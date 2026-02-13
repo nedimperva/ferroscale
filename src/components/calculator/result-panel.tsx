@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
 
 interface ResultPanelProps {
@@ -22,14 +22,23 @@ export const ResultPanel = memo(function ResultPanel({
   wastePercent,
   vatPercent,
 }: ResultPanelProps) {
-  const breakdownRef = useRef<HTMLDetailsElement>(null);
+  const [showExplain, setShowExplain] = useState(false);
 
-  const handleExplain = useCallback(() => {
-    if (breakdownRef.current) {
-      breakdownRef.current.open = true;
-      breakdownRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  /* Lock body scroll when modal is open */
+  useEffect(() => {
+    if (showExplain) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
     }
-  }, []);
+  }, [showExplain]);
+
+  /* Close on Escape */
+  useEffect(() => {
+    if (!showExplain) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowExplain(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showExplain]);
 
   if (!result) {
     return (
@@ -102,7 +111,7 @@ export const ResultPanel = memo(function ResultPanel({
 
       {/* ── Cost Breakdown (collapsible) ── */}
       <div className="mt-1 px-5">
-        <details ref={breakdownRef} className="group rounded-lg border border-slate-100">
+        <details className="group rounded-lg border border-slate-100">
           <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 select-none">
             Cost Breakdown
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180">
@@ -163,7 +172,7 @@ export const ResultPanel = memo(function ResultPanel({
         </button>
         <button
           type="button"
-          onClick={handleExplain}
+          onClick={() => setShowExplain(true)}
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -175,35 +184,6 @@ export const ResultPanel = memo(function ResultPanel({
         </button>
       </div>
 
-      {/* ── Detailed calculation breakdown ── */}
-      <details className="border-t border-slate-100 px-5 py-3">
-        <summary className="cursor-pointer text-xs font-medium text-slate-500 select-none">
-          Full calculation steps
-        </summary>
-        <div className="mt-2 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="text-slate-500">
-                <th className="py-1">Step</th>
-                <th className="py-1">Expression</th>
-                <th className="py-1">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.breakdownRows.map((row) => (
-                <tr key={`${row.label}-${row.expression}`}>
-                  <td className="py-1 pr-2">{row.label}</td>
-                  <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
-                  <td className="py-1">
-                    {row.value} {row.unit}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
-
       {/* ── References ── */}
       <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-400">
         <p className="font-medium text-slate-500">References</p>
@@ -213,6 +193,71 @@ export const ResultPanel = memo(function ResultPanel({
           ))}
         </ul>
       </div>
+
+      {/* ── Explain modal ── */}
+      {showExplain && (
+        <div
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setShowExplain(false)}
+        >
+          <div
+            className="relative max-h-[85vh] w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
+              <h3 className="text-sm font-semibold">Calculation Steps</h3>
+              <button
+                type="button"
+                onClick={() => setShowExplain(false)}
+                className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="overflow-y-auto px-5 py-4" style={{ maxHeight: "calc(85vh - 56px)" }}>
+              <p className="mb-3 text-xs text-slate-500">
+                Formula: {result.formulaLabel}
+              </p>
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 text-slate-500">
+                    <th className="pb-2 pr-3">Step</th>
+                    <th className="pb-2 pr-3">Expression</th>
+                    <th className="pb-2">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.breakdownRows.map((row) => (
+                    <tr key={`${row.label}-${row.expression}`} className="border-b border-slate-50">
+                      <td className="py-2 pr-3 text-slate-600">{row.label}</td>
+                      <td className="py-2 pr-3 font-mono text-[11px]">{row.expression}</td>
+                      <td className="py-2 font-medium">
+                        {row.value} {row.unit}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* References inside modal */}
+              <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
+                <p className="font-medium text-slate-500">References</p>
+                <ul className="mt-1 list-disc pl-4">
+                  {result.referenceLabels.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 });
