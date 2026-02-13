@@ -9,9 +9,10 @@ interface CaptchaPayload {
 
 interface ContactFormProps {
   context?: string;
+  compact?: boolean;
 }
 
-export function ContactForm({ context }: ContactFormProps) {
+export function ContactForm({ context, compact }: ContactFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -84,52 +85,56 @@ export function ContactForm({ context }: ContactFormProps) {
   }
 
   return (
-    <div className="rounded-lg border border-slate-300 bg-white p-5">
-      <h2 className="text-lg font-semibold">Report a Formula or Data Issue</h2>
-      <p className="mt-1 text-sm text-slate-700">
-        Send suspected calculation issues with context. Rate-limited and protected with CAPTCHA.
-      </p>
+    <div className={compact ? "" : "rounded-lg border border-slate-300 bg-white p-5"}>
+      {!compact && (
+        <>
+          <h2 className="text-lg font-semibold">Report a Formula or Data Issue</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Send suspected calculation issues with context. Rate-limited and protected with CAPTCHA.
+          </p>
+        </>
+      )}
 
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-3 md:max-w-2xl">
-        <div className="grid gap-2 md:grid-cols-2">
+      <form onSubmit={handleSubmit} className={compact ? "grid gap-3" : "mt-4 grid gap-3 md:max-w-2xl"}>
+        <div className={compact ? "grid gap-2" : "grid gap-2 md:grid-cols-2"}>
           <label className="grid gap-1 text-sm">
-            <span>Name</span>
+            <span className="text-xs font-medium text-slate-700">Name</span>
             <input
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2"
+              className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
               required
               minLength={2}
               maxLength={80}
             />
           </label>
           <label className="grid gap-1 text-sm">
-            <span>Email</span>
+            <span className="text-xs font-medium text-slate-700">Email</span>
             <input
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2"
+              className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
               required
             />
           </label>
         </div>
 
         <label className="grid gap-1 text-sm">
-          <span>Message</span>
+          <span className="text-xs font-medium text-slate-700">Message</span>
           <textarea
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            className="min-h-28 rounded-md border border-slate-300 bg-white px-3 py-2"
+            className={`rounded-md border border-slate-300 bg-white px-2 py-2 text-sm ${compact ? "min-h-24" : "min-h-28"}`}
             required
             minLength={10}
             maxLength={1500}
           />
         </label>
 
-        <div className="grid gap-2 md:max-w-xs">
-          <label className="text-sm font-medium" htmlFor="captcha-answer">
+        <div className="grid gap-1">
+          <label className="text-xs font-medium text-slate-700" htmlFor="captcha-answer">
             CAPTCHA: {captcha?.prompt ?? "Loading..."}
           </label>
           {!captcha ? (
@@ -137,7 +142,7 @@ export function ContactForm({ context }: ContactFormProps) {
               type="button"
               onClick={() => void loadCaptcha()}
               disabled={captchaLoading}
-              className="w-fit rounded-md border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-fit rounded-md border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {captchaLoading ? "Loading challenge..." : "Load CAPTCHA challenge"}
             </button>
@@ -147,7 +152,7 @@ export function ContactForm({ context }: ContactFormProps) {
             type="text"
             value={challengeAnswer}
             onChange={(event) => setChallengeAnswer(event.target.value)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2"
+            className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
             required
           />
         </div>
@@ -155,7 +160,10 @@ export function ContactForm({ context }: ContactFormProps) {
         <button
           type="submit"
           disabled={status === "loading"}
-          className="w-fit rounded-md bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={compact
+            ? "w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+            : "w-fit rounded-md bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          }
         >
           {status === "loading" ? "Sending..." : "Send report"}
         </button>

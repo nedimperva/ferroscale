@@ -39,7 +39,7 @@ export const PricingSection = memo(function PricingSection({
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
         Pricing
       </h3>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label htmlFor="price-basis" className="text-xs font-medium text-slate-700">
             Basis
@@ -61,7 +61,7 @@ export const PricingSection = memo(function PricingSection({
           <label htmlFor="unit-price" className="text-xs font-medium text-slate-700">
             Unit price
           </label>
-          <div className="flex">
+          <div className="flex min-w-0">
             <input
               id="unit-price"
               type="number"
@@ -73,7 +73,7 @@ export const PricingSection = memo(function PricingSection({
               onChange={(e) =>
                 dispatch({ type: "SET_UNIT_PRICE", value: parseNumber(e.target.value) })
               }
-              className={`h-9 w-full rounded-l-md border bg-white px-2 text-sm ${
+              className={`h-9 min-w-0 flex-1 rounded-l-md border bg-white px-2 text-sm ${
                 hasIssue("unitPrice") ? "border-red-400" : "border-slate-300"
               }`}
             />
@@ -83,7 +83,7 @@ export const PricingSection = memo(function PricingSection({
               onChange={(e) =>
                 dispatch({ type: "SET_PRICE_UNIT", priceUnit: e.target.value as PriceUnit })
               }
-              className={`h-9 rounded-r-md border-y border-r bg-slate-50 px-1 text-xs ${
+              className={`h-9 shrink-0 rounded-r-md border-y border-r bg-slate-50 px-1.5 text-xs ${
                 hasIssue("priceUnit") ? "border-red-400" : "border-slate-300"
               }`}
               aria-label="Price unit"
@@ -134,7 +134,7 @@ export const PricingSection = memo(function PricingSection({
             onChange={(e) =>
               dispatch({ type: "SET_WASTE", value: parseNumber(e.target.value) })
             }
-            className={`h-9 rounded-md border bg-white px-2 text-sm ${
+            className={`h-9 min-w-0 rounded-md border bg-white px-2 text-sm ${
               hasIssue("wastePercent") ? "border-red-400" : "border-slate-300"
             }`}
           />

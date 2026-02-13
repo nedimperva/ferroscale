@@ -1,0 +1,144 @@
+"use client";
+
+import { memo, useEffect } from "react";
+import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
+import type { CalcAction } from "@/hooks/useCalculator";
+import type { MetalFamilyId } from "@/lib/datasets/types";
+import { MaterialSection } from "./material-section";
+import { PricingSection } from "./pricing-section";
+import { PrecisionSection } from "./precision-section";
+
+interface SettingsDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  input: CalculationInput;
+  dispatch: React.Dispatch<CalcAction>;
+  activeFamily: MetalFamilyId;
+  issues: ValidationIssue[];
+  onResetAll: () => void;
+}
+
+export const SettingsDrawer = memo(function SettingsDrawer({
+  open,
+  onClose,
+  input,
+  dispatch,
+  activeFamily,
+  issues,
+  onResetAll,
+}: SettingsDrawerProps) {
+  /* Lock body scroll when open */
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [open]);
+
+  /* Close on Escape key */
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
+          open ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Drawer panel */}
+      <aside
+        aria-label="Settings drawer"
+        className={`fixed inset-y-0 right-0 z-50 flex w-[380px] max-w-[90vw] flex-col bg-slate-50 shadow-xl transition-transform duration-300 ease-in-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            {/* gear icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            Settings
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+            aria-label="Close settings"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            <MaterialSection
+              input={input}
+              dispatch={dispatch}
+              activeFamily={activeFamily}
+              issues={issues}
+            />
+          </div>
+          <div className="h-px bg-slate-200" />
+          <div className="p-4">
+            <PricingSection input={input} dispatch={dispatch} issues={issues} />
+          </div>
+          <div className="h-px bg-slate-200" />
+          <div className="p-4">
+            <PrecisionSection input={input} dispatch={dispatch} />
+          </div>
+        </div>
+
+        {/* Footer with reset */}
+        <div className="border-t border-slate-200 px-4 py-3">
+          <button
+            type="button"
+            onClick={onResetAll}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          >
+            {/* rotate-ccw icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset all to defaults
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+});

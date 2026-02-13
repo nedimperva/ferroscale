@@ -28,7 +28,7 @@ export const MaterialSection = memo(function MaterialSection({
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
         Material
       </h3>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label htmlFor="family" className="text-xs font-medium text-slate-700">
             Family
@@ -39,7 +39,7 @@ export const MaterialSection = memo(function MaterialSection({
             onChange={(e) =>
               dispatch({ type: "SET_FAMILY", familyId: e.target.value as MetalFamilyId })
             }
-            className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
+            className="h-9 min-w-0 rounded-md border border-slate-300 bg-white px-2 text-sm"
           >
             {METAL_FAMILIES.map((f) => (
               <option key={f.id} value={f.id}>
@@ -56,13 +56,13 @@ export const MaterialSection = memo(function MaterialSection({
             id="grade"
             value={input.materialGradeId}
             onChange={(e) => dispatch({ type: "SET_GRADE", gradeId: e.target.value })}
-            className={`h-9 rounded-md border bg-white px-2 text-sm ${
+            className={`h-9 min-w-0 rounded-md border bg-white px-2 text-sm ${
               hasIssue("materialGradeId") ? "border-red-400" : "border-slate-300"
             }`}
           >
             {gradesForFamily.map((g) => (
               <option key={g.id} value={g.id}>
-                {g.label} ({g.densityKgPerM3} kg/m³)
+                {g.label} ({g.densityKgPerM3})
               </option>
             ))}
           </select>

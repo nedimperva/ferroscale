@@ -29,6 +29,32 @@ export function parseNumber(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Local-storage persistence                                         */
+/* ------------------------------------------------------------------ */
+
+const INPUT_STORAGE_KEY = "advanced-calc-input-v1";
+
+function loadPersistedInput(): CalculationInput | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(INPUT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { v: number; input: CalculationInput };
+    if (parsed?.v === 1 && parsed.input) return parsed.input;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function persistInput(input: CalculationInput): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(INPUT_STORAGE_KEY, JSON.stringify({ v: 1, input }));
+  } catch { /* quota exceeded — ignore */ }
+}
+
 function profileDefaults(profile: ProfileDefinition): {
   selectedSizeId?: string;
   manualDimensions: CalculationInput["manualDimensions"];
@@ -96,6 +122,7 @@ export type CalcAction =
   | { type: "SET_ROUNDING_PRICE"; value: number }
   | { type: "SET_ROUNDING_DIMENSION"; value: number }
   | { type: "RESET" }
+  | { type: "RESET_ALL" }
   | { type: "LOAD_ENTRY"; input: CalculationInput };
 
 function inputReducer(state: CalculationInput, action: CalcAction): CalculationInput {
@@ -174,7 +201,19 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
       return { ...state, rounding: { ...state.rounding, priceDecimals: clampRounding(action.value) } };
     case "SET_ROUNDING_DIMENSION":
       return { ...state, rounding: { ...state.rounding, dimensionDecimals: clampRounding(action.value) } };
-    case "RESET":
+    case "RESET": {
+      /* Reset profile/dimensions but preserve settings (material, pricing, precision) */
+      const defaults = getDefaultInput();
+      return {
+        ...state,
+        profileId: defaults.profileId,
+        selectedSizeId: defaults.selectedSizeId,
+        manualDimensions: defaults.manualDimensions,
+        length: defaults.length,
+        quantity: defaults.quantity,
+      };
+    }
+    case "RESET_ALL":
       return getDefaultInput();
     case "LOAD_ENTRY":
       return action.input;
@@ -216,12 +255,21 @@ export interface UseCalculatorReturn {
 }
 
 export function useCalculator(): UseCalculatorReturn {
-  const [input, dispatch] = useReducer(inputReducer, undefined, getDefaultInput);
+  const [input, dispatch] = useReducer(
+    inputReducer,
+    undefined,
+    () => loadPersistedInput() ?? getDefaultInput(),
+  );
   const [isPending, startTransition] = useTransition();
 
   const resultRef = useRef<CalculationResult | null>(null);
   const issuesRef = useRef<ValidationIssue[]>([]);
   const [, forceRender] = useReducer((c: number) => c + 1, 0);
+
+  /* Persist input to localStorage on every change */
+  useEffect(() => {
+    persistInput(input);
+  }, [input]);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
