@@ -37,12 +37,12 @@ export const DimensionInput = memo(function DimensionInput({
           step="any"
           value={value?.value ?? ""}
           onChange={(e) => onValueChange(parseNumber(e.target.value))}
-          className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+          className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm transition-colors focus:border-accent"
         />
         <select
           value={value?.unit ?? "mm"}
           onChange={(e) => onUnitChange(e.target.value as LengthUnit)}
-          className="h-9 rounded-md border border-slate-300 bg-white px-1 text-sm"
+          className="h-9 rounded-lg border border-slate-300 bg-white px-1 text-sm transition-colors focus:border-accent"
           aria-label={`${dimension.label} unit`}
         >
           {LENGTH_UNITS.map((u) => (

@@ -34,7 +34,7 @@ export function PwaRegister() {
   }
 
   return (
-    <div className="sticky top-0 z-50 border-b border-amber-300 bg-amber-100 px-4 py-2 text-center text-sm text-amber-950">
+    <div className="sticky top-0 z-50 border-b border-orange-300 bg-orange-100 px-4 py-2 text-center text-sm text-orange-950">
       Offline mode active. You can continue calculations with cached data.
     </div>
   );

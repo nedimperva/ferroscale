@@ -35,7 +35,7 @@ export const SettingsSummary = memo(function SettingsSummary({
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full items-center gap-2 rounded-md border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-left transition-colors hover:border-slate-300 hover:bg-slate-50"
+      className="group flex w-full items-center gap-2 rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-left transition-colors hover:border-accent/40 hover:bg-orange-50/40"
     >
       {/* gear icon */}
       <svg

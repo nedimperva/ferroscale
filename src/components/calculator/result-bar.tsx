@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useCallback, useRef } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
 
 interface ResultBarProps {
@@ -52,14 +52,16 @@ export const ResultBar = memo(function ResultBar({
           </span>
         </button>
 
-        {/* Star button */}
+        {/* Save button */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             onStar();
           }}
-          className="shrink-0 rounded-full p-2 transition-colors hover:bg-slate-100"
+          className={`shrink-0 rounded-full p-2 transition-colors ${
+            isStarred ? "bg-orange-50" : "hover:bg-slate-100"
+          }`}
           aria-label={isStarred ? "Remove from saved" : "Save calculation"}
         >
           <svg
@@ -67,16 +69,12 @@ export const ResultBar = memo(function ResultBar({
             viewBox="0 0 24 24"
             className={`h-6 w-6 transition-colors duration-200 ${
               isStarred
-                ? "fill-amber-500 stroke-amber-500"
+                ? "fill-accent stroke-accent"
                 : "fill-none stroke-slate-400"
             }`}
             strokeWidth={2}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.324l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.324L11.48 3.5z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
           </svg>
         </button>
       </div>
@@ -91,6 +89,8 @@ export const ResultBar = memo(function ResultBar({
 interface ResultOverlayProps {
   result: CalculationResult;
   includeVat: boolean;
+  wastePercent: number;
+  vatPercent: number;
   isStarred: boolean;
   onStar: () => void;
   onClose: () => void;
@@ -99,15 +99,26 @@ interface ResultOverlayProps {
 export const ResultOverlay = memo(function ResultOverlay({
   result,
   includeVat,
+  wastePercent,
+  vatPercent,
   isStarred,
   onStar,
   onClose,
 }: ResultOverlayProps) {
+  const breakdownRef = useRef<HTMLDetailsElement>(null);
+
+  const handleExplain = useCallback(() => {
+    if (breakdownRef.current) {
+      breakdownRef.current.open = true;
+      breakdownRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, []);
+
   return (
     <div className="fixed inset-0 z-60 flex flex-col bg-white lg:hidden">
       {/* Header bar */}
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-        <h2 className="text-sm font-semibold">Result Details</h2>
+        <h2 className="text-sm font-semibold">Result</h2>
         <button
           type="button"
           onClick={onClose}
@@ -121,128 +132,168 @@ export const ResultOverlay = memo(function ResultOverlay({
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
-        {/* Grand total hero */}
-        <div className="mb-4 rounded-lg border border-accent/30 bg-accent-surface/50 px-4 py-3 text-center">
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-            Grand Total
+      <div className="flex-1 overflow-y-auto">
+        {/* ── Hero: Total Cost ── */}
+        <div className="border-b border-orange-100 bg-linear-to-b from-orange-50 to-white px-5 py-5 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+            Total Cost
           </p>
-          <p className="mt-1 text-4xl font-bold tracking-tight">
+          <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground">
             {result.grandTotalAmount}
-            <span className="ml-1.5 text-lg font-semibold text-muted">
-              {result.currency}
-            </span>
           </p>
-          <button
-            type="button"
-            onClick={onStar}
-            className="mt-2 inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs transition-colors hover:bg-slate-50"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className={`h-4 w-4 transition-colors duration-200 ${
-                isStarred ? "fill-amber-500 stroke-amber-500" : "fill-none stroke-slate-400"
+          <p className="mt-0.5 text-sm font-medium text-muted">{result.currency}</p>
+        </div>
+
+        <div className="px-4 py-4">
+          {/* ── Weight cards ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg bg-slate-50 px-3 py-2.5">
+              <p className="text-[11px] font-medium text-slate-500">Unit Weight</p>
+              <p className="mt-0.5 text-lg font-bold tracking-tight">
+                {result.unitWeightKg}{" "}
+                <span className="text-sm font-medium text-muted">kg</span>
+              </p>
+            </div>
+            <div className="rounded-lg bg-slate-50 px-3 py-2.5">
+              <p className="text-[11px] font-medium text-slate-500">Total Weight</p>
+              <p className="mt-0.5 text-lg font-bold tracking-tight">
+                {result.totalWeightKg}{" "}
+                <span className="text-sm font-medium text-muted">kg</span>
+              </p>
+            </div>
+          </div>
+
+          {/* ── Detail rows ── */}
+          <div className="mt-4 space-y-0 text-sm">
+            <div className="flex items-baseline justify-between border-b border-slate-100 py-2">
+              <span className="text-slate-500">Profile:</span>
+              <span className="font-medium text-right">{result.profileLabel}</span>
+            </div>
+            <div className="flex items-baseline justify-between border-b border-slate-100 py-2">
+              <span className="text-slate-500">Material:</span>
+              <span className="font-medium text-right">{result.gradeLabel}</span>
+            </div>
+            <div className="flex items-baseline justify-between py-2">
+              <span className="text-slate-500">Unit Price:</span>
+              <span className="font-medium text-right">
+                {result.unitPriceAmount} {result.currency}/{result.priceUnit ?? "kg"}
+              </span>
+            </div>
+          </div>
+
+          {/* ── Cost Breakdown ── */}
+          <div className="mt-3">
+            <details ref={breakdownRef} className="group rounded-lg border border-slate-100" open>
+              <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 select-none">
+                Cost Breakdown
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </summary>
+              <div className="border-t border-slate-100 px-3 py-2.5 text-sm">
+                <div className="flex justify-between py-1">
+                  <span className="text-slate-500">Subtotal:</span>
+                  <span>{result.subtotalAmount} {result.currency}</span>
+                </div>
+                {result.wasteAmount > 0 && (
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-500">
+                      Waste ({wastePercent}%):
+                    </span>
+                    <span>{result.wasteAmount} {result.currency}</span>
+                  </div>
+                )}
+                {includeVat && (
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-500">
+                      VAT ({vatPercent}%):
+                    </span>
+                    <span>{result.vatAmount} {result.currency}</span>
+                  </div>
+                )}
+                <div className="mt-1 flex justify-between border-t border-slate-200 pt-2 font-semibold">
+                  <span>Total:</span>
+                  <span className="text-accent">{result.grandTotalAmount} {result.currency}</span>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          {/* ── Action buttons ── */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={onStar}
+              className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                isStarred
+                  ? "border-orange-200 bg-orange-50 text-accent"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
               }`}
-              strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.324l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.324L11.48 3.5z"
-              />
-            </svg>
-            {isStarred ? "Saved" : "Save"}
-          </button>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className={`h-4 w-4 ${
+                  isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
+                }`}
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+              {isStarred ? "Saved" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={handleExplain}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+              Explain
+            </button>
+          </div>
 
-        {/* Metrics grid */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <p className="text-xs text-slate-500">Profile</p>
-            <p className="font-medium">{result.profileLabel}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Material</p>
-            <p className="font-medium">{result.gradeLabel}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Unit weight</p>
-            <p className="font-medium">{result.unitWeightKg} kg</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Total weight</p>
-            <p className="font-medium">
-              {result.totalWeightKg} kg ({result.totalWeightLb} lb)
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Unit price</p>
-            <p className="font-medium">
-              {result.unitPriceAmount} {result.currency}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500">Subtotal</p>
-            <p className="font-medium">
-              {result.subtotalAmount} {result.currency}
-            </p>
-          </div>
-          {result.wasteAmount > 0 && (
-            <div>
-              <p className="text-xs text-slate-500">Waste</p>
-              <p className="font-medium">
-                {result.wasteAmount} {result.currency}
-              </p>
-            </div>
-          )}
-          {includeVat && (
-            <div>
-              <p className="text-xs text-slate-500">VAT</p>
-              <p className="font-medium">
-                {result.vatAmount} {result.currency}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Breakdown */}
-        <details className="mt-4 rounded-md border border-slate-100 bg-slate-50 p-2" open>
-          <summary className="cursor-pointer text-xs font-medium text-slate-700">
-            Calculation breakdown
-          </summary>
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-slate-500">
-                  <th className="py-1">Step</th>
-                  <th className="py-1">Expression</th>
-                  <th className="py-1">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.breakdownRows.map((row) => (
-                  <tr key={`${row.label}-${row.expression}`}>
-                    <td className="py-1 pr-2">{row.label}</td>
-                    <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
-                    <td className="py-1">
-                      {row.value} {row.unit}
-                    </td>
+          {/* ── Full calculation steps ── */}
+          <details className="mt-4 rounded-lg border border-slate-100 p-3">
+            <summary className="cursor-pointer text-xs font-medium text-slate-500 select-none">
+              Full calculation steps
+            </summary>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-slate-500">
+                    <th className="py-1">Step</th>
+                    <th className="py-1">Expression</th>
+                    <th className="py-1">Value</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </details>
+                </thead>
+                <tbody>
+                  {result.breakdownRows.map((row) => (
+                    <tr key={`${row.label}-${row.expression}`}>
+                      <td className="py-1 pr-2">{row.label}</td>
+                      <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
+                      <td className="py-1">
+                        {row.value} {row.unit}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
 
-        {/* References */}
-        <div className="mt-3 text-xs text-slate-500">
-          <p className="font-medium">References</p>
-          <ul className="mt-0.5 list-disc pl-4">
-            {result.referenceLabels.map((label) => (
-              <li key={label}>{label}</li>
-            ))}
-          </ul>
+          {/* ── References ── */}
+          <div className="mt-3 text-xs text-slate-400">
+            <p className="font-medium text-slate-500">References</p>
+            <ul className="mt-0.5 list-disc pl-4">
+              {result.referenceLabels.map((label) => (
+                <li key={label}>{label}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>

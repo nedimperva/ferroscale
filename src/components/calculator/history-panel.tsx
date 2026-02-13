@@ -145,7 +145,7 @@ const HistoryItem = memo(function HistoryItem({
           viewBox="0 0 24 24"
           className={`h-4 w-4 transition-colors duration-200 ${
             isStarred
-              ? "fill-amber-500 stroke-amber-500"
+              ? "fill-accent stroke-accent"
               : "fill-none stroke-slate-300"
           }`}
           strokeWidth={2}

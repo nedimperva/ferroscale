@@ -123,26 +123,26 @@ export function CalculatorApp() {
       </header>
 
       {/* ---- Disclaimer ---- */}
-      <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-900">
+      <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-xs text-orange-900">
         <strong>Estimate only</strong> — verify against project specs and supplier data.
       </div>
 
       {/* ---- Main grid ---- */}
       <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
         {/* LEFT — inputs */}
-        <div className="grid gap-0 self-start rounded-lg border border-slate-200 bg-white">
-          <div className="p-4">
+        <div className="grid gap-0 self-start rounded-xl border border-slate-200 bg-white">
+          <div className="p-4 pb-0">
             <IssueList issues={issues} />
           </div>
 
-          <div className="px-4 pb-3">
+          <div className="px-4 pt-3 pb-2">
             <SettingsSummary
               input={input}
               onOpen={() => setShowSettingsDrawer(true)}
             />
           </div>
 
-          <div className="p-4 pt-0">
+          <div className="p-4">
             <ProfileSection
               input={input}
               dispatch={dispatch}
@@ -160,6 +160,8 @@ export function CalculatorApp() {
             onStar={handleStar}
             isStarred={isCurrentStarred}
             includeVat={input.includeVat}
+            wastePercent={input.wastePercent}
+            vatPercent={input.vatPercent}
           />
         </aside>
       </div>
@@ -178,6 +180,8 @@ export function CalculatorApp() {
         <ResultOverlay
           result={result}
           includeVat={input.includeVat}
+          wastePercent={input.wastePercent}
+          vatPercent={input.vatPercent}
           isStarred={isCurrentStarred}
           onStar={handleStar}
           onClose={() => setShowOverlay(false)}
