@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useState } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
+import { ReferenceList } from "./reference-list";
 
 interface ResultPanelProps {
   result: CalculationResult | null;
@@ -185,14 +186,10 @@ export const ResultPanel = memo(function ResultPanel({
       </div>
 
       {/* ── References ── */}
-      <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-400">
-        <p className="font-medium text-slate-500">References</p>
-        <ul className="mt-0.5 list-disc pl-4">
-          {result.referenceLabels.map((label) => (
-            <li key={label}>{label}</li>
-          ))}
-        </ul>
-      </div>
+      <ReferenceList
+        labels={result.referenceLabels}
+        className="border-t border-slate-100 px-5 py-3 text-xs text-slate-400"
+      />
 
       {/* ── Explain modal ── */}
       {showExplain && (
@@ -246,14 +243,10 @@ export const ResultPanel = memo(function ResultPanel({
               </table>
 
               {/* References inside modal */}
-              <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
-                <p className="font-medium text-slate-500">References</p>
-                <ul className="mt-1 list-disc pl-4">
-                  {result.referenceLabels.map((label) => (
-                    <li key={label}>{label}</li>
-                  ))}
-                </ul>
-              </div>
+              <ReferenceList
+                labels={result.referenceLabels}
+                className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400"
+              />
             </div>
           </div>
         </div>

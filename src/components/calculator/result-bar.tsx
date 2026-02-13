@@ -2,6 +2,7 @@
 
 import { memo, useState, useEffect } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
+import { ReferenceList } from "./reference-list";
 
 interface ResultBarProps {
   result: CalculationResult | null;
@@ -258,14 +259,10 @@ export const ResultOverlay = memo(function ResultOverlay({
           </div>
 
           {/* ── References ── */}
-          <div className="mt-3 text-xs text-slate-400">
-            <p className="font-medium text-slate-500">References</p>
-            <ul className="mt-0.5 list-disc pl-4">
-              {result.referenceLabels.map((label) => (
-                <li key={label}>{label}</li>
-              ))}
-            </ul>
-          </div>
+          <ReferenceList
+            labels={result.referenceLabels}
+            className="mt-3 text-xs text-slate-400"
+          />
         </div>
       </div>
 
@@ -316,14 +313,10 @@ export const ResultOverlay = memo(function ResultOverlay({
                   ))}
                 </tbody>
               </table>
-              <div className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
-                <p className="font-medium text-slate-500">References</p>
-                <ul className="mt-1 list-disc pl-4">
-                  {result.referenceLabels.map((label) => (
-                    <li key={label}>{label}</li>
-                  ))}
-                </ul>
-              </div>
+              <ReferenceList
+                labels={result.referenceLabels}
+                className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400"
+              />
             </div>
           </div>
         </div>
