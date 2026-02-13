@@ -7,7 +7,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
   {
     id: "channel_upn_en",
     label: "UPN Channel",
-    category: "channels_angles",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
@@ -37,7 +37,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
   {
     id: "channel_upe_en",
     label: "UPE Channel",
-    category: "channels_angles",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10279",
@@ -65,7 +65,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
   {
     id: "angle_equal_en",
     label: "Equal Angle (L)",
-    category: "channels_angles",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10056-1",

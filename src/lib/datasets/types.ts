@@ -15,24 +15,20 @@ export interface MaterialGrade {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Profile categories (for <optgroup> UI grouping)                   */
+/*  Profile categories (top-level UI grouping)                        */
 /* ------------------------------------------------------------------ */
 
 export type ProfileCategory =
-  | "basic_shapes"
-  | "beams"
-  | "channels_angles"
-  | "hollow_sections"
+  | "tubes"
+  | "bars"
   | "plates_sheets"
-  | "tees";
+  | "structural";
 
 export const PROFILE_CATEGORY_LABELS: Record<ProfileCategory, string> = {
-  basic_shapes: "Basic Shapes",
-  beams: "I-Beams & H-Beams",
-  channels_angles: "Channels & Angles",
-  hollow_sections: "Hollow Sections",
+  tubes: "Tubes",
+  bars: "Bars",
   plates_sheets: "Plates & Sheets",
-  tees: "Tee Sections",
+  structural: "Structural Profiles",
 };
 
 /* ------------------------------------------------------------------ */
@@ -43,8 +39,6 @@ export type ProfileId =
   | "round_bar"
   | "square_bar"
   | "flat_bar"
-  | "hex_bar"
-  | "octagonal_bar"
   | "sheet"
   | "plate"
   | "chequered_plate"
@@ -61,8 +55,6 @@ export type ProfileId =
   | "beam_hea_en"
   | "beam_heb_en"
   | "beam_hem_en"
-  | "beam_w_aisc"
-  | "beam_hp_aisc"
   | "tee_en";
 
 export type DimensionKey =
@@ -73,7 +65,6 @@ export type DimensionKey =
   | "thickness"
   | "outerDiameter"
   | "wallThickness"
-  | "acrossFlats"
   | "patternHeight";
 
 export interface DimensionDefinition {

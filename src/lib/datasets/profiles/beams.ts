@@ -7,7 +7,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
   {
     id: "beam_ipe_en",
     label: "IPE Beam",
-    category: "beams",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
@@ -39,7 +39,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
   {
     id: "beam_ipn_en",
     label: "IPN Beam",
-    category: "beams",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10024",
@@ -70,7 +70,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
   {
     id: "beam_hea_en",
     label: "HEA Beam",
-    category: "beams",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
@@ -108,7 +108,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
   {
     id: "beam_heb_en",
     label: "HEB Beam",
-    category: "beams",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
@@ -146,7 +146,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
   {
     id: "beam_hem_en",
     label: "HEM Beam",
-    category: "beams",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
@@ -165,62 +165,4 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     ],
   },
 
-  /* ------------------------------------------------------------------ */
-  /*  W-Beam – Wide Flange (AISC)                                       */
-  /* ------------------------------------------------------------------ */
-  {
-    id: "beam_w_aisc",
-    label: "W-Beam (AISC)",
-    category: "beams",
-    mode: "standard",
-    formulaLabel: "A from AISC size table",
-    referenceLabel: "AISC",
-    sizes: [
-      { id: "w6x9", label: "W6×9", areaMm2: 1729, referenceLabel: "AISC" },
-      { id: "w6x15", label: "W6×15", areaMm2: 2858, referenceLabel: "AISC" },
-      { id: "w8x10", label: "W8×10", areaMm2: 1910, referenceLabel: "AISC" },
-      { id: "w8x13", label: "W8×13", areaMm2: 2477, referenceLabel: "AISC" },
-      { id: "w8x18", label: "W8×18", areaMm2: 3394, referenceLabel: "AISC" },
-      { id: "w8x24", label: "W8×24", areaMm2: 4568, referenceLabel: "AISC" },
-      { id: "w8x31", label: "W8×31", areaMm2: 5890, referenceLabel: "AISC" },
-      { id: "w10x12", label: "W10×12", areaMm2: 2284, referenceLabel: "AISC" },
-      { id: "w10x15", label: "W10×15", areaMm2: 2845, referenceLabel: "AISC" },
-      { id: "w10x22", label: "W10×22", areaMm2: 4187, referenceLabel: "AISC" },
-      { id: "w10x30", label: "W10×30", areaMm2: 5703, referenceLabel: "AISC" },
-      { id: "w10x49", label: "W10×49", areaMm2: 9290, referenceLabel: "AISC" },
-      { id: "w12x16", label: "W12×16", areaMm2: 3039, referenceLabel: "AISC" },
-      { id: "w12x19", label: "W12×19", areaMm2: 3594, referenceLabel: "AISC" },
-      { id: "w12x26", label: "W12×26", areaMm2: 4935, referenceLabel: "AISC" },
-      { id: "w12x40", label: "W12×40", areaMm2: 7548, referenceLabel: "AISC" },
-      { id: "w12x58", label: "W12×58", areaMm2: 10968, referenceLabel: "AISC" },
-      { id: "w14x22", label: "W14×22", areaMm2: 4187, referenceLabel: "AISC" },
-      { id: "w14x30", label: "W14×30", areaMm2: 5710, referenceLabel: "AISC" },
-      { id: "w14x48", label: "W14×48", areaMm2: 9097, referenceLabel: "AISC" },
-    ],
-  },
-
-  /* ------------------------------------------------------------------ */
-  /*  HP – Bearing Pile (AISC)                                          */
-  /* ------------------------------------------------------------------ */
-  {
-    id: "beam_hp_aisc",
-    label: "HP-Profile (AISC)",
-    category: "beams",
-    mode: "standard",
-    formulaLabel: "A from AISC size table",
-    referenceLabel: "AISC",
-    sizes: [
-      { id: "hp8x36", label: "HP 8×36", areaMm2: 6839, referenceLabel: "AISC" },
-      { id: "hp10x42", label: "HP 10×42", areaMm2: 8000, referenceLabel: "AISC" },
-      { id: "hp10x57", label: "HP 10×57", areaMm2: 10839, referenceLabel: "AISC" },
-      { id: "hp12x53", label: "HP 12×53", areaMm2: 10000, referenceLabel: "AISC" },
-      { id: "hp12x63", label: "HP 12×63", areaMm2: 11871, referenceLabel: "AISC" },
-      { id: "hp12x74", label: "HP 12×74", areaMm2: 14065, referenceLabel: "AISC" },
-      { id: "hp12x84", label: "HP 12×84", areaMm2: 15871, referenceLabel: "AISC" },
-      { id: "hp14x73", label: "HP 14×73", areaMm2: 13806, referenceLabel: "AISC" },
-      { id: "hp14x89", label: "HP 14×89", areaMm2: 16839, referenceLabel: "AISC" },
-      { id: "hp14x102", label: "HP 14×102", areaMm2: 19355, referenceLabel: "AISC" },
-      { id: "hp14x117", label: "HP 14×117", areaMm2: 22194, referenceLabel: "AISC" },
-    ],
-  },
 ];

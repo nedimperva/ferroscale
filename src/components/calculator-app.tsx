@@ -85,7 +85,7 @@ export function CalculatorApp() {
             Metal Calculator
           </h1>
           <p className="hidden text-sm text-slate-600 sm:block">
-            Live weight &amp; price estimation for EN &amp; AISC profiles.{" "}
+            Live weight &amp; price estimation for EN standard profiles.{" "}
             <span className="text-xs text-slate-400">
               v{DATASET_VERSION}
             </span>

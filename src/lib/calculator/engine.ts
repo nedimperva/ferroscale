@@ -84,22 +84,6 @@ function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression:
     };
   }
 
-  if (profile.id === "hex_bar") {
-    const acrossFlats = getManualDimensionMm(input, "acrossFlats");
-    return {
-      areaMm2: (Math.sqrt(3) / 2) * acrossFlats * acrossFlats,
-      expression: `A = (√3/2) × ${acrossFlats.toFixed(3)}²`,
-    };
-  }
-
-  if (profile.id === "octagonal_bar") {
-    const acrossFlats = getManualDimensionMm(input, "acrossFlats");
-    return {
-      areaMm2: 2 * (Math.SQRT2 - 1) * acrossFlats * acrossFlats,
-      expression: `A = 2(√2−1) × ${acrossFlats.toFixed(3)}²`,
-    };
-  }
-
   if (profile.id === "pipe") {
     const outerDiameter = getManualDimensionMm(input, "outerDiameter");
     const wallThickness = getManualDimensionMm(input, "wallThickness");

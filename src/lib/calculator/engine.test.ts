@@ -33,10 +33,6 @@ const PROFILE_CASES: ProfileCase[] = [
     },
   },
   {
-    profileId: "hex_bar",
-    manualDimensions: { acrossFlats: { value: 28, unit: "mm" } },
-  },
-  {
     profileId: "sheet",
     manualDimensions: {
       width: { value: 1250, unit: "mm" },
@@ -64,10 +60,6 @@ const PROFILE_CASES: ProfileCase[] = [
       height: { value: 80, unit: "mm" },
       wallThickness: { value: 4, unit: "mm" },
     },
-  },
-  {
-    profileId: "octagonal_bar",
-    manualDimensions: { acrossFlats: { value: 30, unit: "mm" } },
   },
   {
     profileId: "square_hollow",
@@ -139,16 +131,6 @@ const PROFILE_CASES: ProfileCase[] = [
     manualDimensions: {},
   },
   {
-    profileId: "beam_w_aisc",
-    selectedSizeId: "w10x22",
-    manualDimensions: {},
-  },
-  {
-    profileId: "beam_hp_aisc",
-    selectedSizeId: "hp10x42",
-    manualDimensions: {},
-  },
-  {
     profileId: "channel_upe_en",
     selectedSizeId: "upe200",
     manualDimensions: {},
@@ -182,20 +164,6 @@ function computeAreaMm2(testCase: ProfileCase): number {
         testCase.manualDimensions.thickness!.unit,
       );
       return width * thickness;
-    }
-    case "hex_bar": {
-      const acrossFlats = toMillimeters(
-        testCase.manualDimensions.acrossFlats!.value,
-        testCase.manualDimensions.acrossFlats!.unit,
-      );
-      return (Math.sqrt(3) / 2) * acrossFlats * acrossFlats;
-    }
-    case "octagonal_bar": {
-      const acrossFlats = toMillimeters(
-        testCase.manualDimensions.acrossFlats!.value,
-        testCase.manualDimensions.acrossFlats!.unit,
-      );
-      return 2 * (Math.SQRT2 - 1) * acrossFlats * acrossFlats;
     }
     case "pipe": {
       const outerDiameter = toMillimeters(

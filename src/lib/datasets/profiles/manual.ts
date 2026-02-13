@@ -1,11 +1,11 @@
 import type { ManualProfileDefinition } from "@/lib/datasets/types";
 
 export const MANUAL_PROFILES: ManualProfileDefinition[] = [
-  /* ---- Basic Shapes ---- */
+  /* ---- Bars ---- */
   {
     id: "round_bar",
     label: "Round Bar",
-    category: "basic_shapes",
+    category: "bars",
     mode: "manual",
     formulaLabel: "A = π × d² / 4",
     referenceLabel: "EN 10060",
@@ -16,7 +16,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
   {
     id: "square_bar",
     label: "Square Bar",
-    category: "basic_shapes",
+    category: "bars",
     mode: "manual",
     formulaLabel: "A = a²",
     referenceLabel: "EN 10059",
@@ -27,7 +27,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
   {
     id: "flat_bar",
     label: "Flat Bar",
-    category: "basic_shapes",
+    category: "bars",
     mode: "manual",
     formulaLabel: "A = b × t",
     referenceLabel: "EN 10058",
@@ -36,34 +36,12 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
       { key: "thickness", label: "Thickness", minMm: 2, maxMm: 120, defaultMm: 8 },
     ],
   },
-  {
-    id: "hex_bar",
-    label: "Hex Bar",
-    category: "basic_shapes",
-    mode: "manual",
-    formulaLabel: "A = (√3/2) × s²",
-    referenceLabel: "EN 10061",
-    dimensions: [
-      { key: "acrossFlats", label: "Across Flats", minMm: 6, maxMm: 300, defaultMm: 24 },
-    ],
-  },
-  {
-    id: "octagonal_bar",
-    label: "Octagonal Bar",
-    category: "basic_shapes",
-    mode: "manual",
-    formulaLabel: "A = 2(√2−1) × s²",
-    referenceLabel: "Geometric",
-    dimensions: [
-      { key: "acrossFlats", label: "Across Flats", minMm: 6, maxMm: 300, defaultMm: 24 },
-    ],
-  },
 
-  /* ---- Hollow Sections ---- */
+  /* ---- Tubes ---- */
   {
     id: "pipe",
     label: "Pipe / Circular Tube",
-    category: "hollow_sections",
+    category: "tubes",
     mode: "manual",
     formulaLabel: "A = π × (OD² − ID²) / 4",
     referenceLabel: "EN 10255 / EN 10216",
@@ -75,7 +53,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
   {
     id: "rectangular_tube",
     label: "Rectangular Tube",
-    category: "hollow_sections",
+    category: "tubes",
     mode: "manual",
     formulaLabel: "A = B×H − (B−2t)×(H−2t)",
     referenceLabel: "EN 10219 / EN 10210",
@@ -88,7 +66,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
   {
     id: "square_hollow",
     label: "Square Hollow Section",
-    category: "hollow_sections",
+    category: "tubes",
     mode: "manual",
     formulaLabel: "A = a² − (a−2t)²",
     referenceLabel: "EN 10219 / EN 10210",

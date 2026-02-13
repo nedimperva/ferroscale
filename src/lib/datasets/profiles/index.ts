@@ -5,8 +5,7 @@ import { CHANNEL_ANGLE_PROFILES } from "./channels-angles";
 import { TEE_PROFILES } from "./tees";
 
 /**
- * All profile definitions, ordered by category then label.
- * Categories: Basic Shapes → Hollow Sections → Plates & Sheets → Beams → Channels & Angles → Tees
+ * All profile definitions, ordered: Bars → Tubes → Plates & Sheets → Structural
  */
 export const PROFILE_DEFINITIONS: ProfileDefinition[] = [
   ...MANUAL_PROFILES,

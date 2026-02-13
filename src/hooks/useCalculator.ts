@@ -258,7 +258,15 @@ export function useCalculator(): UseCalculatorReturn {
   const [input, dispatch] = useReducer(
     inputReducer,
     undefined,
-    () => loadPersistedInput() ?? getDefaultInput(),
+    () => {
+      const persisted = loadPersistedInput();
+      if (!persisted) return getDefaultInput();
+      /* Guard: if a persisted profile was removed, fall back to defaults */
+      if (!getProfileById(persisted.profileId)) {
+        return getDefaultInput();
+      }
+      return persisted;
+    },
   );
   const [isPending, startTransition] = useTransition();
 

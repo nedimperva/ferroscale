@@ -4,7 +4,7 @@ export const TEE_PROFILES: StandardProfileDefinition[] = [
   {
     id: "tee_en",
     label: "Tee Section (T)",
-    category: "tees",
+    category: "structural",
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10055",
