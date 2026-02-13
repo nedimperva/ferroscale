@@ -1,6 +1,6 @@
 import { memo } from "react";
 import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
-import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
+import { METAL_FAMILIES, getMaterialGradesByFamily, getMaterialGradeById } from "@/lib/datasets/materials";
 import type { MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { parseNumber } from "@/hooks/useCalculator";
@@ -21,6 +21,12 @@ export const MaterialSection = memo(function MaterialSection({
   const gradesForFamily = getMaterialGradesByFamily(activeFamily);
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
 
+  const grade = getMaterialGradeById(input.materialGradeId);
+  const effectiveDensity = input.useCustomDensity
+    ? (input.customDensityKgPerM3 ?? "?")
+    : (grade?.densityKgPerM3 ?? "?");
+  const family = METAL_FAMILIES.find((f) => f.id === activeFamily);
+
   return (
     <section className="grid gap-2">
       <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -28,6 +34,15 @@ export const MaterialSection = memo(function MaterialSection({
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
         Material
       </h3>
+
+      {/* Live preview */}
+      <div className="rounded-lg bg-orange-50/60 px-3 py-2 text-xs text-slate-600">
+        <span className="font-medium text-accent">{grade?.label ?? "—"}</span>
+        <span className="mx-1.5 text-slate-300">·</span>
+        <span>{family?.label ?? "—"}</span>
+        <span className="mx-1.5 text-slate-300">·</span>
+        <span className="text-slate-500">{effectiveDensity} kg/m³{input.useCustomDensity ? " (custom)" : ""}</span>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label htmlFor="family" className="text-xs font-medium text-slate-700">

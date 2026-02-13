@@ -20,16 +20,26 @@ export const SettingsSummary = memo(function SettingsSummary({
   const priceTag = `${input.unitPrice} ${input.currency}/${input.priceUnit}`;
   const wasteTag = input.wastePercent > 0 ? `+${input.wastePercent}% waste` : null;
   const vatTag = input.includeVat ? `VAT ${input.vatPercent}%` : null;
-  const roundTag = `${input.rounding.weightDecimals}/${input.rounding.priceDecimals}/${input.rounding.dimensionDecimals}`;
 
-  const parts = [
-    gradeLabel,
-    density,
-    priceTag,
-    wasteTag,
-    vatTag,
-    roundTag,
-  ].filter(Boolean);
+  const { weightDecimals: w, priceDecimals: p, dimensionDecimals: d } = input.rounding;
+  const isDefaultRounding = w === 2 && p === 2 && d === 2;
+  const fmtExample = (dec: number, sample: number) => sample.toFixed(dec);
+  const roundTags = isDefaultRounding
+    ? []
+    : [
+        { prefix: "Weight", label: `${fmtExample(w, 12.3)} kg`, muted: true },
+        { prefix: "Price", label: `${fmtExample(p, 49.9)} €`, muted: true },
+        { prefix: "Dim", label: `${fmtExample(d, 5.7)} mm`, muted: true },
+      ];
+
+  const tags: { prefix?: string; label: string; muted?: boolean }[] = [
+    { prefix: "Grade", label: gradeLabel },
+    ...(density ? [{ prefix: "Density", label: density }] : []),
+    { prefix: "Price", label: priceTag },
+    ...(wasteTag ? [{ prefix: "Waste", label: `${input.wastePercent}%` }] : []),
+    ...(vatTag ? [{ prefix: "VAT", label: `${input.vatPercent}%` }] : []),
+    ...roundTags,
+  ];
 
   return (
     <button
@@ -51,8 +61,22 @@ export const SettingsSummary = memo(function SettingsSummary({
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
         <circle cx="12" cy="12" r="3" />
       </svg>
-      <span className="truncate text-xs text-slate-500">
-        {parts.join(" · ")}
+      <span className="flex min-w-0 flex-1 flex-wrap gap-1">
+        {tags.map((tag) => (
+          <span
+            key={tag.label}
+            className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] leading-tight ${
+              tag.muted
+                ? "bg-slate-100 text-slate-400"
+                : "bg-slate-100 text-slate-600"
+            }`}
+          >
+            {tag.prefix && (
+              <span className="text-slate-400">{tag.prefix}</span>
+            )}
+            {tag.label}
+          </span>
+        ))}
       </span>
       <span className="ml-auto shrink-0 text-[10px] font-medium uppercase tracking-wider text-slate-400 transition-colors group-hover:text-slate-600">
         Edit

@@ -39,6 +39,25 @@ export const PricingSection = memo(function PricingSection({
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
         Pricing
       </h3>
+
+      {/* Live preview */}
+      <div className="rounded-lg bg-orange-50/60 px-3 py-2 text-xs text-slate-600">
+        <span className="font-medium text-accent">{input.unitPrice} {input.currency}/{input.priceUnit}</span>
+        {input.wastePercent > 0 && (
+          <><span className="mx-1.5 text-slate-300">·</span><span>+{input.wastePercent}% waste</span></>
+        )}
+        {input.includeVat && (
+          <><span className="mx-1.5 text-slate-300">·</span><span>+{input.vatPercent}% VAT</span></>
+        )}
+        {(input.wastePercent > 0 || input.includeVat) && (
+          <>
+            <span className="mx-1.5 text-slate-300">→</span>
+            <span className="font-medium">
+              ×{((1 + input.wastePercent / 100) * (input.includeVat ? 1 + input.vatPercent / 100 : 1)).toFixed(3)}
+            </span>
+          </>
+        )}
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label htmlFor="price-basis" className="text-xs font-medium text-slate-700">
