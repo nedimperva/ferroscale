@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { calculateMetal } from "@/lib/calculator/engine";
 import type { CalculationInput } from "@/lib/calculator/types";
-import { getProfileById } from "@/lib/datasets/profiles";
+import { getProfileById } from "@/lib/datasets/profiles/index";
 import { toMillimeters } from "@/lib/calculator/units";
 
 interface ProfileCase {
@@ -66,6 +66,39 @@ const PROFILE_CASES: ProfileCase[] = [
     },
   },
   {
+    profileId: "octagonal_bar",
+    manualDimensions: { acrossFlats: { value: 30, unit: "mm" } },
+  },
+  {
+    profileId: "square_hollow",
+    manualDimensions: {
+      side: { value: 100, unit: "mm" },
+      wallThickness: { value: 5, unit: "mm" },
+    },
+  },
+  {
+    profileId: "chequered_plate",
+    manualDimensions: {
+      width: { value: 1500, unit: "mm" },
+      thickness: { value: 5, unit: "mm" },
+      patternHeight: { value: 2, unit: "mm" },
+    },
+  },
+  {
+    profileId: "expanded_metal",
+    manualDimensions: {
+      width: { value: 1250, unit: "mm" },
+      thickness: { value: 3, unit: "mm" },
+    },
+  },
+  {
+    profileId: "corrugated_sheet",
+    manualDimensions: {
+      width: { value: 1000, unit: "mm" },
+      thickness: { value: 0.7, unit: "mm" },
+    },
+  },
+  {
     profileId: "angle_equal_en",
     selectedSizeId: "l80x8",
     manualDimensions: {},
@@ -83,6 +116,41 @@ const PROFILE_CASES: ProfileCase[] = [
   {
     profileId: "tee_en",
     selectedSizeId: "t60x7",
+    manualDimensions: {},
+  },
+  {
+    profileId: "beam_ipn_en",
+    selectedSizeId: "ipn200",
+    manualDimensions: {},
+  },
+  {
+    profileId: "beam_hea_en",
+    selectedSizeId: "hea200",
+    manualDimensions: {},
+  },
+  {
+    profileId: "beam_heb_en",
+    selectedSizeId: "heb200",
+    manualDimensions: {},
+  },
+  {
+    profileId: "beam_hem_en",
+    selectedSizeId: "hem200",
+    manualDimensions: {},
+  },
+  {
+    profileId: "beam_w_aisc",
+    selectedSizeId: "w10x22",
+    manualDimensions: {},
+  },
+  {
+    profileId: "beam_hp_aisc",
+    selectedSizeId: "hp10x42",
+    manualDimensions: {},
+  },
+  {
+    profileId: "channel_upe_en",
+    selectedSizeId: "upe200",
     manualDimensions: {},
   },
 ];
@@ -122,6 +190,13 @@ function computeAreaMm2(testCase: ProfileCase): number {
       );
       return (Math.sqrt(3) / 2) * acrossFlats * acrossFlats;
     }
+    case "octagonal_bar": {
+      const acrossFlats = toMillimeters(
+        testCase.manualDimensions.acrossFlats!.value,
+        testCase.manualDimensions.acrossFlats!.unit,
+      );
+      return 2 * (Math.SQRT2 - 1) * acrossFlats * acrossFlats;
+    }
     case "pipe": {
       const outerDiameter = toMillimeters(
         testCase.manualDimensions.outerDiameter!.value,
@@ -142,6 +217,29 @@ function computeAreaMm2(testCase: ProfileCase): number {
         testCase.manualDimensions.wallThickness!.unit,
       );
       return width * height - (width - 2 * wallThickness) * (height - 2 * wallThickness);
+    }
+    case "square_hollow": {
+      const side = toMillimeters(testCase.manualDimensions.side!.value, testCase.manualDimensions.side!.unit);
+      const wallThickness = toMillimeters(
+        testCase.manualDimensions.wallThickness!.value,
+        testCase.manualDimensions.wallThickness!.unit,
+      );
+      return side * side - (side - 2 * wallThickness) * (side - 2 * wallThickness);
+    }
+    case "chequered_plate": {
+      const w = toMillimeters(testCase.manualDimensions.width!.value, testCase.manualDimensions.width!.unit);
+      const t = toMillimeters(testCase.manualDimensions.thickness!.value, testCase.manualDimensions.thickness!.unit);
+      const ph = toMillimeters(
+        testCase.manualDimensions.patternHeight!.value,
+        testCase.manualDimensions.patternHeight!.unit,
+      );
+      return w * (t + ph * 0.5);
+    }
+    case "expanded_metal":
+    case "corrugated_sheet": {
+      const w = toMillimeters(testCase.manualDimensions.width!.value, testCase.manualDimensions.width!.unit);
+      const t = toMillimeters(testCase.manualDimensions.thickness!.value, testCase.manualDimensions.thickness!.unit);
+      return w * t;
     }
     default: {
       const profile = getProfileById(testCase.profileId);

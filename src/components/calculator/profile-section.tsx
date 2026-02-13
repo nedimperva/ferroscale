@@ -1,12 +1,27 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
-import type { ProfileDefinition, ProfileId } from "@/lib/datasets/types";
+import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datasets/types";
+import { PROFILE_CATEGORY_LABELS } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { parseNumber } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
+
+/** Group profiles by category, preserving order of first occurrence. */
+function groupByCategory(profiles: ProfileDefinition[]) {
+  const map = new Map<ProfileCategory, ProfileDefinition[]>();
+  for (const p of profiles) {
+    const group = map.get(p.category);
+    if (group) {
+      group.push(p);
+    } else {
+      map.set(p.category, [p]);
+    }
+  }
+  return map;
+}
 
 interface ProfileSectionProps {
   input: CalculationInput;
@@ -22,6 +37,7 @@ export const ProfileSection = memo(function ProfileSection({
   issues,
 }: ProfileSectionProps) {
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
+  const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
 
   return (
     <section className="grid gap-2">
@@ -43,10 +59,14 @@ export const ProfileSection = memo(function ProfileSection({
             }
             className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
           >
-            {PROFILE_DEFINITIONS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
+            {[...grouped.entries()].map(([category, profiles]) => (
+              <optgroup key={category} label={PROFILE_CATEGORY_LABELS[category]}>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
@@ -54,7 +74,7 @@ export const ProfileSection = memo(function ProfileSection({
         {selectedProfile.mode === "standard" && (
           <div className="grid gap-1">
             <label htmlFor="size" className="text-xs font-medium text-slate-700">
-              EN size
+              Size
             </label>
             <select
               id="size"

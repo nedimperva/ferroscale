@@ -1,6 +1,6 @@
 import { DATASET_VERSION } from "@/lib/datasets/version";
 import { getMaterialGradeById } from "@/lib/datasets/materials";
-import { getProfileById } from "@/lib/datasets/profiles";
+import { getProfileById } from "@/lib/datasets/profiles/index";
 import type {
   CalculationInput,
   CalculationResponse,
@@ -59,12 +59,28 @@ function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression:
     };
   }
 
-  if (profile.id === "flat_bar" || profile.id === "sheet" || profile.id === "plate") {
+  if (
+    profile.id === "flat_bar" ||
+    profile.id === "sheet" ||
+    profile.id === "plate" ||
+    profile.id === "expanded_metal" ||
+    profile.id === "corrugated_sheet"
+  ) {
     const width = getManualDimensionMm(input, "width");
     const thickness = getManualDimensionMm(input, "thickness");
     return {
       areaMm2: width * thickness,
-      expression: `A = ${width.toFixed(3)} * ${thickness.toFixed(3)}`,
+      expression: `A = ${width.toFixed(3)} × ${thickness.toFixed(3)}`,
+    };
+  }
+
+  if (profile.id === "chequered_plate") {
+    const width = getManualDimensionMm(input, "width");
+    const thickness = getManualDimensionMm(input, "thickness");
+    const patternHeight = getManualDimensionMm(input, "patternHeight");
+    return {
+      areaMm2: width * (thickness + patternHeight * 0.5),
+      expression: `A = ${width.toFixed(3)} × (${thickness.toFixed(3)} + ${patternHeight.toFixed(3)} × 0.5)`,
     };
   }
 
@@ -72,7 +88,15 @@ function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression:
     const acrossFlats = getManualDimensionMm(input, "acrossFlats");
     return {
       areaMm2: (Math.sqrt(3) / 2) * acrossFlats * acrossFlats,
-      expression: `A = (sqrt(3)/2) * ${acrossFlats.toFixed(3)}^2`,
+      expression: `A = (√3/2) × ${acrossFlats.toFixed(3)}²`,
+    };
+  }
+
+  if (profile.id === "octagonal_bar") {
+    const acrossFlats = getManualDimensionMm(input, "acrossFlats");
+    return {
+      areaMm2: 2 * (Math.SQRT2 - 1) * acrossFlats * acrossFlats,
+      expression: `A = 2(√2−1) × ${acrossFlats.toFixed(3)}²`,
     };
   }
 
@@ -92,9 +116,18 @@ function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression:
     const wallThickness = getManualDimensionMm(input, "wallThickness");
     return {
       areaMm2: width * height - (width - wallThickness * 2) * (height - wallThickness * 2),
-      expression: `A = ${width.toFixed(3)}*${height.toFixed(3)} - (${width.toFixed(3)}-2*${wallThickness.toFixed(
+      expression: `A = ${width.toFixed(3)}×${height.toFixed(3)} − (${width.toFixed(3)}−2×${wallThickness.toFixed(
         3,
-      )})*(${height.toFixed(3)}-2*${wallThickness.toFixed(3)})`,
+      )})×(${height.toFixed(3)}−2×${wallThickness.toFixed(3)})`,
+    };
+  }
+
+  if (profile.id === "square_hollow") {
+    const side = getManualDimensionMm(input, "side");
+    const wallThickness = getManualDimensionMm(input, "wallThickness");
+    return {
+      areaMm2: side * side - (side - wallThickness * 2) * (side - wallThickness * 2),
+      expression: `A = ${side.toFixed(3)}² − (${side.toFixed(3)}−2×${wallThickness.toFixed(3)})²`,
     };
   }
 

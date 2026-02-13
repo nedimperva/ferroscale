@@ -14,18 +14,55 @@ export interface MaterialGrade {
   referenceLabel: string;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Profile categories (for <optgroup> UI grouping)                   */
+/* ------------------------------------------------------------------ */
+
+export type ProfileCategory =
+  | "basic_shapes"
+  | "beams"
+  | "channels_angles"
+  | "hollow_sections"
+  | "plates_sheets"
+  | "tees";
+
+export const PROFILE_CATEGORY_LABELS: Record<ProfileCategory, string> = {
+  basic_shapes: "Basic Shapes",
+  beams: "I-Beams & H-Beams",
+  channels_angles: "Channels & Angles",
+  hollow_sections: "Hollow Sections",
+  plates_sheets: "Plates & Sheets",
+  tees: "Tee Sections",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Profiles                                                          */
+/* ------------------------------------------------------------------ */
+
 export type ProfileId =
   | "round_bar"
   | "square_bar"
   | "flat_bar"
   | "hex_bar"
+  | "octagonal_bar"
   | "sheet"
   | "plate"
+  | "chequered_plate"
+  | "expanded_metal"
+  | "corrugated_sheet"
   | "pipe"
   | "rectangular_tube"
+  | "square_hollow"
   | "angle_equal_en"
   | "channel_upn_en"
+  | "channel_upe_en"
   | "beam_ipe_en"
+  | "beam_ipn_en"
+  | "beam_hea_en"
+  | "beam_heb_en"
+  | "beam_hem_en"
+  | "beam_w_aisc"
+  | "beam_hp_aisc"
   | "tee_en";
 
 export type DimensionKey =
@@ -36,7 +73,8 @@ export type DimensionKey =
   | "thickness"
   | "outerDiameter"
   | "wallThickness"
-  | "acrossFlats";
+  | "acrossFlats"
+  | "patternHeight";
 
 export interface DimensionDefinition {
   key: DimensionKey;
@@ -56,6 +94,7 @@ export interface StandardSizeOption {
 export interface ManualProfileDefinition {
   id: ProfileId;
   label: string;
+  category: ProfileCategory;
   mode: "manual";
   formulaLabel: string;
   referenceLabel: string;
@@ -65,6 +104,7 @@ export interface ManualProfileDefinition {
 export interface StandardProfileDefinition {
   id: ProfileId;
   label: string;
+  category: ProfileCategory;
   mode: "standard";
   formulaLabel: string;
   referenceLabel: string;

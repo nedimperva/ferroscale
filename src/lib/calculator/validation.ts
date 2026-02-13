@@ -1,5 +1,5 @@
 import { getMaterialGradeById } from "@/lib/datasets/materials";
-import { getProfileById } from "@/lib/datasets/profiles";
+import { getProfileById } from "@/lib/datasets/profiles/index";
 import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
 import { toMillimeters } from "@/lib/calculator/units";
 
@@ -127,6 +127,21 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
           issues.push({
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of width and height.",
+          });
+        }
+      }
+    }
+
+    if (profile.id === "square_hollow") {
+      const side = input.manualDimensions.side;
+      const wall = input.manualDimensions.wallThickness;
+      if (side && wall) {
+        const sideMm = toMillimeters(side.value, side.unit);
+        const wallMm = toMillimeters(wall.value, wall.unit);
+        if (wallMm * 2 >= sideMm) {
+          issues.push({
+            field: "manualDimensions.wallThickness",
+            message: "Wall thickness must be less than half of the side length.",
           });
         }
       }

@@ -13,7 +13,7 @@ import { PricingSection } from "@/components/calculator/pricing-section";
 import { PrecisionSection } from "@/components/calculator/precision-section";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
-import { HistoryPanel } from "@/components/calculator/history-panel";
+import { HistoryDrawer } from "@/components/calculator/history-drawer";
 
 export function CalculatorApp() {
   const {
@@ -65,8 +65,8 @@ export function CalculatorApp() {
     [dispatch],
   );
 
-  /* Mobile history drawer */
-  const [showMobileHistory, setShowMobileHistory] = useState(false);
+  /* History drawer */
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4 pb-24 md:px-6 lg:pb-6">
@@ -77,7 +77,7 @@ export function CalculatorApp() {
             Metal Calculator
           </h1>
           <p className="text-sm text-slate-600">
-            Live weight &amp; price estimation for EN profiles.{" "}
+            Live weight &amp; price estimation for EN &amp; AISC profiles.{" "}
             <span className="text-xs text-slate-400">
               v{DATASET_VERSION}
             </span>
@@ -101,11 +101,11 @@ export function CalculatorApp() {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             Report
           </Link>
-          {/* Mobile history toggle */}
+          {/* History drawer toggle */}
           <button
             type="button"
-            onClick={() => setShowMobileHistory((p) => !p)}
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 lg:hidden"
+            onClick={() => setShowHistoryDrawer(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
             History
@@ -158,23 +158,9 @@ export function CalculatorApp() {
           <div className="p-4">
             <PrecisionSection input={input} dispatch={dispatch} />
           </div>
-
-          {/* Mobile inline history (toggled) */}
-          {showMobileHistory && (
-            <div className="border-t border-slate-100 p-4 lg:hidden">
-              <HistoryPanel
-                history={history}
-                starred={starred}
-                onLoad={handleLoad}
-                onToggleStar={toggleStar}
-                onRemoveStarred={removeStarred}
-                onClearHistory={clearHistory}
-              />
-            </div>
-          )}
         </div>
 
-        {/* RIGHT — results & history (desktop) */}
+        {/* RIGHT — results (desktop) */}
         <aside className="hidden gap-4 self-start lg:sticky lg:top-4 lg:grid">
           <ResultPanel
             result={result}
@@ -182,14 +168,6 @@ export function CalculatorApp() {
             onStar={handleStar}
             isStarred={isCurrentStarred}
             includeVat={input.includeVat}
-          />
-          <HistoryPanel
-            history={history}
-            starred={starred}
-            onLoad={handleLoad}
-            onToggleStar={toggleStar}
-            onRemoveStarred={removeStarred}
-            onClearHistory={clearHistory}
           />
         </aside>
       </div>
@@ -213,6 +191,18 @@ export function CalculatorApp() {
           onClose={() => setShowOverlay(false)}
         />
       )}
+
+      {/* ---- History drawer (all breakpoints) ---- */}
+      <HistoryDrawer
+        open={showHistoryDrawer}
+        onClose={() => setShowHistoryDrawer(false)}
+        history={history}
+        starred={starred}
+        onLoad={handleLoad}
+        onToggleStar={toggleStar}
+        onRemoveStarred={removeStarred}
+        onClearHistory={clearHistory}
+      />
     </div>
   );
 }
