@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
 
 interface ResultBarProps {
@@ -26,7 +26,7 @@ export const ResultBar = memo(function ResultBar({
   if (!result) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-sm lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-sm lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-2.5">
         {/* Tappable main area */}
         <button
@@ -107,8 +107,16 @@ export const ResultOverlay = memo(function ResultOverlay({
 }: ResultOverlayProps) {
   const [showExplain, setShowExplain] = useState(false);
 
+  /* Lock body scroll when overlay is open */
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-60 flex flex-col bg-white lg:hidden">
+    <div className="fixed inset-0 z-60 flex flex-col bg-white lg:hidden" style={{ overscrollBehavior: "contain" }}>
       {/* Header bar */}
       <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
         <h2 className="text-sm font-semibold">Result</h2>

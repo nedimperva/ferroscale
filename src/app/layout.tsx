@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import { PwaRegister } from "@/components/pwa-register";
 import "./globals.css";
@@ -39,14 +39,21 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased`}>
+    <html lang="en" className="overflow-x-hidden">
+      <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh`}>
         <PwaRegister />
         {children}
       </body>
