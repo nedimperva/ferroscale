@@ -52,3 +52,26 @@ button {
   outline: 3px solid #2563eb;
   outline-offset: 2px;
 }
+
+/* Result value transitions */
+.transition-result {
+  transition-property: opacity, transform;
+  transition-timing-function: ease-out;
+  transition-duration: 200ms;
+}
+
+/* Keep details open on lg with Tailwind open attribute workaround */
+@media (min-width: 1024px) {
+  details.lg\:open {
+    &:not([open]) {
+      /* auto-open on desktop via JS — this just ensures smooth transition */
+    }
+  }
+  details.lg\:open > summary {
+    list-style: none;
+    cursor: default;
+  }
+  details.lg\:open > summary::-webkit-details-marker {
+    display: none;
+  }
+}

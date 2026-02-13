@@ -1,0 +1,162 @@
+"use client";
+
+import { memo, useState } from "react";
+import type { HistoryEntry } from "@/hooks/useHistory";
+import type { CalculationInput } from "@/lib/calculator/types";
+
+interface HistoryPanelProps {
+  history: HistoryEntry[];
+  starred: HistoryEntry[];
+  onLoad: (input: CalculationInput) => void;
+  onToggleStar: (id: string) => void;
+  onRemoveStarred: (id: string) => void;
+  onClearHistory: () => void;
+}
+
+type Tab = "recent" | "saved";
+
+export const HistoryPanel = memo(function HistoryPanel({
+  history,
+  starred,
+  onLoad,
+  onToggleStar,
+  onRemoveStarred,
+  onClearHistory,
+}: HistoryPanelProps) {
+  const [tab, setTab] = useState<Tab>("recent");
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4">
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 border-b border-slate-100 pb-2">
+        <button
+          type="button"
+          onClick={() => setTab("recent")}
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+            tab === "recent"
+              ? "bg-slate-900 text-white"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          Recent ({history.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("saved")}
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+            tab === "saved"
+              ? "bg-slate-900 text-white"
+              : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          Saved ({starred.length})
+        </button>
+        {tab === "recent" && history.length > 0 && (
+          <button
+            type="button"
+            onClick={onClearHistory}
+            className="ml-auto text-xs text-slate-400 transition-colors hover:text-red-500"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Tab content */}
+      {tab === "recent" ? (
+        history.length === 0 ? (
+          <p className="mt-3 text-xs text-slate-400">
+            Results auto-save here as you calculate.
+          </p>
+        ) : (
+          <ul className="mt-2 grid gap-1.5">
+            {history.map((entry) => (
+              <HistoryItem
+                key={entry.id}
+                entry={entry}
+                onLoad={onLoad}
+                onStar={() => onToggleStar(entry.id)}
+                isStarred={starred.some((s) => s.id === entry.id)}
+              />
+            ))}
+          </ul>
+        )
+      ) : starred.length === 0 ? (
+        <p className="mt-3 text-xs text-slate-400">
+          Star a result to save it here permanently.
+        </p>
+      ) : (
+        <ul className="mt-2 grid gap-1.5">
+          {starred.map((entry) => (
+            <HistoryItem
+              key={entry.id}
+              entry={entry}
+              onLoad={onLoad}
+              onStar={() => onRemoveStarred(entry.id)}
+              isStarred={true}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+});
+
+/* ------------------------------------------------------------------ */
+/*  Single history row                                                */
+/* ------------------------------------------------------------------ */
+
+interface HistoryItemProps {
+  entry: HistoryEntry;
+  onLoad: (input: CalculationInput) => void;
+  onStar: () => void;
+  isStarred: boolean;
+}
+
+const HistoryItem = memo(function HistoryItem({
+  entry,
+  onLoad,
+  onStar,
+  isStarred,
+}: HistoryItemProps) {
+  return (
+    <li className="flex items-center gap-2 rounded-md border border-slate-100 px-2 py-1.5 transition-colors hover:bg-slate-50">
+      <button
+        type="button"
+        onClick={() => onLoad(entry.input)}
+        className="min-w-0 flex-1 text-left"
+      >
+        <p className="truncate text-xs font-medium">
+          {entry.result.profileLabel} — {entry.result.grandTotalAmount}{" "}
+          {entry.result.currency}
+        </p>
+        <p className="text-[10px] text-slate-400">
+          {entry.result.gradeLabel} · {new Date(entry.timestamp).toLocaleString()}
+        </p>
+      </button>
+      <button
+        type="button"
+        onClick={onStar}
+        className="shrink-0 rounded p-1 transition-colors hover:bg-slate-100"
+        aria-label={isStarred ? "Remove star" : "Star"}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          className={`h-4 w-4 transition-colors duration-200 ${
+            isStarred
+              ? "fill-amber-500 stroke-amber-500"
+              : "fill-none stroke-slate-300"
+          }`}
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.324l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.324L11.48 3.5z"
+          />
+        </svg>
+      </button>
+    </li>
+  );
+});
