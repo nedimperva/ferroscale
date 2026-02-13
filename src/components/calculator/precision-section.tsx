@@ -13,13 +13,15 @@ export const PrecisionSection = memo(function PrecisionSection({
   dispatch,
 }: PrecisionSectionProps) {
   return (
-    <section className="grid gap-3">
-      <h3 className="text-sm font-semibold text-slate-900">Precision</h3>
-      <div className="grid gap-3 grid-cols-3">
-        <div className="grid gap-1.5">
-          <label htmlFor="round-weight" className="text-xs font-medium text-slate-700">
-            Weight
-          </label>
+    <section className="grid gap-2">
+      <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {/* gear icon */}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Precision
+      </h3>
+      <div className="flex flex-wrap items-center gap-3">
+        <label htmlFor="round-weight" className="flex items-center gap-1.5 text-xs text-slate-600">
+          Wt
           <input
             id="round-weight"
             type="number"
@@ -32,13 +34,11 @@ export const PrecisionSection = memo(function PrecisionSection({
             onChange={(e) =>
               dispatch({ type: "SET_ROUNDING_WEIGHT", value: parseNumber(e.target.value) })
             }
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="h-8 w-12 rounded-md border border-slate-300 bg-white text-center text-sm"
           />
-        </div>
-        <div className="grid gap-1.5">
-          <label htmlFor="round-price" className="text-xs font-medium text-slate-700">
-            Price
-          </label>
+        </label>
+        <label htmlFor="round-price" className="flex items-center gap-1.5 text-xs text-slate-600">
+          Price
           <input
             id="round-price"
             type="number"
@@ -51,13 +51,11 @@ export const PrecisionSection = memo(function PrecisionSection({
             onChange={(e) =>
               dispatch({ type: "SET_ROUNDING_PRICE", value: parseNumber(e.target.value) })
             }
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="h-8 w-12 rounded-md border border-slate-300 bg-white text-center text-sm"
           />
-        </div>
-        <div className="grid gap-1.5">
-          <label htmlFor="round-dimension" className="text-xs font-medium text-slate-700">
-            Dimension
-          </label>
+        </label>
+        <label htmlFor="round-dimension" className="flex items-center gap-1.5 text-xs text-slate-600">
+          Dim
           <input
             id="round-dimension"
             type="number"
@@ -73,9 +71,9 @@ export const PrecisionSection = memo(function PrecisionSection({
                 value: parseNumber(e.target.value),
               })
             }
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="h-8 w-12 rounded-md border border-slate-300 bg-white text-center text-sm"
           />
-        </div>
+        </label>
       </div>
     </section>
   );

@@ -1,10 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCalculator } from "@/hooks/useCalculator";
 import { useHistory } from "@/hooks/useHistory";
 import { DATASET_VERSION } from "@/lib/datasets/version";
-import { ContactForm } from "@/components/contact-form";
 
 import { IssueList } from "@/components/calculator/issue-list";
 import { MaterialSection } from "@/components/calculator/material-section";
@@ -48,7 +48,7 @@ export function CalculatorApp() {
   /* Mobile overlay state */
   const [showOverlay, setShowOverlay] = useState(false);
 
-  /* Star helpers — we star the most recent history entry matching the current result */
+  /* Star helpers */
   const currentEntryId = history[0]?.id;
   const isCurrentStarred = currentEntryId
     ? starred.some((s) => s.id === currentEntryId)
@@ -69,97 +69,99 @@ export function CalculatorApp() {
   const [showMobileHistory, setShowMobileHistory] = useState(false);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-4 pb-24 md:px-6 lg:pb-6">
+    <div className="mx-auto max-w-7xl px-4 py-4 pb-24 md:px-6 lg:pb-6">
       {/* ---- Header ---- */}
-      <header className="mb-4 grid gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-          Metal Calculator
-        </h1>
-        <p className="text-sm text-slate-600">
-          Live weight &amp; price estimation for EN profiles.{" "}
-          <span className="text-xs text-slate-400">
-            Dataset {DATASET_VERSION}
-          </span>
-        </p>
+      <header className="mb-4 flex items-start justify-between gap-4">
+        <div className="grid gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+            Metal Calculator
+          </h1>
+          <p className="text-sm text-slate-600">
+            Live weight &amp; price estimation for EN profiles.{" "}
+            <span className="text-xs text-slate-400">
+              v{DATASET_VERSION}
+            </span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={resetForm}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          >
+            {/* rotate-ccw icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset
+          </button>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
+          >
+            {/* envelope icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Report
+          </Link>
+          {/* Mobile history toggle */}
+          <button
+            type="button"
+            onClick={() => setShowMobileHistory((p) => !p)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 lg:hidden"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+            History
+          </button>
+        </div>
       </header>
 
-      {/* ---- Disclaimer (compact) ---- */}
-      <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+      {/* ---- Disclaimer ---- */}
+      <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-amber-900">
         <strong>Estimate only</strong> — verify against project specs and supplier data.
       </div>
 
       {/* ---- Main grid ---- */}
-      <div className="grid gap-4 lg:grid-cols-[5fr_3fr]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
         {/* LEFT — inputs */}
-        <div className="grid gap-4 self-start rounded-lg border border-slate-200 bg-white p-4">
-          <IssueList issues={issues} />
+        <div className="grid gap-0 self-start rounded-lg border border-slate-200 bg-white">
+          <div className="p-4">
+            <IssueList issues={issues} />
+          </div>
 
-          <MaterialSection
-            input={input}
-            dispatch={dispatch}
-            activeFamily={activeFamily}
-            issues={issues}
-          />
+          <div className="p-4 pt-0">
+            <MaterialSection
+              input={input}
+              dispatch={dispatch}
+              activeFamily={activeFamily}
+              issues={issues}
+            />
+          </div>
+          <div className="h-px bg-slate-100" />
 
-          <ProfileSection
-            input={input}
-            dispatch={dispatch}
-            selectedProfile={selectedProfile}
-            issues={issues}
-          />
+          <div className="p-4">
+            <ProfileSection
+              input={input}
+              dispatch={dispatch}
+              selectedProfile={selectedProfile}
+              issues={issues}
+            />
+          </div>
+          <div className="h-px bg-slate-100" />
 
-          {/* Pricing in a collapsible on mobile */}
-          <details className="group lg:open" open>
-            <summary className="cursor-pointer text-sm font-semibold text-slate-900 lg:pointer-events-none lg:list-none">
-              Pricing
-              <span className="ml-1 text-xs text-slate-400 group-open:hidden">
-                ▸
-              </span>
-            </summary>
-            <div className="mt-3">
-              <PricingSection
-                input={input}
-                dispatch={dispatch}
-                issues={issues}
-              />
-            </div>
-          </details>
+          <div className="p-4">
+            <PricingSection
+              input={input}
+              dispatch={dispatch}
+              issues={issues}
+            />
+          </div>
+          <div className="h-px bg-slate-100" />
 
-          {/* Precision in a collapsible on mobile */}
-          <details className="group lg:open">
-            <summary className="cursor-pointer text-sm font-semibold text-slate-900 lg:pointer-events-none lg:list-none">
-              Precision
-              <span className="ml-1 text-xs text-slate-400 group-open:hidden">
-                ▸
-              </span>
-            </summary>
-            <div className="mt-3">
-              <PrecisionSection input={input} dispatch={dispatch} />
-            </div>
-          </details>
-
-          {/* Reset */}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={resetForm}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
-            >
-              Reset
-            </button>
-            {/* Mobile history toggle */}
-            <button
-              type="button"
-              onClick={() => setShowMobileHistory((p) => !p)}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 lg:hidden"
-            >
-              History
-            </button>
+          <div className="p-4">
+            <PrecisionSection input={input} dispatch={dispatch} />
           </div>
 
           {/* Mobile inline history (toggled) */}
           {showMobileHistory && (
-            <div className="lg:hidden">
+            <div className="border-t border-slate-100 p-4 lg:hidden">
               <HistoryPanel
                 history={history}
                 starred={starred}
@@ -211,17 +213,6 @@ export function CalculatorApp() {
           onClose={() => setShowOverlay(false)}
         />
       )}
-
-      {/* ---- Contact ---- */}
-      <section className="mt-6">
-        <ContactForm
-          context={
-            result
-              ? `${result.profileLabel} / ${result.gradeLabel} / total ${result.grandTotalAmount} ${result.currency}`
-              : undefined
-          }
-        />
-      </section>
     </div>
   );
 }

@@ -22,10 +22,14 @@ export const MaterialSection = memo(function MaterialSection({
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
 
   return (
-    <section className="grid gap-3">
-      <h3 className="text-sm font-semibold text-slate-900">Material</h3>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="grid gap-1.5">
+    <section className="grid gap-2">
+      <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {/* crosshair icon */}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
+        Material
+      </h3>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-1">
           <label htmlFor="family" className="text-xs font-medium text-slate-700">
             Family
           </label>
@@ -35,7 +39,7 @@ export const MaterialSection = memo(function MaterialSection({
             onChange={(e) =>
               dispatch({ type: "SET_FAMILY", familyId: e.target.value as MetalFamilyId })
             }
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="h-9 rounded-md border border-slate-300 bg-white px-2 text-sm"
           >
             {METAL_FAMILIES.map((f) => (
               <option key={f.id} value={f.id}>
@@ -44,7 +48,7 @@ export const MaterialSection = memo(function MaterialSection({
             ))}
           </select>
         </div>
-        <div className="grid gap-1.5">
+        <div className="grid gap-1">
           <label htmlFor="grade" className="text-xs font-medium text-slate-700">
             Grade
           </label>
@@ -52,7 +56,7 @@ export const MaterialSection = memo(function MaterialSection({
             id="grade"
             value={input.materialGradeId}
             onChange={(e) => dispatch({ type: "SET_GRADE", gradeId: e.target.value })}
-            className={`rounded-md border bg-white px-3 py-2 text-sm ${
+            className={`h-9 rounded-md border bg-white px-2 text-sm ${
               hasIssue("materialGradeId") ? "border-red-400" : "border-slate-300"
             }`}
           >
@@ -77,7 +81,7 @@ export const MaterialSection = memo(function MaterialSection({
       </label>
 
       {input.useCustomDensity && (
-        <div className="grid gap-1.5 sm:max-w-xs">
+        <div className="grid gap-1 sm:max-w-xs">
           <label htmlFor="custom-density" className="text-xs font-medium text-slate-700">
             Density (kg/m³)
           </label>
@@ -93,7 +97,7 @@ export const MaterialSection = memo(function MaterialSection({
             onChange={(e) =>
               dispatch({ type: "SET_CUSTOM_DENSITY", value: parseNumber(e.target.value) })
             }
-            className={`rounded-md border bg-white px-3 py-2 text-sm ${
+            className={`h-9 rounded-md border bg-white px-2 text-sm ${
               hasIssue("customDensityKgPerM3") ? "border-red-400" : "border-slate-300"
             }`}
           />
