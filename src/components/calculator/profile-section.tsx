@@ -306,7 +306,7 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Manual dimensions ── */}
       {selectedProfile.mode === "manual" && (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
           {selectedProfile.dimensions.map((dim) => (
             <DimensionInput
               key={dim.key}
@@ -324,12 +324,12 @@ export const ProfileSection = memo(function ProfileSection({
       )}
 
       {/* ── Length + Quantity ── */}
-      <div className="grid gap-2 sm:grid-cols-2">
-        <div className="grid gap-1">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-1 min-w-0">
           <label htmlFor="length" className="text-xs font-medium text-slate-600">
             Piece length
           </label>
-          <div className="flex gap-1">
+          <div className="flex gap-1 min-w-0">
             <input
               id="length"
               type="number"
@@ -341,7 +341,7 @@ export const ProfileSection = memo(function ProfileSection({
               onChange={(e) =>
                 dispatch({ type: "SET_LENGTH_VALUE", value: parseNumber(e.target.value) })
               }
-              className={`h-9 w-full rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
+              className={`h-9 min-w-0 flex-1 rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
                 hasIssue("length") ? "border-red-400" : "border-slate-300"
               }`}
             />
@@ -350,7 +350,7 @@ export const ProfileSection = memo(function ProfileSection({
               onChange={(e) =>
                 dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
               }
-              className="h-9 rounded-lg border border-slate-300 bg-white px-1 text-sm transition-colors focus:border-accent"
+              className="h-9 shrink-0 rounded-lg border border-slate-300 bg-white px-1 text-sm transition-colors focus:border-accent"
               aria-label="Length unit"
             >
               {LENGTH_UNITS.map((u) => (
@@ -361,7 +361,7 @@ export const ProfileSection = memo(function ProfileSection({
             </select>
           </div>
         </div>
-        <div className="grid gap-1">
+        <div className="grid gap-1 min-w-0">
           <label htmlFor="quantity" className="text-xs font-medium text-slate-600">
             Quantity
           </label>
@@ -376,7 +376,7 @@ export const ProfileSection = memo(function ProfileSection({
             onChange={(e) =>
               dispatch({ type: "SET_QUANTITY", value: parseNumber(e.target.value) })
             }
-            className={`h-9 rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
+            className={`h-9 w-full rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
               hasIssue("quantity") ? "border-red-400" : "border-slate-300"
             }`}
           />

@@ -20,10 +20,10 @@ export const DimensionInput = memo(function DimensionInput({
 }: DimensionInputProps) {
   return (
     <div className="grid gap-1">
-      <label className="text-xs font-medium text-slate-700" htmlFor={`dimension-${dimension.key}`}>
+      <label className="truncate text-xs font-medium text-slate-700" htmlFor={`dimension-${dimension.key}`}>
         {dimension.label}{" "}
         <span className="font-normal text-slate-400">
-          {dimension.minMm}–{dimension.maxMm} mm
+          {dimension.minMm}–{dimension.maxMm}
         </span>
       </label>
       <div className="flex gap-1">

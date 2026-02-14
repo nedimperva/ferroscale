@@ -75,15 +75,15 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
 
   const handleAdd = useCallback(
     (projectId: string, projectName: string) => {
-      const ok = onAddCalculation(projectId, currentInput, currentResult);
-      if (ok) {
-        setFeedback({ projectName });
-        setTimeout(() => {
-          closeAndReset();
-        }, 800);
-      }
+      onAddCalculation(projectId, currentInput, currentResult);
+      setFeedback({ projectName });
+      setTimeout(() => {
+        onClose();
+        setNewName("");
+        setFeedback(null);
+      }, 800);
     },
-    [onAddCalculation, currentInput, currentResult, closeAndReset],
+    [onAddCalculation, currentInput, currentResult, onClose],
   );
 
   const handleCreateAndAdd = useCallback(() => {
