@@ -3,6 +3,7 @@
 import { memo, useState } from "react";
 import type { HistoryEntry } from "@/hooks/useHistory";
 import type { CalculationInput } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 
 interface HistoryPanelProps {
   history: HistoryEntry[];
@@ -128,7 +129,7 @@ const HistoryItem = memo(function HistoryItem({
       >
         <p className="truncate text-xs font-medium">
           {entry.result.profileLabel} — {entry.result.grandTotalAmount}{" "}
-          {entry.result.currency}
+          {CURRENCY_SYMBOLS[entry.result.currency]}
         </p>
         <p className="text-[10px] text-slate-400">
           {entry.result.gradeLabel} · {new Date(entry.timestamp).toLocaleString()}

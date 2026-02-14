@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import type { CompareItem } from "@/hooks/useCompare";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 
 interface CompareCardProps {
   item: CompareItem;
@@ -66,7 +67,7 @@ export const CompareCard = memo(function CompareCard({
         <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground">
           {r.grandTotalAmount}
         </p>
-        <p className="text-xs font-medium text-muted">{r.currency}</p>
+        <p className="text-xs font-medium text-muted">{CURRENCY_SYMBOLS[r.currency]}</p>
         {costDiff && (
           <span
             className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -118,18 +119,18 @@ export const CompareCard = memo(function CompareCard({
       <div className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
         <div className="flex justify-between py-0.5">
           <span>Subtotal:</span>
-          <span className="text-slate-700">{r.subtotalAmount} {r.currency}</span>
+          <span className="text-slate-700">{r.subtotalAmount} {CURRENCY_SYMBOLS[r.currency]}</span>
         </div>
         {r.wasteAmount > 0 && (
           <div className="flex justify-between py-0.5">
             <span>Waste:</span>
-            <span className="text-slate-700">{r.wasteAmount} {r.currency}</span>
+            <span className="text-slate-700">{r.wasteAmount} {CURRENCY_SYMBOLS[r.currency]}</span>
           </div>
         )}
         {r.vatAmount > 0 && (
           <div className="flex justify-between py-0.5">
             <span>VAT:</span>
-            <span className="text-slate-700">{r.vatAmount} {r.currency}</span>
+            <span className="text-slate-700">{r.vatAmount} {CURRENCY_SYMBOLS[r.currency]}</span>
           </div>
         )}
       </div>

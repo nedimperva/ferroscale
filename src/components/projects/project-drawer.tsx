@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useState } from "react";
 import type { Project } from "@/hooks/useProjects";
 import { computeAggregates, exportProjectCsv } from "@/hooks/useProjects";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 /* ------------------------------------------------------------------ */
@@ -336,7 +337,7 @@ function ProjectList({
                       {agg.count > 0 && (
                         <div className="mt-1 flex gap-3 text-xs text-slate-500">
                           <span>{agg.totalWeightKg} kg</span>
-                          <span>{agg.totalCost} {agg.currency}</span>
+                          <span>{agg.totalCost} {CURRENCY_SYMBOLS[agg.currency]}</span>
                         </div>
                       )}
                     </>
@@ -485,7 +486,7 @@ function ProjectDetail({
           <div className="rounded-lg bg-white border border-slate-200 px-3 py-2">
             <p className="text-[10px] font-medium text-slate-500">Total Cost</p>
             <p className="text-lg font-bold text-slate-800">
-              {agg.totalCost} <span className="text-xs font-medium text-slate-400">{agg.currency}</span>
+              {agg.totalCost} <span className="text-xs font-medium text-slate-400">{CURRENCY_SYMBOLS[agg.currency]}</span>
             </p>
           </div>
         </div>
@@ -529,7 +530,7 @@ function ProjectDetail({
                   <p className="text-xs text-slate-500">{calc.result.gradeLabel}</p>
                   <div className="mt-1 flex gap-3 text-xs text-slate-500">
                     <span>{calc.result.totalWeightKg} kg</span>
-                    <span>{calc.result.grandTotalAmount} {calc.result.currency}</span>
+                    <span>{calc.result.grandTotalAmount} {CURRENCY_SYMBOLS[calc.result.currency]}</span>
                   </div>
                 </div>
                 <div className="flex shrink-0 gap-1">

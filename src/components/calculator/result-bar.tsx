@@ -2,6 +2,7 @@
 
 import { memo, useEffect } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { ReferenceList } from "./reference-list";
 
 interface ResultBarProps {
@@ -55,7 +56,7 @@ export const ResultBar = memo(function ResultBar({
           >
             {result.grandTotalAmount}
             <span className="ml-1 text-sm font-semibold text-muted">
-              {result.currency}
+              {CURRENCY_SYMBOLS[result.currency]}
             </span>
           </span>
           <span className="text-xs text-slate-500">
@@ -220,7 +221,7 @@ export const ResultOverlay = memo(function ResultOverlay({
           <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground">
             {result.grandTotalAmount}
           </p>
-          <p className="mt-0.5 text-sm font-medium text-muted">{result.currency}</p>
+          <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
         </div>
 
         <div className="px-4 py-4">
@@ -255,7 +256,7 @@ export const ResultOverlay = memo(function ResultOverlay({
             <div className="flex items-baseline justify-between py-2">
               <span className="text-slate-500">Unit Price:</span>
               <span className="font-medium text-right">
-                {result.unitPriceAmount} {result.currency}/{result.priceUnit ?? "kg"}
+                {result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}
               </span>
             </div>
           </div>
@@ -272,14 +273,14 @@ export const ResultOverlay = memo(function ResultOverlay({
               <div className="border-t border-slate-100 px-3 py-2.5 text-sm">
                 <div className="flex justify-between py-1">
                   <span className="text-slate-500">Subtotal:</span>
-                  <span>{result.subtotalAmount} {result.currency}</span>
+                  <span>{result.subtotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                 </div>
                 {result.wasteAmount > 0 && (
                   <div className="flex justify-between py-1">
                     <span className="text-slate-500">
                       Waste ({wastePercent}%):
                     </span>
-                    <span>{result.wasteAmount} {result.currency}</span>
+                    <span>{result.wasteAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                   </div>
                 )}
                 {includeVat && (
@@ -287,12 +288,12 @@ export const ResultOverlay = memo(function ResultOverlay({
                     <span className="text-slate-500">
                       VAT ({vatPercent}%):
                     </span>
-                    <span>{result.vatAmount} {result.currency}</span>
+                    <span>{result.vatAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                   </div>
                 )}
                 <div className="mt-1 flex justify-between border-t border-slate-200 pt-2 font-semibold">
                   <span>Total:</span>
-                  <span className="text-accent">{result.grandTotalAmount} {result.currency}</span>
+                  <span className="text-accent">{result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                 </div>
               </div>
             </details>

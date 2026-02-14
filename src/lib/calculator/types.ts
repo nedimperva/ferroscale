@@ -2,7 +2,16 @@ import type { DimensionKey, ProfileId } from "@/lib/datasets/types";
 
 export type LengthUnit = "mm" | "cm" | "m" | "in" | "ft";
 export type WeightUnit = "kg" | "lb";
-export type CurrencyCode = "EUR" | "USD" | "GBP" | "PLN";
+export type CurrencyCode = "EUR" | "USD" | "GBP" | "PLN" | "BAM";
+
+/** Display symbol for each currency code. */
+export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
+  EUR: "€",
+  USD: "$",
+  GBP: "£",
+  PLN: "zł",
+  BAM: "KM",
+};
 
 export type PriceBasis = "weight" | "length" | "piece";
 export type PriceUnit = "kg" | "lb" | "m" | "ft" | "piece";

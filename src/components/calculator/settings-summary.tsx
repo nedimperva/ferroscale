@@ -1,5 +1,6 @@
 import { memo } from "react";
 import type { CalculationInput } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { getMaterialGradeById } from "@/lib/datasets/materials";
 
 interface SettingsSummaryProps {
@@ -17,7 +18,7 @@ export const SettingsSummary = memo(function SettingsSummary({
     ? `${input.customDensityKgPerM3 ?? "?"} kg/m³`
     : null;
 
-  const priceTag = `${input.unitPrice} ${input.currency}/${input.priceUnit}`;
+  const priceTag = `${input.unitPrice} ${CURRENCY_SYMBOLS[input.currency]}/${input.priceUnit}`;
   const wasteTag = input.wastePercent > 0 ? `+${input.wastePercent}% waste` : null;
   const vatTag = input.includeVat ? `VAT ${input.vatPercent}%` : null;
 

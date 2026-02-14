@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -25,7 +25,7 @@ export interface Project {
 export interface ProjectAggregates {
   totalWeightKg: number;
   totalCost: number;
-  currency: string;
+  currency: CurrencyCode;
   count: number;
 }
 

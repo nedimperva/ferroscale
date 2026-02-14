@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import type { Project } from "@/hooks/useProjects";
 import { computeAggregates } from "@/hooks/useProjects";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -154,7 +155,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                   {currentResult.profileLabel} &middot; {currentResult.gradeLabel}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {currentResult.totalWeightKg} kg &middot; {currentResult.grandTotalAmount} {currentResult.currency}
+                  {currentResult.totalWeightKg} kg &middot; {currentResult.grandTotalAmount} {CURRENCY_SYMBOLS[currentResult.currency]}
                 </p>
               </div>
 

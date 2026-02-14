@@ -7,6 +7,7 @@ import type {
   BreakdownRow,
   PriceBasis,
 } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import {
   kilogramsToPounds,
   metersToFeet,
@@ -234,19 +235,19 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
       label: "Unit price",
       expression: price.expression,
       value: price.unitPriceAmount,
-      unit: input.currency,
+      unit: CURRENCY_SYMBOLS[input.currency],
     },
     {
       label: "Subtotal",
       expression: `${price.unitPriceAmount.toFixed(4)} * ${input.quantity}`,
       value: subtotalAmount,
-      unit: input.currency,
+      unit: CURRENCY_SYMBOLS[input.currency],
     },
     {
       label: "Waste adjustment",
       expression: `${subtotalAmount.toFixed(4)} * (${input.wastePercent}/100)`,
       value: wasteAmount,
-      unit: input.currency,
+      unit: CURRENCY_SYMBOLS[input.currency],
     },
   ];
 
@@ -255,7 +256,7 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
       label: "VAT",
       expression: `${subtotalWithWasteAmount.toFixed(4)} * (${input.vatPercent}/100)`,
       value: vatAmount,
-      unit: input.currency,
+      unit: CURRENCY_SYMBOLS[input.currency],
     });
   }
 
@@ -301,7 +302,7 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
         ...row,
         value: roundTo(
           row.value,
-          row.unit === input.currency ? input.rounding.priceDecimals : input.rounding.dimensionDecimals,
+          row.unit === CURRENCY_SYMBOLS[input.currency] ? input.rounding.priceDecimals : input.rounding.dimensionDecimals,
         ),
       })),
     },

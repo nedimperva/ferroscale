@@ -5,10 +5,11 @@ import type {
   PriceUnit,
   ValidationIssue,
 } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { parseNumber } from "@/hooks/useCalculator";
 
-const CURRENCIES: CalculationInput["currency"][] = ["EUR", "USD", "GBP", "PLN"];
+const CURRENCIES: CalculationInput["currency"][] = ["EUR", "USD", "GBP", "PLN", "BAM"];
 const WEIGHT_UNITS: PriceUnit[] = ["kg", "lb"];
 const LENGTH_PRICE_UNITS: PriceUnit[] = ["m", "ft"];
 
@@ -42,7 +43,7 @@ export const PricingSection = memo(function PricingSection({
 
       {/* Live preview */}
       <div className="rounded-lg bg-orange-50/60 px-3 py-2 text-xs text-slate-600">
-        <span className="font-medium text-accent">{input.unitPrice} {input.currency}/{input.priceUnit}</span>
+        <span className="font-medium text-accent">{input.unitPrice} {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}</span>
         {input.wastePercent > 0 && (
           <><span className="mx-1.5 text-slate-300">·</span><span>+{input.wastePercent}% waste</span></>
         )}
@@ -132,7 +133,7 @@ export const PricingSection = memo(function PricingSection({
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {CURRENCY_SYMBOLS[c]} {c}
               </option>
             ))}
           </select>

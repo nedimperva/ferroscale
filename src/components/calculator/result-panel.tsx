@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { ReferenceList } from "./reference-list";
 
 interface ResultPanelProps {
@@ -65,7 +66,7 @@ export const ResultPanel = memo(function ResultPanel({
         <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground transition-all duration-300">
           {result.grandTotalAmount}
         </p>
-        <p className="mt-0.5 text-sm font-medium text-muted">{result.currency}</p>
+        <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
       </div>
 
       {/* ── Weight cards ── */}
@@ -99,7 +100,7 @@ export const ResultPanel = memo(function ResultPanel({
         <div className="flex items-baseline justify-between py-2">
           <span className="text-slate-500">Unit Price:</span>
           <span className="font-medium text-right">
-            {result.unitPriceAmount} {result.currency}/{result.priceUnit ?? "kg"}
+            {result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}
           </span>
         </div>
       </div>
@@ -116,14 +117,14 @@ export const ResultPanel = memo(function ResultPanel({
           <div className="border-t border-slate-100 px-3 py-2.5 text-sm">
             <div className="flex justify-between py-1">
               <span className="text-slate-500">Subtotal:</span>
-              <span>{result.subtotalAmount} {result.currency}</span>
+              <span>{result.subtotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
             </div>
             {result.wasteAmount > 0 && (
               <div className="flex justify-between py-1">
                 <span className="text-slate-500">
                   Waste ({wastePercent}%):
                 </span>
-                <span>{result.wasteAmount} {result.currency}</span>
+                <span>{result.wasteAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
               </div>
             )}
             {includeVat && (
@@ -131,12 +132,12 @@ export const ResultPanel = memo(function ResultPanel({
                 <span className="text-slate-500">
                   VAT ({vatPercent}%):
                 </span>
-                <span>{result.vatAmount} {result.currency}</span>
+                <span>{result.vatAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
               </div>
             )}
             <div className="mt-1 flex justify-between border-t border-slate-200 pt-2 font-semibold">
               <span>Total:</span>
-              <span className="text-accent">{result.grandTotalAmount} {result.currency}</span>
+              <span className="text-accent">{result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
             </div>
           </div>
         </details>
