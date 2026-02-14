@@ -106,7 +106,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/30 transition-opacity"
+        className="fixed inset-0 z-50 bg-overlay transition-opacity"
         onClick={closeAndReset}
         aria-hidden="true"
       />
@@ -114,12 +114,12 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeAndReset}>
         <div
-          className="w-full max-w-sm rounded-xl border border-slate-200 bg-white shadow-xl"
+          className="w-full max-w-sm rounded-xl border border-border bg-surface shadow-xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
               </svg>
@@ -128,7 +128,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
             <button
               type="button"
               onClick={closeAndReset}
-              className="rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+              className="rounded-md p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
               aria-label="Close"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -140,7 +140,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
 
           {/* Feedback banner */}
           {feedback && (
-            <div className="border-b border-green-100 bg-green-50 px-4 py-2.5 text-center text-sm font-medium text-green-700">
+            <div className="border-b border-green-border bg-green-surface px-4 py-2.5 text-center text-sm font-medium text-green-text">
               Added to &ldquo;{feedback.projectName}&rdquo;
             </div>
           )}
@@ -149,12 +149,12 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
           {!feedback && (
             <div className="max-h-[60vh] overflow-y-auto p-4">
               {/* Current calculation preview */}
-              <div className="mb-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-                <p className="text-xs text-slate-500">Adding:</p>
-                <p className="mt-0.5 text-sm font-medium text-slate-800">
+              <div className="mb-3 rounded-lg border border-border-faint bg-surface-raised px-3 py-2">
+                <p className="text-xs text-muted">Adding:</p>
+                <p className="mt-0.5 text-sm font-medium text-foreground">
                   {currentResult.profileLabel} &middot; {currentResult.gradeLabel}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted">
                   {currentResult.totalWeightKg} kg &middot; {currentResult.grandTotalAmount} {CURRENCY_SYMBOLS[currentResult.currency]}
                 </p>
               </div>
@@ -162,7 +162,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
               {/* Existing projects — click to add */}
               {projects.length > 0 && (
                 <div className="mb-3 grid gap-1.5">
-                  <span className="text-xs font-medium text-slate-500">Choose a project</span>
+                  <span className="text-xs font-medium text-muted">Choose a project</span>
                   {projects.map((project) => {
                     const agg = computeAggregates(project);
                     return (
@@ -170,16 +170,16 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                         key={project.id}
                         type="button"
                         onClick={() => handleAdd(project.id, project.name)}
-                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left transition-colors hover:border-purple-300 hover:bg-purple-50"
+                        className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2.5 text-left transition-colors hover:border-purple-300 hover:bg-purple-surface"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-800">{project.name}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="truncate text-sm font-medium text-foreground">{project.name}</p>
+                          <p className="text-xs text-muted-faint">
                             {agg.count} item{agg.count !== 1 ? "s" : ""}
                             {agg.count > 0 && <> &middot; {agg.totalWeightKg} kg</>}
                           </p>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-slate-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-border-strong">
                           <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                         </svg>
                       </button>
@@ -190,7 +190,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
 
               {/* Create new project + add */}
               <div className="grid gap-1.5">
-                <span className="text-xs font-medium text-slate-500">
+                <span className="text-xs font-medium text-muted">
                   {projects.length > 0 ? "Or create a new project" : "Create a project"}
                 </span>
                 <div className="flex gap-2">
@@ -203,14 +203,14 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleCreateAndAdd();
                     }}
-                    className="h-9 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm transition-colors focus:border-purple-500 focus:outline-none"
+                    className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-500 focus:outline-none"
                     maxLength={60}
                   />
                   <button
                     type="button"
                     onClick={handleCreateAndAdd}
                     disabled={!newName.trim()}
-                    className="shrink-0 rounded-lg bg-purple-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                    className="shrink-0 rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
                   >
                     Create & Add
                   </button>
@@ -221,11 +221,11 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
 
           {/* Footer */}
           {!feedback && projects.length > 0 && (
-            <div className="border-t border-slate-100 px-4 py-2.5">
+            <div className="border-t border-border-faint px-4 py-2.5">
               <button
                 type="button"
                 onClick={handleManageProjects}
-                className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
+                className="text-xs font-medium text-muted transition-colors hover:text-foreground-secondary"
               >
                 Manage projects...
               </button>

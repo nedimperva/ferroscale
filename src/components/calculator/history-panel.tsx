@@ -27,16 +27,16 @@ export const HistoryPanel = memo(function HistoryPanel({
   const [tab, setTab] = useState<Tab>("recent");
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
+    <section className="rounded-lg border border-border bg-surface p-4">
       {/* Tab bar */}
-      <div className="flex items-center gap-1 border-b border-slate-100 pb-2">
+      <div className="flex items-center gap-1 border-b border-border-faint pb-2">
         <button
           type="button"
           onClick={() => setTab("recent")}
           className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
             tab === "recent"
-              ? "bg-slate-900 text-white"
-              : "text-slate-600 hover:bg-slate-100"
+              ? "bg-surface-inverted text-surface"
+              : "text-foreground-secondary hover:bg-surface-inset"
           }`}
         >
           Recent ({history.length})
@@ -46,8 +46,8 @@ export const HistoryPanel = memo(function HistoryPanel({
           onClick={() => setTab("saved")}
           className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
             tab === "saved"
-              ? "bg-slate-900 text-white"
-              : "text-slate-600 hover:bg-slate-100"
+              ? "bg-surface-inverted text-surface"
+              : "text-foreground-secondary hover:bg-surface-inset"
           }`}
         >
           Saved ({starred.length})
@@ -56,7 +56,7 @@ export const HistoryPanel = memo(function HistoryPanel({
           <button
             type="button"
             onClick={onClearHistory}
-            className="ml-auto text-xs text-slate-400 transition-colors hover:text-red-500"
+            className="ml-auto text-xs text-muted-faint transition-colors hover:text-red-interactive"
           >
             Clear
           </button>
@@ -66,7 +66,7 @@ export const HistoryPanel = memo(function HistoryPanel({
       {/* Tab content */}
       {tab === "recent" ? (
         history.length === 0 ? (
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-muted-faint">
             Results auto-save here as you calculate.
           </p>
         ) : (
@@ -83,7 +83,7 @@ export const HistoryPanel = memo(function HistoryPanel({
           </ul>
         )
       ) : starred.length === 0 ? (
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-muted-faint">
           Star a result to save it here permanently.
         </p>
       ) : (
@@ -121,7 +121,7 @@ const HistoryItem = memo(function HistoryItem({
   isStarred,
 }: HistoryItemProps) {
   return (
-    <li className="flex items-center gap-2 rounded-md border border-slate-100 px-2 py-1.5 transition-colors hover:bg-slate-50">
+    <li className="flex items-center gap-2 rounded-md border border-border-faint px-2 py-1.5 transition-colors hover:bg-surface-raised">
       <button
         type="button"
         onClick={() => onLoad(entry.input)}
@@ -131,14 +131,14 @@ const HistoryItem = memo(function HistoryItem({
           {entry.result.profileLabel} — {entry.result.grandTotalAmount}{" "}
           {CURRENCY_SYMBOLS[entry.result.currency]}
         </p>
-        <p className="text-[10px] text-slate-400">
+        <p className="text-[10px] text-muted-faint">
           {entry.result.gradeLabel} · {new Date(entry.timestamp).toLocaleString()}
         </p>
       </button>
       <button
         type="button"
         onClick={onStar}
-        className="shrink-0 rounded p-1 transition-colors hover:bg-slate-100"
+        className="shrink-0 rounded p-1 transition-colors hover:bg-surface-inset"
         aria-label={isStarred ? "Remove star" : "Star"}
       >
         <svg
@@ -147,7 +147,7 @@ const HistoryItem = memo(function HistoryItem({
           className={`h-4 w-4 transition-colors duration-200 ${
             isStarred
               ? "fill-accent stroke-accent"
-              : "fill-none stroke-slate-300"
+              : "fill-none stroke-border-strong"
           }`}
           strokeWidth={2}
         >

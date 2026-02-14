@@ -38,13 +38,13 @@ export const ResultPanel = memo(function ResultPanel({
 }: ResultPanelProps) {
   if (!result) {
     return (
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="text-sm font-semibold text-slate-400">Result</h2>
+      <section className="rounded-xl border border-border bg-surface p-5">
+        <h2 className="text-sm font-semibold text-muted-faint">Result</h2>
         <div className="mt-6 flex flex-col items-center gap-2 py-4 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-slate-200">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-border">
             <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
           </svg>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-faint">
             Enter dimensions to see live results.
           </p>
         </div>
@@ -54,12 +54,12 @@ export const ResultPanel = memo(function ResultPanel({
 
   return (
     <section
-      className={`rounded-xl border bg-white transition-opacity duration-200 ${
-        isPending ? "border-slate-200 opacity-60" : "border-slate-200"
+      className={`rounded-xl border bg-surface transition-opacity duration-200 ${
+        isPending ? "border-border opacity-60" : "border-border"
       }`}
     >
       {/* ── Hero: Total Cost ── */}
-      <div className="rounded-t-xl border-b border-orange-100 bg-linear-to-b from-orange-50 to-white px-5 py-5 text-center">
+      <div className="rounded-t-xl border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-5 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
           Total Cost
         </p>
@@ -71,15 +71,15 @@ export const ResultPanel = memo(function ResultPanel({
 
       {/* ── Weight cards ── */}
       <div className="grid grid-cols-2 gap-3 px-5 pt-4">
-        <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-          <p className="text-[11px] font-medium text-slate-500">Unit Weight</p>
+        <div className="rounded-lg bg-surface-raised px-3 py-2.5">
+          <p className="text-[11px] font-medium text-muted">Unit Weight</p>
           <p className="mt-0.5 text-lg font-bold tracking-tight transition-all duration-300">
             {result.unitWeightKg}{" "}
             <span className="text-sm font-medium text-muted">kg</span>
           </p>
         </div>
-        <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-          <p className="text-[11px] font-medium text-slate-500">Total Weight</p>
+        <div className="rounded-lg bg-surface-raised px-3 py-2.5">
+          <p className="text-[11px] font-medium text-muted">Total Weight</p>
           <p className="mt-0.5 text-lg font-bold tracking-tight transition-all duration-300">
             {result.totalWeightKg}{" "}
             <span className="text-sm font-medium text-muted">kg</span>
@@ -89,16 +89,16 @@ export const ResultPanel = memo(function ResultPanel({
 
       {/* ── Detail rows ── */}
       <div className="mt-4 space-y-0 px-5 text-sm">
-        <div className="flex items-baseline justify-between border-b border-slate-100 py-2">
-          <span className="text-slate-500">Profile:</span>
+        <div className="flex items-baseline justify-between border-b border-border-faint py-2">
+          <span className="text-muted">Profile:</span>
           <span className="font-medium text-right">{result.profileLabel}</span>
         </div>
-        <div className="flex items-baseline justify-between border-b border-slate-100 py-2">
-          <span className="text-slate-500">Material:</span>
+        <div className="flex items-baseline justify-between border-b border-border-faint py-2">
+          <span className="text-muted">Material:</span>
           <span className="font-medium text-right">{result.gradeLabel}</span>
         </div>
         <div className="flex items-baseline justify-between py-2">
-          <span className="text-slate-500">Unit Price:</span>
+          <span className="text-muted">Unit Price:</span>
           <span className="font-medium text-right">
             {result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}
           </span>
@@ -107,21 +107,21 @@ export const ResultPanel = memo(function ResultPanel({
 
       {/* ── Cost Breakdown (collapsible) ── */}
       <div className="mt-1 px-5">
-        <details className="group rounded-lg border border-slate-100">
-          <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 select-none">
+        <details className="group rounded-lg border border-border-faint">
+          <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-foreground-secondary select-none">
             Cost Breakdown
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-faint transition-transform group-open:rotate-180">
               <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
             </svg>
           </summary>
-          <div className="border-t border-slate-100 px-3 py-2.5 text-sm">
+          <div className="border-t border-border-faint px-3 py-2.5 text-sm">
             <div className="flex justify-between py-1">
-              <span className="text-slate-500">Subtotal:</span>
+              <span className="text-muted">Subtotal:</span>
               <span>{result.subtotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
             </div>
             {result.wasteAmount > 0 && (
               <div className="flex justify-between py-1">
-                <span className="text-slate-500">
+                <span className="text-muted">
                   Waste ({wastePercent}%):
                 </span>
                 <span>{result.wasteAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
@@ -129,13 +129,13 @@ export const ResultPanel = memo(function ResultPanel({
             )}
             {includeVat && (
               <div className="flex justify-between py-1">
-                <span className="text-slate-500">
+                <span className="text-muted">
                   VAT ({vatPercent}%):
                 </span>
                 <span>{result.vatAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
               </div>
             )}
-            <div className="mt-1 flex justify-between border-t border-slate-200 pt-2 font-semibold">
+            <div className="mt-1 flex justify-between border-t border-border pt-2 font-semibold">
               <span>Total:</span>
               <span className="text-accent">{result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
             </div>
@@ -150,8 +150,8 @@ export const ResultPanel = memo(function ResultPanel({
           onClick={onStar}
           className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
             isStarred
-              ? "border-orange-200 bg-orange-50 text-accent"
-              : "border-slate-200 text-slate-700 hover:bg-slate-50"
+              ? "border-accent-border bg-accent-surface text-accent"
+              : "border-border text-foreground-secondary hover:bg-surface-raised"
           }`}
         >
           <svg
@@ -172,10 +172,10 @@ export const ResultPanel = memo(function ResultPanel({
           disabled={!canCompare && !isInCompare}
           className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
             isInCompare
-              ? "border-blue-200 bg-blue-50 text-blue-700"
+              ? "border-blue-border bg-blue-surface text-blue-text"
               : canCompare
-                ? "border-slate-200 text-slate-700 hover:bg-slate-50"
-                : "cursor-not-allowed border-slate-100 text-slate-300"
+                ? "border-border text-foreground-secondary hover:bg-surface-raised"
+                : "cursor-not-allowed border-border-faint text-muted-faint"
           }`}
           title={isInCompare ? "Already in compare" : canCompare ? "Add to compare" : "Compare full (3/3)"}
         >
@@ -190,8 +190,8 @@ export const ResultPanel = memo(function ResultPanel({
           onClick={onAddToProject}
           className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
             hasProjects
-              ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
-              : "border-slate-200 text-slate-700 hover:bg-slate-50"
+              ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+              : "border-border text-foreground-secondary hover:bg-surface-raised"
           }`}
           title="Add to project"
         >
@@ -203,17 +203,17 @@ export const ResultPanel = memo(function ResultPanel({
       </div>
 
       {/* ── Full calculation steps (inline collapsible) ── */}
-      <details className="border-t border-slate-100 px-5 py-3">
-        <summary className="cursor-pointer text-xs font-medium text-slate-500 select-none">
+      <details className="border-t border-border-faint px-5 py-3">
+        <summary className="cursor-pointer text-xs font-medium text-muted select-none">
           Full calculation steps
         </summary>
         <div className="mt-2 overflow-x-auto">
-          <p className="mb-2 text-xs text-slate-500">
+          <p className="mb-2 text-xs text-muted">
             Formula: {result.formulaLabel}
           </p>
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="text-slate-500">
+              <tr className="text-muted">
                 <th className="py-1">Step</th>
                 <th className="py-1">Expression</th>
                 <th className="py-1">Value</th>
@@ -235,7 +235,7 @@ export const ResultPanel = memo(function ResultPanel({
       {/* ── References ── */}
       <ReferenceList
         labels={result.referenceLabels}
-        className="border-t border-slate-100 px-5 py-3 text-xs text-slate-400"
+        className="border-t border-border-faint px-5 py-3 text-xs text-muted-faint"
       />
     </section>
   );

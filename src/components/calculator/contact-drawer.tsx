@@ -36,7 +36,7 @@ export const ContactDrawer = memo(function ContactDrawer({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-overlay transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -46,13 +46,13 @@ export const ContactDrawer = memo(function ContactDrawer({
       {/* Drawer panel */}
       <aside
         aria-label="Report drawer"
-        className={`fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[90vw] flex-col bg-slate-50 shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[90vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             {/* envelope icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -72,7 +72,7 @@ export const ContactDrawer = memo(function ContactDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+            className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
             aria-label="Close report"
           >
             <svg
@@ -93,7 +93,7 @@ export const ContactDrawer = memo(function ContactDrawer({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="mb-3 text-xs text-slate-500">
+          <p className="mb-3 text-xs text-muted">
             Found an issue with a calculation or data? Send us a report below.
           </p>
           <ContactForm compact />

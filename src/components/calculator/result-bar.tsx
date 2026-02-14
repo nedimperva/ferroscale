@@ -38,7 +38,7 @@ export const ResultBar = memo(function ResultBar({
   if (!result) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 backdrop-blur-sm xl:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface/95 backdrop-blur-sm xl:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div className="mx-auto flex max-w-xl items-center gap-3 px-4 py-2.5">
         {/* Tappable main area */}
         <button
@@ -46,7 +46,7 @@ export const ResultBar = memo(function ResultBar({
           onClick={onExpand}
           className="flex min-w-0 flex-1 flex-col text-left"
         >
-          <span className="truncate text-xs text-slate-500">
+          <span className="truncate text-xs text-muted">
             {result.profileLabel} · {result.gradeLabel}
           </span>
           <span
@@ -59,7 +59,7 @@ export const ResultBar = memo(function ResultBar({
               {CURRENCY_SYMBOLS[result.currency]}
             </span>
           </span>
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-muted">
             {result.totalWeightKg} kg · Tap for details
           </span>
         </button>
@@ -73,7 +73,7 @@ export const ResultBar = memo(function ResultBar({
               onCompare?.();
             }}
             className={`shrink-0 rounded-full p-2 transition-colors ${
-              isInCompare ? "bg-blue-50" : "hover:bg-slate-100"
+              isInCompare ? "bg-blue-surface" : "hover:bg-surface-inset"
             }`}
             aria-label={isInCompare ? "Already in compare" : "Add to compare"}
           >
@@ -85,7 +85,7 @@ export const ResultBar = memo(function ResultBar({
               strokeLinecap="round"
               strokeLinejoin="round"
               className={`h-6 w-6 transition-colors duration-200 ${
-                isInCompare ? "stroke-blue-600" : "stroke-slate-400"
+                isInCompare ? "stroke-blue-600" : "stroke-muted-faint"
               }`}
             >
               <rect x="3" y="3" width="7" height="18" rx="1" />
@@ -102,7 +102,7 @@ export const ResultBar = memo(function ResultBar({
             onAddToProject?.();
           }}
           className={`shrink-0 rounded-full p-2 transition-colors ${
-            hasProjects ? "bg-purple-50" : "hover:bg-slate-100"
+            hasProjects ? "bg-purple-surface" : "hover:bg-surface-inset"
           }`}
           aria-label="Add to project"
         >
@@ -114,7 +114,7 @@ export const ResultBar = memo(function ResultBar({
             strokeLinecap="round"
             strokeLinejoin="round"
             className={`h-6 w-6 transition-colors duration-200 ${
-              hasProjects ? "stroke-purple-600" : "stroke-slate-400"
+              hasProjects ? "stroke-purple-600" : "stroke-muted-faint"
             }`}
           >
             <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
@@ -129,7 +129,7 @@ export const ResultBar = memo(function ResultBar({
             onStar();
           }}
           className={`shrink-0 rounded-full p-2 transition-colors ${
-            isStarred ? "bg-orange-50" : "hover:bg-slate-100"
+            isStarred ? "bg-accent-surface" : "hover:bg-surface-inset"
           }`}
           aria-label={isStarred ? "Remove from saved" : "Save calculation"}
         >
@@ -139,7 +139,7 @@ export const ResultBar = memo(function ResultBar({
             className={`h-6 w-6 transition-colors duration-200 ${
               isStarred
                 ? "fill-accent stroke-accent"
-                : "fill-none stroke-slate-400"
+                : "fill-none stroke-muted-faint"
             }`}
             strokeWidth={2}
           >
@@ -195,14 +195,14 @@ export const ResultOverlay = memo(function ResultOverlay({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-60 flex flex-col bg-white xl:hidden" style={{ overscrollBehavior: "contain" }}>
+    <div className="fixed inset-0 z-60 flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain" }}>
       {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold">Result</h2>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"
+          className="rounded-md p-1.5 text-muted hover:bg-surface-inset"
           aria-label="Close details"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
@@ -214,7 +214,7 @@ export const ResultOverlay = memo(function ResultOverlay({
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto">
         {/* ── Hero: Total Cost ── */}
-        <div className="border-b border-orange-100 bg-linear-to-b from-orange-50 to-white px-5 py-5 text-center">
+        <div className="border-b border-orange-100 bg-linear-to-b from-accent-surface to-surface px-5 py-5 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
             Total Cost
           </p>
@@ -227,15 +227,15 @@ export const ResultOverlay = memo(function ResultOverlay({
         <div className="px-4 py-4">
           {/* ── Weight cards ── */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-              <p className="text-[11px] font-medium text-slate-500">Unit Weight</p>
+            <div className="rounded-lg bg-surface-raised px-3 py-2.5">
+              <p className="text-[11px] font-medium text-muted">Unit Weight</p>
               <p className="mt-0.5 text-lg font-bold tracking-tight">
                 {result.unitWeightKg}{" "}
                 <span className="text-sm font-medium text-muted">kg</span>
               </p>
             </div>
-            <div className="rounded-lg bg-slate-50 px-3 py-2.5">
-              <p className="text-[11px] font-medium text-slate-500">Total Weight</p>
+            <div className="rounded-lg bg-surface-raised px-3 py-2.5">
+              <p className="text-[11px] font-medium text-muted">Total Weight</p>
               <p className="mt-0.5 text-lg font-bold tracking-tight">
                 {result.totalWeightKg}{" "}
                 <span className="text-sm font-medium text-muted">kg</span>
@@ -245,16 +245,16 @@ export const ResultOverlay = memo(function ResultOverlay({
 
           {/* ── Detail rows ── */}
           <div className="mt-4 space-y-0 text-sm">
-            <div className="flex items-baseline justify-between border-b border-slate-100 py-2">
-              <span className="text-slate-500">Profile:</span>
+            <div className="flex items-baseline justify-between border-b border-border-faint py-2">
+              <span className="text-muted">Profile:</span>
               <span className="font-medium text-right">{result.profileLabel}</span>
             </div>
-            <div className="flex items-baseline justify-between border-b border-slate-100 py-2">
-              <span className="text-slate-500">Material:</span>
+            <div className="flex items-baseline justify-between border-b border-border-faint py-2">
+              <span className="text-muted">Material:</span>
               <span className="font-medium text-right">{result.gradeLabel}</span>
             </div>
             <div className="flex items-baseline justify-between py-2">
-              <span className="text-slate-500">Unit Price:</span>
+              <span className="text-muted">Unit Price:</span>
               <span className="font-medium text-right">
                 {result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}
               </span>
@@ -263,21 +263,21 @@ export const ResultOverlay = memo(function ResultOverlay({
 
           {/* ── Cost Breakdown ── */}
           <div className="mt-3">
-            <details className="group rounded-lg border border-slate-100" open>
-              <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-slate-700 select-none">
+            <details className="group rounded-lg border border-border-faint" open>
+              <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-foreground-secondary select-none">
                 Cost Breakdown
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-faint transition-transform group-open:rotate-180">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </summary>
-              <div className="border-t border-slate-100 px-3 py-2.5 text-sm">
+              <div className="border-t border-border-faint px-3 py-2.5 text-sm">
                 <div className="flex justify-between py-1">
-                  <span className="text-slate-500">Subtotal:</span>
+                  <span className="text-muted">Subtotal:</span>
                   <span>{result.subtotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                 </div>
                 {result.wasteAmount > 0 && (
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-500">
+                    <span className="text-muted">
                       Waste ({wastePercent}%):
                     </span>
                     <span>{result.wasteAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
@@ -285,13 +285,13 @@ export const ResultOverlay = memo(function ResultOverlay({
                 )}
                 {includeVat && (
                   <div className="flex justify-between py-1">
-                    <span className="text-slate-500">
+                    <span className="text-muted">
                       VAT ({vatPercent}%):
                     </span>
                     <span>{result.vatAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                   </div>
                 )}
-                <div className="mt-1 flex justify-between border-t border-slate-200 pt-2 font-semibold">
+                <div className="mt-1 flex justify-between border-t border-border pt-2 font-semibold">
                   <span>Total:</span>
                   <span className="text-accent">{result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                 </div>
@@ -306,8 +306,8 @@ export const ResultOverlay = memo(function ResultOverlay({
               onClick={onStar}
               className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
                 isStarred
-                  ? "border-orange-200 bg-orange-50 text-accent"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "border-accent-border bg-accent-surface text-accent"
+                  : "border-border text-foreground-secondary hover:bg-surface-raised"
               }`}
             >
               <svg
@@ -328,10 +328,10 @@ export const ResultOverlay = memo(function ResultOverlay({
               disabled={!canCompare && !isInCompare}
               className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
                 isInCompare
-                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  ? "border-blue-border bg-blue-surface text-blue-text"
                   : canCompare
-                    ? "border-slate-200 text-slate-700 hover:bg-slate-50"
-                    : "cursor-not-allowed border-slate-100 text-slate-300"
+                    ? "border-border text-foreground-secondary hover:bg-surface-raised"
+                    : "cursor-not-allowed border-border-faint text-slate-300"
               }`}
               title={isInCompare ? "Already in compare" : canCompare ? "Add to compare" : "Compare full (3/3)"}
             >
@@ -346,8 +346,8 @@ export const ResultOverlay = memo(function ResultOverlay({
               onClick={onAddToProject}
               className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
                 hasProjects
-                  ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
-                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+                  ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-100"
+                  : "border-border text-foreground-secondary hover:bg-surface-raised"
               }`}
               title="Add to project"
             >
@@ -359,17 +359,17 @@ export const ResultOverlay = memo(function ResultOverlay({
           </div>
 
           {/* ── Full calculation steps (inline collapsible) ── */}
-          <details className="mt-4 border-t border-slate-100 pt-3">
-            <summary className="cursor-pointer text-xs font-medium text-slate-500 select-none">
+          <details className="mt-4 border-t border-border-faint pt-3">
+            <summary className="cursor-pointer text-xs font-medium text-muted select-none">
               Full calculation steps
             </summary>
             <div className="mt-2 overflow-x-auto">
-              <p className="mb-2 text-xs text-slate-500">
+              <p className="mb-2 text-xs text-muted">
                 Formula: {result.formulaLabel}
               </p>
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="text-slate-500">
+                  <tr className="text-muted">
                     <th className="py-1">Step</th>
                     <th className="py-1">Expression</th>
                     <th className="py-1">Value</th>
@@ -391,7 +391,7 @@ export const ResultOverlay = memo(function ResultOverlay({
           {/* ── References ── */}
           <ReferenceList
             labels={result.referenceLabels}
-            className="mt-3 text-xs text-slate-400"
+            className="mt-3 text-xs text-muted-faint"
           />
         </div>
       </div>

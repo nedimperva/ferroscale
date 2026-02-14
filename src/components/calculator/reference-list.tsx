@@ -78,7 +78,7 @@ export const ReferenceList = memo(function ReferenceList({
 }: ReferenceListProps) {
   return (
     <div className={className}>
-      <p className="font-medium text-slate-500">References</p>
+      <p className="font-medium text-muted">References</p>
       <ul className="mt-1 list-disc pl-4">
         {labels.map((label) => {
           const url = getUrl(label);
@@ -89,7 +89,7 @@ export const ReferenceList = memo(function ReferenceList({
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-slate-500 underline decoration-slate-300 underline-offset-2 transition-colors hover:text-accent hover:decoration-accent"
+                  className="inline-flex items-center gap-1 text-muted underline decoration-border-strong underline-offset-2 transition-colors hover:text-accent hover:decoration-accent"
                 >
                   {label}
                   {/* external-link icon */}

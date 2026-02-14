@@ -88,7 +88,7 @@ export const CompareDrawer = memo(function CompareDrawer({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-overlay transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -98,13 +98,13 @@ export const CompareDrawer = memo(function CompareDrawer({
       {/* Drawer panel — wider than other drawers to fit comparison cards */}
       <aside
         aria-label="Compare drawer"
-        className={`fixed inset-y-0 right-0 z-50 flex w-[480px] max-w-[95vw] flex-col bg-slate-50 shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[480px] max-w-[95vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             {/* compare / columns icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -120,7 +120,7 @@ export const CompareDrawer = memo(function CompareDrawer({
               <rect x="14" y="3" width="7" height="18" rx="1" />
             </svg>
             Compare
-            <span className="ml-1 rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+            <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
               {items.length}/3
             </span>
           </h2>
@@ -129,7 +129,7 @@ export const CompareDrawer = memo(function CompareDrawer({
               <button
                 type="button"
                 onClick={handleExport}
-                className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200"
+                className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
                 title="Export comparison as CSV"
               >
                 Export
@@ -139,7 +139,7 @@ export const CompareDrawer = memo(function CompareDrawer({
               <button
                 type="button"
                 onClick={onClearAll}
-                className="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                className="rounded-md px-2 py-1 text-xs font-medium text-red-interactive transition-colors hover:bg-red-surface"
               >
                 Clear
               </button>
@@ -147,7 +147,7 @@ export const CompareDrawer = memo(function CompareDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+              className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
               aria-label="Close compare"
             >
               <svg
@@ -179,15 +179,15 @@ export const CompareDrawer = memo(function CompareDrawer({
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-10 w-10 text-slate-200"
+                className="h-10 w-10 text-border"
               >
                 <rect x="3" y="3" width="7" height="18" rx="1" />
                 <rect x="14" y="3" width="7" height="18" rx="1" />
               </svg>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-faint">
                 No items to compare yet.
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-muted-faint">
                 Click &ldquo;Compare&rdquo; on a result to add it here.
               </p>
             </div>
@@ -198,11 +198,11 @@ export const CompareDrawer = memo(function CompareDrawer({
                 reference={null}
                 onRemove={onRemoveItem}
               />
-              <div className="rounded-lg border-2 border-dashed border-slate-200 px-4 py-8 text-center">
-                <p className="text-sm text-slate-400">
+              <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
+                <p className="text-sm text-muted-faint">
                   Add a second calculation to compare.
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-muted-faint">
                   Change inputs and click &ldquo;Compare&rdquo; again.
                 </p>
               </div>
@@ -218,8 +218,8 @@ export const CompareDrawer = memo(function CompareDrawer({
                 />
               ))}
               {items.length < 3 && (
-                <div className="rounded-lg border-2 border-dashed border-slate-200 px-4 py-6 text-center">
-                  <p className="text-xs text-slate-400">
+                <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
+                  <p className="text-xs text-muted-faint">
                     Slot available — add another calculation.
                   </p>
                 </div>

@@ -20,9 +20,9 @@ export const DimensionInput = memo(function DimensionInput({
 }: DimensionInputProps) {
   return (
     <div className="grid gap-1">
-      <label className="truncate text-xs font-medium text-slate-700" htmlFor={`dimension-${dimension.key}`}>
+      <label className="truncate text-xs font-medium text-foreground-secondary" htmlFor={`dimension-${dimension.key}`}>
         {dimension.label}{" "}
-        <span className="font-normal text-slate-400">
+        <span className="font-normal text-muted-faint">
           {dimension.minMm}–{dimension.maxMm}
         </span>
       </label>
@@ -37,12 +37,12 @@ export const DimensionInput = memo(function DimensionInput({
           step="any"
           value={value?.value ?? ""}
           onChange={(e) => onValueChange(parseNumber(e.target.value))}
-          className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm transition-colors focus:border-accent"
+          className="h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-accent"
         />
         <select
           value={value?.unit ?? "mm"}
           onChange={(e) => onUnitChange(e.target.value as LengthUnit)}
-          className="h-9 rounded-lg border border-slate-300 bg-white px-1 text-sm transition-colors focus:border-accent"
+          className="h-9 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-accent"
           aria-label={`${dimension.label} unit`}
         >
           {LENGTH_UNITS.map((u) => (

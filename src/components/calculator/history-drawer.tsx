@@ -50,7 +50,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-overlay transition-opacity duration-300 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -60,13 +60,13 @@ export const HistoryDrawer = memo(function HistoryDrawer({
       {/* Drawer panel */}
       <aside
         aria-label="History drawer"
-        className={`fixed inset-y-0 right-0 z-50 flex w-[340px] max-w-[90vw] flex-col bg-slate-50 shadow-xl transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 flex w-[340px] max-w-[90vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -86,7 +86,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
+            className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
             aria-label="Close history"
           >
             <svg

@@ -10,7 +10,7 @@ export const IssueList = memo(function IssueList({ issues }: IssueListProps) {
 
   return (
     <div
-      className="rounded-md border border-red-300 bg-red-50 p-3 text-red-900"
+      className="rounded-md border border-red-border bg-red-surface p-3 text-red-900"
       role="alert"
       aria-live="polite"
     >

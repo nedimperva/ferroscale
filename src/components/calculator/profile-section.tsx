@@ -230,7 +230,7 @@ export const ProfileSection = memo(function ProfileSection({
     <section className="grid gap-4">
       {/* ── Tier 1: Category pills ── */}
       <div className="grid gap-1.5">
-        <span className="text-xs font-medium text-slate-500">Category</span>
+        <span className="text-xs font-medium text-muted">Category</span>
         <div className="flex flex-wrap gap-1.5">
           {CATEGORY_ORDER.map((cat) => {
             const isActive = cat === activeCategory;
@@ -241,8 +241,8 @@ export const ProfileSection = memo(function ProfileSection({
                 onClick={() => handleCategoryChange(cat)}
                 className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
                   isActive
-                    ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
+                    : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                 }`}
               >
                 {CATEGORY_ICONS[cat]}
@@ -255,7 +255,7 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Tier 2: Sub-type pills ── */}
       <div className="grid gap-1.5">
-        <span className="text-xs font-medium text-slate-500">Type</span>
+        <span className="text-xs font-medium text-muted">Type</span>
         <div className="flex flex-wrap gap-1.5">
           {categoryProfiles.map((p) => {
             const isActive = p.id === input.profileId;
@@ -266,8 +266,8 @@ export const ProfileSection = memo(function ProfileSection({
                 onClick={() => dispatch({ type: "SET_PROFILE", profileId: p.id })}
                 className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
                   isActive
-                    ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
+                    : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                 }`}
               >
                 {PROFILE_ICONS[p.id]}
@@ -281,15 +281,15 @@ export const ProfileSection = memo(function ProfileSection({
       {/* ── Standard profile: size dropdown ── */}
       {selectedProfile.mode === "standard" && (
         <div className="grid gap-1">
-          <label htmlFor="size" className="text-xs font-medium text-slate-600">
+          <label htmlFor="size" className="text-xs font-medium text-foreground-secondary">
             Size
           </label>
           <select
             id="size"
             value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
             onChange={(e) => dispatch({ type: "SET_SIZE", sizeId: e.target.value })}
-            className={`h-9 rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
-              hasIssue("selectedSizeId") ? "border-red-400" : "border-slate-300"
+            className={`h-9 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
+              hasIssue("selectedSizeId") ? "border-red-border" : "border-border-strong"
             }`}
           >
             {selectedProfile.sizes.map((s) => (
@@ -298,7 +298,7 @@ export const ProfileSection = memo(function ProfileSection({
               </option>
             ))}
           </select>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-muted-faint">
             Area from EN table · {selectedProfile.formulaLabel}
           </p>
         </div>
@@ -326,7 +326,7 @@ export const ProfileSection = memo(function ProfileSection({
       {/* ── Length + Quantity ── */}
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1 min-w-0">
-          <label htmlFor="length" className="text-xs font-medium text-slate-600">
+          <label htmlFor="length" className="text-xs font-medium text-foreground-secondary">
             Piece length
           </label>
           <div className="flex gap-1 min-w-0">
@@ -341,8 +341,8 @@ export const ProfileSection = memo(function ProfileSection({
               onChange={(e) =>
                 dispatch({ type: "SET_LENGTH_VALUE", value: parseNumber(e.target.value) })
               }
-              className={`h-9 min-w-0 flex-1 rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
-                hasIssue("length") ? "border-red-400" : "border-slate-300"
+              className={`h-9 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
+                hasIssue("length") ? "border-red-border" : "border-border-strong"
               }`}
             />
             <select
@@ -350,7 +350,7 @@ export const ProfileSection = memo(function ProfileSection({
               onChange={(e) =>
                 dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
               }
-              className="h-9 shrink-0 rounded-lg border border-slate-300 bg-white px-1 text-sm transition-colors focus:border-accent"
+              className="h-9 shrink-0 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-accent"
               aria-label="Length unit"
             >
               {LENGTH_UNITS.map((u) => (
@@ -362,7 +362,7 @@ export const ProfileSection = memo(function ProfileSection({
           </div>
         </div>
         <div className="grid gap-1 min-w-0">
-          <label htmlFor="quantity" className="text-xs font-medium text-slate-600">
+          <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
             Quantity
           </label>
           <input
@@ -376,8 +376,8 @@ export const ProfileSection = memo(function ProfileSection({
             onChange={(e) =>
               dispatch({ type: "SET_QUANTITY", value: parseNumber(e.target.value) })
             }
-            className={`h-9 w-full rounded-lg border bg-white px-2 text-sm transition-colors focus:border-accent ${
-              hasIssue("quantity") ? "border-red-400" : "border-slate-300"
+            className={`h-9 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
+              hasIssue("quantity") ? "border-red-border" : "border-border-strong"
             }`}
           />
         </div>
