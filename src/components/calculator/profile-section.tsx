@@ -56,7 +56,7 @@ const PROFILE_SHORT_LABELS: Partial<Record<ProfileId, string>> = {
   beam_hem_en: "HEM",
   channel_upn_en: "UPN",
   channel_upe_en: "UPE",
-  angle_equal_en: "Angle (L)",
+  angle: "Angle",
   tee_en: "Tee (T)",
 };
 
@@ -167,7 +167,7 @@ const PROFILE_ICONS: Partial<Record<ProfileId, React.ReactNode>> = {
   ),
 
   /* ── Structural — Angle ── */
-  angle_equal_en: (
+  angle: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
       <path d="M4 4v16h16" />
     </svg>

@@ -39,6 +39,7 @@ export type ProfileId =
   | "round_bar"
   | "square_bar"
   | "flat_bar"
+  | "angle"
   | "sheet"
   | "plate"
   | "chequered_plate"
@@ -47,7 +48,6 @@ export type ProfileId =
   | "pipe"
   | "rectangular_tube"
   | "square_hollow"
-  | "angle_equal_en"
   | "channel_upn_en"
   | "channel_upe_en"
   | "beam_ipe_en"
@@ -65,7 +65,9 @@ export type DimensionKey =
   | "thickness"
   | "outerDiameter"
   | "wallThickness"
-  | "patternHeight";
+  | "patternHeight"
+  | "legA"
+  | "legB";
 
 export interface DimensionDefinition {
   key: DimensionKey;

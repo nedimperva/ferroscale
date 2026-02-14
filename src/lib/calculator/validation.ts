@@ -146,6 +146,23 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
         }
       }
     }
+
+    if (profile.id === "angle") {
+      const legA = input.manualDimensions.legA;
+      const legB = input.manualDimensions.legB;
+      const t = input.manualDimensions.thickness;
+      if (legA && legB && t) {
+        const legAMm = toMillimeters(legA.value, legA.unit);
+        const legBMm = toMillimeters(legB.value, legB.unit);
+        const tMm = toMillimeters(t.value, t.unit);
+        if (tMm >= Math.min(legAMm, legBMm)) {
+          issues.push({
+            field: "manualDimensions.thickness",
+            message: "Thickness must be less than the shorter leg.",
+          });
+        }
+      }
+    }
   }
 
   if (input.priceBasis === "weight" && !["kg", "lb"].includes(input.priceUnit)) {

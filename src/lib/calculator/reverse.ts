@@ -236,6 +236,42 @@ function solveProfileDimension(
       return null;
     }
 
+    /* ── Angle (L): A = (a + b − t) × t ── */
+    case "angle": {
+      if (solveDim === "legA") {
+        const b = known.legB;
+        const t = known.thickness;
+        if (!b || !t || b <= 0 || t <= 0) return null;
+        /* A = (a + b − t)·t  →  a = A/t − b + t */
+        const a = A / t - b + t;
+        return a > 0 ? a : null;
+      }
+      if (solveDim === "legB") {
+        const a = known.legA;
+        const t = known.thickness;
+        if (!a || !t || a <= 0 || t <= 0) return null;
+        /* A = (a + b − t)·t  →  b = A/t − a + t */
+        const b = A / t - a + t;
+        return b > 0 ? b : null;
+      }
+      if (solveDim === "thickness") {
+        const a = known.legA;
+        const b = known.legB;
+        if (!a || !b || a <= 0 || b <= 0) return null;
+        /* A = (a + b − t)·t  →  t² − (a+b)t + A = 0 */
+        const sum = a + b;
+        const disc = sum * sum - 4 * A;
+        if (disc < 0) return null;
+        /* Take the smaller root (thickness < shorter leg) */
+        const t1 = (sum - Math.sqrt(disc)) / 2;
+        const t2 = (sum + Math.sqrt(disc)) / 2;
+        const maxT = Math.min(a, b);
+        const t = (t1 > 0 && t1 < maxT) ? t1 : (t2 > 0 && t2 < maxT) ? t2 : null;
+        return t;
+      }
+      return null;
+    }
+
     default:
       return null;
   }
@@ -266,6 +302,8 @@ export function getSolvableDimensions(profileId: ProfileId): DimensionKey[] {
       return ["width", "height", "wallThickness"];
     case "square_hollow":
       return ["side", "wallThickness"];
+    case "angle":
+      return ["legA", "legB", "thickness"];
     default:
       return [];
   }

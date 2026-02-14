@@ -115,6 +115,16 @@ function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression:
     };
   }
 
+  if (profile.id === "angle") {
+    const legA = getManualDimensionMm(input, "legA");
+    const legB = getManualDimensionMm(input, "legB");
+    const thickness = getManualDimensionMm(input, "thickness");
+    return {
+      areaMm2: (legA + legB - thickness) * thickness,
+      expression: `A = (${legA.toFixed(3)} + ${legB.toFixed(3)} − ${thickness.toFixed(3)}) × ${thickness.toFixed(3)}`,
+    };
+  }
+
   return { areaMm2: 0, expression: "Unsupported profile formula" };
 }
 

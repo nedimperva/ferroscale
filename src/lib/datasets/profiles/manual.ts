@@ -36,6 +36,19 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
       { key: "thickness", label: "Thickness", minMm: 2, maxMm: 120, defaultMm: 8 },
     ],
   },
+  {
+    id: "angle",
+    label: "Angle (L)",
+    category: "structural",
+    mode: "manual",
+    formulaLabel: "A = (a + b − t) × t",
+    referenceLabel: "EN 10056",
+    dimensions: [
+      { key: "legA", label: "Leg A", minMm: 15, maxMm: 300, defaultMm: 60 },
+      { key: "legB", label: "Leg B", minMm: 15, maxMm: 300, defaultMm: 60 },
+      { key: "thickness", label: "Thickness", minMm: 2, maxMm: 35, defaultMm: 6 },
+    ],
+  },
 
   /* ---- Tubes ---- */
   {

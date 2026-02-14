@@ -91,9 +91,12 @@ const PROFILE_CASES: ProfileCase[] = [
     },
   },
   {
-    profileId: "angle_equal_en",
-    selectedSizeId: "l80x8",
-    manualDimensions: {},
+    profileId: "angle",
+    manualDimensions: {
+      legA: { value: 80, unit: "mm" },
+      legB: { value: 80, unit: "mm" },
+      thickness: { value: 8, unit: "mm" },
+    },
   },
   {
     profileId: "channel_upn_en",
@@ -208,6 +211,12 @@ function computeAreaMm2(testCase: ProfileCase): number {
       const w = toMillimeters(testCase.manualDimensions.width!.value, testCase.manualDimensions.width!.unit);
       const t = toMillimeters(testCase.manualDimensions.thickness!.value, testCase.manualDimensions.thickness!.unit);
       return w * t;
+    }
+    case "angle": {
+      const a = toMillimeters(testCase.manualDimensions.legA!.value, testCase.manualDimensions.legA!.unit);
+      const b = toMillimeters(testCase.manualDimensions.legB!.value, testCase.manualDimensions.legB!.unit);
+      const t = toMillimeters(testCase.manualDimensions.thickness!.value, testCase.manualDimensions.thickness!.unit);
+      return (a + b - t) * t;
     }
     default: {
       const profile = getProfileById(testCase.profileId);
