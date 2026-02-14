@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useEffect } from "react";
+import { memo, useEffect } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { ReferenceList } from "./reference-list";
 
@@ -10,6 +10,11 @@ interface ResultBarProps {
   onStar: () => void;
   isStarred: boolean;
   onExpand: () => void;
+  onCompare?: () => void;
+  canCompare?: boolean;
+  isInCompare?: boolean;
+  onAddToProject?: () => void;
+  hasProjects?: boolean;
 }
 
 /**
@@ -23,6 +28,11 @@ export const ResultBar = memo(function ResultBar({
   onStar,
   isStarred,
   onExpand,
+  onCompare,
+  canCompare = false,
+  isInCompare = false,
+  onAddToProject,
+  hasProjects = false,
 }: ResultBarProps) {
   if (!result) return null;
 
@@ -51,6 +61,63 @@ export const ResultBar = memo(function ResultBar({
           <span className="text-xs text-slate-500">
             {result.totalWeightKg} kg · Tap for details
           </span>
+        </button>
+
+        {/* Compare button */}
+        {(canCompare || isInCompare) && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCompare?.();
+            }}
+            className={`shrink-0 rounded-full p-2 transition-colors ${
+              isInCompare ? "bg-blue-50" : "hover:bg-slate-100"
+            }`}
+            aria-label={isInCompare ? "Already in compare" : "Add to compare"}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`h-6 w-6 transition-colors duration-200 ${
+                isInCompare ? "stroke-blue-600" : "stroke-slate-400"
+              }`}
+            >
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+          </button>
+        )}
+
+        {/* Project button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToProject?.();
+          }}
+          className={`shrink-0 rounded-full p-2 transition-colors ${
+            hasProjects ? "bg-purple-50" : "hover:bg-slate-100"
+          }`}
+          aria-label="Add to project"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`h-6 w-6 transition-colors duration-200 ${
+              hasProjects ? "stroke-purple-600" : "stroke-slate-400"
+            }`}
+          >
+            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
+          </svg>
         </button>
 
         {/* Save button */}
@@ -95,6 +162,12 @@ interface ResultOverlayProps {
   isStarred: boolean;
   onStar: () => void;
   onClose: () => void;
+  onCompare?: () => void;
+  canCompare?: boolean;
+  isInCompare?: boolean;
+  compareCount?: number;
+  onAddToProject?: () => void;
+  hasProjects?: boolean;
 }
 
 export const ResultOverlay = memo(function ResultOverlay({
@@ -105,9 +178,13 @@ export const ResultOverlay = memo(function ResultOverlay({
   isStarred,
   onStar,
   onClose,
+  onCompare,
+  canCompare = false,
+  isInCompare = false,
+  compareCount = 0,
+  onAddToProject,
+  hasProjects = false,
 }: ResultOverlayProps) {
-  const [showExplain, setShowExplain] = useState(false);
-
   /* Lock body scroll when overlay is open */
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -222,11 +299,11 @@ export const ResultOverlay = memo(function ResultOverlay({
           </div>
 
           {/* ── Action buttons ── */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={onStar}
-              className={`inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
                 isStarred
                   ? "border-orange-200 bg-orange-50 text-accent"
                   : "border-slate-200 text-slate-700 hover:bg-slate-50"
@@ -246,17 +323,69 @@ export const ResultOverlay = memo(function ResultOverlay({
             </button>
             <button
               type="button"
-              onClick={() => setShowExplain(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              onClick={onCompare}
+              disabled={!canCompare && !isInCompare}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+                isInCompare
+                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  : canCompare
+                    ? "border-slate-200 text-slate-700 hover:bg-slate-50"
+                    : "cursor-not-allowed border-slate-100 text-slate-300"
+              }`}
+              title={isInCompare ? "Already in compare" : canCompare ? "Add to compare" : "Compare full (3/3)"}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
+                <rect x="3" y="3" width="7" height="18" rx="1" />
+                <rect x="14" y="3" width="7" height="18" rx="1" />
               </svg>
-              Explain
+              {isInCompare ? `${compareCount}/3` : "Compare"}
+            </button>
+            <button
+              type="button"
+              onClick={onAddToProject}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+                hasProjects
+                  ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                  : "border-slate-200 text-slate-700 hover:bg-slate-50"
+              }`}
+              title="Add to project"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
+              </svg>
+              Project
             </button>
           </div>
+
+          {/* ── Full calculation steps (inline collapsible) ── */}
+          <details className="mt-4 border-t border-slate-100 pt-3">
+            <summary className="cursor-pointer text-xs font-medium text-slate-500 select-none">
+              Full calculation steps
+            </summary>
+            <div className="mt-2 overflow-x-auto">
+              <p className="mb-2 text-xs text-slate-500">
+                Formula: {result.formulaLabel}
+              </p>
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-slate-500">
+                    <th className="py-1">Step</th>
+                    <th className="py-1">Expression</th>
+                    <th className="py-1">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.breakdownRows.map((row) => (
+                    <tr key={`${row.label}-${row.expression}`}>
+                      <td className="py-1 pr-2">{row.label}</td>
+                      <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
+                      <td className="py-1">{row.value} {row.unit}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </details>
 
           {/* ── References ── */}
           <ReferenceList
@@ -265,62 +394,6 @@ export const ResultOverlay = memo(function ResultOverlay({
           />
         </div>
       </div>
-
-      {/* ── Explain modal ── */}
-      {showExplain && (
-        <div
-          className="fixed inset-0 z-70 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-          onClick={() => setShowExplain(false)}
-        >
-          <div
-            className="relative max-h-[85vh] w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-              <h3 className="text-sm font-semibold">Calculation Steps</h3>
-              <button
-                type="button"
-                onClick={() => setShowExplain(false)}
-                className="rounded-md p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Close"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto px-5 py-4" style={{ maxHeight: "calc(85vh - 56px)" }}>
-              <p className="mb-3 text-xs text-slate-500">
-                Formula: {result.formulaLabel}
-              </p>
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
-                    <th className="pb-2 pr-3">Step</th>
-                    <th className="pb-2 pr-3">Expression</th>
-                    <th className="pb-2">Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.breakdownRows.map((row) => (
-                    <tr key={`${row.label}-${row.expression}`} className="border-b border-slate-50">
-                      <td className="py-2 pr-3 text-slate-600">{row.label}</td>
-                      <td className="py-2 pr-3 font-mono text-[11px]">{row.expression}</td>
-                      <td className="py-2 font-medium">
-                        {row.value} {row.unit}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <ReferenceList
-                labels={result.referenceLabels}
-                className="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 });

@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCalculator } from "@/hooks/useCalculator";
 import { useHistory } from "@/hooks/useHistory";
+import { useCompare } from "@/hooks/useCompare";
+import { useReverseCalculator } from "@/hooks/useReverseCalculator";
+import { useProjects } from "@/hooks/useProjects";
 import { DATASET_VERSION } from "@/lib/datasets/version";
 
 import { IssueList } from "@/components/calculator/issue-list";
@@ -13,6 +16,9 @@ import { HistoryDrawer } from "@/components/calculator/history-drawer";
 import { SettingsDrawer } from "@/components/calculator/settings-drawer";
 import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
+import { CompareDrawer } from "@/components/compare/compare-drawer";
+import { ReversePanel } from "@/components/calculator/reverse-panel";
+import { ProjectDrawer } from "@/components/projects/project-drawer";
 
 export function CalculatorApp() {
   const {
@@ -33,6 +39,35 @@ export function CalculatorApp() {
     removeStarred,
     clearHistory,
   } = useHistory();
+
+  const {
+    items: compareItems,
+    isOpen: showCompareDrawer,
+    canAdd: canCompare,
+    open: openCompare,
+    close: closeCompare,
+    addItem: addCompareItem,
+    removeItem: removeCompareItem,
+    clearAll: clearCompare,
+    isDuplicate: isInCompare,
+  } = useCompare();
+
+  const reverse = useReverseCalculator(input, selectedProfile);
+
+  const {
+    projects,
+    isOpen: showProjectDrawer,
+    open: openProjects,
+    close: closeProjects,
+    activeProjectId,
+    setActiveProjectId,
+    createProject,
+    renameProject,
+    deleteProject,
+    addCalculation,
+    removeCalculation,
+    projectCount,
+  } = useProjects();
 
   /* Auto-save valid results to history */
   const prevResultRef = useRef(result);
@@ -55,6 +90,24 @@ export function CalculatorApp() {
   const handleStar = useCallback(() => {
     if (currentEntryId) toggleStar(currentEntryId);
   }, [currentEntryId, toggleStar]);
+
+  /* Compare helpers */
+  const currentIsInCompare = result ? isInCompare(result) : false;
+
+  const handleCompare = useCallback(() => {
+    if (!result) return;
+    if (currentIsInCompare) {
+      /* Already in compare — open the drawer */
+      openCompare();
+    } else {
+      addCompareItem(input, result);
+    }
+  }, [result, input, currentIsInCompare, openCompare, addCompareItem]);
+
+  /* Project helpers */
+  const handleAddToProject = useCallback(() => {
+    openProjects();
+  }, [openProjects]);
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -101,6 +154,38 @@ export function CalculatorApp() {
             {/* envelope icon */}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
             <span className="hidden sm:inline">Report</span>
+          </button>
+          {/* Compare drawer toggle */}
+          {compareItems.length > 0 && (
+            <button
+              type="button"
+              onClick={openCompare}
+              className="inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 p-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 sm:px-3 sm:py-1.5"
+              aria-label="Compare"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+              <span className="hidden sm:inline">Compare ({compareItems.length})</span>
+              <span className="sm:hidden text-[10px] font-bold">{compareItems.length}</span>
+            </button>
+          )}
+          {/* Projects drawer toggle */}
+          <button
+            type="button"
+            onClick={openProjects}
+            className={`inline-flex items-center gap-1.5 rounded-md border p-2 text-xs font-medium transition-colors sm:px-3 sm:py-1.5 ${
+              projectCount > 0
+                ? "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                : "border-slate-300 text-slate-700 hover:bg-slate-100"
+            }`}
+            aria-label="Projects"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
+            <span className="hidden sm:inline">
+              {projectCount > 0 ? `Projects (${projectCount})` : "Projects"}
+            </span>
+            {projectCount > 0 && (
+              <span className="sm:hidden text-[10px] font-bold">{projectCount}</span>
+            )}
           </button>
           {/* Settings drawer toggle */}
           <button
@@ -153,6 +238,13 @@ export function CalculatorApp() {
               issues={issues}
             />
           </div>
+
+          <div className="px-4 pb-4">
+            <ReversePanel
+              reverse={reverse}
+              isManualProfile={selectedProfile.mode === "manual"}
+            />
+          </div>
         </div>
 
         {/* RIGHT — results (desktop) */}
@@ -165,6 +257,12 @@ export function CalculatorApp() {
             includeVat={input.includeVat}
             wastePercent={input.wastePercent}
             vatPercent={input.vatPercent}
+            onCompare={handleCompare}
+            canCompare={canCompare}
+            isInCompare={currentIsInCompare}
+            compareCount={compareItems.length}
+            onAddToProject={handleAddToProject}
+            hasProjects={projectCount > 0}
           />
         </aside>
       </div>
@@ -176,6 +274,11 @@ export function CalculatorApp() {
         onStar={handleStar}
         isStarred={isCurrentStarred}
         onExpand={() => setShowOverlay(true)}
+        onCompare={handleCompare}
+        canCompare={canCompare}
+        isInCompare={currentIsInCompare}
+        onAddToProject={handleAddToProject}
+        hasProjects={projectCount > 0}
       />
 
       {/* ---- Mobile full-screen result overlay ---- */}
@@ -188,6 +291,12 @@ export function CalculatorApp() {
           isStarred={isCurrentStarred}
           onStar={handleStar}
           onClose={() => setShowOverlay(false)}
+          onCompare={handleCompare}
+          canCompare={canCompare}
+          isInCompare={currentIsInCompare}
+          compareCount={compareItems.length}
+          onAddToProject={handleAddToProject}
+          hasProjects={projectCount > 0}
         />
       )}
 
@@ -218,6 +327,32 @@ export function CalculatorApp() {
       <ContactDrawer
         open={showContactDrawer}
         onClose={() => setShowContactDrawer(false)}
+      />
+
+      {/* ---- Compare drawer ---- */}
+      <CompareDrawer
+        open={showCompareDrawer}
+        onClose={closeCompare}
+        items={compareItems}
+        onRemoveItem={removeCompareItem}
+        onClearAll={clearCompare}
+      />
+
+      {/* ---- Project drawer ---- */}
+      <ProjectDrawer
+        open={showProjectDrawer}
+        onClose={closeProjects}
+        projects={projects}
+        activeProjectId={activeProjectId}
+        onSetActiveProject={setActiveProjectId}
+        onCreateProject={createProject}
+        onRenameProject={renameProject}
+        onDeleteProject={deleteProject}
+        onRemoveCalculation={removeCalculation}
+        onLoadCalculation={handleLoad}
+        currentResult={result}
+        currentInput={result ? input : null}
+        onAddCalculation={addCalculation}
       />
     </div>
   );
