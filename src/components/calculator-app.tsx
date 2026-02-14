@@ -19,6 +19,7 @@ import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer } from "@/components/projects/project-drawer";
+import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 
 export function CalculatorApp() {
   const {
@@ -105,9 +106,13 @@ export function CalculatorApp() {
   }, [result, input, currentIsInCompare, openCompare, addCompareItem]);
 
   /* Project helpers */
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
   const handleAddToProject = useCallback(() => {
-    openProjects();
-  }, [openProjects]);
+    if (result) {
+      setShowSaveModal(true);
+    }
+  }, [result]);
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -354,6 +359,20 @@ export function CalculatorApp() {
         currentInput={result ? input : null}
         onAddCalculation={addCalculation}
       />
+
+      {/* ---- Save-to-project quick-add modal ---- */}
+      {result && (
+        <SaveToProjectModal
+          open={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          projects={projects}
+          onCreateProject={createProject}
+          onAddCalculation={addCalculation}
+          currentInput={input}
+          currentResult={result}
+          onOpenDrawer={openProjects}
+        />
+      )}
     </div>
   );
 }
