@@ -144,33 +144,13 @@ export const ResultPanel = memo(function ResultPanel({
       </div>
 
       {/* ── Action buttons ── */}
-      <div className="grid grid-cols-3 gap-2 px-5 pt-4 pb-5">
-        <button
-          type="button"
-          onClick={onStar}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-            isStarred
-              ? "border-accent-border bg-accent-surface text-accent"
-              : "border-border text-foreground-secondary hover:bg-surface-raised"
-          }`}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            className={`h-4 w-4 ${
-              isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
-            }`}
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-          </svg>
-          {isStarred ? "Saved" : "Save"}
-        </button>
+      <div className="flex flex-col gap-2 px-5 pt-4 pb-5">
+        {/* Compare — full width, primary action */}
         <button
           type="button"
           onClick={onCompare}
           disabled={!canCompare && !isInCompare}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+          className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
             isInCompare
               ? "border-blue-border bg-blue-surface text-blue-text"
               : canCompare
@@ -183,23 +163,48 @@ export const ResultPanel = memo(function ResultPanel({
             <rect x="3" y="3" width="7" height="18" rx="1" />
             <rect x="14" y="3" width="7" height="18" rx="1" />
           </svg>
-          {isInCompare ? `${compareCount}/3` : "Compare"}
+          {isInCompare ? `In Compare (${compareCount}/3)` : "Add to Compare"}
         </button>
-        <button
-          type="button"
-          onClick={onAddToProject}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-            hasProjects
-              ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-              : "border-border text-foreground-secondary hover:bg-surface-raised"
-          }`}
-          title="Add to project"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
-          </svg>
-          Project
-        </button>
+
+        {/* Save + Project — side by side */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={onStar}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+              isStarred
+                ? "border-accent-border bg-accent-surface text-accent"
+                : "border-border text-foreground-secondary hover:bg-surface-raised"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className={`h-4 w-4 ${
+                isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
+              }`}
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+            </svg>
+            {isStarred ? "Saved" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={onAddToProject}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+              hasProjects
+                ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+                : "border-border text-foreground-secondary hover:bg-surface-raised"
+            }`}
+            title="Add to project"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
+            </svg>
+            Project
+          </button>
+        </div>
       </div>
 
       {/* ── Full calculation steps (inline collapsible) ── */}

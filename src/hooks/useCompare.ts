@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 /* ------------------------------------------------------------------ */
@@ -64,12 +64,20 @@ export interface UseCompareReturn {
 }
 
 export function useCompare(): UseCompareReturn {
-  const [items, setItems] = useState<CompareItem[]>(() => loadItems());
+  const [items, setItems] = useState<CompareItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  /* Persist on change */
+  /* Hydrate from localStorage on mount (empty [] during SSR to avoid hydration mismatch) */
+  const hydrated = useRef(false);
   useEffect(() => {
-    persistItems(items);
+    const stored = loadItems();
+    if (stored.length > 0) setItems(stored); // eslint-disable-line react-hooks/set-state-in-effect
+    hydrated.current = true;
+  }, []);
+
+  /* Persist on change (skip the initial hydration write-back) */
+  useEffect(() => {
+    if (hydrated.current) persistItems(items);
   }, [items]);
 
   const isDuplicate = useCallback(

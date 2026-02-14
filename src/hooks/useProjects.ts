@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 
 /* ------------------------------------------------------------------ */
@@ -154,13 +154,21 @@ export interface UseProjectsReturn {
 }
 
 export function useProjects(): UseProjectsReturn {
-  const [projects, setProjects] = useState<Project[]>(() => loadProjects());
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
-  /* Persist on change */
+  /* Hydrate from localStorage on mount (empty [] during SSR to avoid hydration mismatch) */
+  const hydrated = useRef(false);
   useEffect(() => {
-    persistProjects(projects);
+    const stored = loadProjects();
+    if (stored.length > 0) setProjects(stored); // eslint-disable-line react-hooks/set-state-in-effect
+    hydrated.current = true;
+  }, []);
+
+  /* Persist on change (skip the initial hydration write-back) */
+  useEffect(() => {
+    if (hydrated.current) persistProjects(projects);
   }, [projects]);
 
   const createProject = useCallback((name: string): Project => {

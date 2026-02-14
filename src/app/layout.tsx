@@ -52,7 +52,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="overflow-x-hidden">
+    <html lang="en" className="overflow-x-hidden" suppressHydrationWarning>
+      <head>
+        {/* Synchronous theme + sidebar script — runs before first paint to prevent flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem("ferroscale-theme")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh`}>
         <PwaRegister />
         {children}

@@ -54,19 +54,30 @@ export interface UseHistoryReturn {
 }
 
 export function useHistory(): UseHistoryReturn {
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadEntries(HISTORY_KEY));
-  const [starred, setStarred] = useState<HistoryEntry[]>(() => loadEntries(STARRED_KEY));
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [starred, setStarred] = useState<HistoryEntry[]>([]);
 
   /* Track last-added fingerprint to deduplicate rapid-fire auto-saves */
   const lastFingerprintRef = useRef<string>("");
 
-  /* Persist on change */
+  /* Hydrate from localStorage on mount (empty [] during SSR to avoid hydration mismatch) */
+  const hydrated = useRef(false);
   useEffect(() => {
-    persistEntries(HISTORY_KEY, history.slice(0, MAX_HISTORY));
+    const storedHistory = loadEntries(HISTORY_KEY);
+    const storedStarred = loadEntries(STARRED_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only localStorage hydration
+    if (storedHistory.length > 0) setHistory(storedHistory);
+    if (storedStarred.length > 0) setStarred(storedStarred);
+    hydrated.current = true;
+  }, []);
+
+  /* Persist on change (skip the initial hydration write-back) */
+  useEffect(() => {
+    if (hydrated.current) persistEntries(HISTORY_KEY, history.slice(0, MAX_HISTORY));
   }, [history]);
 
   useEffect(() => {
-    persistEntries(STARRED_KEY, starred);
+    if (hydrated.current) persistEntries(STARRED_KEY, starred);
   }, [starred]);
 
   const addToHistory = useCallback(

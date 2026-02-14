@@ -161,8 +161,8 @@ export function ContactForm({ context, compact }: ContactFormProps) {
           type="submit"
           disabled={status === "loading"}
           className={compact
-            ? "w-full rounded-md bg-surface-inverted px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-            : "w-fit rounded-md bg-surface-inverted px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+            ? "w-full rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+            : "w-fit rounded-md bg-foreground px-4 py-2 font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
           }
         >
           {status === "loading" ? "Sending..." : "Send report"}
@@ -171,7 +171,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
 
       {feedback ? (
         <p
-          className={`mt-3 text-sm ${status === "success" ? "text-emerald-700" : status === "error" ? "text-red-text" : "text-foreground-secondary"}`}
+          className={`mt-3 text-sm ${status === "success" ? "text-green-text" : status === "error" ? "text-red-text" : "text-foreground-secondary"}`}
           aria-live="polite"
         >
           {feedback}

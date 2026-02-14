@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useCalculator } from "@/hooks/useCalculator";
 import { useHistory } from "@/hooks/useHistory";
 import { useCompare } from "@/hooks/useCompare";
@@ -22,6 +22,18 @@ import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
+
+/* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
+let _sidebarListeners: Array<() => void> = [];
+function subscribeSidebar(cb: () => void) {
+  _sidebarListeners = [..._sidebarListeners, cb];
+  return () => { _sidebarListeners = _sidebarListeners.filter((l) => l !== cb); };
+}
+function getSidebarSnapshot(): boolean {
+  try { return localStorage.getItem("ferroscale-sidebar-collapsed") === "true"; } catch { return false; }
+}
+function getSidebarServerSnapshot(): boolean { return false; }
+function _sidebarEmit() { for (const l of _sidebarListeners) l(); }
 
 export function CalculatorApp() {
   const {
@@ -134,21 +146,19 @@ export function CalculatorApp() {
   /* Contact drawer */
   const [showContactDrawer, setShowContactDrawer] = useState(false);
 
-  /* Sidebar collapsed state (persisted to localStorage) */
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem("ferroscale-sidebar-collapsed") === "true";
-    } catch {
-      return false;
-    }
-  });
+  /* Sidebar collapsed state (persisted to localStorage).
+     Uses useSyncExternalStore to avoid hydration mismatch and
+     lint warnings about setState-in-effect. */
+  const sidebarCollapsed = useSyncExternalStore(
+    subscribeSidebar,
+    getSidebarSnapshot,
+    getSidebarServerSnapshot,
+  );
 
   const toggleSidebarCollapsed = useCallback(() => {
-    setSidebarCollapsed((prev) => {
-      const next = !prev;
-      try { localStorage.setItem("ferroscale-sidebar-collapsed", String(next)); } catch { /* noop */ }
-      return next;
-    });
+    const next = !getSidebarSnapshot();
+    try { localStorage.setItem("ferroscale-sidebar-collapsed", String(next)); } catch { /* noop */ }
+    _sidebarEmit();
   }, []);
 
   const resetAll = useCallback(() => {

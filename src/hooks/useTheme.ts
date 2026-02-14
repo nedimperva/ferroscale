@@ -1,19 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "ferroscale-theme";
 
 export type Theme = "light" | "dark";
 
-function getStoredTheme(): Theme {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "dark") return "dark";
-  } catch {
-    /* noop */
-  }
-  return "light";
+/* ---------- tiny external store for theme ---------- */
+let listeners: Array<() => void> = [];
+
+function subscribe(cb: () => void) {
+  listeners = [...listeners, cb];
+  return () => {
+    listeners = listeners.filter((l) => l !== cb);
+  };
+}
+
+function getSnapshot(): Theme {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+function getServerSnapshot(): Theme {
+  return "light"; // SSR always renders light — inline script fixes paint
+}
+
+function emitChange() {
+  for (const l of listeners) l();
 }
 
 /**
@@ -21,11 +33,15 @@ function getStoredTheme(): Theme {
  * - Persists choice to localStorage
  * - Toggles `.dark` class on `<html>`
  * - Defaults to light
+ *
+ * The synchronous <script> in layout.tsx applies the .dark class before
+ * first paint (preventing flash). This hook uses useSyncExternalStore to
+ * read the DOM state without hydration mismatch.
  */
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(getStoredTheme);
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  /* Sync the .dark class on <html> whenever theme changes */
+  /* Keep .dark class in sync (covers the toggle case) */
   useEffect(() => {
     if (theme === "dark") {
       document.documentElement.classList.add("dark");
@@ -35,15 +51,21 @@ export function useTheme() {
   }, [theme]);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next: Theme = prev === "light" ? "dark" : "light";
-      try {
-        localStorage.setItem(STORAGE_KEY, next);
-      } catch {
-        /* noop */
-      }
-      return next;
-    });
+    const next: Theme = getSnapshot() === "light" ? "dark" : "light";
+
+    if (next === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* noop */
+    }
+
+    emitChange();
   }, []);
 
   return { theme, toggleTheme } as const;
