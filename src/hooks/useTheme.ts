@@ -4,7 +4,21 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "ferroscale-theme";
 
-export type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "system";
+
+/* ---------- helpers for system preference ---------- */
+function getSystemTheme(): "light" | "dark" {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function subscribeToSystemTheme(cb: () => void) {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const handler = () => cb();
+  mq.addEventListener("change", handler);
+  return () => mq.removeEventListener("change", handler);
+}
 
 /* ---------- tiny external store for theme ---------- */
 let listeners: Array<() => void> = [];
@@ -16,12 +30,20 @@ function subscribe(cb: () => void) {
   };
 }
 
+function getStoredTheme(): Theme {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark" || stored === "system") return stored;
+  } catch { /* noop */ }
+  return "system"; // default to system
+}
+
 function getSnapshot(): Theme {
-  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  return getStoredTheme();
 }
 
 function getServerSnapshot(): Theme {
-  return "light"; // SSR always renders light — inline script fixes paint
+  return "system"; // SSR default (will resolve to light via CSS)
 }
 
 function emitChange() {
@@ -29,10 +51,10 @@ function emitChange() {
 }
 
 /**
- * Manages the app theme (light/dark).
+ * Manages the app theme (light/dark/system).
+ * - "system" follows OS preference via prefers-color-scheme
  * - Persists choice to localStorage
- * - Toggles `.dark` class on `<html>`
- * - Defaults to light
+ * - Toggles `.dark` class on `<html>` based on resolved theme
  *
  * The synchronous <script> in layout.tsx applies the .dark class before
  * first paint (preventing flash). This hook uses useSyncExternalStore to
@@ -41,32 +63,45 @@ function emitChange() {
 export function useTheme() {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  /* Resolve theme: if "system", get actual preference */
+  const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
+
   /* Keep .dark class in sync (covers the toggle case) */
   useEffect(() => {
-    if (theme === "dark") {
+    if (resolvedTheme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
+  }, [resolvedTheme]);
+
+  /* Subscribe to system theme changes when in system mode */
+  useEffect(() => {
+    if (theme !== "system") return;
+    return subscribeToSystemTheme(emitChange);
   }, [theme]);
 
-  const toggleTheme = useCallback(() => {
-    const next: Theme = getSnapshot() === "light" ? "dark" : "light";
-
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-
+  const setTheme = useCallback((newTheme: Theme) => {
     try {
-      localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      /* noop */
+      localStorage.setItem(STORAGE_KEY, newTheme);
+    } catch { /* noop */ }
+
+    if (newTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (newTheme === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      // system - apply based on current preference
+      const sys = getSystemTheme();
+      if (sys === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
 
     emitChange();
   }, []);
 
-  return { theme, toggleTheme } as const;
+  return { theme, setTheme, resolvedTheme } as const;
 }

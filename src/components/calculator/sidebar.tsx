@@ -159,8 +159,8 @@ export const Sidebar = memo(function Sidebar({
           className={`flex w-full items-center rounded-lg text-sm font-medium text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${
             collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-2.5 py-2"
           }`}
-          aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-          title={theme === "light" ? "Dark mode" : "Light mode"}
+          aria-label={theme === "light" ? "Switch to dark mode" : theme === "dark" ? "Switch to system mode" : "Switch to light mode"}
+          title={theme === "light" ? "Dark mode" : theme === "dark" ? "System mode" : "Light mode"}
         >
           <span className="shrink-0">
             {theme === "light" ? (
@@ -168,7 +168,7 @@ export const Sidebar = memo(function Sidebar({
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
               </svg>
-            ) : (
+            ) : theme === "dark" ? (
               /* Sun icon */
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <circle cx="12" cy="12" r="4" />
@@ -181,10 +181,19 @@ export const Sidebar = memo(function Sidebar({
                 <path d="m6.34 17.66-1.41 1.41" />
                 <path d="m19.07 4.93-1.41 1.41" />
               </svg>
+            ) : (
+              /* System/auto icon (monitor) */
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <rect width="20" height="14" x="2" y="3" rx="2" />
+                <path d="M8 21h8" />
+                <path d="M12 17v4" />
+              </svg>
             )}
           </span>
           {!collapsed && (
-            <span className="truncate">{theme === "light" ? "Dark mode" : "Light mode"}</span>
+            <span className="truncate">
+              {theme === "light" ? "Dark mode" : theme === "dark" ? "Light mode" : "System"}
+            </span>
           )}
         </button>
 

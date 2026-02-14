@@ -6,6 +6,7 @@ import { useHistory } from "@/hooks/useHistory";
 import { useCompare } from "@/hooks/useCompare";
 import { useReverseCalculator } from "@/hooks/useReverseCalculator";
 import { useProjects } from "@/hooks/useProjects";
+import type { Theme } from "@/hooks/useTheme";
 import { useTheme } from "@/hooks/useTheme";
 import { DATASET_VERSION } from "@/lib/datasets/version";
 
@@ -69,7 +70,14 @@ export function CalculatorApp() {
 
   const reverse = useReverseCalculator(input, selectedProfile);
 
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
+
+  const cycleTheme = useCallback(() => {
+    const order: Theme[] = ["light", "dark", "system"];
+    const currentIdx = order.indexOf(theme);
+    const nextIdx = (currentIdx + 1) % order.length;
+    setTheme(order[nextIdx]);
+  }, [theme, setTheme]);
 
   const {
     projects,
@@ -183,8 +191,8 @@ export function CalculatorApp() {
         isContactOpen={showContactDrawer}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}
-        theme={theme}
-        onToggleTheme={toggleTheme}
+        theme={resolvedTheme}
+        onToggleTheme={cycleTheme}
       />
 
       <div className={`mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-14 pb-28 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pt-6 xl:pb-6 ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}>
@@ -263,6 +271,24 @@ export function CalculatorApp() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
               <span className="hidden sm:inline">History</span>
+            </button>
+            {/* Theme toggle */}
+            <button
+              type="button"
+              onClick={cycleTheme}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border-strong p-2 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset sm:px-3 sm:py-1.5"
+              aria-label={resolvedTheme === "light" ? "Switch to dark mode" : resolvedTheme === "dark" ? "Switch to system mode" : "Switch to light mode"}
+            >
+              {resolvedTheme === "light" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
+              ) : resolvedTheme === "dark" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><rect width="20" height="14" x="2" y="3" rx="2" /><path d="M8 21h8" /><path d="M12 17v4" /></svg>
+              )}
+              <span className="hidden sm:inline">
+                {resolvedTheme === "light" ? "Dark" : resolvedTheme === "dark" ? "Light" : "System"}
+              </span>
             </button>
           </div>
         </header>
