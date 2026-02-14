@@ -135,9 +135,9 @@ export function CalculatorApp() {
   }, [dispatch]);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-7xl flex-col px-4 py-4 pb-28 md:px-6 lg:pb-6">
+    <div className="mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-14 pb-28 md:px-6 md:pt-4 lg:pb-6">
       {/* ---- Header ---- */}
-      <header className="sticky top-0 z-40 -mx-4 mb-4 flex items-start justify-between gap-2 bg-background px-4 py-2 sm:static sm:z-auto sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0 sm:gap-4">
+      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-background px-4 py-2 shadow-sm md:static md:z-auto md:mb-4 md:bg-transparent md:px-0 md:py-0 md:shadow-none">
         <div className="min-w-0 shrink">
           <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
             Metal Calculator
