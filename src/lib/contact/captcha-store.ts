@@ -41,7 +41,7 @@ export function createCaptchaChallenge(): { challengeId: string; prompt: string 
 
   return {
     challengeId,
-    prompt: `What is ${left} + ${right}?`,
+    prompt: `${left} + ${right} = ?`,
   };
 }
 

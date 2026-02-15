@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
-import { PwaRegister } from "@/components/pwa-register";
+import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -16,28 +16,39 @@ const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Advanced Metal Calculator",
-  description:
-    "EU-focused metal calculator for accurate profile weight and price estimates across EN standard and custom profiles.",
-  metadataBase: new URL(siteUrl),
-  manifest: "/manifest.webmanifest",
-  applicationName: "Advanced Metal Calculator",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Advanced Metal Calculator",
-  },
-  openGraph: {
-    title: "Advanced Metal Calculator",
-    description: "Calculate weight and price for EN profile types with traceable formulas and references.",
-    type: "website",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "meta.layout" });
+
+  return {
+    title: t("title"),
+    description: t("description"),
+    metadataBase: new URL(siteUrl),
+    manifest: "/manifest.webmanifest",
+    applicationName: t("applicationName"),
+    alternates: {
+      languages: {
+        en: "/en",
+        bs: "/bs",
+      },
+    },
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: t("applicationName"),
+    },
+    openGraph: {
+      title: t("title"),
+      description: t("openGraphDescription"),
+      type: "website",
+      locale,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -46,13 +57,15 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" className="overflow-x-hidden" suppressHydrationWarning>
+    <html lang={locale} className="overflow-x-hidden" suppressHydrationWarning>
       <head>
         {/* Synchronous theme script — runs before first paint to prevent flash */}
         <script
@@ -61,8 +74,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh`}>
-        <PwaRegister />
+      <body
+        className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type {
   CalculationInput,
   PriceBasis,
@@ -24,6 +25,7 @@ export const PricingSection = memo(function PricingSection({
   dispatch,
   issues,
 }: PricingSectionProps) {
+  const t = useTranslations("pricing");
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
 
   const priceUnitsForBasis: PriceUnit[] =
@@ -38,17 +40,17 @@ export const PricingSection = memo(function PricingSection({
       <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         {/* tag icon */}
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
-        Pricing
+        {t("title")}
       </h3>
 
       {/* Live preview */}
       <div className="rounded-lg bg-accent-surface px-3 py-2 text-xs text-foreground-secondary">
         <span className="font-medium text-accent">{input.unitPrice} {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}</span>
         {input.wastePercent > 0 && (
-          <><span className="mx-1.5 text-muted-faint">·</span><span>+{input.wastePercent}% waste</span></>
+          <><span className="mx-1.5 text-muted-faint">·</span><span>{t("wastePreview", { value: input.wastePercent })}</span></>
         )}
         {input.includeVat && (
-          <><span className="mx-1.5 text-muted-faint">·</span><span>+{input.vatPercent}% VAT</span></>
+          <><span className="mx-1.5 text-muted-faint">·</span><span>{t("vatPreview", { value: input.vatPercent })}</span></>
         )}
         {(input.wastePercent > 0 || input.includeVat) && (
           <>
@@ -62,7 +64,7 @@ export const PricingSection = memo(function PricingSection({
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label htmlFor="price-basis" className="text-xs font-medium text-foreground-secondary">
-            Basis
+            {t("basis")}
           </label>
           <select
             id="price-basis"
@@ -72,14 +74,14 @@ export const PricingSection = memo(function PricingSection({
             }
             className="h-9 rounded-md border border-border-strong bg-surface px-2 text-sm"
           >
-            <option value="weight">Weight</option>
-            <option value="length">Length</option>
-            <option value="piece">Piece</option>
+            <option value="weight">{t("basisWeight")}</option>
+            <option value="length">{t("basisLength")}</option>
+            <option value="piece">{t("basisPiece")}</option>
           </select>
         </div>
         <div className="grid gap-1">
           <label htmlFor="unit-price" className="text-xs font-medium text-foreground-secondary">
-            Unit price
+            {t("unitPrice")}
           </label>
           <div className="flex min-w-0">
             <NumericInput
@@ -102,7 +104,7 @@ export const PricingSection = memo(function PricingSection({
               className={`h-9 shrink-0 rounded-r-md border-y border-r bg-surface-raised px-1.5 text-xs ${
                 hasIssue("priceUnit") ? "border-red-400" : "border-border-strong"
               }`}
-              aria-label="Price unit"
+              aria-label={t("priceUnitAria")}
             >
               {priceUnitsForBasis.map((u) => (
                 <option key={u} value={u}>
@@ -114,7 +116,7 @@ export const PricingSection = memo(function PricingSection({
         </div>
         <div className="grid gap-1">
           <label htmlFor="currency" className="text-xs font-medium text-foreground-secondary">
-            Currency
+            {t("currency")}
           </label>
           <select
             id="currency"
@@ -136,7 +138,7 @@ export const PricingSection = memo(function PricingSection({
         </div>
         <div className="grid gap-1">
           <label htmlFor="waste" className="text-xs font-medium text-foreground-secondary">
-            Waste %
+            {t("waste")}
           </label>
           <NumericInput
             id="waste"
@@ -161,12 +163,12 @@ export const PricingSection = memo(function PricingSection({
               dispatch({ type: "SET_VAT_TOGGLE", value: e.target.checked })
             }
           />
-          VAT
+          {t("vat")}
         </label>
         {input.includeVat && (
           <NumericInput
             id="vat-percent"
-            aria-label="VAT percent"
+            aria-label={t("vatPercentAria")}
             inputMode="decimal"
             autoComplete="off"
             value={input.vatPercent}

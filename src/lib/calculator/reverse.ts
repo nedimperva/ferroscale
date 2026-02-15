@@ -14,6 +14,8 @@ export interface ReverseResult {
 export interface ReverseError {
   ok: false;
   message: string;
+  messageKey?: string;
+  messageValues?: Record<string, string | number>;
 }
 
 export type ReverseResponse = ReverseResult | ReverseError;
@@ -47,10 +49,34 @@ export function solveForDimension(params: {
     knownDimensions,
   } = params;
 
-  if (targetWeightKg <= 0) return { ok: false, message: "Target weight must be positive." };
-  if (densityKgPerM3 <= 0) return { ok: false, message: "Density must be positive." };
-  if (lengthMm <= 0) return { ok: false, message: "Length must be positive." };
-  if (quantity <= 0) return { ok: false, message: "Quantity must be positive." };
+  if (targetWeightKg <= 0) {
+    return {
+      ok: false,
+      message: "Target weight must be positive.",
+      messageKey: "reverseErrors.targetWeight",
+    };
+  }
+  if (densityKgPerM3 <= 0) {
+    return {
+      ok: false,
+      message: "Density must be positive.",
+      messageKey: "reverseErrors.density",
+    };
+  }
+  if (lengthMm <= 0) {
+    return {
+      ok: false,
+      message: "Length must be positive.",
+      messageKey: "reverseErrors.length",
+    };
+  }
+  if (quantity <= 0) {
+    return {
+      ok: false,
+      message: "Quantity must be positive.",
+      messageKey: "reverseErrors.quantity",
+    };
+  }
 
   /* Weight per piece before waste */
   const wasteMultiplier = 1 + wastePercent / 100;
@@ -62,15 +88,28 @@ export function solveForDimension(params: {
   const requiredAreaMm2 = (unitWeightKg * 1_000_000_000) / (lengthMm * densityKgPerM3);
 
   if (requiredAreaMm2 <= 0 || !Number.isFinite(requiredAreaMm2)) {
-    return { ok: false, message: "Cannot compute a valid cross-section area from these inputs." };
+    return {
+      ok: false,
+      message: "Cannot compute a valid cross-section area from these inputs.",
+      messageKey: "reverseErrors.invalidArea",
+    };
   }
 
   const solved = solveProfileDimension(profileId, requiredAreaMm2, solveDimension, knownDimensions);
   if (solved === null) {
-    return { ok: false, message: `Cannot solve for ${solveDimension} with the given profile and known dimensions.` };
+    return {
+      ok: false,
+      message: `Cannot solve for ${solveDimension} with the given profile and known dimensions.`,
+      messageKey: "reverseErrors.cannotSolve",
+      messageValues: { dimension: solveDimension },
+    };
   }
   if (solved <= 0 || !Number.isFinite(solved)) {
-    return { ok: false, message: "No valid positive solution exists for these inputs." };
+    return {
+      ok: false,
+      message: "No valid positive solution exists for these inputs.",
+      messageKey: "reverseErrors.noSolution",
+    };
   }
 
   return { ok: true, solvedDimension: solveDimension, valueMm: solved, requiredAreaMm2 };

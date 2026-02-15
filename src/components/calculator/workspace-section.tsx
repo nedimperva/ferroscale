@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 
 interface WorkspaceSectionProps {
   historyLimit: number;
@@ -20,17 +21,19 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   maxCompare,
   isCompareMobileCapped,
 }: WorkspaceSectionProps) {
+  const t = useTranslations("workspace");
+
   return (
     <section className="grid gap-2">
       <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
-        Workspace
+        {t("title")}
       </h3>
 
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1">
           <label htmlFor="history-limit" className="text-xs font-medium text-foreground-secondary">
-            History depth
+            {t("historyDepth")}
           </label>
           <select
             id="history-limit"
@@ -48,7 +51,7 @@ export const WorkspaceSection = memo(function WorkspaceSection({
 
         <div className="grid gap-1">
           <label htmlFor="compare-limit" className="text-xs font-medium text-foreground-secondary">
-            Compare slots
+            {t("compareSlots")}
           </label>
           <select
             id="compare-limit"
@@ -66,8 +69,8 @@ export const WorkspaceSection = memo(function WorkspaceSection({
       </div>
 
       <p className="text-[11px] text-muted-faint">
-        Active compare limit: {maxCompare}
-        {isCompareMobileCapped ? " (mobile cap: 3)" : ""}
+        {t("activeCompareLimit", { limit: maxCompare })}
+        {isCompareMobileCapped ? ` ${t("mobileCap", { cap: 3 })}` : ""}
       </p>
     </section>
   );

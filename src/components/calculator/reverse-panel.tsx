@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type { UseReverseReturn } from "@/hooks/useReverseCalculator";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import { fromMillimeters, roundTo } from "@/lib/calculator/units";
@@ -19,12 +20,13 @@ export const ReversePanel = memo(function ReversePanel({
   isManualProfile,
   input,
 }: ReversePanelProps) {
+  const t = useTranslations("reverse");
+
   if (!isManualProfile) {
     if (reverse.enabled) {
       return (
         <div className="rounded-lg border border-amber-200 bg-amber-surface px-3 py-2 text-xs text-amber-text">
-          Reverse mode is only available for manual-dimension profiles (bars, tubes, plates).
-          Standard EN profiles have fixed sizes.
+          {t("unavailable")} {t("unavailableHint")}
         </div>
       );
     }
@@ -49,7 +51,7 @@ export const ReversePanel = memo(function ReversePanel({
             <path d="M3.27 6.96 12 12.01l8.73-5.05"/>
             <path d="M12 22.08V12"/>
           </svg>
-          <span className="text-sm font-semibold text-foreground-secondary">Reverse Calculator</span>
+          <span className="text-sm font-semibold text-foreground-secondary">{t("title")}</span>
         </div>
         <div
           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
@@ -68,14 +70,13 @@ export const ReversePanel = memo(function ReversePanel({
       {reverse.enabled && (
         <div className="border-t border-border-faint px-4 py-3 space-y-3">
           <p className="text-xs text-muted">
-            Enter a target weight and choose which dimension to solve for.
-            Other dimensions and settings are taken from the main calculator.
+            {t("description")}
           </p>
 
           {/* Target weight input */}
           <div className="grid gap-1">
             <label htmlFor="reverse-weight" className="text-xs font-medium text-foreground-secondary">
-              Target total weight
+              {t("targetWeight")}
             </label>
             <div className="flex gap-1">
               <NumericInput
@@ -95,7 +96,7 @@ export const ReversePanel = memo(function ReversePanel({
           {/* Dimension to solve for */}
           {reverse.solvableOptions.length > 1 && (
             <div className="grid gap-1">
-              <span className="text-xs font-medium text-foreground-secondary">Solve for</span>
+              <span className="text-xs font-medium text-foreground-secondary">{t("solveFor")}</span>
               <div className="flex flex-wrap gap-1.5">
                 {reverse.solvableOptions.map((dim) => (
                   <button
@@ -108,7 +109,7 @@ export const ReversePanel = memo(function ReversePanel({
                         : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
                   >
-                    {reverse.dimensionLabels[dim] ?? dim}
+                    {t(`dataset.dimensions.${dim}`)}
                   </button>
                 ))}
               </div>
@@ -119,7 +120,6 @@ export const ReversePanel = memo(function ReversePanel({
           <ReverseResult
             result={reverse.result}
             solveDimension={reverse.solveDimension}
-            dimensionLabels={reverse.dimensionLabels}
             input={input}
             dimensionDecimals={input.rounding.dimensionDecimals}
           />
@@ -134,27 +134,34 @@ export const ReversePanel = memo(function ReversePanel({
 function ReverseResult({
   result,
   solveDimension,
-  dimensionLabels,
   input,
   dimensionDecimals,
 }: {
   result: UseReverseReturn["result"];
   solveDimension: DimensionKey | null;
-  dimensionLabels: Record<string, string>;
   input: CalculationInput;
   dimensionDecimals: number;
 }) {
+  const t = useTranslations();
+
   if (!result) return null;
 
   if (!result.ok) {
+    const values = result.messageValues;
+    const resolvedValues = values && typeof values.dimension === "string"
+      ? { ...values, dimension: t(`dataset.dimensions.${values.dimension}`) }
+      : values;
+
     return (
       <div className="rounded-lg border border-red-border bg-red-surface px-3 py-2.5 text-xs text-red-text">
-        {result.message}
+        {result.messageKey
+          ? t(result.messageKey, resolvedValues as Record<string, string | number>)
+          : result.message}
       </div>
     );
   }
 
-  const label = solveDimension ? (dimensionLabels[solveDimension] ?? solveDimension) : "Dimension";
+  const label = solveDimension ? t(`dataset.dimensions.${solveDimension}`) : t("precision.dimension");
   const unit: LengthUnit = solveDimension
     ? (input.manualDimensions[solveDimension]?.unit ?? "mm")
     : "mm";
@@ -163,17 +170,17 @@ function ReverseResult({
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-widest text-green-text">
-        Required {label}
+        {t("reverse.required", { label })}
       </p>
       <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-green-900">
         {displayValue}
         <span className="ml-1 text-sm font-medium text-green-600">{unit}</span>
       </p>
       <p className="mt-1 text-[11px] text-green-600">
-        Equivalent: {result.valueMm.toFixed(2)} mm
+        {t("reverse.equivalent", { value: result.valueMm.toFixed(2) })}
       </p>
       <p className="mt-0.5 text-[11px] text-green-600">
-        Cross-section area needed: {result.requiredAreaMm2.toFixed(2)} mm²
+        {t("reverse.requiredArea", { value: result.requiredAreaMm2.toFixed(2) })}
       </p>
     </div>
   );

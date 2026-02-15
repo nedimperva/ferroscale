@@ -49,16 +49,20 @@ export interface CalculationInput {
 export interface ValidationIssue {
   field: string;
   message: string;
+  messageKey?: string;
+  messageValues?: Record<string, string | number>;
 }
 
 export interface BreakdownRow {
   label: string;
+  labelKey?: string;
   expression: string;
   value: number;
   unit: string;
 }
 
 export interface CalculationResult {
+  profileId: ProfileId;
   profileLabel: string;
   gradeLabel: string;
   densityKgPerM3: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface CaptchaPayload {
   challengeId: string;
@@ -13,6 +14,9 @@ interface ContactFormProps {
 }
 
 export function ContactForm({ context, compact }: ContactFormProps) {
+  const t = useTranslations("contact.form");
+  const rootT = useTranslations();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -31,7 +35,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
       setFeedback("");
     } catch {
       setCaptcha(null);
-      setFeedback("Unable to load CAPTCHA challenge. Please refresh.");
+      setFeedback(t("feedback.captchaLoadFailed"));
       setStatus("error");
     } finally {
       setCaptchaLoading(false);
@@ -43,7 +47,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
     if (!captcha) {
       await loadCaptcha();
       setStatus("error");
-      setFeedback("CAPTCHA challenge loaded. Please solve it and submit again.");
+      setFeedback(t("feedback.captchaLoaded"));
       return;
     }
 
@@ -64,23 +68,34 @@ export function ContactForm({ context, compact }: ContactFormProps) {
         }),
       });
 
-      const payload = (await response.json()) as { ok?: boolean; message?: string };
+      const payload = (await response.json()) as {
+        ok?: boolean;
+        message?: string;
+        messageKey?: string;
+        messageValues?: Record<string, string | number>;
+      };
       if (!response.ok || !payload.ok) {
         setStatus("error");
-        setFeedback(payload.message ?? "Unable to send your message.");
+        const serverMessage = payload.messageKey
+          ? rootT(payload.messageKey, payload.messageValues)
+          : payload.message;
+        setFeedback(serverMessage ?? t("feedback.sendFailed"));
         setChallengeAnswer("");
         await loadCaptcha();
         return;
       }
 
       setStatus("success");
-      setFeedback("Message received. Thanks for reporting.");
+      const successMessage = payload.messageKey
+        ? rootT(payload.messageKey, payload.messageValues)
+        : payload.message;
+      setFeedback(successMessage ?? t("feedback.messageReceived"));
       setMessage("");
       setChallengeAnswer("");
       await loadCaptcha();
     } catch {
       setStatus("error");
-      setFeedback("Network error while sending message.");
+      setFeedback(t("feedback.networkError"));
     }
   }
 
@@ -88,9 +103,9 @@ export function ContactForm({ context, compact }: ContactFormProps) {
     <div className={compact ? "" : "rounded-lg border border-border-strong bg-surface p-5"}>
       {!compact && (
         <>
-          <h2 className="text-lg font-semibold">Report a Formula or Data Issue</h2>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
           <p className="mt-1 text-sm text-foreground-secondary">
-            Send suspected calculation issues with context. Rate-limited and protected with CAPTCHA.
+            {t("description")}
           </p>
         </>
       )}
@@ -98,7 +113,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
       <form onSubmit={handleSubmit} className={compact ? "grid gap-3" : "mt-4 grid gap-3 md:max-w-2xl"}>
         <div className={compact ? "grid gap-2" : "grid gap-2 md:grid-cols-2"}>
           <label className="grid gap-1 text-sm">
-            <span className="text-xs font-medium text-foreground-secondary">Name</span>
+            <span className="text-xs font-medium text-foreground-secondary">{t("name")}</span>
             <input
               type="text"
               value={name}
@@ -110,7 +125,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
             />
           </label>
           <label className="grid gap-1 text-sm">
-            <span className="text-xs font-medium text-foreground-secondary">Email</span>
+            <span className="text-xs font-medium text-foreground-secondary">{t("email")}</span>
             <input
               type="email"
               value={email}
@@ -122,7 +137,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
         </div>
 
         <label className="grid gap-1 text-sm">
-          <span className="text-xs font-medium text-foreground-secondary">Message</span>
+          <span className="text-xs font-medium text-foreground-secondary">{t("message")}</span>
           <textarea
             value={message}
             onChange={(event) => setMessage(event.target.value)}
@@ -135,7 +150,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
 
         <div className="grid gap-1">
           <label className="text-xs font-medium text-foreground-secondary" htmlFor="captcha-answer">
-            CAPTCHA: {captcha?.prompt ?? "Loading..."}
+            {t("captcha", { prompt: captcha?.prompt ?? t("captchaLoading") })}
           </label>
           {!captcha ? (
             <button
@@ -144,7 +159,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
               disabled={captchaLoading}
               className="w-fit rounded-md border border-border-strong px-3 py-1.5 text-xs hover:bg-surface-inset disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {captchaLoading ? "Loading challenge..." : "Load CAPTCHA challenge"}
+              {captchaLoading ? t("loadingCaptcha") : t("loadCaptcha")}
             </button>
           ) : null}
           <input
@@ -165,7 +180,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
             : "w-fit rounded-md bg-foreground px-4 py-2 font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
           }
         >
-          {status === "loading" ? "Sending..." : "Send report"}
+          {status === "loading" ? t("sending") : t("send")}
         </button>
       </form>
 

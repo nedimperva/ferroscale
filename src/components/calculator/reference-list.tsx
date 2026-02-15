@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * Map reference labels to authoritative URLs where users can look up the
@@ -76,12 +77,27 @@ export const ReferenceList = memo(function ReferenceList({
   labels,
   className = "",
 }: ReferenceListProps) {
+  const t = useTranslations();
+
+  const renderLabel = (label: string): string => {
+    if (label.startsWith("Dataset ")) {
+      return t("references.dataset", { version: label.slice("Dataset ".length) });
+    }
+
+    if (label === "User-provided custom density") {
+      return t("references.customDensity");
+    }
+
+    return label;
+  };
+
   return (
     <div className={className}>
-      <p className="font-medium text-muted">References</p>
+      <p className="font-medium text-muted">{t("references.title")}</p>
       <ul className="mt-1 list-disc pl-4">
         {labels.map((label) => {
           const url = getUrl(label);
+          const displayLabel = renderLabel(label);
           return (
             <li key={label}>
               {url ? (
@@ -91,7 +107,7 @@ export const ReferenceList = memo(function ReferenceList({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-muted underline decoration-border-strong underline-offset-2 transition-colors hover:text-accent hover:decoration-accent"
                 >
-                  {label}
+                  {displayLabel}
                   {/* external-link icon */}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -109,7 +125,7 @@ export const ReferenceList = memo(function ReferenceList({
                   </svg>
                 </a>
               ) : (
-                label
+                displayLabel
               )}
             </li>
           );

@@ -13,21 +13,35 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
   const grade = getMaterialGradeById(input.materialGradeId);
 
   if (!profile) {
-    issues.push({ field: "profileId", message: "Select a valid profile type." });
+    issues.push({
+      field: "profileId",
+      message: "Select a valid profile type.",
+      messageKey: "validation.profileInvalid",
+    });
     return issues;
   }
 
   if (!input.useCustomDensity && !grade) {
-    issues.push({ field: "materialGradeId", message: "Select a valid material grade." });
+    issues.push({
+      field: "materialGradeId",
+      message: "Select a valid material grade.",
+      messageKey: "validation.materialInvalid",
+    });
   }
 
   if (input.useCustomDensity) {
     if (typeof input.customDensityKgPerM3 !== "number" || Number.isNaN(input.customDensityKgPerM3)) {
-      issues.push({ field: "customDensityKgPerM3", message: "Enter a custom density value." });
+      issues.push({
+        field: "customDensityKgPerM3",
+        message: "Enter a custom density value.",
+        messageKey: "validation.customDensityRequired",
+      });
     } else if (input.customDensityKgPerM3 < 100 || input.customDensityKgPerM3 > 25_000) {
       issues.push({
         field: "customDensityKgPerM3",
         message: "Custom density must be between 100 and 25,000 kg/m3.",
+        messageKey: "validation.customDensityRange",
+        messageValues: { min: 100, max: 25000 },
       });
     }
   }
@@ -36,6 +50,8 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "quantity",
       message: `Quantity must be between 1 and ${MAX_QUANTITY}.`,
+      messageKey: "validation.quantityRange",
+      messageValues: { max: MAX_QUANTITY },
     });
   }
 
@@ -44,6 +60,8 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "length",
       message: `Length must be between 1 mm and ${MAX_LENGTH_MM} mm.`,
+      messageKey: "validation.lengthRange",
+      messageValues: { max: MAX_LENGTH_MM },
     });
   }
 
@@ -51,6 +69,8 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "unitPrice",
       message: `Unit price must be between 0 and ${MAX_UNIT_PRICE}.`,
+      messageKey: "validation.unitPriceRange",
+      messageValues: { max: MAX_UNIT_PRICE },
     });
   }
 
@@ -58,6 +78,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "wastePercent",
       message: "Waste percent must be between 0 and 100.",
+      messageKey: "validation.wasteRange",
     });
   }
 
@@ -65,6 +86,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "vatPercent",
       message: "VAT percent must be between 0 and 35.",
+      messageKey: "validation.vatRange",
     });
   }
 
@@ -73,11 +95,13 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
       issues.push({
         field: "selectedSizeId",
         message: "Select a standard EN size.",
+        messageKey: "validation.sizeRequired",
       });
     } else if (!profile.sizes.some((size) => size.id === input.selectedSizeId)) {
       issues.push({
         field: "selectedSizeId",
         message: "Selected size is not valid for this profile.",
+        messageKey: "validation.sizeInvalid",
       });
     }
   } else {
@@ -87,6 +111,10 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
         issues.push({
           field: `manualDimensions.${dimension.key}`,
           message: `${dimension.label} is required.`,
+          messageKey: "validation.dimensionRequired",
+          messageValues: {
+            labelKey: `dataset.dimensions.${dimension.key}`,
+          },
         });
         continue;
       }
@@ -96,6 +124,12 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
         issues.push({
           field: `manualDimensions.${dimension.key}`,
           message: `${dimension.label} must be between ${dimension.minMm} mm and ${dimension.maxMm} mm.`,
+          messageKey: "validation.dimensionRange",
+          messageValues: {
+            labelKey: `dataset.dimensions.${dimension.key}`,
+            min: dimension.minMm,
+            max: dimension.maxMm,
+          },
         });
       }
     }
@@ -110,6 +144,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
           issues.push({
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of the outer diameter.",
+            messageKey: "validation.pipeWall",
           });
         }
       }
@@ -127,6 +162,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
           issues.push({
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of width and height.",
+            messageKey: "validation.rectangularWall",
           });
         }
       }
@@ -142,6 +178,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
           issues.push({
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of the side length.",
+            messageKey: "validation.squareWall",
           });
         }
       }
@@ -159,6 +196,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
           issues.push({
             field: "manualDimensions.thickness",
             message: "Thickness must be less than the shorter leg.",
+            messageKey: "validation.angleThickness",
           });
         }
       }
@@ -169,6 +207,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "priceUnit",
       message: "Weight-based pricing requires kg or lb.",
+      messageKey: "validation.priceUnitWeight",
     });
   }
 
@@ -176,6 +215,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "priceUnit",
       message: "Length-based pricing requires m or ft.",
+      messageKey: "validation.priceUnitLength",
     });
   }
 
@@ -183,6 +223,7 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     issues.push({
       field: "priceUnit",
       message: "Piece-based pricing requires piece unit.",
+      messageKey: "validation.priceUnitPiece",
     });
   }
 

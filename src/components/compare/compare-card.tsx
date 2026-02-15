@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type { CompareItem } from "@/hooks/useCompare";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
@@ -26,8 +27,17 @@ export const CompareCard = memo(function CompareCard({
   reference,
   onRemove,
 }: CompareCardProps) {
+  const tBase = useTranslations();
+  const t = useTranslations("compare");
   const r = item.result;
   const isRef = reference === null || reference.id === item.id;
+
+  const gradeLabel =
+    r.gradeLabel === "Custom density input"
+      ? tBase("dataset.customDensityInput")
+      : r.gradeLabel === "Unknown"
+        ? tBase("dataset.unknown")
+        : r.gradeLabel;
 
   const weightDiff = isRef ? null : diffLabel(r.totalWeightKg, reference!.result.totalWeightKg);
   const costDiff = isRef ? null : diffLabel(r.grandTotalAmount, reference!.result.grandTotalAmount);
@@ -40,7 +50,7 @@ export const CompareCard = memo(function CompareCard({
         type="button"
         onClick={() => onRemove(item.id)}
         className="absolute top-2 right-2 rounded-md p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
-        aria-label="Remove from comparison"
+        aria-label={t("remove")}
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
@@ -50,7 +60,7 @@ export const CompareCard = memo(function CompareCard({
       {/* Reference badge */}
       {isRef && (
         <div className="mx-3 mt-3 mb-1 w-fit rounded-full bg-surface-inset px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
-          Reference
+          {t("reference")}
         </div>
       )}
 
@@ -62,13 +72,13 @@ export const CompareCard = memo(function CompareCard({
           </span>
           <span className="truncate">{item.normalizedProfile.shortLabel}</span>
         </p>
-        <p className="truncate text-xs text-muted">{r.gradeLabel}</p>
+        <p className="truncate text-xs text-muted">{gradeLabel}</p>
       </div>
 
       {/* Grand total */}
       <div className="border-t border-border-faint px-3 py-2.5 text-center">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-accent">
-          Total Cost
+          {t("totalCost")}
         </p>
         <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground">
           {r.grandTotalAmount}
@@ -90,7 +100,7 @@ export const CompareCard = memo(function CompareCard({
       {/* Weight rows */}
       <div className="border-t border-border-faint px-3 py-2 text-sm">
         <div className="flex items-baseline justify-between py-1">
-          <span className="text-muted">Unit wt:</span>
+          <span className="text-muted">{t("unitWeight")}</span>
           <span className="flex items-baseline gap-1.5 font-medium">
             {r.unitWeightKg} kg
             {unitWeightDiff && (
@@ -105,7 +115,7 @@ export const CompareCard = memo(function CompareCard({
           </span>
         </div>
         <div className="flex items-baseline justify-between py-1">
-          <span className="text-muted">Total wt:</span>
+          <span className="text-muted">{t("totalWeight")}</span>
           <span className="flex items-baseline gap-1.5 font-medium">
             {r.totalWeightKg} kg
             {weightDiff && (
@@ -124,18 +134,18 @@ export const CompareCard = memo(function CompareCard({
       {/* Price detail */}
       <div className="border-t border-border-faint px-3 py-2 text-xs text-muted">
         <div className="flex justify-between py-0.5">
-          <span>Subtotal:</span>
+          <span>{t("subtotal")}</span>
            <span className="text-foreground-secondary">{r.subtotalAmount} {CURRENCY_SYMBOLS[r.currency]}</span>
         </div>
         {r.wasteAmount > 0 && (
           <div className="flex justify-between py-0.5">
-            <span>Waste:</span>
+            <span>{t("waste")}</span>
             <span className="text-foreground-secondary">{r.wasteAmount} {CURRENCY_SYMBOLS[r.currency]}</span>
           </div>
         )}
         {r.vatAmount > 0 && (
           <div className="flex justify-between py-0.5">
-            <span>VAT:</span>
+            <span>{t("vat")}</span>
             <span className="text-foreground-secondary">{r.vatAmount} {CURRENCY_SYMBOLS[r.currency]}</span>
           </div>
         )}

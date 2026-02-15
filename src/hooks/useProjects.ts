@@ -32,9 +32,45 @@ export interface ProjectAggregates {
   count: number;
 }
 
+export interface ProjectCsvLabels {
+  headers: readonly [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+  ];
+  total: string;
+  filePrefix: string;
+  resolveGradeLabel?: (label: string) => string;
+  resolveProfileLabel?: (profileId: string, fallback: string) => string;
+}
+
 const PROJECTS_KEY = "advanced-calc-projects-v2";
 const MAX_PROJECTS = 20;
 const MAX_CALCS_PER_PROJECT = 50;
+
+const DEFAULT_PROJECT_CSV_LABELS: ProjectCsvLabels = {
+  headers: [
+    "Profile",
+    "Profile Label",
+    "Material",
+    "Unit Weight (kg)",
+    "Total Weight (kg)",
+    "Subtotal",
+    "Waste",
+    "VAT",
+    "Grand Total",
+    "Currency",
+  ],
+  total: "Total",
+  filePrefix: "project",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Local-storage helpers                                             */
@@ -84,27 +120,21 @@ export function computeAggregates(project: Project): ProjectAggregates {
 /*  CSV export                                                        */
 /* ------------------------------------------------------------------ */
 
-export function exportProjectCsv(project: Project): void {
+export function exportProjectCsv(
+  project: Project,
+  labels: ProjectCsvLabels = DEFAULT_PROJECT_CSV_LABELS,
+): void {
   if (project.calculations.length === 0) return;
 
-  const headers = [
-    "Profile",
-    "Profile Label",
-    "Material",
-    "Unit Weight (kg)",
-    "Total Weight (kg)",
-    "Subtotal",
-    "Waste",
-    "VAT",
-    "Grand Total",
-    "Currency",
-  ];
+  const headers = labels.headers;
   const rows = project.calculations.map((calc) => {
     const r = calc.result;
     return [
       calc.normalizedProfile.shortLabel,
-      r.profileLabel,
-      r.gradeLabel,
+      labels.resolveProfileLabel
+        ? labels.resolveProfileLabel(r.profileId, r.profileLabel)
+        : r.profileLabel,
+      labels.resolveGradeLabel ? labels.resolveGradeLabel(r.gradeLabel) : r.gradeLabel,
       r.unitWeightKg,
       r.totalWeightKg,
       r.subtotalAmount,
@@ -117,14 +147,14 @@ export function exportProjectCsv(project: Project): void {
 
   const agg = computeAggregates(project);
   rows.push("");
-  rows.push(`Total,,,"${agg.totalWeightKg}",,,,"${agg.totalCost}","${agg.currency}"`);
+  rows.push(`${labels.total},,,"${agg.totalWeightKg}",,,,"${agg.totalCost}","${agg.currency}"`);
 
   const csv = [headers.join(","), ...rows].join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `${labels.filePrefix}-${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -178,9 +208,10 @@ export function useProjects(): UseProjectsReturn {
 
   const createProject = useCallback((name: string): Project => {
     const now = new Date().toISOString();
+    const trimmed = name.trim();
     const project: Project = {
       id: crypto.randomUUID(),
-      name: name.trim() || "Untitled Project",
+      name: trimmed.length > 0 ? trimmed : `P-${now.slice(0, 10)}`,
       createdAt: now,
       updatedAt: now,
       calculations: [],

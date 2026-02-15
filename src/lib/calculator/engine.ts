@@ -169,7 +169,7 @@ function calculateUnitPrice(
 
   return {
     unitPriceAmount: unitPrice,
-    expression: `${unitPrice} per piece`,
+    expression: `${unitPrice} / piece`,
   };
 }
 
@@ -187,7 +187,11 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
   if (!profile) {
     return {
       ok: false,
-      issues: [{ field: "profileId", message: "Profile not found." }],
+      issues: [{
+        field: "profileId",
+        message: "Profile not found.",
+        messageKey: "validation.profileNotFound",
+      }],
     };
   }
 
@@ -215,36 +219,42 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
   const rows: BreakdownRow[] = [
     {
       label: "Cross-section area",
+      labelKey: "resultRows.crossSectionArea",
       expression: areaExpression,
       value: areaMm2,
       unit: "mm2",
     },
     {
       label: "Volume per piece",
+      labelKey: "resultRows.volumePerPiece",
       expression: `${areaMm2.toFixed(4)} * ${lengthMm.toFixed(4)} / 1e9`,
       value: volumePerPieceM3,
       unit: "m3",
     },
     {
       label: "Unit weight",
+      labelKey: "resultRows.unitWeight",
       expression: `${volumePerPieceM3.toExponential(6)} * ${densityKgPerM3}`,
       value: unitWeightKg,
       unit: "kg",
     },
     {
       label: "Unit price",
+      labelKey: "resultRows.unitPrice",
       expression: price.expression,
       value: price.unitPriceAmount,
       unit: CURRENCY_SYMBOLS[input.currency],
     },
     {
       label: "Subtotal",
+      labelKey: "resultRows.subtotal",
       expression: `${price.unitPriceAmount.toFixed(4)} * ${input.quantity}`,
       value: subtotalAmount,
       unit: CURRENCY_SYMBOLS[input.currency],
     },
     {
       label: "Waste adjustment",
+      labelKey: "resultRows.wasteAdjustment",
       expression: `${subtotalAmount.toFixed(4)} * (${input.wastePercent}/100)`,
       value: wasteAmount,
       unit: CURRENCY_SYMBOLS[input.currency],
@@ -254,6 +264,7 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
   if (input.includeVat) {
     rows.push({
       label: "VAT",
+      labelKey: "resultRows.vat",
       expression: `${subtotalWithWasteAmount.toFixed(4)} * (${input.vatPercent}/100)`,
       value: vatAmount,
       unit: CURRENCY_SYMBOLS[input.currency],
@@ -277,6 +288,7 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
   return {
     ok: true,
     result: {
+      profileId: profile.id,
       profileLabel: profile.label,
       gradeLabel,
       densityKgPerM3: roundTo(densityKgPerM3, input.rounding.dimensionDecimals),

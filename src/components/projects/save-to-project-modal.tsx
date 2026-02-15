@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { Project } from "@/hooks/useProjects";
 import { computeAggregates } from "@/hooks/useProjects";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
@@ -38,10 +39,20 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
   currentResult,
   onOpenDrawer,
 }: SaveToProjectModalProps) {
+  const tBase = useTranslations();
+  const t = useTranslations("saveToProject");
+  const tProjects = useTranslations("projects");
   const normalizedCurrent = normalizeProfileSnapshot(currentInput);
   const [newName, setNewName] = useState("");
   const [feedback, setFeedback] = useState<{ projectName: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const gradeLabel =
+    currentResult.gradeLabel === "Custom density input"
+      ? tBase("dataset.customDensityInput")
+      : currentResult.gradeLabel === "Unknown"
+        ? tBase("dataset.unknown")
+        : currentResult.gradeLabel;
 
   /* Reset state when modal closes */
   const closeAndReset = useCallback(() => {
@@ -126,13 +137,13 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
               </svg>
-              Save to Project
+              {t("title")}
             </h2>
             <button
               type="button"
               onClick={closeAndReset}
               className="rounded-md p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
-              aria-label="Close"
+              aria-label={t("close")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M18 6 6 18" />
@@ -144,7 +155,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
           {/* Feedback banner */}
           {feedback && (
             <div className="border-b border-green-border bg-green-surface px-4 py-2.5 text-center text-sm font-medium text-green-text">
-              Added to &ldquo;{feedback.projectName}&rdquo;
+              {t("added", { projectName: feedback.projectName })}
             </div>
           )}
 
@@ -153,7 +164,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
             <div className="max-h-[60vh] overflow-y-auto p-4">
               {/* Current calculation preview */}
               <div className="mb-3 rounded-lg border border-border-faint bg-surface-raised px-3 py-2">
-                <p className="text-xs text-muted">Adding:</p>
+                <p className="text-xs text-muted">{t("adding")}</p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
                   <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
                     <ProfileIcon category={normalizedCurrent.iconKey} className="h-3.5 w-3.5" />
@@ -161,7 +172,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                   <span className="truncate">{normalizedCurrent.shortLabel}</span>
                 </p>
                 <p className="text-xs text-muted">
-                  {currentResult.gradeLabel} &middot;
+                  {gradeLabel} &middot;
                   {currentResult.totalWeightKg} kg &middot; {currentResult.grandTotalAmount} {CURRENCY_SYMBOLS[currentResult.currency]}
                 </p>
               </div>
@@ -169,7 +180,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
               {/* Existing projects — click to add */}
               {projects.length > 0 && (
                 <div className="mb-3 grid gap-1.5">
-                  <span className="text-xs font-medium text-muted">Choose a project</span>
+                  <span className="text-xs font-medium text-muted">{t("chooseProject")}</span>
                   {projects.map((project) => {
                     const agg = computeAggregates(project);
                     return (
@@ -182,7 +193,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-foreground">{project.name}</p>
                           <p className="text-xs text-muted-faint">
-                            {agg.count} item{agg.count !== 1 ? "s" : ""}
+                            {tProjects("itemsCount", { count: agg.count })}
                             {agg.count > 0 && <> &middot; {agg.totalWeightKg} kg</>}
                           </p>
                         </div>
@@ -198,13 +209,13 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
               {/* Create new project + add */}
               <div className="grid gap-1.5">
                 <span className="text-xs font-medium text-muted">
-                  {projects.length > 0 ? "Or create a new project" : "Create a project"}
+                  {projects.length > 0 ? t("orCreate") : t("createProject")}
                 </span>
                 <div className="flex gap-2">
                   <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Project name..."
+                    placeholder={t("placeholder")}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => {
@@ -219,7 +230,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                     disabled={!newName.trim()}
                     className="shrink-0 rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
                   >
-                    Create & Add
+                    {t("createAndAdd")}
                   </button>
                 </div>
               </div>
@@ -234,7 +245,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                 onClick={handleManageProjects}
                 className="text-xs font-medium text-muted transition-colors hover:text-foreground-secondary"
               >
-                Manage projects...
+                {t("manageProjects")}
               </button>
             </div>
           )}

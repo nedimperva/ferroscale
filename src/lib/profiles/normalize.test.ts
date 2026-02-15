@@ -33,7 +33,7 @@ describe("normalizeProfileSnapshot", () => {
 
     const snapshot = normalizeProfileSnapshot(input);
 
-    expect(snapshot.shortLabel).toBe("Round Tube OD 60.3 x WT 2.8 x L 3400 mm");
+    expect(snapshot.shortLabel).toBe("CHS 60.3x2.8 x L 3400 mm");
     expect(snapshot.iconKey).toBe("tubes");
   });
 
@@ -45,7 +45,7 @@ describe("normalizeProfileSnapshot", () => {
 
     const snapshot = normalizeProfileSnapshot(input);
 
-    expect(snapshot.shortLabel).toBe("Sheet 1500 x 3000 x 10 mm");
+    expect(snapshot.shortLabel).toBe("SHT 1500x3000x10 mm");
     expect(snapshot.iconKey).toBe("plates_sheets");
   });
 
@@ -56,7 +56,7 @@ describe("normalizeProfileSnapshot", () => {
 
     const snapshot = normalizeProfileSnapshot(input);
 
-    expect(snapshot.shortLabel).toBe("IPE 200 x L 6000 mm");
+    expect(snapshot.shortLabel).toBe("IPE 200 · L 6000 mm");
     expect(snapshot.iconKey).toBe("structural");
   });
 });

@@ -53,6 +53,7 @@ async function sendContactEmail(body: {
     return {
       ok: false as const,
       status: 500,
+      messageKey: "contact.api.notConfigured",
       message:
         "Contact service is not configured. Set RESEND_API_KEY, RESEND_FROM, and optionally RESEND_TO.",
     };
@@ -63,6 +64,7 @@ async function sendContactEmail(body: {
     return {
       ok: false as const,
       status: 500,
+      messageKey: "contact.api.recipientEmpty",
       message: "Contact service recipient list is empty.",
     };
   }
@@ -94,6 +96,8 @@ async function sendContactEmail(body: {
     return {
       ok: false as const,
       status: 502,
+      messageKey: details ? "contact.api.deliveryFailedWithReason" : "contact.api.deliveryFailed",
+      messageValues: details ? { details } : undefined,
       message: details ? `Failed to deliver message (${details}).` : "Failed to deliver message.",
     };
   }
@@ -127,6 +131,7 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         message: "Too many requests. Try again later.",
+        messageKey: "contact.api.tooManyRequests",
       },
       {
         status: 429,
@@ -142,6 +147,7 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         message: "Invalid JSON payload.",
+        messageKey: "contact.api.invalidJson",
       },
       { status: 400 },
     );
@@ -152,6 +158,7 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         message: "Invalid request payload.",
+        messageKey: "contact.api.invalidPayload",
       },
       { status: 400 },
     );
@@ -163,6 +170,7 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         message: "Validation failed.",
+        messageKey: "contact.api.validationFailed",
         issues: validated,
       },
       { status: 422 },
@@ -184,6 +192,7 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         message: "Captcha validation failed.",
+        messageKey: "contact.api.captchaFailed",
       },
       { status: 403 },
     );
@@ -201,6 +210,8 @@ export async function POST(request: NextRequest) {
       {
         ok: false,
         message: emailResult.message,
+        messageKey: emailResult.messageKey,
+        messageValues: emailResult.messageValues,
       },
       { status: emailResult.status },
     );
@@ -215,6 +226,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     ok: true,
     message: "Message received.",
+    messageKey: "contact.api.messageReceived",
     remaining: limit.remaining,
     resetAt: limit.resetAt,
   });

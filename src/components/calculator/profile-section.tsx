@@ -1,8 +1,8 @@
 import { memo, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datasets/types";
-import { PROFILE_CATEGORY_LABELS } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
@@ -34,30 +34,6 @@ const CATEGORY_ICONS: Record<ProfileCategory, React.ReactNode> = {
       <circle cx="12" cy="12" r="9" />
     </svg>
   ),
-};
-
-/** Short label for the sub-type pills (cleaner than full profile label). */
-const PROFILE_SHORT_LABELS: Partial<Record<ProfileId, string>> = {
-  pipe: "Circular",
-  rectangular_tube: "Rectangular",
-  square_hollow: "Square",
-  round_bar: "Round",
-  square_bar: "Square",
-  flat_bar: "Flat",
-  sheet: "Sheet",
-  plate: "Plate",
-  chequered_plate: "Chequered",
-  expanded_metal: "Expanded",
-  corrugated_sheet: "Corrugated",
-  beam_ipe_en: "IPE",
-  beam_ipn_en: "IPN",
-  beam_hea_en: "HEA",
-  beam_heb_en: "HEB",
-  beam_hem_en: "HEM",
-  channel_upn_en: "UPN",
-  channel_upe_en: "UPE",
-  angle: "Angle",
-  tee_en: "Tee (T)",
 };
 
 /** SVG icon per profile — represents the cross-section shape. */
@@ -208,9 +184,21 @@ export const ProfileSection = memo(function ProfileSection({
   selectedProfile,
   issues,
 }: ProfileSectionProps) {
+  const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
-  const getIssueMessage = (field: string) =>
-    issues.find((issue) => issue.field === field)?.message;
+  const getIssueMessage = (field: string) => {
+    const issue = issues.find((item) => item.field === field);
+    if (!issue) return undefined;
+
+    const values = issue.messageValues;
+    const resolvedValues = values && typeof values.labelKey === "string"
+      ? { ...values, label: t(values.labelKey) }
+      : values;
+
+    return issue.messageKey
+      ? t(issue.messageKey, resolvedValues)
+      : issue.message;
+  };
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
 
   const activeCategory = selectedProfile.category;
@@ -232,7 +220,7 @@ export const ProfileSection = memo(function ProfileSection({
     <section className="grid gap-4">
       {/* ── Tier 1: Category pills ── */}
       <div className="grid gap-1.5">
-        <span className="text-xs font-medium text-muted">Category</span>
+        <span className="text-xs font-medium text-muted">{t("profileSection.category")}</span>
         <div className="flex flex-wrap gap-1.5">
           {CATEGORY_ORDER.map((cat) => {
             const isActive = cat === activeCategory;
@@ -248,7 +236,7 @@ export const ProfileSection = memo(function ProfileSection({
                 }`}
               >
                 {CATEGORY_ICONS[cat]}
-                {PROFILE_CATEGORY_LABELS[cat]}
+                {t(`dataset.profileCategories.${cat}`)}
               </button>
             );
           })}
@@ -257,7 +245,7 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Tier 2: Sub-type pills ── */}
       <div className="grid gap-1.5">
-        <span className="text-xs font-medium text-muted">Type</span>
+        <span className="text-xs font-medium text-muted">{t("profileSection.type")}</span>
         <div className="flex flex-wrap gap-1.5">
           {categoryProfiles.map((p) => {
             const isActive = p.id === input.profileId;
@@ -273,7 +261,7 @@ export const ProfileSection = memo(function ProfileSection({
                 }`}
               >
                 {PROFILE_ICONS[p.id]}
-                {PROFILE_SHORT_LABELS[p.id] ?? p.label}
+                {t(`dataset.profileShort.${p.id}`)}
               </button>
             );
           })}
@@ -284,7 +272,7 @@ export const ProfileSection = memo(function ProfileSection({
       {selectedProfile.mode === "standard" && (
         <div className="grid gap-1">
           <label htmlFor="size" className="text-xs font-medium text-foreground-secondary">
-            Size
+            {t("profileSection.size")}
           </label>
           <select
             id="size"
@@ -301,7 +289,7 @@ export const ProfileSection = memo(function ProfileSection({
             ))}
           </select>
           <p className="text-[11px] text-muted-faint">
-            Area from EN table · {selectedProfile.formulaLabel}
+            {t("profileSection.enArea")}
           </p>
         </div>
       )}
@@ -331,7 +319,7 @@ export const ProfileSection = memo(function ProfileSection({
       <div className="grid grid-cols-2 gap-2">
         <div className="grid gap-1 min-w-0">
           <label htmlFor="length" className="text-xs font-medium text-foreground-secondary">
-            Piece length
+            {t("profileSection.pieceLength")}
           </label>
           <div className="flex gap-1 min-w-0">
             <NumericInput
@@ -351,7 +339,7 @@ export const ProfileSection = memo(function ProfileSection({
                 dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
               }
               className="h-9 shrink-0 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-accent"
-              aria-label="Length unit"
+              aria-label={t("profileSection.lengthUnitAria")}
             >
               {LENGTH_UNITS.map((u) => (
                 <option key={u} value={u}>
@@ -363,7 +351,7 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
         <div className="grid gap-1 min-w-0">
           <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
-            Quantity
+            {t("profileSection.quantity")}
           </label>
           <NumericInput
             id="quantity"

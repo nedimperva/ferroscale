@@ -28,8 +28,6 @@ export interface UseReverseReturn {
   solvableOptions: DimensionKey[];
   /** The latest reverse-solve result. */
   result: ReverseResponse | null;
-  /** Dimension label map for display. */
-  dimensionLabels: Record<string, string>;
 }
 
 const DEBOUNCE_MS = 200;
@@ -52,16 +50,6 @@ export function useReverseCalculator(
     () => (selectedProfile.mode === "manual" ? getSolvableDimensions(selectedProfile.id) : []),
     [selectedProfile],
   );
-
-  /* Build dimension labels from profile definition */
-  const dimensionLabels = useMemo(() => {
-    if (selectedProfile.mode !== "manual") return {};
-    const labels: Record<string, string> = {};
-    for (const dim of (selectedProfile as ManualProfileDefinition).dimensions) {
-      labels[dim.key] = dim.label;
-    }
-    return labels;
-  }, [selectedProfile]);
 
   /*
    * Derive effective solve dimension from the user's preference + available
@@ -141,6 +129,5 @@ export function useReverseCalculator(
     setSolveDimension,
     solvableOptions,
     result,
-    dimensionLabels,
   };
 }

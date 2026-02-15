@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { getMaterialGradeById } from "@/lib/datasets/materials";
@@ -12,6 +13,7 @@ export const SettingsSummary = memo(function SettingsSummary({
   input,
   onOpen,
 }: SettingsSummaryProps) {
+  const t = useTranslations("settingsSummary");
   const grade = getMaterialGradeById(input.materialGradeId);
   const gradeLabel = grade?.label ?? input.materialGradeId;
   const density = input.useCustomDensity
@@ -28,17 +30,17 @@ export const SettingsSummary = memo(function SettingsSummary({
   const roundTags = isDefaultRounding
     ? []
     : [
-        { prefix: "Weight", label: `${fmtExample(w, 12.3)} kg`, muted: true },
-        { prefix: "Price", label: `${fmtExample(p, 49.9)} €`, muted: true },
-        { prefix: "Dim", label: `${fmtExample(d, 5.7)} mm`, muted: true },
+        { prefix: t("weight"), label: `${fmtExample(w, 12.3)} kg`, muted: true },
+        { prefix: t("price"), label: `${fmtExample(p, 49.9)} €`, muted: true },
+        { prefix: t("dimension"), label: `${fmtExample(d, 5.7)} mm`, muted: true },
       ];
 
   const tags: { prefix?: string; label: string; muted?: boolean }[] = [
-    { prefix: "Grade", label: gradeLabel },
-    ...(density ? [{ prefix: "Density", label: density }] : []),
-    { prefix: "Price", label: priceTag },
-    ...(wasteTag ? [{ prefix: "Waste", label: `${input.wastePercent}%` }] : []),
-    ...(vatTag ? [{ prefix: "VAT", label: `${input.vatPercent}%` }] : []),
+    { prefix: t("grade"), label: gradeLabel },
+    ...(density ? [{ prefix: t("density"), label: density }] : []),
+    { prefix: t("price"), label: priceTag },
+    ...(wasteTag ? [{ prefix: t("waste"), label: `${input.wastePercent}%` }] : []),
+    ...(vatTag ? [{ prefix: t("vat"), label: `${input.vatPercent}%` }] : []),
     ...roundTags,
   ];
 
@@ -80,7 +82,7 @@ export const SettingsSummary = memo(function SettingsSummary({
         ))}
       </span>
       <span className="ml-auto shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-faint transition-colors group-hover:text-foreground-secondary">
-        Edit
+        {t("edit")}
       </span>
     </button>
   );

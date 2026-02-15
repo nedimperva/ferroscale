@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { DimensionDefinition, DimensionKey } from "@/lib/datasets/types";
 import { NumericInput } from "./numeric-input";
@@ -22,10 +23,13 @@ export const DimensionInput = memo(function DimensionInput({
   hasIssue = false,
   issueMessage,
 }: DimensionInputProps) {
+  const t = useTranslations();
+  const dimensionLabel = t(`dataset.dimensions.${dimension.key}`);
+
   return (
     <div className="grid gap-1">
       <label className="truncate text-xs font-medium text-foreground-secondary" htmlFor={`dimension-${dimension.key}`}>
-        {dimension.label}{" "}
+        {dimensionLabel}{" "}
         <span className="font-normal text-muted-faint">
           {dimension.minMm}–{dimension.maxMm}
         </span>
@@ -48,7 +52,7 @@ export const DimensionInput = memo(function DimensionInput({
           value={value?.unit ?? "mm"}
           onChange={(e) => onUnitChange(e.target.value as LengthUnit)}
           className="h-9 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-accent"
-          aria-label={`${dimension.label} unit`}
+          aria-label={t("profileSection.dimensionUnitAria", { label: dimensionLabel })}
         >
           {LENGTH_UNITS.map((u) => (
             <option key={u} value={u}>

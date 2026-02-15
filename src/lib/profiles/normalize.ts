@@ -38,7 +38,7 @@ function dimMm(input: CalculationInput, key: DimensionKey): number | null {
 function labelForStandard(profile: ProfileDefinition, input: CalculationInput, lengthMm: number): { label: string; canonical: string } {
   if (profile.mode !== "standard") {
     return {
-      label: `${profile.label} x L ${formatMm(lengthMm)} mm`,
+      label: `${profile.id} x L ${formatMm(lengthMm)} mm`,
       canonical: `profile=${profile.id}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
     };
   }
@@ -46,7 +46,7 @@ function labelForStandard(profile: ProfileDefinition, input: CalculationInput, l
   const selectedSize = profile.sizes.find((size) => size.id === input.selectedSizeId) ?? profile.sizes[0];
   const sizeLabel = selectedSize ? normalizeSizeLabel(selectedSize.label) : profile.label;
   return {
-    label: `${sizeLabel} x L ${formatMm(lengthMm)} mm`,
+    label: `${sizeLabel} · L ${formatMm(lengthMm)} mm`,
     canonical: `profile=${profile.id}|size=${selectedSize?.id ?? "none"}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
   };
 }
@@ -66,67 +66,67 @@ function manualSnapshot(profile: ProfileDefinition, input: CalculationInput, len
   switch (profile.id) {
     case "round_bar":
       return {
-        label: `Round Bar Dia ${formatMm(diameter ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `RB Ø${formatMm(diameter ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=round_bar|d=${fixedMm(diameter ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "square_bar":
       return {
-        label: `Square Bar ${formatMm(side ?? NaN)} x ${formatMm(side ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `SB ${formatMm(side ?? NaN)}x${formatMm(side ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=square_bar|side=${fixedMm(side ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "flat_bar":
       return {
-        label: `Flat Bar ${formatMm(width ?? NaN)} x ${formatMm(thickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `FB ${formatMm(width ?? NaN)}x${formatMm(thickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=flat_bar|w=${fixedMm(width ?? NaN)}|t=${fixedMm(thickness ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "angle":
       return {
-        label: `Angle ${formatMm(legA ?? NaN)} x ${formatMm(legB ?? NaN)} x ${formatMm(thickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `L ${formatMm(legA ?? NaN)}x${formatMm(legB ?? NaN)}x${formatMm(thickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=angle|a=${fixedMm(legA ?? NaN)}|b=${fixedMm(legB ?? NaN)}|t=${fixedMm(thickness ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "pipe":
       return {
-        label: `Round Tube OD ${formatMm(outerDiameter ?? NaN)} x WT ${formatMm(wallThickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `CHS ${formatMm(outerDiameter ?? NaN)}x${formatMm(wallThickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=pipe|od=${fixedMm(outerDiameter ?? NaN)}|wt=${fixedMm(wallThickness ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "rectangular_tube":
       return {
-        label: `Rect Tube ${formatMm(width ?? NaN)} x ${formatMm(height ?? NaN)} x ${formatMm(wallThickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `RHS ${formatMm(width ?? NaN)}x${formatMm(height ?? NaN)}x${formatMm(wallThickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=rectangular_tube|w=${fixedMm(width ?? NaN)}|h=${fixedMm(height ?? NaN)}|wt=${fixedMm(wallThickness ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "square_hollow":
       return {
-        label: `SHS ${formatMm(side ?? NaN)} x ${formatMm(side ?? NaN)} x ${formatMm(wallThickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
+        label: `SHS ${formatMm(side ?? NaN)}x${formatMm(side ?? NaN)}x${formatMm(wallThickness ?? NaN)} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=square_hollow|side=${fixedMm(side ?? NaN)}|wt=${fixedMm(wallThickness ?? NaN)}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
     case "sheet":
       return {
-        label: `Sheet ${formatMm(width ?? NaN)} x ${formatMm(lengthMm)} x ${formatMm(thickness ?? NaN)} mm`,
+        label: `SHT ${formatMm(width ?? NaN)}x${formatMm(lengthMm)}x${formatMm(thickness ?? NaN)} mm`,
         canonical: `profile=sheet|w=${fixedMm(width ?? NaN)}|len=${fixedMm(lengthMm)}|t=${fixedMm(thickness ?? NaN)}|qty=${input.quantity}`,
       };
     case "plate":
       return {
-        label: `Plate ${formatMm(width ?? NaN)} x ${formatMm(lengthMm)} x ${formatMm(thickness ?? NaN)} mm`,
+        label: `PL ${formatMm(width ?? NaN)}x${formatMm(lengthMm)}x${formatMm(thickness ?? NaN)} mm`,
         canonical: `profile=plate|w=${fixedMm(width ?? NaN)}|len=${fixedMm(lengthMm)}|t=${fixedMm(thickness ?? NaN)}|qty=${input.quantity}`,
       };
     case "chequered_plate":
       return {
-        label: `Chequered Plate ${formatMm(width ?? NaN)} x ${formatMm(lengthMm)} x ${formatMm(thickness ?? NaN)}+${formatMm(patternHeight ?? NaN)} mm`,
+        label: `CHQ ${formatMm(width ?? NaN)}x${formatMm(lengthMm)}x${formatMm(thickness ?? NaN)}+${formatMm(patternHeight ?? NaN)} mm`,
         canonical: `profile=chequered_plate|w=${fixedMm(width ?? NaN)}|len=${fixedMm(lengthMm)}|t=${fixedMm(thickness ?? NaN)}|p=${fixedMm(patternHeight ?? NaN)}|qty=${input.quantity}`,
       };
     case "expanded_metal":
       return {
-        label: `Expanded Metal ${formatMm(width ?? NaN)} x ${formatMm(lengthMm)} x t${formatMm(thickness ?? NaN)} mm`,
+        label: `EXP ${formatMm(width ?? NaN)}x${formatMm(lengthMm)}x${formatMm(thickness ?? NaN)} mm`,
         canonical: `profile=expanded_metal|w=${fixedMm(width ?? NaN)}|len=${fixedMm(lengthMm)}|t=${fixedMm(thickness ?? NaN)}|qty=${input.quantity}`,
       };
     case "corrugated_sheet":
       return {
-        label: `Corrugated Sheet ${formatMm(width ?? NaN)} x ${formatMm(lengthMm)} x t${formatMm(thickness ?? NaN)} mm`,
+        label: `CRG ${formatMm(width ?? NaN)}x${formatMm(lengthMm)}x${formatMm(thickness ?? NaN)} mm`,
         canonical: `profile=corrugated_sheet|w=${fixedMm(width ?? NaN)}|len=${fixedMm(lengthMm)}|t=${fixedMm(thickness ?? NaN)}|qty=${input.quantity}`,
       };
     default:
       return {
-        label: `${profile.label} x L ${formatMm(lengthMm)} mm`,
+        label: `${profile.id} x L ${formatMm(lengthMm)} mm`,
         canonical: `profile=${profile.id}|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
       };
   }
@@ -140,7 +140,7 @@ export function normalizeProfileSnapshot(input: CalculationInput): NormalizedPro
     return {
       formatVersion: PROFILE_FORMAT_VERSION,
       iconKey: "bars",
-      shortLabel: "Unknown Profile",
+      shortLabel: "PROFILE",
       canonicalKey: `profile=unknown|len=${fixedMm(lengthMm)}|qty=${input.quantity}`,
     };
   }

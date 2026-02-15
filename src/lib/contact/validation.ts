@@ -10,6 +10,7 @@ export interface ContactRequest {
 export interface ContactValidationIssue {
   field: keyof ContactRequest | "root";
   message: string;
+  messageKey?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,6 +22,7 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     issues.push({
       field: "name",
       message: "Name must be between 2 and 80 characters.",
+      messageKey: "contact.validation.nameRange",
     });
   }
 
@@ -28,6 +30,7 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     issues.push({
       field: "email",
       message: "Enter a valid email address.",
+      messageKey: "contact.validation.emailInvalid",
     });
   }
 
@@ -35,6 +38,7 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     issues.push({
       field: "message",
       message: "Message must be between 10 and 1500 characters.",
+      messageKey: "contact.validation.messageRange",
     });
   }
 
@@ -42,6 +46,7 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     issues.push({
       field: "challengeId",
       message: "Captcha challenge is required.",
+      messageKey: "contact.validation.challengeRequired",
     });
   }
 
@@ -49,6 +54,7 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     issues.push({
       field: "challengeAnswer",
       message: "Captcha answer is required.",
+      messageKey: "contact.validation.answerRequired",
     });
   }
 
@@ -56,6 +62,7 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     issues.push({
       field: "context",
       message: "Context payload is too large.",
+      messageKey: "contact.validation.contextTooLarge",
     });
   }
 

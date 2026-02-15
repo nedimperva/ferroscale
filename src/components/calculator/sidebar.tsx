@@ -1,8 +1,10 @@
 "use client";
 
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
 import { DATASET_VERSION } from "@/lib/datasets/version";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface SidebarProps {
   onOpenContact: () => void;
@@ -41,6 +43,7 @@ export const Sidebar = memo(function Sidebar({
   theme,
   onToggleTheme,
 }: SidebarProps) {
+  const t = useTranslations();
 
   const width = collapsed ? "w-[56px]" : "w-[220px]";
 
@@ -64,7 +67,7 @@ export const Sidebar = memo(function Sidebar({
         {!collapsed && (
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">
-              Metal Calculator
+              {t("sidebar.title")}
             </h1>
             <span className="text-[10px] text-muted-faint">
               v{DATASET_VERSION}
@@ -84,7 +87,7 @@ export const Sidebar = memo(function Sidebar({
               <circle cx="12" cy="12" r="3"/>
             </svg>
           }
-          label="Settings"
+          label={t("sidebar.settings")}
           active={isSettingsOpen}
           collapsed={collapsed}
           onClick={onOpenSettings}
@@ -97,7 +100,7 @@ export const Sidebar = memo(function Sidebar({
               <path d="M12 7v5l4 2"/>
             </svg>
           }
-          label="History"
+          label={t("sidebar.history")}
           active={isHistoryOpen}
           collapsed={collapsed}
           onClick={onOpenHistory}
@@ -108,7 +111,7 @@ export const Sidebar = memo(function Sidebar({
               <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
             </svg>
           }
-          label="Projects"
+          label={t("sidebar.projects")}
           badge={projectCount > 0 ? projectCount : undefined}
           variant={projectCount > 0 ? "purple" : "default"}
           active={isProjectsOpen}
@@ -124,7 +127,7 @@ export const Sidebar = memo(function Sidebar({
                 <rect x="14" y="3" width="7" height="18" rx="1"/>
               </svg>
             }
-            label={`Compare (${compareCount})`}
+            label={t("sidebar.compareCount", { count: compareCount })}
             variant="blue"
             active={isCompareOpen}
             collapsed={collapsed}
@@ -144,13 +147,19 @@ export const Sidebar = memo(function Sidebar({
               <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
             </svg>
           }
-          label="Report an issue"
+          label={t("sidebar.reportIssue")}
           active={isContactOpen}
           collapsed={collapsed}
           onClick={onOpenContact}
         />
 
         <div className={`border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"} mt-0.5`} />
+
+        {!collapsed && (
+          <div className="px-1 py-1.5">
+            <LanguageSwitcher className="w-full justify-between" />
+          </div>
+        )}
 
         {/* Theme toggle */}
         <button
@@ -159,8 +168,20 @@ export const Sidebar = memo(function Sidebar({
           className={`flex w-full items-center rounded-lg text-sm font-medium text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${
             collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-2.5 py-2"
           }`}
-          aria-label={theme === "light" ? "Switch to dark mode" : theme === "dark" ? "Switch to system mode" : "Switch to light mode"}
-          title={theme === "light" ? "Dark mode" : theme === "dark" ? "System mode" : "Light mode"}
+          aria-label={
+            theme === "light"
+              ? t("theme.switchToDark")
+              : theme === "dark"
+                ? t("theme.switchToSystem")
+                : t("theme.switchToLight")
+          }
+          title={
+            theme === "light"
+              ? t("theme.darkMode")
+              : theme === "dark"
+                ? t("theme.systemMode")
+                : t("theme.lightMode")
+          }
         >
           <span className="shrink-0">
             {theme === "light" ? (
@@ -192,7 +213,11 @@ export const Sidebar = memo(function Sidebar({
           </span>
           {!collapsed && (
             <span className="truncate">
-              {theme === "light" ? "Dark mode" : theme === "dark" ? "Light mode" : "System"}
+              {theme === "light"
+                ? t("theme.darkMode")
+                : theme === "dark"
+                  ? t("theme.lightMode")
+                  : t("theme.system")}
             </span>
           )}
         </button>
@@ -202,8 +227,8 @@ export const Sidebar = memo(function Sidebar({
           type="button"
           onClick={onToggleCollapsed}
           className="flex w-full items-center justify-center rounded-lg px-2.5 py-2 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
+          title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

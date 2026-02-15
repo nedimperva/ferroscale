@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useTransition } from "react";
 import { calculateMetal } from "@/lib/calculator/engine";
 import { parseLocaleNumber } from "@/lib/calculator/number-input";
 import type {
@@ -270,9 +270,8 @@ export function useCalculator(): UseCalculatorReturn {
   );
   const [isPending, startTransition] = useTransition();
 
-  const resultRef = useRef<CalculationResult | null>(null);
-  const issuesRef = useRef<ValidationIssue[]>([]);
-  const [, forceRender] = useReducer((c: number) => c + 1, 0);
+  const [result, setResult] = useState<CalculationResult | null>(null);
+  const [issues, setIssues] = useState<ValidationIssue[]>([]);
 
   /* Persist input to localStorage on every change */
   useEffect(() => {
@@ -296,13 +295,12 @@ export function useCalculator(): UseCalculatorReturn {
       startTransition(() => {
         const response = calculateMetal(input);
         if (response.ok) {
-          resultRef.current = response.result;
-          issuesRef.current = [];
+          setResult(response.result);
+          setIssues([]);
         } else {
-          issuesRef.current = response.issues;
+          setIssues(response.issues);
           // keep previous result visible while issues exist
         }
-        forceRender();
       });
     }, DEBOUNCE_MS);
 
@@ -316,8 +314,8 @@ export function useCalculator(): UseCalculatorReturn {
   return {
     input,
     dispatch,
-    result: resultRef.current,
-    issues: issuesRef.current,
+    result,
+    issues,
     isPending,
     selectedProfile,
     activeFamily,

@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import type { CompareItem } from "@/hooks/useCompare";
 import { CompareCard } from "./compare-card";
 
@@ -13,27 +14,21 @@ interface CompareDrawerProps {
   maxCompare: number;
 }
 
-function exportCompareCsv(items: CompareItem[]): void {
+function exportCompareCsv(
+  items: CompareItem[],
+  headers: string[],
+  filePrefix: string,
+  resolveGradeLabel: (label: string) => string,
+  resolveProfileLabel: (profileId: string, fallback: string) => string,
+): void {
   if (items.length === 0) return;
 
-  const headers = [
-    "Profile",
-    "Profile Label",
-    "Material",
-    "Unit Weight (kg)",
-    "Total Weight (kg)",
-    "Subtotal",
-    "Waste",
-    "VAT",
-    "Grand Total",
-    "Currency",
-  ];
   const rows = items.map((item) => {
     const r = item.result;
     return [
       item.normalizedProfile.shortLabel,
-      r.profileLabel,
-      r.gradeLabel,
+      resolveProfileLabel(r.profileId, r.profileLabel),
+      resolveGradeLabel(r.gradeLabel),
       r.unitWeightKg,
       r.totalWeightKg,
       r.subtotalAmount,
@@ -49,7 +44,7 @@ function exportCompareCsv(items: CompareItem[]): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `compare-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `${filePrefix}-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -62,6 +57,25 @@ export const CompareDrawer = memo(function CompareDrawer({
   onClearAll,
   maxCompare,
 }: CompareDrawerProps) {
+  const tBase = useTranslations();
+  const t = useTranslations("compare");
+
+  const csvHeaders = useMemo(
+    () => [
+      t("csvHeaders.profile"),
+      t("csvHeaders.profileLabel"),
+      t("csvHeaders.material"),
+      t("csvHeaders.unitWeight"),
+      t("csvHeaders.totalWeight"),
+      t("csvHeaders.subtotal"),
+      t("csvHeaders.waste"),
+      t("csvHeaders.vat"),
+      t("csvHeaders.grandTotal"),
+      t("csvHeaders.currency"),
+    ],
+    [t],
+  );
+
   /* Lock body scroll when open */
   useEffect(() => {
     if (open) {
@@ -83,8 +97,24 @@ export const CompareDrawer = memo(function CompareDrawer({
   }, [open, onClose]);
 
   const handleExport = useCallback(() => {
-    exportCompareCsv(items);
-  }, [items]);
+    exportCompareCsv(
+      items,
+      csvHeaders,
+      t("csvFilePrefix"),
+      (label) => {
+        if (label === "Custom density input") return tBase("dataset.customDensityInput");
+        if (label === "Unknown") return tBase("dataset.unknown");
+        return label;
+      },
+      (profileId, fallback) => {
+        try {
+          return tBase(`dataset.profiles.${profileId}`);
+        } catch {
+          return fallback;
+        }
+      },
+    );
+  }, [items, csvHeaders, t, tBase]);
 
   const reference = items.length > 0 ? items[0] : null;
 
@@ -101,7 +131,7 @@ export const CompareDrawer = memo(function CompareDrawer({
 
       {/* Drawer panel — wider than other drawers to fit comparison cards */}
       <aside
-        aria-label="Compare drawer"
+        aria-label={t("drawerAria")}
         className={`fixed inset-y-0 right-0 z-50 flex w-[480px] max-w-[95vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
@@ -123,7 +153,7 @@ export const CompareDrawer = memo(function CompareDrawer({
               <rect x="3" y="3" width="7" height="18" rx="1" />
               <rect x="14" y="3" width="7" height="18" rx="1" />
             </svg>
-            Compare
+            {t("title")}
             <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
               {items.length}/{maxCompare}
             </span>
@@ -134,9 +164,9 @@ export const CompareDrawer = memo(function CompareDrawer({
                 type="button"
                 onClick={handleExport}
                 className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
-                title="Export comparison as CSV"
+                title={t("exportTitle")}
               >
-                Export
+                {t("export")}
               </button>
             )}
             {items.length > 0 && (
@@ -145,14 +175,14 @@ export const CompareDrawer = memo(function CompareDrawer({
                 onClick={onClearAll}
                 className="rounded-md px-2 py-1 text-xs font-medium text-red-interactive transition-colors hover:bg-red-surface"
               >
-                Clear
+                {t("clear")}
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
               className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
-              aria-label="Close compare"
+              aria-label={t("close")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -189,10 +219,10 @@ export const CompareDrawer = memo(function CompareDrawer({
                 <rect x="14" y="3" width="7" height="18" rx="1" />
               </svg>
               <p className="text-sm text-muted-faint">
-                No items to compare yet.
+                {t("empty")}
               </p>
               <p className="text-xs text-muted-faint">
-                Click &ldquo;Compare&rdquo; on a result to add it here.
+                {t("emptyHint")}
               </p>
             </div>
           ) : items.length === 1 ? (
@@ -204,10 +234,10 @@ export const CompareDrawer = memo(function CompareDrawer({
               />
               <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
                 <p className="text-sm text-muted-faint">
-                  Add a second calculation to compare.
+                  {t("needSecond")}
                 </p>
                 <p className="mt-1 text-xs text-muted-faint">
-                  Change inputs and click &ldquo;Compare&rdquo; again.
+                  {t("needSecondHint")}
                 </p>
               </div>
             </div>
@@ -224,7 +254,7 @@ export const CompareDrawer = memo(function CompareDrawer({
               {items.length < maxCompare && (
                 <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
                   <p className="text-xs text-muted-faint">
-                    Slot available — add another calculation.
+                    {t("slotAvailable")}
                   </p>
                 </div>
               )}

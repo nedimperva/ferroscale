@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import type { HistoryEntry } from "@/hooks/useHistory";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { HistoryPanel } from "./history-panel";
@@ -26,6 +27,8 @@ export const HistoryDrawer = memo(function HistoryDrawer({
   onRemoveStarred,
   onClearHistory,
 }: HistoryDrawerProps) {
+  const t = useTranslations("history");
+
   /* Lock body scroll when open */
   useEffect(() => {
     if (open) {
@@ -59,7 +62,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
 
       {/* Drawer panel */}
       <aside
-        aria-label="History drawer"
+        aria-label={t("drawerAria")}
         className={`fixed inset-y-0 right-0 z-50 flex w-[340px] max-w-[90vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
@@ -81,13 +84,13 @@ export const HistoryDrawer = memo(function HistoryDrawer({
               <path d="M3 3v5h5" />
               <path d="M12 7v5l4 2" />
             </svg>
-            History
+            {t("title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
-            aria-label="Close history"
+            aria-label={t("close")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
 import { useCalculator } from "@/hooks/useCalculator";
 import { useHistory } from "@/hooks/useHistory";
 import { useCompare } from "@/hooks/useCompare";
@@ -24,6 +25,7 @@ import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -90,6 +92,7 @@ function focusInputById(id: string): boolean {
 }
 
 export function CalculatorApp() {
+  const t = useTranslations();
   const {
     input,
     dispatch,
@@ -294,12 +297,12 @@ export function CalculatorApp() {
         <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-background px-4 py-2 shadow-sm md:px-6 lg:hidden">
           <div className="min-w-0 shrink">
             <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
-              Metal Calculator
+              {t("app.mobileHeaderTitle")}
             </h1>
             <p className="hidden text-sm text-foreground-secondary sm:block">
-              Live weight &amp; price estimation for EN standard profiles.{" "}
+              {t("app.mobileHeaderSubtitle")} {" "}
               <span className="text-xs text-muted-faint">
-                v{DATASET_VERSION}
+                {t("app.datasetVersion", { version: DATASET_VERSION })}
               </span>
             </p>
           </div>
@@ -308,11 +311,11 @@ export function CalculatorApp() {
               type="button"
               onClick={() => setShowContactDrawer(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-border-strong p-2 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset sm:px-3 sm:py-1.5"
-              aria-label="Report"
+              aria-label={t("sidebar.report")}
             >
               {/* envelope icon */}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <span className="hidden sm:inline">Report</span>
+              <span className="hidden sm:inline">{t("sidebar.report")}</span>
             </button>
             {/* Compare drawer toggle */}
             {compareItems.length > 0 && (
@@ -320,10 +323,10 @@ export function CalculatorApp() {
                 type="button"
                 onClick={openCompare}
                 className="inline-flex items-center gap-1.5 rounded-md border border-blue-border bg-blue-surface p-2 text-xs font-medium text-blue-text transition-colors hover:bg-blue-surface sm:px-3 sm:py-1.5"
-                aria-label="Compare"
+                aria-label={t("sidebar.compare")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
-                <span className="hidden sm:inline">Compare ({compareItems.length})</span>
+                <span className="hidden sm:inline">{t("sidebar.compareCount", { count: compareItems.length })}</span>
                 <span className="sm:hidden text-[10px] font-bold">{compareItems.length}</span>
               </button>
             )}
@@ -336,11 +339,13 @@ export function CalculatorApp() {
                   ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
                   : "border-border-strong text-foreground-secondary hover:bg-surface-inset"
               }`}
-              aria-label="Projects"
+              aria-label={t("sidebar.projects")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
               <span className="hidden sm:inline">
-                {projectCount > 0 ? `Projects (${projectCount})` : "Projects"}
+                {projectCount > 0
+                  ? t("sidebar.projectsCount", { count: projectCount })
+                  : t("sidebar.projects")}
               </span>
               {projectCount > 0 && (
                 <span className="sm:hidden text-[10px] font-bold">{projectCount}</span>
@@ -351,27 +356,34 @@ export function CalculatorApp() {
               type="button"
               onClick={() => setShowSettingsDrawer(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-border-strong p-2 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset sm:px-3 sm:py-1.5"
-              aria-label="Settings"
+              aria-label={t("sidebar.settings")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span className="hidden sm:inline">Settings</span>
+              <span className="hidden sm:inline">{t("sidebar.settings")}</span>
             </button>
             {/* History drawer toggle */}
             <button
               type="button"
               onClick={() => setShowHistoryDrawer(true)}
               className="inline-flex items-center gap-1.5 rounded-md border border-border-strong p-2 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset sm:px-3 sm:py-1.5"
-              aria-label="History"
+              aria-label={t("sidebar.history")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-              <span className="hidden sm:inline">History</span>
+              <span className="hidden sm:inline">{t("sidebar.history")}</span>
             </button>
+            <LanguageSwitcher className="hidden sm:inline-flex" />
             {/* Theme toggle */}
             <button
               type="button"
               onClick={cycleTheme}
               className="inline-flex items-center gap-1.5 rounded-md border border-border-strong p-2 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset sm:px-3 sm:py-1.5"
-              aria-label={resolvedTheme === "light" ? "Switch to dark mode" : resolvedTheme === "dark" ? "Switch to system mode" : "Switch to light mode"}
+              aria-label={
+                resolvedTheme === "light"
+                  ? t("theme.switchToDark")
+                  : resolvedTheme === "dark"
+                    ? t("theme.switchToSystem")
+                    : t("theme.switchToLight")
+              }
             >
               {resolvedTheme === "light" ? (
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
@@ -381,7 +393,11 @@ export function CalculatorApp() {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-3.5 sm:w-3.5"><rect width="20" height="14" x="2" y="3" rx="2" /><path d="M8 21h8" /><path d="M12 17v4" /></svg>
               )}
               <span className="hidden sm:inline">
-                {resolvedTheme === "light" ? "Dark" : resolvedTheme === "dark" ? "Light" : "System"}
+                {resolvedTheme === "light"
+                  ? t("theme.dark")
+                  : resolvedTheme === "dark"
+                    ? t("theme.light")
+                    : t("theme.system")}
               </span>
             </button>
           </div>

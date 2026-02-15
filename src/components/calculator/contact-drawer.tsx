@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { ContactForm } from "@/components/contact-form";
 
 interface ContactDrawerProps {
@@ -12,6 +13,8 @@ export const ContactDrawer = memo(function ContactDrawer({
   open,
   onClose,
 }: ContactDrawerProps) {
+  const t = useTranslations("contact.drawer");
+
   /* Lock body scroll when open */
   useEffect(() => {
     if (open) {
@@ -45,7 +48,7 @@ export const ContactDrawer = memo(function ContactDrawer({
 
       {/* Drawer panel */}
       <aside
-        aria-label="Report drawer"
+        aria-label={t("ariaLabel")}
         className={`fixed inset-y-0 right-0 z-50 flex w-[420px] max-w-[90vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
@@ -67,13 +70,13 @@ export const ContactDrawer = memo(function ContactDrawer({
               <rect width="20" height="16" x="2" y="4" rx="2" />
               <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
             </svg>
-            Report an Issue
+            {t("title")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
-            aria-label="Close report"
+            aria-label={t("close")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -93,9 +96,7 @@ export const ContactDrawer = memo(function ContactDrawer({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-4">
-          <p className="mb-3 text-xs text-muted">
-            Found an issue with a calculation or data? Send us a report below.
-          </p>
+          <p className="mb-3 text-xs text-muted">{t("description")}</p>
           <ContactForm compact />
         </div>
       </aside>

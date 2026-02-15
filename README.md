@@ -34,9 +34,24 @@ Open `http://localhost:3000`.
 
 ```bash
 npm run lint
+npm run i18n:check
 npm run test
 npm run build
 ```
+
+## Internationalization
+
+- Locale-aware routing is enabled with `next-intl`.
+- Supported locales are registered in `src/i18n/routing.ts`.
+- Messages live in `messages/en.json` and `messages/bs.json`.
+- Missing keys automatically fall back to English.
+
+### How to add a new language
+
+1. Add a new message file in `messages/` (for example `messages/de.json`).
+2. Add the locale code to `src/i18n/routing.ts`.
+3. Translate keys in the new locale file.
+4. Run `npm run i18n:check` to verify key coverage.
 
 ## Environment variables
 

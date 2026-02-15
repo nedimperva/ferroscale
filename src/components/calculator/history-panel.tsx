@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import type { HistoryEntry } from "@/hooks/useHistory";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -25,7 +26,15 @@ export const HistoryPanel = memo(function HistoryPanel({
   onRemoveStarred,
   onClearHistory,
 }: HistoryPanelProps) {
+  const t = useTranslations("history");
+  const format = useFormatter();
   const [tab, setTab] = useState<Tab>("recent");
+
+  const formatDateTime = (value: string) =>
+    format.dateTime(new Date(value), {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
 
   return (
     <section className="rounded-lg border border-border bg-surface p-4">
@@ -40,7 +49,7 @@ export const HistoryPanel = memo(function HistoryPanel({
               : "text-foreground-secondary hover:bg-surface-inset"
           }`}
         >
-          Recent ({history.length})
+          {t("recent", { count: history.length })}
         </button>
         <button
           type="button"
@@ -51,7 +60,7 @@ export const HistoryPanel = memo(function HistoryPanel({
               : "text-foreground-secondary hover:bg-surface-inset"
           }`}
         >
-          Saved ({starred.length})
+          {t("saved", { count: starred.length })}
         </button>
         {tab === "recent" && history.length > 0 && (
           <button
@@ -59,7 +68,7 @@ export const HistoryPanel = memo(function HistoryPanel({
             onClick={onClearHistory}
             className="ml-auto text-xs text-muted-faint transition-colors hover:text-red-interactive"
           >
-            Clear
+            {t("clear")}
           </button>
         )}
       </div>
@@ -68,7 +77,7 @@ export const HistoryPanel = memo(function HistoryPanel({
       {tab === "recent" ? (
         history.length === 0 ? (
           <p className="mt-3 text-xs text-muted-faint">
-            Results auto-save here as you calculate.
+            {t("emptyRecent")}
           </p>
         ) : (
           <ul className="mt-2 grid gap-1.5">
@@ -79,13 +88,14 @@ export const HistoryPanel = memo(function HistoryPanel({
                 onLoad={onLoad}
                 onStar={() => onToggleStar(entry.id)}
                 isStarred={starred.some((s) => s.id === entry.id)}
+                formatDateTime={formatDateTime}
               />
             ))}
           </ul>
         )
       ) : starred.length === 0 ? (
         <p className="mt-3 text-xs text-muted-faint">
-          Star a result to save it here permanently.
+          {t("emptySaved")}
         </p>
       ) : (
         <ul className="mt-2 grid gap-1.5">
@@ -96,6 +106,7 @@ export const HistoryPanel = memo(function HistoryPanel({
               onLoad={onLoad}
               onStar={() => onRemoveStarred(entry.id)}
               isStarred={true}
+              formatDateTime={formatDateTime}
             />
           ))}
         </ul>
@@ -113,6 +124,7 @@ interface HistoryItemProps {
   onLoad: (input: CalculationInput) => void;
   onStar: () => void;
   isStarred: boolean;
+  formatDateTime: (value: string) => string;
 }
 
 const HistoryItem = memo(function HistoryItem({
@@ -120,7 +132,18 @@ const HistoryItem = memo(function HistoryItem({
   onLoad,
   onStar,
   isStarred,
+  formatDateTime,
 }: HistoryItemProps) {
+  const tBase = useTranslations();
+  const t = useTranslations("history");
+
+  const gradeLabel =
+    entry.result.gradeLabel === "Custom density input"
+      ? tBase("dataset.customDensityInput")
+      : entry.result.gradeLabel === "Unknown"
+        ? tBase("dataset.unknown")
+        : entry.result.gradeLabel;
+
   return (
     <li className="flex items-center gap-2 rounded-md border border-border-faint px-2 py-1.5 transition-colors hover:bg-surface-raised">
       <button
@@ -138,14 +161,14 @@ const HistoryItem = memo(function HistoryItem({
           {entry.result.grandTotalAmount} {CURRENCY_SYMBOLS[entry.result.currency]} · {entry.result.totalWeightKg} kg
         </p>
         <p className="text-[10px] text-muted-faint">
-          {entry.result.gradeLabel} · {new Date(entry.timestamp).toLocaleString()}
+          {gradeLabel} · {formatDateTime(entry.timestamp)}
         </p>
       </button>
       <button
         type="button"
         onClick={onStar}
         className="shrink-0 rounded p-1 transition-colors hover:bg-surface-inset"
-        aria-label={isStarred ? "Remove star" : "Star"}
+        aria-label={isStarred ? t("removeStar") : t("addStar")}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
