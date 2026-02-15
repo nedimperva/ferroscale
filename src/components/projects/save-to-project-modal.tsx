@@ -5,6 +5,8 @@ import type { Project } from "@/hooks/useProjects";
 import { computeAggregates } from "@/hooks/useProjects";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -36,6 +38,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
   currentResult,
   onOpenDrawer,
 }: SaveToProjectModalProps) {
+  const normalizedCurrent = normalizeProfileSnapshot(currentInput);
   const [newName, setNewName] = useState("");
   const [feedback, setFeedback] = useState<{ projectName: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -151,10 +154,14 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
               {/* Current calculation preview */}
               <div className="mb-3 rounded-lg border border-border-faint bg-surface-raised px-3 py-2">
                 <p className="text-xs text-muted">Adding:</p>
-                <p className="mt-0.5 text-sm font-medium text-foreground">
-                  {currentResult.profileLabel} &middot; {currentResult.gradeLabel}
+                <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+                    <ProfileIcon category={normalizedCurrent.iconKey} className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="truncate">{normalizedCurrent.shortLabel}</span>
                 </p>
                 <p className="text-xs text-muted">
+                  {currentResult.gradeLabel} &middot;
                   {currentResult.totalWeightKg} kg &middot; {currentResult.grandTotalAmount} {CURRENCY_SYMBOLS[currentResult.currency]}
                 </p>
               </div>

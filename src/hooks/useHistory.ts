@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -12,11 +14,12 @@ export interface HistoryEntry {
   timestamp: string;
   input: CalculationInput;
   result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot;
   starred: boolean;
 }
 
-const HISTORY_KEY = "advanced-calc-history-v1";
-const STARRED_KEY = "advanced-calc-starred-v1";
+const HISTORY_KEY = "advanced-calc-history-v2";
+const STARRED_KEY = "advanced-calc-starred-v2";
 const HISTORY_LIMIT_KEY = "advanced-calc-history-limit-v1";
 const DEFAULT_HISTORY_LIMIT = 10;
 
@@ -116,6 +119,7 @@ export function useHistory(): UseHistoryReturn {
         timestamp: new Date().toISOString(),
         input,
         result,
+        normalizedProfile: normalizeProfileSnapshot(input),
         starred: false,
       };
       setHistory((prev) => [entry, ...prev].slice(0, historyLimit));

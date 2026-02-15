@@ -18,6 +18,7 @@ function exportCompareCsv(items: CompareItem[]): void {
 
   const headers = [
     "Profile",
+    "Profile Label",
     "Material",
     "Unit Weight (kg)",
     "Total Weight (kg)",
@@ -30,6 +31,7 @@ function exportCompareCsv(items: CompareItem[]): void {
   const rows = items.map((item) => {
     const r = item.result;
     return [
+      item.normalizedProfile.shortLabel,
       r.profileLabel,
       r.gradeLabel,
       r.unitWeightKg,

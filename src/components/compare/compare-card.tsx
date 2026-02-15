@@ -3,6 +3,7 @@
 import { memo } from "react";
 import type { CompareItem } from "@/hooks/useCompare";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 
 interface CompareCardProps {
   item: CompareItem;
@@ -55,7 +56,12 @@ export const CompareCard = memo(function CompareCard({
 
       {/* Profile + Material */}
       <div className={`px-3 ${isRef ? "pt-1" : "pt-3"} pb-2`}>
-        <p className="truncate text-sm font-semibold text-foreground">{r.profileLabel}</p>
+        <p className="flex items-center gap-1.5 truncate text-sm font-semibold text-foreground">
+          <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+            <ProfileIcon category={item.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+          </span>
+          <span className="truncate">{item.normalizedProfile.shortLabel}</span>
+        </p>
         <p className="truncate text-xs text-muted">{r.gradeLabel}</p>
       </div>
 

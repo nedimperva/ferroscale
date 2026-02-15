@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
+import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -12,6 +14,7 @@ export interface ProjectCalculation {
   timestamp: string;
   input: CalculationInput;
   result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot;
 }
 
 export interface Project {
@@ -29,7 +32,7 @@ export interface ProjectAggregates {
   count: number;
 }
 
-const PROJECTS_KEY = "advanced-calc-projects-v1";
+const PROJECTS_KEY = "advanced-calc-projects-v2";
 const MAX_PROJECTS = 20;
 const MAX_CALCS_PER_PROJECT = 50;
 
@@ -86,6 +89,7 @@ export function exportProjectCsv(project: Project): void {
 
   const headers = [
     "Profile",
+    "Profile Label",
     "Material",
     "Unit Weight (kg)",
     "Total Weight (kg)",
@@ -98,6 +102,7 @@ export function exportProjectCsv(project: Project): void {
   const rows = project.calculations.map((calc) => {
     const r = calc.result;
     return [
+      calc.normalizedProfile.shortLabel,
       r.profileLabel,
       r.gradeLabel,
       r.unitWeightKg,
@@ -219,6 +224,7 @@ export function useProjects(): UseProjectsReturn {
             timestamp: new Date().toISOString(),
             input,
             result,
+            normalizedProfile: normalizeProfileSnapshot(input),
           };
           return {
             ...p,

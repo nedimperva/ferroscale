@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -12,9 +14,10 @@ export interface CompareItem {
   timestamp: string;
   input: CalculationInput;
   result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot;
 }
 
-const COMPARE_KEY = "advanced-calc-compare-v1";
+const COMPARE_KEY = "advanced-calc-compare-v2";
 const COMPARE_LIMIT_KEY = "advanced-calc-compare-limit-v1";
 const DEFAULT_COMPARE_LIMIT = 3;
 
@@ -151,6 +154,7 @@ export function useCompare(): UseCompareReturn {
           timestamp: new Date().toISOString(),
           input,
           result,
+          normalizedProfile: normalizeProfileSnapshot(input),
         };
         const next = [...prev, entry];
         /* Auto-open the drawer when we reach 2+ items */

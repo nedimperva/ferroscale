@@ -5,6 +5,8 @@ import type { Project } from "@/hooks/useProjects";
 import { computeAggregates, exportProjectCsv } from "@/hooks/useProjects";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -406,6 +408,7 @@ function ProjectDetail({
 }) {
   const agg = computeAggregates(project);
   const [justAdded, setJustAdded] = useState(false);
+  const normalizedCurrent = currentInput ? normalizeProfileSnapshot(currentInput) : null;
 
   const handleAddCurrent = useCallback(() => {
     if (!currentResult || !currentInput) return;
@@ -501,7 +504,7 @@ function ProjectDetail({
               : "border-blue-border bg-blue-surface text-blue-text hover:bg-blue-surface"
           }`}
         >
-          {justAdded ? "Added!" : `Add current result (${currentResult.profileLabel})`}
+          {justAdded ? "Added!" : `Add current result${normalizedCurrent ? ` (${normalizedCurrent.shortLabel})` : ""}`}
         </button>
       )}
 
@@ -522,8 +525,11 @@ function ProjectDetail({
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {calc.result.profileLabel}
+                  <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+                      <ProfileIcon category={calc.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="truncate">{calc.normalizedProfile.shortLabel}</span>
                   </p>
                   <p className="text-xs text-muted">{calc.result.gradeLabel}</p>
                   <div className="mt-1 flex gap-3 text-xs text-muted">

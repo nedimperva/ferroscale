@@ -4,6 +4,7 @@ import { memo, useState } from "react";
 import type { HistoryEntry } from "@/hooks/useHistory";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 
 interface HistoryPanelProps {
   history: HistoryEntry[];
@@ -127,9 +128,14 @@ const HistoryItem = memo(function HistoryItem({
         onClick={() => onLoad(entry.input)}
         className="min-w-0 flex-1 text-left"
       >
-        <p className="truncate text-xs font-medium">
-          {entry.result.profileLabel} — {entry.result.grandTotalAmount}{" "}
-          {CURRENCY_SYMBOLS[entry.result.currency]}
+        <p className="flex items-center gap-1.5 truncate text-xs font-medium">
+          <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-surface-inset text-muted">
+            <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-3 w-3" />
+          </span>
+          <span className="truncate">{entry.normalizedProfile.shortLabel}</span>
+        </p>
+        <p className="truncate text-[10px] text-foreground-secondary">
+          {entry.result.grandTotalAmount} {CURRENCY_SYMBOLS[entry.result.currency]} · {entry.result.totalWeightKg} kg
         </p>
         <p className="text-[10px] text-muted-faint">
           {entry.result.gradeLabel} · {new Date(entry.timestamp).toLocaleString()}
