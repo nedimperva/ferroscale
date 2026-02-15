@@ -3,6 +3,104 @@ import { checkContactRateLimit } from "@/lib/contact/rate-limit";
 import { validateContactRequest } from "@/lib/contact/validation";
 import { verifyCaptchaChallenge } from "@/lib/contact/captcha-store";
 
+const RESEND_API_URL = "https://api.resend.com/emails";
+
+function getEnv(upper: string, lower: string): string | undefined {
+  return process.env[upper] ?? process.env[lower];
+}
+
+function parseRecipients(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function buildEmailText(body: {
+  name: string;
+  email: string;
+  message: string;
+  context?: string;
+}): string {
+  const parts = [
+    "New FerroScale contact report",
+    "",
+    `Name: ${body.name}`,
+    `Email: ${body.email}`,
+    "",
+    "Message:",
+    body.message,
+  ];
+
+  if (body.context) {
+    parts.push("", "Context:", body.context);
+  }
+
+  return parts.join("\n");
+}
+
+async function sendContactEmail(body: {
+  name: string;
+  email: string;
+  message: string;
+  context?: string;
+}) {
+  const apiKey = getEnv("RESEND_API_KEY", "resend_api_key");
+  const from = getEnv("RESEND_FROM", "resend_from");
+  const toRaw = getEnv("RESEND_TO", "resend_to") ?? from;
+
+  if (!apiKey || !from || !toRaw) {
+    return {
+      ok: false as const,
+      status: 500,
+      message:
+        "Contact service is not configured. Set RESEND_API_KEY, RESEND_FROM, and optionally RESEND_TO.",
+    };
+  }
+
+  const to = parseRecipients(toRaw);
+  if (to.length === 0) {
+    return {
+      ok: false as const,
+      status: 500,
+      message: "Contact service recipient list is empty.",
+    };
+  }
+
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject: `[FerroScale] User report from ${body.name}`,
+      text: buildEmailText(body),
+      reply_to: body.email,
+    }),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    let details = "";
+    try {
+      const payload = (await response.json()) as { message?: string; error?: string };
+      details = payload.message ?? payload.error ?? "";
+    } catch {
+      /* noop */
+    }
+    return {
+      ok: false as const,
+      status: 502,
+      message: details ? `Failed to deliver message (${details}).` : "Failed to deliver message.",
+    };
+  }
+
+  return { ok: true as const };
+}
+
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
@@ -91,12 +189,26 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // For V1 this endpoint only validates and logs contact requests.
-  console.info("[contact]", {
+  const emailResult = await sendContactEmail(body);
+  if (!emailResult.ok) {
+    console.error("[contact] delivery failed", {
+      name: body.name,
+      email: body.email,
+      reason: emailResult.message,
+      createdAt: new Date().toISOString(),
+    });
+    return NextResponse.json(
+      {
+        ok: false,
+        message: emailResult.message,
+      },
+      { status: emailResult.status },
+    );
+  }
+
+  console.info("[contact] delivered", {
     name: body.name,
     email: body.email,
-    message: body.message,
-    context: body.context,
     createdAt: new Date().toISOString(),
   });
 
