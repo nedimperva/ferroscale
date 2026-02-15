@@ -128,27 +128,16 @@ export function useHistory(): UseHistoryReturn {
   );
 
   const toggleStar = useCallback((id: string) => {
-    /* Check if it's already in starred — if so, un-star it */
-    setStarred((prev) => {
-      const existing = prev.find((e) => e.id === id);
-      if (existing) {
-        return prev.filter((e) => e.id !== id);
-      }
-      return prev;
-    });
+    const sourceEntry = history.find((entry) => entry.id === id);
 
-    /* Check if it's in history — if so, move a copy to starred */
-    setHistory((prev) => {
-      const entry = prev.find((e) => e.id === id);
-      if (entry) {
-        setStarred((prevStarred) => {
-          if (prevStarred.some((e) => e.id === id)) return prevStarred;
-          return [{ ...entry, starred: true }, ...prevStarred];
-        });
+    setStarred((prev) => {
+      if (prev.some((entry) => entry.id === id)) {
+        return prev.filter((entry) => entry.id !== id);
       }
-      return prev;
+      if (!sourceEntry) return prev;
+      return [{ ...sourceEntry, starred: true }, ...prev];
     });
-  }, []);
+  }, [history]);
 
   const removeStarred = useCallback((id: string) => {
     setStarred((prev) => prev.filter((e) => e.id !== id));

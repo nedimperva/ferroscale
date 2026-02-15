@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useCalculator } from "@/hooks/useCalculator";
 import { useHistory } from "@/hooks/useHistory";
 import { useCompare } from "@/hooks/useCompare";
@@ -9,6 +9,7 @@ import { useProjects } from "@/hooks/useProjects";
 import type { Theme } from "@/hooks/useTheme";
 import { useTheme } from "@/hooks/useTheme";
 import { DATASET_VERSION } from "@/lib/datasets/version";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 
 import { IssueList } from "@/components/calculator/issue-list";
 import { ProfileSection } from "@/components/calculator/profile-section";
@@ -176,6 +177,10 @@ export function CalculatorApp() {
 
   /* Compare helpers */
   const currentIsInCompare = result ? isInCompare(result) : false;
+  const normalizedCurrentProfile = useMemo(
+    () => (result ? normalizeProfileSnapshot(input) : null),
+    [result, input],
+  );
 
   const handleCompare = useCallback(() => {
     if (!result) return;
@@ -438,6 +443,7 @@ export function CalculatorApp() {
               maxCompare={maxCompare}
               onAddToProject={handleAddToProject}
               hasProjects={projectCount > 0}
+              normalizedProfile={normalizedCurrentProfile}
             />
           </aside>
         </div>
@@ -455,6 +461,7 @@ export function CalculatorApp() {
           maxCompare={maxCompare}
           onAddToProject={handleAddToProject}
           hasProjects={projectCount > 0}
+          normalizedProfile={normalizedCurrentProfile}
         />
 
         {/* ---- Mobile full-screen result overlay ---- */}
@@ -474,6 +481,7 @@ export function CalculatorApp() {
             maxCompare={maxCompare}
             onAddToProject={handleAddToProject}
             hasProjects={projectCount > 0}
+            normalizedProfile={normalizedCurrentProfile}
           />
         )}
 

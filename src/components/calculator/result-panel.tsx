@@ -3,6 +3,8 @@
 import { memo } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { ReferenceList } from "./reference-list";
 
 interface ResultPanelProps {
@@ -20,6 +22,7 @@ interface ResultPanelProps {
   maxCompare?: number;
   onAddToProject?: () => void;
   hasProjects?: boolean;
+  normalizedProfile?: NormalizedProfileSnapshot | null;
 }
 
 export const ResultPanel = memo(function ResultPanel({
@@ -37,6 +40,7 @@ export const ResultPanel = memo(function ResultPanel({
   maxCompare = 3,
   onAddToProject,
   hasProjects = false,
+  normalizedProfile = null,
 }: ResultPanelProps) {
   if (!result) {
     return (
@@ -93,7 +97,14 @@ export const ResultPanel = memo(function ResultPanel({
       <div className="mt-4 space-y-0 px-5 text-sm">
         <div className="flex items-baseline justify-between border-b border-border-faint py-2">
           <span className="text-muted">Profile:</span>
-          <span className="font-medium text-right">{result.profileLabel}</span>
+          <span className="inline-flex max-w-[70%] items-center justify-end gap-1.5 text-right font-medium">
+            {normalizedProfile && (
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+                <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+              </span>
+            )}
+            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel}</span>
+          </span>
         </div>
         <div className="flex items-baseline justify-between border-b border-border-faint py-2">
           <span className="text-muted">Material:</span>

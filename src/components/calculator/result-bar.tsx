@@ -3,6 +3,8 @@
 import { memo, useEffect } from "react";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { ReferenceList } from "./reference-list";
 
 interface ResultBarProps {
@@ -17,6 +19,7 @@ interface ResultBarProps {
   maxCompare?: number;
   onAddToProject?: () => void;
   hasProjects?: boolean;
+  normalizedProfile?: NormalizedProfileSnapshot | null;
 }
 
 /**
@@ -36,6 +39,7 @@ export const ResultBar = memo(function ResultBar({
   maxCompare = 3,
   onAddToProject,
   hasProjects = false,
+  normalizedProfile = null,
 }: ResultBarProps) {
   if (!result) return null;
 
@@ -48,8 +52,13 @@ export const ResultBar = memo(function ResultBar({
           onClick={onExpand}
           className="flex min-w-0 flex-1 flex-col text-left"
         >
-          <span className="truncate text-xs text-muted">
-            {result.profileLabel} · {result.gradeLabel}
+          <span className="flex items-center gap-1.5 truncate text-xs text-muted">
+            {normalizedProfile && (
+              <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-surface-inset text-muted-faint">
+                <ProfileIcon category={normalizedProfile.iconKey} className="h-2.5 w-2.5" />
+              </span>
+            )}
+            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel} · {result.gradeLabel}</span>
           </span>
           <span
             className={`text-2xl font-bold tracking-tight transition-opacity duration-200 ${
@@ -173,6 +182,7 @@ interface ResultOverlayProps {
   maxCompare?: number;
   onAddToProject?: () => void;
   hasProjects?: boolean;
+  normalizedProfile?: NormalizedProfileSnapshot | null;
 }
 
 export const ResultOverlay = memo(function ResultOverlay({
@@ -190,6 +200,7 @@ export const ResultOverlay = memo(function ResultOverlay({
   maxCompare = 3,
   onAddToProject,
   hasProjects = false,
+  normalizedProfile = null,
 }: ResultOverlayProps) {
   /* Lock body scroll when overlay is open */
   useEffect(() => {
@@ -252,7 +263,14 @@ export const ResultOverlay = memo(function ResultOverlay({
           <div className="mt-4 space-y-0 text-sm">
             <div className="flex items-baseline justify-between border-b border-border-faint py-2">
               <span className="text-muted">Profile:</span>
-              <span className="font-medium text-right">{result.profileLabel}</span>
+              <span className="inline-flex max-w-[70%] items-center justify-end gap-1.5 text-right font-medium">
+                {normalizedProfile && (
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+                    <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+                  </span>
+                )}
+                <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel}</span>
+              </span>
             </div>
             <div className="flex items-baseline justify-between border-b border-border-faint py-2">
               <span className="text-muted">Material:</span>
