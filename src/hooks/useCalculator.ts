@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useTransition } from "react";
 import { calculateMetal } from "@/lib/calculator/engine";
+import { parseLocaleNumber } from "@/lib/calculator/number-input";
 import type {
   CalculationInput,
   CalculationResult,
@@ -25,8 +26,7 @@ import type {
 /* ------------------------------------------------------------------ */
 
 export function parseNumber(value: string): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+  return parseLocaleNumber(value) ?? 0;
 }
 
 /* ------------------------------------------------------------------ */

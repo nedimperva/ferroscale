@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { DimensionDefinition, DimensionKey } from "@/lib/datasets/types";
-import { parseNumber } from "@/hooks/useCalculator";
+import { NumericInput } from "./numeric-input";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 
@@ -10,6 +10,8 @@ interface DimensionInputProps {
   value: CalculationInput["manualDimensions"][DimensionKey];
   onValueChange: (value: number) => void;
   onUnitChange: (unit: LengthUnit) => void;
+  hasIssue?: boolean;
+  issueMessage?: string;
 }
 
 export const DimensionInput = memo(function DimensionInput({
@@ -17,6 +19,8 @@ export const DimensionInput = memo(function DimensionInput({
   value,
   onValueChange,
   onUnitChange,
+  hasIssue = false,
+  issueMessage,
 }: DimensionInputProps) {
   return (
     <div className="grid gap-1">
@@ -27,17 +31,18 @@ export const DimensionInput = memo(function DimensionInput({
         </span>
       </label>
       <div className="flex gap-1">
-        <input
+        <NumericInput
           id={`dimension-${dimension.key}`}
           name={`dimension-${dimension.key}`}
-          type="number"
           inputMode="decimal"
           autoComplete="off"
-          min={0}
-          step="any"
-          value={value?.value ?? ""}
-          onChange={(e) => onValueChange(parseNumber(e.target.value))}
-          className="h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-accent"
+          value={value?.value}
+          onValueChange={onValueChange}
+          className={`h-9 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
+            hasIssue ? "border-red-border" : "border-border-strong"
+          }`}
+          aria-invalid={hasIssue}
+          aria-describedby={hasIssue ? `dimension-${dimension.key}-error` : undefined}
         />
         <select
           value={value?.unit ?? "mm"}
@@ -52,6 +57,11 @@ export const DimensionInput = memo(function DimensionInput({
           ))}
         </select>
       </div>
+      {hasIssue && issueMessage && (
+        <p id={`dimension-${dimension.key}-error`} className="text-[11px] text-red-interactive">
+          {issueMessage}
+        </p>
+      )}
     </div>
   );
 });

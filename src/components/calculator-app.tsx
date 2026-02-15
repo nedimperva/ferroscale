@@ -36,6 +36,58 @@ function getSidebarSnapshot(): boolean {
 function getSidebarServerSnapshot(): boolean { return false; }
 function _sidebarEmit() { for (const l of _sidebarListeners) l(); }
 
+const SETTINGS_ISSUE_FIELDS = new Set([
+  "materialGradeId",
+  "customDensityKgPerM3",
+  "priceBasis",
+  "unitPrice",
+  "priceUnit",
+  "currency",
+  "wastePercent",
+  "vatPercent",
+]);
+
+function issueFieldToInputId(field: string): string | null {
+  if (field.startsWith("manualDimensions.")) {
+    return `dimension-${field.slice("manualDimensions.".length)}`;
+  }
+
+  switch (field) {
+    case "selectedSizeId":
+      return "size";
+    case "length":
+      return "length";
+    case "quantity":
+      return "quantity";
+    case "materialGradeId":
+      return "grade";
+    case "customDensityKgPerM3":
+      return "custom-density";
+    case "priceBasis":
+      return "price-basis";
+    case "unitPrice":
+      return "unit-price";
+    case "priceUnit":
+      return "price-unit";
+    case "currency":
+      return "currency";
+    case "wastePercent":
+      return "waste";
+    case "vatPercent":
+      return "vat-percent";
+    default:
+      return null;
+  }
+}
+
+function focusInputById(id: string): boolean {
+  const element = document.getElementById(id) as (HTMLElement & { focus: (options?: FocusOptions) => void }) | null;
+  if (!element) return false;
+  element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  element.focus({ preventScroll: true });
+  return true;
+}
+
 export function CalculatorApp() {
   const {
     input,
@@ -50,6 +102,8 @@ export function CalculatorApp() {
   const {
     history,
     starred,
+    historyLimit,
+    setHistoryLimit,
     addToHistory,
     toggleStar,
     removeStarred,
@@ -66,6 +120,10 @@ export function CalculatorApp() {
     removeItem: removeCompareItem,
     clearAll: clearCompare,
     isDuplicate: isInCompare,
+    compareLimit,
+    setCompareLimit,
+    maxCompare,
+    isMobileCapped: isCompareMobileCapped,
   } = useCompare();
 
   const reverse = useReverseCalculator(input, selectedProfile);
@@ -153,6 +211,37 @@ export function CalculatorApp() {
 
   /* Contact drawer */
   const [showContactDrawer, setShowContactDrawer] = useState(false);
+
+  const lastFocusedIssueFieldRef = useRef<string | null>(null);
+  const firstIssueField = issues[0]?.field ?? null;
+
+  useEffect(() => {
+    if (!firstIssueField) {
+      lastFocusedIssueFieldRef.current = null;
+      return;
+    }
+
+    if (lastFocusedIssueFieldRef.current === firstIssueField) {
+      return;
+    }
+
+    const targetId = issueFieldToInputId(firstIssueField);
+    if (!targetId) return;
+
+    const tryFocus = () => {
+      if (focusInputById(targetId)) {
+        lastFocusedIssueFieldRef.current = firstIssueField;
+      }
+    };
+
+    if (SETTINGS_ISSUE_FIELDS.has(firstIssueField) && !showSettingsDrawer) {
+      window.setTimeout(() => setShowSettingsDrawer(true), 0);
+      window.setTimeout(tryFocus, 320);
+      return;
+    }
+
+    window.setTimeout(tryFocus, 0);
+  }, [firstIssueField, showSettingsDrawer]);
 
   /* Sidebar collapsed state (persisted to localStorage).
      Uses useSyncExternalStore to avoid hydration mismatch and
@@ -327,6 +416,7 @@ export function CalculatorApp() {
               <ReversePanel
                 reverse={reverse}
                 isManualProfile={selectedProfile.mode === "manual"}
+                input={input}
               />
             </div>
           </div>
@@ -345,6 +435,7 @@ export function CalculatorApp() {
               canCompare={canCompare}
               isInCompare={currentIsInCompare}
               compareCount={compareItems.length}
+              maxCompare={maxCompare}
               onAddToProject={handleAddToProject}
               hasProjects={projectCount > 0}
             />
@@ -361,6 +452,7 @@ export function CalculatorApp() {
           onCompare={handleCompare}
           canCompare={canCompare}
           isInCompare={currentIsInCompare}
+          maxCompare={maxCompare}
           onAddToProject={handleAddToProject}
           hasProjects={projectCount > 0}
         />
@@ -379,6 +471,7 @@ export function CalculatorApp() {
             canCompare={canCompare}
             isInCompare={currentIsInCompare}
             compareCount={compareItems.length}
+            maxCompare={maxCompare}
             onAddToProject={handleAddToProject}
             hasProjects={projectCount > 0}
           />
@@ -405,6 +498,12 @@ export function CalculatorApp() {
           activeFamily={activeFamily}
           issues={issues}
           onResetAll={resetAll}
+          historyLimit={historyLimit}
+          onHistoryLimitChange={setHistoryLimit}
+          compareLimit={compareLimit}
+          onCompareLimitChange={setCompareLimit}
+          maxCompare={maxCompare}
+          isCompareMobileCapped={isCompareMobileCapped}
         />
 
         {/* ---- Contact drawer ---- */}
@@ -420,6 +519,7 @@ export function CalculatorApp() {
           items={compareItems}
           onRemoveItem={removeCompareItem}
           onClearAll={clearCompare}
+          maxCompare={maxCompare}
         />
 
         {/* ---- Project drawer ---- */}

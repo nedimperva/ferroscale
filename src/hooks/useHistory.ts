@@ -17,7 +17,12 @@ export interface HistoryEntry {
 
 const HISTORY_KEY = "advanced-calc-history-v1";
 const STARRED_KEY = "advanced-calc-starred-v1";
-const MAX_HISTORY = 10;
+const HISTORY_LIMIT_KEY = "advanced-calc-history-limit-v1";
+const DEFAULT_HISTORY_LIMIT = 10;
+
+function clampHistoryLimit(value: number): number {
+  return Math.min(100, Math.max(10, Math.round(value)));
+}
 
 /* ------------------------------------------------------------------ */
 /*  Local-storage helpers                                             */
@@ -47,6 +52,8 @@ function persistEntries(key: string, entries: HistoryEntry[]): void {
 export interface UseHistoryReturn {
   history: HistoryEntry[];
   starred: HistoryEntry[];
+  historyLimit: number;
+  setHistoryLimit: (value: number) => void;
   addToHistory: (input: CalculationInput, result: CalculationResult) => void;
   toggleStar: (id: string) => void;
   removeStarred: (id: string) => void;
@@ -56,6 +63,7 @@ export interface UseHistoryReturn {
 export function useHistory(): UseHistoryReturn {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [starred, setStarred] = useState<HistoryEntry[]>([]);
+  const [historyLimit, setHistoryLimitState] = useState(DEFAULT_HISTORY_LIMIT);
 
   /* Track last-added fingerprint to deduplicate rapid-fire auto-saves */
   const lastFingerprintRef = useRef<string>("");
@@ -65,20 +73,37 @@ export function useHistory(): UseHistoryReturn {
   useEffect(() => {
     const storedHistory = loadEntries(HISTORY_KEY);
     const storedStarred = loadEntries(STARRED_KEY);
+    const storedLimitRaw = localStorage.getItem(HISTORY_LIMIT_KEY);
+    const storedLimit = storedLimitRaw ? Number(storedLimitRaw) : DEFAULT_HISTORY_LIMIT;
+    const nextLimit = Number.isFinite(storedLimit)
+      ? clampHistoryLimit(storedLimit)
+      : DEFAULT_HISTORY_LIMIT;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only localStorage hydration
-    if (storedHistory.length > 0) setHistory(storedHistory);
+    setHistoryLimitState(nextLimit);
+    if (storedHistory.length > 0) setHistory(storedHistory.slice(0, nextLimit));
     if (storedStarred.length > 0) setStarred(storedStarred);
     hydrated.current = true;
   }, []);
 
   /* Persist on change (skip the initial hydration write-back) */
   useEffect(() => {
-    if (hydrated.current) persistEntries(HISTORY_KEY, history.slice(0, MAX_HISTORY));
-  }, [history]);
+    if (hydrated.current) persistEntries(HISTORY_KEY, history.slice(0, historyLimit));
+  }, [history, historyLimit]);
 
   useEffect(() => {
     if (hydrated.current) persistEntries(STARRED_KEY, starred);
   }, [starred]);
+
+  useEffect(() => {
+    if (!hydrated.current) return;
+    localStorage.setItem(HISTORY_LIMIT_KEY, String(historyLimit));
+  }, [historyLimit]);
+
+  const setHistoryLimit = useCallback((value: number) => {
+    const clamped = clampHistoryLimit(value);
+    setHistoryLimitState(clamped);
+    setHistory((prev) => prev.slice(0, clamped));
+  }, []);
 
   const addToHistory = useCallback(
     (input: CalculationInput, result: CalculationResult) => {
@@ -93,9 +118,9 @@ export function useHistory(): UseHistoryReturn {
         result,
         starred: false,
       };
-      setHistory((prev) => [entry, ...prev].slice(0, MAX_HISTORY));
+      setHistory((prev) => [entry, ...prev].slice(0, historyLimit));
     },
-    [],
+    [historyLimit],
   );
 
   const toggleStar = useCallback((id: string) => {
@@ -132,5 +157,14 @@ export function useHistory(): UseHistoryReturn {
     }
   }, []);
 
-  return { history, starred, addToHistory, toggleStar, removeStarred, clearHistory };
+  return {
+    history,
+    starred,
+    historyLimit,
+    setHistoryLimit,
+    addToHistory,
+    toggleStar,
+    removeStarred,
+    clearHistory,
+  };
 }

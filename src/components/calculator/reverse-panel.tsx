@@ -2,17 +2,22 @@
 
 import { memo } from "react";
 import type { UseReverseReturn } from "@/hooks/useReverseCalculator";
+import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
+import { fromMillimeters, roundTo } from "@/lib/calculator/units";
 import type { DimensionKey } from "@/lib/datasets/types";
+import { NumericInput } from "./numeric-input";
 
 interface ReversePanelProps {
   reverse: UseReverseReturn;
   /** Whether the current profile supports reverse mode (manual only). */
   isManualProfile: boolean;
+  input: CalculationInput;
 }
 
 export const ReversePanel = memo(function ReversePanel({
   reverse,
   isManualProfile,
+  input,
 }: ReversePanelProps) {
   if (!isManualProfile) {
     if (reverse.enabled) {
@@ -73,18 +78,12 @@ export const ReversePanel = memo(function ReversePanel({
               Target total weight
             </label>
             <div className="flex gap-1">
-              <input
+              <NumericInput
                 id="reverse-weight"
-                type="number"
                 inputMode="decimal"
                 autoComplete="off"
-                min={0}
-                step="any"
                 value={reverse.targetWeightKg}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (Number.isFinite(v)) reverse.setTargetWeight(v);
-                }}
+                onValueChange={reverse.setTargetWeight}
                 className="h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
               />
               <span className="flex h-9 items-center rounded-lg border border-border-strong bg-surface-raised px-2 text-xs font-medium text-muted">
@@ -121,6 +120,8 @@ export const ReversePanel = memo(function ReversePanel({
             result={reverse.result}
             solveDimension={reverse.solveDimension}
             dimensionLabels={reverse.dimensionLabels}
+            input={input}
+            dimensionDecimals={input.rounding.dimensionDecimals}
           />
         </div>
       )}
@@ -134,10 +135,14 @@ function ReverseResult({
   result,
   solveDimension,
   dimensionLabels,
+  input,
+  dimensionDecimals,
 }: {
   result: UseReverseReturn["result"];
   solveDimension: DimensionKey | null;
   dimensionLabels: Record<string, string>;
+  input: CalculationInput;
+  dimensionDecimals: number;
 }) {
   if (!result) return null;
 
@@ -150,8 +155,10 @@ function ReverseResult({
   }
 
   const label = solveDimension ? (dimensionLabels[solveDimension] ?? solveDimension) : "Dimension";
-  /* Determine the display unit from the solved dimension key */
-  const unit = "mm"; /* The valueMm was already converted in the hook */
+  const unit: LengthUnit = solveDimension
+    ? (input.manualDimensions[solveDimension]?.unit ?? "mm")
+    : "mm";
+  const displayValue = roundTo(fromMillimeters(result.valueMm, unit), dimensionDecimals);
 
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
@@ -159,10 +166,13 @@ function ReverseResult({
         Required {label}
       </p>
       <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-green-900">
-        {result.valueMm}
+        {displayValue}
         <span className="ml-1 text-sm font-medium text-green-600">{unit}</span>
       </p>
       <p className="mt-1 text-[11px] text-green-600">
+        Equivalent: {result.valueMm.toFixed(2)} mm
+      </p>
+      <p className="mt-0.5 text-[11px] text-green-600">
         Cross-section area needed: {result.requiredAreaMm2.toFixed(2)} mm²
       </p>
     </div>

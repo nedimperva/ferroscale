@@ -10,6 +10,7 @@ interface CompareDrawerProps {
   items: CompareItem[];
   onRemoveItem: (id: string) => void;
   onClearAll: () => void;
+  maxCompare: number;
 }
 
 function exportCompareCsv(items: CompareItem[]): void {
@@ -57,6 +58,7 @@ export const CompareDrawer = memo(function CompareDrawer({
   items,
   onRemoveItem,
   onClearAll,
+  maxCompare,
 }: CompareDrawerProps) {
   /* Lock body scroll when open */
   useEffect(() => {
@@ -121,7 +123,7 @@ export const CompareDrawer = memo(function CompareDrawer({
             </svg>
             Compare
             <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
-              {items.length}/3
+              {items.length}/{maxCompare}
             </span>
           </h2>
           <div className="flex items-center gap-1">
@@ -217,7 +219,7 @@ export const CompareDrawer = memo(function CompareDrawer({
                   onRemove={onRemoveItem}
                 />
               ))}
-              {items.length < 3 && (
+              {items.length < maxCompare && (
                 <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
                   <p className="text-xs text-muted-faint">
                     Slot available — add another calculation.

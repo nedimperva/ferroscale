@@ -4,8 +4,8 @@ import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datasets/types";
 import { PROFILE_CATEGORY_LABELS } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
-import { parseNumber } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";
+import { NumericInput } from "./numeric-input";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 
@@ -209,6 +209,8 @@ export const ProfileSection = memo(function ProfileSection({
   issues,
 }: ProfileSectionProps) {
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
+  const getIssueMessage = (field: string) =>
+    issues.find((issue) => issue.field === field)?.message;
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
 
   const activeCategory = selectedProfile.category;
@@ -312,6 +314,8 @@ export const ProfileSection = memo(function ProfileSection({
               key={dim.key}
               dimension={dim}
               value={input.manualDimensions[dim.key]}
+              hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
+              issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
               onValueChange={(v) =>
                 dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
               }
@@ -330,20 +334,16 @@ export const ProfileSection = memo(function ProfileSection({
             Piece length
           </label>
           <div className="flex gap-1 min-w-0">
-            <input
+            <NumericInput
               id="length"
-              type="number"
               inputMode="decimal"
               autoComplete="off"
-              min={0}
-              step="any"
               value={input.length.value}
-              onChange={(e) =>
-                dispatch({ type: "SET_LENGTH_VALUE", value: parseNumber(e.target.value) })
-              }
+              onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
               className={`h-9 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
                 hasIssue("length") ? "border-red-border" : "border-border-strong"
               }`}
+              aria-invalid={hasIssue("length")}
             />
             <select
               value={input.length.unit}
@@ -365,20 +365,16 @@ export const ProfileSection = memo(function ProfileSection({
           <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
             Quantity
           </label>
-          <input
+          <NumericInput
             id="quantity"
-            type="number"
             inputMode="numeric"
             autoComplete="off"
-            min={1}
-            step={1}
             value={input.quantity}
-            onChange={(e) =>
-              dispatch({ type: "SET_QUANTITY", value: parseNumber(e.target.value) })
-            }
+            onValueChange={(value) => dispatch({ type: "SET_QUANTITY", value })}
             className={`h-9 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
               hasIssue("quantity") ? "border-red-border" : "border-border-strong"
             }`}
+            aria-invalid={hasIssue("quantity")}
           />
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { DimensionKey, ManualProfileDefinition, ProfileDefinition } from "@/lib/datasets/types";
-import { toMillimeters, fromMillimeters, roundTo } from "@/lib/calculator/units";
+import { toMillimeters } from "@/lib/calculator/units";
 import { getMaterialGradeById } from "@/lib/datasets/materials";
 import { solveForDimension, getSolvableDimensions } from "@/lib/calculator/reverse";
 import type { ReverseResponse } from "@/lib/calculator/reverse";
@@ -117,13 +117,6 @@ export function useReverseCalculator(
         solveDimension,
         knownDimensions,
       });
-
-      /* Convert solved value back to the user's unit for that dimension */
-      if (response.ok) {
-        const dimEntry = input.manualDimensions[solveDimension];
-        const unit = dimEntry?.unit ?? "mm";
-        response.valueMm = roundTo(fromMillimeters(response.valueMm, unit), input.rounding.dimensionDecimals);
-      }
 
       setResult(response);
     }, DEBOUNCE_MS);

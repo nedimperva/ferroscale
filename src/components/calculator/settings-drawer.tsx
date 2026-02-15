@@ -7,6 +7,7 @@ import type { MetalFamilyId } from "@/lib/datasets/types";
 import { MaterialSection } from "./material-section";
 import { PricingSection } from "./pricing-section";
 import { PrecisionSection } from "./precision-section";
+import { WorkspaceSection } from "./workspace-section";
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -16,6 +17,12 @@ interface SettingsDrawerProps {
   activeFamily: MetalFamilyId;
   issues: ValidationIssue[];
   onResetAll: () => void;
+  historyLimit: number;
+  onHistoryLimitChange: (value: number) => void;
+  compareLimit: number;
+  onCompareLimitChange: (value: number) => void;
+  maxCompare: number;
+  isCompareMobileCapped: boolean;
 }
 
 export const SettingsDrawer = memo(function SettingsDrawer({
@@ -26,6 +33,12 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   activeFamily,
   issues,
   onResetAll,
+  historyLimit,
+  onHistoryLimitChange,
+  compareLimit,
+  onCompareLimitChange,
+  maxCompare,
+  isCompareMobileCapped,
 }: SettingsDrawerProps) {
   /* Lock body scroll when open */
   useEffect(() => {
@@ -123,6 +136,17 @@ export const SettingsDrawer = memo(function SettingsDrawer({
           <div className="h-px bg-border" />
           <div className="p-4">
             <PrecisionSection input={input} dispatch={dispatch} />
+          </div>
+          <div className="h-px bg-border" />
+          <div className="p-4">
+            <WorkspaceSection
+              historyLimit={historyLimit}
+              onHistoryLimitChange={onHistoryLimitChange}
+              compareLimit={compareLimit}
+              onCompareLimitChange={onCompareLimitChange}
+              maxCompare={maxCompare}
+              isCompareMobileCapped={isCompareMobileCapped}
+            />
           </div>
         </div>
 

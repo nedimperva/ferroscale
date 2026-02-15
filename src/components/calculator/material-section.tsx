@@ -3,7 +3,7 @@ import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
 import { METAL_FAMILIES, getMaterialGradesByFamily, getMaterialGradeById } from "@/lib/datasets/materials";
 import type { MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
-import { parseNumber } from "@/hooks/useCalculator";
+import { NumericInput } from "./numeric-input";
 
 interface MaterialSectionProps {
   input: CalculationInput;
@@ -100,21 +100,16 @@ export const MaterialSection = memo(function MaterialSection({
           <label htmlFor="custom-density" className="text-xs font-medium text-foreground-secondary">
             Density (kg/m³)
           </label>
-          <input
+          <NumericInput
             id="custom-density"
-            type="number"
             inputMode="decimal"
             autoComplete="off"
-            step="any"
-            min={100}
-            max={25000}
-            value={input.customDensityKgPerM3 ?? ""}
-            onChange={(e) =>
-              dispatch({ type: "SET_CUSTOM_DENSITY", value: parseNumber(e.target.value) })
-            }
+            value={input.customDensityKgPerM3}
+            onValueChange={(value) => dispatch({ type: "SET_CUSTOM_DENSITY", value })}
             className={`h-9 rounded-md border bg-surface px-2 text-sm ${
               hasIssue("customDensityKgPerM3") ? "border-red-400" : "border-border-strong"
             }`}
+            aria-invalid={hasIssue("customDensityKgPerM3")}
           />
         </div>
       )}

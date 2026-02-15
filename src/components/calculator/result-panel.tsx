@@ -17,6 +17,7 @@ interface ResultPanelProps {
   canCompare?: boolean;
   isInCompare?: boolean;
   compareCount?: number;
+  maxCompare?: number;
   onAddToProject?: () => void;
   hasProjects?: boolean;
 }
@@ -33,6 +34,7 @@ export const ResultPanel = memo(function ResultPanel({
   canCompare = false,
   isInCompare = false,
   compareCount = 0,
+  maxCompare = 3,
   onAddToProject,
   hasProjects = false,
 }: ResultPanelProps) {
@@ -157,13 +159,13 @@ export const ResultPanel = memo(function ResultPanel({
                 ? "border-border text-foreground-secondary hover:bg-surface-raised"
                 : "cursor-not-allowed border-border-faint text-muted-faint"
           }`}
-          title={isInCompare ? "Already in compare" : canCompare ? "Add to compare" : "Compare full (3/3)"}
+          title={isInCompare ? "Already in compare" : canCompare ? "Add to compare" : `Compare full (${maxCompare}/${maxCompare})`}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0">
             <rect x="3" y="3" width="7" height="18" rx="1" />
             <rect x="14" y="3" width="7" height="18" rx="1" />
           </svg>
-          {isInCompare ? `In Compare (${compareCount}/3)` : "Add to Compare"}
+          {isInCompare ? `In Compare (${compareCount}/${maxCompare})` : "Add to Compare"}
         </button>
 
         {/* Save + Project — side by side */}

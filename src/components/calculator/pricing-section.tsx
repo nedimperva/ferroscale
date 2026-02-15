@@ -7,7 +7,7 @@ import type {
 } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { CalcAction } from "@/hooks/useCalculator";
-import { parseNumber } from "@/hooks/useCalculator";
+import { NumericInput } from "./numeric-input";
 
 const CURRENCIES: CalculationInput["currency"][] = ["EUR", "USD", "GBP", "PLN", "BAM"];
 const WEIGHT_UNITS: PriceUnit[] = ["kg", "lb"];
@@ -82,20 +82,16 @@ export const PricingSection = memo(function PricingSection({
             Unit price
           </label>
           <div className="flex min-w-0">
-            <input
+            <NumericInput
               id="unit-price"
-              type="number"
               inputMode="decimal"
               autoComplete="off"
-              step="any"
-              min={0}
               value={input.unitPrice}
-              onChange={(e) =>
-                dispatch({ type: "SET_UNIT_PRICE", value: parseNumber(e.target.value) })
-              }
+              onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
               className={`h-9 min-w-0 flex-1 rounded-l-md border bg-surface px-2 text-sm ${
                 hasIssue("unitPrice") ? "border-red-400" : "border-border-strong"
               }`}
+              aria-invalid={hasIssue("unitPrice")}
             />
             <select
               id="price-unit"
@@ -142,21 +138,16 @@ export const PricingSection = memo(function PricingSection({
           <label htmlFor="waste" className="text-xs font-medium text-foreground-secondary">
             Waste %
           </label>
-          <input
+          <NumericInput
             id="waste"
-            type="number"
             inputMode="decimal"
             autoComplete="off"
-            min={0}
-            max={100}
-            step="any"
             value={input.wastePercent}
-            onChange={(e) =>
-              dispatch({ type: "SET_WASTE", value: parseNumber(e.target.value) })
-            }
+            onValueChange={(value) => dispatch({ type: "SET_WASTE", value })}
             className={`h-9 min-w-0 rounded-md border bg-surface px-2 text-sm ${
-              hasIssue("wastePercent") ? "border-red-400" : "border-border-strong"
+                hasIssue("wastePercent") ? "border-red-400" : "border-border-strong"
             }`}
+            aria-invalid={hasIssue("wastePercent")}
           />
         </div>
       </div>
@@ -173,21 +164,17 @@ export const PricingSection = memo(function PricingSection({
           VAT
         </label>
         {input.includeVat && (
-          <input
+          <NumericInput
+            id="vat-percent"
             aria-label="VAT percent"
-            type="number"
             inputMode="decimal"
             autoComplete="off"
-            min={0}
-            max={35}
-            step="any"
             value={input.vatPercent}
-            onChange={(e) =>
-              dispatch({ type: "SET_VAT_PERCENT", value: parseNumber(e.target.value) })
-            }
+            onValueChange={(value) => dispatch({ type: "SET_VAT_PERCENT", value })}
             className={`h-8 w-16 rounded-md border bg-surface px-2 text-center text-sm ${
               hasIssue("vatPercent") ? "border-red-400" : "border-border-strong"
             }`}
+            aria-invalid={hasIssue("vatPercent")}
           />
         )}
       </div>

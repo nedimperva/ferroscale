@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CalcAction } from "@/hooks/useCalculator";
-import { parseNumber } from "@/hooks/useCalculator";
+import { NumericInput } from "./numeric-input";
 
 interface PrecisionSectionProps {
   input: CalculationInput;
@@ -39,56 +39,43 @@ export const PrecisionSection = memo(function PrecisionSection({
       <div className="flex flex-wrap items-center gap-3">
         <label htmlFor="round-weight" className="flex items-center gap-1.5 text-xs text-foreground-secondary">
           Wt
-          <input
+          <NumericInput
             id="round-weight"
-            type="number"
             inputMode="numeric"
             autoComplete="off"
-            min={0}
-            max={6}
-            step={1}
             value={input.rounding.weightDecimals}
-            onChange={(e) =>
-              dispatch({ type: "SET_ROUNDING_WEIGHT", value: parseNumber(e.target.value) })
-            }
+            onValueChange={(value) => dispatch({ type: "SET_ROUNDING_WEIGHT", value })}
             className="h-8 w-12 rounded-md border border-border-strong bg-surface text-center text-sm"
+            emptyValue={input.rounding.weightDecimals}
           />
         </label>
         <label htmlFor="round-price" className="flex items-center gap-1.5 text-xs text-foreground-secondary">
           Price
-          <input
+          <NumericInput
             id="round-price"
-            type="number"
             inputMode="numeric"
             autoComplete="off"
-            min={0}
-            max={6}
-            step={1}
             value={input.rounding.priceDecimals}
-            onChange={(e) =>
-              dispatch({ type: "SET_ROUNDING_PRICE", value: parseNumber(e.target.value) })
-            }
+            onValueChange={(value) => dispatch({ type: "SET_ROUNDING_PRICE", value })}
             className="h-8 w-12 rounded-md border border-border-strong bg-surface text-center text-sm"
+            emptyValue={input.rounding.priceDecimals}
           />
         </label>
         <label htmlFor="round-dimension" className="flex items-center gap-1.5 text-xs text-foreground-secondary">
           Dim
-          <input
+          <NumericInput
             id="round-dimension"
-            type="number"
             inputMode="numeric"
             autoComplete="off"
-            min={0}
-            max={6}
-            step={1}
             value={input.rounding.dimensionDecimals}
-            onChange={(e) =>
+            onValueChange={(value) =>
               dispatch({
                 type: "SET_ROUNDING_DIMENSION",
-                value: parseNumber(e.target.value),
+                value,
               })
             }
             className="h-8 w-12 rounded-md border border-border-strong bg-surface text-center text-sm"
+            emptyValue={input.rounding.dimensionDecimals}
           />
         </label>
       </div>
