@@ -127,7 +127,7 @@ export const SettingsDrawer = memo(function SettingsDrawer({
         <div className="flex-1 overflow-y-auto">
           <div className="p-4">
             <div className="mb-3 flex justify-end">
-              <LanguageSwitcher />
+              <LanguageSwitcher className="w-full justify-between" />
             </div>
             <MaterialSection
               input={input}

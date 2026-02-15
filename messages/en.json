@@ -22,7 +22,8 @@
   "app": {
     "mobileHeaderTitle": "Metal Calculator",
     "mobileHeaderSubtitle": "Live weight and price estimation for EN standard profiles.",
-    "datasetVersion": "v{version}"
+    "datasetVersion": "v{version}",
+    "moreActions": "More actions"
   },
   "theme": {
     "dark": "Dark",

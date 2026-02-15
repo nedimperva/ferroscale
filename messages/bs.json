@@ -22,7 +22,8 @@
   "app": {
     "mobileHeaderTitle": "Kalkulator metala",
     "mobileHeaderSubtitle": "Procjena mase i cijene uzivo za EN standardne profile.",
-    "datasetVersion": "v{version}"
+    "datasetVersion": "v{version}",
+    "moreActions": "Vise opcija"
   },
   "theme": {
     "dark": "Tamno",
