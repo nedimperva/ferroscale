@@ -258,23 +258,32 @@ export function useCalculator(): UseCalculatorReturn {
   const [input, dispatch] = useReducer(
     inputReducer,
     undefined,
-    () => {
-      const persisted = loadPersistedInput();
-      if (!persisted) return getDefaultInput();
-      /* Guard: if a persisted profile was removed, fall back to defaults */
-      if (!getProfileById(persisted.profileId)) {
-        return getDefaultInput();
-      }
-      return persisted;
-    },
+    getDefaultInput,
   );
+  const inputHydratedRef = useRef(false);
+  const skipNextPersistRef = useRef(false);
   const [isPending, startTransition] = useTransition();
 
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
 
-  /* Persist input to localStorage on every change */
+  /* Hydrate persisted input after mount to keep SSR/client first render identical */
   useEffect(() => {
+    const persisted = loadPersistedInput();
+    if (persisted && getProfileById(persisted.profileId)) {
+      skipNextPersistRef.current = true;
+      dispatch({ type: "LOAD_ENTRY", input: persisted });
+    }
+    inputHydratedRef.current = true;
+  }, []);
+
+  /* Persist input to localStorage after hydration */
+  useEffect(() => {
+    if (!inputHydratedRef.current) return;
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
     persistInput(input);
   }, [input]);
 

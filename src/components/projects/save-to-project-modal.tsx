@@ -126,11 +126,15 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closeAndReset}>
+      <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4" onClick={closeAndReset}>
         <div
-          className="w-full max-w-sm rounded-xl border border-border bg-surface shadow-xl"
+          className="flex h-[min(86dvh,780px)] w-full flex-col rounded-t-2xl border border-border bg-surface shadow-xl sm:h-auto sm:max-w-sm sm:rounded-xl"
           onClick={(e) => e.stopPropagation()}
         >
+          <div className="pt-2 sm:hidden">
+            <div className="mx-auto h-1.5 w-10 rounded-full bg-border" />
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -161,7 +165,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
 
           {/* Body */}
           {!feedback && (
-            <div className="max-h-[60vh] overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] sm:max-h-[60vh] sm:flex-none sm:pb-4">
               {/* Current calculation preview */}
               <div className="mb-3 rounded-lg border border-border-faint bg-surface-raised px-3 py-2">
                 <p className="text-xs text-muted">{t("adding")}</p>
@@ -188,7 +192,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                         key={project.id}
                         type="button"
                         onClick={() => handleAdd(project.id, project.name)}
-                        className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-2.5 text-left transition-colors hover:border-purple-300 hover:bg-purple-surface"
+                        className="flex items-center justify-between rounded-lg border border-border bg-surface px-3 py-3 text-left transition-colors hover:border-purple-300 hover:bg-purple-surface"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-foreground">{project.name}</p>
@@ -211,7 +215,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                 <span className="text-xs font-medium text-muted">
                   {projects.length > 0 ? t("orCreate") : t("createProject")}
                 </span>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:flex">
                   <input
                     ref={inputRef}
                     type="text"
@@ -221,14 +225,14 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleCreateAndAdd();
                     }}
-                    className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-500 focus:outline-none"
+                    className="h-10 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-500 focus:outline-none sm:h-9"
                     maxLength={60}
                   />
                   <button
                     type="button"
                     onClick={handleCreateAndAdd}
                     disabled={!newName.trim()}
-                    className="shrink-0 rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
+                    className="w-full shrink-0 rounded-lg bg-purple-strong px-3 py-2.5 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text sm:w-auto sm:py-2"
                   >
                     {t("createAndAdd")}
                   </button>
@@ -239,7 +243,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
 
           {/* Footer */}
           {!feedback && projects.length > 0 && (
-            <div className="border-t border-border-faint px-4 py-2.5">
+            <div className="border-t border-border-faint px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:py-2.5 sm:pb-2.5">
               <button
                 type="button"
                 onClick={handleManageProjects}

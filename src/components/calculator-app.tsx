@@ -118,7 +118,7 @@ export function CalculatorApp() {
     items: compareItems,
     isOpen: showCompareDrawer,
     canAdd: canCompare,
-    open: openCompare,
+    open: openCompareDrawer,
     close: closeCompare,
     addItem: addCompareItem,
     removeItem: removeCompareItem,
@@ -144,7 +144,7 @@ export function CalculatorApp() {
   const {
     projects,
     isOpen: showProjectDrawer,
-    open: openProjects,
+    open: openProjectsDrawer,
     close: closeProjects,
     activeProjectId,
     setActiveProjectId,
@@ -167,6 +167,18 @@ export function CalculatorApp() {
 
   /* Mobile overlay state */
   const [showOverlay, setShowOverlay] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+
+  const openCompare = useCallback(() => {
+    setShowOverlay(false);
+    openCompareDrawer();
+  }, [openCompareDrawer]);
+
+  const openProjects = useCallback(() => {
+    setShowOverlay(false);
+    setShowSaveModal(false);
+    openProjectsDrawer();
+  }, [openProjectsDrawer]);
 
   /* Star helpers */
   const currentEntryId = history[0]?.id;
@@ -195,11 +207,9 @@ export function CalculatorApp() {
     }
   }, [result, input, currentIsInCompare, openCompare, addCompareItem]);
 
-  /* Project helpers */
-  const [showSaveModal, setShowSaveModal] = useState(false);
-
   const handleAddToProject = useCallback(() => {
     if (result) {
+      setShowOverlay(false);
       setShowSaveModal(true);
     }
   }, [result]);
@@ -320,7 +330,7 @@ export function CalculatorApp() {
 
       <div className={`mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-14 pb-28 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pt-6 xl:pb-6 ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}>
         {/* ---- Fixed header (<lg) ---- */}
-        <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between gap-2 bg-background px-4 py-2 shadow-sm md:px-6 lg:hidden">
+        <header className="fixed inset-x-0 top-0 z-[70] flex items-center justify-between gap-2 bg-background px-4 py-2 shadow-sm md:px-6 lg:hidden">
           <div className="min-w-0 shrink">
             <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
               {t("app.mobileHeaderTitle")}
@@ -357,7 +367,7 @@ export function CalculatorApp() {
               </button>
             )}
 
-            <div className="relative" ref={mobileMenuRef}>
+            <div className="relative z-[80]" ref={mobileMenuRef}>
               <button
                 type="button"
                 onClick={() => setShowMobileMenu((value) => !value)}
@@ -370,7 +380,7 @@ export function CalculatorApp() {
               </button>
 
               {showMobileMenu && (
-                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-50 w-60 rounded-lg border border-border bg-surface-raised p-2 shadow-lg" role="menu">
+                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-[90] w-60 rounded-lg border border-border bg-surface-raised p-2 shadow-lg" role="menu">
                   <div className="mb-2">
                     <LanguageSwitcher className="w-full justify-between" />
                   </div>

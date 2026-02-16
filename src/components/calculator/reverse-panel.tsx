@@ -21,6 +21,7 @@ export const ReversePanel = memo(function ReversePanel({
   input,
 }: ReversePanelProps) {
   const t = useTranslations("reverse");
+  const tBase = useTranslations();
 
   if (!isManualProfile) {
     if (reverse.enabled) {
@@ -109,7 +110,7 @@ export const ReversePanel = memo(function ReversePanel({
                         : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
                   >
-                    {t(`dataset.dimensions.${dim}`)}
+                    {tBase(`dataset.dimensions.${dim}`)}
                   </button>
                 ))}
               </div>

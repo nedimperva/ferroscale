@@ -177,7 +177,7 @@ export const ResultPanel = memo(function ResultPanel({
             isInCompare
               ? "border-blue-border bg-blue-surface text-blue-text"
               : canCompare
-                ? "border-border text-foreground-secondary hover:bg-surface-raised"
+                ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
                 : "cursor-not-allowed border-border-faint text-muted-faint"
           }`}
           title={

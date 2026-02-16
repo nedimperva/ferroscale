@@ -277,8 +277,8 @@ function SidebarButton({
       ? "text-foreground bg-surface-inset"
       : "text-foreground-secondary hover:bg-surface-raised hover:text-foreground",
     blue: active
-      ? "text-blue-text bg-blue-surface"
-      : "text-blue-text bg-blue-surface/60 hover:bg-blue-surface",
+      ? "border border-blue-border text-blue-text bg-blue-surface"
+      : "border border-blue-border text-blue-text bg-blue-surface/70 hover:bg-blue-surface",
     purple: active
       ? "text-purple-text bg-purple-surface"
       : "text-purple-text bg-purple-surface/60 hover:bg-purple-surface",

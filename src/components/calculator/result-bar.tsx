@@ -93,8 +93,10 @@ export const ResultBar = memo(function ResultBar({
               e.stopPropagation();
               onCompare?.();
             }}
-            className={`shrink-0 rounded-full p-2 transition-colors ${
-              isInCompare ? "bg-blue-surface" : "hover:bg-surface-inset"
+            className={`shrink-0 rounded-full border p-2 transition-colors ${
+              isInCompare
+                ? "border-blue-border bg-blue-surface text-blue-text"
+                : "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
             }`}
             aria-label={
               isInCompare
@@ -114,9 +116,7 @@ export const ResultBar = memo(function ResultBar({
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={`h-6 w-6 transition-colors duration-200 ${
-                isInCompare ? "stroke-blue-text" : "stroke-muted-faint"
-              }`}
+              className="h-6 w-6 stroke-current transition-colors duration-200"
             >
               <rect x="3" y="3" width="7" height="18" rx="1" />
               <rect x="14" y="3" width="7" height="18" rx="1" />
@@ -360,7 +360,7 @@ export const ResultOverlay = memo(function ResultOverlay({
                 isInCompare
                   ? "border-blue-border bg-blue-surface text-blue-text"
                   : canCompare
-                    ? "border-border text-foreground-secondary hover:bg-surface-raised"
+                    ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
                     : "cursor-not-allowed border-border-faint text-muted-faint"
               }`}
               title={
