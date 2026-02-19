@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { useTranslations } from "next-intl";
+import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
@@ -52,6 +53,18 @@ export const ResultPanel = memo(function ResultPanel({
     return label;
   };
 
+  // Animated values — hooks must be called before early return.
+  const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
+  const animatedUnitWeight = useAnimatedNumber(result?.unitWeightKg ?? 0);
+  const animatedTotalWeight = useAnimatedNumber(result?.totalWeightKg ?? 0);
+
+  /** Format an animated float to the same decimal places as the reference number. */
+  function fmtAnimated(animated: number, reference: number): string {
+    const dot = String(reference).indexOf(".");
+    const dec = dot === -1 ? 0 : String(reference).length - dot - 1;
+    return animated.toFixed(dec);
+  }
+
   if (!result) {
     return (
       <section className="rounded-xl border border-border bg-surface p-5">
@@ -79,8 +92,8 @@ export const ResultPanel = memo(function ResultPanel({
         <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
           {t("totalCost")}
         </p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground transition-all duration-300">
-          {result.grandTotalAmount}
+        <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground tabular-nums transition-all duration-300">
+          {fmtAnimated(animatedTotal, result.grandTotalAmount)}
         </p>
         <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
       </div>
@@ -89,15 +102,15 @@ export const ResultPanel = memo(function ResultPanel({
       <div className="grid grid-cols-2 gap-3 px-5 pt-4">
         <div className="rounded-lg bg-surface-raised px-3 py-2.5">
           <p className="text-[11px] font-medium text-muted">{t("unitWeight")}</p>
-          <p className="mt-0.5 text-lg font-bold tracking-tight transition-all duration-300">
-            {result.unitWeightKg}{" "}
+          <p className="mt-0.5 text-lg font-bold tabular-nums tracking-tight transition-all duration-300">
+            {fmtAnimated(animatedUnitWeight, result.unitWeightKg)}{" "}
             <span className="text-sm font-medium text-muted">kg</span>
           </p>
         </div>
         <div className="rounded-lg bg-surface-raised px-3 py-2.5">
           <p className="text-[11px] font-medium text-muted">{t("totalWeight")}</p>
-          <p className="mt-0.5 text-lg font-bold tracking-tight transition-all duration-300">
-            {result.totalWeightKg}{" "}
+          <p className="mt-0.5 text-lg font-bold tabular-nums tracking-tight transition-all duration-300">
+            {fmtAnimated(animatedTotalWeight, result.totalWeightKg)}{" "}
             <span className="text-sm font-medium text-muted">kg</span>
           </p>
         </div>

@@ -1,6 +1,14 @@
-const CACHE_NAME = "advanced-calc-v1.1.0";
+const CACHE_NAME = "advanced-calc-v1.2.0";
 const OFFLINE_FALLBACK_URL = "/offline.html";
-const APP_SHELL_URLS = ["/", "/manifest.webmanifest", "/icon.svg", "/favicon.ico", OFFLINE_FALLBACK_URL];
+const APP_SHELL_URLS = [
+  "/",
+  "/en",
+  "/bs",
+  "/manifest.webmanifest",
+  "/icon.svg",
+  "/favicon.ico",
+  OFFLINE_FALLBACK_URL,
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -15,9 +23,18 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
+      )
       .then(() => self.clients.claim()),
   );
+});
+
+// Allow the page to trigger an immediate SW activation (used by update banner).
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 function isSameOrigin(requestUrl) {
@@ -54,7 +71,11 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(async () => {
           const cache = await caches.open(CACHE_NAME);
-          const cached = (await cache.match(request)) || (await cache.match("/")) || (await cache.match(OFFLINE_FALLBACK_URL));
+          const cached =
+            (await cache.match(request)) ||
+            (await cache.match(url.pathname.startsWith("/bs") ? "/bs" : "/en")) ||
+            (await cache.match("/")) ||
+            (await cache.match(OFFLINE_FALLBACK_URL));
           if (cached) {
             return cached;
           }
