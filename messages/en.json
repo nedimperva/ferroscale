@@ -17,7 +17,13 @@
     "bs": "Bosnian"
   },
   "pwa": {
-    "offlineBanner": "Offline mode active. You can continue calculations with cached data."
+    "offlineBanner": "Offline mode active. You can continue calculations with cached data.",
+    "updateAvailable": "A new version of the app is available.",
+    "updateNow": "Update now",
+    "readyForOffline": "App is ready for offline use.",
+    "installPrompt": "Install this app for quick offline access.",
+    "installNow": "Install",
+    "dismiss": "Dismiss"
   },
   "app": {
     "mobileHeaderTitle": "Metal Calculator",

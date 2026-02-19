@@ -17,7 +17,13 @@
     "bs": "Bosanski"
   },
   "pwa": {
-    "offlineBanner": "Offline rezim je aktivan. Mozete nastaviti izracune sa kesiranim podacima."
+    "offlineBanner": "Offline rezim je aktivan. Mozete nastaviti izracune sa kesiranim podacima.",
+    "updateAvailable": "Dostupna je nova verzija aplikacije.",
+    "updateNow": "Azuriraj sada",
+    "readyForOffline": "Aplikacija je spremna za koriscenje bez interneta.",
+    "installPrompt": "Instalirajte ovu aplikaciju za brz pristup bez interneta.",
+    "installNow": "Instaliraj",
+    "dismiss": "Zatvori"
   },
   "app": {
     "mobileHeaderTitle": "Kalkulator metala",
