@@ -4,6 +4,7 @@ import { memo } from "react";
 import { useTranslations } from "next-intl";
 import type { CompareItem } from "@/hooks/useCompare";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 
 interface CompareCardProps {
@@ -32,12 +33,7 @@ export const CompareCard = memo(function CompareCard({
   const r = item.result;
   const isRef = reference === null || reference.id === item.id;
 
-  const gradeLabel =
-    r.gradeLabel === "Custom density input"
-      ? tBase("dataset.customDensityInput")
-      : r.gradeLabel === "Unknown"
-        ? tBase("dataset.unknown")
-        : r.gradeLabel;
+  const gradeLabel = resolveGradeLabel(r.gradeLabel, tBase);
 
   const weightDiff = isRef ? null : diffLabel(r.totalWeightKg, reference!.result.totalWeightKg);
   const costDiff = isRef ? null : diffLabel(r.grandTotalAmount, reference!.result.grandTotalAmount);

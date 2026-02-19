@@ -7,6 +7,7 @@ import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
 
 interface ResultBarProps {
@@ -46,12 +47,6 @@ export const ResultBar = memo(function ResultBar({
   const tBase = useTranslations();
   const t = useTranslations("result");
 
-  const getGradeLabel = (label: string) => {
-    if (label === "Custom density input") return tBase("dataset.customDensityInput");
-    if (label === "Unknown") return tBase("dataset.unknown");
-    return label;
-  };
-
   const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
 
   function fmtAnimated(animated: number, reference: number): string {
@@ -77,7 +72,7 @@ export const ResultBar = memo(function ResultBar({
                 <ProfileIcon category={normalizedProfile.iconKey} className="h-2.5 w-2.5" />
               </span>
             )}
-            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel} · {getGradeLabel(result.gradeLabel)}</span>
+            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}</span>
           </span>
           <span
             className={`text-2xl font-bold tabular-nums tracking-tight transition-opacity duration-200 ${
@@ -232,12 +227,6 @@ export const ResultOverlay = memo(function ResultOverlay({
   const tBase = useTranslations();
   const t = useTranslations("result");
 
-  const getGradeLabel = (label: string) => {
-    if (label === "Custom density input") return tBase("dataset.customDensityInput");
-    if (label === "Unknown") return tBase("dataset.unknown");
-    return label;
-  };
-
   /* Lock body scroll when overlay is open */
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -247,20 +236,21 @@ export const ResultOverlay = memo(function ResultOverlay({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-60 flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain" }}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">{t("title")}</h2>
+    <div className="fixed inset-0 z-[90] flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+      {/* Header — "← Close" on left keeps thumb close to the button; title centred */}
+      <div className="flex shrink-0 items-center border-b border-border px-2 py-3">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-1.5 text-muted hover:bg-surface-inset"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
           aria-label={t("closeDetails")}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
+          {t("close")}
         </button>
+        <h2 className="flex-1 pr-10 text-center text-sm font-semibold">{t("title")}</h2>
       </div>
 
       {/* Scrollable body */}
@@ -310,7 +300,7 @@ export const ResultOverlay = memo(function ResultOverlay({
             </div>
             <div className="flex items-baseline justify-between border-b border-border-faint py-2">
               <span className="text-muted">{t("material")}</span>
-              <span className="font-medium text-right">{getGradeLabel(result.gradeLabel)}</span>
+              <span className="font-medium text-right">{resolveGradeLabel(result.gradeLabel, tBase)}</span>
             </div>
             <div className="flex items-baseline justify-between py-2">
               <span className="text-muted">{t("unitPrice")}</span>
