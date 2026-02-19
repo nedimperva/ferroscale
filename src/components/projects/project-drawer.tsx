@@ -258,7 +258,7 @@ function ProjectList({
   return (
     <div className="space-y-3">
       {/* Create new project */}
-      <div className="flex gap-2">
+      <div className="grid gap-2">
         <input
           type="text"
           placeholder={t("newProjectPlaceholder")}
@@ -267,14 +267,14 @@ function ProjectList({
           onKeyDown={(e) => {
             if (e.key === "Enter") onCreate();
           }}
-          className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-strong"
+          className="h-9 w-full rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-strong"
           maxLength={60}
         />
         <button
           type="button"
           onClick={onCreate}
           disabled={!newName.trim()}
-          className="shrink-0 rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
+          className="w-full rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
         >
           {t("create")}
         </button>

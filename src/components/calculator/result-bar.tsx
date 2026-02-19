@@ -7,6 +7,7 @@ import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
 
 interface ResultBarProps {
@@ -46,12 +47,6 @@ export const ResultBar = memo(function ResultBar({
   const tBase = useTranslations();
   const t = useTranslations("result");
 
-  const getGradeLabel = (label: string) => {
-    if (label === "Custom density input") return tBase("dataset.customDensityInput");
-    if (label === "Unknown") return tBase("dataset.unknown");
-    return label;
-  };
-
   const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
 
   function fmtAnimated(animated: number, reference: number): string {
@@ -77,7 +72,7 @@ export const ResultBar = memo(function ResultBar({
                 <ProfileIcon category={normalizedProfile.iconKey} className="h-2.5 w-2.5" />
               </span>
             )}
-            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel} · {getGradeLabel(result.gradeLabel)}</span>
+            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}</span>
           </span>
           <span
             className={`text-2xl font-bold tabular-nums tracking-tight transition-opacity duration-200 ${
@@ -232,12 +227,6 @@ export const ResultOverlay = memo(function ResultOverlay({
   const tBase = useTranslations();
   const t = useTranslations("result");
 
-  const getGradeLabel = (label: string) => {
-    if (label === "Custom density input") return tBase("dataset.customDensityInput");
-    if (label === "Unknown") return tBase("dataset.unknown");
-    return label;
-  };
-
   /* Lock body scroll when overlay is open */
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -248,13 +237,23 @@ export const ResultOverlay = memo(function ResultOverlay({
 
   return (
     <div className="fixed inset-0 z-60 flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain" }}>
+      {/* Drag-handle hint — visual affordance that the overlay can be dismissed */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="flex shrink-0 justify-center pb-1 pt-2"
+        aria-label={t("closeDetails")}
+      >
+        <div className="h-1 w-10 rounded-full bg-border" />
+      </button>
+
       {/* Header bar */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold">{t("title")}</h2>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-1.5 text-muted hover:bg-surface-inset"
+          className="rounded-md p-2 text-foreground-secondary transition-colors hover:bg-surface-inset"
           aria-label={t("closeDetails")}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
@@ -310,7 +309,7 @@ export const ResultOverlay = memo(function ResultOverlay({
             </div>
             <div className="flex items-baseline justify-between border-b border-border-faint py-2">
               <span className="text-muted">{t("material")}</span>
-              <span className="font-medium text-right">{getGradeLabel(result.gradeLabel)}</span>
+              <span className="font-medium text-right">{resolveGradeLabel(result.gradeLabel, tBase)}</span>
             </div>
             <div className="flex items-baseline justify-between py-2">
               <span className="text-muted">{t("unitPrice")}</span>

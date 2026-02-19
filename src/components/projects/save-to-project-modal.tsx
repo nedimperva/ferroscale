@@ -183,7 +183,7 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
               <span className="text-xs font-medium text-muted">
                 {projects.length > 0 ? t("orCreate") : t("createProject")}
               </span>
-              <div className="flex gap-2">
+              <div className="grid gap-2">
                 <input
                   type="text"
                   placeholder={t("placeholder")}
@@ -192,32 +192,32 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleCreateAndAdd();
                   }}
-                  className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-strong focus:outline-none"
+                  className="h-9 w-full rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-strong focus:outline-none"
                   maxLength={60}
                 />
                 <button
                   type="button"
                   onClick={handleCreateAndAdd}
                   disabled={!newName.trim()}
-                  className="shrink-0 rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
+                  className="w-full rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
                 >
                   {t("createAndAdd")}
                 </button>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Footer */}
-        {!feedback && projects.length > 0 && (
-          <div className="border-t border-border-faint px-4 py-3">
-            <button
-              type="button"
-              onClick={handleManageProjects}
-              className="text-xs font-medium text-muted transition-colors hover:text-foreground-secondary"
-            >
-              {t("manageProjects")}
-            </button>
+            {/* Manage projects link — inside scroll area so it's never clipped by the keyboard */}
+            {projects.length > 0 && (
+              <div className="mt-3 border-t border-border-faint pt-3">
+                <button
+                  type="button"
+                  onClick={handleManageProjects}
+                  className="text-xs font-medium text-muted transition-colors hover:text-foreground-secondary"
+                >
+                  {t("manageProjects")}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </aside>

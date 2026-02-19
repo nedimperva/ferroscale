@@ -84,11 +84,10 @@ export function ToastContainer() {
 
   return (
     /*
-     * On mobile: sits above the sticky result bar (bottom-24 ~96 px) so toasts
-     * are never hidden behind it.
-     * On xl+: simple bottom-right stack with no result bar to worry about.
+     * Top-right: toasts never overlap the sticky ResultBar, drawer footers,
+     * or any action buttons regardless of screen size.
      */
-    <div className="fixed bottom-24 right-3 z-[300] flex w-80 max-w-[calc(100vw-1.5rem)] flex-col gap-2 xl:bottom-4 xl:right-4">
+    <div className="fixed right-3 top-3 z-[300] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col gap-2">
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} />
       ))}
