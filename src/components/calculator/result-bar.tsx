@@ -236,7 +236,7 @@ export const ResultOverlay = memo(function ResultOverlay({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-60 flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain", paddingTop: "env(safe-area-inset-top, 0px)" }}>
+    <div className="fixed inset-0 z-[90] flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain", paddingTop: "env(safe-area-inset-top, 0px)" }}>
       {/* Header — "← Close" on left keeps thumb close to the button; title centred */}
       <div className="flex shrink-0 items-center border-b border-border px-2 py-3">
         <button
