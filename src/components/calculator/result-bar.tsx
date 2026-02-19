@@ -237,29 +237,20 @@ export const ResultOverlay = memo(function ResultOverlay({
 
   return (
     <div className="fixed inset-0 z-60 flex flex-col bg-surface xl:hidden" style={{ overscrollBehavior: "contain" }}>
-      {/* Drag-handle hint — visual affordance that the overlay can be dismissed */}
-      <button
-        type="button"
-        onClick={onClose}
-        className="flex shrink-0 justify-center pb-1 pt-2"
-        aria-label={t("closeDetails")}
-      >
-        <div className="h-1 w-10 rounded-full bg-border" />
-      </button>
-
-      {/* Header bar */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">{t("title")}</h2>
+      {/* Header — "← Close" on left keeps thumb close to the button; title centred */}
+      <div className="flex shrink-0 items-center border-b border-border px-2 py-3">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-md p-2 text-foreground-secondary transition-colors hover:bg-surface-inset"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
           aria-label={t("closeDetails")}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
+          {t("close")}
         </button>
+        <h2 className="flex-1 pr-10 text-center text-sm font-semibold">{t("title")}</h2>
       </div>
 
       {/* Scrollable body */}
