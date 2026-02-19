@@ -25,6 +25,12 @@
     "installNow": "Instaliraj",
     "dismiss": "Zatvori"
   },
+  "toasts": {
+    "calculationSaved": "Izracun sacuvan.",
+    "calculationUnstarred": "Uklonjen iz sacuvanih.",
+    "addedToCompare": "Dodano za poredenje.",
+    "historyCleared": "Historija ociscena."
+  },
   "app": {
     "mobileHeaderTitle": "Kalkulator metala",
     "mobileHeaderSubtitle": "Procjena mase i cijene uzivo za EN standardne profile.",

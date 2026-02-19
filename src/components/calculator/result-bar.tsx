@@ -2,6 +2,7 @@
 
 import { memo, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
@@ -51,6 +52,14 @@ export const ResultBar = memo(function ResultBar({
     return label;
   };
 
+  const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
+
+  function fmtAnimated(animated: number, reference: number): string {
+    const dot = String(reference).indexOf(".");
+    const dec = dot === -1 ? 0 : String(reference).length - dot - 1;
+    return animated.toFixed(dec);
+  }
+
   if (!result) return null;
 
   return (
@@ -71,11 +80,11 @@ export const ResultBar = memo(function ResultBar({
             <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel} · {getGradeLabel(result.gradeLabel)}</span>
           </span>
           <span
-            className={`text-2xl font-bold tracking-tight transition-opacity duration-200 ${
+            className={`text-2xl font-bold tabular-nums tracking-tight transition-opacity duration-200 ${
               isPending ? "opacity-50" : ""
             }`}
           >
-            {result.grandTotalAmount}
+            {fmtAnimated(animatedTotal, result.grandTotalAmount)}
             <span className="ml-1 text-sm font-semibold text-muted">
               {CURRENCY_SYMBOLS[result.currency]}
             </span>

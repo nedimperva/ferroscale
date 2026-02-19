@@ -26,6 +26,8 @@ import { ProjectDrawer } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { PwaRegister } from "@/components/pwa-register";
+import { toast } from "@/lib/toast";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -187,8 +189,14 @@ export function CalculatorApp() {
     : false;
 
   const handleStar = useCallback(() => {
-    if (currentEntryId) toggleStar(currentEntryId);
-  }, [currentEntryId, toggleStar]);
+    if (!currentEntryId) return;
+    toggleStar(currentEntryId);
+    if (isCurrentStarred) {
+      toast.info(t("toasts.calculationUnstarred"));
+    } else {
+      toast.success(t("toasts.calculationSaved"));
+    }
+  }, [currentEntryId, toggleStar, isCurrentStarred, t]);
 
   /* Compare helpers */
   const currentIsInCompare = result ? isInCompare(result) : false;
@@ -204,8 +212,9 @@ export function CalculatorApp() {
       openCompare();
     } else {
       addCompareItem(input, result);
+      toast.info(t("toasts.addedToCompare"));
     }
-  }, [result, input, currentIsInCompare, openCompare, addCompareItem]);
+  }, [result, input, currentIsInCompare, openCompare, addCompareItem, t]);
 
   const handleAddToProject = useCallback(() => {
     if (result) {
@@ -213,6 +222,11 @@ export function CalculatorApp() {
       setShowSaveModal(true);
     }
   }, [result]);
+
+  const handleClearHistory = useCallback(() => {
+    clearHistory();
+    toast.info(t("toasts.historyCleared"));
+  }, [clearHistory, t]);
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -560,6 +574,10 @@ export function CalculatorApp() {
         </div>
         ---- */}
 
+        {/* ---- PWA banners (offline / update / install) — rendered here so they
+             appear in normal flow below the fixed mobile header on small screens ---- */}
+        <PwaRegister />
+
         {/* ---- Main grid ---- */}
         <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
           {/* LEFT — inputs */}
@@ -661,7 +679,7 @@ export function CalculatorApp() {
           onLoad={handleLoad}
           onToggleStar={toggleStar}
           onRemoveStarred={removeStarred}
-          onClearHistory={clearHistory}
+          onClearHistory={handleClearHistory}
         />
 
         {/* ---- Settings drawer ---- */}

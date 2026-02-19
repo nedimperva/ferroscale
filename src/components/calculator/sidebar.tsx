@@ -285,7 +285,7 @@ function SidebarButton({
   };
 
   return (
-    <div className="relative">
+    <div className="group relative">
       {/* Active left border accent */}
       {active && (
         <div className="absolute top-1 bottom-1 left-0 w-[3px] rounded-full bg-blue-strong" />
@@ -296,7 +296,6 @@ function SidebarButton({
         className={`flex w-full items-center rounded-lg text-sm font-medium transition-colors ${
           collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-2.5 py-2"
         } ${variantClasses[variant]}`}
-        title={collapsed ? label : undefined}
         aria-label={label}
       >
         <span className="shrink-0">{icon}</span>
@@ -307,6 +306,23 @@ function SidebarButton({
           </span>
         )}
       </button>
+
+      {/* Custom tooltip — only visible when sidebar is collapsed */}
+      {collapsed && (
+        <span
+          role="tooltip"
+          className="pointer-events-none absolute top-1/2 left-full z-50 ml-2.5 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity delay-75 duration-150 group-hover:opacity-100 dark:bg-slate-700"
+        >
+          {/* Arrow */}
+          <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[1px] bg-slate-800 dark:bg-slate-700" />
+          {label}
+          {badge !== undefined && (
+            <span className="ml-1.5 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
+              {badge}
+            </span>
+          )}
+        </span>
+      )}
     </div>
   );
 }

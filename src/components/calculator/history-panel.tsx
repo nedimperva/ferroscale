@@ -2,6 +2,7 @@
 
 import { memo, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
+import { toast } from "@/lib/toast";
 import type { HistoryEntry } from "@/hooks/useHistory";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -166,7 +167,14 @@ const HistoryItem = memo(function HistoryItem({
       </button>
       <button
         type="button"
-        onClick={onStar}
+        onClick={() => {
+          onStar();
+          if (isStarred) {
+            toast.info(tBase("toasts.calculationUnstarred"));
+          } else {
+            toast.success(tBase("toasts.calculationSaved"));
+          }
+        }}
         className="shrink-0 rounded p-1 transition-colors hover:bg-surface-inset"
         aria-label={isStarred ? t("removeStar") : t("addStar")}
       >

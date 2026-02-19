@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { PwaRegister } from "@/components/pwa-register";
+import { ToastContainer } from "@/components/ui/toast-container";
 import { routing } from "@/i18n/routing";
 
 interface LocaleLayoutProps {
@@ -30,8 +30,9 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <PwaRegister />
       {children}
+      {/* Toast notifications — rendered after children so they layer on top */}
+      <ToastContainer />
     </NextIntlClientProvider>
   );
 }

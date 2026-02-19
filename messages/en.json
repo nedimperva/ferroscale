@@ -25,6 +25,12 @@
     "installNow": "Install",
     "dismiss": "Dismiss"
   },
+  "toasts": {
+    "calculationSaved": "Calculation saved.",
+    "calculationUnstarred": "Removed from saved.",
+    "addedToCompare": "Added to compare.",
+    "historyCleared": "History cleared."
+  },
   "app": {
     "mobileHeaderTitle": "Metal Calculator",
     "mobileHeaderSubtitle": "Live weight and price estimation for EN standard profiles.",
