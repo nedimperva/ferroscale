@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Project } from "@/hooks/useProjects";
 import { computeAggregates, exportProjectCsv } from "@/hooks/useProjects";
@@ -8,6 +8,8 @@ import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
+import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
@@ -70,11 +72,7 @@ export const ProjectDrawer = memo(function ProjectDrawer({
     ] as const,
     total: t("csvHeaders.total"),
     filePrefix: t("csvFilePrefix"),
-    resolveGradeLabel: (label: string) => {
-      if (label === "Custom density input") return tBase("dataset.customDensityInput");
-      if (label === "Unknown") return tBase("dataset.unknown");
-      return label;
-    },
+    resolveGradeLabel: (label: string) => resolveGradeLabel(label, tBase),
     resolveProfileLabel: (profileId: string, fallback: string) => {
       try {
         return tBase(`dataset.profiles.${profileId}`);
@@ -84,25 +82,7 @@ export const ProjectDrawer = memo(function ProjectDrawer({
     },
   };
 
-  /* Lock body scroll when open */
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
-  }, [open]);
-
-  /* Close on Escape key */
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  useDrawerBehavior(open, onClose);
 
   const handleCreate = useCallback(() => {
     if (!newName.trim()) return;
@@ -287,14 +267,14 @@ function ProjectList({
           onKeyDown={(e) => {
             if (e.key === "Enter") onCreate();
           }}
-          className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-blue-strong"
+          className="h-9 flex-1 rounded-lg border border-border-strong bg-surface px-3 text-sm transition-colors focus:border-purple-strong"
           maxLength={60}
         />
         <button
           type="button"
           onClick={onCreate}
           disabled={!newName.trim()}
-          className="shrink-0 rounded-lg bg-blue-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
+          className="shrink-0 rounded-lg bg-purple-strong px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-purple-strong-hover disabled:cursor-not-allowed disabled:bg-disabled-bg disabled:text-disabled-text"
         >
           {t("create")}
         </button>
@@ -561,12 +541,7 @@ function ProjectDetail({
       ) : (
         <div className="grid gap-2">
           {project.calculations.map((calc) => {
-            const gradeLabel =
-              calc.result.gradeLabel === "Custom density input"
-                ? tBase("dataset.customDensityInput")
-                : calc.result.gradeLabel === "Unknown"
-                  ? tBase("dataset.unknown")
-                  : calc.result.gradeLabel;
+            const gradeLabel = resolveGradeLabel(calc.result.gradeLabel, tBase);
 
             return (
               <div

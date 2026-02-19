@@ -1,7 +1,8 @@
 "use client";
 
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { useTranslations } from "next-intl";
+import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import { ContactForm } from "@/components/contact-form";
 
 interface ContactDrawerProps {
@@ -15,25 +16,7 @@ export const ContactDrawer = memo(function ContactDrawer({
 }: ContactDrawerProps) {
   const t = useTranslations("contact.drawer");
 
-  /* Lock body scroll when open */
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
-  }, [open]);
-
-  /* Close on Escape key */
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  useDrawerBehavior(open, onClose);
 
   return (
     <>

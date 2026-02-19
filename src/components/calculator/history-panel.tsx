@@ -6,6 +6,7 @@ import { toast } from "@/lib/toast";
 import type { HistoryEntry } from "@/hooks/useHistory";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 
 interface HistoryPanelProps {
@@ -138,12 +139,7 @@ const HistoryItem = memo(function HistoryItem({
   const tBase = useTranslations();
   const t = useTranslations("history");
 
-  const gradeLabel =
-    entry.result.gradeLabel === "Custom density input"
-      ? tBase("dataset.customDensityInput")
-      : entry.result.gradeLabel === "Unknown"
-        ? tBase("dataset.unknown")
-        : entry.result.gradeLabel;
+  const gradeLabel = resolveGradeLabel(entry.result.gradeLabel, tBase);
 
   return (
     <li className="flex items-center gap-2 rounded-md border border-border-faint px-2 py-1.5 transition-colors hover:bg-surface-raised">
