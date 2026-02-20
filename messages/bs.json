@@ -411,7 +411,15 @@
     "solveFor": "Izracunaj",
     "required": "Potrebna dimenzija {label}",
     "equivalent": "Ekvivalent: {value} mm",
-    "requiredArea": "Potrebna povrsina presjeka: {value} mm2"
+    "requiredArea": "Potrebna povrsina presjeka: {value} mm2",
+    "modeDimension": "Nadji dimenziju",
+    "modeQuantity": "Nadji kolicinu",
+    "quantityDescription": "Unesite ciljnu masu da vidite koliko komada trenutnog profila stane.",
+    "quantityResult": "Komada stane",
+    "pieces": "{count, plural, one {# komad} few {# komada} other {# komada}}",
+    "piecesExact": "{value} tacno",
+    "weightPerPiece": "{value} kg / komad",
+    "remainder": "{value} kg ostatak"
   },
   "validation": {
     "profileInvalid": "Odaberite ispravan tip profila.",

@@ -116,6 +116,92 @@ export function solveForDimension(params: {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Solve for quantity                                                */
+/* ------------------------------------------------------------------ */
+
+export interface QuantityResult {
+  ok: true;
+  exactQuantity: number;
+  wholeQuantity: number;
+  /** Weight of one piece before waste adjustment (kg). */
+  unitWeightKg: number;
+  /** Weight remaining after fitting whole pieces (kg). */
+  remainderKg: number;
+}
+
+export interface QuantityError {
+  ok: false;
+  message: string;
+  messageKey?: string;
+  messageValues?: Record<string, string | number>;
+}
+
+export type QuantityResponse = QuantityResult | QuantityError;
+
+/**
+ * Given a target total weight (kg) and a fully-known cross-section area,
+ * solve for the number of pieces that fit.
+ *
+ * Works for all profile types (manual and standard EN).
+ */
+export function solveForQuantity(params: {
+  areaMm2: number;
+  targetWeightKg: number;
+  densityKgPerM3: number;
+  lengthMm: number;
+  wastePercent: number;
+}): QuantityResponse {
+  const { areaMm2, targetWeightKg, densityKgPerM3, lengthMm, wastePercent } = params;
+
+  if (targetWeightKg <= 0) {
+    return {
+      ok: false,
+      message: "Target weight must be positive.",
+      messageKey: "reverseErrors.targetWeight",
+    };
+  }
+  if (densityKgPerM3 <= 0) {
+    return {
+      ok: false,
+      message: "Density must be positive.",
+      messageKey: "reverseErrors.density",
+    };
+  }
+  if (lengthMm <= 0) {
+    return {
+      ok: false,
+      message: "Length must be positive.",
+      messageKey: "reverseErrors.length",
+    };
+  }
+  if (areaMm2 <= 0 || !Number.isFinite(areaMm2)) {
+    return {
+      ok: false,
+      message: "Cannot compute a valid cross-section area from these inputs.",
+      messageKey: "reverseErrors.invalidArea",
+    };
+  }
+
+  const unitWeightKg = (areaMm2 * lengthMm) / 1_000_000_000 * densityKgPerM3;
+  const wasteMultiplier = 1 + wastePercent / 100;
+  const totalPerPiece = unitWeightKg * wasteMultiplier;
+
+  if (totalPerPiece <= 0 || !Number.isFinite(totalPerPiece)) {
+    return {
+      ok: false,
+      message: "Cannot compute a valid cross-section area from these inputs.",
+      messageKey: "reverseErrors.invalidArea",
+    };
+  }
+
+  const exactQuantity = targetWeightKg / totalPerPiece;
+  const wholeQuantity = Math.floor(exactQuantity);
+  const remainderKg = targetWeightKg - wholeQuantity * totalPerPiece;
+
+  return { ok: true, exactQuantity, wholeQuantity, unitWeightKg, remainderKg };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Per-profile inverse formulas                                      */
 /* ------------------------------------------------------------------ */
 
