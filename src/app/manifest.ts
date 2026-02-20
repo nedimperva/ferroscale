@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Advanced Metal Calculator",
-    short_name: "MetalCalc",
+    name: "FerroScale",
+    short_name: "FerroScale",
     description:
-      "EU-focused web app for accurate metal profile weight and price calculations with EN references.",
+      "Metal weight and price calculator for EN standard and custom profiles. Accurate estimates with traceable formulas.",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -25,9 +25,21 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "any",
       },
       {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "maskable",
       },
     ],

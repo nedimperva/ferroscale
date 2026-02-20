@@ -1,5 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#111827" />
-  <path d="M84 374V140h66l106 156 106-156h66v234h-66V250l-106 152-106-152v124z" fill="#f3f4f6" />
-  <rect x="84" y="390" width="344" height="36" rx="12" fill="#d97706" />
+  <defs>
+    <!-- Metallic gradient: top-lit for horizontal surfaces -->
+    <linearGradient id="sv" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f1f5f9"/>
+      <stop offset="55%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <!-- Metallic gradient: left-lit for vertical surfaces -->
+    <linearGradient id="sh" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e2e8f0"/>
+      <stop offset="30%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="512" height="512" rx="96" fill="#111827"/>
+
+  <!-- Balance beam (ferro scale = weighing scale for metal) -->
+  <rect x="82" y="106" width="348" height="20" rx="6" fill="url(#sv)"/>
+
+  <!-- Central pivot / fulcrum knob -->
+  <circle cx="256" cy="116" r="18" fill="url(#sv)"/>
+
+  <!-- Left suspension cord -->
+  <rect x="97" y="126" width="5" height="94" fill="#94a3b8"/>
+
+  <!-- Right suspension cord -->
+  <rect x="410" y="126" width="5" height="94" fill="#94a3b8"/>
+
+  <!-- Left weighing pan (wide flat dish) -->
+  <ellipse cx="100" cy="232" rx="58" ry="12" fill="url(#sv)"/>
+
+  <!-- Right weighing pan -->
+  <ellipse cx="413" cy="232" rx="58" ry="12" fill="url(#sv)"/>
+
+  <!-- Vertical support pillar from fulcrum to base -->
+  <rect x="249" y="132" width="14" height="238" fill="url(#sh)"/>
+
+  <!-- Base plate -->
+  <rect x="186" y="370" width="140" height="28" rx="8" fill="url(#sv)"/>
+
+  <!-- Orange accent bar (brand colour) -->
+  <rect x="88" y="416" width="336" height="26" rx="10" fill="#ea580c"/>
 </svg>

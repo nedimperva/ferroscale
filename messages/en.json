@@ -1,14 +1,14 @@
 {
   "meta": {
     "layout": {
-      "title": "Advanced Metal Calculator",
-      "description": "EU-focused metal calculator for accurate profile weight and price estimates across EN standard and custom profiles.",
-      "applicationName": "Advanced Metal Calculator",
+      "title": "FerroScale",
+      "description": "Metal weight and price calculator for EN standard and custom profiles. Accurate estimates with traceable formulas.",
+      "applicationName": "FerroScale",
       "openGraphDescription": "Calculate weight and price for EN profile types with traceable formulas and references."
     },
     "contact": {
-      "title": "Contact - Advanced Metal Calculator",
-      "description": "Send a report or get in touch about the Advanced Metal Calculator."
+      "title": "Contact - FerroScale",
+      "description": "Send a report or get in touch about FerroScale."
     }
   },
   "language": {
@@ -32,7 +32,7 @@
     "historyCleared": "History cleared."
   },
   "app": {
-    "mobileHeaderTitle": "Metal Calculator",
+    "mobileHeaderTitle": "FerroScale",
     "mobileHeaderSubtitle": "Live weight and price estimation for EN standard profiles.",
     "datasetVersion": "v{version}",
     "moreActions": "More actions"
@@ -123,7 +123,7 @@
     "unknownProfile": "Unknown profile"
   },
   "sidebar": {
-    "title": "Metal Calculator",
+    "title": "FerroScale",
     "settings": "Settings",
     "history": "History",
     "projects": "Projects",

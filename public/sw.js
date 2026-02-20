@@ -1,4 +1,4 @@
-const CACHE_NAME = "advanced-calc-v1.2.0";
+const CACHE_NAME = "ferroscale-v1.0.0";
 const OFFLINE_FALLBACK_URL = "/offline.html";
 const APP_SHELL_URLS = [
   "/",
@@ -6,6 +6,10 @@ const APP_SHELL_URLS = [
   "/bs",
   "/manifest.webmanifest",
   "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+  "/apple-touch-icon.png",
   "/favicon.ico",
   OFFLINE_FALLBACK_URL,
 ];

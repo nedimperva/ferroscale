@@ -1,14 +1,14 @@
 {
   "meta": {
     "layout": {
-      "title": "Napredni kalkulator metala",
-      "description": "EU kalkulator metala za precizne procjene mase i cijene za EN standardne i prilagodjene profile.",
-      "applicationName": "Napredni kalkulator metala",
+      "title": "FerroScale",
+      "description": "Kalkulator mase i cijene metala za EN standardne i prilagodjene profile. Precizne procjene s provjerljivim formulama.",
+      "applicationName": "FerroScale",
       "openGraphDescription": "Izracunajte masu i cijenu za EN profile uz provjerljive formule i reference."
     },
     "contact": {
-      "title": "Kontakt - Napredni kalkulator metala",
-      "description": "Posaljite prijavu ili nas kontaktirajte u vezi Naprednog kalkulatora metala."
+      "title": "Kontakt - FerroScale",
+      "description": "Posaljite prijavu ili nas kontaktirajte u vezi FerroScale aplikacije."
     }
   },
   "language": {
@@ -32,7 +32,7 @@
     "historyCleared": "Historija ociscena."
   },
   "app": {
-    "mobileHeaderTitle": "Kalkulator metala",
+    "mobileHeaderTitle": "FerroScale",
     "mobileHeaderSubtitle": "Procjena mase i cijene uzivo za EN standardne profile.",
     "datasetVersion": "v{version}",
     "moreActions": "Vise opcija"
@@ -123,7 +123,7 @@
     "unknownProfile": "Nepoznati profil"
   },
   "sidebar": {
-    "title": "Kalkulator metala",
+    "title": "FerroScale",
     "settings": "Postavke",
     "history": "Historija",
     "projects": "Projekti",

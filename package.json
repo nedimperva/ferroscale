@@ -1,12 +1,13 @@
 {
-  "name": "advanced-calc",
-  "version": "0.1.0",
+  "name": "ferroscale",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "generate:icons": "node scripts/generate-icons.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18"

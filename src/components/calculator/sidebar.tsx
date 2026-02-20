@@ -56,12 +56,24 @@ export const Sidebar = memo(function Sidebar({
         {/* Logo */}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-inverted">
           <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-            <path
-              d="M4 6h2.5l5.5 8 5.5-8H20v12h-2.5v-7.5L12 18.5 6.5 10.5V18H4V6z"
-              fill="currentColor"
-              className="text-surface"
-            />
-            <rect x="4" y="19" width="16" height="1.5" rx="0.75" fill="#d97706" />
+            {/* Support pillar */}
+            <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
+            {/* Base plate */}
+            <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
+            {/* Balance beam */}
+            <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
+            {/* Central pivot knob */}
+            <circle cx="12" cy="5.75" r="1.8" fill="currentColor" className="text-surface" />
+            {/* Left suspension cord */}
+            <rect x="2.8" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
+            {/* Right suspension cord */}
+            <rect x="20.2" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
+            {/* Left weighing pan */}
+            <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
+            {/* Right weighing pan */}
+            <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
+            {/* Orange accent bar */}
+            <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#d97706" />
           </svg>
         </div>
         {!collapsed && (

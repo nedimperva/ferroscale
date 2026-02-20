@@ -26,6 +26,13 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(siteUrl),
     manifest: "/manifest.webmanifest",
     applicationName: t("applicationName"),
+    icons: {
+      icon: [
+        { url: "/icon.svg", type: "image/svg+xml" },
+        { url: "/favicon.ico", sizes: "48x48" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
     alternates: {
       languages: {
         en: "/en",
