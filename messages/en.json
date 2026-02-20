@@ -411,7 +411,15 @@
     "solveFor": "Solve for",
     "required": "Required {label}",
     "equivalent": "Equivalent: {value} mm",
-    "requiredArea": "Cross-section area needed: {value} mm2"
+    "requiredArea": "Cross-section area needed: {value} mm2",
+    "modeDimension": "Find dimension",
+    "modeQuantity": "Find quantity",
+    "quantityDescription": "Enter a target weight to see how many pieces of the current profile fit.",
+    "quantityResult": "Pieces that fit",
+    "pieces": "{count, plural, one {# piece} other {# pieces}}",
+    "piecesExact": "{value} exact",
+    "weightPerPiece": "{value} kg / piece",
+    "remainder": "{value} kg remaining"
   },
   "validation": {
     "profileInvalid": "Select a valid profile type.",

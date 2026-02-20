@@ -26,7 +26,7 @@ function getManualDimensionMm(input: CalculationInput, key: keyof CalculationInp
   return toMillimeters(dimension.value, dimension.unit);
 }
 
-function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression: string } {
+export function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression: string } {
   const profile = getProfileById(input.profileId);
   if (!profile) {
     return { areaMm2: 0, expression: "Invalid profile" };
