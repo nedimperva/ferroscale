@@ -279,10 +279,7 @@ function QuantityResultPanel({
         {t("quantityResult")}
       </p>
       <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-green-900">
-        {result.wholeQuantity}
-        <span className="ml-1 text-sm font-medium text-green-600">
-          {t("pieces", { count: result.wholeQuantity })}
-        </span>
+        {t("pieces", { count: result.wholeQuantity })}
       </p>
       <p className="mt-1 text-[11px] text-green-600">
         {t("piecesExact", { value: result.exactQuantity.toFixed(3) })}
