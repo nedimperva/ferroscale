@@ -77,8 +77,10 @@ function ToastItem({ toast }: { toast: Toast }) {
 
 /* ---- Container (rendered once in the layout) ---- */
 
+const SERVER_SNAPSHOT: readonly Toast[] = [];
+
 export function ToastContainer() {
-  const toasts = useSyncExternalStore(subscribeToasts, getToastsSnapshot, () => [] as readonly Toast[]);
+  const toasts = useSyncExternalStore(subscribeToasts, getToastsSnapshot, () => SERVER_SNAPSHOT);
 
   if (toasts.length === 0) return null;
 

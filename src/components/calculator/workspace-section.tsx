@@ -26,7 +26,7 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   return (
     <section className="grid gap-2">
       <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 6h18" /><path d="M3 12h18" /><path d="M3 18h18" /></svg>
         {t("title")}
       </h3>
 
@@ -39,7 +39,7 @@ export const WorkspaceSection = memo(function WorkspaceSection({
             id="history-limit"
             value={historyLimit}
             onChange={(event) => onHistoryLimitChange(Number(event.target.value))}
-            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-sm"
+            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             {HISTORY_OPTIONS.map((option) => (
               <option key={option} value={option}>
@@ -57,7 +57,7 @@ export const WorkspaceSection = memo(function WorkspaceSection({
             id="compare-limit"
             value={compareLimit}
             onChange={(event) => onCompareLimitChange(Number(event.target.value))}
-            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-sm"
+            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             {COMPARE_OPTIONS.map((option) => (
               <option key={option} value={option}>

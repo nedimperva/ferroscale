@@ -6,6 +6,7 @@ import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datase
 import type { CalcAction } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
+import { triggerHaptic } from "@/lib/haptics";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 
@@ -210,6 +211,7 @@ export const ProfileSection = memo(function ProfileSection({
   /** Switch to a different category — auto-select its first profile. */
   const handleCategoryChange = (cat: ProfileCategory) => {
     if (cat === activeCategory) return;
+    triggerHaptic("light");
     const profiles = grouped.get(cat);
     if (profiles?.[0]) {
       dispatch({ type: "SET_PROFILE", profileId: profiles[0].id });
@@ -229,11 +231,10 @@ export const ProfileSection = memo(function ProfileSection({
                 key={cat}
                 type="button"
                 onClick={() => handleCategoryChange(cat)}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
-                    : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-                }`}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${isActive
+                  ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
+                  : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
+                  }`}
               >
                 {CATEGORY_ICONS[cat]}
                 {t(`dataset.profileCategories.${cat}`)}
@@ -253,12 +254,14 @@ export const ProfileSection = memo(function ProfileSection({
               <button
                 key={p.id}
                 type="button"
-                onClick={() => dispatch({ type: "SET_PROFILE", profileId: p.id })}
-                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
-                  isActive
-                    ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
-                    : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-                }`}
+                onClick={() => {
+                  triggerHaptic("light");
+                  dispatch({ type: "SET_PROFILE", profileId: p.id });
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${isActive
+                  ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
+                  : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
+                  }`}
               >
                 {PROFILE_ICONS[p.id]}
                 {t(`dataset.profileShort.${p.id}`)}
@@ -278,9 +281,8 @@ export const ProfileSection = memo(function ProfileSection({
             id="size"
             value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
             onChange={(e) => dispatch({ type: "SET_SIZE", sizeId: e.target.value })}
-            className={`h-9 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
-              hasIssue("selectedSizeId") ? "border-red-border" : "border-border-strong"
-            }`}
+            className={`h-10 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("selectedSizeId") ? "border-red-border" : "border-border-strong"
+              }`}
           >
             {selectedProfile.sizes.map((s) => (
               <option key={s.id} value={s.id}>
@@ -328,9 +330,8 @@ export const ProfileSection = memo(function ProfileSection({
               autoComplete="off"
               value={input.length.value}
               onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-              className={`h-9 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
-                hasIssue("length") ? "border-red-border" : "border-border-strong"
-              }`}
+              className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
+                }`}
               aria-invalid={hasIssue("length")}
             />
             <select
@@ -338,7 +339,7 @@ export const ProfileSection = memo(function ProfileSection({
               onChange={(e) =>
                 dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
               }
-              className="h-9 shrink-0 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-accent"
+              className="h-10 shrink-0 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-blue-500"
               aria-label={t("profileSection.lengthUnitAria")}
             >
               {LENGTH_UNITS.map((u) => (
@@ -359,9 +360,8 @@ export const ProfileSection = memo(function ProfileSection({
             autoComplete="off"
             value={input.quantity}
             onValueChange={(value) => dispatch({ type: "SET_QUANTITY", value })}
-            className={`h-9 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
-              hasIssue("quantity") ? "border-red-border" : "border-border-strong"
-            }`}
+            className={`h-10 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
+              }`}
             aria-invalid={hasIssue("quantity")}
           />
         </div>

@@ -8,6 +8,8 @@ import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { SwipeActionItem } from "@/components/ui/swipe-action-item";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface HistoryPanelProps {
   history: HistoryEntry[];
@@ -45,22 +47,20 @@ export const HistoryPanel = memo(function HistoryPanel({
         <button
           type="button"
           onClick={() => setTab("recent")}
-          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-            tab === "recent"
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${tab === "recent"
               ? "bg-surface-inverted text-surface"
               : "text-foreground-secondary hover:bg-surface-inset"
-          }`}
+            }`}
         >
           {t("recent", { count: history.length })}
         </button>
         <button
           type="button"
           onClick={() => setTab("saved")}
-          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-            tab === "saved"
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${tab === "saved"
               ? "bg-surface-inverted text-surface"
               : "text-foreground-secondary hover:bg-surface-inset"
-          }`}
+            }`}
         >
           {t("saved", { count: starred.length })}
         </button>
@@ -102,14 +102,19 @@ export const HistoryPanel = memo(function HistoryPanel({
       ) : (
         <ul className="mt-2 grid gap-1.5">
           {starred.map((entry) => (
-            <HistoryItem
+            <SwipeActionItem
               key={entry.id}
-              entry={entry}
-              onLoad={onLoad}
-              onStar={() => onRemoveStarred(entry.id)}
-              isStarred={true}
-              formatDateTime={formatDateTime}
-            />
+              onSwipeLeft={() => onRemoveStarred(entry.id)}
+              leftLabel={t("removeStar")}
+            >
+              <HistoryItem
+                entry={entry}
+                onLoad={onLoad}
+                onStar={() => onRemoveStarred(entry.id)}
+                isStarred={true}
+                formatDateTime={formatDateTime}
+              />
+            </SwipeActionItem>
           ))}
         </ul>
       )}
@@ -164,6 +169,7 @@ const HistoryItem = memo(function HistoryItem({
       <button
         type="button"
         onClick={() => {
+          triggerHaptic(isStarred ? "light" : "success");
           onStar();
           if (isStarred) {
             toast.info(tBase("toasts.calculationUnstarred"));
@@ -177,11 +183,10 @@ const HistoryItem = memo(function HistoryItem({
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
-          className={`h-4 w-4 transition-colors duration-200 ${
-            isStarred
+          className={`h-4 w-4 transition-colors duration-200 ${isStarred
               ? "fill-accent stroke-accent"
               : "fill-none stroke-border-strong"
-          }`}
+            }`}
           strokeWidth={2}
         >
           <path

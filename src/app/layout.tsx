@@ -62,6 +62,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f5f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
 };
 
 export default async function RootLayout({
@@ -82,7 +86,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh`}
+        className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh bg-surface md:bg-background text-foreground`}
         suppressHydrationWarning
       >
         {children}

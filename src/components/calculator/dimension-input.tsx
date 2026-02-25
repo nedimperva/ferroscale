@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { DimensionDefinition, DimensionKey } from "@/lib/datasets/types";
 import { NumericInput } from "./numeric-input";
+import { triggerHaptic } from "@/lib/haptics";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 
@@ -42,16 +43,18 @@ export const DimensionInput = memo(function DimensionInput({
           autoComplete="off"
           value={value?.value}
           onValueChange={onValueChange}
-          className={`h-9 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-accent ${
-            hasIssue ? "border-red-border" : "border-border-strong"
-          }`}
+          className={`h-10 w-full rounded-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue ? "border-red-border" : "border-border-strong"
+            }`}
           aria-invalid={hasIssue}
           aria-describedby={hasIssue ? `dimension-${dimension.key}-error` : undefined}
         />
         <select
           value={value?.unit ?? "mm"}
-          onChange={(e) => onUnitChange(e.target.value as LengthUnit)}
-          className="h-9 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-accent"
+          onChange={(e) => {
+            triggerHaptic("light");
+            onUnitChange(e.target.value as LengthUnit);
+          }}
+          className="h-10 rounded-lg border border-border-strong bg-surface px-1 text-sm transition-colors focus:border-blue-500"
           aria-label={t("profileSection.dimensionUnitAria", { label: dimensionLabel })}
         >
           {LENGTH_UNITS.map((u) => (

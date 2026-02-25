@@ -25,7 +25,7 @@ export const ReversePanel = memo(function ReversePanel({
   const tBase = useTranslations();
 
   return (
-    <section className="rounded-lg border border-border bg-surface">
+    <section className="border-t border-border bg-surface md:rounded-lg md:border">
       {/* Toggle header */}
       <button
         type="button"
@@ -34,25 +34,23 @@ export const ReversePanel = memo(function ReversePanel({
       >
         <div className="flex items-center gap-2">
           {/* reverse/swap icon */}
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-            <path d="m7.5 4.21 4.5 2.6 4.5-2.6"/>
-            <path d="M7.5 19.79V14.6L3 12"/>
-            <path d="M21 12l-4.5 2.6v5.19"/>
-            <path d="M3.27 6.96 12 12.01l8.73-5.05"/>
-            <path d="M12 22.08V12"/>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-muted">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <path d="m7.5 4.21 4.5 2.6 4.5-2.6" />
+            <path d="M7.5 19.79V14.6L3 12" />
+            <path d="M21 12l-4.5 2.6v5.19" />
+            <path d="M3.27 6.96 12 12.01l8.73-5.05" />
+            <path d="M12 22.08V12" />
           </svg>
           <span className="text-sm font-semibold text-foreground-secondary">{t("title")}</span>
         </div>
         <div
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-            reverse.enabled ? "bg-blue-strong" : "bg-border-strong"
-          }`}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${reverse.enabled ? "bg-blue-strong" : "bg-border-strong"
+            }`}
         >
           <span
-            className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
-              reverse.enabled ? "translate-x-[18px]" : "translate-x-[3px]"
-            }`}
+            className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${reverse.enabled ? "translate-x-[18px]" : "translate-x-[3px]"
+              }`}
           />
         </div>
       </button>
@@ -66,22 +64,20 @@ export const ReversePanel = memo(function ReversePanel({
             <button
               type="button"
               onClick={() => reverse.setReverseMode("dimension")}
-              className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                reverse.reverseMode === "dimension"
-                  ? "border-blue-500 bg-blue-surface text-blue-text shadow-sm"
-                  : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-              }`}
+              className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${reverse.reverseMode === "dimension"
+                ? "border-blue-500 bg-blue-surface text-blue-text shadow-sm"
+                : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
+                }`}
             >
               {t("modeDimension")}
             </button>
             <button
               type="button"
               onClick={() => reverse.setReverseMode("quantity")}
-              className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                reverse.reverseMode === "quantity"
-                  ? "border-blue-500 bg-blue-surface text-blue-text shadow-sm"
-                  : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-              }`}
+              className={`flex-1 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${reverse.reverseMode === "quantity"
+                ? "border-blue-500 bg-blue-surface text-blue-text shadow-sm"
+                : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
+                }`}
             >
               {t("modeQuantity")}
             </button>
@@ -112,9 +108,9 @@ export const ReversePanel = memo(function ReversePanel({
                         autoComplete="off"
                         value={reverse.targetWeightKg}
                         onValueChange={reverse.setTargetWeight}
-                        className="h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+                        className="h-10 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
                       />
-                      <span className="flex h-9 items-center rounded-lg border border-border-strong bg-surface-raised px-2 text-xs font-medium text-muted">
+                      <span className="flex h-10 items-center rounded-lg border border-border-strong bg-surface-raised px-2 text-xs font-medium text-muted">
                         kg
                       </span>
                     </div>
@@ -130,11 +126,10 @@ export const ReversePanel = memo(function ReversePanel({
                             key={dim}
                             type="button"
                             onClick={() => reverse.setSolveDimension(dim)}
-                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
-                              reverse.solveDimension === dim
-                                ? "border-blue-500 bg-blue-surface text-blue-text shadow-sm"
-                                : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-                            }`}
+                            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${reverse.solveDimension === dim
+                              ? "border-blue-500 bg-blue-surface text-blue-text shadow-sm"
+                              : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
+                              }`}
                           >
                             {tBase(`dataset.dimensions.${dim}`)}
                           </button>
@@ -174,9 +169,9 @@ export const ReversePanel = memo(function ReversePanel({
                     autoComplete="off"
                     value={reverse.targetWeightKg}
                     onValueChange={reverse.setTargetWeight}
-                    className="h-9 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+                    className="h-10 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
                   />
-                  <span className="flex h-9 items-center rounded-lg border border-border-strong bg-surface-raised px-2 text-xs font-medium text-muted">
+                  <span className="flex h-10 items-center rounded-lg border border-border-strong bg-surface-raised px-2 text-xs font-medium text-muted">
                     kg
                   </span>
                 </div>

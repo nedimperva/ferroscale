@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { formatInputNumber, parseLocaleNumber } from "@/lib/calculator/number-input";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface NumericInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "onChange"> {
@@ -34,6 +35,7 @@ export const NumericInput = memo(function NumericInput({
         setDraft(next);
         const parsed = parseLocaleNumber(next);
         if (parsed !== null) {
+          triggerHaptic('light');
           onValueChange(parsed);
         }
       }}

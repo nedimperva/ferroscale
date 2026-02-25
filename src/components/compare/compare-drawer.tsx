@@ -5,7 +5,10 @@ import { useTranslations } from "next-intl";
 import type { CompareItem } from "@/hooks/useCompare";
 import { CompareCard } from "./compare-card";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
+import { AnimatedDrawer } from "@/components/ui/animated-drawer";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 
 interface CompareDrawerProps {
   open: boolean;
@@ -61,6 +64,7 @@ export const CompareDrawer = memo(function CompareDrawer({
 }: CompareDrawerProps) {
   const tBase = useTranslations();
   const t = useTranslations("compare");
+  const isMobile = useIsMobile();
 
   const csvHeaders = useMemo(
     () => [
@@ -78,7 +82,7 @@ export const CompareDrawer = memo(function CompareDrawer({
     [t],
   );
 
-  useDrawerBehavior(open, onClose);
+  useDrawerBehavior(!isMobile && open, onClose);
 
   const handleExport = useCallback(() => {
     exportCompareCsv(
@@ -98,66 +102,50 @@ export const CompareDrawer = memo(function CompareDrawer({
 
   const reference = items.length > 0 ? items[0] : null;
 
-  return (
+  const content = (
     <>
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 z-40 bg-overlay transition-opacity duration-300 ${
-          open ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Drawer panel — wider than other drawers to fit comparison cards */}
-      <aside
-        aria-label={t("drawerAria")}
-        className={`fixed inset-y-0 right-0 z-50 flex w-[480px] max-w-[95vw] flex-col bg-surface-raised shadow-xl transition-transform duration-300 ease-in-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Drawer header */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            {/* compare / columns icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
+      {/* Drawer header */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <rect x="3" y="3" width="7" height="18" rx="1" />
+            <rect x="14" y="3" width="7" height="18" rx="1" />
+          </svg>
+          {t("title")}
+          <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
+            {items.length}/{maxCompare}
+          </span>
+        </h2>
+        <div className="flex items-center gap-1">
+          {items.length >= 2 && (
+            <button
+              type="button"
+              onClick={handleExport}
+              className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
+              title={t("exportTitle")}
             >
-              <rect x="3" y="3" width="7" height="18" rx="1" />
-              <rect x="14" y="3" width="7" height="18" rx="1" />
-            </svg>
-            {t("title")}
-            <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
-              {items.length}/{maxCompare}
-            </span>
-          </h2>
-          <div className="flex items-center gap-1">
-            {items.length >= 2 && (
-              <button
-                type="button"
-                onClick={handleExport}
-                className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
-                title={t("exportTitle")}
-              >
-                {t("export")}
-              </button>
-            )}
-            {items.length > 0 && (
-              <button
-                type="button"
-                onClick={onClearAll}
-                className="rounded-md px-2 py-1 text-xs font-medium text-red-interactive transition-colors hover:bg-red-surface"
-              >
-                {t("clear")}
-              </button>
-            )}
+              {t("export")}
+            </button>
+          )}
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="rounded-md px-2 py-1 text-xs font-medium text-red-interactive transition-colors hover:bg-red-surface"
+            >
+              {t("clear")}
+            </button>
+          )}
+          {!isMobile && (
             <button
               type="button"
               onClick={onClose}
@@ -178,70 +166,65 @@ export const CompareDrawer = memo(function CompareDrawer({
                 <path d="m6 6 12 12" />
               </svg>
             </button>
-          </div>
-        </div>
-
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12 text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-10 w-10 text-border"
-              >
-                <rect x="3" y="3" width="7" height="18" rx="1" />
-                <rect x="14" y="3" width="7" height="18" rx="1" />
-              </svg>
-              <p className="text-sm text-muted-faint">
-                {t("empty")}
-              </p>
-              <p className="text-xs text-muted-faint">
-                {t("emptyHint")}
-              </p>
-            </div>
-          ) : items.length === 1 ? (
-            <div className="space-y-3">
-              <CompareCard
-                item={items[0]}
-                reference={null}
-                onRemove={onRemoveItem}
-              />
-              <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
-                <p className="text-sm text-muted-faint">
-                  {t("needSecond")}
-                </p>
-                <p className="mt-1 text-xs text-muted-faint">
-                  {t("needSecondHint")}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {items.map((item) => (
-                <CompareCard
-                  key={item.id}
-                  item={item}
-                  reference={reference}
-                  onRemove={onRemoveItem}
-                />
-              ))}
-              {items.length < maxCompare && (
-                <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
-                  <p className="text-xs text-muted-faint">
-                    {t("slotAvailable")}
-                  </p>
-                </div>
-              )}
-            </div>
           )}
         </div>
-      </aside>
+      </div>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-10 w-10 text-border"
+            >
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+            <p className="text-sm text-muted-faint">{t("empty")}</p>
+            <p className="text-xs text-muted-faint">{t("emptyHint")}</p>
+          </div>
+        ) : items.length === 1 ? (
+          <div className="space-y-3">
+            <CompareCard item={items[0]} reference={null} onRemove={onRemoveItem} />
+            <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm text-muted-faint">{t("needSecond")}</p>
+              <p className="mt-1 text-xs text-muted-faint">{t("needSecondHint")}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {items.map((item) => (
+              <CompareCard key={item.id} item={item} reference={reference} onRemove={onRemoveItem} />
+            ))}
+            {items.length < maxCompare && (
+              <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
+                <p className="text-xs text-muted-faint">{t("slotAvailable")}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </>
+  );
+
+  if (isMobile) {
+    return (
+      <BottomSheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()} title={t("title")}>
+        {content}
+      </BottomSheet>
+    );
+  }
+
+  return (
+    <AnimatedDrawer open={open} onClose={onClose} widthClass="w-[480px]" ariaLabel={t("drawerAria")}>
+      {content}
+    </AnimatedDrawer>
   );
 });

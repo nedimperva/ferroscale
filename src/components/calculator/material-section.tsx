@@ -33,8 +33,8 @@ export const MaterialSection = memo(function MaterialSection({
     <section className="grid gap-2">
       <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         {/* crosshair icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>
-         {t("material.title")}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10" /><line x1="22" x2="18" y1="12" y2="12" /><line x1="6" x2="2" y1="12" y2="12" /><line x1="12" x2="12" y1="6" y2="2" /><line x1="12" x2="12" y1="22" y2="18" /></svg>
+        {t("material.title")}
       </h3>
 
       {/* Live preview */}
@@ -59,7 +59,7 @@ export const MaterialSection = memo(function MaterialSection({
             onChange={(e) =>
               dispatch({ type: "SET_FAMILY", familyId: e.target.value as MetalFamilyId })
             }
-            className="h-9 min-w-0 rounded-md border border-border-strong bg-surface px-2 text-sm"
+            className="h-10 min-w-0 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             {METAL_FAMILIES.map((f) => (
               <option key={f.id} value={f.id}>
@@ -76,9 +76,8 @@ export const MaterialSection = memo(function MaterialSection({
             id="grade"
             value={input.materialGradeId}
             onChange={(e) => dispatch({ type: "SET_GRADE", gradeId: e.target.value })}
-            className={`h-9 min-w-0 rounded-md border bg-surface px-2 text-sm ${
-              hasIssue("materialGradeId") ? "border-red-400" : "border-border-strong"
-            }`}
+            className={`h-10 min-w-0 rounded-md border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("materialGradeId") ? "border-red-400" : "border-border-strong"
+              }`}
           >
             {gradesForFamily.map((g) => (
               <option key={g.id} value={g.id}>
@@ -111,9 +110,8 @@ export const MaterialSection = memo(function MaterialSection({
             autoComplete="off"
             value={input.customDensityKgPerM3}
             onValueChange={(value) => dispatch({ type: "SET_CUSTOM_DENSITY", value })}
-            className={`h-9 rounded-md border bg-surface px-2 text-sm ${
-              hasIssue("customDensityKgPerM3") ? "border-red-400" : "border-border-strong"
-            }`}
+            className={`h-10 rounded-md border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("customDensityKgPerM3") ? "border-red-400" : "border-border-strong"
+              }`}
             aria-invalid={hasIssue("customDensityKgPerM3")}
           />
         </div>

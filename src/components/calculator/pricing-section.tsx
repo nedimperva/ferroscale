@@ -39,7 +39,7 @@ export const PricingSection = memo(function PricingSection({
     <section className="grid gap-2">
       <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted">
         {/* tag icon */}
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z" /><circle cx="7.5" cy="7.5" r=".5" fill="currentColor" /></svg>
         {t("title")}
       </h3>
 
@@ -72,7 +72,7 @@ export const PricingSection = memo(function PricingSection({
             onChange={(e) =>
               dispatch({ type: "SET_PRICE_BASIS", priceBasis: e.target.value as PriceBasis })
             }
-            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-sm"
+            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             <option value="weight">{t("basisWeight")}</option>
             <option value="length">{t("basisLength")}</option>
@@ -90,9 +90,8 @@ export const PricingSection = memo(function PricingSection({
               autoComplete="off"
               value={input.unitPrice}
               onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-              className={`h-9 min-w-0 flex-1 rounded-l-md border bg-surface px-2 text-sm ${
-                hasIssue("unitPrice") ? "border-red-400" : "border-border-strong"
-              }`}
+              className={`h-10 min-w-0 flex-1 rounded-l-md border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-400" : "border-border-strong"
+                }`}
               aria-invalid={hasIssue("unitPrice")}
             />
             <select
@@ -101,9 +100,8 @@ export const PricingSection = memo(function PricingSection({
               onChange={(e) =>
                 dispatch({ type: "SET_PRICE_UNIT", priceUnit: e.target.value as PriceUnit })
               }
-              className={`h-9 shrink-0 rounded-r-md border-y border-r bg-surface-raised px-1.5 text-xs ${
-                hasIssue("priceUnit") ? "border-red-400" : "border-border-strong"
-              }`}
+              className={`h-10 shrink-0 rounded-r-md border border-l-0 bg-surface px-1.5 text-xs transition-colors focus:border-blue-500 ${hasIssue("priceUnit") ? "border-red-400" : "border-border-strong"
+                }`}
               aria-label={t("priceUnitAria")}
             >
               {priceUnitsForBasis.map((u) => (
@@ -127,7 +125,7 @@ export const PricingSection = memo(function PricingSection({
                 currency: e.target.value as CalculationInput["currency"],
               })
             }
-            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-sm"
+            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>
@@ -146,9 +144,8 @@ export const PricingSection = memo(function PricingSection({
             autoComplete="off"
             value={input.wastePercent}
             onValueChange={(value) => dispatch({ type: "SET_WASTE", value })}
-            className={`h-9 min-w-0 rounded-md border bg-surface px-2 text-sm ${
-                hasIssue("wastePercent") ? "border-red-400" : "border-border-strong"
-            }`}
+            className={`h-10 min-w-0 rounded-md border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("wastePercent") ? "border-red-400" : "border-border-strong"
+              }`}
             aria-invalid={hasIssue("wastePercent")}
           />
         </div>
@@ -173,9 +170,8 @@ export const PricingSection = memo(function PricingSection({
             autoComplete="off"
             value={input.vatPercent}
             onValueChange={(value) => dispatch({ type: "SET_VAT_PERCENT", value })}
-            className={`h-8 w-16 rounded-md border bg-surface px-2 text-center text-sm ${
-              hasIssue("vatPercent") ? "border-red-400" : "border-border-strong"
-            }`}
+            className={`h-10 w-16 rounded-md border bg-surface px-2 text-center text-sm transition-colors focus:border-blue-500 ${hasIssue("vatPercent") ? "border-red-400" : "border-border-strong"
+              }`}
             aria-invalid={hasIssue("vatPercent")}
           />
         )}

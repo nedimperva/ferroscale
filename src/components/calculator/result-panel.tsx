@@ -8,6 +8,7 @@ import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { ReferenceList } from "./reference-list";
+import { triggerHaptic } from "@/lib/haptics";
 
 interface ResultPanelProps {
   result: CalculationResult | null;
@@ -83,9 +84,8 @@ export const ResultPanel = memo(function ResultPanel({
 
   return (
     <section
-      className={`rounded-xl border bg-surface transition-opacity duration-200 ${
-        isPending ? "border-border opacity-60" : "border-border"
-      }`}
+      className={`rounded-xl border bg-surface transition-opacity duration-200 ${isPending ? "border-border opacity-60" : "border-border"
+        }`}
     >
       {/* ── Hero: Total Cost ── */}
       <div className="rounded-t-xl border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-5 text-center">
@@ -143,7 +143,11 @@ export const ResultPanel = memo(function ResultPanel({
 
       {/* ── Cost Breakdown (collapsible) ── */}
       <div className="mt-1 px-5">
-        <details className="group rounded-lg border border-border-faint">
+        <details className="group rounded-lg border border-border-faint" onToggle={(e) => {
+          if ((e.target as HTMLDetailsElement).open) {
+            triggerHaptic("light");
+          }
+        }}>
           <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-foreground-secondary select-none">
             {t("costBreakdown")}
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-faint transition-transform group-open:rotate-180">
@@ -184,15 +188,17 @@ export const ResultPanel = memo(function ResultPanel({
         {/* Compare — full width, primary action */}
         <button
           type="button"
-          onClick={onCompare}
+          onClick={(e) => {
+            triggerHaptic("light");
+            onCompare?.();
+          }}
           disabled={!canCompare && !isInCompare}
-          className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-            isInCompare
-              ? "border-blue-border bg-blue-surface text-blue-text"
-              : canCompare
-                ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
-                : "cursor-not-allowed border-border-faint text-muted-faint"
-          }`}
+          className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${isInCompare
+            ? "border-blue-border bg-blue-surface text-blue-text"
+            : canCompare
+              ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
+              : "cursor-not-allowed border-border-faint text-muted-faint"
+            }`}
           title={
             isInCompare
               ? t("alreadyInCompare")
@@ -214,19 +220,20 @@ export const ResultPanel = memo(function ResultPanel({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={onStar}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-              isStarred
-                ? "border-accent-border bg-accent-surface text-accent"
-                : "border-border text-foreground-secondary hover:bg-surface-raised"
-            }`}
+            onClick={(e) => {
+              triggerHaptic(isStarred ? "light" : "success");
+              onStar();
+            }}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${isStarred
+              ? "border-accent-border bg-accent-surface text-accent"
+              : "border-border text-foreground-secondary hover:bg-surface-raised"
+              }`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              className={`h-4 w-4 ${
-                isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
-              }`}
+              className={`h-4 w-4 ${isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
+                }`}
               strokeWidth={2}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
@@ -235,16 +242,18 @@ export const ResultPanel = memo(function ResultPanel({
           </button>
           <button
             type="button"
-            onClick={onAddToProject}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-              hasProjects
-                ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-                : "border-border text-foreground-secondary hover:bg-surface-raised"
-            }`}
+            onClick={(e) => {
+              triggerHaptic("light");
+              onAddToProject?.();
+            }}
+            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${hasProjects
+              ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+              : "border-border text-foreground-secondary hover:bg-surface-raised"
+              }`}
             title={t("addToProject")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
+              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
             </svg>
             {t("project")}
           </button>
@@ -252,7 +261,11 @@ export const ResultPanel = memo(function ResultPanel({
       </div>
 
       {/* ── Full calculation steps (inline collapsible) ── */}
-      <details className="border-t border-border-faint px-5 py-3">
+      <details className="border-t border-border-faint px-5 py-3" onToggle={(e) => {
+        if ((e.target as HTMLDetailsElement).open) {
+          triggerHaptic("light");
+        }
+      }}>
         <summary className="cursor-pointer text-xs font-medium text-muted select-none">
           {t("fullSteps")}
         </summary>
