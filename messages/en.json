@@ -37,6 +37,12 @@
     "datasetVersion": "v{version}",
     "moreActions": "More actions"
   },
+  "tabs": {
+    "calculator": "Calculator",
+    "history": "History",
+    "projects": "Projects",
+    "settings": "Settings"
+  },
   "theme": {
     "dark": "Dark",
     "light": "Light",

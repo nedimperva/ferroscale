@@ -340,3 +340,35 @@ button:not(:disabled):active,
   overscroll-behavior-y: contain;
   scroll-behavior: smooth;
 }
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/*  Card depth & visual grouping — native-feel elevation system       */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/* Elevated card — subtle shadow for floating cards */
+.card-elevated {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+}
+
+.dark .card-elevated {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Inset card — grouped section background */
+.card-inset {
+  background: var(--surface-raised);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+/* Form section group — iOS-style grouped section */
+.form-group {
+  background: var(--surface-raised);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+}
+
+.form-group + .form-group {
+  margin-top: 0.5rem;
+}
