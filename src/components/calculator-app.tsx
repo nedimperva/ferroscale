@@ -448,18 +448,18 @@ export function CalculatorApp() {
         <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
           {/* LEFT — inputs */}
           <div className="flex flex-1 flex-col gap-0 self-start w-full rounded-xl border border-border bg-surface shadow-sm">
-            <div className="px-4 pt-4 pb-0 md:p-4 md:pb-0">
+            <div className="px-3 pt-3 pb-0 md:px-4 md:pt-4 md:pb-0">
               <IssueList issues={issues} />
             </div>
 
-            <div className="hidden px-4 pt-3 pb-2 sm:block md:px-4">
+            <div className="hidden px-3 pt-2 pb-1 sm:block md:px-4 md:pt-3 md:pb-2">
               <SettingsSummary
                 input={input}
                 onOpen={() => setShowSettingsDrawer(true)}
               />
             </div>
 
-            <div className="px-4 py-4 md:p-4">
+            <div className="px-3 py-2.5 md:p-4">
               <ProfileSection
                 input={input}
                 dispatch={dispatch}
@@ -468,7 +468,7 @@ export function CalculatorApp() {
               />
             </div>
 
-            <div className="pb-8 md:px-4 md:pb-4">
+            <div className="pb-6 md:px-4 md:pb-4">
               <ReversePanel
                 reverse={reverse}
                 isManualProfile={selectedProfile.mode === "manual"}

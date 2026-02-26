@@ -220,13 +220,13 @@ export const ProfileSection = memo(function ProfileSection({
   };
 
   return (
-    <section className="grid gap-3">
+    <section className="grid gap-1.5 md:gap-3">
       {/* ── Profile selection group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
         {/* Category pills */}
-        <div className="grid gap-1.5">
+        <div className="grid gap-1">
           <span className="text-xs font-medium text-muted">{t("profileSection.category")}</span>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {CATEGORY_ORDER.map((cat) => {
               const isActive = cat === activeCategory;
               return (
@@ -234,7 +234,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -248,12 +248,12 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
 
         {/* Divider */}
-        <div className="my-2.5 border-t border-border-faint lg:hidden" />
+        <div className="my-1.5 border-t border-border-faint lg:hidden" />
 
         {/* Sub-type pills */}
-        <div className="grid gap-1.5">
+        <div className="grid gap-1">
           <span className="text-xs font-medium text-muted">{t("profileSection.type")}</span>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {categoryProfiles.map((p) => {
               const isActive = p.id === input.profileId;
               return (
@@ -264,7 +264,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -332,7 +332,7 @@ export const ProfileSection = memo(function ProfileSection({
         )}
 
         {/* Divider between dimensions and length */}
-        <div className="my-2 border-t border-border-faint" />
+        <div className="my-1.5 border-t border-border-faint" />
 
         {/* Piece length (part of the size/dimensions group) */}
         <div className="grid gap-1 min-w-0">

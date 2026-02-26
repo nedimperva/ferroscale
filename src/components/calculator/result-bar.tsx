@@ -217,7 +217,7 @@ export const ResultOverlay = memo(function ResultOverlay({
                 </span>
                 <span className="flex flex-col items-center rounded-r-md bg-surface/60 px-3 py-1">
                   <span className="text-[10px] font-medium uppercase tracking-wide text-muted">{t("unitPrice")}</span>
-                  <span className="text-sm font-semibold tabular-nums">{result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}</span>
+                  <span className="text-sm font-semibold tabular-nums">{result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
                 </span>
               </div>
             </div>
