@@ -210,10 +210,15 @@ export const ResultOverlay = memo(function ResultOverlay({
                 {result.grandTotalAmount}
                 <span className="ml-1 text-lg font-bold text-muted">{CURRENCY_SYMBOLS[result.currency]}</span>
               </p>
-              <div className="mt-1.5 flex items-center justify-center gap-3 text-xs text-muted">
-                <span>{result.totalWeightKg} kg</span>
-                <span className="text-border-strong">·</span>
-                <span>{result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}</span>
+              <div className="mt-2 flex items-stretch justify-center gap-px">
+                <span className="flex flex-col items-center rounded-l-md bg-surface/60 px-3 py-1">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted">{t("totalWeight")}</span>
+                  <span className="text-sm font-semibold tabular-nums">{result.totalWeightKg} kg</span>
+                </span>
+                <span className="flex flex-col items-center rounded-r-md bg-surface/60 px-3 py-1">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-muted">{t("unitPrice")}</span>
+                  <span className="text-sm font-semibold tabular-nums">{result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}</span>
+                </span>
               </div>
             </div>
 

@@ -375,13 +375,13 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Quantity + Price group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {/* Quantity with stepper */}
           <div className="grid gap-1 min-w-0">
             <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
               {t("profileSection.quantity")}
             </label>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => {
