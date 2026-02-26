@@ -9,7 +9,6 @@ import { useReverseCalculator } from "@/hooks/useReverseCalculator";
 import { useProjects } from "@/hooks/useProjects";
 import type { Theme } from "@/hooks/useTheme";
 import { useTheme } from "@/hooks/useTheme";
-import { DATASET_VERSION } from "@/lib/datasets/version";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 
 import { IssueList } from "@/components/calculator/issue-list";
@@ -25,8 +24,11 @@ import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
+import type { TabId } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { toast } from "@/lib/toast";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
@@ -243,8 +245,6 @@ export function CalculatorApp() {
 
   /* Contact drawer */
   const [showContactDrawer, setShowContactDrawer] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const lastFocusedIssueFieldRef = useRef<string | null>(null);
   const firstIssueField = issues[0]?.field ?? null;
@@ -277,30 +277,6 @@ export function CalculatorApp() {
     window.setTimeout(tryFocus, 0);
   }, [firstIssueField, showSettingsDrawer]);
 
-  useEffect(() => {
-    if (!showMobileMenu) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!mobileMenuRef.current?.contains(event.target as Node)) {
-        setShowMobileMenu(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setShowMobileMenu(false);
-      }
-    };
-
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [showMobileMenu]);
-
   /* Sidebar collapsed state (persisted to localStorage).
      Uses useSyncExternalStore to avoid hydration mismatch and
      lint warnings about setState-in-effect. */
@@ -319,6 +295,50 @@ export function CalculatorApp() {
   const resetAll = useCallback(() => {
     dispatch({ type: "RESET_ALL" });
   }, [dispatch]);
+
+  /* ---- Bottom tab bar (mobile) ---- */
+  const activeTab: TabId = showHistoryDrawer
+    ? "history"
+    : showProjectDrawer
+      ? "projects"
+      : showSettingsDrawer
+        ? "settings"
+        : "calculator";
+
+  const handleTabChange = useCallback((tab: TabId) => {
+    // Close any open drawers first
+    setShowHistoryDrawer(false);
+    setShowSettingsDrawer(false);
+    closeProjects();
+    setShowContactDrawer(false);
+
+    // Open the selected tab's drawer
+    switch (tab) {
+      case "history":
+        setShowHistoryDrawer(true);
+        break;
+      case "projects":
+        openProjectsDrawer();
+        break;
+      case "settings":
+        setShowSettingsDrawer(true);
+        break;
+      case "calculator":
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        break;
+    }
+  }, [closeProjects, openProjectsDrawer]);
+
+  /* Dynamic header context */
+  const headerContext = useMemo(() => {
+    const profileShort = normalizedCurrentProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
+    if (result) {
+      const gradeLabel = resolveGradeLabel(result.gradeLabel, t);
+      return `${profileShort} · ${gradeLabel}`;
+    }
+    return profileShort;
+  }, [input.profileId, result, normalizedCurrentProfile, t]);
 
   return (
     <>
@@ -342,214 +362,59 @@ export function CalculatorApp() {
         onToggleTheme={cycleTheme}
       />
 
-      <div className={`mx-auto flex min-h-dvh max-w-7xl flex-col pt-14 pb-28 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pt-6 xl:pb-6 ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}>
-        {/* ---- Fixed header (<lg) ---- */}
+      <div className={`mx-auto flex min-h-dvh max-w-7xl flex-col pt-12 pb-36 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pt-6 xl:pb-6 ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}>
+        {/* ---- Fixed header (<lg) — compact dynamic bar ---- */}
         <header
-          className="fixed inset-x-0 top-0 z-[70] flex items-center justify-between gap-2 bg-surface px-4 pb-2 border-b border-border-faint md:bg-background md:border-none md:shadow-sm lg:hidden"
+          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 bg-surface/95 backdrop-blur-md px-4 py-2 border-b border-border-faint lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
-          <div className="min-w-0 shrink">
-            <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl">
+          {/* Logo */}
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-inverted">
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none">
+              <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
+              <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
+              <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
+              <circle cx="12" cy="5.75" r="1.8" fill="currentColor" className="text-surface" />
+              <rect x="2.8" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
+              <rect x="20.2" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
+              <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
+              <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
+              <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#d97706" />
+            </svg>
+          </div>
+
+          {/* App name + context */}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <h1 className="truncate text-sm font-semibold tracking-tight">
               {t("app.mobileHeaderTitle")}
             </h1>
-            <p className="hidden text-sm text-foreground-secondary sm:block">
-              {t("app.mobileHeaderSubtitle")} {" "}
-              <span className="text-xs text-muted-faint">
-                {t("app.datasetVersion", { version: DATASET_VERSION })}
-              </span>
+            <p className="flex items-center gap-1 truncate text-[11px] text-muted">
+              {normalizedCurrentProfile && (
+                <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded bg-surface-inset text-muted-faint">
+                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
+                </span>
+              )}
+              <span className="truncate">{headerContext}</span>
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 md:hidden">
+
+          {/* Right actions: compare badge + theme */}
+          <div className="flex shrink-0 items-center gap-1.5">
             {compareItems.length > 0 && (
               <button
                 type="button"
                 onClick={openCompare}
-                className="inline-flex items-center gap-1 rounded-md border border-blue-border bg-blue-surface px-2 py-1.5 text-[11px] font-semibold text-blue-text"
+                className="inline-flex items-center gap-1 rounded-md border border-blue-border bg-blue-surface px-2 py-1 text-[11px] font-semibold text-blue-text"
                 aria-label={t("sidebar.compare")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3"><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>
                 {compareItems.length}
               </button>
             )}
-
-            {projectCount > 0 && (
-              <button
-                type="button"
-                onClick={openProjects}
-                className="inline-flex items-center gap-1 rounded-md border border-purple-border bg-purple-surface px-2 py-1.5 text-[11px] font-semibold text-purple-text"
-                aria-label={t("sidebar.projects")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
-                {projectCount}
-              </button>
-            )}
-
-            <div className="relative z-[80]" ref={mobileMenuRef}>
-              <button
-                type="button"
-                onClick={() => setShowMobileMenu((value) => !value)}
-                className="inline-flex items-center justify-center rounded-md border border-border-strong p-2 text-foreground-secondary transition-colors hover:bg-surface-inset"
-                aria-haspopup="menu"
-                aria-expanded={showMobileMenu}
-                aria-label={t("app.moreActions")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
-              </button>
-
-              {showMobileMenu && (
-                <div className="absolute right-0 top-[calc(100%+0.4rem)] z-[90] w-60 rounded-lg border border-border bg-surface-raised p-2 shadow-lg" role="menu">
-                  <div className="mb-2">
-                    <LanguageSwitcher className="w-full justify-between" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      setShowSettingsDrawer(true);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
-                    role="menuitem"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-                    {t("sidebar.settings")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      setShowHistoryDrawer(true);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
-                    role="menuitem"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg>
-                    {t("sidebar.history")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      openProjects();
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
-                    role="menuitem"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
-                    {projectCount > 0
-                      ? t("sidebar.projectsCount", { count: projectCount })
-                      : t("sidebar.projects")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (compareItems.length === 0) return;
-                      setShowMobileMenu(false);
-                      openCompare();
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium transition-colors ${compareItems.length > 0
-                      ? "text-foreground-secondary hover:bg-surface-inset"
-                      : "cursor-not-allowed text-muted-faint"
-                      }`}
-                    role="menuitem"
-                    disabled={compareItems.length === 0}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`h-3.5 w-3.5 ${compareItems.length > 0 ? "text-muted-faint" : "text-muted-faint/70"}`}><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>
-                    {compareItems.length > 0
-                      ? t("sidebar.compareCount", { count: compareItems.length })
-                      : t("sidebar.compare")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      setShowContactDrawer(true);
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
-                    role="menuitem"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-                    {t("sidebar.report")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowMobileMenu(false);
-                      cycleTheme();
-                    }}
-                    className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
-                    role="menuitem"
-                  >
-                    {resolvedTheme === "light" ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg>
-                    ) : resolvedTheme === "dark" ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 text-muted-faint"><rect width="20" height="14" x="2" y="3" rx="2" /><path d="M8 21h8" /><path d="M12 17v4" /></svg>
-                    )}
-                    {resolvedTheme === "light"
-                      ? t("theme.dark")
-                      : resolvedTheme === "dark"
-                        ? t("theme.system")
-                        : t("theme.light")}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="hidden shrink-0 items-center gap-2 md:flex">
-            <button
-              type="button"
-              onClick={() => setShowContactDrawer(true)}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border-strong p-2 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
-              aria-label={t("sidebar.report")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-            </button>
-            {compareItems.length > 0 && (
-              <button
-                type="button"
-                onClick={openCompare}
-                className="inline-flex items-center gap-1.5 rounded-md border border-blue-border bg-blue-surface p-2 text-xs font-medium text-blue-text"
-                aria-label={t("sidebar.compare")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><rect x="3" y="3" width="7" height="18" rx="1" /><rect x="14" y="3" width="7" height="18" rx="1" /></svg>
-                <span className="text-[10px] font-bold">{compareItems.length}</span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={openProjects}
-              className={`inline-flex items-center gap-1.5 rounded-md border p-2 text-xs font-medium ${projectCount > 0
-                ? "border-purple-border bg-purple-surface text-purple-text"
-                : "border-border-strong text-foreground-secondary hover:bg-surface-inset"
-                }`}
-              aria-label={t("sidebar.projects")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
-              {projectCount > 0 && <span className="text-[10px] font-bold">{projectCount}</span>}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowSettingsDrawer(true)}
-              className="inline-flex items-center rounded-md border border-border-strong p-2 text-foreground-secondary transition-colors hover:bg-surface-inset"
-              aria-label={t("sidebar.settings")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowHistoryDrawer(true)}
-              className="inline-flex items-center rounded-md border border-border-strong p-2 text-foreground-secondary transition-colors hover:bg-surface-inset"
-              aria-label={t("sidebar.history")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></svg>
-            </button>
-            <LanguageSwitcher compact />
             <button
               type="button"
               onClick={cycleTheme}
-              className="inline-flex items-center rounded-md border border-border-strong p-2 text-foreground-secondary transition-colors hover:bg-surface-inset"
+              className="rounded-md p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
               aria-label={
                 resolvedTheme === "light"
                   ? t("theme.switchToDark")
@@ -582,19 +447,19 @@ export function CalculatorApp() {
         {/* ---- Main grid ---- */}
         <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
           {/* LEFT — inputs */}
-          <div className="flex flex-1 flex-col gap-0 self-start w-full md:rounded-xl md:border border-border bg-surface">
-            <div className="px-4 pt-4 pb-0 md:p-4 md:pb-0">
+          <div className="flex flex-1 flex-col gap-0 self-start w-full rounded-xl border border-border bg-surface shadow-sm">
+            <div className="px-3 pt-3 pb-0 md:px-4 md:pt-4 md:pb-0">
               <IssueList issues={issues} />
             </div>
 
-            <div className="hidden px-4 pt-3 pb-2 sm:block md:px-4">
+            <div className="hidden px-3 pt-2 pb-1 sm:block md:px-4 md:pt-3 md:pb-2">
               <SettingsSummary
                 input={input}
                 onOpen={() => setShowSettingsDrawer(true)}
               />
             </div>
 
-            <div className="px-4 py-4 md:p-4">
+            <div className="px-3 py-2.5 md:p-4">
               <ProfileSection
                 input={input}
                 dispatch={dispatch}
@@ -603,7 +468,7 @@ export function CalculatorApp() {
               />
             </div>
 
-            <div className="pb-8 md:px-4 md:pb-4">
+            <div className="pb-6 md:px-4 md:pb-4">
               <ReversePanel
                 reverse={reverse}
                 isManualProfile={selectedProfile.mode === "manual"}
@@ -634,7 +499,7 @@ export function CalculatorApp() {
           </aside>
         </div>
 
-        {/* ---- Mobile sticky result bar ---- */}
+        {/* ---- Mobile mini result card (above tab bar) ---- */}
         <ResultBar
           result={result}
           isPending={isPending}
@@ -650,7 +515,15 @@ export function CalculatorApp() {
           normalizedProfile={normalizedCurrentProfile}
         />
 
-        {/* ---- Mobile full-screen result overlay ---- */}
+        {/* ---- Bottom tab bar (mobile) ---- */}
+        <BottomTabBar
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          projectCount={projectCount}
+          compareCount={compareItems.length}
+        />
+
+        {/* ---- Result bottom sheet (mobile) ---- */}
         {showOverlay && result && (
           <ResultOverlay
             result={result}

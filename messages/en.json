@@ -37,6 +37,12 @@
     "datasetVersion": "v{version}",
     "moreActions": "More actions"
   },
+  "tabs": {
+    "calculator": "Calculator",
+    "history": "History",
+    "projects": "Projects",
+    "settings": "Settings"
+  },
   "theme": {
     "dark": "Dark",
     "light": "Light",
@@ -140,6 +146,7 @@
     "enArea": "Area from EN table",
     "pieceLength": "Piece length",
     "quantity": "Quantity",
+    "unitPrice": "Unit price",
     "lengthUnitAria": "Length unit",
     "dimensionUnitAria": "{label} unit"
   },

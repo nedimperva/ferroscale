@@ -37,6 +37,12 @@
     "datasetVersion": "v{version}",
     "moreActions": "Vise opcija"
   },
+  "tabs": {
+    "calculator": "Kalkulator",
+    "history": "Historija",
+    "projects": "Projekti",
+    "settings": "Postavke"
+  },
   "theme": {
     "dark": "Tamno",
     "light": "Svijetlo",
@@ -140,6 +146,7 @@
     "enArea": "Povrsina iz EN tabele",
     "pieceLength": "Duzina komada",
     "quantity": "Kolicina",
+    "unitPrice": "Jedinicna cijena",
     "lengthUnitAria": "Jedinica duzine",
     "dimensionUnitAria": "Jedinica za {label}"
   },
