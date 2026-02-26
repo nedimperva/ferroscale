@@ -146,6 +146,7 @@
     "enArea": "Area from EN table",
     "pieceLength": "Piece length",
     "quantity": "Quantity",
+    "unitPrice": "Unit price",
     "lengthUnitAria": "Length unit",
     "dimensionUnitAria": "{label} unit"
   },

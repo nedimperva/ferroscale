@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
@@ -277,7 +278,7 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
       </div>
 
-      {/* ── Size / Dimensions group ── */}
+      {/* ── Size / Dimensions + Length group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
         {/* Standard profile: size dropdown */}
         {selectedProfile.mode === "standard" && (
@@ -329,52 +330,57 @@ export const ProfileSection = memo(function ProfileSection({
             ))}
           </div>
         )}
-      </div>
 
-      {/* ── Length + Quantity group ── */}
-      <div className="form-group lg:bg-transparent lg:p-0">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="grid gap-1 min-w-0">
-            <label htmlFor="length" className="text-xs font-medium text-foreground-secondary">
-              {t("profileSection.pieceLength")}
-            </label>
-            <div className="flex gap-1 min-w-0">
-              <NumericInput
-                id="length"
-                inputMode="decimal"
-                autoComplete="off"
-                value={input.length.value}
-                onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-                className={`h-11 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
-                  }`}
-                aria-invalid={hasIssue("length")}
-              />
-              <div className="relative">
-                <select
-                  value={input.length.unit}
-                  onChange={(e) =>
-                    dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
-                  }
-                  className="h-11 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500"
-                  aria-label={t("profileSection.lengthUnitAria")}
-                >
-                  {LENGTH_UNITS.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                </svg>
-              </div>
+        {/* Divider between dimensions and length */}
+        <div className="my-2 border-t border-border-faint" />
+
+        {/* Piece length (part of the size/dimensions group) */}
+        <div className="grid gap-1 min-w-0">
+          <label htmlFor="length" className="text-xs font-medium text-foreground-secondary">
+            {t("profileSection.pieceLength")}
+          </label>
+          <div className="flex gap-1 min-w-0">
+            <NumericInput
+              id="length"
+              inputMode="decimal"
+              autoComplete="off"
+              value={input.length.value}
+              onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
+              className={`h-11 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
+                }`}
+              aria-invalid={hasIssue("length")}
+            />
+            <div className="relative">
+              <select
+                value={input.length.unit}
+                onChange={(e) =>
+                  dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
+                }
+                className="h-11 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500"
+                aria-label={t("profileSection.lengthUnitAria")}
+              >
+                {LENGTH_UNITS.map((u) => (
+                  <option key={u} value={u}>
+                    {u}
+                  </option>
+                ))}
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
+                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+              </svg>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Quantity + Price group ── */}
+      <div className="form-group lg:bg-transparent lg:p-0">
+        <div className="grid grid-cols-2 gap-2">
+          {/* Quantity with stepper */}
           <div className="grid gap-1 min-w-0">
             <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
               {t("profileSection.quantity")}
             </label>
-            {/* Stepper-style quantity input */}
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -415,6 +421,28 @@ export const ProfileSection = memo(function ProfileSection({
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
               </button>
+            </div>
+          </div>
+
+          {/* Inline unit price */}
+          <div className="grid gap-1 min-w-0">
+            <label htmlFor="inline-unit-price" className="text-xs font-medium text-foreground-secondary">
+              {t("profileSection.unitPrice")}
+            </label>
+            <div className="flex min-w-0">
+              <NumericInput
+                id="inline-unit-price"
+                inputMode="decimal"
+                autoComplete="off"
+                value={input.unitPrice}
+                onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
+                className={`h-11 min-w-0 flex-1 rounded-l-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
+                  }`}
+                aria-invalid={hasIssue("unitPrice")}
+              />
+              <span className="flex h-11 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-2 text-xs text-muted">
+                {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
+              </span>
             </div>
           </div>
         </div>

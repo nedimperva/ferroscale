@@ -146,6 +146,7 @@
     "enArea": "Povrsina iz EN tabele",
     "pieceLength": "Duzina komada",
     "quantity": "Kolicina",
+    "unitPrice": "Jedinicna cijena",
     "lengthUnitAria": "Jedinica duzine",
     "dimensionUnitAria": "Jedinica za {label}"
   },

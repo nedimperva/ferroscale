@@ -83,13 +83,18 @@ export const ResultBar = memo(function ResultBar({
               {normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}
             </span>
             <span
-              className={`text-lg font-bold tabular-nums tracking-tight transition-opacity duration-200 ${
+              className={`flex items-baseline gap-2 transition-opacity duration-200 ${
                 isPending ? "opacity-50" : ""
               }`}
             >
-              {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-              <span className="ml-1 text-xs font-semibold text-muted">
-                {CURRENCY_SYMBOLS[result.currency]}
+              <span className="text-lg font-bold tabular-nums tracking-tight">
+                {fmtAnimated(animatedTotal, result.grandTotalAmount)}
+                <span className="ml-0.5 text-xs font-semibold text-muted">
+                  {CURRENCY_SYMBOLS[result.currency]}
+                </span>
+              </span>
+              <span className="text-[11px] tabular-nums text-muted">
+                {result.totalWeightKg} kg
               </span>
             </span>
           </span>
@@ -196,15 +201,92 @@ export const ResultOverlay = memo(function ResultOverlay({
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto overscroll-contain">
-            {/* ── Hero: Total Cost ── */}
-            <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-5 text-center">
+            {/* ── Hero: Total Cost + Weight summary ── */}
+            <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4 text-center">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
                 {t("totalCost")}
               </p>
               <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground">
                 {result.grandTotalAmount}
+                <span className="ml-1 text-lg font-bold text-muted">{CURRENCY_SYMBOLS[result.currency]}</span>
               </p>
-              <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
+              <div className="mt-1.5 flex items-center justify-center gap-3 text-xs text-muted">
+                <span>{result.totalWeightKg} kg</span>
+                <span className="text-border-strong">·</span>
+                <span>{result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}</span>
+              </div>
+            </div>
+
+            {/* ── Action buttons — immediately visible ── */}
+            <div className="flex gap-2 border-b border-border-faint px-4 py-3">
+              {/* Compare */}
+              <button
+                type="button"
+                onClick={onCompare}
+                disabled={!canCompare && !isInCompare}
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+                  isInCompare
+                    ? "border-blue-border bg-blue-surface text-blue-text"
+                    : canCompare
+                      ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
+                      : "cursor-not-allowed border-border-faint text-muted-faint"
+                }`}
+                title={
+                  isInCompare
+                    ? t("alreadyInCompare")
+                    : canCompare
+                      ? t("addToCompare")
+                      : t("compareFull", { max: maxCompare })
+                }
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0">
+                  <rect x="3" y="3" width="7" height="18" rx="1" />
+                  <rect x="14" y="3" width="7" height="18" rx="1" />
+                </svg>
+                {isInCompare
+                  ? t("inCompareCount", { count: compareCount, max: maxCompare })
+                  : t("addToCompare")}
+              </button>
+
+              {/* Save */}
+              <button
+                type="button"
+                onClick={onStar}
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+                  isStarred
+                    ? "border-accent-border bg-accent-surface text-accent"
+                    : "border-border text-foreground-secondary hover:bg-surface-raised"
+                }`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className={`h-3.5 w-3.5 ${
+                    isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
+                  }`}
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                </svg>
+                {isStarred ? t("saved") : t("save")}
+              </button>
+
+              {/* Project */}
+              <button
+                type="button"
+                onClick={onAddToProject}
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+                  hasProjects
+                    ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+                    : "border-border text-foreground-secondary hover:bg-surface-raised"
+                }`}
+                title={t("addToProject")}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                  <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
+                </svg>
+                {t("project")}
+              </button>
             </div>
 
             <div className="px-4 py-4">
@@ -287,78 +369,6 @@ export const ResultOverlay = memo(function ResultOverlay({
                     </div>
                   </div>
                 </details>
-              </div>
-
-              {/* ── Action buttons ── */}
-              <div className="mt-4 flex flex-col gap-2">
-                {/* Compare — full width, primary action */}
-                <button
-                  type="button"
-                  onClick={onCompare}
-                  disabled={!canCompare && !isInCompare}
-                  className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isInCompare
-                      ? "border-blue-border bg-blue-surface text-blue-text"
-                      : canCompare
-                        ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
-                        : "cursor-not-allowed border-border-faint text-muted-faint"
-                  }`}
-                  title={
-                    isInCompare
-                      ? t("alreadyInCompare")
-                      : canCompare
-                        ? t("addToCompare")
-                        : t("compareFull", { max: maxCompare })
-                  }
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0">
-                    <rect x="3" y="3" width="7" height="18" rx="1" />
-                    <rect x="14" y="3" width="7" height="18" rx="1" />
-                  </svg>
-                  {isInCompare
-                    ? t("inCompareCount", { count: compareCount, max: maxCompare })
-                    : t("addToCompare")}
-                </button>
-
-                {/* Save + Project — side by side */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={onStar}
-                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-                      isStarred
-                        ? "border-accent-border bg-accent-surface text-accent"
-                        : "border-border text-foreground-secondary hover:bg-surface-raised"
-                    }`}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      className={`h-4 w-4 ${
-                        isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
-                      }`}
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                    </svg>
-                    {isStarred ? t("saved") : t("save")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onAddToProject}
-                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-                      hasProjects
-                        ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-                        : "border-border text-foreground-secondary hover:bg-surface-raised"
-                    }`}
-                    title={t("addToProject")}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
-                    </svg>
-                    {t("project")}
-                  </button>
-                </div>
               </div>
 
               {/* ── Full calculation steps (inline collapsible) ── */}
