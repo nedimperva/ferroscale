@@ -47,7 +47,7 @@ export const BottomTabBar = memo(function BottomTabBar({
                 triggerHaptic("light");
                 onTabChange(tab.id);
               }}
-              className={`relative flex flex-1 flex-col items-center gap-0.5 pb-1.5 pt-2 text-[10px] font-medium transition-colors ${
+              className={`relative flex flex-1 flex-col items-center gap-0 pb-1 pt-1.5 text-[10px] font-medium transition-colors ${
                 isActive
                   ? "text-accent"
                   : "text-muted-faint"

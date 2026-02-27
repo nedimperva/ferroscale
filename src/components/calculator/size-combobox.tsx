@@ -151,7 +151,7 @@ export const SizeCombobox = memo(function SizeCombobox({
             setHighlightIdx(0);
           }}
           onKeyDown={handleKeyDown}
-          className={`h-11 w-full rounded-lg border bg-surface px-3 pr-9 text-sm font-medium transition-colors focus:border-blue-500 ${
+          className={`h-10 w-full rounded-lg border bg-surface px-3 pr-9 text-sm font-medium transition-colors focus:border-blue-500 md:h-11 ${
             hasIssue ? "border-red-border" : "border-border-strong"
           }`}
         />

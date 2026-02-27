@@ -228,7 +228,7 @@ export const ProfileSection = memo(function ProfileSection({
   };
 
   return (
-    <section className="grid gap-1.5 md:gap-3">
+    <section className="grid gap-1 md:gap-3">
       {/* ── Profile selection group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
         {/* Category pills */}
@@ -242,7 +242,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -272,7 +272,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -391,7 +391,7 @@ export const ProfileSection = memo(function ProfileSection({
               autoComplete="off"
               value={input.length.value}
               onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-              className={`h-11 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
+              className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
                 }`}
               aria-invalid={hasIssue("length")}
             />
@@ -401,7 +401,7 @@ export const ProfileSection = memo(function ProfileSection({
                 onChange={(e) =>
                   dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
                 }
-                className="h-11 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500"
+                className="h-10 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500 md:h-11"
                 aria-label={t("profileSection.lengthUnitAria")}
               >
                 {LENGTH_UNITS.map((u) => (
@@ -436,7 +436,7 @@ export const ProfileSection = memo(function ProfileSection({
                   }
                 }}
                 disabled={input.quantity <= 1}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed md:h-11 md:w-11"
                 aria-label="Decrease quantity"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -449,7 +449,7 @@ export const ProfileSection = memo(function ProfileSection({
                 autoComplete="off"
                 value={input.quantity}
                 onValueChange={(value) => dispatch({ type: "SET_QUANTITY", value })}
-                className={`h-11 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
+                className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 md:h-11 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
                   }`}
                 aria-invalid={hasIssue("quantity")}
               />
@@ -459,7 +459,7 @@ export const ProfileSection = memo(function ProfileSection({
                   triggerHaptic("light");
                   dispatch({ type: "SET_QUANTITY", value: input.quantity + 1 });
                 }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised md:h-11 md:w-11"
                 aria-label="Increase quantity"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -482,11 +482,11 @@ export const ProfileSection = memo(function ProfileSection({
                   autoComplete="off"
                   value={input.unitPrice}
                   onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-                  className={`h-11 min-w-0 flex-1 rounded-l-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
+                  className={`h-10 min-w-0 flex-1 rounded-l-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
                     }`}
                   aria-invalid={hasIssue("unitPrice")}
                 />
-                <span className="flex h-11 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-2 text-xs text-muted">
+                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-2 text-xs text-muted md:h-11">
                   {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
                 </span>
               </div>

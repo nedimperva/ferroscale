@@ -400,14 +400,14 @@ export function CalculatorApp() {
         onToggleTheme={cycleTheme}
       />
 
-      <div className={`mx-auto flex min-h-dvh max-w-7xl flex-col pt-12 pb-36 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pt-6 xl:pb-6 ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}>
+      <div className={`mx-auto flex min-h-dvh max-w-7xl flex-col pt-10 pb-32 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pt-6 lg:pb-6 ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}>
         {/* ---- Fixed header (<lg) — compact dynamic bar ---- */}
         <header
-          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 bg-surface/95 backdrop-blur-md px-4 py-2 border-b border-border-faint lg:hidden"
-          style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
+          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-2.5 bg-surface/95 backdrop-blur-md px-3 py-1.5 border-b border-border-faint lg:hidden"
+          style={{ paddingTop: "max(0.375rem, env(safe-area-inset-top, 0px))" }}
         >
           {/* Logo */}
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-inverted">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-inverted">
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none">
               <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
               <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
@@ -423,10 +423,10 @@ export function CalculatorApp() {
 
           {/* App name + context */}
           <div className="flex min-w-0 flex-1 flex-col">
-            <h1 className="truncate text-sm font-semibold tracking-tight">
+            <h1 className="truncate text-xs font-semibold tracking-tight">
               {t("app.mobileHeaderTitle")}
             </h1>
-            <p className="flex items-center gap-1 truncate text-[11px] text-muted">
+            <p className="flex items-center gap-1 truncate text-[10px] text-muted leading-tight">
               {normalizedCurrentProfile && (
                 <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded bg-surface-inset text-muted-faint">
                   <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
@@ -486,18 +486,18 @@ export function CalculatorApp() {
         <div className="grid gap-4 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px]">
           {/* LEFT — inputs */}
           <div className="flex flex-1 flex-col gap-0 self-start w-full rounded-xl border border-border bg-surface shadow-sm">
-            <div className="px-3 pt-3 pb-0 md:px-4 md:pt-4 md:pb-0">
+            <div className="px-2.5 pt-2 pb-0 md:px-4 md:pt-4 md:pb-0">
               <IssueList issues={issues} />
             </div>
 
-            <div className="px-3 pt-2 pb-1 md:px-4 md:pt-3 md:pb-2">
+            <div className="px-2.5 pt-1.5 pb-0.5 md:px-4 md:pt-3 md:pb-2">
               <SettingsSummary
                 input={input}
                 onOpen={() => setShowSettingsDrawer(true)}
               />
             </div>
 
-            <div className="px-3 py-2.5 md:p-4">
+            <div className="px-2.5 py-1.5 md:p-4">
               <ProfileSection
                 input={input}
                 dispatch={dispatch}
@@ -509,7 +509,7 @@ export function CalculatorApp() {
               />
             </div>
 
-            <div className="pb-6 md:px-4 md:pb-4">
+            <div className="pb-4 md:px-4 md:pb-4">
               <ReversePanel
                 reverse={reverse}
                 isManualProfile={selectedProfile.mode === "manual"}
