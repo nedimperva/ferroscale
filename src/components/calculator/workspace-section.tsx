@@ -13,6 +13,8 @@ interface WorkspaceSectionProps {
   onToggleInlineMaterial: () => void;
   showInlinePrice: boolean;
   onToggleInlinePrice: () => void;
+  showSettingsPreview: boolean;
+  onToggleSettingsPreview: () => void;
 }
 
 const HISTORY_OPTIONS = [10, 25, 50, 100];
@@ -29,6 +31,8 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   onToggleInlineMaterial,
   showInlinePrice,
   onToggleInlinePrice,
+  showSettingsPreview,
+  onToggleSettingsPreview,
 }: WorkspaceSectionProps) {
   const t = useTranslations("workspace");
 
@@ -83,6 +87,11 @@ export const WorkspaceSection = memo(function WorkspaceSection({
       </p>
 
       <div className="mt-1 border-t border-border-faint pt-2 grid gap-2">
+        <ToggleRow
+          label={t("settingsPreview")}
+          checked={showSettingsPreview}
+          onToggle={onToggleSettingsPreview}
+        />
         <ToggleRow
           label={t("inlineMaterial")}
           checked={showInlineMaterial}

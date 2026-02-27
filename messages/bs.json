@@ -187,6 +187,7 @@
     "compareSlots": "Slotovi za poredenje",
     "activeCompareLimit": "Aktivni limit poredenja: {limit}",
     "mobileCap": "(mobilni limit: {cap})",
+    "settingsPreview": "Prikazi pregled postavki",
     "inlineMaterial": "Prikazi materijal u formi",
     "inlinePrice": "Prikazi cijenu u formi"
   },

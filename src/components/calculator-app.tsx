@@ -68,6 +68,7 @@ function createBoolStore(key: string, defaultValue: boolean) {
 
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
+const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
 
 const SETTINGS_ISSUE_FIELDS = new Set([
   "materialGradeId",
@@ -329,6 +330,11 @@ export function CalculatorApp() {
     inlinePriceStore.getSnapshot,
     inlinePriceStore.getServerSnapshot,
   );
+  const showSettingsPreview = useSyncExternalStore(
+    settingsPreviewStore.subscribe,
+    settingsPreviewStore.getSnapshot,
+    settingsPreviewStore.getServerSnapshot,
+  );
 
   const resetAll = useCallback(() => {
     dispatch({ type: "RESET_ALL" });
@@ -490,12 +496,14 @@ export function CalculatorApp() {
               <IssueList issues={issues} />
             </div>
 
-            <div className="px-2.5 pt-1.5 pb-0.5 md:px-4 md:pt-3 md:pb-2">
-              <SettingsSummary
-                input={input}
-                onOpen={() => setShowSettingsDrawer(true)}
-              />
-            </div>
+            {showSettingsPreview && (
+              <div className="px-2.5 pt-1.5 pb-0.5 md:px-4 md:pt-3 md:pb-2">
+                <SettingsSummary
+                  input={input}
+                  onOpen={() => setShowSettingsDrawer(true)}
+                />
+              </div>
+            )}
 
             <div className="px-2.5 py-1.5 md:p-4">
               <ProfileSection
@@ -616,6 +624,8 @@ export function CalculatorApp() {
           onToggleInlineMaterial={inlineMaterialStore.toggle}
           showInlinePrice={showInlinePrice}
           onToggleInlinePrice={inlinePriceStore.toggle}
+          showSettingsPreview={showSettingsPreview}
+          onToggleSettingsPreview={settingsPreviewStore.toggle}
         />
 
         {/* ---- Contact drawer ---- */}

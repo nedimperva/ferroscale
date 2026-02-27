@@ -33,6 +33,8 @@ interface SettingsDrawerProps {
   onToggleInlineMaterial: () => void;
   showInlinePrice: boolean;
   onToggleInlinePrice: () => void;
+  showSettingsPreview: boolean;
+  onToggleSettingsPreview: () => void;
 }
 
 export const SettingsDrawer = memo(function SettingsDrawer({
@@ -53,6 +55,8 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   onToggleInlineMaterial,
   showInlinePrice,
   onToggleInlinePrice,
+  showSettingsPreview,
+  onToggleSettingsPreview,
 }: SettingsDrawerProps) {
   const t = useTranslations("settingsDrawer");
   const isMobile = useIsMobile();
@@ -137,6 +141,8 @@ export const SettingsDrawer = memo(function SettingsDrawer({
             onToggleInlineMaterial={onToggleInlineMaterial}
             showInlinePrice={showInlinePrice}
             onToggleInlinePrice={onToggleInlinePrice}
+            showSettingsPreview={showSettingsPreview}
+            onToggleSettingsPreview={onToggleSettingsPreview}
           />
         </div>
       </div>

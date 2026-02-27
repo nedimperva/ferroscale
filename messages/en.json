@@ -187,6 +187,7 @@
     "compareSlots": "Compare slots",
     "activeCompareLimit": "Active compare limit: {limit}",
     "mobileCap": "(mobile cap: {cap})",
+    "settingsPreview": "Show settings preview",
     "inlineMaterial": "Show material in form",
     "inlinePrice": "Show price in form"
   },
