@@ -238,7 +238,10 @@
     "closeDetails": "Zatvori detalje",
     "close": "Zatvori",
     "removeFromSaved": "Ukloni iz sacuvanih",
-    "saveCalculation": "Sacuvaj izracun"
+    "saveCalculation": "Sacuvaj izracun",
+    "copy": "Kopiraj",
+    "copied": "Kopirano!",
+    "copyAriaLabel": "Kopiraj sazhetak izracuna u meduspremnik"
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",

@@ -238,7 +238,10 @@
     "closeDetails": "Close details",
     "close": "Close",
     "removeFromSaved": "Remove from saved",
-    "saveCalculation": "Save calculation"
+    "saveCalculation": "Save calculation",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "copyAriaLabel": "Copy calculation summary to clipboard"
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",

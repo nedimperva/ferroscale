@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { Drawer } from "vaul";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -11,6 +11,21 @@ import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
+
+function formatResultForClipboard(
+  result: CalculationResult,
+  profileLabel: string,
+): string {
+  const currency = CURRENCY_SYMBOLS[result.currency];
+  const lines = [
+    `${profileLabel}`,
+    `Material: ${result.gradeLabel}`,
+    `Unit weight: ${result.unitWeightKg} kg`,
+    `Total weight: ${result.totalWeightKg} kg`,
+    `Total cost: ${result.grandTotalAmount} ${currency}`,
+  ];
+  return lines.join("\n");
+}
 
 interface ResultBarProps {
   result: CalculationResult | null;
@@ -61,7 +76,7 @@ export const ResultBar = memo(function ResultBar({
 
   return (
     <div
-      className="fixed inset-x-0 z-40 xl:hidden"
+      className="fixed inset-x-0 z-40 lg:hidden"
       style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
     >
       <div className="mx-3 mb-1">
@@ -186,7 +201,7 @@ export const ResultOverlay = memo(function ResultOverlay({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[80] bg-overlay" />
         <Drawer.Content
-          className="fixed inset-x-0 bottom-0 z-[90] flex max-h-[95dvh] flex-col rounded-t-2xl bg-surface shadow-xl outline-none xl:hidden"
+          className="fixed inset-x-0 bottom-0 z-[90] flex max-h-[95dvh] flex-col rounded-t-2xl bg-surface shadow-xl outline-none lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           {/* Drag handle */}
@@ -223,7 +238,7 @@ export const ResultOverlay = memo(function ResultOverlay({
             </div>
 
             {/* ── Action buttons — immediately visible ── */}
-            <div className="flex gap-2 border-b border-border-faint px-4 py-3">
+            <div className="flex flex-wrap gap-2 border-b border-border-faint px-4 py-3">
               {/* Compare */}
               <button
                 type="button"
@@ -292,6 +307,9 @@ export const ResultOverlay = memo(function ResultOverlay({
                 </svg>
                 {t("project")}
               </button>
+
+              {/* Copy */}
+              <OverlayCopyButton result={result} normalizedProfile={normalizedProfile} />
             </div>
 
             <div className="px-4 py-4">
@@ -418,3 +436,49 @@ export const ResultOverlay = memo(function ResultOverlay({
     </Drawer.Root>
   );
 });
+
+function OverlayCopyButton({
+  result,
+  normalizedProfile,
+}: {
+  result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot | null;
+}) {
+  const t = useTranslations("result");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const label = normalizedProfile?.shortLabel ?? result.profileLabel;
+    const text = formatResultForClipboard(result, label);
+    navigator.clipboard.writeText(text).then(() => {
+      triggerHaptic("success");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [result, normalizedProfile]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+        copied
+          ? "border-green-border bg-green-surface text-green-text"
+          : "border-border text-foreground-secondary hover:bg-surface-raised"
+      }`}
+      aria-label={t("copyAriaLabel")}
+    >
+      {copied ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+      )}
+      {copied ? t("copied") : t("copy")}
+    </button>
+  );
+}

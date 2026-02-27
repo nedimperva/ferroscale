@@ -3,10 +3,12 @@ import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
-import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datasets/types";
+import { METAL_FAMILIES, getMaterialGradesByFamily, getMaterialGradeById } from "@/lib/datasets/materials";
+import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
+import { SizeCombobox } from "./size-combobox";
 import { triggerHaptic } from "@/lib/haptics";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
@@ -178,6 +180,7 @@ interface ProfileSectionProps {
   dispatch: React.Dispatch<CalcAction>;
   selectedProfile: ProfileDefinition;
   issues: ValidationIssue[];
+  activeFamily: MetalFamilyId;
 }
 
 export const ProfileSection = memo(function ProfileSection({
@@ -185,6 +188,7 @@ export const ProfileSection = memo(function ProfileSection({
   dispatch,
   selectedProfile,
   issues,
+  activeFamily,
 }: ProfileSectionProps) {
   const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
@@ -278,36 +282,71 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
       </div>
 
-      {/* ── Size / Dimensions + Length group ── */}
+      {/* ── Inline material selector ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
-        {/* Standard profile: size dropdown */}
-        {selectedProfile.mode === "standard" && (
-          <div className="grid gap-1">
-            <label htmlFor="size" className="text-xs font-medium text-foreground-secondary">
-              {t("profileSection.size")}
-            </label>
+        <div className="grid gap-1">
+          <span className="text-xs font-medium text-muted">{t("material.title")}</span>
+          <div className="grid grid-cols-2 gap-1.5">
             <div className="relative">
               <select
-                id="size"
-                value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
-                onChange={(e) => dispatch({ type: "SET_SIZE", sizeId: e.target.value })}
-                className={`h-11 w-full appearance-none rounded-lg border bg-surface px-3 pr-9 text-sm font-medium transition-colors focus:border-blue-500 ${hasIssue("selectedSizeId") ? "border-red-border" : "border-border-strong"
-                  }`}
+                value={activeFamily}
+                onChange={(e) => {
+                  triggerHaptic("light");
+                  dispatch({ type: "SET_FAMILY", familyId: e.target.value as MetalFamilyId });
+                }}
+                className="h-9 w-full appearance-none rounded-lg border border-border bg-surface px-2.5 pr-7 text-xs font-medium transition-colors focus:border-blue-500"
+                aria-label={t("material.family")}
               >
-                {selectedProfile.sizes.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
+                {METAL_FAMILIES.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {t(`dataset.families.${f.id}`)}
                   </option>
                 ))}
               </select>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-faint">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
               </svg>
             </div>
-            <p className="text-[11px] text-muted-faint">
-              {t("profileSection.enArea")}
-            </p>
+            <div className="relative">
+              <select
+                value={input.materialGradeId}
+                onChange={(e) => {
+                  triggerHaptic("light");
+                  dispatch({ type: "SET_GRADE", gradeId: e.target.value });
+                }}
+                className={`h-9 w-full appearance-none rounded-lg border bg-surface px-2.5 pr-7 text-xs font-medium transition-colors focus:border-blue-500 ${
+                  issues.some((i) => i.field === "materialGradeId")
+                    ? "border-red-border"
+                    : "border-border"
+                }`}
+                aria-label={t("material.grade")}
+              >
+                {getMaterialGradesByFamily(activeFamily).map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.label}
+                  </option>
+                ))}
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
+                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+              </svg>
+            </div>
           </div>
+        </div>
+      </div>
+
+      {/* ── Size / Dimensions + Length group ── */}
+      <div className="form-group lg:bg-transparent lg:p-0">
+        {/* Standard profile: searchable size combobox */}
+        {selectedProfile.mode === "standard" && (
+          <SizeCombobox
+            sizes={selectedProfile.sizes}
+            value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
+            onChange={(sizeId) => dispatch({ type: "SET_SIZE", sizeId })}
+            hasIssue={hasIssue("selectedSizeId")}
+            label={t("profileSection.size")}
+            hint={t("profileSection.enArea")}
+          />
         )}
 
         {/* Manual dimensions */}

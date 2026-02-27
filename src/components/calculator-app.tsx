@@ -445,14 +445,14 @@ export function CalculatorApp() {
         <PwaRegister />
 
         {/* ---- Main grid ---- */}
-        <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
+        <div className="grid gap-4 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px]">
           {/* LEFT — inputs */}
           <div className="flex flex-1 flex-col gap-0 self-start w-full rounded-xl border border-border bg-surface shadow-sm">
             <div className="px-3 pt-3 pb-0 md:px-4 md:pt-4 md:pb-0">
               <IssueList issues={issues} />
             </div>
 
-            <div className="hidden px-3 pt-2 pb-1 sm:block md:px-4 md:pt-3 md:pb-2">
+            <div className="px-3 pt-2 pb-1 md:px-4 md:pt-3 md:pb-2">
               <SettingsSummary
                 input={input}
                 onOpen={() => setShowSettingsDrawer(true)}
@@ -465,6 +465,7 @@ export function CalculatorApp() {
                 dispatch={dispatch}
                 selectedProfile={selectedProfile}
                 issues={issues}
+                activeFamily={activeFamily}
               />
             </div>
 
@@ -478,7 +479,7 @@ export function CalculatorApp() {
           </div>
 
           {/* RIGHT — results (desktop) */}
-          <aside className="hidden gap-4 self-start xl:sticky xl:top-4 xl:grid">
+          <aside className="hidden gap-4 self-start lg:sticky lg:top-4 lg:grid">
             <ResultPanel
               result={result}
               isPending={isPending}
