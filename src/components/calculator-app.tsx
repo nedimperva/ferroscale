@@ -43,6 +43,32 @@ function getSidebarSnapshot(): boolean {
 function getSidebarServerSnapshot(): boolean { return false; }
 function _sidebarEmit() { for (const l of _sidebarListeners) l(); }
 
+/* ---- Inline visibility prefs: tiny external stores ---- */
+function createBoolStore(key: string, defaultValue: boolean) {
+  let _listeners: Array<() => void> = [];
+  function subscribe(cb: () => void) {
+    _listeners = [..._listeners, cb];
+    return () => { _listeners = _listeners.filter((l) => l !== cb); };
+  }
+  function getSnapshot(): boolean {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return defaultValue;
+      return raw === "true";
+    } catch { return defaultValue; }
+  }
+  function getServerSnapshot(): boolean { return defaultValue; }
+  function toggle() {
+    const next = !getSnapshot();
+    try { localStorage.setItem(key, String(next)); } catch { /* noop */ }
+    for (const l of _listeners) l();
+  }
+  return { subscribe, getSnapshot, getServerSnapshot, toggle };
+}
+
+const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
+const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
+
 const SETTINGS_ISSUE_FIELDS = new Set([
   "materialGradeId",
   "customDensityKgPerM3",
@@ -292,6 +318,18 @@ export function CalculatorApp() {
     _sidebarEmit();
   }, []);
 
+  /* Inline visibility preferences */
+  const showInlineMaterial = useSyncExternalStore(
+    inlineMaterialStore.subscribe,
+    inlineMaterialStore.getSnapshot,
+    inlineMaterialStore.getServerSnapshot,
+  );
+  const showInlinePrice = useSyncExternalStore(
+    inlinePriceStore.subscribe,
+    inlinePriceStore.getSnapshot,
+    inlinePriceStore.getServerSnapshot,
+  );
+
   const resetAll = useCallback(() => {
     dispatch({ type: "RESET_ALL" });
   }, [dispatch]);
@@ -466,6 +504,8 @@ export function CalculatorApp() {
                 selectedProfile={selectedProfile}
                 issues={issues}
                 activeFamily={activeFamily}
+                showInlineMaterial={showInlineMaterial}
+                showInlinePrice={showInlinePrice}
               />
             </div>
 
@@ -572,6 +612,10 @@ export function CalculatorApp() {
           onCompareLimitChange={setCompareLimit}
           maxCompare={maxCompare}
           isCompareMobileCapped={isCompareMobileCapped}
+          showInlineMaterial={showInlineMaterial}
+          onToggleInlineMaterial={inlineMaterialStore.toggle}
+          showInlinePrice={showInlinePrice}
+          onToggleInlinePrice={inlinePriceStore.toggle}
         />
 
         {/* ---- Contact drawer ---- */}

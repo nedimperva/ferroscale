@@ -186,7 +186,9 @@
     "historyDepth": "History depth",
     "compareSlots": "Compare slots",
     "activeCompareLimit": "Active compare limit: {limit}",
-    "mobileCap": "(mobile cap: {cap})"
+    "mobileCap": "(mobile cap: {cap})",
+    "inlineMaterial": "Show material in form",
+    "inlinePrice": "Show price in form"
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",

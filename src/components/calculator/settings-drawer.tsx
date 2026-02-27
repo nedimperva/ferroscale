@@ -29,6 +29,10 @@ interface SettingsDrawerProps {
   onCompareLimitChange: (value: number) => void;
   maxCompare: number;
   isCompareMobileCapped: boolean;
+  showInlineMaterial: boolean;
+  onToggleInlineMaterial: () => void;
+  showInlinePrice: boolean;
+  onToggleInlinePrice: () => void;
 }
 
 export const SettingsDrawer = memo(function SettingsDrawer({
@@ -45,6 +49,10 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   onCompareLimitChange,
   maxCompare,
   isCompareMobileCapped,
+  showInlineMaterial,
+  onToggleInlineMaterial,
+  showInlinePrice,
+  onToggleInlinePrice,
 }: SettingsDrawerProps) {
   const t = useTranslations("settingsDrawer");
   const isMobile = useIsMobile();
@@ -125,6 +133,10 @@ export const SettingsDrawer = memo(function SettingsDrawer({
             onCompareLimitChange={onCompareLimitChange}
             maxCompare={maxCompare}
             isCompareMobileCapped={isCompareMobileCapped}
+            showInlineMaterial={showInlineMaterial}
+            onToggleInlineMaterial={onToggleInlineMaterial}
+            showInlinePrice={showInlinePrice}
+            onToggleInlinePrice={onToggleInlinePrice}
           />
         </div>
       </div>
