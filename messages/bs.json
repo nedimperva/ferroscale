@@ -186,7 +186,10 @@
     "historyDepth": "Dubina historije",
     "compareSlots": "Slotovi za poredenje",
     "activeCompareLimit": "Aktivni limit poredenja: {limit}",
-    "mobileCap": "(mobilni limit: {cap})"
+    "mobileCap": "(mobilni limit: {cap})",
+    "settingsPreview": "Prikazi pregled postavki",
+    "inlineMaterial": "Prikazi materijal u formi",
+    "inlinePrice": "Prikazi cijenu u formi"
   },
   "settingsDrawer": {
     "ariaLabel": "Panel postavki",
@@ -238,7 +241,10 @@
     "closeDetails": "Zatvori detalje",
     "close": "Zatvori",
     "removeFromSaved": "Ukloni iz sacuvanih",
-    "saveCalculation": "Sacuvaj izracun"
+    "saveCalculation": "Sacuvaj izracun",
+    "copy": "Kopiraj",
+    "copied": "Kopirano!",
+    "copyAriaLabel": "Kopiraj sazhetak izracuna u meduspremnik"
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",

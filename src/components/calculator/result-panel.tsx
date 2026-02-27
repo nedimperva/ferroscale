@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import type { CalculationResult } from "@/lib/calculator/types";
@@ -9,6 +9,21 @@ import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
+
+function formatResultForClipboard(
+  result: CalculationResult,
+  profileLabel: string,
+): string {
+  const currency = CURRENCY_SYMBOLS[result.currency];
+  const lines = [
+    `${profileLabel}`,
+    `Material: ${result.gradeLabel}`,
+    `Unit weight: ${result.unitWeightKg} kg`,
+    `Total weight: ${result.totalWeightKg} kg`,
+    `Total cost: ${result.grandTotalAmount} ${currency}`,
+  ];
+  return lines.join("\n");
+}
 
 interface ResultPanelProps {
   result: CalculationResult | null;
@@ -216,8 +231,8 @@ export const ResultPanel = memo(function ResultPanel({
             : t("addToCompare")}
         </button>
 
-        {/* Save + Project — side by side */}
-        <div className="grid grid-cols-2 gap-2">
+        {/* Save + Project + Copy — side by side */}
+        <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
             onClick={(e) => {
@@ -257,6 +272,7 @@ export const ResultPanel = memo(function ResultPanel({
             </svg>
             {t("project")}
           </button>
+          <CopyButton result={result} normalizedProfile={normalizedProfile} />
         </div>
       </div>
 
@@ -302,3 +318,49 @@ export const ResultPanel = memo(function ResultPanel({
     </section>
   );
 });
+
+function CopyButton({
+  result,
+  normalizedProfile,
+}: {
+  result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot | null;
+}) {
+  const t = useTranslations("result");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const label = normalizedProfile?.shortLabel ?? result.profileLabel;
+    const text = formatResultForClipboard(result, label);
+    navigator.clipboard.writeText(text).then(() => {
+      triggerHaptic("success");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [result, normalizedProfile]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+        copied
+          ? "border-green-border bg-green-surface text-green-text"
+          : "border-border text-foreground-secondary hover:bg-surface-raised"
+      }`}
+      aria-label={t("copyAriaLabel")}
+    >
+      {copied ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+      )}
+      {copied ? t("copied") : t("copy")}
+    </button>
+  );
+}

@@ -3,10 +3,12 @@ import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
-import type { ProfileCategory, ProfileDefinition, ProfileId } from "@/lib/datasets/types";
+import { METAL_FAMILIES, getMaterialGradesByFamily, getMaterialGradeById } from "@/lib/datasets/materials";
+import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
+import { SizeCombobox } from "./size-combobox";
 import { triggerHaptic } from "@/lib/haptics";
 
 const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
@@ -178,6 +180,9 @@ interface ProfileSectionProps {
   dispatch: React.Dispatch<CalcAction>;
   selectedProfile: ProfileDefinition;
   issues: ValidationIssue[];
+  activeFamily: MetalFamilyId;
+  showInlineMaterial: boolean;
+  showInlinePrice: boolean;
 }
 
 export const ProfileSection = memo(function ProfileSection({
@@ -185,6 +190,9 @@ export const ProfileSection = memo(function ProfileSection({
   dispatch,
   selectedProfile,
   issues,
+  activeFamily,
+  showInlineMaterial,
+  showInlinePrice,
 }: ProfileSectionProps) {
   const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
@@ -220,7 +228,7 @@ export const ProfileSection = memo(function ProfileSection({
   };
 
   return (
-    <section className="grid gap-1.5 md:gap-3">
+    <section className="grid gap-1 md:gap-3">
       {/* ── Profile selection group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
         {/* Category pills */}
@@ -234,7 +242,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -264,7 +272,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -278,36 +286,73 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
       </div>
 
+      {/* ── Inline material selector (optional, off by default) ── */}
+      {showInlineMaterial && (
+        <div className="form-group lg:bg-transparent lg:p-0">
+          <div className="grid gap-1">
+            <span className="text-xs font-medium text-muted">{t("material.title")}</span>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="relative">
+                <select
+                  value={activeFamily}
+                  onChange={(e) => {
+                    triggerHaptic("light");
+                    dispatch({ type: "SET_FAMILY", familyId: e.target.value as MetalFamilyId });
+                  }}
+                  className="h-9 w-full appearance-none rounded-lg border border-border bg-surface px-2.5 pr-7 text-xs font-medium transition-colors focus:border-blue-500"
+                  aria-label={t("material.family")}
+                >
+                  {METAL_FAMILIES.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {t(`dataset.families.${f.id}`)}
+                    </option>
+                  ))}
+                </select>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="relative">
+                <select
+                  value={input.materialGradeId}
+                  onChange={(e) => {
+                    triggerHaptic("light");
+                    dispatch({ type: "SET_GRADE", gradeId: e.target.value });
+                  }}
+                  className={`h-9 w-full appearance-none rounded-lg border bg-surface px-2.5 pr-7 text-xs font-medium transition-colors focus:border-blue-500 ${
+                    issues.some((i) => i.field === "materialGradeId")
+                      ? "border-red-border"
+                      : "border-border"
+                  }`}
+                  aria-label={t("material.grade")}
+                >
+                  {getMaterialGradesByFamily(activeFamily).map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.label}
+                    </option>
+                  ))}
+                </select>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Size / Dimensions + Length group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
-        {/* Standard profile: size dropdown */}
+        {/* Standard profile: searchable size combobox */}
         {selectedProfile.mode === "standard" && (
-          <div className="grid gap-1">
-            <label htmlFor="size" className="text-xs font-medium text-foreground-secondary">
-              {t("profileSection.size")}
-            </label>
-            <div className="relative">
-              <select
-                id="size"
-                value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
-                onChange={(e) => dispatch({ type: "SET_SIZE", sizeId: e.target.value })}
-                className={`h-11 w-full appearance-none rounded-lg border bg-surface px-3 pr-9 text-sm font-medium transition-colors focus:border-blue-500 ${hasIssue("selectedSizeId") ? "border-red-border" : "border-border-strong"
-                  }`}
-              >
-                {selectedProfile.sizes.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-faint">
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <p className="text-[11px] text-muted-faint">
-              {t("profileSection.enArea")}
-            </p>
-          </div>
+          <SizeCombobox
+            sizes={selectedProfile.sizes}
+            value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
+            onChange={(sizeId) => dispatch({ type: "SET_SIZE", sizeId })}
+            hasIssue={hasIssue("selectedSizeId")}
+            label={t("profileSection.size")}
+            hint={t("profileSection.enArea")}
+          />
         )}
 
         {/* Manual dimensions */}
@@ -346,7 +391,7 @@ export const ProfileSection = memo(function ProfileSection({
               autoComplete="off"
               value={input.length.value}
               onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-              className={`h-11 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
+              className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
                 }`}
               aria-invalid={hasIssue("length")}
             />
@@ -356,7 +401,7 @@ export const ProfileSection = memo(function ProfileSection({
                 onChange={(e) =>
                   dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
                 }
-                className="h-11 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500"
+                className="h-10 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500 md:h-11"
                 aria-label={t("profileSection.lengthUnitAria")}
               >
                 {LENGTH_UNITS.map((u) => (
@@ -375,7 +420,7 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Quantity + Price group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className={`grid grid-cols-1 gap-2 ${showInlinePrice ? "sm:grid-cols-2" : ""}`}>
           {/* Quantity with stepper */}
           <div className="grid gap-1 min-w-0">
             <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
@@ -391,7 +436,7 @@ export const ProfileSection = memo(function ProfileSection({
                   }
                 }}
                 disabled={input.quantity <= 1}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed md:h-11 md:w-11"
                 aria-label="Decrease quantity"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -404,7 +449,7 @@ export const ProfileSection = memo(function ProfileSection({
                 autoComplete="off"
                 value={input.quantity}
                 onValueChange={(value) => dispatch({ type: "SET_QUANTITY", value })}
-                className={`h-11 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
+                className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 md:h-11 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
                   }`}
                 aria-invalid={hasIssue("quantity")}
               />
@@ -414,7 +459,7 @@ export const ProfileSection = memo(function ProfileSection({
                   triggerHaptic("light");
                   dispatch({ type: "SET_QUANTITY", value: input.quantity + 1 });
                 }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised md:h-11 md:w-11"
                 aria-label="Increase quantity"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -424,27 +469,29 @@ export const ProfileSection = memo(function ProfileSection({
             </div>
           </div>
 
-          {/* Inline unit price */}
-          <div className="grid gap-1 min-w-0">
-            <label htmlFor="inline-unit-price" className="text-xs font-medium text-foreground-secondary">
-              {t("profileSection.unitPrice")}
-            </label>
-            <div className="flex min-w-0">
-              <NumericInput
-                id="inline-unit-price"
-                inputMode="decimal"
-                autoComplete="off"
-                value={input.unitPrice}
-                onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-                className={`h-11 min-w-0 flex-1 rounded-l-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
-                  }`}
-                aria-invalid={hasIssue("unitPrice")}
-              />
-              <span className="flex h-11 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-2 text-xs text-muted">
-                {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
-              </span>
+          {/* Inline unit price (optional, on by default) */}
+          {showInlinePrice && (
+            <div className="grid gap-1 min-w-0">
+              <label htmlFor="inline-unit-price" className="text-xs font-medium text-foreground-secondary">
+                {t("profileSection.unitPrice")}
+              </label>
+              <div className="flex min-w-0">
+                <NumericInput
+                  id="inline-unit-price"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={input.unitPrice}
+                  onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
+                  className={`h-10 min-w-0 flex-1 rounded-l-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
+                    }`}
+                  aria-invalid={hasIssue("unitPrice")}
+                />
+                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-2 text-xs text-muted md:h-11">
+                  {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

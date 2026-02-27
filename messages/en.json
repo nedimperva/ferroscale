@@ -186,7 +186,10 @@
     "historyDepth": "History depth",
     "compareSlots": "Compare slots",
     "activeCompareLimit": "Active compare limit: {limit}",
-    "mobileCap": "(mobile cap: {cap})"
+    "mobileCap": "(mobile cap: {cap})",
+    "settingsPreview": "Show settings preview",
+    "inlineMaterial": "Show material in form",
+    "inlinePrice": "Show price in form"
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",
@@ -238,7 +241,10 @@
     "closeDetails": "Close details",
     "close": "Close",
     "removeFromSaved": "Remove from saved",
-    "saveCalculation": "Save calculation"
+    "saveCalculation": "Save calculation",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "copyAriaLabel": "Copy calculation summary to clipboard"
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",

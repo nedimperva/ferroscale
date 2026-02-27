@@ -84,3 +84,11 @@ Tests use Vitest with `@/` path alias. The benchmark suite in `engine.test.ts` r
 - TypeScript 5
 - Tailwind CSS 4
 - Vitest 4
+
+## Cursor Cloud specific instructions
+
+- **Single service**: The only service is the Next.js dev server (`npm run dev`, port 3000). No database, Docker, or external services are required.
+- **Locale redirect**: The root `/` returns a 307 redirect to `/en` (or the user's locale). Always use `http://localhost:3000/en` when testing in a browser or with curl.
+- **Lint baseline**: `npm run lint` currently exits with code 1 due to one pre-existing `react-hooks/set-state-in-effect` error in `src/hooks/useAnimatedNumber.ts` plus several unused-variable warnings. This is expected and does not indicate a broken environment.
+- **No env vars needed**: The app runs fully without any `.env` file. The optional `RESEND_API_KEY`/`RESEND_FROM`/`RESEND_TO` vars only affect the contact form email delivery.
+- See the **Commands** section above for all standard dev/lint/test/build commands.
