@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -56,9 +57,13 @@ export const BottomTabBar = memo(function BottomTabBar({
               role="tab"
               aria-selected={isActive}
             >
-              {/* Active indicator bar */}
+              {/* Animated active indicator bar — slides between tabs */}
               {isActive && (
-                <span className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-accent" />
+                <motion.span
+                  layoutId="tab-indicator"
+                  className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-accent"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
               )}
               <span className="relative">
                 <TabIcon id={tab.id} active={isActive} />
