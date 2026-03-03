@@ -2,6 +2,10 @@
   "name": "ferroscale",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "raycast-extension"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +14,9 @@
     "generate:icons": "node scripts/generate-icons.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:core": "npm run test --workspace @ferroscale/metal-core",
+    "test:all": "npm run test && npm run test:core"
   },
   "dependencies": {
     "framer-motion": "^12.34.3",

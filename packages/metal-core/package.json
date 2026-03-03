@@ -1,0 +1,18 @@
+{
+  "name": "@ferroscale/metal-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./quick": "./src/quick/index.ts",
+    "./calculator": "./src/calculator/index.ts",
+    "./datasets": "./src/datasets/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  }
+}

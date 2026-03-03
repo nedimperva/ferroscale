@@ -1,1 +1,1 @@
-export const DATASET_VERSION = "2026.02.1";
+export { DATASET_VERSION } from "../../../packages/metal-core/src/datasets/version";
