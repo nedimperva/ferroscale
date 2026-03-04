@@ -8,8 +8,8 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@ferroscale/metal-core": ["../packages/metal-core/src/index.ts"],
-      "@ferroscale/metal-core/*": ["../packages/metal-core/src/*"]
+      "@ferroscale/metal-core": ["./src/metal-core/index.ts"],
+      "@ferroscale/metal-core/*": ["./src/metal-core/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]

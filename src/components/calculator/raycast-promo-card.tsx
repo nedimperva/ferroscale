@@ -50,7 +50,7 @@ export function RaycastPromoSidebar({ collapsed }: { collapsed: boolean }) {
     return (
       <div className="group relative px-1.5">
         <a
-          href="https://github.com/nedimperva/ferroscale/tree/master/raycast-extension"
+          href="https://github.com/nedimperva/ferroscale/releases"
           target="_blank"
           rel="noopener noreferrer"
           className="flex w-full items-center justify-center rounded-lg py-2 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
@@ -103,7 +103,7 @@ export function RaycastPromoSidebar({ collapsed }: { collapsed: boolean }) {
 
       {/* Download link */}
       <a
-        href="https://github.com/nedimperva/ferroscale/tree/master/raycast-extension"
+        href="https://github.com/nedimperva/ferroscale/releases"
         target="_blank"
         rel="noopener noreferrer"
         className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-border bg-surface-inset px-2.5 py-1.5 text-[11px] font-medium text-foreground transition-colors hover:bg-surface-raised"
