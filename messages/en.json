@@ -457,12 +457,6 @@
     "priceUnitPiece": "Piece-based pricing requires piece unit.",
     "profileNotFound": "Profile not found."
   },
-  "raycast": {
-    "title": "Quick calculations with Raycast",
-    "description": "Run metal weight calculations directly from Raycast with shorthand input.",
-    "download": "Download Extension",
-    "dismiss": "Dismiss"
-  },
   "reverseErrors": {
     "targetWeight": "Target weight must be positive.",
     "density": "Density must be positive.",

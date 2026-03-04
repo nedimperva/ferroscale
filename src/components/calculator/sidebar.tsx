@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
 import { DATASET_VERSION } from "@/lib/datasets/version";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { RaycastPromoSidebar } from "@/components/calculator/raycast-promo-card";
 
 interface SidebarProps {
   onOpenContact: () => void;
@@ -154,9 +153,6 @@ export const Sidebar = memo(function Sidebar({
 
         {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Raycast extension promo */}
-        <RaycastPromoSidebar collapsed={collapsed} />
 
         <div className={`border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"} mt-1`} />
 

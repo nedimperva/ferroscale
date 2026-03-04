@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "packages/*",
-    "raycast-extension"
+    "packages/*"
   ],
   "scripts": {
     "dev": "next dev",
