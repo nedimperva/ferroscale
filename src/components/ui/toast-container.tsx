@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { subscribeToasts, getToastsSnapshot, toast as toastStore } from "@/lib/toast";
 import type { Toast } from "@/lib/toast";
 
@@ -54,7 +55,12 @@ function ToastItem({ toast }: { toast: Toast }) {
   const { wrapper, icon } = STYLES[toast.type];
 
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 40, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 40, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 28 }}
       role="alert"
       aria-live="polite"
       className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-medium shadow-lg ${wrapper}`}
@@ -71,7 +77,7 @@ function ToastItem({ toast }: { toast: Toast }) {
           <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
         </svg>
       </button>
-    </div>
+    </motion.div>
   );
 }
 
@@ -82,17 +88,20 @@ const SERVER_SNAPSHOT: readonly Toast[] = [];
 export function ToastContainer() {
   const toasts = useSyncExternalStore(subscribeToasts, getToastsSnapshot, () => SERVER_SNAPSHOT);
 
-  if (toasts.length === 0) return null;
-
   return (
     /*
      * Top-right: toasts never overlap the sticky ResultBar, drawer footers,
      * or any action buttons regardless of screen size.
+     * Always rendered so AnimatePresence can play exit animations.
      */
-    <div className="fixed right-3 top-3 z-[300] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col gap-2">
-      {toasts.map((t) => (
-        <ToastItem key={t.id} toast={t} />
-      ))}
+    <div className="fixed right-3 top-3 z-[300] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col gap-2 pointer-events-none">
+      <AnimatePresence mode="popLayout">
+        {toasts.map((t) => (
+          <div key={t.id} className="pointer-events-auto">
+            <ToastItem toast={t} />
+          </div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Drawer } from "vaul";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -72,80 +73,93 @@ export const ResultBar = memo(function ResultBar({
     return animated.toFixed(dec);
   }
 
-  if (!result) return null;
-
   return (
-    <div
-      className="fixed inset-x-0 z-40 lg:hidden"
-      style={{ bottom: "calc(52px + env(safe-area-inset-bottom, 0px))" }}
-    >
-      <div className="mx-2.5 mb-0.5">
-        <button
-          type="button"
-          onClick={onExpand}
-          className="group flex w-full items-center gap-2.5 overflow-hidden rounded-2xl border border-accent-border/60 bg-linear-to-r from-accent-surface via-surface to-surface px-3 py-2 shadow-lg shadow-accent/10 transition-all active:scale-[0.98] active:shadow-md"
+    <AnimatePresence>
+      {result && (
+        <motion.div
+          key="result-bar"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 20, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 400, damping: 28 }}
+          className="fixed inset-x-0 z-40 lg:hidden"
+          style={{ bottom: "calc(52px + env(safe-area-inset-bottom, 0px))" }}
         >
-          {/* Accent strip + profile icon */}
-          <span className="relative flex shrink-0 items-center justify-center">
-            <span className="absolute -inset-0.5 rounded-xl bg-accent/10" />
-            {normalizedProfile ? (
-              <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+          <div className="mx-2.5 mb-0.5">
+            <button
+              type="button"
+              onClick={onExpand}
+              className="group flex w-full items-center gap-2.5 overflow-hidden rounded-2xl border border-accent-border/60 bg-linear-to-r from-accent-surface via-surface to-surface px-3 py-2 shadow-lg shadow-accent/10 transition-all active:scale-[0.98] active:shadow-md"
+            >
+              {/* Accent strip + profile icon */}
+              <span className="relative flex shrink-0 items-center justify-center">
+                <span className="absolute -inset-0.5 rounded-xl bg-accent/10" />
+                {normalizedProfile ? (
+                  <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                    <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+                  </span>
+                ) : (
+                  <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+                      <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
+                    </svg>
+                  </span>
+                )}
               </span>
-            ) : (
-              <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
-                  <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
+
+              {/* Cost + weight */}
+              <span className="flex min-w-0 flex-1 flex-col text-left">
+                <span
+                  className={`flex items-baseline gap-1.5 transition-opacity duration-200 ${
+                    isPending ? "opacity-50" : ""
+                  }`}
+                >
+                  <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
+                    {fmtAnimated(animatedTotal, result.grandTotalAmount)}
+                  </span>
+                  <span className="text-[11px] font-semibold text-accent">
+                    {CURRENCY_SYMBOLS[result.currency]}
+                  </span>
+                  <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
+                    {result.totalWeightKg} kg
+                  </span>
+                </span>
+                <span className="truncate text-[10px] leading-tight text-muted">
+                  {normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}
+                </span>
+              </span>
+
+              {/* Star + chevron */}
+              <span className="flex shrink-0 items-center gap-0.5">
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); onStar(); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onStar(); } }}
+                  className={`rounded-full p-1 transition-colors ${
+                    isStarred ? "bg-accent-surface" : ""
+                  }`}
+                  aria-label={isStarred ? t("removeFromSaved") : t("saveCalculation")}
+                >
+                  <motion.svg
+                    key={isStarred ? "starred" : "unstarred"}
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.25, 1] }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={`h-4 w-4 transition-colors ${isStarred ? "fill-accent stroke-accent" : "fill-none stroke-muted-faint"}`} strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </motion.svg>
+                </span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-muted-faint transition-transform group-hover:-translate-y-0.5">
+                  <path fillRule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 9.168l-3.71 3.602a.75.75 0 01-1.042-1.08l4.25-4.12a.75.75 0 011.042 0l4.25 4.12a.75.75 0 01-.02 1.1z" clipRule="evenodd" />
                 </svg>
               </span>
-            )}
-          </span>
-
-          {/* Cost + weight */}
-          <span className="flex min-w-0 flex-1 flex-col text-left">
-            <span
-              className={`flex items-baseline gap-1.5 transition-opacity duration-200 ${
-                isPending ? "opacity-50" : ""
-              }`}
-            >
-              <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
-                {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-              </span>
-              <span className="text-[11px] font-semibold text-accent">
-                {CURRENCY_SYMBOLS[result.currency]}
-              </span>
-              <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
-                {result.totalWeightKg} kg
-              </span>
-            </span>
-            <span className="truncate text-[10px] leading-tight text-muted">
-              {normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}
-            </span>
-          </span>
-
-          {/* Star + chevron */}
-          <span className="flex shrink-0 items-center gap-0.5">
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => { e.stopPropagation(); onStar(); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onStar(); } }}
-              className={`rounded-full p-1 transition-colors ${
-                isStarred ? "bg-accent-surface" : ""
-              }`}
-              aria-label={isStarred ? t("removeFromSaved") : t("saveCalculation")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={`h-4 w-4 transition-colors ${isStarred ? "fill-accent stroke-accent" : "fill-none stroke-muted-faint"}`} strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-              </svg>
-            </span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-muted-faint transition-transform group-hover:-translate-y-0.5">
-              <path fillRule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 9.168l-3.71 3.602a.75.75 0 01-1.042-1.08l4.25-4.12a.75.75 0 011.042 0l4.25 4.12a.75.75 0 01-.02 1.1z" clipRule="evenodd" />
-            </svg>
-          </span>
-        </button>
-      </div>
-    </div>
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 });
 
@@ -284,7 +298,11 @@ export const ResultOverlay = memo(function ResultOverlay({
                     : "border-border text-foreground-secondary hover:bg-surface-raised"
                 }`}
               >
-                <svg
+                <motion.svg
+                  key={isStarred ? "starred" : "unstarred"}
+                  initial={{ scale: 1 }}
+                  animate={{ scale: [1, 1.25, 1] }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   className={`h-3.5 w-3.5 ${
@@ -293,7 +311,7 @@ export const ResultOverlay = memo(function ResultOverlay({
                   strokeWidth={2}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                </svg>
+                </motion.svg>
                 {isStarred ? t("saved") : t("save")}
               </button>
 

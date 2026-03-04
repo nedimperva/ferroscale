@@ -246,10 +246,16 @@ label {
   touch-action: manipulation;
 }
 
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  /* Base transition so active state responds instantly (no delay before scale) */
+  transition: transform 0.08s ease-out, background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+  will-change: transform;
+}
+
 button:not(:disabled):active,
 [role="button"]:not(:disabled):active {
-  transform: scale(0.98);
-  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(0.97);
 }
 
 :focus-visible {
@@ -334,11 +340,11 @@ button:not(:disabled):active,
   }
 }
 
-/* Smooth momentum scrolling for lists / panels */
+/* Momentum scrolling for lists / panels — no scroll-behavior: smooth
+   (it conflicts with programmatic scrollIntoView and causes mobile jank) */
 .scroll-native {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  scroll-behavior: smooth;
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */

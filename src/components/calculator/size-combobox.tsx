@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { StandardSizeOption } from "@/lib/datasets/types";
 
 interface SizeComboboxProps {
@@ -184,60 +185,67 @@ export const SizeCombobox = memo(function SizeCombobox({
           </svg>
         </button>
 
-        {open && (
-          <ul
-            ref={listRef}
-            id="size-listbox"
-            role="listbox"
-            className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-border bg-surface shadow-lg"
-          >
-            {filtered.length === 0 ? (
-              <li className="px-3 py-2.5 text-sm text-muted-faint">
-                No matching sizes
-              </li>
-            ) : (
-              filtered.map((s, i) => {
-                const isSelected = s.id === value;
-                const isHighlighted = i === highlightIdx;
-                return (
-                  <li
-                    key={s.id}
-                    role="option"
-                    aria-selected={isSelected}
-                    onMouseEnter={() => setHighlightIdx(i)}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleSelect(s.id);
-                    }}
-                    className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm transition-colors ${
-                      isHighlighted
-                        ? "bg-blue-surface text-blue-text"
-                        : isSelected
-                          ? "bg-surface-raised font-medium"
-                          : "text-foreground hover:bg-surface-raised"
-                    }`}
-                  >
-                    <span className="font-medium">{s.label}</span>
-                    {isSelected && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="h-4 w-4 shrink-0"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        )}
+        <AnimatePresence>
+          {open && (
+            <motion.ul
+              ref={listRef}
+              id="size-listbox"
+              role="listbox"
+              initial={{ opacity: 0, scaleY: 0.95 }}
+              animate={{ opacity: 1, scaleY: 1 }}
+              exit={{ opacity: 0, scaleY: 0.95 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+              style={{ transformOrigin: "top" }}
+              className="absolute z-50 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-border bg-surface shadow-lg"
+            >
+              {filtered.length === 0 ? (
+                <li className="px-3 py-2.5 text-sm text-muted-faint">
+                  No matching sizes
+                </li>
+              ) : (
+                filtered.map((s, i) => {
+                  const isSelected = s.id === value;
+                  const isHighlighted = i === highlightIdx;
+                  return (
+                    <li
+                      key={s.id}
+                      role="option"
+                      aria-selected={isSelected}
+                      onMouseEnter={() => setHighlightIdx(i)}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelect(s.id);
+                      }}
+                      className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm transition-colors ${
+                        isHighlighted
+                          ? "bg-blue-surface text-blue-text"
+                          : isSelected
+                            ? "bg-surface-raised font-medium"
+                            : "text-foreground hover:bg-surface-raised"
+                      }`}
+                    >
+                      <span className="font-medium">{s.label}</span>
+                      {isSelected && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          className="h-4 w-4 shrink-0"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </li>
+                  );
+                })
+              )}
+            </motion.ul>
+          )}
+        </AnimatePresence>
       </div>
       {hint && <p className="text-[11px] text-muted-faint">{hint}</p>}
     </div>
