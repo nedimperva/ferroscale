@@ -1,6 +1,62 @@
-import { Action, ActionPanel, Color, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Color, Detail, Icon, List } from "@raycast/api";
 import { useMemo, useState } from "react";
 import { calculateQuickFromQuery } from "@ferroscale/metal-core/quick";
+
+const QUICK_REFERENCE_MARKDOWN = [
+  "# Alias Quick Reference",
+  "",
+  "## Tubes and Bars",
+  "- `chs` / `pipe`: `OD x T x L`",
+  "- `shs`: `A x A x T x L`",
+  "- `rhs`: `W x H x T x L`",
+  "- `rb`: `D x L`",
+  "- `sb`: `A x L`",
+  "- `fb`: `W x T x L`",
+  "",
+  "## Sheet and Plate",
+  "- `sheet` / `sht`",
+  "- `plate` / `pl`",
+  "- Orders accepted:",
+  "- `width x length x thickness`",
+  "- `width x thickness x length`",
+  "",
+  "## EN Profiles",
+  "- `ipe`, `ipn`, `hea`, `heb`, `hem`, `upn`, `upe`, `tee`",
+  "- Format: `<alias> <size>x<length>`",
+  "",
+  "## Flags",
+  "- `qty=<number>` (default `1`)",
+  "- `mat=<grade|alias>` (default `steel-s235jr`)",
+  "- `dens=<kg/m3>`",
+  "- `unit=<mm|cm|m|in|ft>`",
+  "",
+  "## Examples",
+  "- `shs 40x40x2x4500mm qty=5`",
+  "- `chs 60.3x3.2x3000 qty=4`",
+  "- `sheet 1250x3000x2 qty=5`",
+  "- `plate 1500x3000x10`",
+  "- `ipe 200x6000 mat=s355`",
+].join("\n");
+
+function AliasQuickReferenceDetail() {
+  return <Detail markdown={QUICK_REFERENCE_MARKDOWN} />;
+}
+
+function AliasQuickReferenceActions() {
+  return (
+    <ActionPanel.Section title="Quick Reference">
+      <Action.Push
+        title="Open Alias Quick Reference"
+        icon={Icon.Book}
+        target={<AliasQuickReferenceDetail />}
+      />
+      <Action.CopyToClipboard
+        content={QUICK_REFERENCE_MARKDOWN}
+        title="Copy Alias Quick Reference"
+      />
+    </ActionPanel.Section>
+  );
+}
 
 export default function Command() {
   const [query, setQuery] = useState("");
@@ -21,52 +77,43 @@ export default function Command() {
     >
       {!trimmedQuery ? (
         <>
-          <List.Section title="How To Use">
+          <List.Section title="Reference">
             <List.Item
-              title="Type in the search bar"
-              subtitle="Format: <alias> <dimensions and length> [flags]"
-              icon={Icon.Keyboard}
-            />
-            <List.Item
-              title="Results show Single and Total"
-              subtitle="When qty > 1, you get both values"
-              icon={Icon.List}
-            />
-          </List.Section>
-
-          <List.Section title="Main Aliases">
-            <List.Item
-              title="Round Tube: chs / pipe"
-              subtitle="chs ODxT xL"
-              icon={Icon.Circle}
-            />
-            <List.Item
-              title="Round Bar: rb"
-              subtitle="rb DxL"
-              icon={Icon.Dot}
-            />
-            <List.Item
-              title="Square Bar: sb"
-              subtitle="sb AxL"
-              icon={Icon.Square}
-            />
-            <List.Item
-              title="Flat Bar: fb"
-              subtitle="fb WxT xL"
-              icon={Icon.Rectangle}
-            />
-            <List.Item
-              title="Square/Rect Tubes: shs / rhs"
-              subtitle="shs AxAxT xL, rhs WxHxT xL"
-              icon={Icon.Box}
+              title="Alias Quick Reference"
+              subtitle="Open all aliases, formats, flags, and examples"
+              icon={{ source: Icon.Book, tintColor: Color.Green }}
+              accessories={[{ text: "always available" }]}
+              actions={
+                <ActionPanel>
+                  <Action.Push
+                    title="Open Alias Quick Reference"
+                    icon={Icon.Book}
+                    target={<AliasQuickReferenceDetail />}
+                  />
+                  <Action.CopyToClipboard
+                    content={QUICK_REFERENCE_MARKDOWN}
+                    title="Copy Alias Quick Reference"
+                  />
+                </ActionPanel>
+              }
             />
           </List.Section>
 
-          <List.Section title="Sheets And Plates">
+          <List.Section title="Input Patterns and Aliases">
             <List.Item
-              title="Aliases: sheet/sht, plate/pl"
-              subtitle="Use width x length x thickness or width x thickness x length"
-              icon={Icon.AppWindowGrid2x2}
+              title="Tubes and Bars"
+              subtitle="chs ODxT xL, rb DxL, sb AxL, fb WxT xL, shs AxAxT xL, rhs WxHxT xL"
+              icon={{ source: Icon.Box, tintColor: Color.Blue }}
+            />
+            <List.Item
+              title="Sheets and Plates"
+              subtitle="sheet/sht or plate/pl: width x length x thickness (or width x thickness x length)"
+              icon={{ source: Icon.AppWindowGrid2x2, tintColor: Color.Purple }}
+            />
+            <List.Item
+              title="EN Structural Profiles"
+              subtitle="ipe/ipn/hea/heb/hem/upn/upe/tee + size x length"
+              icon={{ source: Icon.Building, tintColor: Color.Green }}
             />
           </List.Section>
 
@@ -74,83 +121,98 @@ export default function Command() {
             <List.Item
               title="qty=<number>"
               subtitle="Default: qty=1"
-              icon={Icon.Hashtag}
+              icon={{ source: Icon.Hashtag, tintColor: Color.Blue }}
             />
             <List.Item
               title="mat=<grade or alias>"
               subtitle="Default: steel-s235jr"
-              icon={Icon.Tag}
+              icon={{ source: Icon.Tag, tintColor: Color.Orange }}
             />
             <List.Item
               title="dens=<kg/m3>"
               subtitle="Custom density override"
-              icon={Icon.Gauge}
+              icon={{ source: Icon.Gauge, tintColor: Color.Red }}
             />
             <List.Item
               title="unit=<mm|cm|m|in|ft>"
               subtitle="Fallback unit"
-              icon={Icon.Ruler}
+              icon={{ source: Icon.Ruler, tintColor: Color.Purple }}
             />
           </List.Section>
 
-          <List.Section title="Try These Queries">
+          <List.Section title="High-Value Examples">
             <List.Item
               title="shs 40x40x2x4500mm qty=5"
+              subtitle="Square tube, shows Single + Total"
               icon={Icon.Text}
+              accessories={[{ text: "SHS" }, { text: "qty" }]}
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
                     content="shs 40x40x2x4500mm qty=5"
                     title="Copy Query"
                   />
+                  <AliasQuickReferenceActions />
                 </ActionPanel>
               }
             />
             <List.Item
               title="chs 60.3x3.2x3000 qty=4"
+              subtitle="Round tube with quantity"
               icon={Icon.Text}
+              accessories={[{ text: "CHS" }, { text: "qty" }]}
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
                     content="chs 60.3x3.2x3000 qty=4"
                     title="Copy Query"
                   />
+                  <AliasQuickReferenceActions />
                 </ActionPanel>
               }
             />
             <List.Item
               title="sheet 1250x3000x2 qty=5"
+              subtitle="Sheet in width x length x thickness order"
               icon={Icon.Text}
+              accessories={[{ text: "SHEET" }, { text: "qty" }]}
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
                     content="sheet 1250x3000x2 qty=5"
                     title="Copy Query"
                   />
+                  <AliasQuickReferenceActions />
                 </ActionPanel>
               }
             />
             <List.Item
               title="plate 1500x3000x10"
+              subtitle="Plate default quantity (1 pc)"
               icon={Icon.Text}
+              accessories={[{ text: "PLATE" }]}
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
                     content="plate 1500x3000x10"
                     title="Copy Query"
                   />
+                  <AliasQuickReferenceActions />
                 </ActionPanel>
               }
             />
             <List.Item
               title="ipe 200x6000 mat=s355"
+              subtitle="EN profile with material override"
               icon={Icon.Text}
+              accessories={[{ text: "EN" }, { text: "mat" }]}
               actions={
                 <ActionPanel>
                   <Action.CopyToClipboard
                     content="ipe 200x6000 mat=s355"
                     title="Copy Query"
                   />
+                  <AliasQuickReferenceActions />
                 </ActionPanel>
               }
             />
@@ -174,6 +236,7 @@ export default function Command() {
                   content="shs 40x40x2x4500mm qty=5"
                   title="Copy Example Query"
                 />
+                <AliasQuickReferenceActions />
               </ActionPanel>
             }
           />
@@ -203,6 +266,7 @@ export default function Command() {
                       content={response.result.normalizedInput}
                       title="Copy Normalized Input"
                     />
+                    <AliasQuickReferenceActions />
                   </ActionPanel>
                 }
               />
@@ -229,6 +293,7 @@ export default function Command() {
                       content={response.result.normalizedInput}
                       title="Copy Normalized Input"
                     />
+                    <AliasQuickReferenceActions />
                   </ActionPanel>
                 }
               />
@@ -249,6 +314,7 @@ export default function Command() {
                     content={response.result.normalizedInput}
                     title="Copy Normalized Input"
                   />
+                  <AliasQuickReferenceActions />
                 </ActionPanel>
               }
             />
