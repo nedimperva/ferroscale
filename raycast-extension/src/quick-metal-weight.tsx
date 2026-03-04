@@ -1,4 +1,13 @@
-import { Action, ActionPanel, Color, Detail, Icon, Keyboard, List, LocalStorage } from "@raycast/api";
+import {
+  Action,
+  ActionPanel,
+  Color,
+  Detail,
+  Icon,
+  Keyboard,
+  List,
+  LocalStorage,
+} from "@raycast/api";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateQuickFromQuery } from "@ferroscale/metal-core/quick";
 import type { QuickWeightResult } from "@ferroscale/metal-core/quick";
@@ -64,7 +73,10 @@ async function loadHistory(): Promise<HistoryEntry[]> {
   }
 }
 
-async function saveToHistory(query: string, result: QuickWeightResult): Promise<HistoryEntry[]> {
+async function saveToHistory(
+  query: string,
+  result: QuickWeightResult,
+): Promise<HistoryEntry[]> {
   const existing = await loadHistory();
   const entry: HistoryEntry = { query, result, timestamp: Date.now() };
   // Remove duplicate queries, prepend new, cap at MAX_HISTORY
@@ -79,9 +91,20 @@ async function saveToHistory(query: string, result: QuickWeightResult): Promise<
 function ExtraCopyActions({ result }: { result: QuickWeightResult }) {
   return (
     <ActionPanel.Section title="Copy">
-      <Action.CopyToClipboard content={resultToJson(result)} title="Copy as JSON" icon={Icon.Code} />
-      <Action.CopyToClipboard content={resultToSummary(result)} title="Copy as Formatted Summary" icon={Icon.Document} />
-      <Action.CopyToClipboard content={result.normalizedInput} title="Copy Normalized Input" />
+      <Action.CopyToClipboard
+        content={resultToJson(result)}
+        title="Copy as JSON"
+        icon={Icon.Code}
+      />
+      <Action.CopyToClipboard
+        content={resultToSummary(result)}
+        title="Copy as Formatted Summary"
+        icon={Icon.Document}
+      />
+      <Action.CopyToClipboard
+        content={result.normalizedInput}
+        title="Copy Normalized Input"
+      />
     </ActionPanel.Section>
   );
 }
@@ -197,12 +220,14 @@ export default function Command() {
                   title={entry.query}
                   subtitle={`${entry.result.profileAlias.toUpperCase()} · ${formatKgLbs(entry.result.totalWeightKg)}`}
                   icon={{ source: Icon.Clock, tintColor: Color.SecondaryText }}
-                  accessories={[
-                    { text: `qty ${entry.result.quantity}` },
-                  ]}
+                  accessories={[{ text: `qty ${entry.result.quantity}` }]}
                   actions={
                     <ActionPanel>
-                      <Action title="Re-Run Query" icon={Icon.ArrowRight} onAction={() => handleHistorySelect(entry)} />
+                      <Action
+                        title="Re-Run Query"
+                        icon={Icon.ArrowRight}
+                        onAction={() => handleHistorySelect(entry)}
+                      />
                       <Action.CopyToClipboard
                         content={`${entry.result.totalWeightKg.toFixed(3)} kg`}
                         title="Copy Weight"
