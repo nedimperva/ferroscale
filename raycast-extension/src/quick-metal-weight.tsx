@@ -1,6 +1,92 @@
-import { Action, ActionPanel, Color, Detail, Icon, List } from "@raycast/api";
-import { useMemo, useState } from "react";
+import { Action, ActionPanel, Color, Detail, Icon, Keyboard, List, LocalStorage } from "@raycast/api";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { calculateQuickFromQuery } from "@ferroscale/metal-core/quick";
+import type { QuickWeightResult } from "@ferroscale/metal-core/quick";
+
+const KG_TO_LBS = 2.20462;
+const MAX_HISTORY = 10;
+const HISTORY_KEY = "ferroscale-recent-calculations";
+
+interface HistoryEntry {
+  query: string;
+  result: QuickWeightResult;
+  timestamp: number;
+}
+
+/* ---- Helpers ---- */
+
+function formatKgLbs(kg: number): string {
+  return `${kg.toFixed(3)} kg / ${(kg * KG_TO_LBS).toFixed(3)} lbs`;
+}
+
+function resultToJson(r: QuickWeightResult): string {
+  return JSON.stringify(
+    {
+      profile: r.profileAlias.toUpperCase(),
+      profileLabel: r.profileLabel,
+      quantity: r.quantity,
+      lengthMm: r.lengthMm,
+      material: r.materialGradeId,
+      densityKgPerM3: r.densityKgPerM3,
+      unitWeightKg: +r.unitWeightKg.toFixed(3),
+      unitWeightLbs: +(r.unitWeightKg * KG_TO_LBS).toFixed(3),
+      totalWeightKg: +r.totalWeightKg.toFixed(3),
+      totalWeightLbs: +(r.totalWeightKg * KG_TO_LBS).toFixed(3),
+    },
+    null,
+    2,
+  );
+}
+
+function resultToSummary(r: QuickWeightResult): string {
+  const lines = [
+    `Profile: ${r.profileAlias.toUpperCase()} (${r.profileLabel})`,
+    `Material: ${r.materialGradeId} (${r.densityKgPerM3.toFixed(0)} kg/m³)`,
+    `Length: ${r.lengthMm.toFixed(0)} mm`,
+    `Quantity: ${r.quantity}`,
+    `Unit weight: ${formatKgLbs(r.unitWeightKg)}`,
+  ];
+  if (r.quantity > 1) {
+    lines.push(`Total weight: ${formatKgLbs(r.totalWeightKg)}`);
+  }
+  return lines.join("\n");
+}
+
+/* ---- History persistence ---- */
+
+async function loadHistory(): Promise<HistoryEntry[]> {
+  const raw = await LocalStorage.getItem<string>(HISTORY_KEY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as HistoryEntry[];
+  } catch {
+    return [];
+  }
+}
+
+async function saveToHistory(query: string, result: QuickWeightResult): Promise<HistoryEntry[]> {
+  const existing = await loadHistory();
+  const entry: HistoryEntry = { query, result, timestamp: Date.now() };
+  // Remove duplicate queries, prepend new, cap at MAX_HISTORY
+  const filtered = existing.filter((e) => e.query !== query);
+  const updated = [entry, ...filtered].slice(0, MAX_HISTORY);
+  await LocalStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+  return updated;
+}
+
+/* ---- Copy actions shared across result items ---- */
+
+function ExtraCopyActions({ result }: { result: QuickWeightResult }) {
+  return (
+    <ActionPanel.Section title="Copy">
+      <Action.CopyToClipboard content={resultToJson(result)} title="Copy as JSON" icon={Icon.Code} />
+      <Action.CopyToClipboard content={resultToSummary(result)} title="Copy as Formatted Summary" icon={Icon.Document} />
+      <Action.CopyToClipboard content={result.normalizedInput} title="Copy Normalized Input" />
+    </ActionPanel.Section>
+  );
+}
+
+/* ---- Quick Reference ---- */
 
 const QUICK_REFERENCE_MARKDOWN = [
   "# Alias Quick Reference",
@@ -60,14 +146,39 @@ function AliasQuickReferenceActions() {
 
 export default function Command() {
   const [query, setQuery] = useState("");
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const trimmedQuery = query.trim();
 
+  // Load history on mount
+  useEffect(() => {
+    loadHistory().then(setHistory);
+  }, []);
+
   const response = useMemo(() => {
-    if (!trimmedQuery) {
-      return null;
-    }
+    if (!trimmedQuery) return null;
     return calculateQuickFromQuery(trimmedQuery);
   }, [trimmedQuery]);
+
+  // Save successful results to history (debounced — waits 1.5s after last keystroke)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    clearTimeout(saveTimerRef.current);
+    if (response?.ok) {
+      saveTimerRef.current = setTimeout(() => {
+        saveToHistory(trimmedQuery, response.result).then(setHistory);
+      }, 1500);
+    }
+    return () => clearTimeout(saveTimerRef.current);
+  }, [response, trimmedQuery]);
+
+  const handleHistorySelect = useCallback((entry: HistoryEntry) => {
+    setQuery(entry.query);
+  }, []);
+
+  const handleClearHistory = useCallback(async () => {
+    await LocalStorage.removeItem(HISTORY_KEY);
+    setHistory([]);
+  }, []);
 
   return (
     <List
@@ -77,6 +188,43 @@ export default function Command() {
     >
       {!trimmedQuery ? (
         <>
+          {/* Recent calculations */}
+          {history.length > 0 && (
+            <List.Section title="Recent">
+              {history.map((entry) => (
+                <List.Item
+                  key={`${entry.query}-${entry.timestamp}`}
+                  title={entry.query}
+                  subtitle={`${entry.result.profileAlias.toUpperCase()} · ${formatKgLbs(entry.result.totalWeightKg)}`}
+                  icon={{ source: Icon.Clock, tintColor: Color.SecondaryText }}
+                  accessories={[
+                    { text: `qty ${entry.result.quantity}` },
+                  ]}
+                  actions={
+                    <ActionPanel>
+                      <Action title="Re-Run Query" icon={Icon.ArrowRight} onAction={() => handleHistorySelect(entry)} />
+                      <Action.CopyToClipboard
+                        content={`${entry.result.totalWeightKg.toFixed(3)} kg`}
+                        title="Copy Weight"
+                      />
+                      <ExtraCopyActions result={entry.result} />
+                      <ActionPanel.Section title="History">
+                        <Action
+                          title="Clear History"
+                          icon={Icon.Trash}
+                          style={Action.Style.Destructive}
+                          shortcut={{ modifiers: ["ctrl"], key: "k" }}
+                          onAction={handleClearHistory}
+                        />
+                      </ActionPanel.Section>
+                      <AliasQuickReferenceActions />
+                    </ActionPanel>
+                  }
+                />
+              ))}
+            </List.Section>
+          )}
+
           <List.Section title="Reference">
             <List.Item
               title="Alias Quick Reference"
@@ -248,7 +396,7 @@ export default function Command() {
           {response.result.quantity > 1 ? (
             <>
               <List.Item
-                title={`Single (1 pc): ${response.result.unitWeightKg.toFixed(3)} kg`}
+                title={`Single (1 pc): ${formatKgLbs(response.result.unitWeightKg)}`}
                 subtitle={`${response.result.profileAlias.toUpperCase()} - ${response.result.lengthMm.toFixed(0)} mm`}
                 icon={{ source: Icon.Circle, tintColor: Color.Blue }}
                 accessories={[{ text: `qty ${response.result.quantity}` }]}
@@ -256,43 +404,45 @@ export default function Command() {
                   <ActionPanel>
                     <Action.CopyToClipboard
                       content={`${response.result.unitWeightKg.toFixed(3)} kg`}
-                      title="Copy Single Weight"
+                      title="Copy Single Weight (kg)"
+                    />
+                    <Action.CopyToClipboard
+                      content={`${(response.result.unitWeightKg * KG_TO_LBS).toFixed(3)} lbs`}
+                      title="Copy Single Weight (lbs)"
                     />
                     <Action.CopyToClipboard
                       content={`${response.result.totalWeightKg.toFixed(3)} kg`}
-                      title="Copy Total Weight"
+                      title="Copy Total Weight (kg)"
                     />
-                    <Action.CopyToClipboard
-                      content={response.result.normalizedInput}
-                      title="Copy Normalized Input"
-                    />
+                    <ExtraCopyActions result={response.result} />
                     <AliasQuickReferenceActions />
                   </ActionPanel>
                 }
               />
               <List.Item
-                title={`Total (${response.result.quantity} pcs): ${response.result.totalWeightKg.toFixed(3)} kg`}
+                title={`Total (${response.result.quantity} pcs): ${formatKgLbs(response.result.totalWeightKg)}`}
                 subtitle={`${response.result.profileAlias.toUpperCase()} - ${response.result.materialGradeId}`}
                 icon={{ source: Icon.CheckCircle, tintColor: Color.Green }}
                 accessories={[
                   {
-                    text: `${response.result.densityKgPerM3.toFixed(0)} kg/m3`,
+                    text: `${response.result.densityKgPerM3.toFixed(0)} kg/m³`,
                   },
                 ]}
                 actions={
                   <ActionPanel>
                     <Action.CopyToClipboard
                       content={`${response.result.totalWeightKg.toFixed(3)} kg`}
-                      title="Copy Total Weight"
+                      title="Copy Total Weight (kg)"
+                    />
+                    <Action.CopyToClipboard
+                      content={`${(response.result.totalWeightKg * KG_TO_LBS).toFixed(3)} lbs`}
+                      title="Copy Total Weight (lbs)"
                     />
                     <Action.CopyToClipboard
                       content={`${response.result.unitWeightKg.toFixed(3)} kg`}
-                      title="Copy Single Weight"
+                      title="Copy Single Weight (kg)"
                     />
-                    <Action.CopyToClipboard
-                      content={response.result.normalizedInput}
-                      title="Copy Normalized Input"
-                    />
+                    <ExtraCopyActions result={response.result} />
                     <AliasQuickReferenceActions />
                   </ActionPanel>
                 }
@@ -300,7 +450,7 @@ export default function Command() {
             </>
           ) : (
             <List.Item
-              title={`Weight: ${response.result.unitWeightKg.toFixed(3)} kg`}
+              title={`Weight: ${formatKgLbs(response.result.unitWeightKg)}`}
               subtitle={`${response.result.profileAlias.toUpperCase()} - 1 pc - ${response.result.lengthMm.toFixed(0)} mm`}
               icon={{ source: Icon.CheckCircle, tintColor: Color.Green }}
               accessories={[{ text: response.result.materialGradeId }]}
@@ -308,12 +458,13 @@ export default function Command() {
                 <ActionPanel>
                   <Action.CopyToClipboard
                     content={`${response.result.unitWeightKg.toFixed(3)} kg`}
-                    title="Copy Weight"
+                    title="Copy Weight (kg)"
                   />
                   <Action.CopyToClipboard
-                    content={response.result.normalizedInput}
-                    title="Copy Normalized Input"
+                    content={`${(response.result.unitWeightKg * KG_TO_LBS).toFixed(3)} lbs`}
+                    title="Copy Weight (lbs)"
                   />
+                  <ExtraCopyActions result={response.result} />
                   <AliasQuickReferenceActions />
                 </ActionPanel>
               }

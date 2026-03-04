@@ -457,6 +457,12 @@
     "priceUnitPiece": "Cijena po komadu zahtijeva jedinicu komad.",
     "profileNotFound": "Profil nije pronaden."
   },
+  "raycast": {
+    "title": "Brzi proracuni s Raycast-om",
+    "description": "Pokrenite proracune tezine metala direktno iz Raycast-a sa skracenim unosom.",
+    "download": "Preuzmi ekstenziju",
+    "dismiss": "Zatvori"
+  },
   "reverseErrors": {
     "targetWeight": "Ciljna masa mora biti pozitivna.",
     "density": "Gustoca mora biti pozitivna.",
