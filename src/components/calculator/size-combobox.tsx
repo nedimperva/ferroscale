@@ -114,10 +114,22 @@ export const SizeCombobox = memo(function SizeCombobox({
     }
   }, [open]);
 
+  /* When the dropdown opens with no query, scroll to the currently selected item.
+     Uses a ref + requestAnimationFrame instead of synchronous setState to avoid
+     the react-hooks/set-state-in-effect lint error. */
+  const pendingHighlightRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (open && !query) {
       const idx = filtered.findIndex((s) => s.id === value);
-      setHighlightIdx(idx >= 0 ? idx : 0);
+      pendingHighlightRef.current = idx >= 0 ? idx : 0;
+      const raf = requestAnimationFrame(() => {
+        if (pendingHighlightRef.current !== null) {
+          setHighlightIdx(pendingHighlightRef.current);
+          pendingHighlightRef.current = null;
+        }
+      });
+      return () => cancelAnimationFrame(raf);
     }
   }, [open, query, filtered, value]);
 

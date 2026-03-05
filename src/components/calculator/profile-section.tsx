@@ -3,7 +3,7 @@ import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
-import { METAL_FAMILIES, getMaterialGradesByFamily, getMaterialGradeById } from "@/lib/datasets/materials";
+import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
 import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import { DimensionInput } from "./dimension-input";

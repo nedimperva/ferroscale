@@ -48,20 +48,15 @@ interface ResultBarProps {
  * Tapping it opens the result bottom sheet via the onExpand callback.
  * Hidden on desktop (xl:hidden).
  */
-export const ResultBar = memo(function ResultBar({
-  result,
-  isPending,
-  onStar,
-  isStarred,
-  onExpand,
-  onCompare,
-  canCompare = false,
-  isInCompare = false,
-  maxCompare = 3,
-  onAddToProject,
-  hasProjects = false,
-  normalizedProfile = null,
-}: ResultBarProps) {
+export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
+  const {
+    result,
+    isPending,
+    onStar,
+    isStarred,
+    onExpand,
+    normalizedProfile = null,
+  } = props;
   const tBase = useTranslations();
   const t = useTranslations("result");
 

@@ -204,7 +204,7 @@ export const ResultPanel = memo(function ResultPanel({
         {/* Compare — full width, primary action */}
         <button
           type="button"
-          onClick={(e) => {
+          onClick={() => {
             triggerHaptic("light");
             onCompare?.();
           }}
@@ -236,7 +236,7 @@ export const ResultPanel = memo(function ResultPanel({
         <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
-            onClick={(e) => {
+            onClick={() => {
               triggerHaptic(isStarred ? "light" : "success");
               onStar();
             }}
@@ -262,7 +262,7 @@ export const ResultPanel = memo(function ResultPanel({
           </button>
           <button
             type="button"
-            onClick={(e) => {
+            onClick={() => {
               triggerHaptic("light");
               onAddToProject?.();
             }}
