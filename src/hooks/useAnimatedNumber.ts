@@ -32,18 +32,19 @@ export function useAnimatedNumber(value: number, duration = 350): number {
       return;
     }
 
-    // Bail early for non-finite values.
+    // Bail early for non-finite values — schedule via rAF to avoid
+    // synchronous setState inside an effect (react-hooks/set-state-in-effect).
     if (!isFinite(value)) {
-      setDisplayed(value);
       fromRef.current = value;
-      return;
+      rafRef.current = requestAnimationFrame(() => setDisplayed(value));
+      return () => cancelAnimationFrame(rafRef.current);
     }
 
     // Respect the OS/browser reduced-motion preference.
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setDisplayed(value);
       fromRef.current = value;
-      return;
+      rafRef.current = requestAnimationFrame(() => setDisplayed(value));
+      return () => cancelAnimationFrame(rafRef.current);
     }
 
     const startValue = fromRef.current;

@@ -189,13 +189,18 @@
     "mobileCap": "(mobile cap: {cap})",
     "settingsPreview": "Show settings preview",
     "inlineMaterial": "Show material in form",
-    "inlinePrice": "Show price in form"
+    "inlinePrice": "Show price in form",
+    "weightAsMain": "Weight as main display"
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",
     "title": "Settings",
     "close": "Close settings",
-    "reset": "Reset all to defaults"
+    "reset": "Reset all to defaults",
+    "sectionMaterial": "Material & Density",
+    "sectionPricing": "Pricing",
+    "sectionPrecision": "Precision & Rounding",
+    "sectionWorkspace": "Display & Limits"
   },
   "settingsSummary": {
     "grade": "Grade",
@@ -244,7 +249,9 @@
     "saveCalculation": "Save calculation",
     "copy": "Copy",
     "copied": "Copied!",
-    "copyAriaLabel": "Copy calculation summary to clipboard"
+    "copyAriaLabel": "Copy calculation summary to clipboard",
+    "share": "Share",
+    "shareCopied": "Link copied to clipboard"
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",
@@ -337,6 +344,7 @@
     "needSecond": "Add a second calculation to compare.",
     "needSecondHint": "Change inputs and click \"Compare\" again.",
     "slotAvailable": "Slot available - add another calculation.",
+    "chartTitle": "Visual Comparison",
     "remove": "Remove from comparison",
     "reference": "Reference",
     "totalCost": "Total cost",
@@ -456,6 +464,18 @@
     "priceUnitLength": "Length-based pricing requires m or ft.",
     "priceUnitPiece": "Piece-based pricing requires piece unit.",
     "profileNotFound": "Profile not found."
+  },
+  "quickCalc": {
+    "title": "Quick Calculate",
+    "placeholder": "e.g. ipe 200x6000 or shs 40x40x2x4500mm qty=10",
+    "hint": "Type a profile query to calculate weight instantly",
+    "hintExample": "shs 40x40x2x4500mm qty=10 mat=s355",
+    "recent": "Recent queries",
+    "total": "Total",
+    "load": "Load",
+    "loadInCalculator": "Load in calculator",
+    "sidebarLabel": "Quick Calc",
+    "shortcutHint": "Quick Calculate"
   },
   "reverseErrors": {
     "targetWeight": "Target weight must be positive.",

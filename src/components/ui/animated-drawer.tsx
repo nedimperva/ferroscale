@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { triggerHaptic } from "@/lib/haptics";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface AnimatedDrawerProps {
     open: boolean;
@@ -25,6 +27,9 @@ export function AnimatedDrawer({
     widthClass = "w-[400px]",
     ariaLabel,
 }: AnimatedDrawerProps) {
+    const drawerRef = useRef<HTMLElement>(null);
+    useFocusTrap(drawerRef, open);
+
     return (
         <AnimatePresence>
             {open && (
@@ -44,6 +49,9 @@ export function AnimatedDrawer({
                     {/* Drawer panel */}
                     <motion.aside
                         key="drawer"
+                        ref={drawerRef}
+                        role="dialog"
+                        aria-modal="true"
                         initial={{ x: "100%" }}
                         animate={{ x: 0 }}
                         exit={{ x: "100%" }}

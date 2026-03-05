@@ -30,6 +30,10 @@ import { PwaRegister } from "@/components/pwa-register";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { toast } from "@/lib/toast";
+import { useQuickCalculator } from "@/hooks/useQuickCalculator";
+import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
+import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
+import { encodeInputToParams } from "@/lib/calculator/url-state";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -69,6 +73,7 @@ function createBoolStore(key: string, defaultValue: boolean) {
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
+const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
 
 const SETTINGS_ISSUE_FIELDS = new Set([
   "materialGradeId",
@@ -187,6 +192,8 @@ export function CalculatorApp() {
     projectCount,
   } = useProjects();
 
+  const quickCalc = useQuickCalculator();
+
   /* Auto-save valid results to history */
   const prevResultRef = useRef(result);
   useEffect(() => {
@@ -264,6 +271,19 @@ export function CalculatorApp() {
     [dispatch],
   );
 
+  const handleShare = useCallback(() => {
+    const params = encodeInputToParams(input);
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+    if (navigator.share) {
+      navigator.share({ title: "FerroScale", url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        toast.success(t("result.shareCopied"));
+      });
+    }
+  }, [input, t]);
+
   /* History drawer */
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
 
@@ -272,6 +292,20 @@ export function CalculatorApp() {
 
   /* Contact drawer */
   const [showContactDrawer, setShowContactDrawer] = useState(false);
+
+  /* Keyboard shortcuts */
+  const shortcutHandlers = useMemo(
+    () => ({
+      quickCalc: () => quickCalc.toggle(),
+      history: () => setShowHistoryDrawer((prev: boolean) => !prev),
+      settings: () => setShowSettingsDrawer((prev: boolean) => !prev),
+      projects: () => openProjectsDrawer(),
+      resetForm: () => dispatch({ type: "RESET" }),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [quickCalc.toggle, openProjectsDrawer, dispatch],
+  );
+  useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
 
   const lastFocusedIssueFieldRef = useRef<string | null>(null);
   const firstIssueField = issues[0]?.field ?? null;
@@ -335,6 +369,11 @@ export function CalculatorApp() {
     settingsPreviewStore.getSnapshot,
     settingsPreviewStore.getServerSnapshot,
   );
+  const weightAsMain = useSyncExternalStore(
+    weightAsMainStore.subscribe,
+    weightAsMainStore.getSnapshot,
+    weightAsMainStore.getServerSnapshot,
+  );
 
   const resetAll = useCallback(() => {
     dispatch({ type: "RESET_ALL" });
@@ -393,6 +432,7 @@ export function CalculatorApp() {
         onOpenProjects={openProjects}
         onOpenSettings={() => setShowSettingsDrawer(true)}
         onOpenHistory={() => setShowHistoryDrawer(true)}
+        onOpenQuickCalc={quickCalc.open}
         compareCount={compareItems.length}
         projectCount={projectCount}
         isSettingsOpen={showSettingsDrawer}
@@ -544,6 +584,7 @@ export function CalculatorApp() {
               onAddToProject={handleAddToProject}
               hasProjects={projectCount > 0}
               normalizedProfile={normalizedCurrentProfile}
+              onShare={handleShare}
             />
           </aside>
         </div>
@@ -562,6 +603,7 @@ export function CalculatorApp() {
           onAddToProject={handleAddToProject}
           hasProjects={projectCount > 0}
           normalizedProfile={normalizedCurrentProfile}
+          weightAsMain={weightAsMain}
         />
 
         {/* ---- Bottom tab bar (mobile) ---- */}
@@ -626,6 +668,8 @@ export function CalculatorApp() {
           onToggleInlinePrice={inlinePriceStore.toggle}
           showSettingsPreview={showSettingsPreview}
           onToggleSettingsPreview={settingsPreviewStore.toggle}
+          weightAsMain={weightAsMain}
+          onToggleWeightAsMain={weightAsMainStore.toggle}
         />
 
         {/* ---- Contact drawer ---- */}
@@ -675,6 +719,9 @@ export function CalculatorApp() {
           />
         )}
       </div>
+
+      {/* ---- Quick Calculate palette (Ctrl+K) ---- */}
+      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} />
     </>
   );
 }

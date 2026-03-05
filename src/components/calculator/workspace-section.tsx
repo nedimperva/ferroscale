@@ -15,6 +15,8 @@ interface WorkspaceSectionProps {
   onToggleInlinePrice: () => void;
   showSettingsPreview: boolean;
   onToggleSettingsPreview: () => void;
+  weightAsMain: boolean;
+  onToggleWeightAsMain: () => void;
 }
 
 const HISTORY_OPTIONS = [10, 25, 50, 100];
@@ -33,6 +35,8 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   onToggleInlinePrice,
   showSettingsPreview,
   onToggleSettingsPreview,
+  weightAsMain,
+  onToggleWeightAsMain,
 }: WorkspaceSectionProps) {
   const t = useTranslations("workspace");
 
@@ -101,6 +105,11 @@ export const WorkspaceSection = memo(function WorkspaceSection({
           label={t("inlinePrice")}
           checked={showInlinePrice}
           onToggle={onToggleInlinePrice}
+        />
+        <ToggleRow
+          label={t("weightAsMain")}
+          checked={weightAsMain}
+          onToggle={onToggleWeightAsMain}
         />
       </div>
     </section>

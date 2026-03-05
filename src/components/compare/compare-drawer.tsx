@@ -4,6 +4,7 @@ import { memo, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { CompareItem } from "@/hooks/useCompare";
 import { CompareCard } from "./compare-card";
+import { CompareChart } from "./compare-chart";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
@@ -200,6 +201,7 @@ export const CompareDrawer = memo(function CompareDrawer({
           </div>
         ) : (
           <div className="grid gap-3">
+            <CompareChart items={items} />
             {items.map((item) => (
               <CompareCard key={item.id} item={item} reference={reference} onRemove={onRemoveItem} />
             ))}
