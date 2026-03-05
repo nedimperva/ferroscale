@@ -73,6 +73,7 @@ function createBoolStore(key: string, defaultValue: boolean) {
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
+const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
 
 const SETTINGS_ISSUE_FIELDS = new Set([
   "materialGradeId",
@@ -368,6 +369,11 @@ export function CalculatorApp() {
     settingsPreviewStore.getSnapshot,
     settingsPreviewStore.getServerSnapshot,
   );
+  const weightAsMain = useSyncExternalStore(
+    weightAsMainStore.subscribe,
+    weightAsMainStore.getSnapshot,
+    weightAsMainStore.getServerSnapshot,
+  );
 
   const resetAll = useCallback(() => {
     dispatch({ type: "RESET_ALL" });
@@ -597,6 +603,7 @@ export function CalculatorApp() {
           onAddToProject={handleAddToProject}
           hasProjects={projectCount > 0}
           normalizedProfile={normalizedCurrentProfile}
+          weightAsMain={weightAsMain}
         />
 
         {/* ---- Bottom tab bar (mobile) ---- */}
@@ -661,6 +668,8 @@ export function CalculatorApp() {
           onToggleInlinePrice={inlinePriceStore.toggle}
           showSettingsPreview={showSettingsPreview}
           onToggleSettingsPreview={settingsPreviewStore.toggle}
+          weightAsMain={weightAsMain}
+          onToggleWeightAsMain={weightAsMainStore.toggle}
         />
 
         {/* ---- Contact drawer ---- */}

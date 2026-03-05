@@ -189,7 +189,8 @@
     "mobileCap": "(mobilni limit: {cap})",
     "settingsPreview": "Prikazi pregled postavki",
     "inlineMaterial": "Prikazi materijal u formi",
-    "inlinePrice": "Prikazi cijenu u formi"
+    "inlinePrice": "Prikazi cijenu u formi",
+    "weightAsMain": "Tezina kao glavni prikaz"
   },
   "settingsDrawer": {
     "ariaLabel": "Panel postavki",

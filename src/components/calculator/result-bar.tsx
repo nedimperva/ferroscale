@@ -41,6 +41,7 @@ interface ResultBarProps {
   onAddToProject?: () => void;
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
+  weightAsMain?: boolean;
 }
 
 /**
@@ -56,11 +57,13 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
     isStarred,
     onExpand,
     normalizedProfile = null,
+    weightAsMain = false,
   } = props;
   const tBase = useTranslations();
   const t = useTranslations("result");
 
   const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
+  const animatedWeight = useAnimatedNumber(result?.totalWeightKg ?? 0);
 
   function fmtAnimated(animated: number, reference: number): string {
     const dot = String(reference).indexOf(".");
@@ -78,46 +81,59 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
           exit={{ y: 20, opacity: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 28 }}
           className="fixed inset-x-0 z-40 lg:hidden"
-          style={{ bottom: "calc(52px + env(safe-area-inset-bottom, 0px))" }}
+          style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
         >
-          <div className="mx-2.5 mb-0.5">
+          <div className="mx-3 mb-1">
             <button
               type="button"
               onClick={onExpand}
-              className="group flex w-full items-center gap-2.5 overflow-hidden rounded-2xl border border-accent-border/60 bg-linear-to-r from-accent-surface via-surface to-surface px-3 py-2 shadow-lg shadow-accent/10 transition-all active:scale-[0.98] active:shadow-md"
+              className="group flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-accent-border/50 bg-surface/95 px-3.5 py-2.5 shadow-xl shadow-black/15 ring-1 ring-black/[0.03] backdrop-blur-xl transition-all active:scale-[0.98] active:shadow-lg"
             >
-              {/* Accent strip + profile icon */}
+              {/* Profile icon */}
               <span className="relative flex shrink-0 items-center justify-center">
-                <span className="absolute -inset-0.5 rounded-xl bg-accent/10" />
                 {normalizedProfile ? (
-                  <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                    <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent/12 text-accent ring-1 ring-accent/20">
+                    <ProfileIcon category={normalizedProfile.iconKey} className="h-4 w-4" />
                   </span>
                 ) : (
-                  <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent/12 text-accent ring-1 ring-accent/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
                       <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
                     </svg>
                   </span>
                 )}
               </span>
 
-              {/* Cost + weight */}
+              {/* Main value + secondary value */}
               <span className="flex min-w-0 flex-1 flex-col text-left">
                 <span
                   className={`flex items-baseline gap-1.5 transition-opacity duration-200 ${
                     isPending ? "opacity-50" : ""
                   }`}
                 >
-                  <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
-                    {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-                  </span>
-                  <span className="text-[11px] font-semibold text-accent">
-                    {CURRENCY_SYMBOLS[result.currency]}
-                  </span>
-                  <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
-                    {result.totalWeightKg} kg
-                  </span>
+                  {weightAsMain ? (
+                    <>
+                      <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
+                        {fmtAnimated(animatedWeight, result.totalWeightKg)}
+                      </span>
+                      <span className="text-[11px] font-semibold text-accent">kg</span>
+                      <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
+                        {result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
+                        {fmtAnimated(animatedTotal, result.grandTotalAmount)}
+                      </span>
+                      <span className="text-[11px] font-semibold text-accent">
+                        {CURRENCY_SYMBOLS[result.currency]}
+                      </span>
+                      <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
+                        {result.totalWeightKg} kg
+                      </span>
+                    </>
+                  )}
                 </span>
                 <span className="truncate text-[10px] leading-tight text-muted">
                   {normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}

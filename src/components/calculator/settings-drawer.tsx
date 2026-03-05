@@ -36,6 +36,8 @@ interface SettingsDrawerProps {
   onToggleInlinePrice: () => void;
   showSettingsPreview: boolean;
   onToggleSettingsPreview: () => void;
+  weightAsMain: boolean;
+  onToggleWeightAsMain: () => void;
 }
 
 export const SettingsDrawer = memo(function SettingsDrawer({
@@ -58,6 +60,8 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   onToggleInlinePrice,
   showSettingsPreview,
   onToggleSettingsPreview,
+  weightAsMain,
+  onToggleWeightAsMain,
 }: SettingsDrawerProps) {
   const t = useTranslations("settingsDrawer");
   const isMobile = useIsMobile();
@@ -156,6 +160,8 @@ export const SettingsDrawer = memo(function SettingsDrawer({
               onToggleInlinePrice={onToggleInlinePrice}
               showSettingsPreview={showSettingsPreview}
               onToggleSettingsPreview={onToggleSettingsPreview}
+              weightAsMain={weightAsMain}
+              onToggleWeightAsMain={onToggleWeightAsMain}
             />
           </div>
         </CollapsibleSection>

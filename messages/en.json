@@ -189,7 +189,8 @@
     "mobileCap": "(mobile cap: {cap})",
     "settingsPreview": "Show settings preview",
     "inlineMaterial": "Show material in form",
-    "inlinePrice": "Show price in form"
+    "inlinePrice": "Show price in form",
+    "weightAsMain": "Weight as main display"
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",
