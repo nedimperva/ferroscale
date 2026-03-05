@@ -7,7 +7,7 @@ import { parseQuickQuery } from "./parser";
 
 const DEFAULT_OUTPUT_DECIMALS = 3;
 
-function toCalculationInput(request: QuickWeightRequest): CalculationInput {
+export function toCalculationInput(request: QuickWeightRequest): CalculationInput {
   const manualDimensions = Object.fromEntries(
     Object.entries(request.manualDimensionsMm).map(([key, value]) => [key, { value, unit: "mm" }]),
   );

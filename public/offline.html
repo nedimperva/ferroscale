@@ -3,40 +3,62 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Offline - Advanced Metal Calculator</title>
+    <title>Offline - FerroScale</title>
     <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: "Segoe UI", sans-serif;
-        background: #f3f4f6;
-        color: #111827;
-      }
-      main {
-        max-width: 36rem;
-        padding: 1.5rem;
-        border: 1px solid #cbd5e1;
-        background: #fff;
-        border-radius: 0.75rem;
-      }
-      h1 {
-        margin-top: 0;
-      }
-      a {
-        color: #1d4ed8;
-      }
+      :root { --bg: #f5f5f4; --card: #fff; --text: #111827; --muted: #6b7280; --border: #e2e8f0; --accent: #d97706; --link: #1d4ed8; }
+      html.dark { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155; --accent: #f59e0b; --link: #60a5fa; }
+      body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:'Space Grotesk','Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
+      main { max-width:28rem; padding:2rem; border:1px solid var(--border); background:var(--card); border-radius:1rem; text-align:center; }
+      .logo { display:inline-flex; align-items:center; justify-content:center; width:3rem; height:3rem; border-radius:0.75rem; background:var(--text); margin-bottom:1rem; }
+      .logo svg { width:1.5rem; height:1.5rem; }
+      h1 { margin:0 0 0.5rem; font-size:1.25rem; font-weight:700; }
+      p { color:var(--muted); font-size:0.875rem; line-height:1.6; }
+      .btn { display:inline-block; margin-top:1.25rem; padding:0.625rem 1.5rem; background:var(--accent); color:#fff; border:none; border-radius:0.5rem; font-size:0.875rem; font-weight:600; cursor:pointer; text-decoration:none; }
+      .btn:hover { opacity:0.9; }
+      a { color:var(--link); }
     </style>
+    <script>
+      // Detect dark mode
+      try {
+        var t = localStorage.getItem("ferroscale-theme");
+        if (t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme:dark)").matches)) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch(e) {}
+      // Detect language
+      try {
+        var lang = navigator.language || "";
+        if (lang.startsWith("bs")) {
+          document.documentElement.lang = "bs";
+          document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("title").textContent = "Niste povezani";
+            document.getElementById("desc").textContent = "Aplikacija nije dostupna u kesh memoriji. Povežite se jednom, učitajte kalkulator, a zatim će raditi i bez interneta.";
+            document.getElementById("retry-btn").textContent = "Pokušaj ponovo";
+          });
+        }
+      } catch(e) {}
+    </script>
   </head>
   <body>
     <main>
-      <h1>Offline mode</h1>
-      <p>
-        The app shell is unavailable in cache yet. Reconnect once, load the calculator, then it will work offline for
-        subsequent visits.
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="11.5" y="7.6" width="1" height="8.9" fill="#f5f5f4" />
+          <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="#f5f5f4" />
+          <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="#f5f5f4" />
+          <circle cx="12" cy="5.75" r="1.8" fill="#f5f5f4" />
+          <rect x="2.8" y="6.5" width="1" height="4.5" fill="#f5f5f4" />
+          <rect x="20.2" y="6.5" width="1" height="4.5" fill="#f5f5f4" />
+          <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="#f5f5f4" />
+          <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="#f5f5f4" />
+          <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#d97706" />
+        </svg>
+      </div>
+      <h1 id="title">You're offline</h1>
+      <p id="desc">
+        The app shell is not available in cache yet. Connect to the internet once, load the calculator, and it will work offline for subsequent visits.
       </p>
-      <p><a href="/">Try opening the calculator</a></p>
+      <button id="retry-btn" class="btn" onclick="location.reload()">Retry</button>
     </main>
   </body>
 </html>

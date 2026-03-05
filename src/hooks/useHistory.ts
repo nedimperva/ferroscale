@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -28,25 +29,11 @@ function clampHistoryLimit(value: number): number {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local-storage helpers                                             */
+/*  Local-storage helpers (delegated to shared utility)               */
 /* ------------------------------------------------------------------ */
 
-function loadEntries(key: string): HistoryEntry[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as HistoryEntry[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistEntries(key: string, entries: HistoryEntry[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(key, JSON.stringify(entries));
-}
+const loadEntries = (key: string) => loadArrayFromStorage<HistoryEntry>(key);
+const persistEntries = (key: string, entries: HistoryEntry[]) => persistToStorage(key, entries);
 
 /* ------------------------------------------------------------------ */
 /*  Hook                                                              */

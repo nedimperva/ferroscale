@@ -20,6 +20,7 @@ import type {
   ProfileDefinition,
   ProfileId,
 } from "@/lib/datasets/types";
+import { decodeParamsToInput } from "@/lib/calculator/url-state";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -267,12 +268,23 @@ export function useCalculator(): UseCalculatorReturn {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
 
-  /* Hydrate persisted input after mount to keep SSR/client first render identical */
+  /* Hydrate persisted input after mount to keep SSR/client first render identical.
+     URL params take priority over localStorage-persisted input for shareable links. */
   useEffect(() => {
-    const persisted = loadPersistedInput();
-    if (persisted && getProfileById(persisted.profileId)) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromUrl = decodeParamsToInput(urlParams);
+
+    if (fromUrl && getProfileById(fromUrl.profileId)) {
       skipNextPersistRef.current = true;
-      dispatch({ type: "LOAD_ENTRY", input: persisted });
+      dispatch({ type: "LOAD_ENTRY", input: fromUrl });
+      // Clean the URL to avoid stale shares
+      window.history.replaceState({}, "", window.location.pathname);
+    } else {
+      const persisted = loadPersistedInput();
+      if (persisted && getProfileById(persisted.profileId)) {
+        skipNextPersistRef.current = true;
+        dispatch({ type: "LOAD_ENTRY", input: persisted });
+      }
     }
     inputHydratedRef.current = true;
   }, []);

@@ -195,7 +195,11 @@
     "ariaLabel": "Panel postavki",
     "title": "Postavke",
     "close": "Zatvori postavke",
-    "reset": "Vrati sve na podrazumijevano"
+    "reset": "Vrati sve na podrazumijevano",
+    "sectionMaterial": "Materijal i gustoca",
+    "sectionPricing": "Cijena",
+    "sectionPrecision": "Preciznost i zaokruzivanje",
+    "sectionWorkspace": "Prikaz i limiti"
   },
   "settingsSummary": {
     "grade": "Kvalitet",
@@ -244,7 +248,9 @@
     "saveCalculation": "Sacuvaj izracun",
     "copy": "Kopiraj",
     "copied": "Kopirano!",
-    "copyAriaLabel": "Kopiraj sazhetak izracuna u meduspremnik"
+    "copyAriaLabel": "Kopiraj sazhetak izracuna u meduspremnik",
+    "share": "Podijeli",
+    "shareCopied": "Link kopiran u meduspremnik"
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",
@@ -337,6 +343,7 @@
     "needSecond": "Dodajte drugi izracun za poredenje.",
     "needSecondHint": "Promijenite ulaze i kliknite \"Poredi\" ponovo.",
     "slotAvailable": "Slot je slobodan - dodajte jos jedan izracun.",
+    "chartTitle": "Vizuelno poredenje",
     "remove": "Ukloni iz poredenja",
     "reference": "Referenca",
     "totalCost": "Ukupna cijena",
@@ -456,6 +463,18 @@
     "priceUnitLength": "Cijena po duzini zahtijeva m ili ft.",
     "priceUnitPiece": "Cijena po komadu zahtijeva jedinicu komad.",
     "profileNotFound": "Profil nije pronaden."
+  },
+  "quickCalc": {
+    "title": "Brzi kalkulator",
+    "placeholder": "npr. ipe 200x6000 ili shs 40x40x2x4500mm qty=10",
+    "hint": "Unesite profil za trenutni izracun tezine",
+    "hintExample": "shs 40x40x2x4500mm qty=10 mat=s355",
+    "recent": "Nedavni upiti",
+    "total": "Ukupno",
+    "load": "Ucitaj",
+    "loadInCalculator": "Ucitaj u kalkulator",
+    "sidebarLabel": "Brzi Calc",
+    "shortcutHint": "Brzi kalkulator"
   },
   "reverseErrors": {
     "targetWeight": "Ciljna masa mora biti pozitivna.",

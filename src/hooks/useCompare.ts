@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { fingerprint } from "@/lib/calculator/fingerprint";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -26,33 +28,11 @@ function clampCompareLimit(value: number): number {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local-storage helpers                                             */
+/*  Local-storage helpers (delegated to shared utility)               */
 /* ------------------------------------------------------------------ */
 
-function loadItems(): CompareItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(COMPARE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as CompareItem[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistItems(items: CompareItem[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(COMPARE_KEY, JSON.stringify(items));
-}
-
-/* ------------------------------------------------------------------ */
-/*  Fingerprint – prevent adding the exact same calculation twice      */
-/* ------------------------------------------------------------------ */
-
-function fingerprint(result: CalculationResult): string {
-  return `${result.profileLabel}|${result.gradeLabel}|${result.grandTotalAmount}|${result.totalWeightKg}`;
-}
+const loadItems = () => loadArrayFromStorage<CompareItem>(COMPARE_KEY);
+const persistItems = (items: CompareItem[]) => persistToStorage(COMPARE_KEY, items);
 
 /* ------------------------------------------------------------------ */
 /*  Hook                                                              */

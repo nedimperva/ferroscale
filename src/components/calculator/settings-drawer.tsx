@@ -14,6 +14,7 @@ import { WorkspaceSection } from "./workspace-section";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -109,42 +110,55 @@ export const SettingsDrawer = memo(function SettingsDrawer({
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom">
-        <div className="p-4">
-          <div className="mb-3 flex justify-end">
-            <LanguageSwitcher className="w-full justify-between" />
+        <div className="px-4 pt-3 pb-1">
+          <LanguageSwitcher className="w-full justify-between" />
+        </div>
+
+        <div className="h-px bg-border" />
+        <CollapsibleSection title={t("sectionMaterial")} defaultOpen>
+          <div className="p-4 pt-1">
+            <MaterialSection
+              input={input}
+              dispatch={dispatch}
+              activeFamily={activeFamily}
+              issues={issues}
+            />
           </div>
-          <MaterialSection
-            input={input}
-            dispatch={dispatch}
-            activeFamily={activeFamily}
-            issues={issues}
-          />
-        </div>
+        </CollapsibleSection>
+
         <div className="h-px bg-border" />
-        <div className="p-4">
-          <PricingSection input={input} dispatch={dispatch} issues={issues} />
-        </div>
+        <CollapsibleSection title={t("sectionPricing")} defaultOpen>
+          <div className="p-4 pt-1">
+            <PricingSection input={input} dispatch={dispatch} issues={issues} />
+          </div>
+        </CollapsibleSection>
+
         <div className="h-px bg-border" />
-        <div className="p-4">
-          <PrecisionSection input={input} dispatch={dispatch} />
-        </div>
+        <CollapsibleSection title={t("sectionPrecision")}>
+          <div className="p-4 pt-1">
+            <PrecisionSection input={input} dispatch={dispatch} />
+          </div>
+        </CollapsibleSection>
+
         <div className="h-px bg-border" />
-        <div className="p-4">
-          <WorkspaceSection
-            historyLimit={historyLimit}
-            onHistoryLimitChange={onHistoryLimitChange}
-            compareLimit={compareLimit}
-            onCompareLimitChange={onCompareLimitChange}
-            maxCompare={maxCompare}
-            isCompareMobileCapped={isCompareMobileCapped}
-            showInlineMaterial={showInlineMaterial}
-            onToggleInlineMaterial={onToggleInlineMaterial}
-            showInlinePrice={showInlinePrice}
-            onToggleInlinePrice={onToggleInlinePrice}
-            showSettingsPreview={showSettingsPreview}
-            onToggleSettingsPreview={onToggleSettingsPreview}
-          />
-        </div>
+        <CollapsibleSection title={t("sectionWorkspace")}>
+          <div className="p-4 pt-1">
+            <WorkspaceSection
+              historyLimit={historyLimit}
+              onHistoryLimitChange={onHistoryLimitChange}
+              compareLimit={compareLimit}
+              onCompareLimitChange={onCompareLimitChange}
+              maxCompare={maxCompare}
+              isCompareMobileCapped={isCompareMobileCapped}
+              showInlineMaterial={showInlineMaterial}
+              onToggleInlineMaterial={onToggleInlineMaterial}
+              showInlinePrice={showInlinePrice}
+              onToggleInlinePrice={onToggleInlinePrice}
+              showSettingsPreview={showSettingsPreview}
+              onToggleSettingsPreview={onToggleSettingsPreview}
+            />
+          </div>
+        </CollapsibleSection>
       </div>
 
       {/* Footer with reset */}

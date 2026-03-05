@@ -34,6 +34,8 @@ export function BottomSheet({
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-40 bg-overlay" />
                 <Drawer.Content
+                    aria-modal="true"
+                    role="dialog"
                     className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-2xl bg-surface shadow-xl outline-none"
                     style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
                 >

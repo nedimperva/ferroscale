@@ -12,6 +12,7 @@ interface SidebarProps {
   onOpenProjects: () => void;
   onOpenSettings: () => void;
   onOpenHistory: () => void;
+  onOpenQuickCalc: () => void;
   compareCount: number;
   projectCount: number;
   isSettingsOpen: boolean;
@@ -31,6 +32,7 @@ export const Sidebar = memo(function Sidebar({
   onOpenProjects,
   onOpenSettings,
   onOpenHistory,
+  onOpenQuickCalc,
   compareCount,
   projectCount,
   isSettingsOpen,
@@ -96,6 +98,18 @@ export const Sidebar = memo(function Sidebar({
 
       {/* ---- Navigation ---- */}
       <nav className={`flex flex-1 flex-col gap-0.5 pt-3 ${collapsed ? "px-1.5" : "px-3"}`}>
+        {/* Quick Calculate */}
+        <SidebarButton
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+          }
+          label={collapsed ? t("quickCalc.sidebarLabel") : `${t("quickCalc.sidebarLabel")}  ⌘K`}
+          collapsed={collapsed}
+          onClick={onOpenQuickCalc}
+        />
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">

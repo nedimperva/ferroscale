@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { fingerprint } from "@/lib/calculator/fingerprint";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -73,25 +75,11 @@ const DEFAULT_PROJECT_CSV_LABELS: ProjectCsvLabels = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Local-storage helpers                                             */
+/*  Local-storage helpers (delegated to shared utility)               */
 /* ------------------------------------------------------------------ */
 
-function loadProjects(): Project[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(PROJECTS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Project[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function persistProjects(projects: Project[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects));
-}
+const loadProjects = () => loadArrayFromStorage<Project>(PROJECTS_KEY);
+const persistProjects = (projects: Project[]) => persistToStorage(PROJECTS_KEY, projects);
 
 /* ------------------------------------------------------------------ */
 /*  Aggregation helper                                                */
@@ -157,14 +145,6 @@ export function exportProjectCsv(
   a.download = `${labels.filePrefix}-${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-/* ------------------------------------------------------------------ */
-/*  Fingerprint — prevent adding identical calculation twice           */
-/* ------------------------------------------------------------------ */
-
-function fingerprint(result: CalculationResult): string {
-  return `${result.profileLabel}|${result.gradeLabel}|${result.grandTotalAmount}|${result.totalWeightKg}`;
 }
 
 /* ------------------------------------------------------------------ */
