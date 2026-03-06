@@ -23,9 +23,11 @@ export interface QuickWeightResult {
   profileId: ProfileId;
   profileLabel: string;
   selectedSizeId?: string;
+  manualDimensionsMm: Partial<Record<DimensionKey, number>>;
   quantity: number;
   lengthMm: number;
   materialGradeId: string;
+  customDensityKgPerM3?: number;
   densityKgPerM3: number;
   unitWeightKg: number;
   totalWeightKg: number;
