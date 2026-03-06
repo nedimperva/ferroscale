@@ -148,7 +148,10 @@
     "quantity": "Kolicina",
     "unitPrice": "Jedinicna cijena",
     "lengthUnitAria": "Jedinica duzine",
-    "dimensionUnitAria": "Jedinica za {label}"
+    "dimensionUnitAria": "Jedinica za {label}",
+    "decreaseQuantity": "Smanji kolicinu",
+    "increaseQuantity": "Povecaj kolicinu",
+    "toggleSizeList": "Otvori/zatvori listu velicina"
   },
   "material": {
     "title": "Materijal",
@@ -181,6 +184,18 @@
     "weightShort": "Mas",
     "dimensionShort": "Dim"
   },
+  "presets": {
+    "title": "Favoriti",
+    "save": "Sacuvaj",
+    "savePreset": "Sacuvaj trenutne dimenzije kao favorit",
+    "applyPreset": "Primijeni ovaj favorit",
+    "removePreset": "Ukloni favorit",
+    "confirmRemove": "Potvrdi uklanjanje",
+    "promptLabel": "Naziv favorita",
+    "defaultLabel": "{profile} {dims}",
+    "search": "Pretraži favorite…",
+    "noResults": "Nema rezultata"
+  },
   "workspace": {
     "title": "Radni prostor",
     "historyDepth": "Dubina historije",
@@ -190,7 +205,9 @@
     "settingsPreview": "Prikazi pregled postavki",
     "inlineMaterial": "Prikazi materijal u formi",
     "inlinePrice": "Prikazi cijenu u formi",
-    "weightAsMain": "Tezina kao glavni prikaz"
+    "weightAsMain": "Tezina kao glavni prikaz",
+    "defaultUnit": "Podrazumijevana jedinica",
+    "defaultUnitHint": "Koristi se za sve dimenzije i duzine"
   },
   "settingsDrawer": {
     "ariaLabel": "Panel postavki",
@@ -250,6 +267,9 @@
     "copy": "Kopiraj",
     "copied": "Kopirano!",
     "copyAriaLabel": "Kopiraj sazhetak izracuna u meduspremnik",
+    "saveAriaLabel": "Sacuvaj trenutni izracun",
+    "projectAriaLabel": "Dodaj u projekat",
+    "expandAriaLabel": "Prosiri detalje rezultata",
     "share": "Podijeli",
     "shareCopied": "Link kopiran u meduspremnik"
   },
@@ -474,8 +494,22 @@
     "total": "Ukupno",
     "load": "Ucitaj",
     "loadInCalculator": "Ucitaj u kalkulator",
+    "multiLineHint": "Koristite Shift+Enter za vise linija",
+    "loadAll": "Ucitaj sve",
     "sidebarLabel": "Brzi Calc",
-    "shortcutHint": "Brzi kalkulator"
+    "shortcutHint": "Brzi kalkulator",
+    "presetPickerHint": "Odaberite favorit — Enter za prvi",
+    "noPresets": "Nema odgovarajucih favorita",
+    "atTriggerHint": "Ukucajte @ za umetanje sacuvanog favorita"
+  },
+  "shortcuts": {
+    "title": "Precice na tastaturi",
+    "quickCalc": "Brzi kalkulator",
+    "history": "Historija",
+    "settings": "Postavke",
+    "projects": "Projekti",
+    "resetForm": "Resetuj formu",
+    "showShortcuts": "Prikazi precice"
   },
   "reverseErrors": {
     "targetWeight": "Ciljna masa mora biti pozitivna.",

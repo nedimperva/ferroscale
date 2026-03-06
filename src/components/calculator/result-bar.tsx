@@ -87,6 +87,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
             <button
               type="button"
               onClick={onExpand}
+              aria-label={t("expandAriaLabel")}
               className="group flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-accent-border/50 bg-surface/95 px-3.5 py-2.5 shadow-xl shadow-black/15 ring-1 ring-black/[0.03] backdrop-blur-xl transition-all active:scale-[0.98] active:shadow-lg"
             >
               {/* Profile icon */}

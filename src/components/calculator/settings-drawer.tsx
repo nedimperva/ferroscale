@@ -4,7 +4,7 @@ import { memo } from "react";
 import { useTranslations } from "next-intl";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
+import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { MetalFamilyId } from "@/lib/datasets/types";
 import { MaterialSection } from "./material-section";
@@ -38,6 +38,9 @@ interface SettingsDrawerProps {
   onToggleSettingsPreview: () => void;
   weightAsMain: boolean;
   onToggleWeightAsMain: () => void;
+  defaultUnit: LengthUnit;
+  onDefaultUnitChange: (value: LengthUnit) => void;
+  unitOptions: LengthUnit[];
 }
 
 export const SettingsDrawer = memo(function SettingsDrawer({
@@ -62,6 +65,9 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   onToggleSettingsPreview,
   weightAsMain,
   onToggleWeightAsMain,
+  defaultUnit,
+  onDefaultUnitChange,
+  unitOptions,
 }: SettingsDrawerProps) {
   const t = useTranslations("settingsDrawer");
   const isMobile = useIsMobile();
@@ -162,6 +168,9 @@ export const SettingsDrawer = memo(function SettingsDrawer({
               onToggleSettingsPreview={onToggleSettingsPreview}
               weightAsMain={weightAsMain}
               onToggleWeightAsMain={onToggleWeightAsMain}
+              defaultUnit={defaultUnit}
+              onDefaultUnitChange={onDefaultUnitChange}
+              unitOptions={unitOptions}
             />
           </div>
         </CollapsibleSection>

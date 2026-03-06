@@ -264,6 +264,7 @@ export const ResultPanel = memo(function ResultPanel({
               ? "border-accent-border bg-accent-surface text-accent"
               : "border-border text-foreground-secondary hover:bg-surface-raised"
               }`}
+            aria-label={t("saveAriaLabel")}
           >
             <motion.svg
               key={isStarred ? "starred" : "unstarred"}
@@ -291,6 +292,7 @@ export const ResultPanel = memo(function ResultPanel({
               : "border-border text-foreground-secondary hover:bg-surface-raised"
               }`}
             title={t("addToProject")}
+            aria-label={t("projectAriaLabel")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />

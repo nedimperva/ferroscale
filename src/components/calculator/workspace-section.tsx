@@ -1,5 +1,6 @@
 import { memo, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import type { LengthUnit } from "@/lib/calculator/types";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface WorkspaceSectionProps {
@@ -17,6 +18,9 @@ interface WorkspaceSectionProps {
   onToggleSettingsPreview: () => void;
   weightAsMain: boolean;
   onToggleWeightAsMain: () => void;
+  defaultUnit: LengthUnit;
+  onDefaultUnitChange: (value: LengthUnit) => void;
+  unitOptions: LengthUnit[];
 }
 
 const HISTORY_OPTIONS = [10, 25, 50, 100];
@@ -37,6 +41,9 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   onToggleSettingsPreview,
   weightAsMain,
   onToggleWeightAsMain,
+  defaultUnit,
+  onDefaultUnitChange,
+  unitOptions,
 }: WorkspaceSectionProps) {
   const t = useTranslations("workspace");
 
@@ -89,6 +96,25 @@ export const WorkspaceSection = memo(function WorkspaceSection({
         {t("activeCompareLimit", { limit: maxCompare })}
         {isCompareMobileCapped ? ` ${t("mobileCap", { cap: 3 })}` : ""}
       </p>
+
+      <div className="mt-1 border-t border-border-faint pt-2 grid gap-2">
+        <div className="grid gap-1">
+          <label htmlFor="default-unit" className="text-xs font-medium text-foreground-secondary">
+            {t("defaultUnit")}
+          </label>
+          <select
+            id="default-unit"
+            value={defaultUnit}
+            onChange={(e) => onDefaultUnitChange(e.target.value as LengthUnit)}
+            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+          >
+            {unitOptions.map((u) => (
+              <option key={u} value={u}>{u}</option>
+            ))}
+          </select>
+          <p className="text-[11px] text-muted-faint">{t("defaultUnitHint")}</p>
+        </div>
+      </div>
 
       <div className="mt-1 border-t border-border-faint pt-2 grid gap-2">
         <ToggleRow

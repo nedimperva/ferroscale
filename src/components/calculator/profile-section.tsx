@@ -6,12 +6,12 @@ import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
 import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
+import type { DimensionPreset } from "@/hooks/usePresets";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
 import { SizeCombobox } from "./size-combobox";
+import { PresetChips } from "./preset-chips";
 import { triggerHaptic } from "@/lib/haptics";
-
-const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 
 /** Ordered list of categories for the top-level tabs. */
 const CATEGORY_ORDER: ProfileCategory[] = ["structural", "tubes", "plates_sheets", "bars"];
@@ -183,6 +183,11 @@ interface ProfileSectionProps {
   activeFamily: MetalFamilyId;
   showInlineMaterial: boolean;
   showInlinePrice: boolean;
+  defaultUnit: LengthUnit;
+  profilePresets: DimensionPreset[];
+  onSavePreset: () => void;
+  onApplyPreset: (preset: DimensionPreset) => void;
+  onRemovePreset: (id: string) => void;
 }
 
 export const ProfileSection = memo(function ProfileSection({
@@ -193,6 +198,11 @@ export const ProfileSection = memo(function ProfileSection({
   activeFamily,
   showInlineMaterial,
   showInlinePrice,
+  defaultUnit,
+  profilePresets,
+  onSavePreset,
+  onApplyPreset,
+  onRemovePreset,
 }: ProfileSectionProps) {
   const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
@@ -363,57 +373,51 @@ export const ProfileSection = memo(function ProfileSection({
                 key={dim.key}
                 dimension={dim}
                 value={input.manualDimensions[dim.key]}
+                unit={defaultUnit}
                 hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
                 issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
                 onValueChange={(v) =>
                   dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
-                }
-                onUnitChange={(u) =>
-                  dispatch({ type: "SET_DIMENSION_UNIT", key: dim.key, unit: u })
                 }
               />
             ))}
           </div>
         )}
 
+        {/* Favourite presets */}
+        {profilePresets.length > 0 || selectedProfile.mode === "manual" ? (
+          <div className="mt-1">
+            <PresetChips
+              presets={profilePresets}
+              onApply={onApplyPreset}
+              onSave={onSavePreset}
+              onRemove={onRemovePreset}
+            />
+          </div>
+        ) : null}
+
         {/* Divider between dimensions and length */}
         <div className="my-1.5 border-t border-border-faint" />
 
-        {/* Piece length (part of the size/dimensions group) */}
+        {/* Piece length */}
         <div className="grid gap-1 min-w-0">
           <label htmlFor="length" className="text-xs font-medium text-foreground-secondary">
             {t("profileSection.pieceLength")}
           </label>
-          <div className="flex gap-1 min-w-0">
+          <div className="relative min-w-0">
             <NumericInput
               id="length"
               inputMode="decimal"
               autoComplete="off"
               value={input.length.value}
               onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-              className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
+              className={`h-10 w-full rounded-lg border bg-surface px-2.5 pr-10 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
                 }`}
               aria-invalid={hasIssue("length")}
             />
-            <div className="relative">
-              <select
-                value={input.length.unit}
-                onChange={(e) =>
-                  dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit })
-                }
-                className="h-10 shrink-0 appearance-none rounded-lg border border-border-strong bg-surface pl-2 pr-7 text-sm transition-colors focus:border-blue-500 md:h-11"
-                aria-label={t("profileSection.lengthUnitAria")}
-              >
-                {LENGTH_UNITS.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-faint">
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-              </svg>
-            </div>
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
+              {defaultUnit}
+            </span>
           </div>
         </div>
       </div>
@@ -437,7 +441,7 @@ export const ProfileSection = memo(function ProfileSection({
                 }}
                 disabled={input.quantity <= 1}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed md:h-11 md:w-11"
-                aria-label="Decrease quantity"
+                aria-label={t("profileSection.decreaseQuantity")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" />
@@ -460,7 +464,7 @@ export const ProfileSection = memo(function ProfileSection({
                   dispatch({ type: "SET_QUANTITY", value: input.quantity + 1 });
                 }}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised md:h-11 md:w-11"
-                aria-label="Increase quantity"
+                aria-label={t("profileSection.increaseQuantity")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />

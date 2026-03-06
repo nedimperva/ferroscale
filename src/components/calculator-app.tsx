@@ -31,8 +31,13 @@ import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { toast } from "@/lib/toast";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
+import { usePresets } from "@/hooks/usePresets";
+import type { DimensionPreset } from "@/hooks/usePresets";
+import type { LengthUnit } from "@/lib/calculator/types";
+import { getProfileById } from "@/lib/datasets/profiles";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
+import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -73,6 +78,30 @@ const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false)
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
 const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
+
+const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
+function createStringStore<T extends string>(key: string, defaultValue: T) {
+  let _listeners: Array<() => void> = [];
+  function subscribe(cb: () => void) {
+    _listeners = [..._listeners, cb];
+    return () => { _listeners = _listeners.filter((l) => l !== cb); };
+  }
+  function getSnapshot(): T {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return defaultValue;
+      return raw as T;
+    } catch { return defaultValue; }
+  }
+  function getServerSnapshot(): T { return defaultValue; }
+  function set(value: T) {
+    try { localStorage.setItem(key, value); } catch { /* noop */ }
+    for (const l of _listeners) l();
+  }
+  return { subscribe, getSnapshot, getServerSnapshot, set };
+}
+
+const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
 const SETTINGS_ISSUE_FIELDS = new Set([
   "materialGradeId",
@@ -192,6 +221,9 @@ export function CalculatorApp() {
   } = useProjects();
 
   const quickCalc = useQuickCalculator();
+  const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
+  const profilePresets = useMemo(() => presetsForProfile(input.profileId), [presetsForProfile, input.profileId]);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   /* Auto-save valid results to history */
   const prevResultRef = useRef(result);
@@ -287,6 +319,7 @@ export function CalculatorApp() {
       settings: () => setShowSettingsDrawer((prev: boolean) => !prev),
       projects: () => openProjectsDrawer(),
       resetForm: () => dispatch({ type: "RESET" }),
+      showShortcuts: () => setShowShortcutsModal((prev) => !prev),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [quickCalc.toggle, openProjectsDrawer, dispatch],
@@ -359,6 +392,64 @@ export function CalculatorApp() {
     weightAsMainStore.subscribe,
     weightAsMainStore.getSnapshot,
     weightAsMainStore.getServerSnapshot,
+  );
+
+  const defaultUnit = useSyncExternalStore(
+    defaultUnitStore.subscribe,
+    defaultUnitStore.getSnapshot,
+    defaultUnitStore.getServerSnapshot,
+  );
+
+  const handleSavePreset = useCallback(() => {
+    const profile = getProfileById(input.profileId);
+    if (!profile) return;
+
+    const isPlateSheet = profile.category === "plates_sheets";
+    const dims: Record<string, number> = {};
+    if (profile.mode === "manual") {
+      for (const dim of profile.dimensions) {
+        const val = input.manualDimensions[dim.key]?.value;
+        if (val != null) dims[dim.key] = val;
+      }
+    }
+
+    const dimParts = Object.values(dims).filter(Boolean);
+    const autoLabel = isPlateSheet
+      ? [...dimParts, input.length.value].join("x")
+      : dimParts.join("x");
+
+    const label = window.prompt("Favourite name:", autoLabel);
+    if (!label) return;
+
+    addPreset({
+      profileId: input.profileId,
+      label,
+      manualDimensionsMm: dims,
+      selectedSizeId: input.selectedSizeId,
+      lengthValue: isPlateSheet ? input.length.value : undefined,
+    });
+    toast.success("Favourite saved");
+  }, [input, addPreset]);
+
+  const handleApplyPreset = useCallback(
+    (preset: DimensionPreset) => {
+      const profile = getProfileById(preset.profileId);
+      if (!profile) return;
+
+      if (preset.selectedSizeId) {
+        dispatch({ type: "SET_SIZE", sizeId: preset.selectedSizeId });
+      }
+      for (const [key, value] of Object.entries(preset.manualDimensionsMm)) {
+        if (value != null) {
+          dispatch({ type: "SET_DIMENSION_VALUE", key: key as import("@/lib/datasets/types").DimensionKey, value });
+        }
+      }
+      if (preset.lengthValue != null) {
+        dispatch({ type: "SET_LENGTH_VALUE", value: preset.lengthValue });
+      }
+      toast.info("Favourite applied");
+    },
+    [dispatch],
   );
 
   const resetAll = useCallback(() => {
@@ -540,6 +631,11 @@ export function CalculatorApp() {
                 activeFamily={activeFamily}
                 showInlineMaterial={showInlineMaterial}
                 showInlinePrice={showInlinePrice}
+                defaultUnit={defaultUnit}
+                profilePresets={profilePresets}
+                onSavePreset={handleSavePreset}
+                onApplyPreset={handleApplyPreset}
+                onRemovePreset={removePreset}
               />
             </div>
 
@@ -656,6 +752,9 @@ export function CalculatorApp() {
           onToggleSettingsPreview={settingsPreviewStore.toggle}
           weightAsMain={weightAsMain}
           onToggleWeightAsMain={weightAsMainStore.toggle}
+          defaultUnit={defaultUnit}
+          onDefaultUnitChange={defaultUnitStore.set}
+          unitOptions={UNIT_OPTIONS}
         />
 
         {/* ---- Contact drawer ---- */}
@@ -707,7 +806,10 @@ export function CalculatorApp() {
       </div>
 
       {/* ---- Quick Calculate palette (Ctrl+K) ---- */}
-      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} />
+      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} presets={presets} />
+
+      {/* ---- Keyboard shortcuts modal (?) ---- */}
+      <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
     </>
   );
 }
