@@ -148,7 +148,10 @@
     "quantity": "Quantity",
     "unitPrice": "Unit price",
     "lengthUnitAria": "Length unit",
-    "dimensionUnitAria": "{label} unit"
+    "dimensionUnitAria": "{label} unit",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "toggleSizeList": "Toggle size list"
   },
   "material": {
     "title": "Material",
@@ -181,6 +184,16 @@
     "weightShort": "Wt",
     "dimensionShort": "Dim"
   },
+  "presets": {
+    "title": "Favourites",
+    "save": "Save",
+    "savePreset": "Save current dimensions as favourite",
+    "applyPreset": "Apply this favourite",
+    "removePreset": "Remove favourite",
+    "confirmRemove": "Confirm remove",
+    "promptLabel": "Favourite name",
+    "defaultLabel": "{profile} {dims}"
+  },
   "workspace": {
     "title": "Workspace",
     "historyDepth": "History depth",
@@ -190,7 +203,9 @@
     "settingsPreview": "Show settings preview",
     "inlineMaterial": "Show material in form",
     "inlinePrice": "Show price in form",
-    "weightAsMain": "Weight as main display"
+    "weightAsMain": "Weight as main display",
+    "defaultUnit": "Default unit",
+    "defaultUnitHint": "Used for all dimension and length inputs"
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",
@@ -250,6 +265,9 @@
     "copy": "Copy",
     "copied": "Copied!",
     "copyAriaLabel": "Copy calculation summary to clipboard",
+    "saveAriaLabel": "Save current calculation",
+    "projectAriaLabel": "Add to project",
+    "expandAriaLabel": "Expand result details",
     "share": "Share",
     "shareCopied": "Link copied to clipboard"
   },
@@ -475,8 +493,18 @@
     "load": "Load",
     "loadInCalculator": "Load in calculator",
     "multiLineHint": "Use Shift+Enter for multiple lines",
+    "loadAll": "Load all",
     "sidebarLabel": "Quick Calc",
     "shortcutHint": "Quick Calculate"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "quickCalc": "Quick Calculate",
+    "history": "History",
+    "settings": "Settings",
+    "projects": "Projects",
+    "resetForm": "Reset form",
+    "showShortcuts": "Show shortcuts"
   },
   "reverseErrors": {
     "targetWeight": "Target weight must be positive.",
