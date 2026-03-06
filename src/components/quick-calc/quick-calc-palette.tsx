@@ -167,7 +167,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                 <div className="px-4 py-5">
                   <p className="text-xs text-muted-faint">{t("hint")}</p>
                   <div className="mt-3 space-y-1.5">
-                    {["shs 40x40x2x4500mm", "ipe 200x6000 mat=s355", "chs 60.3x3.2x3000 qty=2", "plate 1500x10x3000"].map((ex) => (
+                    {["shs 40x40x2x4500mm", "rhs 120x80x4x6000", "ipe 200x6000 mat=s355", "chs 60.3x3.2x3000 qty=2", "plate 1500x10x3000"].map((ex) => (
                       <button
                         key={ex}
                         type="button"
@@ -195,9 +195,11 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
               {successCount >= 2 && (
                 <div className="flex items-center justify-between border-t border-border bg-surface-inset/60 px-4 py-3">
                   <span className="text-xs font-semibold text-foreground-secondary">{t("total")}</span>
-                  <span className="font-mono text-sm font-bold tabular-nums text-foreground">
-                    {totalWeightKg} kg
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-bold tabular-nums text-foreground">
+                      {totalWeightKg} kg
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -243,6 +245,11 @@ function QuickResultRow({
                 &times;{r.quantity}
               </span>
             )}
+            {r.materialGradeId !== "steel-s235jr" && (
+              <span className="rounded bg-blue-surface px-1.5 py-0.5 text-[10px] font-medium text-blue-text">
+                {r.materialGradeId.split("-").pop()?.toUpperCase()}
+              </span>
+            )}
             {r.unitWeightKg !== r.totalWeightKg && (
               <span className="text-muted-faint">{r.unitWeightKg} kg/pc</span>
             )}
@@ -271,7 +278,7 @@ function QuickResultRow({
   const issue = lineResult.issues?.[0];
   return (
     <div className="flex items-center gap-3 border-b border-border-faint/60 px-4 py-3 last:border-b-0">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-400 dark:bg-red-950/30 dark:text-red-500">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-400 dark:bg-red-500/10 dark:text-red-400">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
           <circle cx="12" cy="12" r="10" />
           <path d="m15 9-6 6" />
