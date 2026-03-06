@@ -192,7 +192,9 @@
     "removePreset": "Remove favourite",
     "confirmRemove": "Confirm remove",
     "promptLabel": "Favourite name",
-    "defaultLabel": "{profile} {dims}"
+    "defaultLabel": "{profile} {dims}",
+    "search": "Search favourites…",
+    "noResults": "No matches"
   },
   "workspace": {
     "title": "Workspace",
@@ -495,7 +497,10 @@
     "multiLineHint": "Use Shift+Enter for multiple lines",
     "loadAll": "Load all",
     "sidebarLabel": "Quick Calc",
-    "shortcutHint": "Quick Calculate"
+    "shortcutHint": "Quick Calculate",
+    "presetPickerHint": "Select a favourite — Enter to pick first",
+    "noPresets": "No matching favourites",
+    "atTriggerHint": "Type @ to insert a saved favourite"
   },
   "shortcuts": {
     "title": "Keyboard Shortcuts",

@@ -192,7 +192,9 @@
     "removePreset": "Ukloni favorit",
     "confirmRemove": "Potvrdi uklanjanje",
     "promptLabel": "Naziv favorita",
-    "defaultLabel": "{profile} {dims}"
+    "defaultLabel": "{profile} {dims}",
+    "search": "Pretraži favorite…",
+    "noResults": "Nema rezultata"
   },
   "workspace": {
     "title": "Radni prostor",
@@ -495,7 +497,10 @@
     "multiLineHint": "Koristite Shift+Enter za vise linija",
     "loadAll": "Ucitaj sve",
     "sidebarLabel": "Brzi Calc",
-    "shortcutHint": "Brzi kalkulator"
+    "shortcutHint": "Brzi kalkulator",
+    "presetPickerHint": "Odaberite favorit — Enter za prvi",
+    "noPresets": "Nema odgovarajucih favorita",
+    "atTriggerHint": "Ukucajte @ za umetanje sacuvanog favorita"
   },
   "shortcuts": {
     "title": "Precice na tastaturi",
