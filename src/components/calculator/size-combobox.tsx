@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import type { StandardSizeOption } from "@/lib/datasets/types";
 
 interface SizeComboboxProps {
@@ -21,6 +22,7 @@ export const SizeCombobox = memo(function SizeCombobox({
   label,
   hint,
 }: SizeComboboxProps) {
+  const t = useTranslations("profileSection");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [highlightIdx, setHighlightIdx] = useState(-1);
@@ -181,7 +183,7 @@ export const SizeCombobox = memo(function SizeCombobox({
             }
           }}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-faint"
-          aria-label="Toggle size list"
+          aria-label={t("toggleSizeList")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
