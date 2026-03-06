@@ -474,6 +474,7 @@
     "total": "Total",
     "load": "Load",
     "loadInCalculator": "Load in calculator",
+    "multiLineHint": "Use Shift+Enter for multiple lines",
     "sidebarLabel": "Quick Calc",
     "shortcutHint": "Quick Calculate"
   },

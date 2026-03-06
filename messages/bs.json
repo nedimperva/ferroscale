@@ -474,6 +474,7 @@
     "total": "Ukupno",
     "load": "Ucitaj",
     "loadInCalculator": "Ucitaj u kalkulator",
+    "multiLineHint": "Koristite Shift+Enter za vise linija",
     "sidebarLabel": "Brzi Calc",
     "shortcutHint": "Brzi kalkulator"
   },
