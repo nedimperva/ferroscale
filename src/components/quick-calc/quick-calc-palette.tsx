@@ -3,7 +3,8 @@
 import { memo, useCallback, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import type { UseQuickCalculatorReturn, QuickLineResult } from "@/hooks/useQuickCalculator";
+import type { UseQuickCalculatorReturn } from "@/hooks/useQuickCalculator";
+import type { QuickLineResult } from "@/hooks/useQuickCalculator";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { QuickWeightResult } from "@ferroscale/metal-core";
 import { toCalculationInput } from "@ferroscale/metal-core/quick/calculate";
@@ -24,6 +25,9 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { isOpen, close, query, setQuery, lineResults, totalWeightKg, recentQueries } = quickCalc;
+
+  const lineResultsRef = useRef(lineResults);
+  lineResultsRef.current = lineResults;
 
   useEffect(() => {
     if (isOpen) {
@@ -71,7 +75,6 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   );
 
   const successCount = lineResults.filter((lr) => lr.result).length;
-  const singleSuccess = lineResults.length === 1 && lineResults[0].result;
 
   return (
     <AnimatePresence>
@@ -119,15 +122,19 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                     rows={1}
                     className="w-full resize-none bg-transparent text-[15px] font-medium text-foreground placeholder:text-muted-faint outline-none"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey && singleSuccess) {
-                        e.preventDefault();
-                        handleLoadResult(lineResults[0].result!);
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        const results = lineResultsRef.current;
+                        const first = results.find((lr) => lr.result);
+                        if (first?.result) {
+                          e.preventDefault();
+                          handleLoadResult(first.result);
+                        }
                       }
                     }}
                   />
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {singleSuccess && (
+                  {successCount > 0 && (
                     <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium text-muted sm:inline-flex items-center gap-0.5">
                       <span>&#9166;</span>
                     </kbd>
