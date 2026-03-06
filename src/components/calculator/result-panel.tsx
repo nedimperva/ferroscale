@@ -42,7 +42,7 @@ interface ResultPanelProps {
   onAddToProject?: () => void;
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
-  onShare?: () => void;
+  weightAsMain?: boolean;
 }
 
 export const ResultPanel = memo(function ResultPanel({
@@ -61,7 +61,7 @@ export const ResultPanel = memo(function ResultPanel({
   onAddToProject,
   hasProjects = false,
   normalizedProfile = null,
-  onShare,
+  weightAsMain = false,
 }: ResultPanelProps) {
   const tBase = useTranslations();
   const t = useTranslations("result");
@@ -105,15 +105,32 @@ export const ResultPanel = memo(function ResultPanel({
       className={`rounded-xl border bg-surface transition-opacity duration-200 ${isPending ? "border-border opacity-60" : "border-border"
         }`}
     >
-      {/* ── Hero: Total Cost ── */}
+      {/* ── Hero: Total Cost / Weight ── */}
       <div className="rounded-t-xl border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-5 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-          {t("totalCost")}
-        </p>
-        <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground tabular-nums transition-all duration-300">
-          {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-        </p>
-        <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
+        {weightAsMain ? (
+          <>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+              {t("totalWeight")}
+            </p>
+            <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground tabular-nums transition-all duration-300">
+              {fmtAnimated(animatedTotalWeight, result.totalWeightKg)}
+            </p>
+            <p className="mt-0.5 text-sm font-medium text-muted">kg</p>
+            <p className="mt-1 text-sm tabular-nums text-muted">
+              {fmtAnimated(animatedTotal, result.grandTotalAmount)} {CURRENCY_SYMBOLS[result.currency]}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+              {t("totalCost")}
+            </p>
+            <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground tabular-nums transition-all duration-300">
+              {fmtAnimated(animatedTotal, result.grandTotalAmount)}
+            </p>
+            <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
+          </>
+        )}
       </div>
 
       {/* ── Weight cards ── */}
@@ -236,6 +253,7 @@ export const ResultPanel = memo(function ResultPanel({
 
         {/* Save + Project + Copy — side by side */}
         <div className="grid grid-cols-3 gap-2">
+
           <button
             type="button"
             onClick={() => {
@@ -280,24 +298,6 @@ export const ResultPanel = memo(function ResultPanel({
             {t("project")}
           </button>
           <CopyButton result={result} normalizedProfile={normalizedProfile} />
-          {onShare && (
-            <button
-              type="button"
-              onClick={() => {
-                triggerHaptic("light");
-                onShare();
-              }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-2 py-2.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
-              title={t("share")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                <polyline points="16 6 12 2 8 6" />
-                <line x1="12" x2="12" y1="2" y2="15" />
-              </svg>
-              {t("share")}
-            </button>
-          )}
         </div>
       </div>
 

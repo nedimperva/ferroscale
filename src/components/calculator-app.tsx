@@ -33,7 +33,6 @@ import { toast } from "@/lib/toast";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
-import { encodeInputToParams } from "@/lib/calculator/url-state";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -270,19 +269,6 @@ export function CalculatorApp() {
     },
     [dispatch],
   );
-
-  const handleShare = useCallback(() => {
-    const params = encodeInputToParams(input);
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
-    if (navigator.share) {
-      navigator.share({ title: "FerroScale", url }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(url).then(() => {
-        toast.success(t("result.shareCopied"));
-      });
-    }
-  }, [input, t]);
 
   /* History drawer */
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
@@ -584,7 +570,7 @@ export function CalculatorApp() {
               onAddToProject={handleAddToProject}
               hasProjects={projectCount > 0}
               normalizedProfile={normalizedCurrentProfile}
-              onShare={handleShare}
+              weightAsMain={weightAsMain}
             />
           </aside>
         </div>
