@@ -221,7 +221,7 @@ export function CalculatorApp() {
   } = useProjects();
 
   const quickCalc = useQuickCalculator();
-  const { presetsForProfile, addPreset, removePreset } = usePresets();
+  const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
   const profilePresets = useMemo(() => presetsForProfile(input.profileId), [presetsForProfile, input.profileId]);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
@@ -404,6 +404,7 @@ export function CalculatorApp() {
     const profile = getProfileById(input.profileId);
     if (!profile) return;
 
+    const isPlateSheet = profile.category === "plates_sheets";
     const dims: Record<string, number> = {};
     if (profile.mode === "manual") {
       for (const dim of profile.dimensions) {
@@ -413,7 +414,9 @@ export function CalculatorApp() {
     }
 
     const dimParts = Object.values(dims).filter(Boolean);
-    const autoLabel = dimParts.join("x");
+    const autoLabel = isPlateSheet
+      ? [...dimParts, input.length.value].join("x")
+      : dimParts.join("x");
 
     const label = window.prompt("Favourite name:", autoLabel);
     if (!label) return;
@@ -423,6 +426,7 @@ export function CalculatorApp() {
       label,
       manualDimensionsMm: dims,
       selectedSizeId: input.selectedSizeId,
+      lengthValue: isPlateSheet ? input.length.value : undefined,
     });
     toast.success("Favourite saved");
   }, [input, addPreset]);
@@ -439,6 +443,9 @@ export function CalculatorApp() {
         if (value != null) {
           dispatch({ type: "SET_DIMENSION_VALUE", key: key as import("@/lib/datasets/types").DimensionKey, value });
         }
+      }
+      if (preset.lengthValue != null) {
+        dispatch({ type: "SET_LENGTH_VALUE", value: preset.lengthValue });
       }
       toast.info("Favourite applied");
     },
@@ -799,7 +806,7 @@ export function CalculatorApp() {
       </div>
 
       {/* ---- Quick Calculate palette (Ctrl+K) ---- */}
-      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} />
+      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} presets={presets} />
 
       {/* ---- Keyboard shortcuts modal (?) ---- */}
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />

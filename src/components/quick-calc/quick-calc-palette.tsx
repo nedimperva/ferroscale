@@ -1,25 +1,86 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import type { UseQuickCalculatorReturn } from "@/hooks/useQuickCalculator";
 import type { QuickLineResult } from "@/hooks/useQuickCalculator";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { QuickWeightResult } from "@ferroscale/metal-core";
+import type { DimensionPreset } from "@/hooks/usePresets";
 import { toCalculationInput } from "@ferroscale/metal-core/quick/calculate";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { triggerHaptic } from "@/lib/haptics";
+import type { ProfileId, StandardProfileDefinition } from "@/lib/datasets/types";
+
+/** Maps profileId to the canonical quick-calc alias. */
+const PROFILE_ALIAS: Partial<Record<ProfileId, string>> = {
+  square_hollow: "shs",
+  rectangular_tube: "rhs",
+  pipe: "chs",
+  round_bar: "rb",
+  square_bar: "sb",
+  flat_bar: "fb",
+  angle: "angle",
+  sheet: "sheet",
+  plate: "plate",
+  chequered_plate: "chequered",
+  expanded_metal: "expanded",
+  corrugated_sheet: "corrugated",
+  beam_ipe_en: "ipe",
+  beam_ipn_en: "ipn",
+  beam_hea_en: "hea",
+  beam_heb_en: "heb",
+  beam_hem_en: "hem",
+  channel_upn_en: "upn",
+  channel_upe_en: "upe",
+  tee_en: "tee",
+};
+
+/** Build a quick-calc query string from a preset.
+ *  For plates/sheets with a saved length, returns the full query.
+ *  For others, returns the alias + cross-section dims with a trailing `x`
+ *  so the user can type the length. */
+function presetToQuery(preset: DimensionPreset): string {
+  const alias = PROFILE_ALIAS[preset.profileId];
+  if (!alias) return "";
+
+  const profile = getProfileById(preset.profileId);
+  if (!profile) return "";
+
+  let dimStr: string;
+  if (profile.mode === "standard") {
+    const size = (profile as StandardProfileDefinition).sizes.find(
+      (s) => s.id === preset.selectedSizeId,
+    );
+    // Extract just the numeric designation from labels like "IPE 200" → "200"
+    const designation = size?.label.split(" ").pop() ?? "";
+    dimStr = designation;
+  } else {
+    const vals = profile.dimensions.map(
+      (d) => preset.manualDimensionsMm[d.key] ?? "",
+    );
+    dimStr = vals.join("x");
+  }
+
+  if (preset.lengthValue != null) {
+    return `${alias} ${dimStr}x${preset.lengthValue}`;
+  }
+  // No length stored — leave a trailing x so user can append length
+  return `${alias} ${dimStr}x`;
+}
 
 interface QuickCalcPaletteProps {
   quickCalc: UseQuickCalculatorReturn;
   onLoadEntry: (input: CalculationInput) => void;
+  presets: DimensionPreset[];
 }
 
 export const QuickCalcPalette = memo(function QuickCalcPalette({
   quickCalc,
   onLoadEntry,
+  presets,
 }: QuickCalcPaletteProps) {
   const t = useTranslations("quickCalc");
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -29,9 +90,22 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const lineResultsRef = useRef(lineResults);
   lineResultsRef.current = lineResults;
 
+  // @ trigger state
+  const [atStart, setAtStart] = useState<number | null>(null);
+  const [presetFilter, setPresetFilter] = useState("");
+
+  const filteredPresets = presetFilter.trim()
+    ? presets.filter((p) => p.label.toLowerCase().includes(presetFilter.toLowerCase()))
+    : presets;
+
+  const showPresetPicker = atStart !== null;
+
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => inputRef.current?.focus());
+    } else {
+      setAtStart(null);
+      setPresetFilter("");
     }
   }, [isOpen]);
 
@@ -40,12 +114,70 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
-        close();
+        if (atStart !== null) {
+          // First Escape closes the preset picker
+          setAtStart(null);
+          setPresetFilter("");
+        } else {
+          close();
+        }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [isOpen, close]);
+  }, [isOpen, close, atStart]);
+
+  const handleTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      const cursor = e.target.selectionStart ?? value.length;
+      setQuery(value);
+
+      if (atStart !== null) {
+        // Check if @ is still present just before atStart
+        if (value[atStart - 1] !== "@" || cursor < atStart) {
+          setAtStart(null);
+          setPresetFilter("");
+        } else {
+          setPresetFilter(value.slice(atStart, cursor));
+        }
+      } else {
+        // Detect fresh @ at cursor
+        if (cursor > 0 && value[cursor - 1] === "@") {
+          setAtStart(cursor);
+          setPresetFilter("");
+        }
+      }
+    },
+    [setQuery, atStart],
+  );
+
+  const handleSelectPreset = useCallback(
+    (preset: DimensionPreset) => {
+      if (atStart === null) return;
+      const q = presetToQuery(preset);
+      if (!q) return;
+
+      // Replace the @<filter> portion with the generated query
+      const before = query.slice(0, atStart - 1); // before the @
+      const afterCursor = query.slice(atStart + presetFilter.length); // after filter text
+
+      const newQuery = before + q + afterCursor;
+      setQuery(newQuery);
+      setAtStart(null);
+      setPresetFilter("");
+
+      // Move cursor to end of inserted query
+      requestAnimationFrame(() => {
+        const el = inputRef.current;
+        if (!el) return;
+        const pos = before.length + q.length;
+        el.setSelectionRange(pos, pos);
+        el.focus();
+      });
+    },
+    [atStart, presetFilter, query, setQuery],
+  );
 
   const handleLoadResult = useCallback(
     (result: QuickWeightResult) => {
@@ -117,24 +249,33 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                   <textarea
                     ref={inputRef}
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={handleTextChange}
                     placeholder={t("placeholder")}
                     rows={1}
                     className="w-full resize-none bg-transparent text-[15px] font-medium text-foreground placeholder:text-muted-faint outline-none"
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
-                        const results = lineResultsRef.current;
-                        const first = results.find((lr) => lr.result);
-                        if (first?.result) {
-                          e.preventDefault();
-                          handleLoadResult(first.result);
+                        if (showPresetPicker) {
+                          // Enter selects first filtered preset
+                          const first = filteredPresets[0];
+                          if (first) {
+                            e.preventDefault();
+                            handleSelectPreset(first);
+                          }
+                        } else {
+                          const results = lineResultsRef.current;
+                          const first = results.find((lr) => lr.result);
+                          if (first?.result) {
+                            e.preventDefault();
+                            handleLoadResult(first.result);
+                          }
                         }
                       }
                     }}
                   />
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {successCount > 0 && (
+                  {(successCount > 0 || (showPresetPicker && filteredPresets.length > 0)) && (
                     <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium text-muted sm:inline-flex items-center gap-0.5">
                       <span>&#9166;</span>
                     </kbd>
@@ -144,70 +285,109 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                   </kbd>
                 </div>
               </div>
+
+              {/* @ trigger indicator */}
+              {showPresetPicker && (
+                <div className="flex items-center gap-1.5 border-t border-border-faint bg-blue-surface/40 px-4 py-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 text-blue-text">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  <span className="text-[10px] font-medium text-blue-text">
+                    {t("presetPickerHint")}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Body */}
             <div className="max-h-[55vh] overflow-y-auto scroll-native">
-              {/* Empty state: recent queries */}
-              {lineResults.length === 0 && !query.trim() && recentQueries.length > 0 && (
-                <div className="px-4 py-3">
-                  <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-faint">
-                    {t("recent")}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {recentQueries.slice(0, 8).map((q) => (
-                      <button
-                        key={q}
-                        type="button"
-                        onClick={() => handleRecentClick(q)}
-                        className="rounded-lg border border-border-faint bg-surface px-2.5 py-1.5 font-mono text-xs text-foreground-secondary transition-colors hover:border-border hover:bg-surface-raised"
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {/* Preset picker mode (@ trigger active) */}
+              {showPresetPicker && (
+                <>
+                  {filteredPresets.length === 0 ? (
+                    <div className="px-4 py-4">
+                      <p className="text-xs text-muted-faint">{t("noPresets")}</p>
+                    </div>
+                  ) : (
+                    filteredPresets.map((preset) => (
+                      <PresetPickerRow
+                        key={preset.id}
+                        preset={preset}
+                        onSelect={handleSelectPreset}
+                      />
+                    ))
+                  )}
+                </>
               )}
 
-              {/* Empty state: hint */}
-              {lineResults.length === 0 && !query.trim() && recentQueries.length === 0 && (
-                <div className="px-4 py-5">
-                  <p className="text-xs text-muted-faint">{t("hint")}</p>
-                  <div className="mt-3 space-y-1.5">
-                    {["shs 40x40x2x4500mm", "rhs 120x80x4x6000", "ipe 200x6000 mat=s355", "chs 60.3x3.2x3000 qty=2", "plate 1500x10x3000"].map((ex) => (
-                      <button
-                        key={ex}
-                        type="button"
-                        onClick={() => setQuery(ex)}
-                        className="block w-full rounded-lg border border-transparent px-2.5 py-1.5 text-left font-mono text-xs text-muted transition-colors hover:border-border-faint hover:bg-surface-inset hover:text-foreground-secondary"
-                      >
-                        {ex}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-[10px] text-muted-faint">{t("multiLineHint")}</p>
-                </div>
-              )}
+              {/* Normal mode */}
+              {!showPresetPicker && (
+                <>
+                  {/* Empty state: recent queries */}
+                  {lineResults.length === 0 && !query.trim() && recentQueries.length > 0 && (
+                    <div className="px-4 py-3">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-faint">
+                        {t("recent")}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {recentQueries.slice(0, 8).map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => handleRecentClick(q)}
+                            className="rounded-lg border border-border-faint bg-surface px-2.5 py-1.5 font-mono text-xs text-foreground-secondary transition-colors hover:border-border hover:bg-surface-raised"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Results */}
-              {lineResults.map((lr, idx) => (
-                <QuickResultRow
-                  key={idx}
-                  lineResult={lr}
-                  onLoad={handleLoadResult}
-                />
-              ))}
+                  {/* Empty state: hint */}
+                  {lineResults.length === 0 && !query.trim() && recentQueries.length === 0 && (
+                    <div className="px-4 py-5">
+                      <p className="text-xs text-muted-faint">{t("hint")}</p>
+                      <div className="mt-3 space-y-1.5">
+                        {["shs 40x40x2x4500mm", "rhs 120x80x4x6000", "ipe 200x6000 mat=s355", "chs 60.3x3.2x3000 qty=2", "plate 1500x10x3000"].map((ex) => (
+                          <button
+                            key={ex}
+                            type="button"
+                            onClick={() => setQuery(ex)}
+                            className="block w-full rounded-lg border border-transparent px-2.5 py-1.5 text-left font-mono text-xs text-muted transition-colors hover:border-border-faint hover:bg-surface-inset hover:text-foreground-secondary"
+                          >
+                            {ex}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-[10px] text-muted-faint">{t("multiLineHint")}</p>
+                      {presets.length > 0 && (
+                        <p className="mt-1 text-[10px] text-muted-faint">{t("atTriggerHint")}</p>
+                      )}
+                    </div>
+                  )}
 
-              {/* Multi-line totals */}
-              {successCount >= 2 && (
-                <div className="flex items-center justify-between border-t border-border bg-surface-inset/60 px-4 py-3">
-                  <span className="text-xs font-semibold text-foreground-secondary">{t("total")}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-bold tabular-nums text-foreground">
-                      {totalWeightKg} kg
-                    </span>
-                  </div>
-                </div>
+                  {/* Results */}
+                  {lineResults.map((lr, idx) => (
+                    <QuickResultRow
+                      key={idx}
+                      lineResult={lr}
+                      onLoad={handleLoadResult}
+                    />
+                  ))}
+
+                  {/* Multi-line totals */}
+                  {successCount >= 2 && (
+                    <div className="flex items-center justify-between border-t border-border bg-surface-inset/60 px-4 py-3">
+                      <span className="text-xs font-semibold text-foreground-secondary">{t("total")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-bold tabular-nums text-foreground">
+                          {totalWeightKg} kg
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
@@ -216,6 +396,41 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
     </AnimatePresence>
   );
 });
+
+/* ---- Preset picker row ---- */
+
+function PresetPickerRow({
+  preset,
+  onSelect,
+}: {
+  preset: DimensionPreset;
+  onSelect: (preset: DimensionPreset) => void;
+}) {
+  const profile = getProfileById(preset.profileId);
+  const category = profile?.category ?? "bars";
+  const query = presetToQuery(preset);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(preset)}
+      className="group flex w-full items-center gap-3 border-b border-border-faint/60 px-4 py-2.5 text-left last:border-b-0 transition-colors hover:bg-blue-surface/50"
+    >
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted group-hover:bg-blue-surface group-hover:text-blue-text">
+        <ProfileIcon category={category} className="h-3.5 w-3.5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-foreground">{preset.label}</p>
+        {query && (
+          <p className="mt-0.5 truncate font-mono text-[11px] text-muted-faint">{query}</p>
+        )}
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0 text-muted-faint opacity-0 transition-opacity group-hover:opacity-100">
+        <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+      </svg>
+    </button>
+  );
+}
 
 /* ---- Individual result row ---- */
 

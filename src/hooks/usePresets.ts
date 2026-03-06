@@ -13,6 +13,9 @@ export interface DimensionPreset {
   label: string;
   manualDimensionsMm: Partial<Record<DimensionKey, number>>;
   selectedSizeId?: string;
+  /** Saved piece length (raw value in whatever unit the user had active at save time).
+   *  Only stored for plates_sheets profiles where length is as important as width/thickness. */
+  lengthValue?: number;
   createdAt: number;
 }
 
