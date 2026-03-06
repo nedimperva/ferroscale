@@ -413,7 +413,7 @@ export function CalculatorApp() {
     }
 
     const dimParts = Object.values(dims).filter(Boolean);
-    const autoLabel = `${dimParts.join("x")}x${input.length.value}`;
+    const autoLabel = dimParts.join("x");
 
     const label = window.prompt("Favourite name:", autoLabel);
     if (!label) return;
@@ -423,7 +423,6 @@ export function CalculatorApp() {
       label,
       manualDimensionsMm: dims,
       selectedSizeId: input.selectedSizeId,
-      lengthMm: input.length.value,
     });
     toast.success("Favourite saved");
   }, [input, addPreset]);
@@ -441,7 +440,6 @@ export function CalculatorApp() {
           dispatch({ type: "SET_DIMENSION_VALUE", key: key as import("@/lib/datasets/types").DimensionKey, value });
         }
       }
-      dispatch({ type: "SET_LENGTH_VALUE", value: preset.lengthMm });
       toast.info("Favourite applied");
     },
     [dispatch],

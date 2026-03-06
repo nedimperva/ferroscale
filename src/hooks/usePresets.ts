@@ -13,7 +13,6 @@ export interface DimensionPreset {
   label: string;
   manualDimensionsMm: Partial<Record<DimensionKey, number>>;
   selectedSizeId?: string;
-  lengthMm: number;
   createdAt: number;
 }
 
