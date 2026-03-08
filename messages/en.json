@@ -194,7 +194,9 @@
     "promptLabel": "Favourite name",
     "defaultLabel": "{profile} {dims}",
     "search": "Search favourites…",
-    "noResults": "No matches"
+    "noResults": "No matches",
+    "saved": "Favourite saved",
+    "applied": "Favourite applied"
   },
   "workspace": {
     "title": "Workspace",
@@ -498,7 +500,7 @@
     "loadAll": "Load all",
     "sidebarLabel": "Quick Calc",
     "shortcutHint": "Quick Calculate",
-    "presetPickerHint": "Select a favourite — Enter to pick first",
+    "presetPickerHint": "↑↓ to navigate · Enter to select · Esc to dismiss",
     "noPresets": "No matching favourites",
     "atTriggerHint": "Type @ to insert a saved favourite"
   },

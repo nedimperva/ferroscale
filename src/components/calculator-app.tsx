@@ -428,8 +428,8 @@ export function CalculatorApp() {
       selectedSizeId: input.selectedSizeId,
       lengthValue: isPlateSheet ? input.length.value : undefined,
     });
-    toast.success("Favourite saved");
-  }, [input, addPreset]);
+    toast.success(t("presets.saved"));
+  }, [input, addPreset, t]);
 
   const handleApplyPreset = useCallback(
     (preset: DimensionPreset) => {
@@ -447,9 +447,9 @@ export function CalculatorApp() {
       if (preset.lengthValue != null) {
         dispatch({ type: "SET_LENGTH_VALUE", value: preset.lengthValue });
       }
-      toast.info("Favourite applied");
+      toast.info(t("presets.applied"));
     },
-    [dispatch],
+    [dispatch, t],
   );
 
   const resetAll = useCallback(() => {

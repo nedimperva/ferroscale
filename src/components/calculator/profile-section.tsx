@@ -384,17 +384,15 @@ export const ProfileSection = memo(function ProfileSection({
           </div>
         )}
 
-        {/* Favourite presets */}
-        {profilePresets.length > 0 || selectedProfile.mode === "manual" ? (
-          <div className="mt-1">
-            <PresetChips
-              presets={profilePresets}
-              onApply={onApplyPreset}
-              onSave={onSavePreset}
-              onRemove={onRemovePreset}
-            />
-          </div>
-        ) : null}
+        {/* Favourite presets (compact dropdown) */}
+        <div className="mt-1.5">
+          <PresetChips
+            presets={profilePresets}
+            onApply={onApplyPreset}
+            onSave={onSavePreset}
+            onRemove={onRemovePreset}
+          />
+        </div>
 
         {/* Divider between dimensions and length */}
         <div className="my-1.5 border-t border-border-faint" />

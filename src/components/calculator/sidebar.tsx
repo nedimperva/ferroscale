@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
 import { DATASET_VERSION } from "@/lib/datasets/version";
@@ -46,6 +46,13 @@ export const Sidebar = memo(function Sidebar({
   onToggleTheme,
 }: SidebarProps) {
   const t = useTranslations();
+
+  const isMac = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+  }, []);
+
+  const quickCalcShortcut = isMac ? "⌘K" : "Ctrl+K";
 
   const width = collapsed ? "w-[56px]" : "w-[220px]";
 
@@ -106,7 +113,7 @@ export const Sidebar = memo(function Sidebar({
               <path d="m21 21-4.3-4.3" />
             </svg>
           }
-          label={collapsed ? t("quickCalc.sidebarLabel") : `${t("quickCalc.sidebarLabel")}  ⌘K`}
+          label={collapsed ? t("quickCalc.sidebarLabel") : `${t("quickCalc.sidebarLabel")}  ${quickCalcShortcut}`}
           collapsed={collapsed}
           onClick={onOpenQuickCalc}
         />

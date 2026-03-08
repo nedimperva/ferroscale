@@ -194,7 +194,9 @@
     "promptLabel": "Naziv favorita",
     "defaultLabel": "{profile} {dims}",
     "search": "Pretraži favorite…",
-    "noResults": "Nema rezultata"
+    "noResults": "Nema rezultata",
+    "saved": "Favorit sačuvan",
+    "applied": "Favorit primijenjen"
   },
   "workspace": {
     "title": "Radni prostor",
@@ -498,7 +500,7 @@
     "loadAll": "Ucitaj sve",
     "sidebarLabel": "Brzi Calc",
     "shortcutHint": "Brzi kalkulator",
-    "presetPickerHint": "Odaberite favorit — Enter za prvi",
+    "presetPickerHint": "↑↓ za navigaciju · Enter za odabir · Esc za zatvaranje",
     "noPresets": "Nema odgovarajucih favorita",
     "atTriggerHint": "Ukucajte @ za umetanje sacuvanog favorita"
   },
