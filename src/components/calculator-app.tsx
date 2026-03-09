@@ -32,12 +32,12 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { toast } from "@/lib/toast";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { usePresets } from "@/hooks/usePresets";
-import type { DimensionPreset } from "@/hooks/usePresets";
 import type { LengthUnit } from "@/lib/calculator/types";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
+import { SavePresetModal } from "@/components/calculator/save-preset-modal";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -222,8 +222,10 @@ export function CalculatorApp() {
 
   const quickCalc = useQuickCalculator();
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
-  const profilePresets = useMemo(() => presetsForProfile(input.profileId), [presetsForProfile, input.profileId]);
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const [presetModalOpen, setPresetModalOpen] = useState(false);
+  const [presetDefaultLabel, setPresetDefaultLabel] = useState("");
+  const [presetProfileName, setPresetProfileName] = useState("");
 
   /* Auto-save valid results to history */
   const prevResultRef = useRef(result);
@@ -320,6 +322,8 @@ export function CalculatorApp() {
       projects: () => openProjectsDrawer(),
       resetForm: () => dispatch({ type: "RESET" }),
       showShortcuts: () => setShowShortcutsModal((prev) => !prev),
+      undo: () => dispatch({ type: "UNDO" }),
+      redo: () => dispatch({ type: "REDO" }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [quickCalc.toggle, openProjectsDrawer, dispatch],
@@ -418,38 +422,36 @@ export function CalculatorApp() {
       ? [...dimParts, input.length.value].join("x")
       : dimParts.join("x");
 
-    const label = window.prompt("Favourite name:", autoLabel);
-    if (!label) return;
+    setPresetDefaultLabel(autoLabel);
+    setPresetProfileName(t(`dataset.profiles.${input.profileId}`));
+    setPresetModalOpen(true);
+  }, [input, t]);
 
-    addPreset({
-      profileId: input.profileId,
-      label,
-      manualDimensionsMm: dims,
-      selectedSizeId: input.selectedSizeId,
-      lengthValue: isPlateSheet ? input.length.value : undefined,
-    });
-    toast.success("Favourite saved");
-  }, [input, addPreset]);
-
-  const handleApplyPreset = useCallback(
-    (preset: DimensionPreset) => {
-      const profile = getProfileById(preset.profileId);
+  const handleConfirmSavePreset = useCallback(
+    (label: string) => {
+      const profile = getProfileById(input.profileId);
       if (!profile) return;
 
-      if (preset.selectedSizeId) {
-        dispatch({ type: "SET_SIZE", sizeId: preset.selectedSizeId });
-      }
-      for (const [key, value] of Object.entries(preset.manualDimensionsMm)) {
-        if (value != null) {
-          dispatch({ type: "SET_DIMENSION_VALUE", key: key as import("@/lib/datasets/types").DimensionKey, value });
+      const isPlateSheet = profile.category === "plates_sheets";
+      const dims: Record<string, number> = {};
+      if (profile.mode === "manual") {
+        for (const dim of profile.dimensions) {
+          const val = input.manualDimensions[dim.key]?.value;
+          if (val != null) dims[dim.key] = val;
         }
       }
-      if (preset.lengthValue != null) {
-        dispatch({ type: "SET_LENGTH_VALUE", value: preset.lengthValue });
-      }
-      toast.info("Favourite applied");
+
+      addPreset({
+        profileId: input.profileId,
+        label,
+        manualDimensionsMm: dims,
+        selectedSizeId: input.selectedSizeId,
+        lengthValue: isPlateSheet ? input.length.value : undefined,
+      });
+      toast.success(t("presets.saved"));
+      setPresetModalOpen(false);
     },
-    [dispatch],
+    [input, addPreset, t],
   );
 
   const resetAll = useCallback(() => {
@@ -632,9 +634,8 @@ export function CalculatorApp() {
                 showInlineMaterial={showInlineMaterial}
                 showInlinePrice={showInlinePrice}
                 defaultUnit={defaultUnit}
-                profilePresets={profilePresets}
                 onSavePreset={handleSavePreset}
-                onApplyPreset={handleApplyPreset}
+                profilePresets={presetsForProfile(input.profileId)}
                 onRemovePreset={removePreset}
               />
             </div>
@@ -810,6 +811,15 @@ export function CalculatorApp() {
 
       {/* ---- Keyboard shortcuts modal (?) ---- */}
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
+
+      {/* ---- Save preset modal ---- */}
+      <SavePresetModal
+        open={presetModalOpen}
+        onClose={() => setPresetModalOpen(false)}
+        onSave={handleConfirmSavePreset}
+        defaultLabel={presetDefaultLabel}
+        profileName={presetProfileName}
+      />
     </>
   );
 }

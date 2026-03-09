@@ -65,6 +65,8 @@ export const APP_SHORTCUTS: ShortcutMap = {
   projects: { key: "p", mod: true },
   resetForm: { key: "r", mod: true, shift: true },
   showShortcuts: { key: "?", shift: true },
+  undo: { key: "z", mod: true },
+  redo: { key: "z", mod: true, shift: true },
 };
 
 /** Returns a display string for a shortcut, e.g. "⌘K" or "Ctrl+K" */

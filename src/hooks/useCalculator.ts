@@ -124,7 +124,9 @@ export type CalcAction =
   | { type: "SET_ROUNDING_DIMENSION"; value: number }
   | { type: "RESET" }
   | { type: "RESET_ALL" }
-  | { type: "LOAD_ENTRY"; input: CalculationInput };
+  | { type: "LOAD_ENTRY"; input: CalculationInput }
+  | { type: "UNDO" }
+  | { type: "REDO" };
 
 function inputReducer(state: CalculationInput, action: CalcAction): CalculationInput {
   switch (action.type) {
@@ -228,6 +230,54 @@ function clampRounding(v: number): number {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Undo/redo wrapper                                                 */
+/* ------------------------------------------------------------------ */
+
+interface UndoableState {
+  present: CalculationInput;
+  past: CalculationInput[];
+  future: CalculationInput[];
+}
+
+const MAX_UNDO = 30;
+
+const SKIP_UNDO_ACTIONS = new Set<string>(["LOAD_ENTRY", "RESET", "RESET_ALL"]);
+
+function undoableReducer(state: UndoableState, action: CalcAction): UndoableState {
+  if (action.type === "UNDO") {
+    if (state.past.length === 0) return state;
+    const previous = state.past[state.past.length - 1];
+    return {
+      present: previous,
+      past: state.past.slice(0, -1),
+      future: [state.present, ...state.future],
+    };
+  }
+  if (action.type === "REDO") {
+    if (state.future.length === 0) return state;
+    const next = state.future[0];
+    return {
+      present: next,
+      past: [...state.past, state.present],
+      future: state.future.slice(1),
+    };
+  }
+
+  const newPresent = inputReducer(state.present, action);
+  if (newPresent === state.present) return state;
+
+  if (SKIP_UNDO_ACTIONS.has(action.type)) {
+    return { present: newPresent, past: [], future: [] };
+  }
+
+  return {
+    present: newPresent,
+    past: [...state.past, state.present].slice(-MAX_UNDO),
+    future: [],
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Derived helpers                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -253,14 +303,25 @@ export interface UseCalculatorReturn {
   selectedProfile: ProfileDefinition;
   activeFamily: MetalFamilyId;
   resetForm: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+}
+
+function getInitialUndoableState(): UndoableState {
+  return {
+    present: getDefaultInput(),
+    past: [],
+    future: [],
+  };
 }
 
 export function useCalculator(): UseCalculatorReturn {
-  const [input, dispatch] = useReducer(
-    inputReducer,
+  const [state, dispatch] = useReducer(
+    undoableReducer,
     undefined,
-    getDefaultInput,
+    getInitialUndoableState,
   );
+  const input = state.present;
   const inputHydratedRef = useRef(false);
   const skipNextPersistRef = useRef(false);
   const [isPending, startTransition] = useTransition();
@@ -341,5 +402,7 @@ export function useCalculator(): UseCalculatorReturn {
     selectedProfile,
     activeFamily,
     resetForm,
+    canUndo: state.past.length > 0,
+    canRedo: state.future.length > 0,
   };
 }

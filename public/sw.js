@@ -41,6 +41,61 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// Background Sync for contact form
+const CONTACT_QUEUE_STORE = "contact-queue";
+
+async function openContactQueue() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("ferroscale-offline", 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore(CONTACT_QUEUE_STORE, { keyPath: "id", autoIncrement: true });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function enqueueContact(body) {
+  const db = await openContactQueue();
+  const tx = db.transaction(CONTACT_QUEUE_STORE, "readwrite");
+  tx.objectStore(CONTACT_QUEUE_STORE).add({ body, timestamp: Date.now() });
+  return new Promise((resolve) => {
+    tx.oncomplete = resolve;
+  });
+}
+
+async function replayContactQueue() {
+  const db = await openContactQueue();
+  const tx = db.transaction(CONTACT_QUEUE_STORE, "readonly");
+  const store = tx.objectStore(CONTACT_QUEUE_STORE);
+  const all = await new Promise((resolve) => {
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+  });
+
+  for (const entry of all) {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(entry.body),
+      });
+      if (res.ok) {
+        const delTx = db.transaction(CONTACT_QUEUE_STORE, "readwrite");
+        delTx.objectStore(CONTACT_QUEUE_STORE).delete(entry.id);
+      }
+    } catch {
+      /* still offline, will retry later */
+    }
+  }
+}
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "contact-sync") {
+    event.waitUntil(replayContactQueue());
+  }
+});
+
 function isSameOrigin(requestUrl) {
   return new URL(requestUrl).origin === self.location.origin;
 }
@@ -48,15 +103,32 @@ function isSameOrigin(requestUrl) {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  if (request.method !== "GET") {
-    return;
-  }
-
   if (!isSameOrigin(request.url)) {
     return;
   }
 
   const url = new URL(request.url);
+
+  // Background Sync: queue failed POST /api/contact and replay when online
+  if (request.method === "POST" && url.pathname === "/api/contact") {
+    event.respondWith(
+      fetch(request.clone()).catch(async () => {
+        const body = await request.json();
+        await enqueueContact(body);
+        if (self.registration.sync) {
+          await self.registration.sync.register("contact-sync");
+        }
+        return new Response(JSON.stringify({ ok: true, queued: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }),
+    );
+    return;
+  }
+
+  if (request.method !== "GET") {
+    return;
+  }
 
   // Always network APIs. If offline, fail fast rather than serving stale writes.
   if (url.pathname.startsWith("/api/")) {
