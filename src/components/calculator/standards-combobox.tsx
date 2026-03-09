@@ -7,10 +7,18 @@ import type { DimensionKey, ProfileId } from "@/lib/datasets/types";
 import { getStandardSizesForProfile } from "@/lib/datasets/standard-sizes";
 import type { StandardSize } from "@/lib/datasets/standard-sizes";
 
+interface CustomSize {
+  id: string;
+  label: string;
+  dimensions: Partial<Record<DimensionKey, number>>;
+}
+
 interface StandardsComboboxProps {
   profileId: ProfileId;
   onSelect: (dimensions: Partial<Record<DimensionKey, number>>) => void;
   currentDimensions: Record<string, { value: number; unit: string } | undefined>;
+  customSizes?: CustomSize[];
+  onRemoveCustom?: (id: string) => void;
 }
 
 const TOLERANCE = 0.01;
@@ -25,13 +33,32 @@ function dimensionsMatch(
   });
 }
 
+type ComboItem = StandardSize & { isCustom?: boolean; customId?: string };
+
+function normalizeSearch(s: string): string {
+  return s.toLowerCase().replace(/×/g, "x");
+}
+
 export const StandardsCombobox = memo(function StandardsCombobox({
   profileId,
   onSelect,
   currentDimensions,
+  customSizes = [],
+  onRemoveCustom,
 }: StandardsComboboxProps) {
   const t = useTranslations("standards");
   const sizes = useMemo(() => getStandardSizesForProfile(profileId), [profileId]);
+
+  const allItems: ComboItem[] = useMemo(() => {
+    const customItems: ComboItem[] = customSizes.map((cs) => ({
+      profileId,
+      label: cs.label,
+      dimensions: cs.dimensions,
+      isCustom: true,
+      customId: cs.id,
+    }));
+    return [...customItems, ...sizes];
+  }, [customSizes, sizes, profileId]);
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -42,13 +69,13 @@ export const StandardsCombobox = memo(function StandardsCombobox({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const filtered = query.trim()
-    ? sizes.filter((s) =>
-        s.label.toLowerCase().includes(query.trim().toLowerCase()),
+    ? allItems.filter((s) =>
+        normalizeSearch(s.label).includes(normalizeSearch(query.trim())),
       )
-    : sizes;
+    : allItems;
 
   const handleSelect = useCallback(
-    (size: StandardSize) => {
+    (size: ComboItem) => {
       onSelect(size.dimensions);
       setQuery("");
       setOpen(false);
@@ -142,7 +169,7 @@ export const StandardsCombobox = memo(function StandardsCombobox({
     }
   }, [open, query, filtered, currentDimensions]);
 
-  if (sizes.length === 0) return null;
+  if (sizes.length === 0 && customSizes.length === 0) return null;
 
   return (
     <div className="relative mb-1.5" ref={containerRef}>
@@ -173,7 +200,7 @@ export const StandardsCombobox = memo(function StandardsCombobox({
         >
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
         </svg>
-        {t("title")} ({sizes.length})
+        {t("title")} ({sizes.length}{customSizes.length > 0 ? ` + ${customSizes.length} custom` : ""})
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
@@ -228,9 +255,10 @@ export const StandardsCombobox = memo(function StandardsCombobox({
                 filtered.map((size, i) => {
                   const isMatched = dimensionsMatch(size, currentDimensions);
                   const isHighlighted = i === highlightIdx;
+                  const isCustom = size.isCustom === true;
                   return (
                     <li
-                      key={size.label}
+                      key={isCustom ? `custom-${size.customId}` : size.label}
                       role="option"
                       aria-selected={isMatched}
                       onMouseEnter={() => setHighlightIdx(i)}
@@ -241,31 +269,58 @@ export const StandardsCombobox = memo(function StandardsCombobox({
                       className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm transition-colors ${
                         isHighlighted
                           ? "bg-blue-surface text-blue-text"
-                          : isMatched
-                            ? "bg-surface-raised font-medium"
-                            : "text-foreground hover:bg-surface-raised"
+                          : isCustom
+                            ? "bg-purple-surface/30 text-foreground hover:bg-purple-surface/50"
+                            : isMatched
+                              ? "bg-surface-raised font-medium"
+                              : "text-foreground hover:bg-surface-raised"
                       }`}
                     >
-                      <span className="font-medium">{size.label}</span>
-                      {isMatched && (
-                        <span className="flex shrink-0 items-center gap-1">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="h-4 w-4 text-green-600 dark:text-green-400"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          <span className="rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                            {t("matched")}
+                      <span className="flex items-center gap-1.5 font-medium">
+                        {size.label}
+                        {isCustom && (
+                          <span className="rounded bg-purple-surface px-1 py-0.5 text-[9px] font-semibold text-purple-text">
+                            Custom
                           </span>
-                        </span>
-                      )}
+                        )}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1">
+                        {isMatched && (
+                          <>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              className="h-4 w-4 text-green-600 dark:text-green-400"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            <span className="rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                              {t("matched")}
+                            </span>
+                          </>
+                        )}
+                        {isCustom && onRemoveCustom && (
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onRemoveCustom(size.customId!);
+                            }}
+                            className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
+                            title={t("removeCustom")}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                          </button>
+                        )}
+                      </span>
                     </li>
                   );
                 })

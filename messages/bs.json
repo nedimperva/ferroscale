@@ -208,7 +208,8 @@
     "title": "Standardne dimenzije",
     "search": "Pretraži standardne dimenzije...",
     "noResults": "Nema rezultata",
-    "matched": "Trenutno"
+    "matched": "Trenutno",
+    "removeCustom": "Ukloni prilagođenu veličinu"
   },
   "workspace": {
     "title": "Radni prostor",

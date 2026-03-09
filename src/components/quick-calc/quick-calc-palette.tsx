@@ -136,7 +136,9 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const allPickerItems = buildPickerItems(presets, STANDARD_SIZES);
 
   const filteredItems = presetFilter.trim()
-    ? allPickerItems.filter((p) => p.label.toLowerCase().includes(presetFilter.toLowerCase()))
+    ? allPickerItems.filter((p) =>
+        p.label.toLowerCase().replace(/×/g, "x").includes(presetFilter.toLowerCase().replace(/×/g, "x")),
+      )
     : allPickerItems;
 
   const showPresetPicker = atStart !== null;

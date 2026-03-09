@@ -7,6 +7,7 @@ import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materi
 import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { DimensionKey } from "@/lib/datasets/types";
+import type { DimensionPreset } from "@/hooks/usePresets";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
 import { SizeCombobox } from "./size-combobox";
@@ -185,6 +186,8 @@ interface ProfileSectionProps {
   showInlinePrice: boolean;
   defaultUnit: LengthUnit;
   onSavePreset: () => void;
+  profilePresets: DimensionPreset[];
+  onRemovePreset: (id: string) => void;
 }
 
 export const ProfileSection = memo(function ProfileSection({
@@ -197,6 +200,8 @@ export const ProfileSection = memo(function ProfileSection({
   showInlinePrice,
   defaultUnit,
   onSavePreset,
+  profilePresets,
+  onRemovePreset,
 }: ProfileSectionProps) {
   const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
@@ -372,6 +377,12 @@ export const ProfileSection = memo(function ProfileSection({
                 }
               }}
               currentDimensions={input.manualDimensions}
+              customSizes={profilePresets.map((p) => ({
+                id: p.id,
+                label: p.label,
+                dimensions: p.manualDimensionsMm,
+              }))}
+              onRemoveCustom={onRemovePreset}
             />
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
               {selectedProfile.dimensions.map((dim) => (

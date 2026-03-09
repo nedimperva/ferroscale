@@ -208,7 +208,8 @@
     "title": "Standard sizes",
     "search": "Search standard sizes...",
     "noResults": "No matching sizes",
-    "matched": "Current"
+    "matched": "Current",
+    "removeCustom": "Remove custom size"
   },
   "workspace": {
     "title": "Workspace",

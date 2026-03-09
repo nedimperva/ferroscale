@@ -221,7 +221,7 @@ export function CalculatorApp() {
   } = useProjects();
 
   const quickCalc = useQuickCalculator();
-  const { presets, addPreset } = usePresets();
+  const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
   const [presetDefaultLabel, setPresetDefaultLabel] = useState("");
@@ -635,6 +635,8 @@ export function CalculatorApp() {
                 showInlinePrice={showInlinePrice}
                 defaultUnit={defaultUnit}
                 onSavePreset={handleSavePreset}
+                profilePresets={presetsForProfile(input.profileId)}
+                onRemovePreset={removePreset}
               />
             </div>
 
