@@ -9,7 +9,7 @@ test.describe("Calculator main flow", () => {
   test("page loads with default profile and result", async ({ page }) => {
     await expect(page.locator("text=Category")).toBeVisible();
     await expect(page.locator("text=Piece length")).toBeVisible();
-    await expect(page.locator("text=TOTAL COST")).toBeVisible();
+    await expect(page.getByText("Subtotal:").first()).toBeVisible();
   });
 
   test("switching profile category updates the form", async ({ page }) => {
@@ -42,14 +42,11 @@ test.describe("Calculator main flow", () => {
     await expect(quantityInput).toHaveValue("1");
   });
 
-  test("save preset modal opens and works", async ({ page }) => {
+  test("save custom size modal opens and works", async ({ page }) => {
     await page.getByRole("button", { name: /Bars/ }).click();
     await page.getByRole("button", { name: /Round/ }).click();
 
-    const favBtn = page.getByRole("button", { name: /Favourites/ });
-    await favBtn.click();
-
-    await page.getByRole("button", { name: /Save current dimensions/ }).click();
+    await page.getByText("Save custom size").click();
 
     await expect(page.getByRole("dialog", { name: /Save favourite/ })).toBeVisible();
 
@@ -57,8 +54,7 @@ test.describe("Calculator main flow", () => {
     await nameInput.fill("Test E2E Preset");
     await page.getByRole("dialog").getByRole("button", { name: /Save/ }).click();
 
-    await favBtn.click();
-    await expect(page.locator("text=Test E2E Preset")).toBeVisible();
+    await expect(page.locator("text=Favourite saved")).toBeVisible({ timeout: 3000 });
   });
 
   test("settings drawer opens", async ({ page }) => {

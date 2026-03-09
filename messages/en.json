@@ -188,6 +188,7 @@
     "title": "Favourites",
     "save": "Save",
     "savePreset": "Save current dimensions as favourite",
+    "saveCustom": "Save custom size",
     "applyPreset": "Apply this favourite",
     "removePreset": "Remove favourite",
     "confirmRemove": "Confirm remove",
@@ -202,6 +203,12 @@
     "modalPlaceholder": "Enter a name...",
     "modalCancel": "Cancel",
     "modalSave": "Save"
+  },
+  "standards": {
+    "title": "Standard sizes",
+    "search": "Search standard sizes...",
+    "noResults": "No matching sizes",
+    "matched": "Current"
   },
   "workspace": {
     "title": "Workspace",

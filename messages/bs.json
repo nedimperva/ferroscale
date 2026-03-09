@@ -188,6 +188,7 @@
     "title": "Favoriti",
     "save": "Sacuvaj",
     "savePreset": "Sacuvaj trenutne dimenzije kao favorit",
+    "saveCustom": "Sačuvaj prilagođenu dimenziju",
     "applyPreset": "Primijeni ovaj favorit",
     "removePreset": "Ukloni favorit",
     "confirmRemove": "Potvrdi uklanjanje",
@@ -202,6 +203,12 @@
     "modalPlaceholder": "Unesite naziv...",
     "modalCancel": "Otkaži",
     "modalSave": "Sačuvaj"
+  },
+  "standards": {
+    "title": "Standardne dimenzije",
+    "search": "Pretraži standardne dimenzije...",
+    "noResults": "Nema rezultata",
+    "matched": "Trenutno"
   },
   "workspace": {
     "title": "Radni prostor",

@@ -13,6 +13,7 @@ import { getProfileById } from "@/lib/datasets/profiles";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { triggerHaptic } from "@/lib/haptics";
 import type { ProfileId, StandardProfileDefinition } from "@/lib/datasets/types";
+import { STANDARD_SIZES, type StandardSize } from "@/lib/datasets/standard-sizes";
 
 /** Maps profileId to the canonical quick-calc alias. */
 const PROFILE_ALIAS: Partial<Record<ProfileId, string>> = {
@@ -71,6 +72,40 @@ function presetToQuery(preset: DimensionPreset): string {
   return `${alias} ${dimStr}x`;
 }
 
+/** Build a quick-calc query from a standard size. */
+function standardSizeToQuery(size: StandardSize): string {
+  const alias = PROFILE_ALIAS[size.profileId];
+  if (!alias) return "";
+  const vals = Object.values(size.dimensions).filter((v) => v != null);
+  return `${alias} ${vals.join("x")}x`;
+}
+
+interface PickerItem {
+  id: string;
+  label: string;
+  profileId: ProfileId;
+  query: string;
+  kind: "preset" | "standard";
+}
+
+function buildPickerItems(presets: DimensionPreset[], standards: StandardSize[]): PickerItem[] {
+  const presetItems: PickerItem[] = presets.map((p) => ({
+    id: p.id,
+    label: p.label,
+    profileId: p.profileId,
+    query: presetToQuery(p),
+    kind: "preset",
+  }));
+  const stdItems: PickerItem[] = standards.map((s, i) => ({
+    id: `std_${s.profileId}_${i}`,
+    label: s.label,
+    profileId: s.profileId,
+    query: standardSizeToQuery(s),
+    kind: "standard",
+  }));
+  return [...presetItems, ...stdItems];
+}
+
 interface QuickCalcPaletteProps {
   quickCalc: UseQuickCalculatorReturn;
   onLoadEntry: (input: CalculationInput) => void;
@@ -98,9 +133,11 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const [highlightIdx, setHighlightIdx] = useState(0);
   const presetListRef = useRef<HTMLDivElement>(null);
 
-  const filteredPresets = presetFilter.trim()
-    ? presets.filter((p) => p.label.toLowerCase().includes(presetFilter.toLowerCase()))
-    : presets;
+  const allPickerItems = buildPickerItems(presets, STANDARD_SIZES);
+
+  const filteredItems = presetFilter.trim()
+    ? allPickerItems.filter((p) => p.label.toLowerCase().includes(presetFilter.toLowerCase()))
+    : allPickerItems;
 
   const showPresetPicker = atStart !== null;
 
@@ -119,7 +156,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reset index on filter change
     setHighlightIdx(0);
-  }, [filteredPresets.length]);
+  }, [filteredItems.length]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -164,22 +201,20 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
     [setQuery, atStart],
   );
 
-  const handleSelectPreset = useCallback(
-    (preset: DimensionPreset) => {
+  const handleSelectItem = useCallback(
+    (item: PickerItem) => {
       if (atStart === null) return;
-      const q = presetToQuery(preset);
+      const q = item.query;
       if (!q) return;
 
-      // Replace the @<filter> portion with the generated query
-      const before = query.slice(0, atStart - 1); // before the @
-      const afterCursor = query.slice(atStart + presetFilter.length); // after filter text
+      const before = query.slice(0, atStart - 1);
+      const afterCursor = query.slice(atStart + presetFilter.length);
 
       const newQuery = before + q + afterCursor;
       setQuery(newQuery);
       setAtStart(null);
       setPresetFilter("");
 
-      // Move cursor to end of inserted query
       requestAnimationFrame(() => {
         const el = inputRef.current;
         if (!el) return;
@@ -270,29 +305,29 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                         if (e.key === "ArrowDown") {
                           e.preventDefault();
                           setHighlightIdx((i) =>
-                            filteredPresets.length ? (i + 1) % filteredPresets.length : 0,
+                            filteredItems.length ? (i + 1) % filteredItems.length : 0,
                           );
                           return;
                         }
                         if (e.key === "ArrowUp") {
                           e.preventDefault();
                           setHighlightIdx((i) =>
-                            filteredPresets.length
-                              ? (i - 1 + filteredPresets.length) % filteredPresets.length
+                            filteredItems.length
+                              ? (i - 1 + filteredItems.length) % filteredItems.length
                               : 0,
                           );
                           return;
                         }
                         if (e.key === "Tab") {
                           e.preventDefault();
-                          const target = filteredPresets[highlightIdx];
-                          if (target) handleSelectPreset(target);
+                          const target = filteredItems[highlightIdx];
+                          if (target) handleSelectItem(target);
                           return;
                         }
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
-                          const target = filteredPresets[highlightIdx];
-                          if (target) handleSelectPreset(target);
+                          const target = filteredItems[highlightIdx];
+                          if (target) handleSelectItem(target);
                           return;
                         }
                       } else if (e.key === "Enter" && !e.shiftKey) {
@@ -307,7 +342,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                   />
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {(successCount > 0 || (showPresetPicker && filteredPresets.length > 0)) && (
+                  {(successCount > 0 || (showPresetPicker && filteredItems.length > 0)) && (
                     <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium text-muted sm:inline-flex items-center gap-0.5">
                       <span>&#9166;</span>
                     </kbd>
@@ -327,9 +362,9 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                   <span className="text-[10px] font-medium text-blue-text">
                     {t("presetPickerHint")}
                   </span>
-                  {filteredPresets.length > 1 && (
+                  {filteredItems.length > 1 && (
                     <span className="ml-auto text-[10px] tabular-nums text-blue-text/60">
-                      {highlightIdx + 1}/{filteredPresets.length}
+                      {highlightIdx + 1}/{filteredItems.length}
                     </span>
                   )}
                 </div>
@@ -341,17 +376,17 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
               {/* Preset picker mode (@ trigger active) */}
               {showPresetPicker && (
                 <div ref={presetListRef}>
-                  {filteredPresets.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     <div className="px-4 py-4">
                       <p className="text-xs text-muted-faint">{t("noPresets")}</p>
                     </div>
                   ) : (
-                    filteredPresets.map((preset, idx) => (
+                    filteredItems.map((preset, idx) => (
                       <PresetPickerRow
                         key={preset.id}
                         preset={preset}
                         highlighted={idx === highlightIdx}
-                        onSelect={handleSelectPreset}
+                        onSelect={handleSelectItem}
                         onHover={() => setHighlightIdx(idx)}
                       />
                     ))
@@ -444,15 +479,15 @@ function PresetPickerRow({
   onSelect,
   onHover,
 }: {
-  preset: DimensionPreset;
+  preset: PickerItem;
   highlighted: boolean;
-  onSelect: (preset: DimensionPreset) => void;
+  onSelect: (preset: PickerItem) => void;
   onHover: () => void;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
   const profile = getProfileById(preset.profileId);
   const category = profile?.category ?? "bars";
-  const query = presetToQuery(preset);
+  const query = preset.query;
 
   useEffect(() => {
     if (highlighted && ref.current) {
@@ -478,7 +513,12 @@ function PresetPickerRow({
         <ProfileIcon category={category} className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-foreground">{preset.label}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-semibold text-foreground">{preset.label}</p>
+          {preset.kind === "preset" && (
+            <span className="shrink-0 rounded bg-purple-surface px-1 py-0.5 text-[9px] font-medium text-purple-text">Custom</span>
+          )}
+        </div>
         {query && (
           <p className="mt-0.5 truncate font-mono text-[11px] text-muted-faint">{query}</p>
         )}

@@ -100,127 +100,92 @@ export const ResultPanel = memo(function ResultPanel({
     );
   }
 
+  const profileLabel = normalizedProfile?.shortLabel ?? result.profileLabel;
+  const gradeLabel = getGradeLabel(result.gradeLabel);
+  const currency = CURRENCY_SYMBOLS[result.currency];
+  const priceUnit = result.priceUnit ?? "kg";
+
+  const heroValue = weightAsMain
+    ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
+    : fmtAnimated(animatedTotal, result.grandTotalAmount);
+  const heroUnit = weightAsMain ? "kg" : currency;
+  const secondaryLine = weightAsMain
+    ? `${fmtAnimated(animatedTotal, result.grandTotalAmount)} ${currency}`
+    : `${fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg`;
+
+  const hasCostInfo = true;
+  const showTotalRow = result.wasteAmount > 0 || (includeVat && result.vatAmount > 0);
+
   return (
     <section
       className={`rounded-xl border bg-surface transition-opacity duration-200 ${isPending ? "border-border opacity-60" : "border-border"
         }`}
     >
-      {/* ── Hero: Total Cost / Weight ── */}
-      <div className="rounded-t-xl border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-5 text-center">
-        {weightAsMain ? (
-          <>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-              {t("totalWeight")}
-            </p>
-            <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground tabular-nums transition-all duration-300">
-              {fmtAnimated(animatedTotalWeight, result.totalWeightKg)}
-            </p>
-            <p className="mt-0.5 text-sm font-medium text-muted">kg</p>
-            <p className="mt-1 text-sm tabular-nums text-muted">
-              {fmtAnimated(animatedTotal, result.grandTotalAmount)} {CURRENCY_SYMBOLS[result.currency]}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-              {t("totalCost")}
-            </p>
-            <p className="mt-1 text-4xl font-extrabold tracking-tight text-foreground tabular-nums transition-all duration-300">
-              {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-            </p>
-            <p className="mt-0.5 text-sm font-medium text-muted">{CURRENCY_SYMBOLS[result.currency]}</p>
-          </>
-        )}
+      {/* Hero */}
+      <div className="rounded-t-xl border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4 text-center">
+        <p className="text-4xl font-extrabold tracking-tight tabular-nums transition-all duration-300">
+          {heroValue}
+        </p>
+        <p className="text-sm font-medium text-muted">{heroUnit}</p>
+        <p className="mt-1 text-sm tabular-nums text-muted">{secondaryLine}</p>
       </div>
 
-      {/* ── Weight cards ── */}
-      <div className="grid grid-cols-2 gap-3 px-5 pt-4">
-        <div className="rounded-lg bg-surface-raised px-3 py-2.5">
-          <p className="text-[11px] font-medium text-muted">{t("unitWeight")}</p>
-          <p className="mt-0.5 text-lg font-bold tabular-nums tracking-tight transition-all duration-300">
-            {fmtAnimated(animatedUnitWeight, result.unitWeightKg)}{" "}
-            <span className="text-sm font-medium text-muted">kg</span>
-          </p>
-        </div>
-        <div className="rounded-lg bg-surface-raised px-3 py-2.5">
-          <p className="text-[11px] font-medium text-muted">{t("totalWeight")}</p>
-          <p className="mt-0.5 text-lg font-bold tabular-nums tracking-tight transition-all duration-300">
-            {fmtAnimated(animatedTotalWeight, result.totalWeightKg)}{" "}
-            <span className="text-sm font-medium text-muted">kg</span>
-          </p>
-        </div>
-      </div>
-
-      {/* ── Detail rows ── */}
-      <div className="mt-4 space-y-0 px-5 text-sm">
-        <div className="flex items-baseline justify-between border-b border-border-faint py-2">
-          <span className="text-muted">{t("profile")}</span>
-          <span className="inline-flex max-w-[70%] items-center justify-end gap-1.5 text-right font-medium">
-            {normalizedProfile && (
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
-                <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
-              </span>
-            )}
-            <span className="truncate">{normalizedProfile?.shortLabel ?? result.profileLabel}</span>
+      {/* Profile + Material + Weight — compact info */}
+      <div className="px-5 py-3 text-sm">
+        <div className="flex items-center gap-2">
+          {normalizedProfile && (
+            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+              <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+            </span>
+          )}
+          <span className="font-medium truncate">{profileLabel}</span>
+          <span className="rounded bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium text-muted">
+            {gradeLabel}
           </span>
         </div>
-        <div className="flex items-baseline justify-between border-b border-border-faint py-2">
-          <span className="text-muted">{t("material")}</span>
-          <span className="font-medium text-right">{getGradeLabel(result.gradeLabel)}</span>
-        </div>
-        <div className="flex items-baseline justify-between py-2">
-          <span className="text-muted">{t("unitPrice")}</span>
-          <span className="font-medium text-right">
-            {result.unitPriceAmount} {CURRENCY_SYMBOLS[result.currency]}/{result.priceUnit ?? "kg"}
+        <div className="mt-1.5 flex items-baseline gap-3 text-xs text-muted">
+          <span>{fmtAnimated(animatedUnitWeight, result.unitWeightKg)} kg/pc</span>
+          {result.quantity > 1 && (
+            <span>
+              × {result.quantity} = {fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg
+            </span>
+          )}
+          <span className="ml-auto">
+            {result.unitPriceAmount} {currency}/{priceUnit}
           </span>
         </div>
       </div>
 
-      {/* ── Cost Breakdown (collapsible) ── */}
-      <div className="mt-1 px-5">
-        <details className="group rounded-lg border border-border-faint" onToggle={(e) => {
-          if ((e.target as HTMLDetailsElement).open) {
-            triggerHaptic("light");
-          }
-        }}>
-          <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-foreground-secondary select-none">
-            {t("costBreakdown")}
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-faint transition-transform group-open:rotate-180">
-              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-            </svg>
-          </summary>
-          <div className="border-t border-border-faint px-3 py-2.5 text-sm">
-            <div className="flex justify-between py-1">
-              <span className="text-muted">{t("subtotal")}</span>
-              <span>{result.subtotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
-            </div>
-            {result.wasteAmount > 0 && (
-              <div className="flex justify-between py-1">
-                <span className="text-muted">
-                  {t("waste", { percent: wastePercent })}
-                </span>
-                <span>{result.wasteAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
-              </div>
-            )}
-            {includeVat && (
-              <div className="flex justify-between py-1">
-                <span className="text-muted">
-                  {t("vat", { percent: vatPercent })}
-                </span>
-                <span>{result.vatAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
-              </div>
-            )}
-            <div className="mt-1 flex justify-between border-t border-border pt-2 font-semibold">
-              <span>{t("total")}</span>
-              <span className="text-accent">{result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}</span>
-            </div>
+      {/* Cost lines — inline, no accordion */}
+      {hasCostInfo && (
+        <div className="border-t border-border-faint px-5 py-2.5 text-sm">
+          <div className="flex justify-between py-0.5">
+            <span className="text-muted">{t("subtotal")}</span>
+            <span>{result.subtotalAmount} {currency}</span>
           </div>
-        </details>
-      </div>
+          {result.wasteAmount > 0 && (
+            <div className="flex justify-between py-0.5">
+              <span className="text-muted">{t("waste", { percent: wastePercent })}</span>
+              <span>{result.wasteAmount} {currency}</span>
+            </div>
+          )}
+          {includeVat && result.vatAmount > 0 && (
+            <div className="flex justify-between py-0.5">
+              <span className="text-muted">{t("vat", { percent: vatPercent })}</span>
+              <span>{result.vatAmount} {currency}</span>
+            </div>
+          )}
+          {showTotalRow && (
+            <div className="mt-1 flex justify-between border-t border-border-faint pt-1 font-semibold">
+              <span>{t("total")}</span>
+              <span className="text-accent">{result.grandTotalAmount} {currency}</span>
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* ── Action buttons ── */}
-      <div className="flex flex-col gap-2 px-5 pt-4 pb-5">
-        {/* Compare — full width, primary action */}
+      {/* Action buttons — compact row */}
+      <div className="flex items-center gap-1.5 border-t border-border-faint px-5 py-3">
         <button
           type="button"
           onClick={() => {
@@ -228,7 +193,7 @@ export const ResultPanel = memo(function ResultPanel({
             onCompare?.();
           }}
           disabled={!canCompare && !isInCompare}
-          className={`inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${isInCompare
+          className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${isInCompare
             ? "border-blue-border bg-blue-surface text-blue-text"
             : canCompare
               ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
@@ -250,66 +215,63 @@ export const ResultPanel = memo(function ResultPanel({
             ? t("inCompareCount", { count: compareCount, max: maxCompare })
             : t("addToCompare")}
         </button>
-
-        {/* Save + Project + Copy — side by side */}
-        <div className="grid grid-cols-3 gap-2">
-
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic(isStarred ? "light" : "success");
-              onStar();
-            }}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${isStarred
-              ? "border-accent-border bg-accent-surface text-accent"
-              : "border-border text-foreground-secondary hover:bg-surface-raised"
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic(isStarred ? "light" : "success");
+            onStar();
+          }}
+          title={isStarred ? t("saved") : t("save")}
+          aria-label={t("saveAriaLabel")}
+          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${isStarred
+            ? "border-accent-border bg-accent-surface text-accent"
+            : "border-border text-foreground-secondary hover:bg-surface-raised"
+            }`}
+        >
+          <motion.svg
+            key={isStarred ? "starred" : "unstarred"}
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.25, 1] }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            className={`h-4 w-4 ${isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
               }`}
-            aria-label={t("saveAriaLabel")}
+            strokeWidth={2}
           >
-            <motion.svg
-              key={isStarred ? "starred" : "unstarred"}
-              initial={{ scale: 1 }}
-              animate={{ scale: [1, 1.25, 1] }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className={`h-4 w-4 ${isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
-                }`}
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-            </motion.svg>
-            {isStarred ? t("saved") : t("save")}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic("light");
-              onAddToProject?.();
-            }}
-            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${hasProjects
-              ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-              : "border-border text-foreground-secondary hover:bg-surface-raised"
-              }`}
-            title={t("addToProject")}
-            aria-label={t("projectAriaLabel")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
-            </svg>
-            {t("project")}
-          </button>
-          <CopyButton result={result} normalizedProfile={normalizedProfile} />
-        </div>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+          </motion.svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic("light");
+            onAddToProject?.();
+          }}
+          title={t("addToProject")}
+          aria-label={t("projectAriaLabel")}
+          className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${hasProjects
+            ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+            : "border-border text-foreground-secondary hover:bg-surface-raised"
+            }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
+          </svg>
+        </button>
+        <CopyButton result={result} normalizedProfile={normalizedProfile} />
       </div>
 
-      {/* ── Full calculation steps (inline collapsible) ── */}
-      <details className="border-t border-border-faint px-5 py-3" onToggle={(e) => {
-        if ((e.target as HTMLDetailsElement).open) {
-          triggerHaptic("light");
-        }
-      }}>
-        <summary className="cursor-pointer text-xs font-medium text-muted select-none">
+      {/* Formula link */}
+      <details
+        className="border-t border-border-faint px-5 py-2.5"
+        onToggle={(e) => {
+          if ((e.target as HTMLDetailsElement).open) {
+            triggerHaptic("light");
+          }
+        }}
+      >
+        <summary className="cursor-pointer text-xs text-muted select-none">
           {t("fullSteps")}
         </summary>
         <div className="mt-2 overflow-x-auto">
@@ -337,7 +299,7 @@ export const ResultPanel = memo(function ResultPanel({
         </div>
       </details>
 
-      {/* ── References ── */}
+      {/* References */}
       <ReferenceList
         labels={result.referenceLabels}
         className="border-t border-border-faint px-5 py-3 text-xs text-muted-faint"
@@ -370,12 +332,13 @@ function CopyButton({
     <button
       type="button"
       onClick={handleCopy}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+      title={copied ? t("copied") : t("copy")}
+      aria-label={t("copyAriaLabel")}
+      className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
         copied
           ? "border-green-border bg-green-surface text-green-text"
           : "border-border text-foreground-secondary hover:bg-surface-raised"
       }`}
-      aria-label={t("copyAriaLabel")}
     >
       {copied ? (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -387,7 +350,6 @@ function CopyButton({
           <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
         </svg>
       )}
-      {copied ? t("copied") : t("copy")}
     </button>
   );
 }

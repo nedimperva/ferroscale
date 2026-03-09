@@ -32,7 +32,6 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { toast } from "@/lib/toast";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { usePresets } from "@/hooks/usePresets";
-import type { DimensionPreset } from "@/hooks/usePresets";
 import type { LengthUnit } from "@/lib/calculator/types";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
@@ -222,8 +221,7 @@ export function CalculatorApp() {
   } = useProjects();
 
   const quickCalc = useQuickCalculator();
-  const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
-  const profilePresets = useMemo(() => presetsForProfile(input.profileId), [presetsForProfile, input.profileId]);
+  const { presets, addPreset } = usePresets();
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
   const [presetDefaultLabel, setPresetDefaultLabel] = useState("");
@@ -456,27 +454,6 @@ export function CalculatorApp() {
     [input, addPreset, t],
   );
 
-  const handleApplyPreset = useCallback(
-    (preset: DimensionPreset) => {
-      const profile = getProfileById(preset.profileId);
-      if (!profile) return;
-
-      if (preset.selectedSizeId) {
-        dispatch({ type: "SET_SIZE", sizeId: preset.selectedSizeId });
-      }
-      for (const [key, value] of Object.entries(preset.manualDimensionsMm)) {
-        if (value != null) {
-          dispatch({ type: "SET_DIMENSION_VALUE", key: key as import("@/lib/datasets/types").DimensionKey, value });
-        }
-      }
-      if (preset.lengthValue != null) {
-        dispatch({ type: "SET_LENGTH_VALUE", value: preset.lengthValue });
-      }
-      toast.info(t("presets.applied"));
-    },
-    [dispatch, t],
-  );
-
   const resetAll = useCallback(() => {
     dispatch({ type: "RESET_ALL" });
   }, [dispatch]);
@@ -657,10 +634,7 @@ export function CalculatorApp() {
                 showInlineMaterial={showInlineMaterial}
                 showInlinePrice={showInlinePrice}
                 defaultUnit={defaultUnit}
-                profilePresets={profilePresets}
                 onSavePreset={handleSavePreset}
-                onApplyPreset={handleApplyPreset}
-                onRemovePreset={removePreset}
               />
             </div>
 

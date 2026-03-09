@@ -6,11 +6,11 @@ import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
 import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
-import type { DimensionPreset } from "@/hooks/usePresets";
+import type { DimensionKey } from "@/lib/datasets/types";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
 import { SizeCombobox } from "./size-combobox";
-import { PresetChips } from "./preset-chips";
+import { StandardsCombobox } from "./standards-combobox";
 import { triggerHaptic } from "@/lib/haptics";
 
 /** Ordered list of categories for the top-level tabs. */
@@ -184,10 +184,7 @@ interface ProfileSectionProps {
   showInlineMaterial: boolean;
   showInlinePrice: boolean;
   defaultUnit: LengthUnit;
-  profilePresets: DimensionPreset[];
   onSavePreset: () => void;
-  onApplyPreset: (preset: DimensionPreset) => void;
-  onRemovePreset: (id: string) => void;
 }
 
 export const ProfileSection = memo(function ProfileSection({
@@ -199,10 +196,7 @@ export const ProfileSection = memo(function ProfileSection({
   showInlineMaterial,
   showInlinePrice,
   defaultUnit,
-  profilePresets,
   onSavePreset,
-  onApplyPreset,
-  onRemovePreset,
 }: ProfileSectionProps) {
   const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
@@ -367,32 +361,45 @@ export const ProfileSection = memo(function ProfileSection({
 
         {/* Manual dimensions */}
         {selectedProfile.mode === "manual" && (
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-            {selectedProfile.dimensions.map((dim) => (
-              <DimensionInput
-                key={dim.key}
-                dimension={dim}
-                value={input.manualDimensions[dim.key]}
-                unit={defaultUnit}
-                hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
-                issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
-                onValueChange={(v) =>
-                  dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
+          <>
+            <StandardsCombobox
+              profileId={input.profileId}
+              onSelect={(dims) => {
+                for (const [key, value] of Object.entries(dims)) {
+                  if (value != null) {
+                    dispatch({ type: "SET_DIMENSION_VALUE", key: key as DimensionKey, value });
+                  }
                 }
-              />
-            ))}
-          </div>
+              }}
+              currentDimensions={input.manualDimensions}
+            />
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+              {selectedProfile.dimensions.map((dim) => (
+                <DimensionInput
+                  key={dim.key}
+                  dimension={dim}
+                  value={input.manualDimensions[dim.key]}
+                  unit={defaultUnit}
+                  hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
+                  issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
+                  onValueChange={(v) =>
+                    dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
+                  }
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={onSavePreset}
+              className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-muted-faint transition-colors hover:text-foreground-secondary"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                <path d="M12 5v14" /><path d="M5 12h14" />
+              </svg>
+              {t("presets.saveCustom")}
+            </button>
+          </>
         )}
-
-        {/* Favourite presets (compact dropdown) */}
-        <div className="mt-1.5">
-          <PresetChips
-            presets={profilePresets}
-            onApply={onApplyPreset}
-            onSave={onSavePreset}
-            onRemove={onRemovePreset}
-          />
-        </div>
 
         {/* Divider between dimensions and length */}
         <div className="my-1.5 border-t border-border-faint" />
