@@ -80,71 +80,31 @@ export const ResultContent = memo(function ResultContent({
   const currency = CURRENCY_SYMBOLS[result.currency];
   const priceUnit = result.priceUnit ?? "kg";
 
-  const showTotalRow = result.wasteAmount > 0 || (includeVat && result.vatAmount > 0);
   const isMulti = result.quantity > 1;
-  const unitCost = isMulti
-    ? (result.subtotalAmount / result.quantity).toFixed(
-        String(result.subtotalAmount).includes(".")
-          ? String(result.subtotalAmount).split(".")[1].length
-          : 0,
-      )
-    : null;
 
   return (
     <>
       {/* ── Hero ── */}
-      <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4">
-        {isMulti ? (
-          /* ── Two-column hero for qty > 1 ── */
-          <div className="grid grid-cols-2 gap-4">
-            {/* Per piece column */}
-            <div className={`flex flex-col items-center rounded-lg px-3 py-2 ${!weightAsMain ? "bg-surface/40" : "bg-surface/60 ring-1 ring-accent/20"}`}>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">
-                {t("perPiece")}
-              </span>
-              <span className={`mt-1 tabular-nums tracking-tight text-foreground ${weightAsMain ? "text-2xl font-extrabold" : "text-xl font-bold"}`}>
-                {fmtAnimated(animatedUnitWeight, result.unitWeightKg)}
-                <span className="ml-0.5 text-xs font-semibold text-muted">kg</span>
-              </span>
-              <span className={`tabular-nums ${weightAsMain ? "text-base font-bold text-accent" : "text-sm font-semibold text-foreground-secondary"}`}>
-                {unitCost}
-                <span className="ml-0.5 text-xs font-medium text-muted">{currency}</span>
-              </span>
-            </div>
-            {/* Total column */}
-            <div className={`flex flex-col items-center rounded-lg px-3 py-2 ${weightAsMain ? "bg-surface/40" : "bg-surface/60 ring-1 ring-accent/20"}`}>
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">
-                {t("totalQty", { qty: result.quantity })}
-              </span>
-              <span className={`mt-1 tabular-nums tracking-tight text-foreground ${!weightAsMain ? "text-2xl font-extrabold" : "text-xl font-bold"}`}>
-                {fmtAnimated(animatedTotalWeight, result.totalWeightKg)}
-                <span className="ml-0.5 text-xs font-semibold text-muted">kg</span>
-              </span>
-              <span className={`tabular-nums ${!weightAsMain ? "text-base font-bold text-accent" : "text-sm font-semibold text-foreground-secondary"}`}>
-                {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-                <span className="ml-0.5 text-xs font-medium text-muted">{currency}</span>
-              </span>
-            </div>
-          </div>
-        ) : (
-          /* ── Single centered hero for qty = 1 ── */
-          <div className="text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-              {weightAsMain ? t("totalWeight") : t("totalCost")}
-            </p>
-            <p className="mt-1 text-4xl font-extrabold tabular-nums tracking-tight text-foreground transition-all duration-300">
-              {weightAsMain
-                ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
-                : fmtAnimated(animatedTotal, result.grandTotalAmount)}
-              <span className="ml-1 text-lg font-bold text-muted">
-                {weightAsMain ? "kg" : currency}
-              </span>
-            </p>
-            <p className="mt-1 text-sm tabular-nums text-muted">
-              {result.unitWeightKg} kg · {result.unitPriceAmount} {currency}/{priceUnit}
-            </p>
-          </div>
-        )}
+      <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+          {weightAsMain ? t("totalWeight") : t("totalCost")}
+        </p>
+        <p className="mt-1 text-4xl font-extrabold tabular-nums tracking-tight text-foreground transition-all duration-300">
+          {weightAsMain
+            ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
+            : fmtAnimated(animatedTotal, result.grandTotalAmount)}
+          <span className="ml-1 text-lg font-bold text-muted">
+            {weightAsMain ? "kg" : currency}
+          </span>
+        </p>
+        <p className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-muted">
+          {normalizedProfile && (
+            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-surface-inset">
+              <ProfileIcon category={normalizedProfile.iconKey} className="h-3 w-3" />
+            </span>
+          )}
+          <span className="truncate">{profileLabel} · {gradeLabel}</span>
+        </p>
       </div>
 
       {/* ── Action buttons ── */}
@@ -235,70 +195,53 @@ export const ResultContent = memo(function ResultContent({
         <CopyButton result={result} normalizedProfile={normalizedProfile} />
       </div>
 
-      <div className="px-4 py-4">
-        {/* ── Detail rows (metadata only) ── */}
-        <div className="space-y-0 text-sm">
-          <div className="flex items-baseline justify-between border-b border-border-faint py-2">
-            <span className="text-muted">{t("profile")}</span>
-            <span className="inline-flex max-w-[70%] items-center justify-end gap-1.5 text-right font-medium">
-              {normalizedProfile && (
-                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
-                  <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
-                </span>
-              )}
-              <span className="truncate">{profileLabel}</span>
-            </span>
-          </div>
-          <div className="flex items-baseline justify-between border-b border-border-faint py-2">
-            <span className="text-muted">{t("material")}</span>
-            <span className="font-medium text-right">{gradeLabel}</span>
-          </div>
-          <div className="flex items-baseline justify-between py-2">
-            <span className="text-muted">{t("unitPrice")}</span>
-            <span className="font-medium text-right">
-              {result.unitPriceAmount} {currency}/{priceUnit}
-            </span>
-          </div>
+      {/* ── Receipt body ── */}
+      <div className="px-4 py-4 text-sm">
+        {/* Weight section */}
+        <div className="flex justify-between py-1.5">
+          <span className="text-muted">{t("unitWeight")}</span>
+          <span className="tabular-nums">{fmtAnimated(animatedUnitWeight, result.unitWeightKg)} kg</span>
         </div>
-
-        {/* ── Cost Breakdown ── */}
-        <div className="mt-3">
-          <details className="group rounded-lg border border-border-faint" open>
-            <summary className="flex cursor-pointer items-center justify-between px-3 py-2.5 text-sm font-medium text-foreground-secondary select-none">
-              {t("costBreakdown")}
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-muted-faint transition-transform group-open:rotate-180">
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-              </svg>
-            </summary>
-            <div className="border-t border-border-faint px-3 py-2.5 text-sm">
-              <div className="flex justify-between py-1">
-                <span className="text-muted">{t("subtotal")}</span>
-                <span>{result.subtotalAmount} {currency}</span>
-              </div>
-              {result.wasteAmount > 0 && (
-                <div className="flex justify-between py-1">
-                  <span className="text-muted">
-                    {t("waste", { percent: wastePercent })}
-                  </span>
-                  <span>{result.wasteAmount} {currency}</span>
-                </div>
-              )}
-              {includeVat && (
-                <div className="flex justify-between py-1">
-                  <span className="text-muted">
-                    {t("vat", { percent: vatPercent })}
-                  </span>
-                  <span>{result.vatAmount} {currency}</span>
-                </div>
-              )}
-              {showTotalRow && (
-                <div className="mt-1 flex justify-between border-t border-border pt-2 font-semibold">
-                  <span>{t("total")}</span>
-                  <span className="text-accent">{result.grandTotalAmount} {currency}</span>
-                </div>
-              )}
+        {isMulti && (
+          <>
+            <div className="flex justify-between py-1.5 text-muted">
+              <span>× {t("pieces", { qty: result.quantity })}</span>
             </div>
-          </details>
+            <div className="flex justify-between py-1.5">
+              <span className="text-muted">{t("totalWeight")}</span>
+              <span className="tabular-nums font-medium">{fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg</span>
+            </div>
+          </>
+        )}
+
+        <hr className="my-2 border-border-faint" />
+
+        {/* Cost section */}
+        <div className="flex justify-between py-1.5">
+          <span className="text-muted">{t("unitPrice")}</span>
+          <span className="tabular-nums">{result.unitPriceAmount} {currency}/{priceUnit}</span>
+        </div>
+        <div className="flex justify-between py-1.5">
+          <span className="text-muted">{t("subtotal")}</span>
+          <span className="tabular-nums">{result.subtotalAmount} {currency}</span>
+        </div>
+        {result.wasteAmount > 0 && (
+          <div className="flex justify-between py-1.5">
+            <span className="text-muted">{t("waste", { percent: wastePercent })}</span>
+            <span className="tabular-nums">{result.wasteAmount} {currency}</span>
+          </div>
+        )}
+        {includeVat && (
+          <div className="flex justify-between py-1.5">
+            <span className="text-muted">{t("vat", { percent: vatPercent })}</span>
+            <span className="tabular-nums">{result.vatAmount} {currency}</span>
+          </div>
+        )}
+
+        {/* Grand total */}
+        <div className="mt-2 flex justify-between border-y-2 border-border py-2.5 font-semibold">
+          <span>{t("grandTotal")}</span>
+          <span className="tabular-nums text-accent">{fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}</span>
         </div>
 
         {/* ── Full calculation steps ── */}

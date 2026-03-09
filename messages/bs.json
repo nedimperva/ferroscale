@@ -255,6 +255,8 @@
     "totalWeight": "Ukupna masa",
     "perPiece": "Po komadu",
     "totalQty": "Ukupno (\u00d7{qty})",
+    "pieces": "{qty, plural, one {# komad} few {# komada} other {# komada}}",
+    "grandTotal": "Sveukupno",
     "profile": "Profil:",
     "material": "Materijal:",
     "unitPrice": "Jedinicna cijena:",
