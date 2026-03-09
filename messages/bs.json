@@ -253,6 +253,8 @@
     "totalCost": "Ukupna cijena",
     "unitWeight": "Masa po komadu",
     "totalWeight": "Ukupna masa",
+    "perPiece": "Po komadu",
+    "totalQty": "Ukupno (\u00d7{qty})",
     "profile": "Profil:",
     "material": "Materijal:",
     "unitPrice": "Jedinicna cijena:",

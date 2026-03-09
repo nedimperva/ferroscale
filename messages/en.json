@@ -253,6 +253,8 @@
     "totalCost": "Total cost",
     "unitWeight": "Unit weight",
     "totalWeight": "Total weight",
+    "perPiece": "Per piece",
+    "totalQty": "Total (\u00d7{qty})",
     "profile": "Profile:",
     "material": "Material:",
     "unitPrice": "Unit price:",

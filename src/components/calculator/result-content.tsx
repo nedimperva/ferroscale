@@ -80,44 +80,71 @@ export const ResultContent = memo(function ResultContent({
   const currency = CURRENCY_SYMBOLS[result.currency];
   const priceUnit = result.priceUnit ?? "kg";
 
-  const heroValue = weightAsMain
-    ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
-    : fmtAnimated(animatedTotal, result.grandTotalAmount);
-  const heroUnit = weightAsMain ? "kg" : currency;
   const showTotalRow = result.wasteAmount > 0 || (includeVat && result.vatAmount > 0);
+  const isMulti = result.quantity > 1;
+  const unitCost = isMulti
+    ? (result.subtotalAmount / result.quantity).toFixed(
+        String(result.subtotalAmount).includes(".")
+          ? String(result.subtotalAmount).split(".")[1].length
+          : 0,
+      )
+    : null;
 
   return (
     <>
       {/* ── Hero ── */}
-      <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-          {weightAsMain ? t("totalWeight") : t("totalCost")}
-        </p>
-        <p className="mt-1 text-4xl font-extrabold tabular-nums tracking-tight text-foreground transition-all duration-300">
-          {heroValue}
-          <span className="ml-1 text-lg font-bold text-muted">{heroUnit}</span>
-        </p>
-        <div className="mt-2 flex items-stretch justify-center gap-px">
-          {/* Secondary value — show the one that's NOT the hero */}
-          <span className="flex flex-col items-center rounded-l-md bg-surface/60 px-3 py-1">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-muted">
-              {weightAsMain ? t("totalCost") : t("totalWeight")}
-            </span>
-            <span className="text-sm font-semibold tabular-nums">
+      <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4">
+        {isMulti ? (
+          /* ── Two-column hero for qty > 1 ── */
+          <div className="grid grid-cols-2 gap-4">
+            {/* Per piece column */}
+            <div className={`flex flex-col items-center rounded-lg px-3 py-2 ${!weightAsMain ? "bg-surface/40" : "bg-surface/60 ring-1 ring-accent/20"}`}>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">
+                {t("perPiece")}
+              </span>
+              <span className={`mt-1 tabular-nums tracking-tight text-foreground ${weightAsMain ? "text-2xl font-extrabold" : "text-xl font-bold"}`}>
+                {fmtAnimated(animatedUnitWeight, result.unitWeightKg)}
+                <span className="ml-0.5 text-xs font-semibold text-muted">kg</span>
+              </span>
+              <span className={`tabular-nums ${weightAsMain ? "text-base font-bold text-accent" : "text-sm font-semibold text-foreground-secondary"}`}>
+                {unitCost}
+                <span className="ml-0.5 text-xs font-medium text-muted">{currency}</span>
+              </span>
+            </div>
+            {/* Total column */}
+            <div className={`flex flex-col items-center rounded-lg px-3 py-2 ${weightAsMain ? "bg-surface/40" : "bg-surface/60 ring-1 ring-accent/20"}`}>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">
+                {t("totalQty", { qty: result.quantity })}
+              </span>
+              <span className={`mt-1 tabular-nums tracking-tight text-foreground ${!weightAsMain ? "text-2xl font-extrabold" : "text-xl font-bold"}`}>
+                {fmtAnimated(animatedTotalWeight, result.totalWeightKg)}
+                <span className="ml-0.5 text-xs font-semibold text-muted">kg</span>
+              </span>
+              <span className={`tabular-nums ${!weightAsMain ? "text-base font-bold text-accent" : "text-sm font-semibold text-foreground-secondary"}`}>
+                {fmtAnimated(animatedTotal, result.grandTotalAmount)}
+                <span className="ml-0.5 text-xs font-medium text-muted">{currency}</span>
+              </span>
+            </div>
+          </div>
+        ) : (
+          /* ── Single centered hero for qty = 1 ── */
+          <div className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
+              {weightAsMain ? t("totalWeight") : t("totalCost")}
+            </p>
+            <p className="mt-1 text-4xl font-extrabold tabular-nums tracking-tight text-foreground transition-all duration-300">
               {weightAsMain
-                ? `${fmtAnimated(animatedTotal, result.grandTotalAmount)} ${currency}`
-                : `${fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg`}
-            </span>
-          </span>
-          <span className="flex flex-col items-center rounded-r-md bg-surface/60 px-3 py-1">
-            <span className="text-[10px] font-medium uppercase tracking-wide text-muted">
-              {t("unitPrice")}
-            </span>
-            <span className="text-sm font-semibold tabular-nums">
-              {result.unitPriceAmount} {currency}
-            </span>
-          </span>
-        </div>
+                ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
+                : fmtAnimated(animatedTotal, result.grandTotalAmount)}
+              <span className="ml-1 text-lg font-bold text-muted">
+                {weightAsMain ? "kg" : currency}
+              </span>
+            </p>
+            <p className="mt-1 text-sm tabular-nums text-muted">
+              {result.unitWeightKg} kg · {result.unitPriceAmount} {currency}/{priceUnit}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* ── Action buttons ── */}
@@ -209,7 +236,7 @@ export const ResultContent = memo(function ResultContent({
       </div>
 
       <div className="px-4 py-4">
-        {/* ── Detail rows ── */}
+        {/* ── Detail rows (metadata only) ── */}
         <div className="space-y-0 text-sm">
           <div className="flex items-baseline justify-between border-b border-border-faint py-2">
             <span className="text-muted">{t("profile")}</span>
@@ -226,39 +253,12 @@ export const ResultContent = memo(function ResultContent({
             <span className="text-muted">{t("material")}</span>
             <span className="font-medium text-right">{gradeLabel}</span>
           </div>
-          <div className="flex items-baseline justify-between border-b border-border-faint py-2">
-            <span className="text-muted">{t("unitWeight")}</span>
-            <span className="font-medium text-right">
-              {fmtAnimated(animatedUnitWeight, result.unitWeightKg)} kg
-              {result.quantity > 1 && (
-                <span className="ml-1 text-xs text-muted">
-                  × {result.quantity}
-                </span>
-              )}
-            </span>
-          </div>
-          {result.quantity > 1 && (
-            <div className="flex items-baseline justify-between border-b border-border-faint py-2">
-              <span className="text-muted">{t("totalWeight")}</span>
-              <span className="font-medium text-right">
-                {fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg
-              </span>
-            </div>
-          )}
-          <div className={`flex items-baseline justify-between py-2 ${result.quantity > 1 ? "border-b border-border-faint" : ""}`}>
+          <div className="flex items-baseline justify-between py-2">
             <span className="text-muted">{t("unitPrice")}</span>
             <span className="font-medium text-right">
               {result.unitPriceAmount} {currency}/{priceUnit}
             </span>
           </div>
-          {result.quantity > 1 && (
-            <div className="flex items-baseline justify-between py-2">
-              <span className="text-muted">{t("totalCost")}</span>
-              <span className="font-semibold text-right text-accent">
-                {fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* ── Cost Breakdown ── */}
