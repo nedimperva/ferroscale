@@ -715,6 +715,7 @@ export function CalculatorApp() {
             onAddToProject={handleAddToProject}
             hasProjects={projectCount > 0}
             normalizedProfile={normalizedCurrentProfile}
+            weightAsMain={weightAsMain}
           />
         )}
 
