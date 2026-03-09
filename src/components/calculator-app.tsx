@@ -38,6 +38,7 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcut
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
+import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -316,6 +317,9 @@ export function CalculatorApp() {
   /* Contact drawer */
   const [showContactDrawer, setShowContactDrawer] = useState(false);
 
+  /* Changelog drawer */
+  const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
+
   /* Keyboard shortcuts */
   const shortcutHandlers = useMemo(
     () => ({
@@ -515,6 +519,7 @@ export function CalculatorApp() {
         onOpenSettings={() => setShowSettingsDrawer(true)}
         onOpenHistory={() => setShowHistoryDrawer(true)}
         onOpenQuickCalc={quickCalc.open}
+        onOpenChangelog={() => setShowChangelogDrawer(true)}
         compareCount={compareItems.length}
         projectCount={projectCount}
         isSettingsOpen={showSettingsDrawer}
@@ -522,6 +527,7 @@ export function CalculatorApp() {
         isProjectsOpen={showProjectDrawer}
         isCompareOpen={showCompareDrawer}
         isContactOpen={showContactDrawer}
+        isChangelogOpen={showChangelogDrawer}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}
         theme={resolvedTheme}
@@ -766,6 +772,12 @@ export function CalculatorApp() {
         <ContactDrawer
           open={showContactDrawer}
           onClose={() => setShowContactDrawer(false)}
+        />
+
+        {/* ---- Changelog drawer ---- */}
+        <ChangelogDrawer
+          open={showChangelogDrawer}
+          onClose={() => setShowChangelogDrawer(false)}
         />
 
         {/* ---- Compare drawer ---- */}

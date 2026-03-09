@@ -137,7 +137,16 @@
     "compare": "Compare",
     "compareCount": "Compare ({count})",
     "reportIssue": "Report an issue",
-    "report": "Report"
+    "report": "Report",
+    "whatsNew": "What's New"
+  },
+  "changelog": {
+    "title": "What's New",
+    "ariaLabel": "Changelog drawer",
+    "close": "Close",
+    "added": "Added",
+    "changed": "Changed",
+    "fixed": "Fixed"
   },
   "profileSection": {
     "category": "Category",

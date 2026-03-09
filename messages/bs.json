@@ -137,7 +137,16 @@
     "compare": "Poredi",
     "compareCount": "Poredi ({count})",
     "reportIssue": "Prijavi problem",
-    "report": "Prijava"
+    "report": "Prijava",
+    "whatsNew": "Novosti"
+  },
+  "changelog": {
+    "title": "Novosti",
+    "ariaLabel": "Pregled izmjena",
+    "close": "Zatvori",
+    "added": "Dodano",
+    "changed": "Izmijenjeno",
+    "fixed": "Ispravljeno"
   },
   "profileSection": {
     "category": "Kategorija",
