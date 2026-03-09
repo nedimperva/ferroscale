@@ -217,6 +217,9 @@ export function CalculatorApp() {
     deleteProject,
     addCalculation,
     removeCalculation,
+    duplicateProject,
+    updateCalculationNote,
+    updateProjectDescription,
     projectCount,
   } = useProjects();
 
@@ -785,7 +788,10 @@ export function CalculatorApp() {
           onCreateProject={createProject}
           onRenameProject={renameProject}
           onDeleteProject={deleteProject}
+          onDuplicateProject={duplicateProject}
           onRemoveCalculation={removeCalculation}
+          onUpdateCalculationNote={updateCalculationNote}
+          onUpdateProjectDescription={updateProjectDescription}
           onLoadCalculation={handleLoad}
           currentResult={result}
           currentInput={result ? input : null}

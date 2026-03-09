@@ -17,11 +17,13 @@ export interface ProjectCalculation {
   input: CalculationInput;
   result: CalculationResult;
   normalizedProfile: NormalizedProfileSnapshot;
+  note?: string;
 }
 
 export interface Project {
   id: string;
   name: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
   calculations: ProjectCalculation[];
@@ -30,6 +32,7 @@ export interface Project {
 export interface ProjectAggregates {
   totalWeightKg: number;
   totalCost: number;
+  costPerKg: number;
   currency: CurrencyCode;
   count: number;
 }
@@ -87,7 +90,7 @@ const persistProjects = (projects: Project[]) => persistToStorage(PROJECTS_KEY, 
 
 export function computeAggregates(project: Project): ProjectAggregates {
   if (project.calculations.length === 0) {
-    return { totalWeightKg: 0, totalCost: 0, currency: "EUR", count: 0 };
+    return { totalWeightKg: 0, totalCost: 0, costPerKg: 0, currency: "EUR", count: 0 };
   }
   let totalWeightKg = 0;
   let totalCost = 0;
@@ -96,9 +99,13 @@ export function computeAggregates(project: Project): ProjectAggregates {
     totalWeightKg += calc.result.totalWeightKg;
     totalCost += calc.result.grandTotalAmount;
   }
+  const roundedWeight = Math.round(totalWeightKg * 100) / 100;
+  const roundedCost = Math.round(totalCost * 100) / 100;
+  const costPerKg = roundedWeight > 0 ? Math.round((roundedCost / roundedWeight) * 100) / 100 : 0;
   return {
-    totalWeightKg: Math.round(totalWeightKg * 100) / 100,
-    totalCost: Math.round(totalCost * 100) / 100,
+    totalWeightKg: roundedWeight,
+    totalCost: roundedCost,
+    costPerKg,
     currency,
     count: project.calculations.length,
   };
@@ -148,6 +155,220 @@ export function exportProjectCsv(
 }
 
 /* ------------------------------------------------------------------ */
+/*  PDF export                                                        */
+/* ------------------------------------------------------------------ */
+
+export interface ProjectPdfLabels {
+  title: string;
+  description: string;
+  date: string;
+  items: string;
+  totalWeight: string;
+  totalCost: string;
+  costPerKg: string;
+  profileColumn: string;
+  materialColumn: string;
+  qtyColumn: string;
+  unitWeightColumn: string;
+  weightColumn: string;
+  costColumn: string;
+  noteColumn: string;
+  total: string;
+  subtotal: string;
+  materialSummary: string;
+  resolveCategoryLabel: (iconKey: string) => string;
+  resolveGradeLabel?: (label: string) => string;
+  resolveProfileLabel?: (profileId: string, fallback: string) => string;
+}
+
+const CATEGORY_ORDER = ["bars", "plates_sheets", "tubes", "structural"];
+
+export function exportProjectPdf(
+  project: Project,
+  labels: ProjectPdfLabels,
+  currencySymbols: Record<string, string>,
+): void {
+  if (project.calculations.length === 0) return;
+
+  const agg = computeAggregates(project);
+  const currency = currencySymbols[agg.currency] ?? agg.currency;
+  const dateStr = new Date().toLocaleDateString();
+
+  /* Group calculations by profile category (iconKey) */
+  const categoryGroups = new Map<string, ProjectCalculation[]>();
+  for (const calc of project.calculations) {
+    const cat = calc.normalizedProfile.iconKey as string;
+    if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
+    categoryGroups.get(cat)!.push(calc);
+  }
+  const sortedCategories = [...categoryGroups.entries()].sort(
+    (a, b) => CATEGORY_ORDER.indexOf(a[0]) - CATEGORY_ORDER.indexOf(b[0]),
+  );
+  const multiCategory = sortedCategories.length > 1;
+
+  /* Build items table rows grouped by category */
+  let tableBody = "";
+  for (const [cat, calcs] of sortedCategories) {
+    const catLabel = labels.resolveCategoryLabel(cat);
+
+    if (multiCategory) {
+      tableBody += `<tr class="cat-row"><td colspan="7">${catLabel}</td></tr>`;
+    }
+
+    let catWeight = 0;
+    let catCost = 0;
+
+    for (const calc of calcs) {
+      const profileLabel = calc.normalizedProfile.shortLabel;
+      const gradeLabel = labels.resolveGradeLabel
+        ? labels.resolveGradeLabel(calc.result.gradeLabel)
+        : calc.result.gradeLabel;
+      const qty = calc.result.quantity;
+      const unitWt = calc.result.unitWeightKg;
+      const totalWt = calc.result.totalWeightKg;
+      const cost = calc.result.grandTotalAmount;
+      catWeight += totalWt;
+      catCost += cost;
+      tableBody += `<tr>
+        <td>${profileLabel}</td>
+        <td>${gradeLabel}</td>
+        <td class="num">${qty}</td>
+        <td class="num">${unitWt}</td>
+        <td class="num">${totalWt} kg</td>
+        <td class="num">${cost} ${currency}</td>
+        <td>${calc.note ?? ""}</td>
+      </tr>`;
+    }
+
+    if (multiCategory) {
+      const rw = Math.round(catWeight * 100) / 100;
+      const rc = Math.round(catCost * 100) / 100;
+      tableBody += `<tr class="subtotal-row">
+        <td colspan="4">${catLabel} — ${labels.subtotal}</td>
+        <td class="num">${rw} kg</td>
+        <td class="num">${rc} ${currency}</td>
+        <td></td>
+      </tr>`;
+    }
+  }
+
+  /* Grand total row */
+  tableBody += `<tr class="total-row">
+    <td colspan="4">${labels.total}</td>
+    <td class="num">${agg.totalWeightKg} kg</td>
+    <td class="num">${agg.totalCost} ${currency}</td>
+    <td></td>
+  </tr>`;
+
+  /* Material grade summary */
+  const materialMap = new Map<string, { count: number; weight: number; cost: number }>();
+  for (const calc of project.calculations) {
+    const mk = labels.resolveGradeLabel
+      ? labels.resolveGradeLabel(calc.result.gradeLabel)
+      : calc.result.gradeLabel;
+    if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
+    const entry = materialMap.get(mk)!;
+    entry.count++;
+    entry.weight += calc.result.totalWeightKg;
+    entry.cost += calc.result.grandTotalAmount;
+  }
+  const materialRows = [...materialMap.entries()]
+    .sort((a, b) => b[1].weight - a[1].weight)
+    .map(([k, v]) => {
+      const rw = Math.round(v.weight * 100) / 100;
+      const rc = Math.round(v.cost * 100) / 100;
+      const cpk = rw > 0 ? Math.round((rc / rw) * 100) / 100 : 0;
+      return `<tr>
+        <td>${k}</td>
+        <td class="num">${v.count}</td>
+        <td class="num">${rw} kg</td>
+        <td class="num">${rc} ${currency}</td>
+        <td class="num">${cpk} ${currency}/kg</td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${project.name}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #888; margin-bottom: 8px; font-weight: 600; }
+  .meta { color: #666; font-size: 11px; margin-bottom: 4px; }
+  .description { color: #444; font-size: 12px; margin: 8px 0 20px; font-style: italic; border-left: 3px solid #e5e7eb; padding-left: 10px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 24px; }
+  .stat { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; flex: 1; }
+  .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th { background: #f3f4f6; text-align: left; padding: 7px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; border-bottom: 2px solid #e5e7eb; }
+  th.num, td.num { text-align: right; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; font-size: 11px; }
+  .cat-row td { background: #f9fafb; font-weight: 700; font-size: 11px; color: #374151; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 6px 10px; }
+  .subtotal-row td { font-weight: 600; background: #f3f4f6; border-top: 1px solid #e5e7eb; color: #374151; }
+  .total-row td { font-weight: 700; border-top: 2px solid #374151; padding-top: 9px; }
+  .footer { color: #aaa; font-size: 10px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+<h1>${project.name}</h1>
+<p class="meta">${labels.date}: ${dateStr}</p>
+${project.description ? `<p class="description">${project.description}</p>` : ""}
+
+<div class="stats">
+  <div class="stat"><div class="stat-label">${labels.items}</div><div class="stat-value">${agg.count}</div></div>
+  <div class="stat"><div class="stat-label">${labels.totalWeight}</div><div class="stat-value">${agg.totalWeightKg} kg</div></div>
+  <div class="stat"><div class="stat-label">${labels.totalCost}</div><div class="stat-value">${agg.totalCost} ${currency}</div></div>
+  <div class="stat"><div class="stat-label">${labels.costPerKg}</div><div class="stat-value">${agg.costPerKg} ${currency}/kg</div></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>${labels.profileColumn}</th>
+      <th>${labels.materialColumn}</th>
+      <th class="num">${labels.qtyColumn}</th>
+      <th class="num">${labels.unitWeightColumn}</th>
+      <th class="num">${labels.weightColumn}</th>
+      <th class="num">${labels.costColumn}</th>
+      <th>${labels.noteColumn}</th>
+    </tr>
+  </thead>
+  <tbody>${tableBody}</tbody>
+</table>
+
+${materialMap.size > 1 ? `<h2>${labels.materialSummary}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>${labels.materialColumn}</th>
+      <th class="num">#</th>
+      <th class="num">${labels.weightColumn}</th>
+      <th class="num">${labels.costColumn}</th>
+      <th class="num">${labels.costPerKg}</th>
+    </tr>
+  </thead>
+  <tbody>${materialRows}</tbody>
+</table>` : ""}
+
+<div class="footer">FerroScale &middot; ${dateStr}</div>
+</body>
+</html>`;
+
+  const win = window.open("", "_blank");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 300);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Hook                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -162,8 +383,11 @@ export interface UseProjectsReturn {
   createProject: (name: string) => Project;
   renameProject: (id: string, name: string) => void;
   deleteProject: (id: string) => void;
+  duplicateProject: (id: string) => Project | null;
   addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
   removeCalculation: (projectId: string, calcId: string) => void;
+  updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
+  updateProjectDescription: (id: string, description: string) => void;
   /** Quick-add: shows a picker if multiple projects exist, otherwise adds to the only one. */
   projectCount: number;
 }
@@ -213,9 +437,39 @@ export function useProjects(): UseProjectsReturn {
     );
   }, []);
 
+  const updateProjectDescription = useCallback((id: string, description: string) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === id
+          ? { ...p, description: description.trim() || undefined, updatedAt: new Date().toISOString() }
+          : p,
+      ),
+    );
+  }, []);
+
   const deleteProject = useCallback((id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setActiveProjectId((current) => (current === id ? null : current));
+  }, []);
+
+  const duplicateProject = useCallback((id: string): Project | null => {
+    let duplicate: Project | null = null;
+    setProjects((prev) => {
+      if (prev.length >= MAX_PROJECTS) return prev;
+      const original = prev.find((p) => p.id === id);
+      if (!original) return prev;
+      const now = new Date().toISOString();
+      duplicate = {
+        ...original,
+        id: crypto.randomUUID(),
+        name: `${original.name} (copy)`,
+        createdAt: now,
+        updatedAt: now,
+        calculations: original.calculations.map((c) => ({ ...c, id: crypto.randomUUID() })),
+      };
+      return [duplicate, ...prev];
+    });
+    return duplicate;
   }, []);
 
   const addCalculation = useCallback(
@@ -262,6 +516,21 @@ export function useProjects(): UseProjectsReturn {
     );
   }, []);
 
+  const updateCalculationNote = useCallback((projectId: string, calcId: string, note: string) => {
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== projectId) return p;
+        return {
+          ...p,
+          updatedAt: new Date().toISOString(),
+          calculations: p.calculations.map((c) =>
+            c.id === calcId ? { ...c, note: note.trim() || undefined } : c,
+          ),
+        };
+      }),
+    );
+  }, []);
+
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => {
     setIsOpen(false);
@@ -278,8 +547,11 @@ export function useProjects(): UseProjectsReturn {
     createProject,
     renameProject,
     deleteProject,
+    duplicateProject,
     addCalculation,
     removeCalculation,
+    updateCalculationNote,
+    updateProjectDescription,
     projectCount: projects.length,
   };
 }
