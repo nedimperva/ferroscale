@@ -86,17 +86,25 @@ export const ResultContent = memo(function ResultContent({
     <>
       {/* ── Hero ── */}
       <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4 text-center">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">
-          {weightAsMain ? t("totalWeight") : t("totalCost")}
-        </p>
+        {/* Primary value */}
         <p className="mt-1 text-4xl font-extrabold tabular-nums tracking-tight text-foreground transition-all duration-300">
           {weightAsMain
             ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
             : fmtAnimated(animatedTotal, result.grandTotalAmount)}
-          <span className="ml-1 text-lg font-bold text-muted">
+          <span className="ml-1 text-lg font-bold text-accent">
             {weightAsMain ? "kg" : currency}
           </span>
         </p>
+        {/* Secondary value */}
+        <p className="mt-1 text-lg font-semibold tabular-nums text-foreground-secondary">
+          {weightAsMain
+            ? fmtAnimated(animatedTotal, result.grandTotalAmount)
+            : fmtAnimated(animatedTotalWeight, result.totalWeightKg)}
+          <span className="ml-0.5 text-sm font-medium text-muted">
+            {weightAsMain ? currency : "kg"}
+          </span>
+        </p>
+        {/* Profile + material subtitle */}
         <p className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-muted">
           {normalizedProfile && (
             <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-surface-inset">
