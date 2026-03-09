@@ -97,29 +97,25 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
                     isPending ? "opacity-50" : ""
                   }`}
                 >
-                  {weightAsMain ? (
-                    <>
-                      <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
-                        {fmtAnimated(animatedWeight, result.totalWeightKg)}
-                      </span>
-                      <span className="text-[11px] font-semibold text-accent">kg</span>
-                      <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
-                        {result.grandTotalAmount} {CURRENCY_SYMBOLS[result.currency]}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
-                        {fmtAnimated(animatedTotal, result.grandTotalAmount)}
-                      </span>
-                      <span className="text-[11px] font-semibold text-accent">
-                        {CURRENCY_SYMBOLS[result.currency]}
-                      </span>
-                      <span className="ml-auto text-[11px] font-medium tabular-nums text-muted">
-                        {result.totalWeightKg} kg
-                      </span>
-                    </>
-                  )}
+                  {/* Primary value */}
+                  <span className="text-[17px] font-extrabold tabular-nums tracking-tight text-foreground">
+                    {weightAsMain
+                      ? fmtAnimated(animatedWeight, result.totalWeightKg)
+                      : fmtAnimated(animatedTotal, result.grandTotalAmount)}
+                  </span>
+                  <span className="text-[11px] font-semibold text-accent">
+                    {weightAsMain ? "kg" : CURRENCY_SYMBOLS[result.currency]}
+                  </span>
+                  <span className="text-[10px] text-muted-faint">·</span>
+                  {/* Secondary value */}
+                  <span className="text-[13px] font-semibold tabular-nums text-foreground-secondary">
+                    {weightAsMain
+                      ? fmtAnimated(animatedTotal, result.grandTotalAmount)
+                      : fmtAnimated(animatedWeight, result.totalWeightKg)}
+                  </span>
+                  <span className="text-[10px] font-medium text-muted">
+                    {weightAsMain ? CURRENCY_SYMBOLS[result.currency] : "kg"}
+                  </span>
                 </span>
                 <span className="truncate text-[10px] leading-tight text-muted">
                   {normalizedProfile?.shortLabel ?? result.profileLabel} · {resolveGradeLabel(result.gradeLabel, tBase)}
