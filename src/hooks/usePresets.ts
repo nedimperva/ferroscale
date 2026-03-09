@@ -35,6 +35,7 @@ export function usePresets(): UsePresetsReturn {
   const [presets, setPresets] = useState<DimensionPreset[]>([]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount hydration from storage
     setPresets(loadArrayFromStorage<DimensionPreset>(PRESETS_KEY));
   }, []);
 

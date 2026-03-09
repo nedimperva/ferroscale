@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { ToastContainer } from "@/components/ui/toast-container";
 import { routing } from "@/i18n/routing";
 
@@ -29,10 +30,20 @@ export default async function LocaleLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      {children}
-      {/* Toast notifications — rendered after children so they layer on top */}
-      <ToastContainer />
-    </NextIntlClientProvider>
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-blue-500"
+      >
+        Skip to main content
+      </a>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        <ErrorBoundary>
+          <main id="main-content">{children}</main>
+        </ErrorBoundary>
+        {/* Toast notifications — rendered after children so they layer on top */}
+        <ToastContainer />
+      </NextIntlClientProvider>
+    </>
   );
 }

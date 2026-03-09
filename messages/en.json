@@ -196,7 +196,12 @@
     "search": "Search favourites…",
     "noResults": "No matches",
     "saved": "Favourite saved",
-    "applied": "Favourite applied"
+    "applied": "Favourite applied",
+    "modalTitle": "Save favourite",
+    "modalContext": "Saving for: {profile}",
+    "modalPlaceholder": "Enter a name...",
+    "modalCancel": "Cancel",
+    "modalSave": "Save"
   },
   "workspace": {
     "title": "Workspace",
@@ -367,6 +372,13 @@
     "needSecondHint": "Change inputs and click \"Compare\" again.",
     "slotAvailable": "Slot available - add another calculation.",
     "chartTitle": "Visual Comparison",
+    "lightest": "Lightest",
+    "cheapest": "Cheapest",
+    "weightAxis": "Weight (kg)",
+    "costAxis": "Cost",
+    "diffFromRef": "{value}% vs ref",
+    "copyChart": "Copy",
+    "chartCopied": "Copied!",
     "remove": "Remove from comparison",
     "reference": "Reference",
     "totalCost": "Total cost",
@@ -510,6 +522,8 @@
     "history": "History",
     "settings": "Settings",
     "projects": "Projects",
+    "undo": "Undo",
+    "redo": "Redo",
     "resetForm": "Reset form",
     "showShortcuts": "Show shortcuts"
   },

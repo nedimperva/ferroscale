@@ -88,7 +88,9 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const { isOpen, close, query, setQuery, lineResults, totalWeightKg, recentQueries } = quickCalc;
 
   const lineResultsRef = useRef(lineResults);
-  lineResultsRef.current = lineResults;
+  useEffect(() => {
+    lineResultsRef.current = lineResults;
+  }, [lineResults]);
 
   // @ trigger state
   const [atStart, setAtStart] = useState<number | null>(null);
@@ -106,6 +108,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
     if (isOpen) {
       requestAnimationFrame(() => inputRef.current?.focus());
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- cleanup on modal close
       setAtStart(null);
       setPresetFilter("");
       setHighlightIdx(0);
@@ -114,6 +117,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
 
   // Reset highlight when filtered list changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset index on filter change
     setHighlightIdx(0);
   }, [filteredPresets.length]);
 

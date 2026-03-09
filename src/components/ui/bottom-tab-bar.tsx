@@ -32,13 +32,31 @@ export const BottomTabBar = memo(function BottomTabBar({
     { id: "settings", label: t("settings") },
   ];
 
+  const handleKeyDown = (e: React.KeyboardEvent, currentIndex: number) => {
+    let nextIndex: number | null = null;
+    if (e.key === "ArrowLeft") {
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+    } else if (e.key === "ArrowRight") {
+      nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+    } else if (e.key === "Home") {
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      nextIndex = tabs.length - 1;
+    }
+    if (nextIndex !== null) {
+      e.preventDefault();
+      triggerHaptic("light");
+      onTabChange(tabs[nextIndex]!.id);
+    }
+  };
+
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface/95 backdrop-blur-md lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="mx-auto flex max-w-lg items-stretch">
-        {tabs.map((tab) => {
+      <div className="mx-auto flex max-w-lg items-stretch" role="tablist">
+        {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           return (
             <button
@@ -48,14 +66,17 @@ export const BottomTabBar = memo(function BottomTabBar({
                 triggerHaptic("light");
                 onTabChange(tab.id);
               }}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               className={`relative flex flex-1 flex-col items-center gap-0 pb-1 pt-1.5 text-[10px] font-medium transition-colors ${
                 isActive
                   ? "text-accent"
                   : "text-muted-faint"
               }`}
               aria-label={tab.label}
-              role="tab"
+              aria-controls={`tabpanel-${tab.id}`}
               aria-selected={isActive}
+              role="tab"
+              tabIndex={isActive ? 0 : -1}
             >
               {/* Animated active indicator bar — slides between tabs */}
               {isActive && (

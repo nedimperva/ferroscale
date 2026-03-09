@@ -33,6 +33,7 @@ export const PresetChips = memo(function PresetChips({
     : presets;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset highlight when filter results change
     setHighlightIdx(0);
   }, [filtered.length]);
 

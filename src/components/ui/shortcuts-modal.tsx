@@ -17,6 +17,8 @@ const SHORTCUTS = [
   { id: "history", keys: [`${mod}+H`] },
   { id: "settings", keys: [`${mod}+,`] },
   { id: "projects", keys: [`${mod}+P`] },
+  { id: "undo", keys: [`${mod}+Z`] },
+  { id: "redo", keys: [`${mod}+Shift+Z`] },
   { id: "resetForm", keys: [`${mod}+Shift+R`] },
   { id: "showShortcuts", keys: ["?"] },
 ] as const;

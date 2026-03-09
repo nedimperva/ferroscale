@@ -37,6 +37,7 @@ export function useQuickCalculator(): UseQuickCalculatorReturn {
 
   // Hydrate recent queries from localStorage
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount hydration from storage
     setRecentQueries(loadArrayFromStorage<string>(QUICK_HISTORY_KEY));
   }, []);
 
@@ -45,6 +46,7 @@ export function useQuickCalculator(): UseQuickCalculatorReturn {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (!query.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- debounced calculation result
       setLineResults([]);
       setTotalWeightKg(0);
       return;
