@@ -24,6 +24,7 @@ interface SettingsDrawerProps {
   activeFamily: MetalFamilyId;
   issues: ValidationIssue[];
   onResetAll: () => void;
+  onOpenChangelog: () => void;
   historyLimit: number;
   onHistoryLimitChange: (value: number) => void;
   compareLimit: number;
@@ -51,6 +52,7 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   activeFamily,
   issues,
   onResetAll,
+  onOpenChangelog,
   historyLimit,
   onHistoryLimitChange,
   compareLimit,
@@ -176,12 +178,20 @@ export const SettingsDrawer = memo(function SettingsDrawer({
         </CollapsibleSection>
       </div>
 
-      {/* Footer with reset */}
-      <div className="border-t border-border px-4 py-3">
+      {/* Footer with reset + what's new */}
+      <div className="border-t border-border px-4 py-3 flex gap-2">
+        <button
+          type="button"
+          onClick={onOpenChangelog}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          {t("whatsNew")}
+        </button>
         <button
           type="button"
           onClick={onResetAll}
-          className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border-strong px-3 py-1.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-inset"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>
           {t("reset")}
