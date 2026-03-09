@@ -106,9 +106,18 @@ export const ProjectDrawer = memo(function ProjectDrawer({
     costColumn: t("csvHeaders.grandTotal"),
     noteColumn: t("pdfNoteColumn"),
     total: t("csvHeaders.total"),
-    profileBreakdown: t("breakdownByProfile"),
-    materialBreakdown: t("breakdownByMaterial"),
+    qtyColumn: t("pdfQtyColumn"),
+    unitWeightColumn: t("pdfUnitWeightColumn"),
+    materialSummary: t("pdfMaterialSummary"),
+    subtotal: t("pdfSubtotal"),
     resolveGradeLabel: (label: string) => resolveGradeLabel(label, tBase),
+    resolveCategoryLabel: (iconKey: string) => {
+      try {
+        return tBase(`dataset.profileCategories.${iconKey}`);
+      } catch {
+        return iconKey;
+      }
+    },
     resolveProfileLabel: (profileId: string, fallback: string) => {
       try {
         return tBase(`dataset.profiles.${profileId}`);
@@ -542,13 +551,13 @@ function ProjectDetail({
     setNoteValue("");
   }, [project.id, editingNoteId, noteValue, onUpdateCalculationNote]);
 
-  /* Unique profile labels for filter chips */
+  /* Unique profile categories for filter chips */
   const profileOptions = useMemo(() => {
     const seen = new Set<string>();
     const opts: string[] = [];
     for (const c of project.calculations) {
-      const lbl = c.normalizedProfile.shortLabel;
-      if (!seen.has(lbl)) { seen.add(lbl); opts.push(lbl); }
+      const key = c.normalizedProfile.iconKey;
+      if (!seen.has(key)) { seen.add(key); opts.push(key); }
     }
     return opts;
   }, [project.calculations]);
@@ -558,7 +567,7 @@ function ProjectDetail({
   /* Sort + filter calculations */
   const displayCalcs = useMemo(() => {
     let calcs = project.calculations;
-    if (filterProfile) calcs = calcs.filter((c) => c.normalizedProfile.shortLabel === filterProfile);
+    if (filterProfile) calcs = calcs.filter((c) => c.normalizedProfile.iconKey === filterProfile);
     return [...calcs].sort((a, b) => {
       if (sortBy === "weight") return b.result.totalWeightKg - a.result.totalWeightKg;
       if (sortBy === "cost") return b.result.grandTotalAmount - a.result.grandTotalAmount;
@@ -797,16 +806,20 @@ function ProjectDetail({
               >
                 {t("filterAll")}
               </button>
-              {profileOptions.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setFilterProfile(opt === filterProfile ? null : opt)}
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${filterProfile === opt ? "bg-purple-surface text-purple-strong border border-purple-border" : "text-muted hover:text-foreground-secondary"}`}
-                >
-                  {opt}
-                </button>
-              ))}
+              {profileOptions.map((opt) => {
+                let label = opt;
+                try { label = tBase(`dataset.profileCategories.${opt}`); } catch { /* fallback */ }
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setFilterProfile(opt === filterProfile ? null : opt)}
+                    className={`rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors ${filterProfile === opt ? "bg-purple-surface text-purple-strong border border-purple-border" : "text-muted hover:text-foreground-secondary"}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>

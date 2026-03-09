@@ -466,6 +466,10 @@
     "pdfDescription": "Opis",
     "pdfDate": "Datum",
     "pdfNoteColumn": "Napomena",
+    "pdfQtyColumn": "Kol.",
+    "pdfUnitWeightColumn": "Jed. masa (kg)",
+    "pdfMaterialSummary": "Pregled po kvalitetu materijala",
+    "pdfSubtotal": "Meduzbir",
     "csvFilePrefix": "projekat",
     "csvHeaders": {
       "profile": "Profil",

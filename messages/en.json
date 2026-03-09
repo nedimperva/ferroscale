@@ -466,6 +466,10 @@
     "pdfDescription": "Description",
     "pdfDate": "Date",
     "pdfNoteColumn": "Note",
+    "pdfQtyColumn": "Qty",
+    "pdfUnitWeightColumn": "Unit wt (kg)",
+    "pdfMaterialSummary": "Material grade summary",
+    "pdfSubtotal": "Subtotal",
     "csvFilePrefix": "project",
     "csvHeaders": {
       "profile": "Profile",

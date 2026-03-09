@@ -168,15 +168,20 @@ export interface ProjectPdfLabels {
   costPerKg: string;
   profileColumn: string;
   materialColumn: string;
+  qtyColumn: string;
+  unitWeightColumn: string;
   weightColumn: string;
   costColumn: string;
   noteColumn: string;
   total: string;
-  profileBreakdown: string;
-  materialBreakdown: string;
+  subtotal: string;
+  materialSummary: string;
+  resolveCategoryLabel: (iconKey: string) => string;
   resolveGradeLabel?: (label: string) => string;
   resolveProfileLabel?: (profileId: string, fallback: string) => string;
 }
+
+const CATEGORY_ORDER = ["bars", "plates_sheets", "tubes", "structural"];
 
 export function exportProjectPdf(
   project: Project,
@@ -189,45 +194,99 @@ export function exportProjectPdf(
   const currency = currencySymbols[agg.currency] ?? agg.currency;
   const dateStr = new Date().toLocaleDateString();
 
-  /* Profile breakdown */
-  const profileMap = new Map<string, { count: number; weight: number }>();
-  const materialMap = new Map<string, { count: number; weight: number }>();
+  /* Group calculations by profile category (iconKey) */
+  const categoryGroups = new Map<string, ProjectCalculation[]>();
   for (const calc of project.calculations) {
-    const pk = calc.normalizedProfile.shortLabel;
-    const mk = labels.resolveGradeLabel ? labels.resolveGradeLabel(calc.result.gradeLabel) : calc.result.gradeLabel;
-    const w = calc.result.totalWeightKg;
-    if (!profileMap.has(pk)) profileMap.set(pk, { count: 0, weight: 0 });
-    if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0 });
-    profileMap.get(pk)!.count++;
-    profileMap.get(pk)!.weight += w;
-    materialMap.get(mk)!.count++;
-    materialMap.get(mk)!.weight += w;
+    const cat = calc.normalizedProfile.iconKey as string;
+    if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
+    categoryGroups.get(cat)!.push(calc);
+  }
+  const sortedCategories = [...categoryGroups.entries()].sort(
+    (a, b) => CATEGORY_ORDER.indexOf(a[0]) - CATEGORY_ORDER.indexOf(b[0]),
+  );
+  const multiCategory = sortedCategories.length > 1;
+
+  /* Build items table rows grouped by category */
+  let tableBody = "";
+  for (const [cat, calcs] of sortedCategories) {
+    const catLabel = labels.resolveCategoryLabel(cat);
+
+    if (multiCategory) {
+      tableBody += `<tr class="cat-row"><td colspan="7">${catLabel}</td></tr>`;
+    }
+
+    let catWeight = 0;
+    let catCost = 0;
+
+    for (const calc of calcs) {
+      const profileLabel = calc.normalizedProfile.shortLabel;
+      const gradeLabel = labels.resolveGradeLabel
+        ? labels.resolveGradeLabel(calc.result.gradeLabel)
+        : calc.result.gradeLabel;
+      const qty = calc.result.quantity;
+      const unitWt = calc.result.unitWeightKg;
+      const totalWt = calc.result.totalWeightKg;
+      const cost = calc.result.grandTotalAmount;
+      catWeight += totalWt;
+      catCost += cost;
+      tableBody += `<tr>
+        <td>${profileLabel}</td>
+        <td>${gradeLabel}</td>
+        <td class="num">${qty}</td>
+        <td class="num">${unitWt}</td>
+        <td class="num">${totalWt} kg</td>
+        <td class="num">${cost} ${currency}</td>
+        <td>${calc.note ?? ""}</td>
+      </tr>`;
+    }
+
+    if (multiCategory) {
+      const rw = Math.round(catWeight * 100) / 100;
+      const rc = Math.round(catCost * 100) / 100;
+      tableBody += `<tr class="subtotal-row">
+        <td colspan="4">${catLabel} — ${labels.subtotal}</td>
+        <td class="num">${rw} kg</td>
+        <td class="num">${rc} ${currency}</td>
+        <td></td>
+      </tr>`;
+    }
   }
 
-  const profileRows = [...profileMap.entries()]
-    .sort((a, b) => b[1].weight - a[1].weight)
-    .map(([k, v]) => `<tr><td>${k}</td><td>${v.count}</td><td>${Math.round(v.weight * 100) / 100} kg</td></tr>`)
-    .join("");
+  /* Grand total row */
+  tableBody += `<tr class="total-row">
+    <td colspan="4">${labels.total}</td>
+    <td class="num">${agg.totalWeightKg} kg</td>
+    <td class="num">${agg.totalCost} ${currency}</td>
+    <td></td>
+  </tr>`;
 
+  /* Material grade summary */
+  const materialMap = new Map<string, { count: number; weight: number; cost: number }>();
+  for (const calc of project.calculations) {
+    const mk = labels.resolveGradeLabel
+      ? labels.resolveGradeLabel(calc.result.gradeLabel)
+      : calc.result.gradeLabel;
+    if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
+    const entry = materialMap.get(mk)!;
+    entry.count++;
+    entry.weight += calc.result.totalWeightKg;
+    entry.cost += calc.result.grandTotalAmount;
+  }
   const materialRows = [...materialMap.entries()]
     .sort((a, b) => b[1].weight - a[1].weight)
-    .map(([k, v]) => `<tr><td>${k}</td><td>${v.count}</td><td>${Math.round(v.weight * 100) / 100} kg</td></tr>`)
+    .map(([k, v]) => {
+      const rw = Math.round(v.weight * 100) / 100;
+      const rc = Math.round(v.cost * 100) / 100;
+      const cpk = rw > 0 ? Math.round((rc / rw) * 100) / 100 : 0;
+      return `<tr>
+        <td>${k}</td>
+        <td class="num">${v.count}</td>
+        <td class="num">${rw} kg</td>
+        <td class="num">${rc} ${currency}</td>
+        <td class="num">${cpk} ${currency}/kg</td>
+      </tr>`;
+    })
     .join("");
-
-  const calcRows = project.calculations.map((calc) => {
-    const profileLabel = calc.normalizedProfile.shortLabel;
-    const gradeLabel = labels.resolveGradeLabel ? labels.resolveGradeLabel(calc.result.gradeLabel) : calc.result.gradeLabel;
-    const weight = calc.result.totalWeightKg;
-    const cost = calc.result.grandTotalAmount;
-    const note = calc.note ?? "";
-    return `<tr>
-      <td>${profileLabel}</td>
-      <td>${gradeLabel}</td>
-      <td>${weight} kg</td>
-      <td>${cost} ${currency}</td>
-      <td>${note}</td>
-    </tr>`;
-  }).join("");
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -238,22 +297,20 @@ export function exportProjectPdf(
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
   h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  .meta { color: #666; font-size: 11px; margin-bottom: 8px; }
-  .description { color: #444; font-size: 12px; margin-bottom: 20px; font-style: italic; }
-  .stats { display: flex; gap: 16px; margin-bottom: 24px; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #888; margin-bottom: 8px; font-weight: 600; }
+  .meta { color: #666; font-size: 11px; margin-bottom: 4px; }
+  .description { color: #444; font-size: 12px; margin: 8px 0 20px; font-style: italic; border-left: 3px solid #e5e7eb; padding-left: 10px; }
+  .stats { display: flex; gap: 12px; margin-bottom: 24px; }
   .stat { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; flex: 1; }
   .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat-value { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .stat-value { font-size: 17px; font-weight: 700; margin-top: 2px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-  th { background: #f9fafb; text-align: left; padding: 8px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; border-bottom: 2px solid #e5e7eb; }
-  td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  .total-row td { font-weight: 700; border-top: 2px solid #e5e7eb; padding-top: 10px; }
-  .breakdown { display: flex; gap: 24px; margin-bottom: 24px; }
-  .breakdown-section { flex: 1; }
-  .breakdown-section h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 8px; }
-  .breakdown-section table { margin-bottom: 0; }
-  .breakdown-section th, .breakdown-section td { padding: 5px 8px; font-size: 11px; }
+  th { background: #f3f4f6; text-align: left; padding: 7px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; border-bottom: 2px solid #e5e7eb; }
+  th.num, td.num { text-align: right; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; font-size: 11px; }
+  .cat-row td { background: #f9fafb; font-weight: 700; font-size: 11px; color: #374151; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 6px 10px; }
+  .subtotal-row td { font-weight: 600; background: #f3f4f6; border-top: 1px solid #e5e7eb; color: #374151; }
+  .total-row td { font-weight: 700; border-top: 2px solid #374151; padding-top: 9px; }
   .footer { color: #aaa; font-size: 10px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
   @media print { body { padding: 20px; } }
 </style>
@@ -267,7 +324,7 @@ ${project.description ? `<p class="description">${project.description}</p>` : ""
   <div class="stat"><div class="stat-label">${labels.items}</div><div class="stat-value">${agg.count}</div></div>
   <div class="stat"><div class="stat-label">${labels.totalWeight}</div><div class="stat-value">${agg.totalWeightKg} kg</div></div>
   <div class="stat"><div class="stat-label">${labels.totalCost}</div><div class="stat-value">${agg.totalCost} ${currency}</div></div>
-  <div class="stat"><div class="stat-label">${labels.costPerKg}</div><div class="stat-value">${agg.costPerKg} ${currency}</div></div>
+  <div class="stat"><div class="stat-label">${labels.costPerKg}</div><div class="stat-value">${agg.costPerKg} ${currency}/kg</div></div>
 </div>
 
 <table>
@@ -275,39 +332,29 @@ ${project.description ? `<p class="description">${project.description}</p>` : ""
     <tr>
       <th>${labels.profileColumn}</th>
       <th>${labels.materialColumn}</th>
-      <th>${labels.weightColumn}</th>
-      <th>${labels.costColumn}</th>
+      <th class="num">${labels.qtyColumn}</th>
+      <th class="num">${labels.unitWeightColumn}</th>
+      <th class="num">${labels.weightColumn}</th>
+      <th class="num">${labels.costColumn}</th>
       <th>${labels.noteColumn}</th>
     </tr>
   </thead>
-  <tbody>
-    ${calcRows}
-    <tr class="total-row">
-      <td>${labels.total}</td>
-      <td></td>
-      <td>${agg.totalWeightKg} kg</td>
-      <td>${agg.totalCost} ${currency}</td>
-      <td></td>
-    </tr>
-  </tbody>
+  <tbody>${tableBody}</tbody>
 </table>
 
-<div class="breakdown">
-  <div class="breakdown-section">
-    <h3>${labels.profileBreakdown}</h3>
-    <table>
-      <thead><tr><th>${labels.profileColumn}</th><th>#</th><th>${labels.weightColumn}</th></tr></thead>
-      <tbody>${profileRows}</tbody>
-    </table>
-  </div>
-  <div class="breakdown-section">
-    <h3>${labels.materialBreakdown}</h3>
-    <table>
-      <thead><tr><th>${labels.materialColumn}</th><th>#</th><th>${labels.weightColumn}</th></tr></thead>
-      <tbody>${materialRows}</tbody>
-    </table>
-  </div>
-</div>
+${materialMap.size > 1 ? `<h2>${labels.materialSummary}</h2>
+<table>
+  <thead>
+    <tr>
+      <th>${labels.materialColumn}</th>
+      <th class="num">#</th>
+      <th class="num">${labels.weightColumn}</th>
+      <th class="num">${labels.costColumn}</th>
+      <th class="num">${labels.costPerKg}</th>
+    </tr>
+  </thead>
+  <tbody>${materialRows}</tbody>
+</table>` : ""}
 
 <div class="footer">FerroScale &middot; ${dateStr}</div>
 </body>
