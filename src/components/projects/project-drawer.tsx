@@ -473,6 +473,35 @@ function ProjectList({
 type SortKey = "date" | "weight" | "cost";
 
 /* ------------------------------------------------------------------ */
+/*  Cross-section key (length-free grouping key)                      */
+/* ------------------------------------------------------------------ */
+
+const SHEET_PROFILE_IDS = ["sheet", "plate", "chequered_plate", "expanded_metal", "corrugated_sheet"];
+const LENGTH_UNIT_FACTORS: Record<string, number> = { mm: 1, cm: 10, m: 1000, in: 25.4, ft: 304.8 };
+
+function crossSectionKey(calc: ProjectCalculation): string {
+  const profileId = calc.result.profileId;
+  const shortLabel = calc.normalizedProfile.shortLabel;
+
+  // Sheets & plates: group by thickness only (user request)
+  if (SHEET_PROFILE_IDS.includes(profileId)) {
+    const t = calc.input.manualDimensions?.thickness;
+    if (t) {
+      const mm = Math.round(t.value * (LENGTH_UNIT_FACTORS[t.unit] ?? 1) * 10) / 10;
+      return `${mm} mm`;
+    }
+  }
+
+  // EN standard profiles: "HEA 100 · L 6000 mm" → "HEA 100"
+  if (shortLabel.includes(" · L ")) return shortLabel.split(" · L ")[0];
+
+  // Manual profiles: "FB 80x8 x L 3000 mm" → "FB 80x8"
+  if (shortLabel.includes(" x L ")) return shortLabel.split(" x L ")[0];
+
+  return shortLabel;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Project detail view                                               */
 /* ------------------------------------------------------------------ */
 
@@ -589,12 +618,12 @@ function ProjectDetail({
     return { heaviestId, lightestId, priciestId };
   }, [project.calculations]);
 
-  /* Breakdown by profile and material */
+  /* Breakdown by profile (cross-section only, no length) and material */
   const breakdown = useMemo(() => {
     const profileMap = new Map<string, number>();
     const materialMap = new Map<string, number>();
     for (const c of project.calculations) {
-      const pk = c.normalizedProfile.shortLabel;
+      const pk = crossSectionKey(c);
       const mk = resolveGradeLabel(c.result.gradeLabel, tBase);
       profileMap.set(pk, (profileMap.get(pk) ?? 0) + c.result.totalWeightKg);
       materialMap.set(mk, (materialMap.get(mk) ?? 0) + c.result.totalWeightKg);
