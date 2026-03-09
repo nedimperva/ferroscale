@@ -237,12 +237,28 @@ export const ResultContent = memo(function ResultContent({
               )}
             </span>
           </div>
-          <div className="flex items-baseline justify-between py-2">
+          {result.quantity > 1 && (
+            <div className="flex items-baseline justify-between border-b border-border-faint py-2">
+              <span className="text-muted">{t("totalWeight")}</span>
+              <span className="font-medium text-right">
+                {fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg
+              </span>
+            </div>
+          )}
+          <div className={`flex items-baseline justify-between py-2 ${result.quantity > 1 ? "border-b border-border-faint" : ""}`}>
             <span className="text-muted">{t("unitPrice")}</span>
             <span className="font-medium text-right">
               {result.unitPriceAmount} {currency}/{priceUnit}
             </span>
           </div>
+          {result.quantity > 1 && (
+            <div className="flex items-baseline justify-between py-2">
+              <span className="text-muted">{t("totalCost")}</span>
+              <span className="font-semibold text-right text-accent">
+                {fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Cost Breakdown ── */}
