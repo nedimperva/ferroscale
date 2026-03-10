@@ -3,7 +3,7 @@
 import { memo, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
-import { DATASET_VERSION } from "@/lib/datasets/version";
+import { APP_VERSION } from "@/lib/changelog";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface SidebarProps {
@@ -101,10 +101,15 @@ export const Sidebar = memo(function Sidebar({
             <button
               type="button"
               onClick={onOpenChangelog}
-              className={`text-[10px] transition-colors hover:text-foreground-secondary ${isChangelogOpen ? "text-foreground-secondary" : "text-muted-faint"}`}
+              className={`inline-flex items-center gap-1 text-[10px] transition-colors hover:text-foreground-secondary ${isChangelogOpen ? "text-foreground-secondary" : "text-muted-faint"}`}
               title={t("sidebar.whatsNew")}
             >
-              v{DATASET_VERSION}
+              v{APP_VERSION}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
             </button>
           </div>
         )}

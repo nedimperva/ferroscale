@@ -146,7 +146,8 @@
     "close": "Zatvori",
     "added": "Dodano",
     "changed": "Izmijenjeno",
-    "fixed": "Ispravljeno"
+    "fixed": "Ispravljeno",
+    "latest": "Najnovije"
   },
   "profileSection": {
     "category": "Kategorija",

@@ -146,7 +146,8 @@
     "close": "Close",
     "added": "Added",
     "changed": "Changed",
-    "fixed": "Fixed"
+    "fixed": "Fixed",
+    "latest": "Latest"
   },
   "profileSection": {
     "category": "Category",
