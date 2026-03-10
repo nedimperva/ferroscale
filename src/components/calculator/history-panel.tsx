@@ -10,6 +10,19 @@ import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { SwipeActionItem } from "@/components/ui/swipe-action-item";
 import { triggerHaptic } from "@/lib/haptics";
 
+function categoryStyle(category: string): { iconBg: string; badge: string } {
+  switch (category) {
+    case "tubes":
+      return { iconBg: "bg-blue-surface text-blue-text", badge: "bg-blue-surface text-blue-text border border-blue-border" };
+    case "plates_sheets":
+      return { iconBg: "bg-amber-surface text-amber-text", badge: "bg-amber-surface text-amber-text border border-amber-border" };
+    case "structural":
+      return { iconBg: "bg-green-surface text-green-text", badge: "bg-green-surface text-green-text border border-green-border" };
+    default:
+      return { iconBg: "bg-purple-surface text-purple-text", badge: "bg-purple-surface text-purple-text border border-purple-border" };
+  }
+}
+
 interface SavedPanelProps {
   saved: SavedEntry[];
   onLoad: (input: CalculationInput) => void;
@@ -104,6 +117,7 @@ const SavedItem = memo(function SavedItem({
 
   const gradeLabel = resolveGradeLabel(entry.result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[entry.result.currency];
+  const styles = categoryStyle(entry.normalizedProfile.iconKey);
 
   function handleSaveEdit() {
     const name = editName.trim();
@@ -162,19 +176,26 @@ const SavedItem = memo(function SavedItem({
         onClick={() => onLoad(entry.input)}
         className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left"
       >
-        {/* Profile icon */}
-        <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-muted">
+        {/* Profile icon — colored per category */}
+        <span className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${styles.iconBg}`}>
           <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
         </span>
 
         <span className="min-w-0 flex-1">
-          {/* Name */}
-          <span className="block truncate text-xs font-semibold text-foreground">
-            {entry.name}
+          {/* Name + grade badge */}
+          <span className="flex items-center gap-1.5 min-w-0">
+            <span className="truncate text-xs font-semibold text-foreground">
+              {entry.name}
+            </span>
+            {gradeLabel && (
+              <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold ${styles.badge}`}>
+                {gradeLabel}
+              </span>
+            )}
           </span>
-          {/* Subtitle: profile · grade */}
+          {/* Subtitle: profile dimensions */}
           <span className="block truncate text-[10px] text-foreground-secondary">
-            {entry.normalizedProfile.shortLabel} · {gradeLabel}
+            {entry.normalizedProfile.shortLabel}
           </span>
           {/* Values */}
           <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-faint">

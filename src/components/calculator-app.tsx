@@ -312,6 +312,27 @@ export function CalculatorApp() {
     [dispatch],
   );
 
+  /* Quick-calc load: preserve user's pricing & rounding settings */
+  const handleQuickCalcLoad = useCallback(
+    (loadedInput: typeof input) => {
+      dispatch({
+        type: "LOAD_ENTRY",
+        input: {
+          ...loadedInput,
+          priceBasis: input.priceBasis,
+          priceUnit: input.priceUnit,
+          unitPrice: input.unitPrice,
+          currency: input.currency,
+          wastePercent: input.wastePercent,
+          includeVat: input.includeVat,
+          vatPercent: input.vatPercent,
+          rounding: input.rounding,
+        },
+      });
+    },
+    [dispatch, input.priceBasis, input.priceUnit, input.unitPrice, input.currency, input.wastePercent, input.includeVat, input.vatPercent, input.rounding],
+  );
+
   /* Saved drawer */
   const [showSavedDrawer, setShowSavedDrawer] = useState(false);
 
@@ -840,7 +861,7 @@ export function CalculatorApp() {
       </div>
 
       {/* ---- Quick Calculate palette (Ctrl+K) ---- */}
-      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} presets={presets} />
+      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleQuickCalcLoad} presets={presets} />
 
       {/* ---- Keyboard shortcuts modal (?) ---- */}
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
