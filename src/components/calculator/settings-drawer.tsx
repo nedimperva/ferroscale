@@ -25,8 +25,6 @@ interface SettingsDrawerProps {
   issues: ValidationIssue[];
   onResetAll: () => void;
   onOpenChangelog: () => void;
-  historyLimit: number;
-  onHistoryLimitChange: (value: number) => void;
   compareLimit: number;
   onCompareLimitChange: (value: number) => void;
   maxCompare: number;
@@ -53,8 +51,6 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   issues,
   onResetAll,
   onOpenChangelog,
-  historyLimit,
-  onHistoryLimitChange,
   compareLimit,
   onCompareLimitChange,
   maxCompare,
@@ -156,8 +152,6 @@ export const SettingsDrawer = memo(function SettingsDrawer({
         <CollapsibleSection title={t("sectionWorkspace")}>
           <div className="p-4 pt-1">
             <WorkspaceSection
-              historyLimit={historyLimit}
-              onHistoryLimitChange={onHistoryLimitChange}
               compareLimit={compareLimit}
               onCompareLimitChange={onCompareLimitChange}
               maxCompare={maxCompare}

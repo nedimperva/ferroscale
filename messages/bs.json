@@ -39,7 +39,7 @@
   },
   "tabs": {
     "calculator": "Kalkulator",
-    "history": "Historija",
+    "saved": "Sacuvano",
     "projects": "Projekti",
     "settings": "Postavke"
   },
@@ -131,7 +131,7 @@
   "sidebar": {
     "title": "FerroScale",
     "settings": "Postavke",
-    "history": "Historija",
+    "saved": "Sacuvano",
     "projects": "Projekti",
     "projectsCount": "Projekti ({count})",
     "compare": "Poredi",
@@ -280,6 +280,8 @@
     "addToCompare": "Dodaj u poredenje",
     "compareFull": "Poredenje je puno ({max}/{max})",
     "inCompareCount": "U poredenju ({count}/{max})",
+    "savedRemove": "Ukloni iz sacuvanih",
+    "actionsTitle": "Akcije",
     "save": "Sacuvaj",
     "saved": "Sacuvano",
     "project": "Projekat",
@@ -317,17 +319,28 @@
     "dataset": "Skup podataka {version}",
     "customDensity": "Korisnicki unesena gustoca"
   },
-  "history": {
-    "drawerAria": "Panel historije",
-    "title": "Historija",
-    "close": "Zatvori historiju",
-    "recent": "Nedavno ({count})",
-    "saved": "Sacuvano ({count})",
-    "clear": "Ocisti",
-    "emptyRecent": "Rezultati se ovdje automatski cuvaju tokom izracuna.",
-    "emptySaved": "Oznacite rezultat zvjezdicom da ostane trajno sacuvan.",
-    "removeStar": "Ukloni zvjezdicu",
-    "addStar": "Dodaj zvjezdicu"
+  "saved": {
+    "drawerAria": "Panel sacuvanih",
+    "title": "Sacuvano",
+    "close": "Zatvori sacuvane",
+    "emptyTitle": "Nista sacuvano",
+    "emptySubtitle": "Sacuvajte izracun da biste mu uvijek pristupili ovdje.",
+    "remove": "Ukloni",
+    "edit": "Uredi",
+    "editCancel": "Otkazi",
+    "editSave": "Sacuvaj",
+    "notesPlaceholder": "Dodajte napomenu..."
+  },
+  "saveDialog": {
+    "title": "Sacuvaj izracun",
+    "subtitle": "Dajte naziv ovom izracunu da ga lako pronadete.",
+    "labelName": "Naziv",
+    "placeholderName": "npr. HEA 200 · S355",
+    "labelNotes": "Napomena",
+    "optional": "(opciono)",
+    "placeholderNotes": "Dodajte napomenu ili kontekst...",
+    "cancel": "Otkazi",
+    "save": "Sacuvaj"
   },
   "contact": {
     "page": {
@@ -570,7 +583,7 @@
   "shortcuts": {
     "title": "Precice na tastaturi",
     "quickCalc": "Brzi kalkulator",
-    "history": "Historija",
+    "saved": "Sacuvano",
     "settings": "Postavke",
     "projects": "Projekti",
     "undo": "Poništi",

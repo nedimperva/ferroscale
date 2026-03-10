@@ -4,8 +4,6 @@ import type { LengthUnit } from "@/lib/calculator/types";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface WorkspaceSectionProps {
-  historyLimit: number;
-  onHistoryLimitChange: (value: number) => void;
   compareLimit: number;
   onCompareLimitChange: (value: number) => void;
   maxCompare: number;
@@ -23,12 +21,9 @@ interface WorkspaceSectionProps {
   unitOptions: LengthUnit[];
 }
 
-const HISTORY_OPTIONS = [10, 25, 50, 100];
 const COMPARE_OPTIONS = [3, 5, 8];
 
 export const WorkspaceSection = memo(function WorkspaceSection({
-  historyLimit,
-  onHistoryLimitChange,
   compareLimit,
   onCompareLimitChange,
   maxCompare,
@@ -54,42 +49,22 @@ export const WorkspaceSection = memo(function WorkspaceSection({
         {t("title")}
       </h3>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="grid gap-1">
-          <label htmlFor="history-limit" className="text-xs font-medium text-foreground-secondary">
-            {t("historyDepth")}
-          </label>
-          <select
-            id="history-limit"
-            value={historyLimit}
-            onChange={(event) => onHistoryLimitChange(Number(event.target.value))}
-            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
-          >
-            {HISTORY_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid gap-1">
-          <label htmlFor="compare-limit" className="text-xs font-medium text-foreground-secondary">
-            {t("compareSlots")}
-          </label>
-          <select
-            id="compare-limit"
-            value={compareLimit}
-            onChange={(event) => onCompareLimitChange(Number(event.target.value))}
-            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
-          >
-            {COMPARE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="grid gap-1">
+        <label htmlFor="compare-limit" className="text-xs font-medium text-foreground-secondary">
+          {t("compareSlots")}
+        </label>
+        <select
+          id="compare-limit"
+          value={compareLimit}
+          onChange={(event) => onCompareLimitChange(Number(event.target.value))}
+          className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+        >
+          {COMPARE_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
       </div>
 
       <p className="text-[11px] text-muted-faint">

@@ -39,7 +39,7 @@
   },
   "tabs": {
     "calculator": "Calculator",
-    "history": "History",
+    "saved": "Saved",
     "projects": "Projects",
     "settings": "Settings"
   },
@@ -131,7 +131,7 @@
   "sidebar": {
     "title": "FerroScale",
     "settings": "Settings",
-    "history": "History",
+    "saved": "Saved",
     "projects": "Projects",
     "projectsCount": "Projects ({count})",
     "compare": "Compare",
@@ -280,6 +280,8 @@
     "addToCompare": "Add to compare",
     "compareFull": "Compare full ({max}/{max})",
     "inCompareCount": "In compare ({count}/{max})",
+    "savedRemove": "Remove from saved",
+    "actionsTitle": "Actions",
     "save": "Save",
     "saved": "Saved",
     "project": "Project",
@@ -317,17 +319,28 @@
     "dataset": "Dataset {version}",
     "customDensity": "User-provided custom density"
   },
-  "history": {
-    "drawerAria": "History drawer",
-    "title": "History",
-    "close": "Close history",
-    "recent": "Recent ({count})",
-    "saved": "Saved ({count})",
-    "clear": "Clear",
-    "emptyRecent": "Results auto-save here as you calculate.",
-    "emptySaved": "Star a result to save it here permanently.",
-    "removeStar": "Remove star",
-    "addStar": "Star"
+  "saved": {
+    "drawerAria": "Saved drawer",
+    "title": "Saved",
+    "close": "Close saved",
+    "emptyTitle": "Nothing saved yet",
+    "emptySubtitle": "Save a calculation to access it here anytime.",
+    "remove": "Remove",
+    "edit": "Edit",
+    "editCancel": "Cancel",
+    "editSave": "Save",
+    "notesPlaceholder": "Add notes..."
+  },
+  "saveDialog": {
+    "title": "Save Calculation",
+    "subtitle": "Give this calculation a name so you can find it later.",
+    "labelName": "Name",
+    "placeholderName": "e.g. HEA 200 · S355",
+    "labelNotes": "Notes",
+    "optional": "(optional)",
+    "placeholderNotes": "Add any notes or context...",
+    "cancel": "Cancel",
+    "save": "Save"
   },
   "contact": {
     "page": {
@@ -570,7 +583,7 @@
   "shortcuts": {
     "title": "Keyboard Shortcuts",
     "quickCalc": "Quick Calculate",
-    "history": "History",
+    "saved": "Saved",
     "settings": "Settings",
     "projects": "Projects",
     "undo": "Undo",

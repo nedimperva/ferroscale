@@ -9,8 +9,9 @@ import { ResultContent } from "./result-content";
 interface ResultPanelProps {
   result: CalculationResult | null;
   isPending: boolean;
-  onStar: () => void;
-  isStarred: boolean;
+  isSaved: boolean;
+  onOpenSaveDialog: () => void;
+  onRemoveSaved: () => void;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -28,8 +29,9 @@ interface ResultPanelProps {
 export const ResultPanel = memo(function ResultPanel({
   result,
   isPending,
-  onStar,
-  isStarred,
+  isSaved,
+  onOpenSaveDialog,
+  onRemoveSaved,
   includeVat,
   wastePercent,
   vatPercent,
@@ -72,8 +74,9 @@ export const ResultPanel = memo(function ResultPanel({
         includeVat={includeVat}
         wastePercent={wastePercent}
         vatPercent={vatPercent}
-        isStarred={isStarred}
-        onStar={onStar}
+        isSaved={isSaved}
+        onOpenSaveDialog={onOpenSaveDialog}
+        onRemoveSaved={onRemoveSaved}
         onCompare={onCompare}
         canCompare={canCompare}
         isInCompare={isInCompare}

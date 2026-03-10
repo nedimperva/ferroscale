@@ -32,8 +32,9 @@ export interface ResultContentProps {
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
-  isStarred: boolean;
-  onStar: () => void;
+  isSaved: boolean;
+  onOpenSaveDialog: () => void;
+  onRemoveSaved: () => void;
   onCompare?: () => void;
   canCompare?: boolean;
   isInCompare?: boolean;
@@ -50,8 +51,9 @@ export const ResultContent = memo(function ResultContent({
   includeVat,
   wastePercent,
   vatPercent,
-  isStarred,
-  onStar,
+  isSaved,
+  onOpenSaveDialog,
+  onRemoveSaved,
   onCompare,
   canCompare = false,
   isInCompare = false,
@@ -149,34 +151,39 @@ export const ResultContent = memo(function ResultContent({
             : t("addToCompare")}
         </button>
 
-        {/* Save */}
+        {/* Save / Saved */}
         <button
           type="button"
           onClick={() => {
-            triggerHaptic(isStarred ? "light" : "success");
-            onStar();
+            if (isSaved) {
+              triggerHaptic("light");
+              onRemoveSaved();
+            } else {
+              triggerHaptic("success");
+              onOpenSaveDialog();
+            }
           }}
           className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-            isStarred
+            isSaved
               ? "border-accent-border bg-accent-surface text-accent"
               : "border-border text-foreground-secondary hover:bg-surface-raised"
           }`}
         >
           <motion.svg
-            key={isStarred ? "starred" : "unstarred"}
+            key={isSaved ? "saved" : "unsaved"}
             initial={{ scale: 1 }}
             animate={{ scale: [1, 1.25, 1] }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             className={`h-3.5 w-3.5 ${
-              isStarred ? "fill-accent stroke-accent" : "fill-none stroke-current"
+              isSaved ? "fill-accent stroke-accent" : "fill-none stroke-current"
             }`}
             strokeWidth={2}
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
           </motion.svg>
-          {isStarred ? t("saved") : t("save")}
+          {isSaved ? t("saved") : t("save")}
         </button>
 
         {/* Project */}
