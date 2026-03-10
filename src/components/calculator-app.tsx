@@ -272,20 +272,19 @@ export function CalculatorApp() {
     [result, input, saveCalculation, t],
   );
 
-  const defaultSaveName = useMemo(() => {
-    if (!result) return "";
-    const profileLabel = normalizedCurrentProfile?.shortLabel ?? result.profileLabel;
-    return resolveGradeLabel(result.gradeLabel, t)
-      ? `${profileLabel} · ${resolveGradeLabel(result.gradeLabel, t)}`
-      : profileLabel;
-  }, [result, normalizedCurrentProfile, t]);
-
   /* Compare helpers */
   const currentIsInCompare = result ? isInCompare(result) : false;
   const normalizedCurrentProfile = useMemo(
     () => (result ? normalizeProfileSnapshot(input) : null),
     [result, input],
   );
+
+  const defaultSaveName = useMemo(() => {
+    if (!result) return "";
+    const profileLabel = normalizedCurrentProfile?.shortLabel ?? result.profileLabel;
+    const grade = resolveGradeLabel(result.gradeLabel, t);
+    return grade ? `${profileLabel} · ${grade}` : profileLabel;
+  }, [result, normalizedCurrentProfile, t]);
 
   const handleCompare = useCallback(() => {
     if (!result) return;
