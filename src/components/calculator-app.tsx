@@ -38,6 +38,7 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcut
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
+import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
 let _sidebarListeners: Array<() => void> = [];
@@ -316,6 +317,9 @@ export function CalculatorApp() {
   /* Contact drawer */
   const [showContactDrawer, setShowContactDrawer] = useState(false);
 
+  /* Changelog drawer */
+  const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
+
   /* Keyboard shortcuts */
   const shortcutHandlers = useMemo(
     () => ({
@@ -515,6 +519,7 @@ export function CalculatorApp() {
         onOpenSettings={() => setShowSettingsDrawer(true)}
         onOpenHistory={() => setShowHistoryDrawer(true)}
         onOpenQuickCalc={quickCalc.open}
+        onOpenChangelog={() => setShowChangelogDrawer(true)}
         compareCount={compareItems.length}
         projectCount={projectCount}
         isSettingsOpen={showSettingsDrawer}
@@ -522,6 +527,7 @@ export function CalculatorApp() {
         isProjectsOpen={showProjectDrawer}
         isCompareOpen={showCompareDrawer}
         isContactOpen={showContactDrawer}
+        isChangelogOpen={showChangelogDrawer}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}
         theme={resolvedTheme}
@@ -564,7 +570,7 @@ export function CalculatorApp() {
             </p>
           </div>
 
-          {/* Right actions: compare badge + theme */}
+          {/* Right actions: compare badge + info + theme */}
           <div className="flex shrink-0 items-center gap-1.5">
             {compareItems.length > 0 && (
               <button
@@ -577,6 +583,14 @@ export function CalculatorApp() {
                 {compareItems.length}
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setShowChangelogDrawer(true)}
+              className="rounded-md p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
+              aria-label={t("changelog.title")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+            </button>
             <button
               type="button"
               onClick={cycleTheme}
@@ -743,6 +757,7 @@ export function CalculatorApp() {
           activeFamily={activeFamily}
           issues={issues}
           onResetAll={resetAll}
+          onOpenChangelog={() => { setShowSettingsDrawer(false); setShowChangelogDrawer(true); }}
           historyLimit={historyLimit}
           onHistoryLimitChange={setHistoryLimit}
           compareLimit={compareLimit}
@@ -766,6 +781,12 @@ export function CalculatorApp() {
         <ContactDrawer
           open={showContactDrawer}
           onClose={() => setShowContactDrawer(false)}
+        />
+
+        {/* ---- Changelog drawer ---- */}
+        <ChangelogDrawer
+          open={showChangelogDrawer}
+          onClose={() => setShowChangelogDrawer(false)}
         />
 
         {/* ---- Compare drawer ---- */}

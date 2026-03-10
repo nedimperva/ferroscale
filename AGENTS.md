@@ -85,6 +85,29 @@ Tests use Vitest with `@/` path alias. The benchmark suite in `engine.test.ts` r
 - Tailwind CSS 4
 - Vitest 4
 
+## Changelog Maintenance
+
+When adding any user-visible feature, fix, or change:
+
+1. Add an entry to `src/lib/changelog.ts` under the current version block, or create a new version block if shipping a release. This is the **single source of truth** for the in-app changelog viewer.
+2. Keep `CHANGELOG.md` at the repo root in sync — it mirrors `src/lib/changelog.ts` in Keep-a-Changelog markdown format.
+3. Bump `DATASET_VERSION` in `packages/metal-core/src/datasets/version.ts` if any dataset (profiles, materials, densities) changed.
+
+Entry categories:
+- **added** — new features or capabilities visible to users
+- **changed** — existing behaviour modified (UX, layout, defaults)
+- **fixed** — bug fixes
+
+Example `src/lib/changelog.ts` entry:
+```ts
+{
+  version: "1.6.0",
+  date: "2026-03-15",
+  added: ["New feature description here"],
+  fixed: ["Bug fix description here"],
+},
+```
+
 ## Cursor Cloud specific instructions
 
 - **Single service**: The only service is the Next.js dev server (`npm run dev`, port 3000). No database, Docker, or external services are required.

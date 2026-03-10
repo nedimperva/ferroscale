@@ -137,7 +137,17 @@
     "compare": "Poredi",
     "compareCount": "Poredi ({count})",
     "reportIssue": "Prijavi problem",
-    "report": "Prijava"
+    "report": "Prijava",
+    "whatsNew": "Novosti"
+  },
+  "changelog": {
+    "title": "Novosti",
+    "ariaLabel": "Pregled izmjena",
+    "close": "Zatvori",
+    "added": "Dodano",
+    "changed": "Izmijenjeno",
+    "fixed": "Ispravljeno",
+    "latest": "Najnovije"
   },
   "profileSection": {
     "category": "Kategorija",
@@ -229,6 +239,7 @@
     "title": "Postavke",
     "close": "Zatvori postavke",
     "reset": "Vrati sve na podrazumijevano",
+    "whatsNew": "Novosti",
     "sectionMaterial": "Materijal i gustoca",
     "sectionPricing": "Cijena",
     "sectionPrecision": "Preciznost i zaokruzivanje",

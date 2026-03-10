@@ -24,6 +24,7 @@ interface SettingsDrawerProps {
   activeFamily: MetalFamilyId;
   issues: ValidationIssue[];
   onResetAll: () => void;
+  onOpenChangelog: () => void;
   historyLimit: number;
   onHistoryLimitChange: (value: number) => void;
   compareLimit: number;
@@ -51,6 +52,7 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   activeFamily,
   issues,
   onResetAll,
+  onOpenChangelog,
   historyLimit,
   onHistoryLimitChange,
   compareLimit,
