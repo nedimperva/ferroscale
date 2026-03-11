@@ -17,6 +17,24 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.5.1",
+    date: "2026-03-11",
+    changed: [
+      "Saved items redesigned to match project card style — bordered cards with icon buttons, no timestamp clutter",
+      "Category-colored icons and grade badges in both saved drawer and project calculations for quick profile/material recognition",
+    ],
+    changed_bs: [
+      "Sačuvane stavke redizajnirane u stilu projektnih kartica — obrubljene kartice sa ikonama gumbima, bez zbunjujućeg vremenskog pečata",
+      "Ikone obojene po kategoriji i oznake materijala u ladičaru sačuvanih stavki i projektnim kalkulacijama za brzo prepoznavanje profila/materijala",
+    ],
+    fixed: [
+      "Quick Calc no longer resets price basis, unit price, currency, waste, VAT, and rounding precision when loading a result — user settings are now preserved app-wide",
+    ],
+    fixed_bs: [
+      "Brzi izračun više ne resetuje osnovu cijene, jediničnu cijenu, valutu, otpad, PDV i preciznost zaokruživanja pri učitavanju rezultata — korisničke postavke su sada sačuvane u cijeloj aplikaciji",
+    ],
+  },
+  {
     version: "1.5.0",
     date: "2026-03-09",
     added: [

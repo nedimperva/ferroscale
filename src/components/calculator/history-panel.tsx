@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -37,13 +37,6 @@ export const HistoryPanel = memo(function HistoryPanel({
   onUpdate,
 }: SavedPanelProps) {
   const t = useTranslations("saved");
-  const format = useFormatter();
-
-  const formatDateTime = (value: string) =>
-    format.dateTime(new Date(value), {
-      dateStyle: "short",
-      timeStyle: "short",
-    });
 
   if (saved.length === 0) {
     return (
@@ -82,7 +75,6 @@ export const HistoryPanel = memo(function HistoryPanel({
             onLoad={onLoad}
             onRemove={() => onRemove(entry.id)}
             onUpdate={(patch) => onUpdate(entry.id, patch)}
-            formatDateTime={formatDateTime}
           />
         </SwipeActionItem>
       ))}
@@ -99,7 +91,6 @@ interface SavedItemProps {
   onLoad: (input: CalculationInput) => void;
   onRemove: () => void;
   onUpdate: (patch: { name?: string; notes?: string }) => void;
-  formatDateTime: (value: string) => string;
 }
 
 const SavedItem = memo(function SavedItem({
@@ -107,7 +98,6 @@ const SavedItem = memo(function SavedItem({
   onLoad,
   onRemove,
   onUpdate,
-  formatDateTime,
 }: SavedItemProps) {
   const tBase = useTranslations();
   const t = useTranslations("saved");
@@ -125,66 +115,20 @@ const SavedItem = memo(function SavedItem({
     setEditing(false);
   }
 
-  if (editing) {
-    return (
-      <li className="rounded-xl border border-blue-border bg-blue-surface/30 p-3">
-        <input
-          type="text"
-          value={editName}
-          onChange={(e) => setEditName(e.target.value)}
-          className="w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:border-blue-border"
-          maxLength={80}
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSaveEdit();
-            if (e.key === "Escape") setEditing(false);
-          }}
-        />
-        <textarea
-          value={editNotes}
-          onChange={(e) => setEditNotes(e.target.value)}
-          rows={2}
-          placeholder={t("notesPlaceholder")}
-          className="mt-1.5 w-full resize-none rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-faint outline-none focus:border-blue-border"
-          maxLength={200}
-        />
-        <div className="mt-2 flex justify-end gap-1.5">
-          <button
-            type="button"
-            onClick={() => setEditing(false)}
-            className="rounded-md px-2.5 py-1 text-xs text-foreground-secondary hover:bg-surface-inset"
-          >
-            {t("editCancel")}
-          </button>
-          <button
-            type="button"
-            onClick={handleSaveEdit}
-            className="rounded-md bg-blue-surface px-2.5 py-1 text-xs font-semibold text-blue-text hover:bg-blue-surface/80"
-          >
-            {t("editSave")}
-          </button>
-        </div>
-      </li>
-    );
-  }
-
   return (
-    <li className="overflow-hidden rounded-xl border border-border-faint bg-surface transition-colors hover:bg-surface-raised">
-      {/* Load button — main row */}
-      <button
-        type="button"
-        onClick={() => onLoad(entry.input)}
-        className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left"
-      >
-        {/* Profile icon — colored per category */}
-        <span className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${styles.iconBg}`}>
-          <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
-        </span>
-
-        <span className="min-w-0 flex-1">
-          {/* Name + grade badge */}
-          <span className="flex items-center gap-1.5 min-w-0">
-            <span className="truncate text-xs font-semibold text-foreground">
+    <li className="rounded-lg border border-border bg-surface px-3 py-2.5">
+      <div className="flex items-start justify-between gap-2">
+        {/* Clickable main content — loads entry */}
+        <button
+          type="button"
+          onClick={() => onLoad(entry.input)}
+          className="min-w-0 flex-1 text-left"
+        >
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${styles.iconBg}`}>
+              <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
+            </span>
+            <span className="truncate text-sm font-medium text-foreground">
               {entry.name}
             </span>
             {gradeLabel && (
@@ -192,81 +136,82 @@ const SavedItem = memo(function SavedItem({
                 {gradeLabel}
               </span>
             )}
-          </span>
-          {/* Subtitle: profile dimensions */}
-          <span className="block truncate text-[10px] text-foreground-secondary">
-            {entry.normalizedProfile.shortLabel}
-          </span>
-          {/* Values */}
-          <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-faint">
-            <span className="font-medium tabular-nums text-foreground-secondary">
-              {entry.result.grandTotalAmount} {currency}
-            </span>
-            <span>·</span>
-            <span className="tabular-nums">{entry.result.totalWeightKg} kg</span>
-            <span>·</span>
-            <span>{formatDateTime(entry.timestamp)}</span>
-          </span>
-          {/* Notes */}
-          {entry.notes && (
-            <span className="mt-0.5 block truncate text-[10px] italic text-muted">
-              {entry.notes}
-            </span>
+          </div>
+          <p className="mt-0.5 text-xs text-muted">{entry.normalizedProfile.shortLabel}</p>
+          <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
+            <span>{entry.result.totalWeightKg} kg</span>
+            <span>{entry.result.grandTotalAmount} {currency}</span>
+          </div>
+          {entry.notes && !editing && (
+            <p className="mt-1 text-[11px] text-muted-faint italic line-clamp-2">{entry.notes}</p>
           )}
-        </span>
-      </button>
+        </button>
 
-      {/* Action row */}
-      <div className="flex border-t border-border-faint/60">
-        <button
-          type="button"
-          onClick={() => {
-            setEditName(entry.name);
-            setEditNotes(entry.notes ?? "");
-            setEditing(true);
-          }}
-          className="flex flex-1 items-center justify-center gap-1 py-1.5 text-[10px] font-medium text-muted transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-3 w-3"
+        {/* Small icon buttons */}
+        <div className="flex shrink-0 items-start gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              setEditName(entry.name);
+              setEditNotes(entry.notes ?? "");
+              setEditing((v) => !v);
+            }}
+            className="rounded p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
+            title={t("edit")}
           >
-            <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-          </svg>
-          {t("edit")}
-        </button>
-        <div className="w-px bg-border-faint/60" />
-        <button
-          type="button"
-          onClick={() => {
-            triggerHaptic("light");
-            onRemove();
-          }}
-          className="flex flex-1 items-center justify-center gap-1 py-1.5 text-[10px] font-medium text-muted transition-colors hover:bg-surface-inset hover:text-red-interactive"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-3 w-3"
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              onRemove();
+            }}
+            className="rounded p-1 text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
+            title={t("remove")}
           >
-            <path d="M3 6h18" />
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-          </svg>
-          {t("remove")}
-        </button>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+              <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {/* Inline name/notes editor */}
+      {editing && (
+        <div className="mt-2 grid gap-1.5">
+          <input
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            className="w-full rounded border border-blue-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:border-blue-strong"
+            maxLength={80}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSaveEdit();
+              if (e.key === "Escape") setEditing(false);
+            }}
+          />
+          <textarea
+            value={editNotes}
+            onChange={(e) => setEditNotes(e.target.value)}
+            rows={2}
+            placeholder={t("notesPlaceholder")}
+            className="w-full resize-none rounded border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-faint outline-none focus:border-blue-border"
+            maxLength={200}
+          />
+          <div className="flex gap-2">
+            <button type="button" onClick={handleSaveEdit} className="text-[11px] font-medium text-blue-strong">
+              {t("editSave")}
+            </button>
+            <button type="button" onClick={() => setEditing(false)} className="text-[11px] font-medium text-muted">
+              {t("editCancel")}
+            </button>
+          </div>
+        </div>
+      )}
     </li>
   );
 });
