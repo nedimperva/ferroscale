@@ -19,13 +19,31 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.5.1",
     date: "2026-03-11",
+    added: [
+      "Named saves — calculations can now be saved with a custom name and optional notes via a save dialog",
+      "Save dialog: name input + notes textarea shown when clicking Save on any result",
+      "⋯ action sheet on mobile — single button opens Compare, Save, and Add to Project in one place",
+      "Bookmark icon fills when the current calculation is already saved",
+    ],
+    added_bs: [
+      "Imenovanaa sačuvana izračunavanja — izračuni se sada mogu sačuvati s prilagođenim imenom i opcionalnim bilješkama putem dijaloga za čuvanje",
+      "Dijalog za čuvanje: polje za ime i tekstualno polje za bilješke prikazano pri kliku na Sačuvaj za bilo koji rezultat",
+      "⋯ akcijski list na mobilnom — jedan gumb otvara Usporedi, Sačuvaj i Dodaj u projekt na jednom mjestu",
+      "Ikona oznake se popunjava kada je trenutni izračun već sačuvan",
+    ],
     changed: [
-      "Saved items redesigned to match project card style — bordered cards with icon buttons, no timestamp clutter",
-      "Category-colored icons and grade badges in both saved drawer and project calculations for quick profile/material recognition",
+      "Auto-save history removed — replaced with intentional named saves (no more automatic clutter)",
+      "Bottom tab bar: History tab replaced with Saved tab — bookmark icon with count badge",
+      "Saved items redesigned to match project card style — bordered cards with small icon buttons, no timestamp",
+      "Category-colored icons (tubes=blue, plates=amber, structural=green, bars=purple) in saved drawer and project calculations",
+      "Grade badges color-matched to profile category for quick material recognition",
     ],
     changed_bs: [
-      "Sačuvane stavke redizajnirane u stilu projektnih kartica — obrubljene kartice sa ikonama gumbima, bez zbunjujućeg vremenskog pečata",
-      "Ikone obojene po kategoriji i oznake materijala u ladičaru sačuvanih stavki i projektnim kalkulacijama za brzo prepoznavanje profila/materijala",
+      "Automatska historija uklonjena — zamijenjena namjernim imenovanim sačuvavanjima (bez automatskog nereda)",
+      "Donja traka kartica: kartica Historija zamijenjena karticom Sačuvano — ikona oznake s brojanikom",
+      "Sačuvane stavke redizajnirane u stilu projektnih kartica — obrubljene kartice s malim ikonama gumbima, bez vremenskog pečata",
+      "Ikone obojene po kategoriji (cijevi=plava, ploče=jantarna, konstrukcioni=zelena, šipke=ljubičasta) u ladičaru sačuvanih i projektnim kalkulacijama",
+      "Oznake materijala usklađene bojom s kategorijom profila za brzo prepoznavanje",
     ],
     fixed: [
       "Quick Calc no longer resets price basis, unit price, currency, waste, VAT, and rounding precision when loading a result — user settings are now preserved app-wide",
