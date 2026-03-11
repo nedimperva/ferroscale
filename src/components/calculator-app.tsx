@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { useCalculator } from "@/hooks/useCalculator";
-import { useHistory } from "@/hooks/useHistory";
+import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useReverseCalculator } from "@/hooks/useReverseCalculator";
 import { useProjects } from "@/hooks/useProjects";
@@ -38,6 +38,7 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcut
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
+import { SaveDialog } from "@/components/calculator/save-dialog";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 
 /* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
@@ -169,15 +170,13 @@ export function CalculatorApp() {
   } = useCalculator();
 
   const {
-    history,
-    starred,
-    historyLimit,
-    setHistoryLimit,
-    addToHistory,
-    toggleStar,
-    removeStarred,
-    clearHistory,
-  } = useHistory();
+    saved,
+    saveCalculation,
+    removeSaved,
+    updateSaved,
+    isSaved: isSavedEntry,
+    getSavedEntry,
+  } = useSaved();
 
   const {
     items: compareItems,
@@ -231,14 +230,6 @@ export function CalculatorApp() {
   const [presetDefaultLabel, setPresetDefaultLabel] = useState("");
   const [presetProfileName, setPresetProfileName] = useState("");
 
-  /* Auto-save valid results to history */
-  const prevResultRef = useRef(result);
-  useEffect(() => {
-    if (result && result !== prevResultRef.current) {
-      addToHistory(input, result);
-    }
-    prevResultRef.current = result;
-  }, [result, input, addToHistory]);
 
   /* Mobile overlay state */
   const [showOverlay, setShowOverlay] = useState(false);
@@ -255,21 +246,31 @@ export function CalculatorApp() {
     openProjectsDrawer();
   }, [openProjectsDrawer]);
 
-  /* Star helpers */
-  const currentEntryId = history[0]?.id;
-  const isCurrentStarred = currentEntryId
-    ? starred.some((s) => s.id === currentEntryId)
-    : false;
+  /* Save helpers */
+  const isCurrentSaved = result ? isSavedEntry(result) : false;
+  const currentSavedEntry = result ? getSavedEntry(result) : undefined;
 
-  const handleStar = useCallback(() => {
-    if (!currentEntryId) return;
-    toggleStar(currentEntryId);
-    if (isCurrentStarred) {
-      toast.info(t("toasts.calculationUnstarred"));
-    } else {
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+
+  const handleOpenSaveDialog = useCallback(() => {
+    if (result) setShowSaveDialog(true);
+  }, [result]);
+
+  const handleRemoveSaved = useCallback(() => {
+    if (!currentSavedEntry) return;
+    removeSaved(currentSavedEntry.id);
+    toast.info(t("toasts.calculationUnstarred"));
+  }, [currentSavedEntry, removeSaved, t]);
+
+  const handleConfirmSave = useCallback(
+    (name: string, notes?: string) => {
+      if (!result) return;
+      saveCalculation(input, result, name, notes);
+      setShowSaveDialog(false);
       toast.success(t("toasts.calculationSaved"));
-    }
-  }, [currentEntryId, toggleStar, isCurrentStarred, t]);
+    },
+    [result, input, saveCalculation, t],
+  );
 
   /* Compare helpers */
   const currentIsInCompare = result ? isInCompare(result) : false;
@@ -277,6 +278,13 @@ export function CalculatorApp() {
     () => (result ? normalizeProfileSnapshot(input) : null),
     [result, input],
   );
+
+  const defaultSaveName = useMemo(() => {
+    if (!result) return "";
+    const profileLabel = normalizedCurrentProfile?.shortLabel ?? result.profileLabel;
+    const grade = resolveGradeLabel(result.gradeLabel, t);
+    return grade ? `${profileLabel} · ${grade}` : profileLabel;
+  }, [result, normalizedCurrentProfile, t]);
 
   const handleCompare = useCallback(() => {
     if (!result) return;
@@ -296,10 +304,6 @@ export function CalculatorApp() {
     }
   }, [result]);
 
-  const handleClearHistory = useCallback(() => {
-    clearHistory();
-    toast.info(t("toasts.historyCleared"));
-  }, [clearHistory, t]);
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -308,8 +312,29 @@ export function CalculatorApp() {
     [dispatch],
   );
 
-  /* History drawer */
-  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  /* Quick-calc load: preserve user's pricing & rounding settings */
+  const handleQuickCalcLoad = useCallback(
+    (loadedInput: typeof input) => {
+      dispatch({
+        type: "LOAD_ENTRY",
+        input: {
+          ...loadedInput,
+          priceBasis: input.priceBasis,
+          priceUnit: input.priceUnit,
+          unitPrice: input.unitPrice,
+          currency: input.currency,
+          wastePercent: input.wastePercent,
+          includeVat: input.includeVat,
+          vatPercent: input.vatPercent,
+          rounding: input.rounding,
+        },
+      });
+    },
+    [dispatch, input.priceBasis, input.priceUnit, input.unitPrice, input.currency, input.wastePercent, input.includeVat, input.vatPercent, input.rounding],
+  );
+
+  /* Saved drawer */
+  const [showSavedDrawer, setShowSavedDrawer] = useState(false);
 
   /* Settings drawer */
   const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
@@ -324,7 +349,7 @@ export function CalculatorApp() {
   const shortcutHandlers = useMemo(
     () => ({
       quickCalc: () => quickCalc.toggle(),
-      history: () => setShowHistoryDrawer((prev: boolean) => !prev),
+      history: () => setShowSavedDrawer((prev: boolean) => !prev),
       settings: () => setShowSettingsDrawer((prev: boolean) => !prev),
       projects: () => openProjectsDrawer(),
       resetForm: () => dispatch({ type: "RESET" }),
@@ -466,8 +491,8 @@ export function CalculatorApp() {
   }, [dispatch]);
 
   /* ---- Bottom tab bar (mobile) ---- */
-  const activeTab: TabId = showHistoryDrawer
-    ? "history"
+  const activeTab: TabId = showSavedDrawer
+    ? "saved"
     : showProjectDrawer
       ? "projects"
       : showSettingsDrawer
@@ -476,15 +501,15 @@ export function CalculatorApp() {
 
   const handleTabChange = useCallback((tab: TabId) => {
     // Close any open drawers first
-    setShowHistoryDrawer(false);
+    setShowSavedDrawer(false);
     setShowSettingsDrawer(false);
     closeProjects();
     setShowContactDrawer(false);
 
     // Open the selected tab's drawer
     switch (tab) {
-      case "history":
-        setShowHistoryDrawer(true);
+      case "saved":
+        setShowSavedDrawer(true);
         break;
       case "projects":
         openProjectsDrawer();
@@ -517,13 +542,13 @@ export function CalculatorApp() {
         onOpenCompare={openCompare}
         onOpenProjects={openProjects}
         onOpenSettings={() => setShowSettingsDrawer(true)}
-        onOpenHistory={() => setShowHistoryDrawer(true)}
+        onOpenHistory={() => setShowSavedDrawer(true)}
         onOpenQuickCalc={quickCalc.open}
         onOpenChangelog={() => setShowChangelogDrawer(true)}
         compareCount={compareItems.length}
         projectCount={projectCount}
         isSettingsOpen={showSettingsDrawer}
-        isHistoryOpen={showHistoryDrawer}
+        isHistoryOpen={showSavedDrawer}
         isProjectsOpen={showProjectDrawer}
         isCompareOpen={showCompareDrawer}
         isContactOpen={showContactDrawer}
@@ -671,8 +696,9 @@ export function CalculatorApp() {
             <ResultPanel
               result={result}
               isPending={isPending}
-              onStar={handleStar}
-              isStarred={isCurrentStarred}
+              isSaved={isCurrentSaved}
+              onOpenSaveDialog={handleOpenSaveDialog}
+              onRemoveSaved={handleRemoveSaved}
               includeVat={input.includeVat}
               wastePercent={input.wastePercent}
               vatPercent={input.vatPercent}
@@ -693,12 +719,14 @@ export function CalculatorApp() {
         <ResultBar
           result={result}
           isPending={isPending}
-          onStar={handleStar}
-          isStarred={isCurrentStarred}
+          isSaved={isCurrentSaved}
+          onOpenSaveDialog={handleOpenSaveDialog}
+          onRemoveSaved={handleRemoveSaved}
           onExpand={() => setShowOverlay(true)}
           onCompare={handleCompare}
           canCompare={canCompare}
           isInCompare={currentIsInCompare}
+          compareCount={compareItems.length}
           maxCompare={maxCompare}
           onAddToProject={handleAddToProject}
           hasProjects={projectCount > 0}
@@ -712,6 +740,7 @@ export function CalculatorApp() {
           onTabChange={handleTabChange}
           projectCount={projectCount}
           compareCount={compareItems.length}
+          savedCount={saved.length}
         />
 
         {/* ---- Result bottom sheet (mobile) ---- */}
@@ -721,8 +750,9 @@ export function CalculatorApp() {
             includeVat={input.includeVat}
             wastePercent={input.wastePercent}
             vatPercent={input.vatPercent}
-            isStarred={isCurrentStarred}
-            onStar={handleStar}
+            isSaved={isCurrentSaved}
+            onOpenSaveDialog={handleOpenSaveDialog}
+            onRemoveSaved={handleRemoveSaved}
             onClose={() => setShowOverlay(false)}
             onCompare={handleCompare}
             canCompare={canCompare}
@@ -736,16 +766,14 @@ export function CalculatorApp() {
           />
         )}
 
-        {/* ---- History drawer (all breakpoints) ---- */}
+        {/* ---- Saved drawer (all breakpoints) ---- */}
         <HistoryDrawer
-          open={showHistoryDrawer}
-          onClose={() => setShowHistoryDrawer(false)}
-          history={history}
-          starred={starred}
+          open={showSavedDrawer}
+          onClose={() => setShowSavedDrawer(false)}
+          saved={saved}
           onLoad={handleLoad}
-          onToggleStar={toggleStar}
-          onRemoveStarred={removeStarred}
-          onClearHistory={handleClearHistory}
+          onRemove={removeSaved}
+          onUpdate={updateSaved}
         />
 
         {/* ---- Settings drawer ---- */}
@@ -758,8 +786,6 @@ export function CalculatorApp() {
           issues={issues}
           onResetAll={resetAll}
           onOpenChangelog={() => { setShowSettingsDrawer(false); setShowChangelogDrawer(true); }}
-          historyLimit={historyLimit}
-          onHistoryLimitChange={setHistoryLimit}
           compareLimit={compareLimit}
           onCompareLimitChange={setCompareLimit}
           maxCompare={maxCompare}
@@ -835,10 +861,18 @@ export function CalculatorApp() {
       </div>
 
       {/* ---- Quick Calculate palette (Ctrl+K) ---- */}
-      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleLoad} presets={presets} />
+      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleQuickCalcLoad} presets={presets} />
 
       {/* ---- Keyboard shortcuts modal (?) ---- */}
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
+
+      {/* ---- Save calculation dialog ---- */}
+      <SaveDialog
+        open={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        onSave={handleConfirmSave}
+        defaultName={defaultSaveName}
+      />
 
       {/* ---- Save preset modal ---- */}
       <SavePresetModal

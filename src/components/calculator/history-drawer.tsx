@@ -4,34 +4,30 @@ import { memo } from "react";
 import { useTranslations } from "next-intl";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import type { HistoryEntry } from "@/hooks/useHistory";
+import type { SavedEntry } from "@/hooks/useSaved";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { HistoryPanel } from "./history-panel";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 
-interface HistoryDrawerProps {
+interface SavedDrawerProps {
   open: boolean;
   onClose: () => void;
-  history: HistoryEntry[];
-  starred: HistoryEntry[];
+  saved: SavedEntry[];
   onLoad: (input: CalculationInput) => void;
-  onToggleStar: (id: string) => void;
-  onRemoveStarred: (id: string) => void;
-  onClearHistory: () => void;
+  onRemove: (id: string) => void;
+  onUpdate: (id: string, patch: { name?: string; notes?: string }) => void;
 }
 
 export const HistoryDrawer = memo(function HistoryDrawer({
   open,
   onClose,
-  history,
-  starred,
+  saved,
   onLoad,
-  onToggleStar,
-  onRemoveStarred,
-  onClearHistory,
-}: HistoryDrawerProps) {
-  const t = useTranslations("history");
+  onRemove,
+  onUpdate,
+}: SavedDrawerProps) {
+  const t = useTranslations("saved");
   const isMobile = useIsMobile();
 
   useDrawerBehavior(!isMobile && open, onClose);
@@ -41,6 +37,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
       {/* Drawer header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          {/* Bookmark icon */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -51,11 +48,14 @@ export const HistoryDrawer = memo(function HistoryDrawer({
             strokeLinejoin="round"
             className="h-4 w-4"
           >
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-            <path d="M12 7v5l4 2" />
+            <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
           </svg>
           {t("title")}
+          {saved.length > 0 && (
+            <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-surface px-1 text-[10px] font-bold text-accent">
+              {saved.length}
+            </span>
+          )}
         </h2>
         {!isMobile && (
           <button
@@ -84,15 +84,13 @@ export const HistoryDrawer = memo(function HistoryDrawer({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
         <HistoryPanel
-          history={history}
-          starred={starred}
+          saved={saved}
           onLoad={(loadedInput) => {
             onLoad(loadedInput);
             onClose();
           }}
-          onToggleStar={onToggleStar}
-          onRemoveStarred={onRemoveStarred}
-          onClearHistory={onClearHistory}
+          onRemove={onRemove}
+          onUpdate={onUpdate}
         />
       </div>
     </>

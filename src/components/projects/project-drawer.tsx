@@ -467,6 +467,23 @@ function ProjectList({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Category style helper                                            */
+/* ------------------------------------------------------------------ */
+
+function categoryStyle(category: string): { iconBg: string; badge: string } {
+  switch (category) {
+    case "tubes":
+      return { iconBg: "bg-blue-surface text-blue-text", badge: "bg-blue-surface text-blue-text border border-blue-border" };
+    case "plates_sheets":
+      return { iconBg: "bg-amber-surface text-amber-text", badge: "bg-amber-surface text-amber-text border border-amber-border" };
+    case "structural":
+      return { iconBg: "bg-green-surface text-green-text", badge: "bg-green-surface text-green-text border border-green-border" };
+    default:
+      return { iconBg: "bg-purple-surface text-purple-text", badge: "bg-purple-surface text-purple-text border border-purple-border" };
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Sort type                                                         */
 /* ------------------------------------------------------------------ */
 
@@ -873,6 +890,7 @@ function ProjectDetail({
             const isLightest = extremes.lightestId === calc.id;
             const isPriciest = extremes.priciestId === calc.id;
             const isEditingNote = editingNoteId === calc.id;
+            const catStyle = categoryStyle(calc.normalizedProfile.iconKey);
             const costPerKgCalc = calc.result.totalWeightKg > 0
               ? Math.round((calc.result.grandTotalAmount / calc.result.totalWeightKg) * 100) / 100
               : 0;
@@ -886,7 +904,7 @@ function ProjectDetail({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="flex items-center gap-1.5 text-sm font-medium text-foreground min-w-0">
-                        <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted">
+                        <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${catStyle.iconBg}`}>
                           <ProfileIcon category={calc.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
                         </span>
                         <span className="truncate">{calc.normalizedProfile.shortLabel}</span>
@@ -908,7 +926,11 @@ function ProjectDetail({
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted">{gradeLabel}</p>
+                    {gradeLabel && (
+                      <span className={`mt-0.5 inline-block rounded px-1.5 py-0.5 text-[9px] font-semibold ${catStyle.badge}`}>
+                        {gradeLabel}
+                      </span>
+                    )}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
                       <span>{calc.result.totalWeightKg} kg</span>
                       <span>{calc.result.grandTotalAmount} {CURRENCY_SYMBOLS[calc.result.currency]}</span>

@@ -5,13 +5,14 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { triggerHaptic } from "@/lib/haptics";
 
-export type TabId = "calculator" | "history" | "projects" | "settings";
+export type TabId = "calculator" | "saved" | "projects" | "settings";
 
 interface BottomTabBarProps {
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
   projectCount?: number;
   compareCount?: number;
+  savedCount?: number;
 }
 
 /**
@@ -22,12 +23,13 @@ export const BottomTabBar = memo(function BottomTabBar({
   activeTab,
   onTabChange,
   projectCount = 0,
+  savedCount = 0,
 }: BottomTabBarProps) {
   const t = useTranslations("tabs");
 
   const tabs: { id: TabId; label: string; badge?: number }[] = [
     { id: "calculator", label: t("calculator") },
-    { id: "history", label: t("history") },
+    { id: "saved", label: t("saved"), badge: savedCount > 0 ? savedCount : undefined },
     { id: "projects", label: t("projects"), badge: projectCount > 0 ? projectCount : undefined },
     { id: "settings", label: t("settings") },
   ];
@@ -120,12 +122,10 @@ function TabIcon({ id, active }: { id: TabId; active: boolean }) {
           <path d="M8 7h8" />
         </svg>
       );
-    case "history":
+    case "saved":
       return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}>
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-          <path d="M3 3v5h5" />
-          <path d="M12 7v5l4 2" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}>
+          <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
         </svg>
       );
     case "projects":

@@ -14,7 +14,7 @@ const mod = isMac ? "\u2318" : "Ctrl";
 
 const SHORTCUTS = [
   { id: "quickCalc", keys: [`${mod}+K`] },
-  { id: "history", keys: [`${mod}+H`] },
+  { id: "saved", keys: [`${mod}+H`] },
   { id: "settings", keys: [`${mod}+,`] },
   { id: "projects", keys: [`${mod}+P`] },
   { id: "undo", keys: [`${mod}+Z`] },
