@@ -17,7 +17,7 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "1.5.1",
+    version: "1.6.0",
     date: "2026-03-11",
     added: [
       "Named saves — calculations can now be saved with a custom name and optional notes via a save dialog",
