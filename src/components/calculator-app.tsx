@@ -227,8 +227,7 @@ export function CalculatorApp() {
 
   const quickCalc = useQuickCalculator();
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
-  // const { recent: recentProfiles, trackProfile } = useRecentProfiles();
-  const recentProfiles: any[] = []; // Temporarily disabled
+  const { recent: recentProfiles, trackProfile } = useRecentProfiles();
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
   const [presetDefaultLabel, setPresetDefaultLabel] = useState("");
@@ -374,15 +373,14 @@ export function CalculatorApp() {
   );
   useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
 
-  // Track profile usage for "recently used" feature - TEMPORARILY DISABLED
-  // const prevProfileRef = useRef(input.profileId);
-  // useEffect(() => {
-  //   if (input.profileId !== prevProfileRef.current) {
-  //     prevProfileRef.current = input.profileId;
-  //     trackProfile(input.profileId);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [input.profileId]);
+  const prevProfileRef = useRef(input.profileId);
+  useEffect(() => {
+    if (input.profileId !== prevProfileRef.current) {
+      prevProfileRef.current = input.profileId;
+      trackProfile(input.profileId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input.profileId]);
 
   const lastFocusedIssueFieldRef = useRef<string | null>(null);
   const firstIssueField = issues[0]?.field ?? null;
