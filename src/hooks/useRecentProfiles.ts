@@ -29,6 +29,8 @@ export function useRecentProfiles() {
 
   const trackProfile = useCallback((profileId: ProfileId) => {
     const prev = getSnapshot();
+    // Only update if the profile is not already at the top
+    if (prev[0] === profileId) return;
     const filtered = prev.filter((id) => id !== profileId);
     const next = [profileId, ...filtered].slice(0, MAX_RECENT);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }

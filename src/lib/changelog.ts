@@ -17,6 +17,22 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.7.0",
+    date: "2026-03-13",
+    added: [
+      "Profile dimension diagrams — SVG cross-section illustrations with labeled dimension arrows for all manual profile types",
+      "Share calculation via URL — new Share button copies a shareable link that reconstructs the exact calculation",
+      "Weight context comparisons — fun, relatable weight analogies shown below the result (e.g. 'About the weight of a small car')",
+      "Recently used profiles — quick-access chips above the category selector for faster profile switching",
+    ],
+    added_bs: [
+      "Dijagrami dimenzija profila — SVG ilustracije poprečnog presjeka s označenim strelicama dimenzija za sve ručne tipove profila",
+      "Dijeljenje izračuna putem URL-a — novo dugme Dijeli kopira link koji rekonstruira tačan izračun",
+      "Kontekst mase — zabavne, razumljive usporedbe mase prikazane ispod rezultata (npr. 'Otprilike težina malog automobila')",
+      "Nedavno korišteni profili — brzi pristup iznad birača kategorije za brže prebacivanje profila",
+    ],
+  },
+  {
     version: "1.6.0",
     date: "2026-03-11",
     added: [

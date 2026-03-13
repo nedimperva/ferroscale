@@ -5,7 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [1.7.0] – 2026-03-13
+
+### Added
+- **Profile dimension diagrams** — SVG cross-section illustrations with labeled dimension arrows for all manual profile types (round bar, square bar, flat bar, angle, pipe, rectangular tube, square hollow, sheet, plate, chequered plate, expanded metal, corrugated sheet)
+- **Share calculation via URL** — new Share button in result actions copies a shareable link that reconstructs the exact calculation when opened
+- **Weight context comparisons** — fun, relatable weight analogies shown below the grand total (e.g. "About the weight of a small car")
+- **Recently used profiles** — quick-access chips above the category selector for faster profile switching
+
+---
+
+## [1.6.0] – 2026-03-11
+
+### Added
+- Named saves — calculations can now be saved with a custom name and optional notes via a save dialog
+- Save dialog: name input + notes textarea shown when clicking Save on any result
+- ⋯ action sheet on mobile — single button opens Compare, Save, and Add to Project in one place
+- Bookmark icon fills when the current calculation is already saved
+
+### Changed
+- Auto-save history removed — replaced with intentional named saves (no more automatic clutter)
+- Bottom tab bar: History tab replaced with Saved tab — bookmark icon with count badge
+- Saved items redesigned to match project card style — bordered cards with small icon buttons, no timestamp
+- Category-colored icons (tubes=blue, plates=amber, structural=green, bars=purple) in saved drawer and project calculations
+- Grade badges color-matched to profile category for quick material recognition
+
+### Fixed
+- Quick Calc no longer resets price basis, unit price, currency, waste, VAT, and rounding precision when loading a result — user settings are now preserved app-wide
 
 ---
 
@@ -113,7 +139,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v1.5.0...HEAD
+[1.7.0]: https://github.com/nedimperva/ferroscale/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/nedimperva/ferroscale/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/nedimperva/ferroscale/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/nedimperva/ferroscale/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nedimperva/ferroscale/compare/v1.2.0...v1.3.0
