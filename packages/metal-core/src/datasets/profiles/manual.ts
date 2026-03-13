@@ -98,7 +98,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     formulaLabel: "A = width × thickness",
     referenceLabel: "EN 10051",
     dimensions: [
-      { key: "width", label: "Width", minMm: 100, maxMm: 3000, defaultMm: 1250 },
+      { key: "width", label: "Width", minMm: 10, maxMm: 3000, defaultMm: 1250 },
       { key: "thickness", label: "Thickness", minMm: 0.4, maxMm: 6, defaultMm: 2 },
     ],
   },
@@ -110,7 +110,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     formulaLabel: "A = width × thickness",
     referenceLabel: "EN 10029",
     dimensions: [
-      { key: "width", label: "Width", minMm: 100, maxMm: 4000, defaultMm: 1500 },
+      { key: "width", label: "Width", minMm: 10, maxMm: 4000, defaultMm: 1500 },
       { key: "thickness", label: "Thickness", minMm: 6, maxMm: 250, defaultMm: 20 },
     ],
   },
@@ -122,8 +122,8 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     formulaLabel: "A = w × (t + pattern×0.5)",
     referenceLabel: "EN 10363",
     dimensions: [
-      { key: "width", label: "Width", minMm: 100, maxMm: 4000, defaultMm: 1500 },
-      { key: "thickness", label: "Base Thickness", minMm: 3, maxMm: 20, defaultMm: 5 },
+      { key: "width", label: "Width", minMm: 10, maxMm: 4000, defaultMm: 1500 },
+      { key: "thickness", label: "Base Thickness", minMm: 2, maxMm: 20, defaultMm: 5 },
       { key: "patternHeight", label: "Pattern Height", minMm: 1, maxMm: 5, defaultMm: 2 },
     ],
   },
@@ -135,7 +135,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     formulaLabel: "A = width × eff. thickness",
     referenceLabel: "ISO 16573",
     dimensions: [
-      { key: "width", label: "Width", minMm: 100, maxMm: 3000, defaultMm: 1250 },
+      { key: "width", label: "Width", minMm: 10, maxMm: 3000, defaultMm: 1250 },
       { key: "thickness", label: "Eff. Thickness", minMm: 0.5, maxMm: 10, defaultMm: 3 },
     ],
   },
@@ -147,7 +147,7 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     formulaLabel: "A = width × base thickness",
     referenceLabel: "EN 508",
     dimensions: [
-      { key: "width", label: "Cover Width", minMm: 100, maxMm: 3000, defaultMm: 1000 },
+      { key: "width", label: "Cover Width", minMm: 10, maxMm: 3000, defaultMm: 1000 },
       { key: "thickness", label: "Base Thickness", minMm: 0.3, maxMm: 3, defaultMm: 0.7 },
     ],
   },
