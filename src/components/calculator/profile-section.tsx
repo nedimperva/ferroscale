@@ -12,6 +12,7 @@ import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
 import { SizeCombobox } from "./size-combobox";
 import { StandardsCombobox } from "./standards-combobox";
+import { ProfileDiagram } from "./profile-diagram";
 import { triggerHaptic } from "@/lib/haptics";
 
 /** Ordered list of categories for the top-level tabs. */
@@ -188,6 +189,7 @@ interface ProfileSectionProps {
   onSavePreset: () => void;
   profilePresets: DimensionPreset[];
   onRemovePreset: (id: string) => void;
+  recentProfiles?: string[];
 }
 
 export const ProfileSection = memo(function ProfileSection({
@@ -202,6 +204,7 @@ export const ProfileSection = memo(function ProfileSection({
   onSavePreset,
   profilePresets,
   onRemovePreset,
+  recentProfiles = [],
 }: ProfileSectionProps) {
   const t = useTranslations();
   const hasIssue = (field: string) => issues.some((i) => i.field === field);
@@ -240,6 +243,36 @@ export const ProfileSection = memo(function ProfileSection({
     <section className="grid gap-1 md:gap-3">
       {/* ── Profile selection group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
+        {/* Recently used profiles */}
+        {recentProfiles.length > 1 && (
+          <div className="grid gap-1 mb-1.5">
+            <span className="text-[10px] font-medium text-muted-faint">{t("profileSection.recent")}</span>
+            <div className="flex flex-wrap gap-1">
+              {recentProfiles
+                .filter((pid) => pid !== input.profileId)
+                .slice(0, 3)
+                .map((pid) => {
+                  const def = PROFILE_DEFINITIONS.find((p) => p.id === pid);
+                  if (!def) return null;
+                  return (
+                    <button
+                      key={pid}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("light");
+                        dispatch({ type: "SET_PROFILE", profileId: pid as ProfileId });
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md border border-border-faint bg-surface px-2 py-0.5 text-[10px] font-medium text-muted transition-all hover:border-border-strong hover:text-foreground-secondary"
+                    >
+                      {PROFILE_ICONS[def.id]}
+                      {t(`dataset.profileShort.${def.id}`)}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
         {/* Category pills */}
         <div className="grid gap-1">
           <span className="text-xs font-medium text-muted">{t("profileSection.category")}</span>
@@ -384,20 +417,27 @@ export const ProfileSection = memo(function ProfileSection({
               }))}
               onRemoveCustom={onRemovePreset}
             />
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-              {selectedProfile.dimensions.map((dim) => (
-                <DimensionInput
-                  key={dim.key}
-                  dimension={dim}
-                  value={input.manualDimensions[dim.key]}
-                  unit={defaultUnit}
-                  hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
-                  issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
-                  onValueChange={(v) =>
-                    dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
-                  }
-                />
-              ))}
+            <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0 items-start">
+              <ProfileDiagram
+                profileId={input.profileId}
+                dimensions={input.manualDimensions}
+                className="row-span-2 h-[72px] w-[88px] shrink-0 hidden sm:flex"
+              />
+              <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 sm:col-start-2">
+                {selectedProfile.dimensions.map((dim) => (
+                  <DimensionInput
+                    key={dim.key}
+                    dimension={dim}
+                    value={input.manualDimensions[dim.key]}
+                    unit={defaultUnit}
+                    hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
+                    issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
+                    onValueChange={(v) =>
+                      dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
+                    }
+                  />
+                ))}
+              </div>
             </div>
             <button
               type="button"

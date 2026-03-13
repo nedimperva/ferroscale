@@ -29,12 +29,14 @@ import type { TabId } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
+import { encodeInputToParams } from "@/lib/calculator/url-state";
 import { toast } from "@/lib/toast";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { usePresets } from "@/hooks/usePresets";
 import type { LengthUnit } from "@/lib/calculator/types";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
+import { useRecentProfiles } from "@/hooks/useRecentProfiles";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
@@ -225,6 +227,7 @@ export function CalculatorApp() {
 
   const quickCalc = useQuickCalculator();
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
+  const { recent: recentProfiles, trackProfile } = useRecentProfiles();
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
   const [presetDefaultLabel, setPresetDefaultLabel] = useState("");
@@ -304,6 +307,14 @@ export function CalculatorApp() {
     }
   }, [result]);
 
+  const handleShare = useCallback(() => {
+    const params = encodeInputToParams(input);
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.info(t("result.shareCopied"));
+    });
+  }, [input, t]);
+
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -361,6 +372,15 @@ export function CalculatorApp() {
     [quickCalc.toggle, openProjectsDrawer, dispatch],
   );
   useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
+
+  // Track profile usage for "recently used" feature
+  const prevProfileRef = useRef(input.profileId);
+  useEffect(() => {
+    if (input.profileId !== prevProfileRef.current) {
+      prevProfileRef.current = input.profileId;
+      trackProfile(input.profileId);
+    }
+  }, [input.profileId, trackProfile]);
 
   const lastFocusedIssueFieldRef = useRef<string | null>(null);
   const firstIssueField = issues[0]?.field ?? null;
@@ -679,6 +699,7 @@ export function CalculatorApp() {
                 onSavePreset={handleSavePreset}
                 profilePresets={presetsForProfile(input.profileId)}
                 onRemovePreset={removePreset}
+                recentProfiles={recentProfiles}
               />
             </div>
 
@@ -711,6 +732,7 @@ export function CalculatorApp() {
               hasProjects={projectCount > 0}
               normalizedProfile={normalizedCurrentProfile}
               weightAsMain={weightAsMain}
+              onShare={handleShare}
             />
           </aside>
         </div>
@@ -763,6 +785,7 @@ export function CalculatorApp() {
             hasProjects={projectCount > 0}
             normalizedProfile={normalizedCurrentProfile}
             weightAsMain={weightAsMain}
+            onShare={handleShare}
           />
         )}
 

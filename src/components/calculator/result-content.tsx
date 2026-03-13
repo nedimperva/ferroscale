@@ -10,6 +10,7 @@ import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
+import { WeightContext } from "./weight-context";
 import { triggerHaptic } from "@/lib/haptics";
 
 export function formatResultForClipboard(
@@ -44,6 +45,7 @@ export interface ResultContentProps {
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
   weightAsMain?: boolean;
+  onShare?: () => void;
 }
 
 export const ResultContent = memo(function ResultContent({
@@ -63,6 +65,7 @@ export const ResultContent = memo(function ResultContent({
   hasProjects = false,
   normalizedProfile = null,
   weightAsMain = false,
+  onShare,
 }: ResultContentProps) {
   const tBase = useTranslations();
   const t = useTranslations("result");
@@ -208,6 +211,9 @@ export const ResultContent = memo(function ResultContent({
 
         {/* Copy */}
         <CopyButton result={result} normalizedProfile={normalizedProfile} />
+
+        {/* Share */}
+        {onShare && <ShareButton onShare={onShare} />}
       </div>
 
       {/* ── Receipt body ── */}
@@ -258,6 +264,9 @@ export const ResultContent = memo(function ResultContent({
           <span>{t("grandTotal")}</span>
           <span className="tabular-nums text-accent">{fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}</span>
         </div>
+
+        {/* ── Weight context ── */}
+        <WeightContext weightKg={result.totalWeightKg} />
 
         {/* ── Full calculation steps ── */}
         <details
@@ -348,6 +357,43 @@ export function CopyButton({
         </svg>
       )}
       {copied ? t("copied") : t("copy")}
+    </button>
+  );
+}
+
+function ShareButton({ onShare }: { onShare: () => void }) {
+  const t = useTranslations("result");
+  const [shared, setShared] = useState(false);
+
+  const handleShare = useCallback(() => {
+    triggerHaptic("success");
+    onShare();
+    setShared(true);
+    setTimeout(() => setShared(false), 2000);
+  }, [onShare]);
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+        shared
+          ? "border-green-border bg-green-surface text-green-text"
+          : "border-border text-foreground-secondary hover:bg-surface-raised"
+      }`}
+    >
+      {shared ? (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+          <polyline points="16 6 12 2 8 6" />
+          <line x1="12" x2="12" y1="2" y2="15" />
+        </svg>
+      )}
+      {shared ? t("shareCopied") : t("share")}
     </button>
   );
 }

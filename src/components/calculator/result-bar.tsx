@@ -227,6 +227,7 @@ interface ResultOverlayProps {
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
   weightAsMain?: boolean;
+  onShare?: () => void;
 }
 
 export const ResultOverlay = memo(function ResultOverlay({
@@ -247,6 +248,7 @@ export const ResultOverlay = memo(function ResultOverlay({
   hasProjects = false,
   normalizedProfile = null,
   weightAsMain = false,
+  onShare,
 }: ResultOverlayProps) {
   const t = useTranslations("result");
 
@@ -298,6 +300,7 @@ export const ResultOverlay = memo(function ResultOverlay({
               hasProjects={hasProjects}
               normalizedProfile={normalizedProfile}
               weightAsMain={weightAsMain}
+              onShare={onShare}
             />
           </div>
         </Drawer.Content>

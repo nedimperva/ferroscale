@@ -24,6 +24,7 @@ interface ResultPanelProps {
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
   weightAsMain?: boolean;
+  onShare?: () => void;
 }
 
 export const ResultPanel = memo(function ResultPanel({
@@ -44,6 +45,7 @@ export const ResultPanel = memo(function ResultPanel({
   hasProjects = false,
   normalizedProfile = null,
   weightAsMain = false,
+  onShare,
 }: ResultPanelProps) {
   const t = useTranslations("result");
 
@@ -86,6 +88,7 @@ export const ResultPanel = memo(function ResultPanel({
         hasProjects={hasProjects}
         normalizedProfile={normalizedProfile}
         weightAsMain={weightAsMain}
+        onShare={onShare}
       />
     </section>
   );

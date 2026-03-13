@@ -161,7 +161,8 @@
     "dimensionUnitAria": "{label} unit",
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
-    "toggleSizeList": "Toggle size list"
+    "toggleSizeList": "Toggle size list",
+    "recent": "Recently used"
   },
   "material": {
     "title": "Material",

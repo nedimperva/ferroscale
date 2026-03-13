@@ -161,7 +161,8 @@
     "dimensionUnitAria": "Jedinica za {label}",
     "decreaseQuantity": "Smanji kolicinu",
     "increaseQuantity": "Povecaj kolicinu",
-    "toggleSizeList": "Otvori/zatvori listu velicina"
+    "toggleSizeList": "Otvori/zatvori listu velicina",
+    "recent": "Nedavno koristeno"
   },
   "material": {
     "title": "Materijal",
