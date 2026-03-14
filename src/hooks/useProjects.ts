@@ -409,7 +409,7 @@ export function useProjects(): UseProjectsReturn {
       return [project, ...prev];
     });
     return project;
-  }, []);
+  }, [setProjects]);
 
   const renameProject = useCallback((id: string, name: string) => {
     setProjects((prev) =>
@@ -419,7 +419,7 @@ export function useProjects(): UseProjectsReturn {
           : p,
       ),
     );
-  }, []);
+  }, [setProjects]);
 
   const updateProjectDescription = useCallback((id: string, description: string) => {
     setProjects((prev) =>
@@ -429,12 +429,12 @@ export function useProjects(): UseProjectsReturn {
           : p,
       ),
     );
-  }, []);
+  }, [setProjects]);
 
   const deleteProject = useCallback((id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setActiveProjectId((current) => (current === id ? null : current));
-  }, []);
+  }, [setProjects]);
 
   const duplicateProject = useCallback((id: string): Project | null => {
     let duplicate: Project | null = null;
@@ -454,7 +454,7 @@ export function useProjects(): UseProjectsReturn {
       return [duplicate, ...prev];
     });
     return duplicate;
-  }, []);
+  }, [setProjects]);
 
   const addCalculation = useCallback(
     (projectId: string, input: CalculationInput, result: CalculationResult): boolean => {
@@ -463,7 +463,6 @@ export function useProjects(): UseProjectsReturn {
         prev.map((p) => {
           if (p.id !== projectId) return p;
           if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
-          /* Check for duplicate */
           const fp = fingerprint(result);
           if (p.calculations.some((c) => fingerprint(c.result) === fp)) return p;
 
@@ -484,7 +483,7 @@ export function useProjects(): UseProjectsReturn {
       );
       return added;
     },
-    [],
+    [setProjects],
   );
 
   const removeCalculation = useCallback((projectId: string, calcId: string) => {
@@ -498,7 +497,7 @@ export function useProjects(): UseProjectsReturn {
         };
       }),
     );
-  }, []);
+  }, [setProjects]);
 
   const updateCalculationNote = useCallback((projectId: string, calcId: string, note: string) => {
     setProjects((prev) =>
@@ -513,7 +512,7 @@ export function useProjects(): UseProjectsReturn {
         };
       }),
     );
-  }, []);
+  }, [setProjects]);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => {

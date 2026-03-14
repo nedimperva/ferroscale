@@ -62,12 +62,12 @@ export function useSaved(): UseSavedReturn {
       };
       setSaved((prev) => [entry, ...prev]);
     },
-    [],
+    [setSaved],
   );
 
   const removeSaved = useCallback((id: string) => {
     setSaved((prev) => prev.filter((e) => e.id !== id));
-  }, []);
+  }, [setSaved]);
 
   const updateSaved = useCallback(
     (id: string, patch: { name?: string; notes?: string }) => {
@@ -85,7 +85,7 @@ export function useSaved(): UseSavedReturn {
         ),
       );
     },
-    [],
+    [setSaved],
   );
 
   const isSaved = useCallback(

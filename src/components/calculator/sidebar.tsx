@@ -53,6 +53,7 @@ export const Sidebar = memo(function Sidebar({
 
   const [isMac, setIsMac] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only client detection
     setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.userAgent));
   }, []);
 

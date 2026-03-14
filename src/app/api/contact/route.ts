@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkContactRateLimit } from "@/lib/contact/rate-limit";
-import { validateContactRequest, type ContactRequest } from "@/lib/contact/validation";
+import { validateContactRequest } from "@/lib/contact/validation";
 import { verifyCaptchaChallenge } from "@/lib/contact/captcha-store";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
