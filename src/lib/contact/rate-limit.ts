@@ -5,10 +5,17 @@ interface BucketState {
 
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS = 5;
+/**
+ * Hard cap on the number of tracked IPs. Prevents unbounded memory growth
+ * in long-running single-instance deployments.
+ * NOTE: In-memory rate limiting does not persist across restarts and does not
+ * work across distributed instances. For production multi-instance deployments,
+ * integrate a shared store (Redis, KV, etc.).
+ */
+const MAX_MAP_SIZE = 10_000;
 
 const bucketByIp = new Map<string, BucketState>();
 
-/** Evict expired buckets to prevent unbounded memory growth. */
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 let lastCleanup = Date.now();
 
@@ -18,6 +25,14 @@ function evictExpired(now: number): void {
   for (const [ip, bucket] of bucketByIp) {
     if (bucket.resetAt <= now) {
       bucketByIp.delete(ip);
+    }
+  }
+
+  if (bucketByIp.size > MAX_MAP_SIZE) {
+    const sorted = [...bucketByIp.entries()].sort((a, b) => a[1].resetAt - b[1].resetAt);
+    const overflow = bucketByIp.size - MAX_MAP_SIZE;
+    for (let i = 0; i < overflow; i++) {
+      bucketByIp.delete(sorted[i][0]);
     }
   }
 }

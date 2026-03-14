@@ -13,9 +13,26 @@ export interface ContactValidationIssue {
   messageKey?: string;
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export type ContactValidationResult =
+  | { ok: true; issues: []; data: ContactRequest }
+  | { ok: false; issues: ContactValidationIssue[]; data: null };
 
-export function validateContactRequest(payload: Partial<ContactRequest>): ContactValidationIssue[] {
+/**
+ * Email regex requires:
+ *  - local part (no spaces or @)
+ *  - domain with at least one dot
+ *  - TLD of 2+ characters (rejects a@b.c)
+ *  - total length capped at 254 (RFC 5321)
+ */
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const EMAIL_MAX_LENGTH = 254;
+
+/** Strip HTML tags from a string to prevent injection in logs/emails. */
+function sanitizePlainText(input: string): string {
+  return input.replace(/<[^>]*>/g, "");
+}
+
+export function validateContactRequest(payload: Partial<ContactRequest>): ContactValidationResult {
   const issues: ContactValidationIssue[] = [];
 
   if (!payload.name || payload.name.trim().length < 2 || payload.name.trim().length > 80) {
@@ -26,7 +43,11 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     });
   }
 
-  if (!payload.email || !EMAIL_REGEX.test(payload.email)) {
+  if (
+    !payload.email ||
+    payload.email.length > EMAIL_MAX_LENGTH ||
+    !EMAIL_REGEX.test(payload.email)
+  ) {
     issues.push({
       field: "email",
       message: "Enter a valid email address.",
@@ -66,5 +87,20 @@ export function validateContactRequest(payload: Partial<ContactRequest>): Contac
     });
   }
 
-  return issues;
+  if (issues.length > 0) {
+    return { ok: false, issues, data: null };
+  }
+
+  return {
+    ok: true,
+    issues: [],
+    data: {
+      name: payload.name!.trim(),
+      email: payload.email!.trim(),
+      message: payload.message!.trim(),
+      challengeId: payload.challengeId!,
+      challengeAnswer: payload.challengeAnswer!,
+      context: payload.context ? sanitizePlainText(payload.context).slice(0, 3000) : undefined,
+    },
+  };
 }

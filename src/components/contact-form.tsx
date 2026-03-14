@@ -26,11 +26,24 @@ export function ContactForm({ context, compact }: ContactFormProps) {
   const [feedback, setFeedback] = useState("");
   const [captchaLoading, setCaptchaLoading] = useState(false);
 
+  async function fetchWithRetry<T>(url: string, init?: RequestInit, retries = 2): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 1000 * 2 ** (attempt - 1)));
+        const response = await fetch(url, init);
+        return (await response.json()) as T;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError;
+  }
+
   async function loadCaptcha() {
     setCaptchaLoading(true);
     try {
-      const response = await fetch("/api/captcha", { cache: "no-store" });
-      const payload = (await response.json()) as CaptchaPayload;
+      const payload = await fetchWithRetry<CaptchaPayload>("/api/captcha", { cache: "no-store" });
       setCaptcha(payload);
       setFeedback("");
     } catch {
@@ -68,12 +81,22 @@ export function ContactForm({ context, compact }: ContactFormProps) {
         }),
       });
 
-      const payload = (await response.json()) as {
+      let payload: {
         ok?: boolean;
         message?: string;
         messageKey?: string;
         messageValues?: Record<string, string | number>;
       };
+      try {
+        payload = await response.json();
+      } catch {
+        setStatus("error");
+        setFeedback(t("feedback.sendFailed"));
+        setChallengeAnswer("");
+        await loadCaptcha();
+        return;
+      }
+
       if (!response.ok || !payload.ok) {
         setStatus("error");
         const serverMessage = payload.messageKey
@@ -93,9 +116,11 @@ export function ContactForm({ context, compact }: ContactFormProps) {
       setMessage("");
       setChallengeAnswer("");
       await loadCaptcha();
-    } catch {
+    } catch (err) {
       setStatus("error");
-      setFeedback(t("feedback.networkError"));
+      const isNetworkError =
+        err instanceof TypeError || (err instanceof DOMException && err.name === "AbortError");
+      setFeedback(isNetworkError ? t("feedback.networkError") : t("feedback.sendFailed"));
     }
   }
 
