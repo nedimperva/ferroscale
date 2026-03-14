@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { fingerprint } from "@/lib/calculator/fingerprint";
+import { useStorageArray } from "@/hooks/useStorageState";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -40,25 +41,8 @@ export interface UseSavedReturn {
   getSavedEntry: (result: CalculationResult) => SavedEntry | undefined;
 }
 
-function makeFingerprint(result: CalculationResult): string {
-  return `${result.profileLabel}|${result.grandTotalAmount}|${result.gradeLabel}|${result.totalWeightKg}`;
-}
-
 export function useSaved(): UseSavedReturn {
-  const [saved, setSaved] = useState<SavedEntry[]>([]);
-
-  /* Hydrate from localStorage on mount */
-  const hydrated = useRef(false);
-  useEffect(() => {
-    const stored = loadArrayFromStorage<SavedEntry>(SAVED_KEY);
-    if (stored.length > 0) setSaved(stored);
-    hydrated.current = true;
-  }, []);
-
-  /* Persist on change */
-  useEffect(() => {
-    if (hydrated.current) persistToStorage(SAVED_KEY, saved);
-  }, [saved]);
+  const [saved, setSaved] = useStorageArray<SavedEntry>(SAVED_KEY);
 
   const saveCalculation = useCallback(
     (
@@ -78,12 +62,12 @@ export function useSaved(): UseSavedReturn {
       };
       setSaved((prev) => [entry, ...prev]);
     },
-    [],
+    [setSaved],
   );
 
   const removeSaved = useCallback((id: string) => {
     setSaved((prev) => prev.filter((e) => e.id !== id));
-  }, []);
+  }, [setSaved]);
 
   const updateSaved = useCallback(
     (id: string, patch: { name?: string; notes?: string }) => {
@@ -101,21 +85,21 @@ export function useSaved(): UseSavedReturn {
         ),
       );
     },
-    [],
+    [setSaved],
   );
 
   const isSaved = useCallback(
     (result: CalculationResult) => {
-      const fp = makeFingerprint(result);
-      return saved.some((e) => makeFingerprint(e.result) === fp);
+      const fp = fingerprint(result);
+      return saved.some((e) => fingerprint(e.result) === fp);
     },
     [saved],
   );
 
   const getSavedEntry = useCallback(
     (result: CalculationResult) => {
-      const fp = makeFingerprint(result);
-      return saved.find((e) => makeFingerprint(e.result) === fp);
+      const fp = fingerprint(result);
+      return saved.find((e) => fingerprint(e.result) === fp);
     },
     [saved],
   );

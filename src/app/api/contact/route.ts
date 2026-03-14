@@ -91,7 +91,10 @@ async function sendContactEmail(body: {
       const payload = (await response.json()) as { message?: string; error?: string };
       details = payload.message ?? payload.error ?? "";
     } catch {
-      /* noop */
+      console.error("[contact] failed to parse Resend error response", {
+        status: response.status,
+        statusText: response.statusText,
+      });
     }
     return {
       ok: false as const,
@@ -105,18 +108,35 @@ async function sendContactEmail(body: {
   return { ok: true as const };
 }
 
+/**
+ * Extract client IP using platform-trusted headers.
+ *
+ * Priority order:
+ *  1. `x-vercel-forwarded-for` — set by Vercel edge, cannot be spoofed by clients
+ *  2. `cf-connecting-ip`       — set by Cloudflare, cannot be spoofed by clients
+ *  3. `x-real-ip`             — set by trusted reverse proxies (e.g. nginx)
+ *  4. Last entry in `x-forwarded-for` — rightmost IP is added by the outermost
+ *     trusted proxy and is harder to spoof than the leftmost (client-supplied)
+ *
+ * Falls back to "unknown" when no header is available (e.g. localhost dev).
+ */
 function getClientIp(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) {
-      return first;
-    }
+  const vercelIp = request.headers.get("x-vercel-forwarded-for");
+  if (vercelIp) {
+    const first = vercelIp.split(",")[0]?.trim();
+    if (first) return first;
   }
 
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+
   const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    return realIp;
+  if (realIp) return realIp.trim();
+
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const parts = forwarded.split(",").map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1];
   }
 
   return "unknown";
@@ -165,26 +185,19 @@ export async function POST(request: NextRequest) {
   }
 
   const validated = validateContactRequest(payload as Record<string, unknown>);
-  if (validated.length > 0) {
+  if (!validated.ok) {
     return NextResponse.json(
       {
         ok: false,
         message: "Validation failed.",
         messageKey: "contact.api.validationFailed",
-        issues: validated,
+        issues: validated.issues,
       },
       { status: 422 },
     );
   }
 
-  const body = payload as {
-    name: string;
-    email: string;
-    message: string;
-    challengeId: string;
-    challengeAnswer: string;
-    context?: string;
-  };
+  const body = validated.data;
 
   const captchaOk = verifyCaptchaChallenge(body.challengeId, body.challengeAnswer);
   if (!captchaOk) {

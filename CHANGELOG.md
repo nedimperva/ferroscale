@@ -9,6 +9,52 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.7.0] – 2026-03-14
+
+### Added
+- 56 new unit tests covering CAPTCHA, rate limiting, contact validation, storage utilities, external stores, and fingerprint logic
+- Shared `useStorageArray` hook for hydration-safe localStorage persistence
+- `createStringStore` factory in external-stores for typed string preferences
+
+### Changed
+- CAPTCHA now uses mixed operations (+, −, ×) with larger numbers — much harder to brute-force
+- IP detection uses platform-trusted headers (Vercel, Cloudflare) and rightmost `X-Forwarded-For` entry to prevent spoofing
+- Email validation requires 2+ character TLD and enforces 254-character RFC limit
+- Contact validation returns type-safe result object instead of raw array cast
+- Context field is sanitized (HTML stripped) before logging and emailing
+- Rate limiter capped at 10,000 tracked IPs to prevent unbounded memory growth
+- Profile lookups use O(1) Map cache instead of linear search
+- Preset filtering uses pre-indexed Map grouped by profileId
+- Sidebar keyboard shortcut detection moved to `useEffect` to avoid SSR hydration mismatch
+- Contact form retries CAPTCHA loading with exponential backoff and distinguishes network vs server errors
+
+### Fixed
+- Inconsistent fingerprint implementations across history, saved, compare, and projects — all now use shared fingerprint module
+- Duplicated `createBoolStore`/`createStringStore` definitions removed from calculator-app.tsx — single source in external-stores.ts
+- Silent error swallowing when Resend API returns unparseable response — now logged with status details
+
+---
+
+## [1.6.0] – 2026-03-11
+
+### Added
+- Named saves — calculations can now be saved with a custom name and optional notes via a save dialog
+- Save dialog: name input + notes textarea shown when clicking Save on any result
+- ⋯ action sheet on mobile — single button opens Compare, Save, and Add to Project in one place
+- Bookmark icon fills when the current calculation is already saved
+
+### Changed
+- Auto-save history removed — replaced with intentional named saves (no more automatic clutter)
+- Bottom tab bar: History tab replaced with Saved tab — bookmark icon with count badge
+- Saved items redesigned to match project card style — bordered cards with small icon buttons, no timestamp
+- Category-colored icons (tubes=blue, plates=amber, structural=green, bars=purple) in saved drawer and project calculations
+- Grade badges color-matched to profile category for quick material recognition
+
+### Fixed
+- Quick Calc no longer resets price basis, unit price, currency, waste, VAT, and rounding precision when loading a result — user settings are now preserved app-wide
+
+---
+
 ## [1.5.0] – 2026-03-09
 
 ### Added
@@ -113,7 +159,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/nedimperva/ferroscale/compare/v1.6.0...v1.7.0
+[1.6.0]: https://github.com/nedimperva/ferroscale/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/nedimperva/ferroscale/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/nedimperva/ferroscale/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nedimperva/ferroscale/compare/v1.2.0...v1.3.0

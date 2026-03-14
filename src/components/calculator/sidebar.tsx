@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
 import { APP_VERSION } from "@/lib/changelog";
@@ -51,9 +51,10 @@ export const Sidebar = memo(function Sidebar({
 }: SidebarProps) {
   const t = useTranslations();
 
-  const isMac = useMemo(() => {
-    if (typeof navigator === "undefined") return false;
-    return /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+  const [isMac, setIsMac] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only client detection
+    setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.userAgent));
   }, []);
 
   const quickCalcShortcut = isMac ? "⌘K" : "Ctrl+K";

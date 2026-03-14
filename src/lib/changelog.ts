@@ -17,6 +17,32 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.7.0",
+    date: "2026-03-14",
+    added: [
+      "56 new unit tests covering CAPTCHA, rate limiting, contact validation, storage utilities, external stores, and fingerprint logic",
+      "Shared useStorageArray hook for hydration-safe localStorage persistence",
+      "createStringStore factory in external-stores for typed string preferences",
+    ],
+    changed: [
+      "CAPTCHA now uses mixed operations (+, −, ×) with larger numbers — much harder to brute-force",
+      "IP detection uses platform-trusted headers (Vercel, Cloudflare) and rightmost X-Forwarded-For entry to prevent spoofing",
+      "Email validation requires 2+ character TLD and enforces 254-character RFC limit",
+      "Contact validation returns type-safe result object instead of raw array cast",
+      "Context field is sanitized (HTML stripped) before logging and emailing",
+      "Rate limiter capped at 10,000 tracked IPs to prevent unbounded memory growth",
+      "Profile lookups use O(1) Map cache instead of linear search",
+      "Preset filtering uses pre-indexed Map grouped by profileId",
+      "Sidebar keyboard shortcut detection moved to useEffect to avoid SSR hydration mismatch",
+      "Contact form retries CAPTCHA loading with exponential backoff and distinguishes network vs server errors",
+    ],
+    fixed: [
+      "Inconsistent fingerprint implementations across history, saved, compare, and projects — all now use shared fingerprint module",
+      "Duplicated createBoolStore/createStringStore definitions removed from calculator-app.tsx — single source in external-stores.ts",
+      "Silent error swallowing when Resend API returns unparseable response — now logged with status details",
+    ],
+  },
+  {
     version: "1.6.0",
     date: "2026-03-11",
     added: [

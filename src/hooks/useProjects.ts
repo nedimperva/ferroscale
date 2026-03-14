@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { fingerprint } from "@/lib/calculator/fingerprint";
+import { useStorageArray } from "@/hooks/useStorageState";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -78,11 +78,8 @@ const DEFAULT_PROJECT_CSV_LABELS: ProjectCsvLabels = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Local-storage helpers (delegated to shared utility)               */
+/*  Local-storage helpers (delegated to shared utility via hook)      */
 /* ------------------------------------------------------------------ */
-
-const loadProjects = () => loadArrayFromStorage<Project>(PROJECTS_KEY);
-const persistProjects = (projects: Project[]) => persistToStorage(PROJECTS_KEY, projects);
 
 /* ------------------------------------------------------------------ */
 /*  Aggregation helper                                                */
@@ -393,22 +390,9 @@ export interface UseProjectsReturn {
 }
 
 export function useProjects(): UseProjectsReturn {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useStorageArray<Project>(PROJECTS_KEY);
   const [isOpen, setIsOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
-
-  /* Hydrate from localStorage on mount (empty [] during SSR to avoid hydration mismatch) */
-  const hydrated = useRef(false);
-  useEffect(() => {
-    const stored = loadProjects();
-    if (stored.length > 0) setProjects(stored); // eslint-disable-line react-hooks/set-state-in-effect
-    hydrated.current = true;
-  }, []);
-
-  /* Persist on change (skip the initial hydration write-back) */
-  useEffect(() => {
-    if (hydrated.current) persistProjects(projects);
-  }, [projects]);
 
   const createProject = useCallback((name: string): Project => {
     const now = new Date().toISOString();
@@ -425,7 +409,7 @@ export function useProjects(): UseProjectsReturn {
       return [project, ...prev];
     });
     return project;
-  }, []);
+  }, [setProjects]);
 
   const renameProject = useCallback((id: string, name: string) => {
     setProjects((prev) =>
@@ -435,7 +419,7 @@ export function useProjects(): UseProjectsReturn {
           : p,
       ),
     );
-  }, []);
+  }, [setProjects]);
 
   const updateProjectDescription = useCallback((id: string, description: string) => {
     setProjects((prev) =>
@@ -445,12 +429,12 @@ export function useProjects(): UseProjectsReturn {
           : p,
       ),
     );
-  }, []);
+  }, [setProjects]);
 
   const deleteProject = useCallback((id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
     setActiveProjectId((current) => (current === id ? null : current));
-  }, []);
+  }, [setProjects]);
 
   const duplicateProject = useCallback((id: string): Project | null => {
     let duplicate: Project | null = null;
@@ -470,7 +454,7 @@ export function useProjects(): UseProjectsReturn {
       return [duplicate, ...prev];
     });
     return duplicate;
-  }, []);
+  }, [setProjects]);
 
   const addCalculation = useCallback(
     (projectId: string, input: CalculationInput, result: CalculationResult): boolean => {
@@ -479,7 +463,6 @@ export function useProjects(): UseProjectsReturn {
         prev.map((p) => {
           if (p.id !== projectId) return p;
           if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
-          /* Check for duplicate */
           const fp = fingerprint(result);
           if (p.calculations.some((c) => fingerprint(c.result) === fp)) return p;
 
@@ -500,7 +483,7 @@ export function useProjects(): UseProjectsReturn {
       );
       return added;
     },
-    [],
+    [setProjects],
   );
 
   const removeCalculation = useCallback((projectId: string, calcId: string) => {
@@ -514,7 +497,7 @@ export function useProjects(): UseProjectsReturn {
         };
       }),
     );
-  }, []);
+  }, [setProjects]);
 
   const updateCalculationNote = useCallback((projectId: string, calcId: string, note: string) => {
     setProjects((prev) =>
@@ -529,7 +512,7 @@ export function useProjects(): UseProjectsReturn {
         };
       }),
     );
-  }, []);
+  }, [setProjects]);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => {

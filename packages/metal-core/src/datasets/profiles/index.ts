@@ -19,6 +19,11 @@ export const PROFILE_DEFINITIONS: ProfileDefinition[] = [
   ...TEE_PROFILES,
 ];
 
+const profileByIdCache = new Map<ProfileId, ProfileDefinition>();
+for (const profile of PROFILE_DEFINITIONS) {
+  profileByIdCache.set(profile.id, profile);
+}
+
 export function getProfileById(profileId: ProfileId): ProfileDefinition | undefined {
-  return PROFILE_DEFINITIONS.find((profile) => profile.id === profileId);
+  return profileByIdCache.get(profileId);
 }
