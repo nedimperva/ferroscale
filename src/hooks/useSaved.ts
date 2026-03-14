@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { fingerprint } from "@/lib/calculator/fingerprint";
+import { useStorageArray } from "@/hooks/useStorageState";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -42,20 +42,7 @@ export interface UseSavedReturn {
 }
 
 export function useSaved(): UseSavedReturn {
-  const [saved, setSaved] = useState<SavedEntry[]>([]);
-
-  /* Hydrate from localStorage on mount */
-  const hydrated = useRef(false);
-  useEffect(() => {
-    const stored = loadArrayFromStorage<SavedEntry>(SAVED_KEY);
-    if (stored.length > 0) setSaved(stored);
-    hydrated.current = true;
-  }, []);
-
-  /* Persist on change */
-  useEffect(() => {
-    if (hydrated.current) persistToStorage(SAVED_KEY, saved);
-  }, [saved]);
+  const [saved, setSaved] = useStorageArray<SavedEntry>(SAVED_KEY);
 
   const saveCalculation = useCallback(
     (
