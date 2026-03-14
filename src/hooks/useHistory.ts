@@ -5,6 +5,7 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { fingerprint as calcFingerprint } from "@/lib/calculator/fingerprint";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -97,9 +98,9 @@ export function useHistory(): UseHistoryReturn {
 
   const addToHistory = useCallback(
     (input: CalculationInput, result: CalculationResult) => {
-      const fingerprint = `${result.profileLabel}|${result.grandTotalAmount}|${result.gradeLabel}`;
-      if (fingerprint === lastFingerprintRef.current) return;
-      lastFingerprintRef.current = fingerprint;
+      const fp = calcFingerprint(result);
+      if (fp === lastFingerprintRef.current) return;
+      lastFingerprintRef.current = fp;
 
       const entry: HistoryEntry = {
         id: crypto.randomUUID(),

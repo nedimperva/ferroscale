@@ -5,6 +5,7 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { fingerprint } from "@/lib/calculator/fingerprint";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -38,10 +39,6 @@ export interface UseSavedReturn {
   updateSaved: (id: string, patch: { name?: string; notes?: string }) => void;
   isSaved: (result: CalculationResult) => boolean;
   getSavedEntry: (result: CalculationResult) => SavedEntry | undefined;
-}
-
-function makeFingerprint(result: CalculationResult): string {
-  return `${result.profileLabel}|${result.grandTotalAmount}|${result.gradeLabel}|${result.totalWeightKg}`;
 }
 
 export function useSaved(): UseSavedReturn {
@@ -106,16 +103,16 @@ export function useSaved(): UseSavedReturn {
 
   const isSaved = useCallback(
     (result: CalculationResult) => {
-      const fp = makeFingerprint(result);
-      return saved.some((e) => makeFingerprint(e.result) === fp);
+      const fp = fingerprint(result);
+      return saved.some((e) => fingerprint(e.result) === fp);
     },
     [saved],
   );
 
   const getSavedEntry = useCallback(
     (result: CalculationResult) => {
-      const fp = makeFingerprint(result);
-      return saved.find((e) => makeFingerprint(e.result) === fp);
+      const fp = fingerprint(result);
+      return saved.find((e) => fingerprint(e.result) === fp);
     },
     [saved],
   );

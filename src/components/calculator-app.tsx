@@ -40,69 +40,16 @@ import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
 import { SaveDialog } from "@/components/calculator/save-dialog";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
+import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 
-/* ---- Sidebar collapsed: tiny external store (avoids hydration mismatch) ---- */
-let _sidebarListeners: Array<() => void> = [];
-function subscribeSidebar(cb: () => void) {
-  _sidebarListeners = [..._sidebarListeners, cb];
-  return () => { _sidebarListeners = _sidebarListeners.filter((l) => l !== cb); };
-}
-function getSidebarSnapshot(): boolean {
-  try { return localStorage.getItem("ferroscale-sidebar-collapsed") === "true"; } catch { return false; }
-}
-function getSidebarServerSnapshot(): boolean { return false; }
-function _sidebarEmit() { for (const l of _sidebarListeners) l(); }
-
-/* ---- Inline visibility prefs: tiny external stores ---- */
-function createBoolStore(key: string, defaultValue: boolean) {
-  let _listeners: Array<() => void> = [];
-  function subscribe(cb: () => void) {
-    _listeners = [..._listeners, cb];
-    return () => { _listeners = _listeners.filter((l) => l !== cb); };
-  }
-  function getSnapshot(): boolean {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw === null) return defaultValue;
-      return raw === "true";
-    } catch { return defaultValue; }
-  }
-  function getServerSnapshot(): boolean { return defaultValue; }
-  function toggle() {
-    const next = !getSnapshot();
-    try { localStorage.setItem(key, String(next)); } catch { /* noop */ }
-    for (const l of _listeners) l();
-  }
-  return { subscribe, getSnapshot, getServerSnapshot, toggle };
-}
-
+/* ---- External stores (persisted to localStorage, hydration-safe) ---- */
+const sidebarStore = createSidebarStore();
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
 const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
 
 const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
-function createStringStore<T extends string>(key: string, defaultValue: T) {
-  let _listeners: Array<() => void> = [];
-  function subscribe(cb: () => void) {
-    _listeners = [..._listeners, cb];
-    return () => { _listeners = _listeners.filter((l) => l !== cb); };
-  }
-  function getSnapshot(): T {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw === null) return defaultValue;
-      return raw as T;
-    } catch { return defaultValue; }
-  }
-  function getServerSnapshot(): T { return defaultValue; }
-  function set(value: T) {
-    try { localStorage.setItem(key, value); } catch { /* noop */ }
-    for (const l of _listeners) l();
-  }
-  return { subscribe, getSnapshot, getServerSnapshot, set };
-}
-
 const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
 const SETTINGS_ISSUE_FIELDS = new Set([
@@ -393,19 +340,14 @@ export function CalculatorApp() {
     window.setTimeout(tryFocus, 0);
   }, [firstIssueField, showSettingsDrawer]);
 
-  /* Sidebar collapsed state (persisted to localStorage).
-     Uses useSyncExternalStore to avoid hydration mismatch and
-     lint warnings about setState-in-effect. */
   const sidebarCollapsed = useSyncExternalStore(
-    subscribeSidebar,
-    getSidebarSnapshot,
-    getSidebarServerSnapshot,
+    sidebarStore.subscribe,
+    sidebarStore.getSnapshot,
+    sidebarStore.getServerSnapshot,
   );
 
   const toggleSidebarCollapsed = useCallback(() => {
-    const next = !getSidebarSnapshot();
-    try { localStorage.setItem("ferroscale-sidebar-collapsed", String(next)); } catch { /* noop */ }
-    _sidebarEmit();
+    sidebarStore.toggle();
   }, []);
 
   /* Inline visibility preferences */

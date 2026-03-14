@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import type { DimensionKey, ProfileId } from "@/lib/datasets/types";
 
@@ -77,9 +77,19 @@ export function usePresets(): UsePresetsReturn {
     [],
   );
 
+  const presetsByProfile = useMemo(() => {
+    const map = new Map<ProfileId, DimensionPreset[]>();
+    for (const p of presets) {
+      const list = map.get(p.profileId);
+      if (list) list.push(p);
+      else map.set(p.profileId, [p]);
+    }
+    return map;
+  }, [presets]);
+
   const presetsForProfile = useCallback(
-    (profileId: ProfileId) => presets.filter((p) => p.profileId === profileId),
-    [presets],
+    (profileId: ProfileId) => presetsByProfile.get(profileId) ?? [],
+    [presetsByProfile],
   );
 
   return { presets, presetsForProfile, addPreset, removePreset, renamePreset };
