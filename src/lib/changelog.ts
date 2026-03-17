@@ -18,28 +18,36 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.7.0",
-    date: "2026-03-14",
+    date: "2026-03-17",
     added: [
-      "56 new unit tests covering CAPTCHA, rate limiting, contact validation, storage utilities, external stores, and fingerprint logic",
-      "Shared useStorageArray hook for hydration-safe localStorage persistence",
-      "createStringStore factory in external-stores for typed string preferences",
+      "Route-backed mobile app shell with dedicated Calculator, Saved, Projects, and Settings screens",
+      "Localized Saved, Projects, and Settings routes with route metadata in both supported languages",
+      "Edge-swipe navigation between primary mobile tabs",
+    ],
+    added_bs: [
+      "Route-backed mobilni app shell sa zasebnim ekranima za Kalkulator, Sacuvano, Projekte i Postavke",
+      "Lokalizirane rute za Sacuvano, Projekte i Postavke sa route metadata podacima na oba podrzana jezika",
+      "Navigacija prevlacenjem sa ivice izmedju primarnih mobilnih tabova",
     ],
     changed: [
-      "CAPTCHA now uses mixed operations (+, −, ×) with larger numbers — much harder to brute-force",
-      "IP detection uses platform-trusted headers (Vercel, Cloudflare) and rightmost X-Forwarded-For entry to prevent spoofing",
-      "Email validation requires 2+ character TLD and enforces 254-character RFC limit",
-      "Contact validation returns type-safe result object instead of raw array cast",
-      "Context field is sanitized (HTML stripped) before logging and emailing",
-      "Rate limiter capped at 10,000 tracked IPs to prevent unbounded memory growth",
-      "Profile lookups use O(1) Map cache instead of linear search",
-      "Preset filtering uses pre-indexed Map grouped by profileId",
-      "Sidebar keyboard shortcut detection moved to useEffect to avoid SSR hydration mismatch",
-      "Contact form retries CAPTCHA loading with exponential backoff and distinguishes network vs server errors",
+      "Primary mobile navigation now uses real routes with swipeable tab transitions while desktop keeps the existing sidebar and drawer workflow",
+      "Current calculation state, result bar, and overlays now stay live while moving between mobile tabs",
+      "Settings and Projects now reuse shared content as full mobile screens instead of mobile-only sheets",
+      "Mobile breakpoints are aligned to the app-shell experience across tabs and overlays",
+    ],
+    changed_bs: [
+      "Primarna mobilna navigacija sada koristi stvarne rute sa swipe prijelazima izmedju tabova, dok desktop zadrzava postojeci sidebar i drawer tok rada",
+      "Trenutno stanje kalkulacije, result bar i overlayi ostaju aktivni dok se prelazi izmedju mobilnih tabova",
+      "Postavke i Projekti sada koriste zajednicki sadrzaj kao pune mobilne ekrane umjesto mobilnih sheetova",
+      "Mobilni breakpointi su uskladjeni sa app-shell iskustvom kroz tabove i overlaye",
     ],
     fixed: [
-      "Inconsistent fingerprint implementations across history, saved, compare, and projects — all now use shared fingerprint module",
-      "Duplicated createBoolStore/createStringStore definitions removed from calculator-app.tsx — single source in external-stores.ts",
-      "Silent error swallowing when Resend API returns unparseable response — now logged with status details",
+      "Missing labels in the new mobile app shell for the Saved sidebar entry and result-bar actions",
+      "Swipe-to-action rows now block tab-swipe navigation to avoid gesture conflicts",
+    ],
+    fixed_bs: [
+      "Ispravljene su nedostajuce oznake u novom mobilnom app shellu za stavku Sacuvano u sidebaru i akcije result bara",
+      "Redovi sa swipe akcijama sada blokiraju tab-swipe navigaciju kako bi se izbjegli konflikti gesti",
     ],
   },
   {
@@ -256,3 +264,5 @@ export const CHANGELOG: ChangelogEntry[] = [
 
 /** Latest app version — matches the first (newest) entry in CHANGELOG. */
 export const APP_VERSION = CHANGELOG[0].version;
+
+

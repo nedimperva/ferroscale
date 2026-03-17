@@ -3,6 +3,7 @@ import { hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { RouteAwareAppShell } from "@/components/route-aware-app-shell";
 import { ToastContainer } from "@/components/ui/toast-container";
 import { routing } from "@/i18n/routing";
 
@@ -39,7 +40,9 @@ export default async function LocaleLayout({
       </a>
       <NextIntlClientProvider locale={locale} messages={messages}>
         <ErrorBoundary>
-          <main id="main-content">{children}</main>
+          <main id="main-content">
+            <RouteAwareAppShell>{children}</RouteAwareAppShell>
+          </main>
         </ErrorBoundary>
         {/* Toast notifications — rendered after children so they layer on top */}
         <ToastContainer />

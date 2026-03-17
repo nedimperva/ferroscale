@@ -152,7 +152,7 @@ export const Sidebar = memo(function Sidebar({
               <path d="M12 7v5l4 2" />
             </svg>
           }
-          label={t("sidebar.history")}
+          label={t("sidebar.saved")}
           active={isHistoryOpen}
           collapsed={collapsed}
           onClick={onOpenHistory}

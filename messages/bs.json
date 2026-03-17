@@ -9,6 +9,18 @@
     "contact": {
       "title": "Kontakt - FerroScale",
       "description": "Posaljite prijavu ili nas kontaktirajte u vezi FerroScale aplikacije."
+    },
+    "saved": {
+      "title": "Sacuvano - FerroScale",
+      "description": "Pregledajte sacuvane izracune u FerroScale aplikaciji."
+    },
+    "projects": {
+      "title": "Projekti - FerroScale",
+      "description": "Upravljajte projektnim kolekcijama i izvozima u FerroScale aplikaciji."
+    },
+    "settings": {
+      "title": "Postavke - FerroScale",
+      "description": "Podesite podrazumijevane opcije kalkulatora i radnog prostora u FerroScale aplikaciji."
     }
   },
   "language": {
@@ -261,6 +273,7 @@
   "result": {
     "title": "Rezultat",
     "empty": "Unesite dimenzije za prikaz rezultata uzivo.",
+    "moreActions": "Vise opcija",
     "totalCost": "Ukupna cijena",
     "unitWeight": "Masa po komadu",
     "totalWeight": "Ukupna masa",

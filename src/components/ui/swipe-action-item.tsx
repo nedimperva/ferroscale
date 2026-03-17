@@ -65,7 +65,7 @@ export function SwipeActionItem({
     };
 
     return (
-        <div className={`relative overflow-hidden rounded-lg ${className}`}>
+        <div className={`relative overflow-hidden rounded-lg ${className}`} data-app-swipe-lock="true">
             {/* Action background — revealed when swiping */}
             <motion.div
                 className={`absolute inset-y-0 right-0 flex w-24 items-center justify-center ${leftBgClass} text-white`}

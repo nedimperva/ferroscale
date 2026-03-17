@@ -14,6 +14,72 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 
+function buildProjectExportLabels(
+  t: ReturnType<typeof useTranslations>,
+  tBase: ReturnType<typeof useTranslations>,
+) {
+  return {
+    csvLabels: {
+      headers: [
+        t("csvHeaders.profile"),
+        t("csvHeaders.profileLabel"),
+        t("csvHeaders.material"),
+        t("csvHeaders.unitWeight"),
+        t("csvHeaders.totalWeight"),
+        t("csvHeaders.subtotal"),
+        t("csvHeaders.waste"),
+        t("csvHeaders.vat"),
+        t("csvHeaders.grandTotal"),
+        t("csvHeaders.currency"),
+      ] as const,
+      total: t("csvHeaders.total"),
+      filePrefix: t("csvFilePrefix"),
+      resolveGradeLabel: (label: string) => resolveGradeLabel(label, tBase),
+      resolveProfileLabel: (profileId: string, fallback: string) => {
+        try {
+          return tBase(`dataset.profiles.${profileId}`);
+        } catch {
+          return fallback;
+        }
+      },
+    },
+    pdfLabels: {
+      title: t("pdfTitle"),
+      description: t("pdfDescription"),
+      date: t("pdfDate"),
+      items: t("aggregateItems"),
+      totalWeight: t("aggregateTotalWeight"),
+      totalCost: t("aggregateTotalCost"),
+      costPerKg: t("aggregateCostPerKg"),
+      profileColumn: t("csvHeaders.profile"),
+      materialColumn: t("csvHeaders.material"),
+      weightColumn: t("csvHeaders.totalWeight"),
+      costColumn: t("csvHeaders.grandTotal"),
+      noteColumn: t("pdfNoteColumn"),
+      total: t("csvHeaders.total"),
+      qtyColumn: t("pdfQtyColumn"),
+      unitWeightColumn: t("pdfUnitWeightColumn"),
+      materialSummary: t("pdfMaterialSummary"),
+      subtotal: t("pdfSubtotal"),
+      resolveGradeLabel: (label: string) => resolveGradeLabel(label, tBase),
+      resolveCategoryLabel: (iconKey: string) => {
+        try {
+          return tBase(`dataset.profileCategories.${iconKey}`);
+        } catch {
+          return iconKey;
+        }
+      },
+      resolveProfileLabel: (profileId: string, fallback: string) => {
+        try {
+          return tBase(`dataset.profiles.${profileId}`);
+        } catch {
+          return fallback;
+        }
+      },
+    },
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Props                                                             */
 /* ------------------------------------------------------------------ */
@@ -38,13 +104,11 @@ interface ProjectDrawerProps {
   onAddCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Drawer                                                            */
-/* ------------------------------------------------------------------ */
+interface ProjectsWorkspaceContentProps extends Omit<ProjectDrawerProps, "open" | "onClose"> {
+  showToolbar?: boolean;
+}
 
-export const ProjectDrawer = memo(function ProjectDrawer({
-  open,
-  onClose,
+export function ProjectsWorkspaceContent({
   projects,
   activeProjectId,
   onSetActiveProject,
@@ -59,75 +123,15 @@ export const ProjectDrawer = memo(function ProjectDrawer({
   currentResult,
   currentInput,
   onAddCalculation,
-}: ProjectDrawerProps) {
+  showToolbar = true,
+}: ProjectsWorkspaceContentProps) {
   const tBase = useTranslations();
   const t = useTranslations("projects");
-  const isMobile = useIsMobile();
   const [newName, setNewName] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
-  const csvLabels = {
-    headers: [
-      t("csvHeaders.profile"),
-      t("csvHeaders.profileLabel"),
-      t("csvHeaders.material"),
-      t("csvHeaders.unitWeight"),
-      t("csvHeaders.totalWeight"),
-      t("csvHeaders.subtotal"),
-      t("csvHeaders.waste"),
-      t("csvHeaders.vat"),
-      t("csvHeaders.grandTotal"),
-      t("csvHeaders.currency"),
-    ] as const,
-    total: t("csvHeaders.total"),
-    filePrefix: t("csvFilePrefix"),
-    resolveGradeLabel: (label: string) => resolveGradeLabel(label, tBase),
-    resolveProfileLabel: (profileId: string, fallback: string) => {
-      try {
-        return tBase(`dataset.profiles.${profileId}`);
-      } catch {
-        return fallback;
-      }
-    },
-  };
-
-  const pdfLabels = {
-    title: t("pdfTitle"),
-    description: t("pdfDescription"),
-    date: t("pdfDate"),
-    items: t("aggregateItems"),
-    totalWeight: t("aggregateTotalWeight"),
-    totalCost: t("aggregateTotalCost"),
-    costPerKg: t("aggregateCostPerKg"),
-    profileColumn: t("csvHeaders.profile"),
-    materialColumn: t("csvHeaders.material"),
-    weightColumn: t("csvHeaders.totalWeight"),
-    costColumn: t("csvHeaders.grandTotal"),
-    noteColumn: t("pdfNoteColumn"),
-    total: t("csvHeaders.total"),
-    qtyColumn: t("pdfQtyColumn"),
-    unitWeightColumn: t("pdfUnitWeightColumn"),
-    materialSummary: t("pdfMaterialSummary"),
-    subtotal: t("pdfSubtotal"),
-    resolveGradeLabel: (label: string) => resolveGradeLabel(label, tBase),
-    resolveCategoryLabel: (iconKey: string) => {
-      try {
-        return tBase(`dataset.profileCategories.${iconKey}`);
-      } catch {
-        return iconKey;
-      }
-    },
-    resolveProfileLabel: (profileId: string, fallback: string) => {
-      try {
-        return tBase(`dataset.profiles.${profileId}`);
-      } catch {
-        return fallback;
-      }
-    },
-  };
-
-  useDrawerBehavior(!isMobile && open, onClose);
+  const { csvLabels, pdfLabels } = buildProjectExportLabels(t, tBase);
 
   const handleCreate = useCallback(() => {
     if (!newName.trim()) return;
@@ -153,6 +157,110 @@ export const ProjectDrawer = memo(function ProjectDrawer({
     ? projects.find((p) => p.id === activeProjectId) ?? null
     : null;
 
+  return (
+    <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
+      {showToolbar && activeProject && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2">
+          <button
+            type="button"
+            onClick={() => onSetActiveProject(null)}
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+            </svg>
+            {t("back")}
+          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => exportProjectPdf(activeProject, pdfLabels, CURRENCY_SYMBOLS)}
+              className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
+              title={t("pdfExportTitle")}
+            >
+              {t("pdfExport")}
+            </button>
+            <button
+              type="button"
+              onClick={() => exportProjectCsv(activeProject, csvLabels)}
+              className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
+              title={t("exportTitle")}
+            >
+              {t("export")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeProject ? (
+        <ProjectDetail
+          project={activeProject}
+          onRemoveCalculation={onRemoveCalculation}
+          onUpdateCalculationNote={onUpdateCalculationNote}
+          onUpdateProjectDescription={onUpdateProjectDescription}
+          onLoadCalculation={onLoadCalculation}
+          onStartRename={() => startRename(activeProject)}
+          onDeleteProject={() => {
+            onDeleteProject(activeProject.id);
+            onSetActiveProject(null);
+          }}
+          onDuplicateProject={() => {
+            const dup = onDuplicateProject(activeProject.id);
+            if (dup) onSetActiveProject(dup.id);
+          }}
+          isRenaming={renamingId === activeProject.id}
+          renameValue={renameValue}
+          onRenameValueChange={setRenameValue}
+          onConfirmRename={confirmRename}
+          onCancelRename={() => setRenamingId(null)}
+          currentResult={currentResult}
+          currentInput={currentInput}
+          onAddCalculation={onAddCalculation}
+        />
+      ) : (
+        <ProjectList
+          projects={projects}
+          onSelectProject={onSetActiveProject}
+          onDeleteProject={onDeleteProject}
+          onDuplicateProject={(id) => {
+            const dup = onDuplicateProject(id);
+            if (dup) onSetActiveProject(dup.id);
+          }}
+          newName={newName}
+          onNewNameChange={setNewName}
+          onCreate={handleCreate}
+          renamingId={renamingId}
+          renameValue={renameValue}
+          onStartRename={startRename}
+          onRenameValueChange={setRenameValue}
+          onConfirmRename={confirmRename}
+          onCancelRename={() => setRenamingId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Drawer                                                            */
+/* ------------------------------------------------------------------ */
+
+export const ProjectDrawer = memo(function ProjectDrawer({
+  open,
+  onClose,
+  ...contentProps
+}: ProjectDrawerProps) {
+  const tBase = useTranslations();
+  const t = useTranslations("projects");
+  const isMobile = useIsMobile();
+  const { csvLabels, pdfLabels } = buildProjectExportLabels(t, tBase);
+
+  useDrawerBehavior(!isMobile && open, onClose);
+
+  const activeProject = contentProps.activeProjectId
+    ? contentProps.projects.find((project) => project.id === contentProps.activeProjectId) ?? null
+    : null;
+
   const content = (
     <>
       {/* Header */}
@@ -161,7 +269,7 @@ export const ProjectDrawer = memo(function ProjectDrawer({
           {activeProject && (
             <button
               type="button"
-              onClick={() => onSetActiveProject(null)}
+              onClick={() => contentProps.onSetActiveProject(null)}
               className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
               aria-label={t("back")}
             >
@@ -175,9 +283,9 @@ export const ProjectDrawer = memo(function ProjectDrawer({
               <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
             </svg>
             {activeProject ? activeProject.name : t("title")}
-            {!activeProject && projects.length > 0 && (
+            {!activeProject && contentProps.projects.length > 0 && (
               <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
-                {projects.length}
+                {contentProps.projects.length}
               </span>
             )}
           </h2>
@@ -219,54 +327,7 @@ export const ProjectDrawer = memo(function ProjectDrawer({
         </div>
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
-        {activeProject ? (
-          <ProjectDetail
-            project={activeProject}
-            onRemoveCalculation={onRemoveCalculation}
-            onUpdateCalculationNote={onUpdateCalculationNote}
-            onUpdateProjectDescription={onUpdateProjectDescription}
-            onLoadCalculation={onLoadCalculation}
-            onStartRename={() => startRename(activeProject)}
-            onDeleteProject={() => {
-              onDeleteProject(activeProject.id);
-              onSetActiveProject(null);
-            }}
-            onDuplicateProject={() => {
-              const dup = onDuplicateProject(activeProject.id);
-              if (dup) onSetActiveProject(dup.id);
-            }}
-            isRenaming={renamingId === activeProject.id}
-            renameValue={renameValue}
-            onRenameValueChange={setRenameValue}
-            onConfirmRename={confirmRename}
-            onCancelRename={() => setRenamingId(null)}
-            currentResult={currentResult}
-            currentInput={currentInput}
-            onAddCalculation={onAddCalculation}
-          />
-        ) : (
-          <ProjectList
-            projects={projects}
-            onSelectProject={onSetActiveProject}
-            onDeleteProject={onDeleteProject}
-            onDuplicateProject={(id) => {
-              const dup = onDuplicateProject(id);
-              if (dup) onSetActiveProject(dup.id);
-            }}
-            newName={newName}
-            onNewNameChange={setNewName}
-            onCreate={handleCreate}
-            renamingId={renamingId}
-            renameValue={renameValue}
-            onStartRename={startRename}
-            onRenameValueChange={setRenameValue}
-            onConfirmRename={confirmRename}
-            onCancelRename={() => setRenamingId(null)}
-          />
-        )}
-      </div>
+      <ProjectsWorkspaceContent {...contentProps} showToolbar={false} />
     </>
   );
 

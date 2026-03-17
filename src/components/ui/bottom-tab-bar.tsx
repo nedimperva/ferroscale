@@ -4,12 +4,11 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { triggerHaptic } from "@/lib/haptics";
-
-export type TabId = "calculator" | "saved" | "projects" | "settings";
+import type { AppTabId } from "@/lib/app-shell";
 
 interface BottomTabBarProps {
-  activeTab: TabId;
-  onTabChange: (tab: TabId) => void;
+  activeTab: AppTabId;
+  onTabChange: (tab: AppTabId) => void;
   projectCount?: number;
   compareCount?: number;
   savedCount?: number;
@@ -27,7 +26,7 @@ export const BottomTabBar = memo(function BottomTabBar({
 }: BottomTabBarProps) {
   const t = useTranslations("tabs");
 
-  const tabs: { id: TabId; label: string; badge?: number }[] = [
+  const tabs: { id: AppTabId; label: string; badge?: number }[] = [
     { id: "calculator", label: t("calculator") },
     { id: "saved", label: t("saved"), badge: savedCount > 0 ? savedCount : undefined },
     { id: "projects", label: t("projects"), badge: projectCount > 0 ? projectCount : undefined },
@@ -107,7 +106,7 @@ export const BottomTabBar = memo(function BottomTabBar({
 
 /* ---- Tab icons ---- */
 
-function TabIcon({ id, active }: { id: TabId; active: boolean }) {
+function TabIcon({ id, active }: { id: AppTabId; active: boolean }) {
   const cls = `h-5 w-5 ${active ? "stroke-accent" : "stroke-current"}`;
   const fill = active ? "currentColor" : "none";
 

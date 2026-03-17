@@ -9,6 +9,18 @@
     "contact": {
       "title": "Contact - FerroScale",
       "description": "Send a report or get in touch about FerroScale."
+    },
+    "saved": {
+      "title": "Saved - FerroScale",
+      "description": "Browse saved calculations in FerroScale."
+    },
+    "projects": {
+      "title": "Projects - FerroScale",
+      "description": "Manage project collections and exports in FerroScale."
+    },
+    "settings": {
+      "title": "Settings - FerroScale",
+      "description": "Adjust calculator defaults and workspace preferences in FerroScale."
     }
   },
   "language": {
@@ -261,6 +273,7 @@
   "result": {
     "title": "Result",
     "empty": "Enter dimensions to see live results.",
+    "moreActions": "More actions",
     "totalCost": "Total cost",
     "unitWeight": "Unit weight",
     "totalWeight": "Total weight",

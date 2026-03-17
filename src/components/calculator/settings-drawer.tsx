@@ -42,15 +42,12 @@ interface SettingsDrawerProps {
   unitOptions: LengthUnit[];
 }
 
-export const SettingsDrawer = memo(function SettingsDrawer({
-  open,
-  onClose,
+export function SettingsWorkspaceContent({
   input,
   dispatch,
   activeFamily,
   issues,
   onResetAll,
-  onOpenChangelog,
   compareLimit,
   onCompareLimitChange,
   maxCompare,
@@ -66,57 +63,10 @@ export const SettingsDrawer = memo(function SettingsDrawer({
   defaultUnit,
   onDefaultUnitChange,
   unitOptions,
-}: SettingsDrawerProps) {
+}: Omit<SettingsDrawerProps, "open" | "onClose" >) {
   const t = useTranslations("settingsDrawer");
-  const isMobile = useIsMobile();
-
-  useDrawerBehavior(!isMobile && open, onClose);
-
-  const content = (
+  return (
     <>
-      {/* Drawer header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4"
-          >
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          {t("title")}
-        </h2>
-        {!isMobile && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
-            aria-label={t("close")}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-            >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom">
         <div className="px-4 pt-3 pb-1">
           <LanguageSwitcher className="w-full justify-between" />
@@ -183,6 +133,65 @@ export const SettingsDrawer = memo(function SettingsDrawer({
           {t("reset")}
         </button>
       </div>
+    </>
+  );
+}
+
+export const SettingsDrawer = memo(function SettingsDrawer({
+  open,
+  onClose,
+  ...contentProps
+}: SettingsDrawerProps) {
+  const t = useTranslations("settingsDrawer");
+  const isMobile = useIsMobile();
+
+  useDrawerBehavior(!isMobile && open, onClose);
+
+  const content = (
+    <>
+      {/* Drawer header */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+          >
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          {t("title")}
+        </h2>
+        {!isMobile && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-muted transition-colors hover:bg-surface-raised hover:text-foreground"
+            aria-label={t("close")}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      <SettingsWorkspaceContent {...contentProps} />
     </>
   );
 
