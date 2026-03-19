@@ -529,7 +529,8 @@
     "aggregatePaintNeeded": "Paint needed",
     "aggregatePaintingCost": "Painting cost",
     "paintPricePerKg": "Paint price / kg",
-    "paintCoverage": "Coverage (m²/kg)"
+    "paintCoverage": "Coverage (m²/kg)",
+    "paintCoats": "Coats"
   },
   "saveToProject": {
     "title": "Save to project",

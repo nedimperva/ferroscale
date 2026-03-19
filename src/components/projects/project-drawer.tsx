@@ -102,7 +102,7 @@ interface ProjectDrawerProps {
   onRemoveCalculation: (projectId: string, calcId: string) => void;
   onUpdateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   onUpdateProjectDescription: (id: string, description: string) => void;
-  onUpdateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined) => void;
+  onUpdateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => void;
   onLoadCalculation?: (input: CalculationInput) => void;
   /** Current calculator result to allow quick-add from inside the drawer. */
   currentResult: CalculationResult | null;
@@ -614,7 +614,7 @@ function ProjectDetail({
   onRemoveCalculation: (projectId: string, calcId: string) => void;
   onUpdateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   onUpdateProjectDescription: (id: string, description: string) => void;
-  onUpdateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined) => void;
+  onUpdateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => void;
   onLoadCalculation?: (input: CalculationInput) => void;
   onStartRename: () => void;
   onDeleteProject: () => void;
@@ -860,7 +860,7 @@ function ProjectDetail({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-[10px] font-medium text-muted mb-0.5">{t("paintPricePerKg")}</label>
               <input
@@ -870,7 +870,7 @@ function ProjectDetail({
                 value={project.paintingPricePerKg ?? ""}
                 onChange={(e) => {
                   const val = e.target.value ? parseFloat(e.target.value) : undefined;
-                  onUpdateProjectPaintingSettings(project.id, val, project.paintingCoverageM2PerKg);
+                  onUpdateProjectPaintingSettings(project.id, val, project.paintingCoverageM2PerKg, project.paintingCoats);
                 }}
                 placeholder="0.00"
                 className="h-8 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm tabular-nums transition-colors focus:border-purple-strong"
@@ -885,7 +885,22 @@ function ProjectDetail({
                 value={project.paintingCoverageM2PerKg ?? 8}
                 onChange={(e) => {
                   const val = e.target.value ? parseFloat(e.target.value) : undefined;
-                  onUpdateProjectPaintingSettings(project.id, project.paintingPricePerKg, val);
+                  onUpdateProjectPaintingSettings(project.id, project.paintingPricePerKg, val, project.paintingCoats);
+                }}
+                className="h-8 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm tabular-nums transition-colors focus:border-purple-strong"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium text-muted mb-0.5">{t("paintCoats")}</label>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                step={1}
+                value={project.paintingCoats ?? 1}
+                onChange={(e) => {
+                  const val = e.target.value ? Math.max(1, Math.min(10, parseInt(e.target.value, 10))) : undefined;
+                  onUpdateProjectPaintingSettings(project.id, project.paintingPricePerKg, project.paintingCoverageM2PerKg, val);
                 }}
                 className="h-8 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm tabular-nums transition-colors focus:border-purple-strong"
               />

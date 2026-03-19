@@ -31,6 +31,8 @@ export interface Project {
   paintingPricePerKg?: number;
   /** Paint coverage rate in m² per kg (default 8). */
   paintingCoverageM2PerKg?: number;
+  /** Number of paint coats (default 1). */
+  paintingCoats?: number;
 }
 
 export interface ProjectAggregates {
@@ -116,7 +118,8 @@ export function computeAggregates(project: Project): ProjectAggregates {
   const costPerKg = roundedWeight > 0 ? Math.round((roundedCost / roundedWeight) * 100) / 100 : 0;
   const roundedSurfaceArea = Math.round(totalSurfaceAreaM2 * 100) / 100;
   const coverageRate = project.paintingCoverageM2PerKg ?? DEFAULT_COVERAGE_M2_PER_KG;
-  const paintKgNeeded = coverageRate > 0 ? Math.round((roundedSurfaceArea / coverageRate) * 100) / 100 : 0;
+  const coats = project.paintingCoats ?? 1;
+  const paintKgNeeded = coverageRate > 0 ? Math.round((roundedSurfaceArea * coats / coverageRate) * 100) / 100 : 0;
   const pricePerKg = project.paintingPricePerKg ?? 0;
   const totalPaintingCost = Math.round(paintKgNeeded * pricePerKg * 100) / 100;
   return {
@@ -426,7 +429,7 @@ export interface UseProjectsReturn {
   removeCalculation: (projectId: string, calcId: string) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   updateProjectDescription: (id: string, description: string) => void;
-  updateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined) => void;
+  updateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => void;
   /** Quick-add: shows a picker if multiple projects exist, otherwise adds to the only one. */
   projectCount: number;
 }
@@ -473,11 +476,11 @@ export function useProjects(): UseProjectsReturn {
     );
   }, [setProjects]);
 
-  const updateProjectPaintingSettings = useCallback((id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined) => {
+  const updateProjectPaintingSettings = useCallback((id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => {
     setProjects((prev) =>
       prev.map((p) =>
         p.id === id
-          ? { ...p, paintingPricePerKg: pricePerKg, paintingCoverageM2PerKg: coverageM2PerKg, updatedAt: new Date().toISOString() }
+          ? { ...p, paintingPricePerKg: pricePerKg, paintingCoverageM2PerKg: coverageM2PerKg, paintingCoats: coats, updatedAt: new Date().toISOString() }
           : p,
       ),
     );

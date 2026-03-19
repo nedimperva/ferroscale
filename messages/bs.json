@@ -529,7 +529,8 @@
     "aggregatePaintNeeded": "Potrebna boja",
     "aggregatePaintingCost": "Cijena farbanja",
     "paintPricePerKg": "Cijena boje / kg",
-    "paintCoverage": "Pokrivenost (m²/kg)"
+    "paintCoverage": "Pokrivenost (m²/kg)",
+    "paintCoats": "Slojevi"
   },
   "saveToProject": {
     "title": "Sacuvaj u projekat",
