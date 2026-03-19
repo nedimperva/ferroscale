@@ -317,7 +317,8 @@
     "expandAriaLabel": "Prosiri detalje rezultata",
     "share": "Podijeli",
     "shareCopied": "Link kopiran u meduspremnik",
-    "surfaceArea": "Površina"
+    "surfaceArea": "Površina",
+    "geometrySummary": "Površina presjeka, gustoća i formula površine za ovaj izračun"
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",

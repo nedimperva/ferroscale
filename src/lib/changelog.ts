@@ -37,12 +37,16 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
     changed: [
       "Calculator result receipt now shows surface area between weight and cost sections when available",
+      "Result header shows a compact cross-section area, material density, and area formula above the action row",
       "Clipboard copy format includes surface area line when present",
+      "Clipboard copy includes geometry line (area, density, formula) after the profile summary",
       "Project aggregate cards include painting data when surface area is available",
     ],
     changed_bs: [
       "Račun rezultata kalkulatora sada prikazuje površinu između sekcija mase i cijene kada je dostupna",
+      "Zaglavlje rezultata prikazuje kompaktno površinu presjeka, gustoću materijala i formulu površine iznad reda akcija",
       "Format kopiranja u međuspremnik uključuje red sa površinom kada je prisutan",
+      "Kopiranje u međuspremnik uključuje red geometrije (površina, gustoća, formula) nakon sažetka profila",
       "Agregatne kartice projekta uključuju podatke o farbanju kada je površina dostupna",
     ],
   },

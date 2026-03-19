@@ -317,7 +317,8 @@
     "expandAriaLabel": "Expand result details",
     "share": "Share",
     "shareCopied": "Link copied to clipboard",
-    "surfaceArea": "Surface area"
+    "surfaceArea": "Surface area",
+    "geometrySummary": "Cross-section area, density, and area formula for this calculation"
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",

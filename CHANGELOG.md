@@ -22,7 +22,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - Calculator result receipt now shows surface area between weight and cost sections when available
+- Result header shows a compact cross-section area, material density, and area formula above the action row
 - Clipboard copy format includes surface area line when present
+- Clipboard copy includes a geometry line (area, density, formula) after the profile summary
 - Project aggregate cards include painting data when surface area is available
 
 ---

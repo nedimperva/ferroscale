@@ -12,6 +12,20 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
 
+function formatMm2(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 4,
+    useGrouping: true,
+  }).format(value);
+}
+
+function formatDensityKgM3(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+    useGrouping: true,
+  }).format(value);
+}
+
 export function formatResultForClipboard(
   result: CalculationResult,
   profileLabel: string,
@@ -19,6 +33,7 @@ export function formatResultForClipboard(
   const currency = CURRENCY_SYMBOLS[result.currency];
   const lines = [
     `${profileLabel}`,
+    `A: ${formatMm2(result.areaMm2)} mm² · ρ: ${formatDensityKgM3(result.densityKgPerM3)} kg/m³ (${result.formulaLabel})`,
     `Material: ${result.gradeLabel}`,
     `Unit weight: ${result.unitWeightKg} kg`,
     `Total weight: ${result.totalWeightKg} kg`,
@@ -116,6 +131,26 @@ export const ResultContent = memo(function ResultContent({
           )}
           <span className="truncate">{profileLabel} · {gradeLabel}</span>
         </p>
+
+        {/* Compact geometry + formula (always visible; full steps still in details below) */}
+        <div
+          className="mt-3 border-t border-accent-border/60 pt-3 text-center"
+          role="group"
+          aria-label={t("geometrySummary")}
+        >
+          <p className="text-[11px] leading-snug text-muted tabular-nums">
+            <span className="text-foreground-secondary">
+              {formatMm2(result.areaMm2)} mm²
+            </span>
+            <span className="mx-1.5 text-border-faint" aria-hidden>
+              ·
+            </span>
+            <span className="text-foreground-secondary">
+              {formatDensityKgM3(result.densityKgPerM3)} kg/m³
+            </span>
+          </p>
+          <p className="mt-1 px-1 text-[11px] leading-snug text-muted">{result.formulaLabel}</p>
+        </div>
       </div>
 
       {/* ── Action buttons ── */}
@@ -310,7 +345,7 @@ export const ResultContent = memo(function ResultContent({
         {/* ── References ── */}
         <ReferenceList
           labels={result.referenceLabels}
-          className="mt-3 text-xs text-muted-faint"
+          className="mt-2 text-[11px] leading-snug text-muted-faint [&_ul]:mt-0.5 [&_ul]:space-y-0.5"
         />
       </div>
     </>
