@@ -165,10 +165,10 @@ export const ResultContent = memo(function ResultContent({
         >
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
             <div
-              className="shrink-0 rounded-lg border border-accent-border/50 bg-surface/80 p-2 text-muted"
+              className="shrink-0 rounded-md border border-border bg-surface-inset/80 p-2.5 text-muted shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
               aria-hidden
             >
-              <ProfileGeometryDiagram profileId={result.profileId} className="h-12 w-12 sm:h-14 sm:w-14" />
+              <ProfileGeometryDiagram profileId={result.profileId} className="h-11 w-11 sm:h-[3.25rem] sm:w-[3.25rem]" />
             </div>
             <div className="min-w-0 flex-1 text-center sm:text-left">
               <p className="text-[11px] leading-snug text-muted tabular-nums">

@@ -3,34 +3,47 @@
 import { memo, type ReactNode } from "react";
 import type { ProfileId } from "@/lib/datasets/types";
 
-const vb = "0 0 48 48";
-const sw = 1.65;
+const VB = "0 0 48 48";
+/** Primary outline — technical drawing weight */
+const SW = 1.2;
+/** Secondary (hatch, centerline) */
+const SW2 = 0.85;
+const fillMuted = { fill: "currentColor", fillOpacity: 0.055 } as const;
+const strokeOnly = {
+  stroke: "currentColor",
+  strokeWidth: SW,
+  strokeLinecap: "butt" as const,
+  strokeLinejoin: "miter" as const,
+  strokeMiterlimit: 2,
+  fill: "none" as const,
+};
 
-function SvgFrame({
-  className,
-  children,
-}: {
-  className?: string;
-  children: ReactNode;
-}) {
+function SvgRoot({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <svg
-      viewBox={vb}
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={sw}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
+    <svg viewBox={VB} className={className} aria-hidden>
       {children}
     </svg>
   );
 }
 
+/** Vertical symmetry axis — dashed, low contrast */
+function CenterlineY({ x = 24, y1 = 8, y2 = 40 }: { x?: number; y1?: number; y2?: number }) {
+  return (
+    <line
+      x1={x}
+      y1={y1}
+      x2={x}
+      y2={y2}
+      stroke="currentColor"
+      strokeWidth={SW2}
+      strokeDasharray="2 3"
+      strokeOpacity={0.22}
+    />
+  );
+}
+
 /**
- * Cross-section style schematic per profile type (not to scale, for recognition only).
+ * Cross-section schematics per profile (recognition / documentation style, not to scale).
  */
 export const ProfileGeometryDiagram = memo(function ProfileGeometryDiagram({
   profileId,
@@ -42,153 +55,200 @@ export const ProfileGeometryDiagram = memo(function ProfileGeometryDiagram({
   switch (profileId) {
     case "round_bar":
       return (
-        <SvgFrame className={className}>
-          <circle cx="24" cy="24" r="13" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <circle cx="24" cy="24" r="12.5" {...fillMuted} {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "square_bar":
       return (
-        <SvgFrame className={className}>
-          <rect x="14" y="14" width="20" height="20" rx="1" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="13.5" y="13.5" width="21" height="21" {...fillMuted} {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "flat_bar":
       return (
-        <SvgFrame className={className}>
-          <rect x="6" y="21" width="36" height="7" rx="0.5" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="7" y="21.5" width="34" height="5" {...fillMuted} {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "angle":
       return (
-        <SvgFrame className={className}>
-          <path d="M10 10v28h28v-6H16V10H10z" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path
+            d="M10 10v26h26v-5H15V10H10z"
+            {...fillMuted}
+            {...strokeOnly}
+          />
+        </SvgRoot>
       );
 
     case "sheet":
       return (
-        <SvgFrame className={className}>
-          <rect x="6" y="22.5" width="36" height="3" rx="0.5" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="7" y="23" width="34" height="2.5" {...fillMuted} {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "plate":
       return (
-        <SvgFrame className={className}>
-          <rect x="6" y="19" width="36" height="10" rx="0.5" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="7" y="19.5" width="34" height="9" {...fillMuted} {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "chequered_plate":
       return (
-        <SvgFrame className={className}>
-          <rect x="6" y="19" width="36" height="10" rx="0.5" />
-          <path d="M10 22l4 4m6-4l4 4m6-4l4 4m-22 2l4 4m6-4l4 4" opacity={0.45} strokeWidth={1} />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="7" y="19.5" width="34" height="9" {...fillMuted} {...strokeOnly} />
+          <g stroke="currentColor" strokeWidth={SW2} strokeOpacity={0.32} strokeLinecap="square">
+            <path d="M8 20.5h32M8 24h32M8 27.5h32" />
+            <path d="M12 19.5v9M18 19.5v9M24 19.5v9M30 19.5v9M36 19.5v9" />
+          </g>
+        </SvgRoot>
       );
 
     case "expanded_metal":
       return (
-        <SvgFrame className={className}>
-          <path
-            d="M8 16l6 6-6 6m8-16l6 6-6 6m8-16l6 6-6 6m8-16l6 6-6 6m-28 4l6 6-6 6m8-16l6 6-6 6m8-16l6 6-6 6"
-            opacity={0.85}
-            strokeWidth={1.2}
-          />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="9" y="12" width="30" height="24" rx="0.5" {...fillMuted} {...strokeOnly} />
+          <g stroke="currentColor" strokeWidth={SW2} strokeLinecap="square" strokeOpacity={0.42}>
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+              <line
+                key={i}
+                x1={10 + i * 4}
+                y1={14}
+                x2={18 + i * 4}
+                y2={34}
+              />
+            ))}
+          </g>
+        </SvgRoot>
       );
 
     case "corrugated_sheet":
       return (
-        <SvgFrame className={className}>
-          <path d="M6 28V22c3-2 3-4 6-4s3 2 6 4 3 4 6 4 3-2 6-4 3-4 6-4 3 2 6 4v6H6z" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path
+            d="M7 31V26c2.4-1.5 2.4-3.2 4.8-3.2s2.4 1.7 4.8 3.2 2.4 3.2 4.8 3.2 2.4-1.7 4.8-3.2 2.4-3.2 4.8-3.2 2.4 1.7 4.8 3.2 2.4 3.2 4.8 3.2 2.4-1.7 4.8-3.2 2.4-3.2 4.8-3.2 2.4 1.7 4.8 3.2V31H7z"
+            {...fillMuted}
+            {...strokeOnly}
+          />
+        </SvgRoot>
       );
 
     case "pipe":
       return (
-        <SvgFrame className={className}>
-          <circle cx="24" cy="24" r="12.5" />
-          <circle cx="24" cy="24" r="7" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <circle cx="24" cy="24" r="12.5" {...fillMuted} {...strokeOnly} />
+          <circle cx="24" cy="24" r="7.5" {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "rectangular_tube":
       return (
-        <SvgFrame className={className}>
-          <rect x="9" y="11" width="30" height="26" rx="1" />
-          <rect x="15" y="17" width="18" height="14" rx="0.5" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="9.5" y="11.5" width="29" height="25" {...fillMuted} {...strokeOnly} />
+          <rect x="15.5" y="17.5" width="17" height="13" {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "square_hollow":
       return (
-        <SvgFrame className={className}>
-          <rect x="10" y="10" width="28" height="28" rx="1" />
-          <rect x="17" y="17" width="14" height="14" rx="0.5" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <rect x="10.5" y="10.5" width="27" height="27" {...fillMuted} {...strokeOnly} />
+          <rect x="17.5" y="17.5" width="13" height="13" {...strokeOnly} />
+        </SvgRoot>
       );
 
     case "channel_upn_en":
       return (
-        <SvgFrame className={className}>
-          {/* Tapered-flange channel (IPN-era style); open to the right */}
-          <path d="M12 8v32M12 8h22M12 40h22M34 8L31 13M34 40L31 35" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path
+            d="M11 8v32M11 8h21.5M11 40h21.5M32.5 8l-2.5 4.5M32.5 40l-2.5-4.5"
+            {...strokeOnly}
+          />
+        </SvgRoot>
       );
 
     case "channel_upe_en":
       return (
-        <SvgFrame className={className}>
-          {/* Parallel flanges: short returns on the open side */}
-          <path d="M12 8v32M12 8h20M32 8v5M12 40h20M32 40v-5" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path
+            d="M11 8v32M11 8h19.5M30.5 8v4.5M11 40h19.5M30.5 40v-4.5"
+            {...strokeOnly}
+          />
+        </SvgRoot>
       );
 
-    case "beam_ipe_en":
+    case "beam_ipe_en": {
+      /* Double-symmetric I: web 22–26, flanges 9–39, tf/bf 3px */
+      const p = "M9 9L39 9 39 12 26 12 26 36 39 36 39 39 9 39 9 36 22 36 22 12 9 12Z";
       return (
-        <SvgFrame className={className}>
-          <path d="M8 9h32M8 13h32M22 13v22M26 13v22M8 35h32M8 39h32" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path d={p} {...fillMuted} {...strokeOnly} />
+          <CenterlineY x={24} y1={10} y2={38} />
+        </SvgRoot>
       );
+    }
 
-    case "beam_ipn_en":
+    case "beam_ipn_en": {
+      const p = "M9 9L39 9 39 12 26 12 26 36 39 36 39 39 9 39 9 36 22 36 22 12 9 12Z";
       return (
-        <SvgFrame className={className}>
-          <path d="M8 9h32M8 13h32M22 13v22M26 13v22M8 35h32M8 39h32" />
-          <path d="M8 11l14 2M40 11L26 13M8 37l14-2M40 37l-14-2" opacity={0.55} strokeWidth={1.2} />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path d={p} {...fillMuted} {...strokeOnly} />
+          <CenterlineY x={24} y1={10} y2={38} />
+          <path
+            d="M9 10.5L17 11.75M39 10.5L31 11.75M9 37.5L17 36.25M39 37.5L31 36.25"
+            stroke="currentColor"
+            strokeWidth={SW2}
+            strokeOpacity={0.38}
+            fill="none"
+          />
+        </SvgRoot>
       );
+    }
 
-    case "beam_hea_en":
+    case "beam_hea_en": {
+      const p = "M7 8.5L41 8.5 41 12 25 12 25 36 41 36 41 39.5 7 39.5 7 36 21 36 21 12 7 12Z";
       return (
-        <SvgFrame className={className}>
-          <path d="M6 9h36M6 14h36M20 14v20M28 14v20M6 34h36M6 39h36" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path d={p} {...fillMuted} {...strokeOnly} />
+          <CenterlineY x={24} y1={9.5} y2={38.5} />
+        </SvgRoot>
       );
+    }
 
-    case "beam_heb_en":
+    case "beam_heb_en": {
+      const p = "M6 8.5L42 8.5 42 12.5 25 12.5 25 35.5 42 35.5 42 39.5 6 39.5 6 35.5 21 35.5 21 12.5 6 12.5Z";
       return (
-        <SvgFrame className={className}>
-          <path d="M5 9h38M5 15h38M19 15v18M29 15v18M5 33h38M5 39h38" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path d={p} {...fillMuted} {...strokeOnly} />
+          <CenterlineY x={24} y1={9.5} y2={38.5} />
+        </SvgRoot>
       );
+    }
 
-    case "beam_hem_en":
+    case "beam_hem_en": {
+      const p = "M5 8L43 8 43 12.5 25 12.5 25 35.5 43 35.5 43 40 5 40 5 35.5 21 35.5 21 12.5 5 12.5Z";
       return (
-        <SvgFrame className={className}>
-          <path d="M4 8h40M4 16h40M18 16v16M30 16v16M4 32h40M4 40h40" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path d={p} {...fillMuted} {...strokeOnly} />
+          <CenterlineY x={24} y1={9} y2={39} />
+        </SvgRoot>
       );
+    }
 
-    case "tee_en":
+    case "tee_en": {
+      const p = "M7 9.5L41 9.5 41 14.5 26.5 14.5 26.5 38 21.5 38 21.5 14.5 7 14.5 7 9.5Z";
       return (
-        <SvgFrame className={className}>
-          <path d="M6 10h36v6H6zM21 16v24h6V16" />
-        </SvgFrame>
+        <SvgRoot className={className}>
+          <path d={p} {...fillMuted} {...strokeOnly} />
+          <CenterlineY x={24} y1={14.5} y2={38} />
+        </SvgRoot>
       );
+    }
   }
 });
