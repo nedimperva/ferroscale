@@ -94,6 +94,19 @@ describe("createResultCsv", () => {
     expect(csv).toContain("EN 10060 | EN 10025-2");
   });
 
+  it("adds profile and material standard rows when present on the result", () => {
+    const csv = createResultCsv(
+      makeMockResult({
+        profileReferenceLabel: "EN 10060",
+        materialReferenceLabel: "EN 10025-2",
+      }),
+    );
+    expect(csv).toContain("Profile standard");
+    expect(csv).toContain("Material standard");
+    expect(csv).toContain("EN 10060");
+    expect(csv).toContain("EN 10025-2");
+  });
+
   it("produces the correct number of data rows (20 fields + header)", () => {
     const csv = createResultCsv(makeMockResult());
     const lines = csv.split("\n").filter((line) => line.length > 0);

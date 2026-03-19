@@ -22,6 +22,15 @@ export function createResultCsv(result: CalculationResult): string {
     ["Price basis", result.priceBasis],
     ["Price unit", result.priceUnit],
     ["Formula", result.formulaLabel],
+    ...(result.profileReferenceLabel
+      ? ([["Profile standard", result.profileReferenceLabel]] as Array<[string, string]>)
+      : []),
+    ...(result.standardSizeReferenceLabel
+      ? ([["Standard size / table", result.standardSizeReferenceLabel]] as Array<[string, string]>)
+      : []),
+    ...(result.materialReferenceLabel
+      ? ([["Material standard", result.materialReferenceLabel]] as Array<[string, string]>)
+      : []),
     ["Dataset version", result.datasetVersion],
     ["References", result.referenceLabels.join(" | ")],
   ];

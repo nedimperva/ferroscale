@@ -1,12 +1,13 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { ProfileCategoryDiagram } from "@/components/profiles/profile-category-diagram";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
@@ -26,6 +27,13 @@ function formatDensityKgM3(value: number): string {
   }).format(value);
 }
 
+function formatLengthMm(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 4,
+    useGrouping: true,
+  }).format(value);
+}
+
 export function formatResultForClipboard(
   result: CalculationResult,
   profileLabel: string,
@@ -34,6 +42,11 @@ export function formatResultForClipboard(
   const lines = [
     `${profileLabel}`,
     `A: ${formatMm2(result.areaMm2)} mm² · ρ: ${formatDensityKgM3(result.densityKgPerM3)} kg/m³ (${result.formulaLabel})`,
+    `Length (per piece): ${formatLengthMm(result.lengthMm)} mm`,
+    `Quantity: ${result.quantity}`,
+    ...(result.profileReferenceLabel ? [`Profile standard: ${result.profileReferenceLabel}`] : []),
+    ...(result.standardSizeReferenceLabel ? [`Size / table: ${result.standardSizeReferenceLabel}`] : []),
+    ...(result.materialReferenceLabel ? [`Material standard: ${result.materialReferenceLabel}`] : []),
     `Material: ${result.gradeLabel}`,
     `Unit weight: ${result.unitWeightKg} kg`,
     `Total weight: ${result.totalWeightKg} kg`,
@@ -100,6 +113,18 @@ export const ResultContent = memo(function ResultContent({
 
   const isMulti = result.quantity > 1;
 
+  const profileRef = result.profileReferenceLabel ?? null;
+  const sizeRef = result.standardSizeReferenceLabel ?? null;
+  const materialRef = result.materialReferenceLabel ?? null;
+  const specLabelSet = useMemo(
+    () => new Set([profileRef, sizeRef, materialRef].filter((x): x is string => Boolean(x))),
+    [profileRef, sizeRef, materialRef],
+  );
+  const referenceListLabels = useMemo(
+    () => result.referenceLabels.filter((label) => !specLabelSet.has(label)),
+    [result.referenceLabels, specLabelSet],
+  );
+
   return (
     <>
       {/* ── Hero ── */}
@@ -134,23 +159,72 @@ export const ResultContent = memo(function ResultContent({
 
         {/* Compact geometry + formula (always visible; full steps still in details below) */}
         <div
-          className="mt-3 border-t border-accent-border/60 pt-3 text-center"
+          className="mt-3 border-t border-accent-border/60 pt-3"
           role="group"
           aria-label={t("geometrySummary")}
         >
-          <p className="text-[11px] leading-snug text-muted tabular-nums">
-            <span className="text-foreground-secondary">
-              {formatMm2(result.areaMm2)} mm²
-            </span>
-            <span className="mx-1.5 text-border-faint" aria-hidden>
-              ·
-            </span>
-            <span className="text-foreground-secondary">
-              {formatDensityKgM3(result.densityKgPerM3)} kg/m³
-            </span>
-          </p>
-          <p className="mt-1 px-1 text-[11px] leading-snug text-muted">{result.formulaLabel}</p>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
+            {normalizedProfile ? (
+              <div
+                className="shrink-0 rounded-lg border border-accent-border/50 bg-surface/80 p-2 text-muted"
+                aria-hidden
+              >
+                <ProfileCategoryDiagram category={normalizedProfile.iconKey} className="h-12 w-12 sm:h-14 sm:w-14" />
+              </div>
+            ) : null}
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <p className="text-[11px] leading-snug text-muted tabular-nums">
+                <span className="text-foreground-secondary">
+                  {formatMm2(result.areaMm2)} mm²
+                </span>
+                <span className="mx-1.5 text-border-faint" aria-hidden>
+                  ·
+                </span>
+                <span className="text-foreground-secondary">
+                  {formatDensityKgM3(result.densityKgPerM3)} kg/m³
+                </span>
+              </p>
+              <p className="mt-1 text-[11px] leading-snug text-muted">{result.formulaLabel}</p>
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* ── Run context: length, quantity, EN notes (deduped from reference list below) ── */}
+      <div
+        className="border-b border-border-faint bg-surface-inset/50 px-4 py-3 text-left"
+        role="region"
+        aria-label={t("calculationContext")}
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">{t("calculationContext")}</p>
+        <dl className="mt-2 space-y-2 text-xs">
+          <div>
+            <dt className="font-medium text-foreground-secondary">{t("pieceLength")}</dt>
+            <dd className="mt-0.5 tabular-nums text-muted">{formatLengthMm(result.lengthMm)} mm</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-foreground-secondary">{t("quantityHeading")}</dt>
+            <dd className="mt-0.5 text-muted">{t("pieces", { qty: result.quantity })}</dd>
+          </div>
+          {profileRef ? (
+            <div>
+              <dt className="font-medium text-foreground-secondary">{t("profileStandard")}</dt>
+              <dd className="mt-0.5 leading-snug text-muted">{profileRef}</dd>
+            </div>
+          ) : null}
+          {sizeRef ? (
+            <div>
+              <dt className="font-medium text-foreground-secondary">{t("sizeStandard")}</dt>
+              <dd className="mt-0.5 leading-snug text-muted">{sizeRef}</dd>
+            </div>
+          ) : null}
+          {materialRef ? (
+            <div>
+              <dt className="font-medium text-foreground-secondary">{t("materialStandard")}</dt>
+              <dd className="mt-0.5 leading-snug text-muted">{materialRef}</dd>
+            </div>
+          ) : null}
+        </dl>
       </div>
 
       {/* ── Action buttons ── */}
@@ -305,11 +379,13 @@ export const ResultContent = memo(function ResultContent({
           <span className="tabular-nums text-accent">{fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}</span>
         </div>
 
-        {/* ── References (standards / dataset) — above full steps so they stay easy to find ── */}
-        <ReferenceList
-          labels={result.referenceLabels}
-          className="mt-3 border-t border-border-faint pt-3 text-xs leading-snug text-muted [&_ul]:mt-1 [&_ul]:space-y-0.5"
-        />
+        {/* ── References (dataset + links); EN lines shown above are omitted here to avoid duplicate prose ── */}
+        {referenceListLabels.length > 0 ? (
+          <ReferenceList
+            labels={referenceListLabels}
+            className="mt-3 border-t border-border-faint pt-3 text-xs leading-snug text-muted [&_ul]:mt-1 [&_ul]:space-y-0.5"
+          />
+        ) : null}
 
         {/* ── Full calculation steps ── */}
         <details

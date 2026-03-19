@@ -82,6 +82,12 @@ export interface CalculationResult {
   priceBasis: PriceBasis;
   priceUnit: PriceUnit;
   formulaLabel: string;
+  /** EN / product standard note for the profile family (also listed in referenceLabels). */
+  profileReferenceLabel?: string | null;
+  /** Standard-size sourcing note for table-based profiles (when applicable). */
+  standardSizeReferenceLabel?: string | null;
+  /** Material / grade delivery standard note (omitted for custom density). */
+  materialReferenceLabel?: string | null;
   datasetVersion: string;
   referenceLabels: string[];
   breakdownRows: BreakdownRow[];
