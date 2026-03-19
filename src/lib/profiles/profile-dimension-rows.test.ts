@@ -67,4 +67,16 @@ describe("buildProfileDimensionRows", () => {
     const rows = buildProfileDimensionRows(input, res);
     expect(rows.some((r) => r.kind === "designation")).toBe(true);
   });
+
+  it("adds EN section dimensions for standard structural sizes", () => {
+    const input: CalculationInput = {
+      ...baseInput,
+      profileId: "beam_ipe_en",
+      manualDimensions: {},
+      selectedSizeId: "ipe200",
+    };
+    const res = { ...baseResult, profileId: "beam_ipe_en" as const };
+    const rows = buildProfileDimensionRows(input, res);
+    expect(rows.filter((r) => r.kind === "sectionDim").map((r) => r.field)).toEqual(["h", "b", "tw", "tf"]);
+  });
 });

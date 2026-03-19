@@ -62,3 +62,17 @@ export function beamSectionDimGuide(profileId: ProfileId): { y1: number; y2: num
       return { y1: 9, y2: 39, vx: 41.5 };
   }
 }
+
+/** Horizontal span for flange width dimension (matches schematic outline) */
+export function beamFlangeWidthGuide(profileId: ProfileId): { x1: number; x2: number } {
+  switch (profileId) {
+    case "beam_hem_en":
+      return { x1: 5, x2: 43 };
+    case "beam_heb_en":
+      return { x1: 5.5, x2: 42.5 };
+    case "beam_hea_en":
+      return { x1: 6.5, x2: 41.5 };
+    default:
+      return { x1: 9, x2: 39 };
+  }
+}

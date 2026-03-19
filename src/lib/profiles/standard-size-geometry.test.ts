@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { beamSectionDimGuide, parseStandardSizeGeometry } from "./standard-size-geometry";
+import {
+  beamFlangeWidthGuide,
+  beamSectionDimGuide,
+  parseStandardSizeGeometry,
+} from "./standard-size-geometry";
 
 describe("parseStandardSizeGeometry", () => {
   it("parses beam designation depth", () => {
@@ -34,5 +38,13 @@ describe("parseStandardSizeGeometry", () => {
 describe("beamSectionDimGuide", () => {
   it("returns wider vx for heavier families", () => {
     expect(beamSectionDimGuide("beam_ipe_en").vx).toBeLessThan(beamSectionDimGuide("beam_hem_en").vx);
+  });
+});
+
+describe("beamFlangeWidthGuide", () => {
+  it("returns wider span for heavier families", () => {
+    const ipe = beamFlangeWidthGuide("beam_ipe_en");
+    const hem = beamFlangeWidthGuide("beam_hem_en");
+    expect(hem.x2 - hem.x1).toBeGreaterThan(ipe.x2 - ipe.x1);
   });
 });

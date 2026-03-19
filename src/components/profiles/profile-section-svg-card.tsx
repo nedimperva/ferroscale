@@ -7,9 +7,14 @@ import type { ProfileId } from "@/lib/datasets/types";
 import {
   buildProfileDimensionRows,
   findManualRow,
+  getSelectedSectionMm,
   type ProfileDimensionRow,
 } from "@/lib/profiles/profile-dimension-rows";
-import { beamSectionDimGuide, parseStandardSizeGeometry } from "@/lib/profiles/standard-size-geometry";
+import {
+  beamFlangeWidthGuide,
+  beamSectionDimGuide,
+  parseStandardSizeGeometry,
+} from "@/lib/profiles/standard-size-geometry";
 import { ProfileGeometryPrimitives } from "./profile-geometry-diagram";
 
 const DRAW_W = 62;
@@ -98,11 +103,14 @@ function DimLineV({
 function GeometryAnnotations({
   profileId,
   rows,
+  input,
 }: {
   profileId: ProfileId;
   rows: ProfileDimensionRow[];
+  input: CalculationInput;
 }) {
   const t = useTranslations("result");
+  const sectionMm = getSelectedSectionMm(input);
   const desRow = rows.find((r): r is Extract<ProfileDimensionRow, { kind: "designation" }> => r.kind === "designation");
   const stdGeo = desRow ? parseStandardSizeGeometry(profileId, desRow.display) : {};
 
@@ -149,6 +157,66 @@ function GeometryAnnotations({
     }
     default:
       break;
+  }
+
+  if (profileId.startsWith("beam_") && sectionMm) {
+    const g = beamSectionDimGuide(profileId);
+    const fw = beamFlangeWidthGuide(profileId);
+    return (
+      <>
+        <DimLineH
+          x1={fw.x1}
+          x2={fw.x2}
+          y={5.4}
+          text={t("sectionFlangeWidthDim", { value: sectionMm.b })}
+        />
+        <DimLineV
+          x={g.vx}
+          y1={g.y1}
+          y2={g.y2}
+          text={t("sectionDepthDim", { value: sectionMm.h })}
+          textX={g.vx + 2}
+        />
+      </>
+    );
+  }
+
+  if ((profileId === "channel_upn_en" || profileId === "channel_upe_en") && sectionMm) {
+    return (
+      <>
+        <DimLineH x1={11} x2={31} y={5.5} text={t("sectionFlangeWidthDim", { value: sectionMm.b })} />
+        <DimLineV
+          x={36}
+          y1={8}
+          y2={40}
+          text={t("sectionDepthDim", { value: sectionMm.h })}
+          textX={38.2}
+        />
+      </>
+    );
+  }
+
+  if (profileId === "tee_en" && sectionMm) {
+    const legH = t("sectionTeeLegDim", { value: sectionMm.h });
+    const legB = t("sectionTeeLegDim", { value: sectionMm.b });
+    const tStr = t("sectionTeeThicknessDim", { value: sectionMm.tf });
+    return (
+      <>
+        <DimLineH x1={7} x2={41} y={6} text={legH} />
+        <DimLineV x={42.5} y1={14.5} y2={38} text={legB} textX={44.5} />
+        <text
+          x={24}
+          y={47}
+          textAnchor="middle"
+          fontSize={3.8}
+          fill="currentColor"
+          fillOpacity={0.72}
+          fontFamily="ui-monospace, system-ui, sans-serif"
+        >
+          {tStr}
+        </text>
+      </>
+    );
   }
 
   if (profileId.startsWith("beam_") && stdGeo.depthMm != null) {
@@ -217,7 +285,11 @@ function rowLabel(
   if (row.kind === "designation") {
     return tResult("sectionDesignation");
   }
-  if (row.key === "A") {
+  if (row.kind === "sectionDim") {
+    const labels = { h: "sectionDimH", b: "sectionDimB", tw: "sectionDimTw", tf: "sectionDimTf" } as const;
+    return tResult(labels[row.field]);
+  }
+  if (row.kind === "derived" && row.key === "A") {
     return tResult("sectionArea");
   }
   return tResult("sectionLength");
@@ -333,7 +405,7 @@ export const ProfileSectionSvgCard = memo(function ProfileSectionSvgCard({
 
       <g transform={`translate(${ox},${oy}) scale(${s})`}>
         <ProfileGeometryPrimitives profileId={profileId} />
-        <GeometryAnnotations profileId={profileId} rows={rows} />
+        <GeometryAnnotations profileId={profileId} rows={rows} input={input} />
       </g>
 
       <text
@@ -350,7 +422,17 @@ export const ProfileSectionSvgCard = memo(function ProfileSectionSvgCard({
 
       {rows.map((row, i) => (
         <text
-          key={`${row.kind}-${"key" in row ? row.key : row.kind}-${i}`}
+          key={
+            row.kind === "manual"
+              ? `m-${row.key}`
+              : row.kind === "designation"
+                ? "des"
+                : row.kind === "sectionDim"
+                  ? `sec-${row.field}`
+                  : row.kind === "derived"
+                    ? `d-${row.key}`
+                    : `r-${i}`
+          }
           x={tableX}
           y={tableBodyY + i * lineH}
           fill="currentColor"

@@ -1,5 +1,5 @@
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
-import type { DimensionKey } from "@/lib/datasets/types";
+import type { DimensionKey, SectionDimensionsMm } from "@/lib/datasets/types";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { roundTo, toMillimeters } from "@/lib/calculator/units";
 
@@ -20,7 +20,15 @@ function dimMm(input: CalculationInput, key: DimensionKey): number | null {
 export type ProfileDimensionRow =
   | { kind: "manual"; key: DimensionKey; display: string }
   | { kind: "designation"; display: string }
+  | { kind: "sectionDim"; field: "h" | "b" | "tw" | "tf"; display: string }
   | { kind: "derived"; key: "A" | "L"; display: string };
+
+export function getSelectedSectionMm(input: CalculationInput): SectionDimensionsMm | undefined {
+  const profile = getProfileById(input.profileId);
+  if (!profile || profile.mode !== "standard") return undefined;
+  const size = profile.sizes.find((s) => s.id === input.selectedSizeId) ?? profile.sizes[0];
+  return size?.sectionMm;
+}
 
 /**
  * Ordered rows for the section drawing card and CSV-style traceability.
@@ -52,6 +60,15 @@ export function buildProfileDimensionRows(
         kind: "designation",
         display: size.label.replace(/\u00D7/g, "\u00d7"),
       });
+      if (size.sectionMm) {
+        const m = size.sectionMm;
+        rows.push(
+          { kind: "sectionDim", field: "h", display: `${fmtMm(m.h)} mm` },
+          { kind: "sectionDim", field: "b", display: `${fmtMm(m.b)} mm` },
+          { kind: "sectionDim", field: "tw", display: `${fmtMm(m.tw)} mm` },
+          { kind: "sectionDim", field: "tf", display: `${fmtMm(m.tf)} mm` },
+        );
+      }
     }
   }
 

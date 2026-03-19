@@ -26,7 +26,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Workspace (desktop):** Toggle Saved side panel, max result column width preset (320–480px), reset column widths
 - **Results:** References block moved under grand total, above full calculation steps
 - **Results:** SVG cross-section “drawing sheet” in header with frame, scaled section, dimension lines where applicable, and a spec table from the current calculation (manual dims, designation, A, L)
-- **Results:** Structural standards: nominal **h** on I/H and U channels from designation; **l** / **t** on tees; manual angle legs on the section sketch
+- **Results:** Structural standards: catalog **h**, **b**, **t_w**, **t_f** (mm) on IPE/IPN/HEA/HEB/HEM, UPN/UPE, and tees — **b** and **h** on the drawing, web/flange thicknesses in the spec column (area from the dataset still drives weight); manual angle legs on the section sketch
 - Calculator result receipt now shows surface area between weight and cost sections when available
 - Result header shows a compact cross-section area, material density, and area formula above the action row
 - Clipboard copy format includes surface area line when present
