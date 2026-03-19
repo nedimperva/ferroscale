@@ -17,6 +17,36 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.8.0",
+    date: "2026-03-19",
+    added: [
+      "Paintable surface area calculated for every profile type — outer perimeter × length × quantity displayed in results, project aggregates, CSV and PDF exports",
+      "Painting cost estimation at project level — configurable paint price per kg and coverage rate (m²/kg, default 8) with automatic paint-needed and total-cost rollup",
+      "Multiple paint coats — adjustable coat count (1–10) per project; paint needed scales accordingly",
+      "Perimeter data for all 138 EN standard profile sizes — IPE, IPN, HEA, HEB, HEM, UPN, UPE, and T-sections now include perimeterMm for accurate surface area",
+      "Painting section in project drawer with editable price/kg, coverage, and coats inputs",
+      "Surface area column in project CSV and PDF exports",
+    ],
+    added_bs: [
+      "Površina za farbanje izračunata za svaki tip profila — vanjski obim × dužina × količina prikazana u rezultatima, agregatima projekta, CSV i PDF izvozima",
+      "Procjena troška farbanja na nivou projekta — podesiva cijena boje po kg i pokrivenost (m²/kg, zadano 8) sa automatskim izračunom potrebne boje i ukupnog troška",
+      "Više slojeva boje — podesiv broj slojeva (1–10) po projektu; potrebna boja se skalira u skladu s tim",
+      "Podaci o perimetru za svih 138 EN standardnih dimenzija profila — IPE, IPN, HEA, HEB, HEM, UPN, UPE i T-profili sada uključuju perimeterMm za tačan izračun površine",
+      "Sekcija za farbanje u ladičaru projekta sa unosima za cijenu/kg, pokrivenost i broj slojeva",
+      "Kolona površine u CSV i PDF izvozima projekta",
+    ],
+    changed: [
+      "Calculator result receipt now shows surface area between weight and cost sections when available",
+      "Clipboard copy format includes surface area line when present",
+      "Project aggregate cards include painting data when surface area is available",
+    ],
+    changed_bs: [
+      "Račun rezultata kalkulatora sada prikazuje površinu između sekcija mase i cijene kada je dostupna",
+      "Format kopiranja u međuspremnik uključuje red sa površinom kada je prisutan",
+      "Agregatne kartice projekta uključuju podatke o farbanju kada je površina dostupna",
+    ],
+  },
+  {
     version: "1.7.0",
     date: "2026-03-17",
     added: [

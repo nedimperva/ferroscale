@@ -192,6 +192,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     duplicateProject,
     updateCalculationNote,
     updateProjectDescription,
+    updateProjectPaintingSettings,
     projectCount,
   } = useProjects();
   const quickCalc = useQuickCalculator();
@@ -729,6 +730,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onRemoveCalculation={removeCalculation}
           onUpdateCalculationNote={updateCalculationNote}
           onUpdateProjectDescription={updateProjectDescription}
+          onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
           onLoadCalculation={handleLoad}
           currentResult={result}
           currentInput={result ? input : null}
@@ -1029,6 +1031,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             onRemoveCalculation={removeCalculation}
             onUpdateCalculationNote={updateCalculationNote}
             onUpdateProjectDescription={updateProjectDescription}
+          onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
             onLoadCalculation={handleLoad}
             currentResult={result}
             currentInput={result ? input : null}

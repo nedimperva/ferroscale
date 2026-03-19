@@ -22,6 +22,7 @@ export function formatResultForClipboard(
     `Material: ${result.gradeLabel}`,
     `Unit weight: ${result.unitWeightKg} kg`,
     `Total weight: ${result.totalWeightKg} kg`,
+    ...(result.surfaceAreaM2 != null ? [`Surface area: ${result.surfaceAreaM2} m²`] : []),
     `Total cost: ${result.grandTotalAmount} ${currency}`,
   ];
   return lines.join("\n");
@@ -225,6 +226,16 @@ export const ResultContent = memo(function ResultContent({
             <div className="flex justify-between py-1.5">
               <span className="text-muted">{t("totalWeight")}</span>
               <span className="tabular-nums font-medium">{fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg</span>
+            </div>
+          </>
+        )}
+
+        {result.surfaceAreaM2 != null && (
+          <>
+            <hr className="my-2 border-border-faint" />
+            <div className="flex justify-between py-1.5">
+              <span className="text-muted">{t("surfaceArea")}</span>
+              <span className="tabular-nums">{result.surfaceAreaM2} m²</span>
             </div>
           </>
         )}

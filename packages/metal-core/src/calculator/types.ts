@@ -85,6 +85,10 @@ export interface CalculationResult {
   datasetVersion: string;
   referenceLabels: string[];
   breakdownRows: BreakdownRow[];
+  /** Total paintable surface area in m² (null when perimeter data unavailable). */
+  surfaceAreaM2: number | null;
+  /** Paintable surface area per single piece in m² (null when unavailable). */
+  unitSurfaceAreaM2: number | null;
 }
 
 export type CalculationResponse =

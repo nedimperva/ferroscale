@@ -278,7 +278,7 @@
     "unitWeight": "Unit weight",
     "totalWeight": "Total weight",
     "perPiece": "Per piece",
-    "totalQty": "Total (\u00d7{qty})",
+    "totalQty": "Total (×{qty})",
     "pieces": "{qty, plural, one {# piece} other {# pieces}}",
     "grandTotal": "Grand total",
     "profile": "Profile:",
@@ -316,7 +316,8 @@
     "projectAriaLabel": "Add to project",
     "expandAriaLabel": "Expand result details",
     "share": "Share",
-    "shareCopied": "Link copied to clipboard"
+    "shareCopied": "Link copied to clipboard",
+    "surfaceArea": "Surface area"
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",
@@ -325,7 +326,8 @@
     "unitPrice": "Unit price",
     "subtotal": "Subtotal",
     "wasteAdjustment": "Waste adjustment",
-    "vat": "VAT"
+    "vat": "VAT",
+    "surfaceArea": "Surface area"
   },
   "references": {
     "title": "References",
@@ -519,8 +521,16 @@
       "vat": "VAT",
       "grandTotal": "Grand Total",
       "currency": "Currency",
-      "total": "Total"
-    }
+      "total": "Total",
+      "surfaceArea": "Surface Area (m²)"
+    },
+    "paintingSection": "Painting",
+    "aggregateTotalSurfaceArea": "Total surface area",
+    "aggregatePaintNeeded": "Paint needed",
+    "aggregatePaintingCost": "Painting cost",
+    "paintPricePerKg": "Paint price / kg",
+    "paintCoverage": "Coverage (m²/kg)",
+    "paintCoats": "Coats"
   },
   "saveToProject": {
     "title": "Save to project",

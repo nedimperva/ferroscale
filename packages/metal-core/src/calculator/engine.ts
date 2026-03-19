@@ -129,6 +129,99 @@ export function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expr
   return { areaMm2: 0, expression: "Unsupported profile formula" };
 }
 
+export function resolvePerimeterMm(input: CalculationInput): { perimeterMm: number | null; expression: string } {
+  const profile = getProfileById(input.profileId);
+  if (!profile) {
+    return { perimeterMm: null, expression: "Invalid profile" };
+  }
+
+  if (profile.mode === "standard") {
+    const size = profile.sizes.find((item) => item.id === input.selectedSizeId);
+    if (!size || size.perimeterMm == null) {
+      return { perimeterMm: null, expression: "Perimeter data not available for this EN size" };
+    }
+    return {
+      perimeterMm: size.perimeterMm,
+      expression: `P from EN size table (${size.label})`,
+    };
+  }
+
+  if (profile.id === "round_bar") {
+    const diameter = getManualDimensionMm(input, "diameter");
+    return {
+      perimeterMm: Math.PI * diameter,
+      expression: `P = π × ${diameter.toFixed(3)}`,
+    };
+  }
+
+  if (profile.id === "square_bar") {
+    const side = getManualDimensionMm(input, "side");
+    return {
+      perimeterMm: 4 * side,
+      expression: `P = 4 × ${side.toFixed(3)}`,
+    };
+  }
+
+  if (profile.id === "flat_bar") {
+    const width = getManualDimensionMm(input, "width");
+    const thickness = getManualDimensionMm(input, "thickness");
+    return {
+      perimeterMm: 2 * (width + thickness),
+      expression: `P = 2 × (${width.toFixed(3)} + ${thickness.toFixed(3)})`,
+    };
+  }
+
+  if (
+    profile.id === "sheet" ||
+    profile.id === "plate" ||
+    profile.id === "chequered_plate" ||
+    profile.id === "expanded_metal" ||
+    profile.id === "corrugated_sheet"
+  ) {
+    const width = getManualDimensionMm(input, "width");
+    return {
+      perimeterMm: 2 * width,
+      expression: `P = 2 × ${width.toFixed(3)} (two faces)`,
+    };
+  }
+
+  if (profile.id === "pipe") {
+    const outerDiameter = getManualDimensionMm(input, "outerDiameter");
+    return {
+      perimeterMm: Math.PI * outerDiameter,
+      expression: `P = π × ${outerDiameter.toFixed(3)}`,
+    };
+  }
+
+  if (profile.id === "rectangular_tube") {
+    const width = getManualDimensionMm(input, "width");
+    const height = getManualDimensionMm(input, "height");
+    return {
+      perimeterMm: 2 * (width + height),
+      expression: `P = 2 × (${width.toFixed(3)} + ${height.toFixed(3)})`,
+    };
+  }
+
+  if (profile.id === "square_hollow") {
+    const side = getManualDimensionMm(input, "side");
+    return {
+      perimeterMm: 4 * side,
+      expression: `P = 4 × ${side.toFixed(3)}`,
+    };
+  }
+
+  if (profile.id === "angle") {
+    const legA = getManualDimensionMm(input, "legA");
+    const legB = getManualDimensionMm(input, "legB");
+    return {
+      perimeterMm: 2 * (legA + legB),
+      expression: `P = 2 × (${legA.toFixed(3)} + ${legB.toFixed(3)})`,
+    };
+  }
+
+  return { perimeterMm: null, expression: "Unsupported profile for perimeter" };
+}
+
 function calculateUnitPrice(
   basis: PriceBasis,
   priceUnit: CalculationInput["priceUnit"],
@@ -216,6 +309,14 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
   const vatAmount = input.includeVat ? subtotalWithWasteAmount * (input.vatPercent / 100) : 0;
   const grandTotalAmount = subtotalWithWasteAmount + vatAmount;
 
+  const { perimeterMm, expression: perimeterExpression } = resolvePerimeterMm(input);
+  let unitSurfaceAreaM2: number | null = null;
+  let surfaceAreaM2: number | null = null;
+  if (perimeterMm != null) {
+    unitSurfaceAreaM2 = (perimeterMm / 1000) * (lengthMm / 1000);
+    surfaceAreaM2 = unitSurfaceAreaM2 * input.quantity;
+  }
+
   const rows: BreakdownRow[] = [
     {
       label: "Cross-section area",
@@ -271,6 +372,16 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
     });
   }
 
+  if (perimeterMm != null && surfaceAreaM2 != null) {
+    rows.push({
+      label: "Surface area",
+      labelKey: "resultRows.surfaceArea",
+      expression: perimeterExpression + ` → ${(perimeterMm / 1000).toFixed(6)} m × ${(lengthMm / 1000).toFixed(6)} m × ${input.quantity}`,
+      value: surfaceAreaM2,
+      unit: "m2",
+    });
+  }
+
   const sizeReference =
     profile.mode === "standard"
       ? profile.sizes.find((item) => item.id === input.selectedSizeId)?.referenceLabel
@@ -310,6 +421,8 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
       formulaLabel: profile.formulaLabel,
       datasetVersion: DATASET_VERSION,
       referenceLabels: references,
+      surfaceAreaM2: surfaceAreaM2 != null ? roundTo(surfaceAreaM2, input.rounding.dimensionDecimals) : null,
+      unitSurfaceAreaM2: unitSurfaceAreaM2 != null ? roundTo(unitSurfaceAreaM2, input.rounding.dimensionDecimals) : null,
       breakdownRows: rows.map((row) => ({
         ...row,
         value: roundTo(
