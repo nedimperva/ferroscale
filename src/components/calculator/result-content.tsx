@@ -7,7 +7,7 @@ import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
-import { ProfileCategoryDiagram } from "@/components/profiles/profile-category-diagram";
+import { ProfileGeometryDiagram } from "@/components/profiles/profile-geometry-diagram";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
@@ -164,14 +164,12 @@ export const ResultContent = memo(function ResultContent({
           aria-label={t("geometrySummary")}
         >
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
-            {normalizedProfile ? (
-              <div
-                className="shrink-0 rounded-lg border border-accent-border/50 bg-surface/80 p-2 text-muted"
-                aria-hidden
-              >
-                <ProfileCategoryDiagram category={normalizedProfile.iconKey} className="h-12 w-12 sm:h-14 sm:w-14" />
-              </div>
-            ) : null}
+            <div
+              className="shrink-0 rounded-lg border border-accent-border/50 bg-surface/80 p-2 text-muted"
+              aria-hidden
+            >
+              <ProfileGeometryDiagram profileId={result.profileId} className="h-12 w-12 sm:h-14 sm:w-14" />
+            </div>
             <div className="min-w-0 flex-1 text-center sm:text-left">
               <p className="text-[11px] leading-snug text-muted tabular-nums">
                 <span className="text-foreground-secondary">
