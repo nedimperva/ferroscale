@@ -1,4 +1,5 @@
 import type { StandardProfileDefinition } from "../types";
+import { mapSizes } from "../standard-section-mm";
 
 export const TEE_PROFILES: StandardProfileDefinition[] = [
   {
@@ -8,7 +9,7 @@ export const TEE_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10055",
-    sizes: [
+    sizes: mapSizes([
       { id: "t30x4", label: "T 30×30×4", areaMm2: 228, perimeterMm: 120, referenceLabel: "EN 10055" },
       { id: "t35x4.5", label: "T 35×35×4.5", areaMm2: 298, perimeterMm: 140, referenceLabel: "EN 10055" },
       { id: "t40x5", label: "T 40×40×5", areaMm2: 375, perimeterMm: 160, referenceLabel: "EN 10055" },
@@ -23,6 +24,6 @@ export const TEE_PROFILES: StandardProfileDefinition[] = [
       { id: "t120x12", label: "T 120×120×12", areaMm2: 2713, perimeterMm: 480, referenceLabel: "EN 10055" },
       { id: "t130x13", label: "T 130×130×13", areaMm2: 3178, perimeterMm: 520, referenceLabel: "EN 10055" },
       { id: "t140x14", label: "T 140×140×14", areaMm2: 3685, perimeterMm: 560, referenceLabel: "EN 10055" },
-    ],
+    ]),
   },
 ];

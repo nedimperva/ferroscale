@@ -1,4 +1,5 @@
 import type { StandardProfileDefinition } from "../types";
+import { mapSizes } from "../standard-section-mm";
 
 export const BEAM_PROFILES: StandardProfileDefinition[] = [
   /* ------------------------------------------------------------------ */
@@ -11,7 +12,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
-    sizes: [
+    sizes: mapSizes([
       { id: "ipe80", label: "IPE 80", areaMm2: 764, perimeterMm: 328, referenceLabel: "EN 10365" },
       { id: "ipe100", label: "IPE 100", areaMm2: 1032, perimeterMm: 400, referenceLabel: "EN 10365" },
       { id: "ipe120", label: "IPE 120", areaMm2: 1321, perimeterMm: 475, referenceLabel: "EN 10365" },
@@ -30,7 +31,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
       { id: "ipe500", label: "IPE 500", areaMm2: 11552, perimeterMm: 1744, referenceLabel: "EN 10365" },
       { id: "ipe550", label: "IPE 550", areaMm2: 13442, perimeterMm: 1877, referenceLabel: "EN 10365" },
       { id: "ipe600", label: "IPE 600", areaMm2: 15598, perimeterMm: 2015, referenceLabel: "EN 10365" },
-    ],
+    ]),
   },
 
   /* ------------------------------------------------------------------ */
@@ -43,7 +44,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10024",
-    sizes: [
+    sizes: mapSizes([
       { id: "ipn80", label: "IPN 80", areaMm2: 786, perimeterMm: 304, referenceLabel: "EN 10024" },
       { id: "ipn100", label: "IPN 100", areaMm2: 1058, perimeterMm: 370, referenceLabel: "EN 10024" },
       { id: "ipn120", label: "IPN 120", areaMm2: 1422, perimeterMm: 439, referenceLabel: "EN 10024" },
@@ -61,7 +62,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
       { id: "ipn360", label: "IPN 360", areaMm2: 9704, perimeterMm: 1262, referenceLabel: "EN 10024" },
       { id: "ipn380", label: "IPN 380", areaMm2: 10738, perimeterMm: 1332, referenceLabel: "EN 10024" },
       { id: "ipn400", label: "IPN 400", areaMm2: 11826, perimeterMm: 1402, referenceLabel: "EN 10024" },
-    ],
+    ]),
   },
 
   /* ------------------------------------------------------------------ */
@@ -74,7 +75,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
-    sizes: [
+    sizes: mapSizes([
       { id: "hea100", label: "HEA 100", areaMm2: 2124, perimeterMm: 561, referenceLabel: "EN 10365" },
       { id: "hea120", label: "HEA 120", areaMm2: 2534, perimeterMm: 677, referenceLabel: "EN 10365" },
       { id: "hea140", label: "HEA 140", areaMm2: 3142, perimeterMm: 794, referenceLabel: "EN 10365" },
@@ -99,7 +100,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
       { id: "hea800", label: "HEA 800", areaMm2: 28558, perimeterMm: 2704, referenceLabel: "EN 10365" },
       { id: "hea900", label: "HEA 900", areaMm2: 32098, perimeterMm: 2904, referenceLabel: "EN 10365" },
       { id: "hea1000", label: "HEA 1000", areaMm2: 34698, perimeterMm: 3101, referenceLabel: "EN 10365" },
-    ],
+    ]),
   },
 
   /* ------------------------------------------------------------------ */
@@ -112,7 +113,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
-    sizes: [
+    sizes: mapSizes([
       { id: "heb100", label: "HEB 100", areaMm2: 2604, perimeterMm: 567, referenceLabel: "EN 10365" },
       { id: "heb120", label: "HEB 120", areaMm2: 3401, perimeterMm: 686, referenceLabel: "EN 10365" },
       { id: "heb140", label: "HEB 140", areaMm2: 4296, perimeterMm: 805, referenceLabel: "EN 10365" },
@@ -137,7 +138,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
       { id: "heb800", label: "HEB 800", areaMm2: 33438, perimeterMm: 2719, referenceLabel: "EN 10365" },
       { id: "heb900", label: "HEB 900", areaMm2: 37098, perimeterMm: 2917, referenceLabel: "EN 10365" },
       { id: "heb1000", label: "HEB 1000", areaMm2: 40000, perimeterMm: 3116, referenceLabel: "EN 10365" },
-    ],
+    ]),
   },
 
   /* ------------------------------------------------------------------ */
@@ -150,7 +151,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
-    sizes: [
+    sizes: mapSizes([
       { id: "hem100", label: "HEM 100", areaMm2: 5320, perimeterMm: 619, referenceLabel: "EN 10365" },
       { id: "hem120", label: "HEM 120", areaMm2: 6621, perimeterMm: 738, referenceLabel: "EN 10365" },
       { id: "hem140", label: "HEM 140", areaMm2: 8135, perimeterMm: 857, referenceLabel: "EN 10365" },
@@ -162,7 +163,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
       { id: "hem260", label: "HEM 260", areaMm2: 22042, perimeterMm: 1575, referenceLabel: "EN 10365" },
       { id: "hem280", label: "HEM 280", areaMm2: 24024, perimeterMm: 1694, referenceLabel: "EN 10365" },
       { id: "hem300", label: "HEM 300", areaMm2: 30310, perimeterMm: 1832, referenceLabel: "EN 10365" },
-    ],
+    ]),
   },
 
 ];

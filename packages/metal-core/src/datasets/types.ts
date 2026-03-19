@@ -77,6 +77,17 @@ export interface DimensionDefinition {
   defaultMm: number;
 }
 
+/**
+ * Nominal rolled-section dimensions (mm) for EN catalog sizes — h×b, web tw, flange tf.
+ * Used for drawings / spec tables; area in the dataset remains authoritative for calculation.
+ */
+export interface SectionDimensionsMm {
+  h: number;
+  b: number;
+  tw: number;
+  tf: number;
+}
+
 export interface StandardSizeOption {
   id: string;
   label: string;
@@ -84,6 +95,8 @@ export interface StandardSizeOption {
   /** Outer painting perimeter in mm (for surface area calculation). */
   perimeterMm?: number;
   referenceLabel: string;
+  /** Populated for structural standard sizes (beams, channels, tees). */
+  sectionMm?: SectionDimensionsMm;
 }
 
 export interface ManualProfileDefinition {

@@ -1,4 +1,5 @@
 import type { StandardProfileDefinition } from "../types";
+import { mapSizes } from "../standard-section-mm";
 
 export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
   /* ------------------------------------------------------------------ */
@@ -11,7 +12,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10365",
-    sizes: [
+    sizes: mapSizes([
       { id: "upn50", label: "UPN 50", areaMm2: 714, perimeterMm: 224, referenceLabel: "EN 10365" },
       { id: "upn65", label: "UPN 65", areaMm2: 903, perimeterMm: 267, referenceLabel: "EN 10365" },
       { id: "upn80", label: "UPN 80", areaMm2: 1100, perimeterMm: 307, referenceLabel: "EN 10365" },
@@ -28,7 +29,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
       { id: "upn300", label: "UPN 300", areaMm2: 5878, perimeterMm: 939, referenceLabel: "EN 10365" },
       { id: "upn320", label: "UPN 320", areaMm2: 6475, perimeterMm: 967, referenceLabel: "EN 10365" },
       { id: "upn400", label: "UPN 400", areaMm2: 9179, perimeterMm: 1166, referenceLabel: "EN 10365" },
-    ],
+    ]),
   },
 
   /* ------------------------------------------------------------------ */
@@ -41,7 +42,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
     mode: "standard",
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10279",
-    sizes: [
+    sizes: mapSizes([
       { id: "upe80", label: "UPE 80", areaMm2: 1010, perimeterMm: 331, referenceLabel: "EN 10279" },
       { id: "upe100", label: "UPE 100", areaMm2: 1279, perimeterMm: 390, referenceLabel: "EN 10279" },
       { id: "upe120", label: "UPE 120", areaMm2: 1600, perimeterMm: 449, referenceLabel: "EN 10279" },
@@ -56,7 +57,7 @@ export const CHANNEL_ANGLE_PROFILES: StandardProfileDefinition[] = [
       { id: "upe330", label: "UPE 330", areaMm2: 6234, perimeterMm: 1027, referenceLabel: "EN 10279" },
       { id: "upe360", label: "UPE 360", areaMm2: 7218, perimeterMm: 1105, referenceLabel: "EN 10279" },
       { id: "upe400", label: "UPE 400", areaMm2: 8440, perimeterMm: 1197, referenceLabel: "EN 10279" },
-    ],
+    ]),
   },
 
 ];
