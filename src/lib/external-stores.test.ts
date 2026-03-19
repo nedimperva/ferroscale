@@ -4,6 +4,7 @@ import {
   createNumberStore,
   createStringStore,
   createSidebarStore,
+  normalizeResultPaneCap,
 } from "./external-stores";
 
 const mockStorage = new Map<string, string>();
@@ -122,6 +123,14 @@ describe("createNumberStore", () => {
   it("getServerSnapshot returns default", () => {
     const store = createNumberStore("server-num", 320);
     expect(store.getServerSnapshot()).toBe(320);
+  });
+});
+
+describe("normalizeResultPaneCap", () => {
+  it("returns nearest allowed cap for invalid stored values", () => {
+    expect(normalizeResultPaneCap(380)).toBe(380);
+    expect(normalizeResultPaneCap(999)).toBe(480);
+    expect(normalizeResultPaneCap(NaN)).toBe(480);
   });
 });
 

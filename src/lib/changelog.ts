@@ -37,6 +37,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
     changed: [
       "Desktop calculator uses a resizable split between the form and the result panel — drag the gutter to change width (persisted); double-click the gutter to reset",
+      "Optional third desktop column for Saved and References with a tab bar, persisted visibility and tab, and its own resizable gutter",
+      "Column splitters support keyboard: Arrow Left/Right nudge width; Home/End jump to min/max (respecting the result max-width cap from settings)",
+      "Workspace (desktop): toggle third panel, choose max result column width (320–480px), and reset stored column widths without using the gutter",
       "Calculator result receipt now shows surface area between weight and cost sections when available",
       "Result header shows a compact cross-section area, material density, and area formula above the action row",
       "Clipboard copy format includes surface area line when present",
@@ -45,6 +48,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
     changed_bs: [
       "Desktop kalkulator koristi podesivu podjelu između obrasca i panela rezultata — prevucite razdjelnik za širinu (pamti se); dupli klik na razdjelnik vraća zadano",
+      "Opciona treća desktop kolona za Sačuvano i Reference sa tabovima, pamćenjem vidljivosti i taba, i vlastitim podesivim razdjelnikom",
+      "Razdjelnici kolona podržavaju tastaturu: strelice lijevo/desno za korak širine; Home/End na min/maks (uz limit širine rezultata iz postavki)",
+      "Workspace (desktop): uključivanje trećeg panela, izbor maks. širine kolone rezultata (320–480px) i reset pohranjenih širina bez razdjelnika",
       "Račun rezultata kalkulatora sada prikazuje površinu između sekcija mase i cijene kada je dostupna",
       "Zaglavlje rezultata prikazuje kompaktno površinu presjeka, gustoću materijala i formulu površine iznad reda akcija",
       "Format kopiranja u međuspremnik uključuje red sa površinom kada je prisutan",

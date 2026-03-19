@@ -22,7 +22,13 @@ import { getProfileById } from "@/lib/datasets/profiles";
 import { toast } from "@/lib/toast";
 import { getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { triggerHaptic } from "@/lib/haptics";
-import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
+import {
+  createBoolStore,
+  createStringStore,
+  createSidebarStore,
+  desktopThirdTabStore,
+  desktopThirdVisibleStore,
+} from "@/lib/external-stores";
 import { IssueList } from "@/components/calculator/issue-list";
 import { ProfileSection } from "@/components/calculator/profile-section";
 import { ResultPanel } from "@/components/calculator/result-panel";
@@ -36,6 +42,7 @@ import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { DesktopCalculatorSplit } from "@/components/calculator/desktop-calculator-split";
+import { DesktopThirdColumn } from "@/components/calculator/desktop-third-column";
 import { Sidebar } from "@/components/calculator/sidebar";
 import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
@@ -442,6 +449,16 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     defaultUnitStore.getSnapshot,
     defaultUnitStore.getServerSnapshot,
   );
+  const desktopThirdVisible = useSyncExternalStore(
+    desktopThirdVisibleStore.subscribe,
+    desktopThirdVisibleStore.getSnapshot,
+    desktopThirdVisibleStore.getServerSnapshot,
+  );
+  const desktopThirdTab = useSyncExternalStore(
+    desktopThirdTabStore.subscribe,
+    desktopThirdTabStore.getSnapshot,
+    desktopThirdTabStore.getServerSnapshot,
+  );
 
   const handleSavePreset = useCallback(() => {
     const profile = getProfileById(input.profileId);
@@ -669,6 +686,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           normalizedProfile={normalizedCurrentProfile}
           weightAsMain={weightAsMain}
         />
+      }
+      thirdPane={
+        desktopThirdVisible ? (
+          <DesktopThirdColumn
+            tab={desktopThirdTab}
+            saved={saved}
+            onLoad={handleLoad}
+            onRemove={removeSaved}
+            onUpdate={updateSaved}
+            referenceLabels={result?.referenceLabels ?? []}
+          />
+        ) : null
       }
     />
   );

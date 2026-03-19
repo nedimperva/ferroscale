@@ -1,6 +1,16 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import type { LengthUnit } from "@/lib/calculator/types";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import {
+  RESULT_PANE_CAP_CHOICES,
+  desktopResultPaneMaxCapStore,
+  desktopResultPaneWidthStore,
+  desktopThirdPaneWidthStore,
+  desktopThirdVisibleStore,
+  normalizeResultPaneCap,
+} from "@/lib/external-stores";
+import { DEFAULT_RESULT_PANE_PX, DEFAULT_THIRD_PANE_PX } from "@/lib/desktop-pane-clamp";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface WorkspaceSectionProps {
@@ -41,6 +51,25 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   unitOptions,
 }: WorkspaceSectionProps) {
   const t = useTranslations("workspace");
+  const isMobile = useIsMobile();
+
+  const thirdVisibleDesktop = useSyncExternalStore(
+    desktopThirdVisibleStore.subscribe,
+    desktopThirdVisibleStore.getSnapshot,
+    desktopThirdVisibleStore.getServerSnapshot,
+  );
+  const maxCapRaw = useSyncExternalStore(
+    desktopResultPaneMaxCapStore.subscribe,
+    desktopResultPaneMaxCapStore.getSnapshot,
+    desktopResultPaneMaxCapStore.getServerSnapshot,
+  );
+  const normalizedCap = normalizeResultPaneCap(maxCapRaw);
+
+  const resetDesktopWidths = useCallback(() => {
+    triggerHaptic("light");
+    desktopResultPaneWidthStore.set(DEFAULT_RESULT_PANE_PX);
+    desktopThirdPaneWidthStore.set(DEFAULT_THIRD_PANE_PX);
+  }, []);
 
   return (
     <section className="grid gap-2">
@@ -113,6 +142,55 @@ export const WorkspaceSection = memo(function WorkspaceSection({
           onToggle={onToggleWeightAsMain}
         />
       </div>
+
+      {!isMobile && (
+        <div className="mt-1 border-t border-border-faint pt-2 grid gap-2">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            {t("desktopLayoutTitle")}
+          </h4>
+          <p className="text-[11px] text-muted-faint">{t("desktopLayoutHint")}</p>
+
+          <ToggleRow
+            label={t("desktopThirdColumn")}
+            checked={thirdVisibleDesktop}
+            onToggle={() => {
+              triggerHaptic("light");
+              desktopThirdVisibleStore.toggle();
+            }}
+          />
+
+          <div className="grid gap-1">
+            <label htmlFor="result-pane-max-cap" className="text-xs font-medium text-foreground-secondary">
+              {t("resultPaneMaxCap")}
+            </label>
+            <select
+              id="result-pane-max-cap"
+              value={normalizedCap}
+              onChange={(e) => {
+                triggerHaptic("light");
+                desktopResultPaneMaxCapStore.set(Number(e.target.value));
+              }}
+              className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+            >
+              {RESULT_PANE_CAP_CHOICES.map((px) => (
+                <option key={px} value={px}>
+                  {t("resultPaneCapOption", { px })}
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] text-muted-faint">{t("resultPaneMaxCapHint")}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={resetDesktopWidths}
+            className="rounded-lg border border-border-strong bg-surface px-3 py-2 text-left text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
+            title={t("resetDesktopWidthsHint")}
+          >
+            {t("resetDesktopWidths")}
+          </button>
+        </div>
+      )}
     </section>
   );
 });

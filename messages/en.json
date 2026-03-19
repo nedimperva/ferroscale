@@ -244,7 +244,16 @@
     "inlinePrice": "Show price in form",
     "weightAsMain": "Weight as main display",
     "defaultUnit": "Default unit",
-    "defaultUnitHint": "Used for all dimension and length inputs"
+    "defaultUnitHint": "Used for all dimension and length inputs",
+    "desktopLayoutTitle": "Desktop layout",
+    "desktopLayoutHint": "Applies to wide screens with the sidebar layout.",
+    "desktopThirdColumn": "Show right panel (Saved & references)",
+    "resultPaneMaxCap": "Max result column width",
+    "resultPaneMaxCapHint": "Upper limit when dragging the separator (Home/End still respect this cap).",
+    "resultPaneCapOption": "Up to {px}px",
+    "resetDesktopWidths": "Reset column widths",
+    "resetDesktopWidthsHint": "Restore default widths for the result and right panels.",
+    "thirdColumnReferencesEmpty": "Run a calculation to see standards and dataset references here."
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",
@@ -320,8 +329,12 @@
     "surfaceArea": "Surface area",
     "geometrySummary": "Cross-section area, density, and area formula for this calculation",
     "resizeSeparator": "Resize calculator and result columns",
+    "resizeSeparatorResult": "Resize between calculator and result",
+    "resizeSeparatorThird": "Resize between result and right panel",
     "resizeSeparatorValue": "{px} pixels wide",
-    "resizeSeparatorHint": "Drag to resize. Double-click to reset to default width."
+    "resizeSeparatorHint": "Drag to resize. Double-click to reset. Arrow keys nudge; Home/End min/max.",
+    "resizeThirdSeparatorValue": "Right panel {px}px wide",
+    "resizeThirdSeparatorHint": "Drag to resize the Saved / References panel. Double-click to reset. Arrow keys nudge; Home/End min/max."
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",
