@@ -2,12 +2,13 @@
 
 import { memo } from "react";
 import { useTranslations } from "next-intl";
-import type { CalculationResult } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ResultContent } from "./result-content";
 
 interface ResultPanelProps {
   result: CalculationResult | null;
+  input: CalculationInput;
   isPending: boolean;
   isSaved: boolean;
   onOpenSaveDialog: () => void;
@@ -28,6 +29,7 @@ interface ResultPanelProps {
 
 export const ResultPanel = memo(function ResultPanel({
   result,
+  input,
   isPending,
   isSaved,
   onOpenSaveDialog,
@@ -71,6 +73,7 @@ export const ResultPanel = memo(function ResultPanel({
     >
       <ResultContent
         result={result}
+        input={input}
         includeVat={includeVat}
         wastePercent={wastePercent}
         vatPercent={vatPercent}

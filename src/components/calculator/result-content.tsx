@@ -4,10 +4,10 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import type { CalculationResult } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
-import { ProfileGeometryDiagram } from "@/components/profiles/profile-geometry-diagram";
+import { ProfileSectionSvgCard } from "@/components/profiles/profile-section-svg-card";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
@@ -58,6 +58,7 @@ export function formatResultForClipboard(
 
 export interface ResultContentProps {
   result: CalculationResult;
+  input: CalculationInput;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -77,6 +78,7 @@ export interface ResultContentProps {
 
 export const ResultContent = memo(function ResultContent({
   result,
+  input,
   includeVat,
   wastePercent,
   vatPercent,
@@ -163,27 +165,27 @@ export const ResultContent = memo(function ResultContent({
           role="group"
           aria-label={t("geometrySummary")}
         >
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
-            <div
-              className="shrink-0 rounded-md border border-border bg-surface-inset/80 p-2.5 text-muted shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-              aria-hidden
-            >
-              <ProfileGeometryDiagram profileId={result.profileId} className="h-11 w-11 sm:h-[3.25rem] sm:w-[3.25rem]" />
-            </div>
-            <div className="min-w-0 flex-1 text-center sm:text-left">
-              <p className="text-[11px] leading-snug text-muted tabular-nums">
-                <span className="text-foreground-secondary">
-                  {formatMm2(result.areaMm2)} mm²
-                </span>
-                <span className="mx-1.5 text-border-faint" aria-hidden>
-                  ·
-                </span>
-                <span className="text-foreground-secondary">
-                  {formatDensityKgM3(result.densityKgPerM3)} kg/m³
-                </span>
-              </p>
-              <p className="mt-1 text-[11px] leading-snug text-muted">{result.formulaLabel}</p>
-            </div>
+          <div className="rounded-md border border-border bg-surface-inset/50 p-1.5 text-muted">
+            <ProfileSectionSvgCard
+              profileId={result.profileId}
+              input={input}
+              result={result}
+              subtitle={profileLabel}
+            />
+          </div>
+          <div className="mt-2.5 text-center sm:text-left">
+            <p className="text-[11px] leading-snug text-muted tabular-nums">
+              <span className="text-foreground-secondary">
+                {formatMm2(result.areaMm2)} mm²
+              </span>
+              <span className="mx-1.5 text-border-faint" aria-hidden>
+                ·
+              </span>
+              <span className="text-foreground-secondary">
+                {formatDensityKgM3(result.densityKgPerM3)} kg/m³
+              </span>
+            </p>
+            <p className="mt-1 text-[11px] leading-snug text-muted">{result.formulaLabel}</p>
           </div>
         </div>
       </div>

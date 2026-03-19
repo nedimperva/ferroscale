@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Drawer } from "vaul";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import type { CalculationResult } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
@@ -16,6 +16,7 @@ import { triggerHaptic } from "@/lib/haptics";
 
 interface ResultBarProps {
   result: CalculationResult | null;
+  input: CalculationInput;
   isPending: boolean;
   onExpand: () => void;
   /* Actions */
@@ -42,6 +43,7 @@ interface ResultBarProps {
 export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
   const {
     result,
+    input,
     isPending,
     onExpand,
     isSaved,
@@ -211,6 +213,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
 
 interface ResultOverlayProps {
   result: CalculationResult;
+  input: CalculationInput;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -231,6 +234,7 @@ interface ResultOverlayProps {
 
 export const ResultOverlay = memo(function ResultOverlay({
   result,
+  input,
   includeVat,
   wastePercent,
   vatPercent,
@@ -283,6 +287,7 @@ export const ResultOverlay = memo(function ResultOverlay({
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <ResultContent
               result={result}
+              input={input}
               includeVat={includeVat}
               wastePercent={wastePercent}
               vatPercent={vatPercent}

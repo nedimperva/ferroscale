@@ -663,6 +663,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       result={
         <ResultPanel
           result={result}
+          input={input}
           isPending={isPending}
           isSaved={isCurrentSaved}
           onOpenSaveDialog={handleOpenSaveDialog}
@@ -939,6 +940,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
         <ResultBar
           result={result}
+          input={input}
           isPending={isPending}
           isSaved={isCurrentSaved}
           onOpenSaveDialog={handleOpenSaveDialog}
@@ -966,6 +968,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         {showOverlay && result && (
           <ResultOverlay
             result={result}
+            input={input}
             includeVat={input.includeVat}
             wastePercent={input.wastePercent}
             vatPercent={input.vatPercent}

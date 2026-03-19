@@ -25,7 +25,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Desktop:** Optional third column (Saved bookmarks only), persisted; second resizable gutter; keyboard control on both gutters (arrows nudge, Home/End min/max)
 - **Workspace (desktop):** Toggle Saved side panel, max result column width preset (320–480px), reset column widths
 - **Results:** References block moved under grand total, above full calculation steps
-- **Results:** Per-profile cross-section schematic in header (technical drawing style: section tint, crisp I/H/T geometry, dashed symmetry axis on beams); “This calculation” context (length, qty, EN notes); clipboard + CSV include structured spec lines when present
+- **Results:** SVG cross-section “drawing sheet” in header with frame, scaled section, dimension lines where applicable, and a spec table from the current calculation (manual dims, designation, A, L)
 - Calculator result receipt now shows surface area between weight and cost sections when available
 - Result header shows a compact cross-section area, material density, and area formula above the action row
 - Clipboard copy format includes surface area line when present
