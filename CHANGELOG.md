@@ -9,6 +9,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.8.0] – 2026-03-19
+
+### Added
+- **Paintable surface area** calculated for every profile type — outer perimeter × length × quantity displayed in calculator results, project aggregates, CSV and PDF exports
+- **Painting cost estimation** at project level — configurable paint price per kg and coverage rate (m²/kg, default 8) with automatic paint-needed and total-cost rollup
+- **Multiple paint coats** — adjustable coat count (1–10) per project; paint needed scales accordingly
+- **Perimeter data for all 138 EN standard profile sizes** — IPE, IPN, HEA, HEB, HEM, UPN, UPE, and T-sections now include perimeterMm for accurate surface area calculation
+- Painting section in project drawer with editable price/kg, coverage, and coats inputs
+- Surface area column in project CSV and PDF exports
+- Painting summary stats (total surface area, paint needed, painting cost) in PDF export header
+
+### Changed
+- Calculator result receipt now shows surface area between weight and cost sections when available
+- Clipboard copy format includes surface area line when present
+- Project aggregate cards include painting data when surface area is available
+
+---
+
 ## [1.7.0] � 2026-03-17
 
 ### Added
@@ -152,7 +170,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/nedimperva/ferroscale/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/nedimperva/ferroscale/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/nedimperva/ferroscale/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/nedimperva/ferroscale/compare/v1.4.0...v1.5.0
