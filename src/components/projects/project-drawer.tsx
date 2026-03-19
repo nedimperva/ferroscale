@@ -26,6 +26,7 @@ function buildProjectExportLabels(
         t("csvHeaders.material"),
         t("csvHeaders.unitWeight"),
         t("csvHeaders.totalWeight"),
+        t("csvHeaders.surfaceArea"),
         t("csvHeaders.subtotal"),
         t("csvHeaders.waste"),
         t("csvHeaders.vat"),
@@ -51,9 +52,13 @@ function buildProjectExportLabels(
       totalWeight: t("aggregateTotalWeight"),
       totalCost: t("aggregateTotalCost"),
       costPerKg: t("aggregateCostPerKg"),
+      totalSurfaceArea: t("aggregateTotalSurfaceArea"),
+      paintNeeded: t("aggregatePaintNeeded"),
+      paintingCost: t("aggregatePaintingCost"),
       profileColumn: t("csvHeaders.profile"),
       materialColumn: t("csvHeaders.material"),
       weightColumn: t("csvHeaders.totalWeight"),
+      surfaceAreaColumn: t("csvHeaders.surfaceArea"),
       costColumn: t("csvHeaders.grandTotal"),
       noteColumn: t("pdfNoteColumn"),
       total: t("csvHeaders.total"),
@@ -97,6 +102,7 @@ interface ProjectDrawerProps {
   onRemoveCalculation: (projectId: string, calcId: string) => void;
   onUpdateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   onUpdateProjectDescription: (id: string, description: string) => void;
+  onUpdateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined) => void;
   onLoadCalculation?: (input: CalculationInput) => void;
   /** Current calculator result to allow quick-add from inside the drawer. */
   currentResult: CalculationResult | null;
@@ -119,6 +125,7 @@ export function ProjectsWorkspaceContent({
   onRemoveCalculation,
   onUpdateCalculationNote,
   onUpdateProjectDescription,
+  onUpdateProjectPaintingSettings,
   onLoadCalculation,
   currentResult,
   currentInput,
@@ -198,6 +205,7 @@ export function ProjectsWorkspaceContent({
           onRemoveCalculation={onRemoveCalculation}
           onUpdateCalculationNote={onUpdateCalculationNote}
           onUpdateProjectDescription={onUpdateProjectDescription}
+          onUpdateProjectPaintingSettings={onUpdateProjectPaintingSettings}
           onLoadCalculation={onLoadCalculation}
           onStartRename={() => startRename(activeProject)}
           onDeleteProject={() => {
@@ -588,6 +596,7 @@ function ProjectDetail({
   onRemoveCalculation,
   onUpdateCalculationNote,
   onUpdateProjectDescription,
+  onUpdateProjectPaintingSettings,
   onLoadCalculation,
   onStartRename,
   onDeleteProject,
@@ -605,6 +614,7 @@ function ProjectDetail({
   onRemoveCalculation: (projectId: string, calcId: string) => void;
   onUpdateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   onUpdateProjectDescription: (id: string, description: string) => void;
+  onUpdateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined) => void;
   onLoadCalculation?: (input: CalculationInput) => void;
   onStartRename: () => void;
   onDeleteProject: () => void;
@@ -824,6 +834,66 @@ function ProjectDetail({
         </div>
       )}
 
+      {/* Painting section */}
+      {agg.count > 0 && agg.totalSurfaceAreaM2 > 0 && (
+        <div className="rounded-lg border border-border bg-surface px-3 py-3">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted">{t("paintingSection")}</p>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <div>
+              <p className="text-[10px] font-medium text-muted">{t("aggregateTotalSurfaceArea")}</p>
+              <p className="text-base font-bold text-foreground">
+                {agg.totalSurfaceAreaM2} <span className="text-xs font-medium text-muted-faint">m²</span>
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-medium text-muted">{t("aggregatePaintNeeded")}</p>
+              <p className="text-base font-bold text-foreground">
+                {agg.paintKgNeeded} <span className="text-xs font-medium text-muted-faint">kg</span>
+              </p>
+            </div>
+            {agg.totalPaintingCost > 0 && (
+              <div className="col-span-2">
+                <p className="text-[10px] font-medium text-muted">{t("aggregatePaintingCost")}</p>
+                <p className="text-base font-bold text-foreground">
+                  {agg.totalPaintingCost} <span className="text-xs font-medium text-muted-faint">{CURRENCY_SYMBOLS[agg.currency]}</span>
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[10px] font-medium text-muted mb-0.5">{t("paintPricePerKg")}</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={project.paintingPricePerKg ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value ? parseFloat(e.target.value) : undefined;
+                  onUpdateProjectPaintingSettings(project.id, val, project.paintingCoverageM2PerKg);
+                }}
+                placeholder="0.00"
+                className="h-8 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm tabular-nums transition-colors focus:border-purple-strong"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium text-muted mb-0.5">{t("paintCoverage")}</label>
+              <input
+                type="number"
+                min={0.1}
+                step={0.5}
+                value={project.paintingCoverageM2PerKg ?? 8}
+                onChange={(e) => {
+                  const val = e.target.value ? parseFloat(e.target.value) : undefined;
+                  onUpdateProjectPaintingSettings(project.id, project.paintingPricePerKg, val);
+                }}
+                className="h-8 w-full rounded-lg border border-border-strong bg-surface px-2 text-sm tabular-nums transition-colors focus:border-purple-strong"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Breakdown by profile & material */}
       {agg.count > 1 && (
         <div className="grid gap-3 rounded-lg border border-border bg-surface px-3 py-3">
@@ -994,6 +1064,9 @@ function ProjectDetail({
                     )}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
                       <span>{calc.result.totalWeightKg} kg</span>
+                      {calc.result.surfaceAreaM2 != null && (
+                        <span>{calc.result.surfaceAreaM2} m²</span>
+                      )}
                       <span>{calc.result.grandTotalAmount} {CURRENCY_SYMBOLS[calc.result.currency]}</span>
                       {costPerKgCalc > 0 && (
                         <span className="text-muted-faint">{costPerKgCalc} {CURRENCY_SYMBOLS[calc.result.currency]}/kg</span>

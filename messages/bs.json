@@ -278,7 +278,7 @@
     "unitWeight": "Masa po komadu",
     "totalWeight": "Ukupna masa",
     "perPiece": "Po komadu",
-    "totalQty": "Ukupno (\u00d7{qty})",
+    "totalQty": "Ukupno (×{qty})",
     "pieces": "{qty, plural, one {# komad} few {# komada} other {# komada}}",
     "grandTotal": "Sveukupno",
     "profile": "Profil:",
@@ -316,7 +316,8 @@
     "projectAriaLabel": "Dodaj u projekat",
     "expandAriaLabel": "Prosiri detalje rezultata",
     "share": "Podijeli",
-    "shareCopied": "Link kopiran u meduspremnik"
+    "shareCopied": "Link kopiran u meduspremnik",
+    "surfaceArea": "Površina"
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",
@@ -325,7 +326,8 @@
     "unitPrice": "Jedinicna cijena",
     "subtotal": "Meduzbir",
     "wasteAdjustment": "Korekcija otpada",
-    "vat": "PDV"
+    "vat": "PDV",
+    "surfaceArea": "Površina"
   },
   "references": {
     "title": "Reference",
@@ -519,8 +521,15 @@
       "vat": "PDV",
       "grandTotal": "Ukupno",
       "currency": "Valuta",
-      "total": "Ukupno"
-    }
+      "total": "Ukupno",
+      "surfaceArea": "Površina (m²)"
+    },
+    "paintingSection": "Farbanje",
+    "aggregateTotalSurfaceArea": "Ukupna površina",
+    "aggregatePaintNeeded": "Potrebna boja",
+    "aggregatePaintingCost": "Cijena farbanja",
+    "paintPricePerKg": "Cijena boje / kg",
+    "paintCoverage": "Pokrivenost (m²/kg)"
   },
   "saveToProject": {
     "title": "Sacuvaj u projekat",

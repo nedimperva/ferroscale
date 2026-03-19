@@ -81,6 +81,8 @@ export interface StandardSizeOption {
   id: string;
   label: string;
   areaMm2: number;
+  /** Outer painting perimeter in mm (for surface area calculation). */
+  perimeterMm?: number;
   referenceLabel: string;
 }
 

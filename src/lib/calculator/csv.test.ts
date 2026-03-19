@@ -27,6 +27,8 @@ function makeMockResult(overrides?: Partial<CalculationResult>): CalculationResu
     formulaLabel: "A = π × d² / 4",
     datasetVersion: "1.0.0",
     referenceLabels: ["EN 10060", "EN 10025-2"],
+    surfaceAreaM2: 0.754,
+    unitSurfaceAreaM2: 0.377,
     breakdownRows: [],
     ...overrides,
   };

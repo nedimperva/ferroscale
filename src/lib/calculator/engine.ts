@@ -1,1 +1,1 @@
-export { calculateMetal, resolveAreaMm2 } from "../../../packages/metal-core/src/calculator/engine";
+export { calculateMetal, resolveAreaMm2, resolvePerimeterMm } from "../../../packages/metal-core/src/calculator/engine";
