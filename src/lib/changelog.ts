@@ -36,6 +36,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Kolona površine u CSV i PDF izvozima projekta",
     ],
     changed: [
+      "Desktop calculator uses a resizable split between the form and the result panel — drag the gutter to change width (persisted); double-click the gutter to reset",
       "Calculator result receipt now shows surface area between weight and cost sections when available",
       "Result header shows a compact cross-section area, material density, and area formula above the action row",
       "Clipboard copy format includes surface area line when present",
@@ -43,6 +44,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Project aggregate cards include painting data when surface area is available",
     ],
     changed_bs: [
+      "Desktop kalkulator koristi podesivu podjelu između obrasca i panela rezultata — prevucite razdjelnik za širinu (pamti se); dupli klik na razdjelnik vraća zadano",
       "Račun rezultata kalkulatora sada prikazuje površinu između sekcija mase i cijene kada je dostupna",
       "Zaglavlje rezultata prikazuje kompaktno površinu presjeka, gustoću materijala i formulu površine iznad reda akcija",
       "Format kopiranja u međuspremnik uključuje red sa površinom kada je prisutan",

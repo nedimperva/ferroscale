@@ -318,7 +318,10 @@
     "share": "Podijeli",
     "shareCopied": "Link kopiran u meduspremnik",
     "surfaceArea": "Površina",
-    "geometrySummary": "Površina presjeka, gustoća i formula površine za ovaj izračun"
+    "geometrySummary": "Površina presjeka, gustoća i formula površine za ovaj izračun",
+    "resizeSeparator": "Promijeni širinu kolona kalkulatora i rezultata",
+    "resizeSeparatorValue": "{px} piksela širine",
+    "resizeSeparatorHint": "Prevucite za promjenu širine. Dupli klik za zadanu širinu."
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",

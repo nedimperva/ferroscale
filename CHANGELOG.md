@@ -21,6 +21,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Painting summary stats (total surface area, paint needed, painting cost) in PDF export header
 
 ### Changed
+- **Desktop:** Resizable split between calculator form and result panel (persisted width; double-click gutter to reset)
 - Calculator result receipt now shows surface area between weight and cost sections when available
 - Result header shows a compact cross-section area, material density, and area formula above the action row
 - Clipboard copy format includes surface area line when present

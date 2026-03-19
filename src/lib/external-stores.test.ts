@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createBoolStore, createStringStore, createSidebarStore } from "./external-stores";
+import {
+  createBoolStore,
+  createNumberStore,
+  createStringStore,
+  createSidebarStore,
+} from "./external-stores";
 
 const mockStorage = new Map<string, string>();
 
@@ -83,6 +88,40 @@ describe("createStringStore", () => {
   it("getServerSnapshot returns default", () => {
     const store = createStringStore("server-str", "default");
     expect(store.getServerSnapshot()).toBe("default");
+  });
+});
+
+describe("createNumberStore", () => {
+  it("returns default value when key does not exist", () => {
+    const store = createNumberStore("test-num", 42);
+    expect(store.getSnapshot()).toBe(42);
+  });
+
+  it("reads persisted value", () => {
+    mockStorage.set("test-num", "128");
+    const store = createNumberStore("test-num", 42);
+    expect(store.getSnapshot()).toBe(128);
+  });
+
+  it("falls back to default for non-numeric storage", () => {
+    mockStorage.set("test-num", "x");
+    const store = createNumberStore("test-num", 7);
+    expect(store.getSnapshot()).toBe(7);
+  });
+
+  it("sets value and notifies subscribers", () => {
+    const store = createNumberStore("set-num", 1);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.set(99);
+    expect(store.getSnapshot()).toBe(99);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("getServerSnapshot returns default", () => {
+    const store = createNumberStore("server-num", 320);
+    expect(store.getServerSnapshot()).toBe(320);
   });
 });
 

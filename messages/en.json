@@ -318,7 +318,10 @@
     "share": "Share",
     "shareCopied": "Link copied to clipboard",
     "surfaceArea": "Surface area",
-    "geometrySummary": "Cross-section area, density, and area formula for this calculation"
+    "geometrySummary": "Cross-section area, density, and area formula for this calculation",
+    "resizeSeparator": "Resize calculator and result columns",
+    "resizeSeparatorValue": "{px} pixels wide",
+    "resizeSeparatorHint": "Drag to resize. Double-click to reset to default width."
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",

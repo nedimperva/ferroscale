@@ -35,6 +35,7 @@ import { CompareDrawer } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
+import { DesktopCalculatorSplit } from "@/components/calculator/desktop-calculator-split";
 import { Sidebar } from "@/components/calculator/sidebar";
 import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
@@ -610,44 +611,45 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px]">
-      <div className="flex w-full flex-1 flex-col self-start rounded-xl border border-border bg-surface shadow-sm">
-        <div className="px-2.5 pb-0 pt-2 md:px-4 md:pb-0 md:pt-4">
-          <IssueList issues={issues} />
-        </div>
-
-        {showSettingsPreview && (
-          <div className="px-2.5 pb-0.5 pt-1.5 md:px-4 md:pb-2 md:pt-3">
-            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
+    <DesktopCalculatorSplit
+      calculator={
+        <>
+          <div className="px-2.5 pb-0 pt-2 md:px-4 md:pb-0 md:pt-4">
+            <IssueList issues={issues} />
           </div>
-        )}
 
-        <div className="px-2.5 py-1.5 md:p-4">
-          <ProfileSection
-            input={input}
-            dispatch={dispatch}
-            selectedProfile={selectedProfile}
-            issues={issues}
-            activeFamily={activeFamily}
-            showInlineMaterial={showInlineMaterial}
-            showInlinePrice={showInlinePrice}
-            defaultUnit={defaultUnit}
-            onSavePreset={handleSavePreset}
-            profilePresets={presetsForProfile(input.profileId)}
-            onRemovePreset={removePreset}
-          />
-        </div>
+          {showSettingsPreview && (
+            <div className="px-2.5 pb-0.5 pt-1.5 md:px-4 md:pb-2 md:pt-3">
+              <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
+            </div>
+          )}
 
-        <div className="pb-4 md:px-4 md:pb-4">
-          <ReversePanel
-            reverse={reverse}
-            isManualProfile={selectedProfile.mode === "manual"}
-            input={input}
-          />
-        </div>
-      </div>
+          <div className="px-2.5 py-1.5 md:p-4">
+            <ProfileSection
+              input={input}
+              dispatch={dispatch}
+              selectedProfile={selectedProfile}
+              issues={issues}
+              activeFamily={activeFamily}
+              showInlineMaterial={showInlineMaterial}
+              showInlinePrice={showInlinePrice}
+              defaultUnit={defaultUnit}
+              onSavePreset={handleSavePreset}
+              profilePresets={presetsForProfile(input.profileId)}
+              onRemovePreset={removePreset}
+            />
+          </div>
 
-      <aside className="hidden gap-4 self-start lg:sticky lg:top-4 lg:grid">
+          <div className="pb-4 md:px-4 md:pb-4">
+            <ReversePanel
+              reverse={reverse}
+              isManualProfile={selectedProfile.mode === "manual"}
+              input={input}
+            />
+          </div>
+        </>
+      }
+      result={
         <ResultPanel
           result={result}
           isPending={isPending}
@@ -667,8 +669,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           normalizedProfile={normalizedCurrentProfile}
           weightAsMain={weightAsMain}
         />
-      </aside>
-    </div>
+      }
+    />
   );
 
   const mobileScreen =
