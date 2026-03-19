@@ -9,6 +9,7 @@ import {
   findManualRow,
   type ProfileDimensionRow,
 } from "@/lib/profiles/profile-dimension-rows";
+import { beamSectionDimGuide, parseStandardSizeGeometry } from "@/lib/profiles/standard-size-geometry";
 import { ProfileGeometryPrimitives } from "./profile-geometry-diagram";
 
 const DRAW_W = 62;
@@ -58,12 +59,14 @@ function DimLineV({
   y2,
   text,
   textX,
+  textAnchor = "start",
 }: {
   x: number;
   y1: number;
   y2: number;
   text: string;
   textX: number;
+  textAnchor?: "start" | "middle" | "end";
 }) {
   const t = 2.2;
   const ym = (y1 + y2) / 2;
@@ -81,7 +84,7 @@ function DimLineV({
       <text
         x={textX}
         y={ym + 1.5}
-        textAnchor="start"
+        textAnchor={textAnchor}
         fontSize={4.2}
         fontFamily="ui-monospace, system-ui, sans-serif"
         stroke="none"
@@ -99,6 +102,10 @@ function GeometryAnnotations({
   profileId: ProfileId;
   rows: ProfileDimensionRow[];
 }) {
+  const t = useTranslations("result");
+  const desRow = rows.find((r): r is Extract<ProfileDimensionRow, { kind: "designation" }> => r.kind === "designation");
+  const stdGeo = desRow ? parseStandardSizeGeometry(profileId, desRow.display) : {};
+
   const dia = findManualRow(rows, "diameter");
   const od = findManualRow(rows, "outerDiameter");
   const side = findManualRow(rows, "side");
@@ -129,9 +136,74 @@ function GeometryAnnotations({
           <DimLineV x={40.5} y1={11.5} y2={36.5} text={height.display} textX={43} />
         </>
       );
+    case "angle": {
+      const legA = findManualRow(rows, "legA");
+      const legB = findManualRow(rows, "legB");
+      if (!legA || !legB) return null;
+      return (
+        <>
+          <DimLineH x1={10} x2={36} y={41.5} text={legA.display} />
+          <DimLineV x={38} y1={10} y2={35} text={legB.display} textX={40.5} />
+        </>
+      );
+    }
     default:
-      return null;
+      break;
   }
+
+  if (profileId.startsWith("beam_") && stdGeo.depthMm != null) {
+    const g = beamSectionDimGuide(profileId);
+    return (
+      <DimLineV
+        x={g.vx}
+        y1={g.y1}
+        y2={g.y2}
+        text={t("sectionDepthDim", { value: stdGeo.depthMm })}
+        textX={g.vx + 2}
+      />
+    );
+  }
+
+  if ((profileId === "channel_upn_en" || profileId === "channel_upe_en") && stdGeo.depthMm != null) {
+    return (
+      <DimLineV
+        x={36}
+        y1={8}
+        y2={40}
+        text={t("sectionDepthDim", { value: stdGeo.depthMm })}
+        textX={38.2}
+      />
+    );
+  }
+
+  if (profileId === "tee_en" && stdGeo.legMm != null) {
+    const legText = t("sectionTeeLegDim", { value: stdGeo.legMm });
+    const tStr =
+      stdGeo.thicknessMm != null
+        ? t("sectionTeeThicknessDim", { value: stdGeo.thicknessMm })
+        : "";
+    return (
+      <>
+        <DimLineH x1={7} x2={41} y={6} text={legText} />
+        <DimLineV x={42.5} y1={14.5} y2={38} text={legText} textX={44.5} />
+        {tStr ? (
+          <text
+            x={24}
+            y={47}
+            textAnchor="middle"
+            fontSize={3.8}
+            fill="currentColor"
+            fillOpacity={0.72}
+            fontFamily="ui-monospace, system-ui, sans-serif"
+          >
+            {tStr}
+          </text>
+        ) : null}
+      </>
+    );
+  }
+
+  return null;
 }
 
 function rowLabel(
