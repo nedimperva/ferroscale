@@ -247,13 +247,12 @@
     "defaultUnitHint": "Koristi se za sve dimenzije i duzine",
     "desktopLayoutTitle": "Desktop raspored",
     "desktopLayoutHint": "Vrijedi za široke ekrane sa sidebar rasporedom.",
-    "desktopThirdColumn": "Prikaži desni panel (Sačuvano i reference)",
+    "desktopThirdColumn": "Prikaži desni panel (Sačuvano)",
     "resultPaneMaxCap": "Maks. širina kolone rezultata",
     "resultPaneMaxCapHint": "Gornja granica pri povlačenju razdjelnika (Home/End i dalje poštuju ovaj limit).",
     "resultPaneCapOption": "Do {px}px",
     "resetDesktopWidths": "Resetuj širine kolona",
-    "resetDesktopWidthsHint": "Vrati zadane širine za kolonu rezultata i desni panel.",
-    "thirdColumnReferencesEmpty": "Pokrenite izračun da ovdje vidite standarde i reference iz skupa podataka."
+    "resetDesktopWidthsHint": "Vrati zadane širine za kolonu rezultata i desni panel."
   },
   "settingsDrawer": {
     "ariaLabel": "Panel postavki",
@@ -334,7 +333,7 @@
     "resizeSeparatorValue": "{px} piksela širine",
     "resizeSeparatorHint": "Prevucite za promjenu. Dupli klik za reset. Strelice za korak; Home/End min/maks.",
     "resizeThirdSeparatorValue": "Desni panel {px}px širine",
-    "resizeThirdSeparatorHint": "Prevucite za širinu panela Sačuvano / Reference. Dupli klik za reset. Strelice; Home/End min/maks."
+    "resizeThirdSeparatorHint": "Prevucite za širinu panela Sačuvano. Dupli klik za reset. Strelice; Home/End min/maks."
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",

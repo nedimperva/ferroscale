@@ -90,44 +90,7 @@ export const desktopResultPaneMaxCapStore = createNumberStore(
   480,
 );
 
-const THIRD_TAB_VALUES = ["saved", "references"] as const;
-export type DesktopThirdTab = (typeof THIRD_TAB_VALUES)[number];
-
-/** Which tab is active in the optional desktop third column. */
-export const desktopThirdTabStore = (function createDesktopThirdTabStore() {
-  const key = "ferroscale-desktop-third-tab";
-  const defaultValue: DesktopThirdTab = "saved";
-  let _listeners: Array<() => void> = [];
-  function subscribe(cb: () => void) {
-    _listeners = [..._listeners, cb];
-    return () => {
-      _listeners = _listeners.filter((l) => l !== cb);
-    };
-  }
-  function getSnapshot(): DesktopThirdTab {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw === "saved" || raw === "references") return raw;
-      return defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  }
-  function getServerSnapshot(): DesktopThirdTab {
-    return defaultValue;
-  }
-  function set(value: DesktopThirdTab) {
-    try {
-      localStorage.setItem(key, value);
-    } catch {
-      /* noop */
-    }
-    for (const l of _listeners) l();
-  }
-  return { subscribe, getSnapshot, getServerSnapshot, set };
-})();
-
-/** Whether the optional third desktop column (Saved / References) is visible. */
+/** Whether the optional third desktop column (Saved list) is visible. */
 export const desktopThirdVisibleStore = createBoolStore(
   "ferroscale-desktop-third-visible",
   false,

@@ -305,6 +305,12 @@ export const ResultContent = memo(function ResultContent({
           <span className="tabular-nums text-accent">{fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}</span>
         </div>
 
+        {/* ── References (standards / dataset) — above full steps so they stay easy to find ── */}
+        <ReferenceList
+          labels={result.referenceLabels}
+          className="mt-3 border-t border-border-faint pt-3 text-xs leading-snug text-muted [&_ul]:mt-1 [&_ul]:space-y-0.5"
+        />
+
         {/* ── Full calculation steps ── */}
         <details
           className="mt-4 border-t border-border-faint pt-3"
@@ -341,12 +347,6 @@ export const ResultContent = memo(function ResultContent({
             </table>
           </div>
         </details>
-
-        {/* ── References ── */}
-        <ReferenceList
-          labels={result.referenceLabels}
-          className="mt-2 text-[11px] leading-snug text-muted-faint [&_ul]:mt-0.5 [&_ul]:space-y-0.5"
-        />
       </div>
     </>
   );

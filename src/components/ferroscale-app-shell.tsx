@@ -26,7 +26,6 @@ import {
   createBoolStore,
   createStringStore,
   createSidebarStore,
-  desktopThirdTabStore,
   desktopThirdVisibleStore,
 } from "@/lib/external-stores";
 import { IssueList } from "@/components/calculator/issue-list";
@@ -454,11 +453,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     desktopThirdVisibleStore.getSnapshot,
     desktopThirdVisibleStore.getServerSnapshot,
   );
-  const desktopThirdTab = useSyncExternalStore(
-    desktopThirdTabStore.subscribe,
-    desktopThirdTabStore.getSnapshot,
-    desktopThirdTabStore.getServerSnapshot,
-  );
 
   const handleSavePreset = useCallback(() => {
     const profile = getProfileById(input.profileId);
@@ -690,12 +684,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       thirdPane={
         desktopThirdVisible ? (
           <DesktopThirdColumn
-            tab={desktopThirdTab}
             saved={saved}
             onLoad={handleLoad}
             onRemove={removeSaved}
             onUpdate={updateSaved}
-            referenceLabels={result?.referenceLabels ?? []}
           />
         ) : null
       }

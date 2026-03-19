@@ -22,8 +22,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - **Desktop:** Resizable split between calculator form and result panel (persisted width; double-click gutter to reset)
-- **Desktop:** Optional third column (Saved + References tabs), persisted; second resizable gutter; keyboard control on both gutters (arrows nudge, Home/End min/max)
-- **Workspace (desktop):** Toggle third panel, max result column width preset (320–480px), reset column widths
+- **Desktop:** Optional third column (Saved bookmarks only), persisted; second resizable gutter; keyboard control on both gutters (arrows nudge, Home/End min/max)
+- **Workspace (desktop):** Toggle Saved side panel, max result column width preset (320–480px), reset column widths
+- **Results:** References block moved under grand total, above full calculation steps
 - Calculator result receipt now shows surface area between weight and cost sections when available
 - Result header shows a compact cross-section area, material density, and area formula above the action row
 - Clipboard copy format includes surface area line when present

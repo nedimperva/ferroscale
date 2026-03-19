@@ -247,13 +247,12 @@
     "defaultUnitHint": "Used for all dimension and length inputs",
     "desktopLayoutTitle": "Desktop layout",
     "desktopLayoutHint": "Applies to wide screens with the sidebar layout.",
-    "desktopThirdColumn": "Show right panel (Saved & references)",
+    "desktopThirdColumn": "Show right panel (Saved)",
     "resultPaneMaxCap": "Max result column width",
     "resultPaneMaxCapHint": "Upper limit when dragging the separator (Home/End still respect this cap).",
     "resultPaneCapOption": "Up to {px}px",
     "resetDesktopWidths": "Reset column widths",
-    "resetDesktopWidthsHint": "Restore default widths for the result and right panels.",
-    "thirdColumnReferencesEmpty": "Run a calculation to see standards and dataset references here."
+    "resetDesktopWidthsHint": "Restore default widths for the result and right panels."
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",
@@ -334,7 +333,7 @@
     "resizeSeparatorValue": "{px} pixels wide",
     "resizeSeparatorHint": "Drag to resize. Double-click to reset. Arrow keys nudge; Home/End min/max.",
     "resizeThirdSeparatorValue": "Right panel {px}px wide",
-    "resizeThirdSeparatorHint": "Drag to resize the Saved / References panel. Double-click to reset. Arrow keys nudge; Home/End min/max."
+    "resizeThirdSeparatorHint": "Drag to resize the Saved panel. Double-click to reset. Arrow keys nudge; Home/End min/max."
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",
