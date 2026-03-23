@@ -19,15 +19,33 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "2.2.0",
     date: "2026-03-23",
+    added: [
+      "Desktop column mode now includes a dedicated Specs panel with synced engineering-style profile drawings, key dimensions, and family lookup tables",
+      "Profile lookup now covers every profile type with repo-owned numeric spec data, including live manual-profile drawings and EN family tables for structural sections",
+    ],
+    added_bs: [
+      "Desktop rezim kolona sada ukljucuje poseban panel Specifikacije sa sinhronizovanim inzenjerskim crtezima profila, kljucnim dimenzijama i tabelama porodice profila",
+      "Pregled profila sada pokriva sve tipove profila uz numericke specifikacije iz repozitorija, ukljucujuci zive crteze rucnih profila i EN tabele porodice za konstrukcione sekcije",
+    ],
     changed: [
+      "Specs panel drawings now use cleaner engineering callouts, unequal-angle support, and more distinct silhouettes for IPN/IPE/HE, UPN/UPE, and corrugated profiles",
+      "Specs cards and family lookup tables now surface denser engineering data including kg/m, inner dimensions, clear heights, flange projection, and similarity-sorted manual family rows",
       "Saved calculations now use the same result-style card hierarchy across drawers, mobile screens, and column mode",
       "Saved entries and project calculations now show quantity, piece length, unit weight, total weight, total cost, and surface area in a clearer layout",
       "Project list and project detail views were redesigned around totals-first summaries, grouped actions, painting stats, and refreshed breakdown cards",
     ],
     changed_bs: [
+      "Crtezi u panelu Specifikacije sada koriste cisce inzenjerske oznake, podrsku za nejednake L profile i jasnije siluete za IPN/IPE/HE, UPN/UPE i valovite profile",
+      "Kartice specifikacija i lookup tabele porodice sada prikazuju gusce inzenjerske podatke ukljucujuci kg/m, unutrasnje dimenzije, ciste visine, izbacaj pojasa i slicnosno sortirane rucne redove porodice",
       "Sacuvani izracuni sada koriste istu hijerarhiju kartica kao rezultat kroz drawere, mobilne ekrane i rezim kolona",
       "Sacuvane stavke i kalkulacije u projektu sada jasnije prikazuju kolicinu, duzinu komada, masu po komadu, ukupnu masu, ukupnu cijenu i povrsinu",
       "Lista projekata i detalji projekta su redizajnirani oko pregleda sa glavnim totalima, grupisanih akcija, statistike farbanja i osvjezenih breakdown kartica",
+    ],
+    fixed: [
+      "L-angle drawings now keep the thickness callout outside the profile and manual angle lookup now includes unequal standard sizes",
+    ],
+    fixed_bs: [
+      "Crtezi L profila sada drze oznaku debljine izvan profila, a rucni lookup za uglove sada ukljucuje i nejednake standardne velicine",
     ],
   },
   {

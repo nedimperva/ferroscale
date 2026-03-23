@@ -6,7 +6,6 @@ import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
 import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
-import type { DimensionKey } from "@/lib/datasets/types";
 import type { DimensionPreset } from "@/hooks/usePresets";
 import { DimensionInput } from "./dimension-input";
 import { NumericInput } from "./numeric-input";
@@ -369,13 +368,7 @@ export const ProfileSection = memo(function ProfileSection({
           <>
             <StandardsCombobox
               profileId={input.profileId}
-              onSelect={(dims) => {
-                for (const [key, value] of Object.entries(dims)) {
-                  if (value != null) {
-                    dispatch({ type: "SET_DIMENSION_VALUE", key: key as DimensionKey, value });
-                  }
-                }
-              }}
+              onSelect={(dims) => dispatch({ type: "SET_DIMENSIONS_MM", dimensions: dims })}
               currentDimensions={input.manualDimensions}
               customSizes={profilePresets.map((p) => ({
                 id: p.id,

@@ -86,6 +86,52 @@ export interface StandardSizeOption {
   referenceLabel: string;
 }
 
+export type ProfileSpecDrawingKind =
+  | "round"
+  | "square"
+  | "flat"
+  | "pipe"
+  | "rect_hollow"
+  | "sheet"
+  | "chequered"
+  | "expanded"
+  | "corrugated"
+  | "angle"
+  | "ibeam"
+  | "channel"
+  | "tee";
+
+export interface ProfileSpecGeometry {
+  heightMm?: number;
+  widthMm?: number;
+  sideMm?: number;
+  diameterMm?: number;
+  outerDiameterMm?: number;
+  innerDiameterMm?: number;
+  thicknessMm?: number;
+  wallThicknessMm?: number;
+  webThicknessMm?: number;
+  flangeThicknessMm?: number;
+  legAMm?: number;
+  legBMm?: number;
+  patternHeightMm?: number;
+  rootRadiusMm?: number;
+  waveHeightMm?: number;
+  wavePitchMm?: number;
+  meshPitchMm?: number;
+  strandWidthMm?: number;
+}
+
+export interface StandardProfileSpecRecord {
+  sizeId: string;
+  label: string;
+  drawingKind: ProfileSpecDrawingKind;
+  geometry: ProfileSpecGeometry;
+  areaMm2: number;
+  perimeterMm?: number;
+  referenceLabel: string;
+}
+
 export interface ManualProfileDefinition {
   id: ProfileId;
   label: string;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useTransition } from "react";
 import { calculateMetal } from "@/lib/calculator/engine";
 import { parseLocaleNumber } from "@/lib/calculator/number-input";
+import { fromMillimeters } from "@/lib/calculator/units";
 import type {
   CalculationInput,
   CalculationResult,
@@ -109,6 +110,7 @@ export type CalcAction =
   | { type: "SET_SIZE"; sizeId: string }
   | { type: "SET_DIMENSION_VALUE"; key: DimensionKey; value: number }
   | { type: "SET_DIMENSION_UNIT"; key: DimensionKey; unit: LengthUnit }
+  | { type: "SET_DIMENSIONS_MM"; dimensions: Partial<Record<DimensionKey, number>> }
   | { type: "SET_LENGTH_VALUE"; value: number }
   | { type: "SET_LENGTH_UNIT"; unit: LengthUnit }
   | { type: "SET_QUANTITY"; value: number }
@@ -174,6 +176,28 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
             unit: action.unit,
           },
         },
+      };
+    case "SET_DIMENSIONS_MM":
+      return {
+        ...state,
+        manualDimensions: Object.entries(action.dimensions).reduce(
+          (nextDimensions, [rawKey, rawValue]) => {
+            const key = rawKey as DimensionKey;
+            if (rawValue == null || !Number.isFinite(rawValue)) {
+              return nextDimensions;
+            }
+
+            const currentUnit = state.manualDimensions[key]?.unit ?? "mm";
+            return {
+              ...nextDimensions,
+              [key]: {
+                value: fromMillimeters(rawValue, currentUnit),
+                unit: currentUnit,
+              },
+            };
+          },
+          { ...state.manualDimensions },
+        ),
       };
     case "SET_LENGTH_VALUE":
       return { ...state, length: { ...state.length, value: action.value } };
@@ -243,7 +267,7 @@ const MAX_UNDO = 30;
 
 const SKIP_UNDO_ACTIONS = new Set<string>(["LOAD_ENTRY", "RESET", "RESET_ALL"]);
 
-function undoableReducer(state: UndoableState, action: CalcAction): UndoableState {
+export function undoableReducer(state: UndoableState, action: CalcAction): UndoableState {
   if (action.type === "UNDO") {
     if (state.past.length === 0) return state;
     const previous = state.past[state.past.length - 1];
@@ -307,7 +331,7 @@ export interface UseCalculatorReturn {
   canRedo: boolean;
 }
 
-function getInitialUndoableState(): UndoableState {
+export function getInitialUndoableState(): UndoableState {
   return {
     present: getDefaultInput(),
     past: [],

@@ -76,12 +76,13 @@ describe("getAvailableColumnPanelIds", () => {
       { id: "result", panelId: "result" as const },
     ];
 
-    expect(getAvailableColumnPanelIds(columns)).toEqual(["projects", "settings", "compare"]);
+    expect(getAvailableColumnPanelIds(columns)).toEqual(["projects", "settings", "compare", "specs"]);
     expect(getAvailableColumnPanelIds(columns, "saved")).toEqual([
       "saved",
       "projects",
       "settings",
       "compare",
+      "specs",
     ]);
   });
 });

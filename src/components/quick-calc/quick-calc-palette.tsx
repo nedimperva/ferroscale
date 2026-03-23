@@ -39,6 +39,29 @@ const PROFILE_ALIAS: Partial<Record<ProfileId, string>> = {
   tee_en: "tee",
 };
 
+const PROFILE_SUGGESTION_ORDER: ProfileId[] = [
+  "pipe",
+  "square_hollow",
+  "rectangular_tube",
+  "flat_bar",
+  "angle",
+  "round_bar",
+  "square_bar",
+  "sheet",
+  "plate",
+  "chequered_plate",
+  "corrugated_sheet",
+  "expanded_metal",
+  "channel_upe_en",
+  "channel_upn_en",
+  "beam_ipe_en",
+  "beam_ipn_en",
+  "beam_hea_en",
+  "beam_heb_en",
+  "beam_hem_en",
+  "tee_en",
+];
+
 /** Build a quick-calc query string from a preset.
  *  For plates/sheets with a saved length, returns the full query.
  *  For others, returns the alias + cross-section dims with a trailing `x`
@@ -80,6 +103,41 @@ function standardSizeToQuery(size: StandardSize): string {
   return `${alias} ${vals.join("x")}x`;
 }
 
+function interleaveStandards(standards: StandardSize[]): StandardSize[] {
+  const buckets = new Map<ProfileId, StandardSize[]>();
+
+  for (const size of standards) {
+    const bucket = buckets.get(size.profileId);
+    if (bucket) {
+      bucket.push(size);
+    } else {
+      buckets.set(size.profileId, [size]);
+    }
+  }
+
+  const profileIds = PROFILE_SUGGESTION_ORDER.filter((profileId) => buckets.has(profileId));
+  const result: StandardSize[] = [];
+  let keepGoing = true;
+  let index = 0;
+
+  while (keepGoing) {
+    keepGoing = false;
+
+    for (const profileId of profileIds) {
+      const bucket = buckets.get(profileId);
+      const next = bucket?.[index];
+      if (next) {
+        result.push(next);
+        keepGoing = true;
+      }
+    }
+
+    index += 1;
+  }
+
+  return result;
+}
+
 interface PickerItem {
   id: string;
   label: string;
@@ -96,7 +154,7 @@ function buildPickerItems(presets: DimensionPreset[], standards: StandardSize[])
     query: presetToQuery(p),
     kind: "preset",
   }));
-  const stdItems: PickerItem[] = standards.map((s, i) => ({
+  const stdItems: PickerItem[] = interleaveStandards(standards).map((s, i) => ({
     id: `std_${s.profileId}_${i}`,
     label: s.label,
     profileId: s.profileId,

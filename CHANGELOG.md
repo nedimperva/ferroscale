@@ -11,10 +11,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [2.2.0] - 2026-03-23
 
+### Added
+- Desktop column mode now includes a dedicated Specs panel with synced engineering-style profile drawings, key dimensions, and family lookup tables
+- Profile lookup now covers every profile type with repo-owned numeric spec data, including live manual-profile drawings and EN family tables for structural sections
+
 ### Changed
+- Specs panel drawings now use cleaner engineering callouts, unequal-angle support, and more distinct silhouettes for IPN/IPE/HE, UPN/UPE, and corrugated profiles
+- Specs cards and family lookup tables now surface denser engineering data including `kg/m`, inner dimensions, clear heights, flange projection, and similarity-sorted manual family rows
 - Saved calculations now use the same result-style card hierarchy across drawers, mobile screens, and column mode
 - Saved entries and project calculations now show quantity, piece length, unit weight, total weight, total cost, and surface area in a clearer layout
 - Project list and project detail views were redesigned around totals-first summaries, grouped actions, painting stats, and refreshed breakdown cards
+
+### Fixed
+- L-angle drawings now keep the thickness callout outside the profile and manual angle lookup now includes unequal standard sizes
 
 ---
 

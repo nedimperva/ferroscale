@@ -78,6 +78,30 @@ function sheet(thickness: number): StandardSize {
   };
 }
 
+function chequered(thickness: number, patternHeight: number): StandardSize {
+  return {
+    profileId: "chequered_plate",
+    label: `t=${thickness}+${patternHeight}mm (w=1500)`,
+    dimensions: { width: 1500, thickness, patternHeight },
+  };
+}
+
+function expanded(thickness: number): StandardSize {
+  return {
+    profileId: "expanded_metal",
+    label: `eff. t=${thickness}mm (w=1250)`,
+    dimensions: { width: 1250, thickness },
+  };
+}
+
+function corrugated(thickness: number): StandardSize {
+  return {
+    profileId: "corrugated_sheet",
+    label: `t=${thickness}mm (w=1000)`,
+    dimensions: { width: 1000, thickness },
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /*  Standard sizes dataset                                            */
 /* ------------------------------------------------------------------ */
@@ -109,7 +133,7 @@ export const STANDARD_SIZES: StandardSize[] = [
     [160, 12], [180, 10], [180, 12], [200, 10], [200, 12], [200, 15], [200, 20],
   ].map(([w, t]) => fb(w, t)),
 
-  /* ---- Angle L (equal angles) ---- */
+  /* ---- Angle L (equal + unequal angles) ---- */
   ...[
     [20, 20, 3], [25, 25, 3], [25, 25, 4], [30, 30, 3], [30, 30, 4],
     [35, 35, 3], [35, 35, 4], [40, 40, 3], [40, 40, 4], [40, 40, 5],
@@ -123,6 +147,12 @@ export const STANDARD_SIZES: StandardSize[] = [
     [150, 150, 10], [150, 150, 12], [150, 150, 15], [160, 160, 12], [160, 160, 14],
     [160, 160, 16], [180, 180, 14], [180, 180, 16], [180, 180, 18],
     [200, 200, 16], [200, 200, 18], [200, 200, 20],
+    [30, 20, 3], [30, 20, 4], [40, 20, 3], [40, 25, 3], [40, 25, 4],
+    [50, 30, 4], [50, 30, 5], [60, 40, 4], [60, 40, 5], [60, 40, 6],
+    [65, 50, 5], [65, 50, 6], [70, 50, 5], [70, 50, 6], [75, 50, 5],
+    [75, 50, 6], [80, 40, 6], [80, 60, 6], [80, 60, 8], [90, 60, 6],
+    [90, 60, 8], [100, 50, 6], [100, 65, 7], [100, 75, 8], [120, 80, 8],
+    [120, 80, 10], [150, 90, 10], [150, 100, 10], [200, 100, 12],
   ].map(([a, b, t]) => ang(a, b, t)),
 
   /* ---- SHS - Square Hollow Section ---- */
@@ -186,6 +216,17 @@ export const STANDARD_SIZES: StandardSize[] = [
 
   /* ---- Sheet (thickness standards, width=1250) ---- */
   ...[0.5, 0.6, 0.7, 0.8, 1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6].map(sheet),
+
+  /* ---- Chequered plate (base thickness + pattern, width=1500) ---- */
+  ...[
+    [3, 1.5], [4, 1.5], [4, 2], [5, 2], [6, 2], [8, 2], [10, 2.5],
+  ].map(([t, p]) => chequered(t, p)),
+
+  /* ---- Expanded metal (effective thickness, width=1250) ---- */
+  ...[1.5, 2, 2.5, 3, 4, 5, 6].map(expanded),
+
+  /* ---- Corrugated sheet (base thickness, cover width=1000) ---- */
+  ...[0.4, 0.5, 0.6, 0.7, 0.8, 1, 1.2].map(corrugated),
 ];
 
 export function getStandardSizesForProfile(

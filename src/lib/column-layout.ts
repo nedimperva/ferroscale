@@ -1,4 +1,11 @@
-export type ColumnPanelId = "calculator" | "result" | "saved" | "projects" | "settings" | "compare";
+export type ColumnPanelId =
+  | "calculator"
+  | "result"
+  | "saved"
+  | "projects"
+  | "settings"
+  | "compare"
+  | "specs";
 
 export interface ColumnConfig {
   id: string;
@@ -24,6 +31,7 @@ export const COLUMN_PANEL_LABELS: Record<ColumnPanelId, string> = {
   projects: "sidebar.projects",
   settings: "sidebar.settings",
   compare: "sidebar.compare",
+  specs: "columns.specs",
 };
 
 export const ALL_PANEL_IDS: ColumnPanelId[] = [
@@ -33,6 +41,7 @@ export const ALL_PANEL_IDS: ColumnPanelId[] = [
   "projects",
   "settings",
   "compare",
+  "specs",
 ];
 
 let _nextId = 1;

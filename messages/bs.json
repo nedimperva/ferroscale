@@ -165,7 +165,46 @@
     "close": "Zatvori kolonu",
     "resizeHandle": "Promijeni sirinu kolona",
     "columnsMode": "Kolone",
-    "result": "Rezultat"
+    "result": "Rezultat",
+    "specs": "Specifikacije"
+  },
+  "specs": {
+    "title": "Specifikacije profila",
+    "customSelection": "Rucno",
+    "matchedSelection": "Uskladjeno",
+    "drawingAria": "Inzenjerski crtez profila",
+    "incompleteTitle": "Crtez prati aktivni odabir",
+    "incompleteBody": "Popunite obavezne dimenzije ili izaberite red iz porodice profila da generisete crtez i izracunate specifikacije.",
+    "metricsTitle": "Glavne specifikacije",
+    "metricsEmpty": "Izracunate specifikacije ce se pojaviti kada aktivni profil ima dovoljno dimenzija.",
+    "formulaLabel": "Formula / osnova",
+    "familyTableTitle": "Pregled porodice",
+    "familyTableHint": "Odabir reda odmah azurira aktivni profil u kalkulatoru.",
+    "noLookupRows": "Za ovaj profil jos nema lookup redova.",
+    "table": {
+      "size": "Velicina",
+      "area": "A (mm2)",
+      "perimeter": "P (mm)",
+      "massPerMeter": "kg/m"
+    },
+    "labels": {
+      "areaMm2": "Povrsina presjeka",
+      "perimeterMm": "Obim",
+      "webThickness": "Debljina rebra",
+      "flangeThickness": "Debljina pojasa",
+      "rootRadius": "Korijenski radijus",
+      "innerDiameter": "Unutrasnji precnik",
+      "innerWidth": "Unutrasnja sirina",
+      "innerHeight": "Unutrasnja visina",
+      "waveHeight": "Visina talasa",
+      "wavePitch": "Korak talasa",
+      "meshPitch": "Korak mreze",
+      "strandWidth": "Sirina niti",
+      "massPerMeter": "Masa po metru",
+      "surfacePerMeter": "Povrsina po metru",
+      "clearHeight": "Cista visina",
+      "flangeProjection": "Izbacaj pojasa"
+    }
   },
   "changelog": {
     "title": "Novosti",

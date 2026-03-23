@@ -41,6 +41,7 @@ import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
+import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
@@ -751,6 +752,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         normalizedProfile={normalizedCurrentProfile}
         weightAsMain={weightAsMain}
         layout="column"
+      />
+    ),
+    specs: (
+      <ProfileSpecsPanel
+        input={input}
+        onSelectStandardSize={(sizeId) => dispatch({ type: "SET_SIZE", sizeId })}
+        onSelectManualDimensionsMm={(dimensions) => dispatch({ type: "SET_DIMENSIONS_MM", dimensions })}
       />
     ),
     saved: (

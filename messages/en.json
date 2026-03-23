@@ -165,7 +165,46 @@
     "close": "Close column",
     "resizeHandle": "Resize columns",
     "columnsMode": "Columns",
-    "result": "Result"
+    "result": "Result",
+    "specs": "Specs"
+  },
+  "specs": {
+    "title": "Profile specs",
+    "customSelection": "Custom",
+    "matchedSelection": "Matched",
+    "drawingAria": "Profile engineering drawing",
+    "incompleteTitle": "Drawing follows the active selection",
+    "incompleteBody": "Fill the required dimensions or pick a row from the family table to generate the profile drawing and computed specs.",
+    "metricsTitle": "Key specs",
+    "metricsEmpty": "Calculated specs appear here once the active profile has enough dimensions.",
+    "formulaLabel": "Formula / basis",
+    "familyTableTitle": "Family lookup",
+    "familyTableHint": "Selecting a row updates the active calculator profile immediately.",
+    "noLookupRows": "No lookup rows are available for this profile yet.",
+    "table": {
+      "size": "Size",
+      "area": "A (mm2)",
+      "perimeter": "P (mm)",
+      "massPerMeter": "kg/m"
+    },
+    "labels": {
+      "areaMm2": "Area",
+      "perimeterMm": "Perimeter",
+      "webThickness": "Web thickness",
+      "flangeThickness": "Flange thickness",
+      "rootRadius": "Root radius",
+      "innerDiameter": "Inner diameter",
+      "innerWidth": "Inner width",
+      "innerHeight": "Inner height",
+      "waveHeight": "Wave height",
+      "wavePitch": "Wave pitch",
+      "meshPitch": "Mesh pitch",
+      "strandWidth": "Strand width",
+      "massPerMeter": "Mass per meter",
+      "surfacePerMeter": "Surface per meter",
+      "clearHeight": "Clear height",
+      "flangeProjection": "Flange projection"
+    }
   },
   "changelog": {
     "title": "What's New",
