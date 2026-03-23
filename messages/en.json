@@ -154,11 +154,16 @@
   },
   "columns": {
     "addColumn": "Add Column",
+    "addPanel": "Add panel",
+    "addPanelLabel": "Panel to add",
+    "noPanelsAvailable": "All panels are already open",
+    "panelType": "Panel type",
     "resetLayout": "Reset Layout",
     "exitColumns": "Exit Columns",
     "moveLeft": "Move left",
     "moveRight": "Move right",
     "close": "Close column",
+    "resizeHandle": "Resize columns",
     "columnsMode": "Columns",
     "result": "Result"
   },

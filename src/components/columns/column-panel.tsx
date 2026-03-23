@@ -3,12 +3,13 @@
 import { memo } from "react";
 import { useTranslations } from "next-intl";
 import type { ColumnPanelId } from "@/lib/column-layout";
-import { ALL_PANEL_IDS, COLUMN_PANEL_LABELS } from "@/lib/column-layout";
+import { COLUMN_PANEL_LABELS, MIN_COLUMN_WIDTH } from "@/lib/column-layout";
 import { ColumnContent } from "./column-content";
 
 interface ColumnPanelProps {
   id: string;
   panelId: ColumnPanelId;
+  panelOptions: ColumnPanelId[];
   isFirst: boolean;
   isLast: boolean;
   canClose: boolean;
@@ -22,6 +23,7 @@ interface ColumnPanelProps {
 export const ColumnPanel = memo(function ColumnPanel({
   id,
   panelId,
+  panelOptions,
   isFirst,
   isLast,
   canClose,
@@ -37,7 +39,8 @@ export const ColumnPanel = memo(function ColumnPanel({
     <div
       id={`column-${id}`}
       data-column-id={id}
-      className="flex min-h-0 min-w-[280px] flex-1 flex-col rounded-xl border border-border bg-surface shadow-sm"
+      className="flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-surface shadow-sm"
+      style={{ minWidth: `${MIN_COLUMN_WIDTH}px` }}
     >
       {/* Header */}
       <div className="flex items-center gap-1.5 border-b border-border-faint px-3 py-2">
@@ -45,9 +48,10 @@ export const ColumnPanel = memo(function ColumnPanel({
         <select
           value={panelId}
           onChange={(e) => onSetPanel(e.target.value as ColumnPanelId)}
+          aria-label={t("columns.panelType")}
           className="min-w-0 flex-1 truncate rounded-md border border-border bg-transparent px-2 py-1 text-xs font-semibold text-foreground outline-none transition-colors hover:bg-surface-raised focus:ring-1 focus:ring-blue-strong"
         >
-          {ALL_PANEL_IDS.map((pid) => (
+          {panelOptions.map((pid) => (
             <option key={pid} value={pid}>
               {t(COLUMN_PANEL_LABELS[pid])}
             </option>

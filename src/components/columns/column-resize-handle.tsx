@@ -1,6 +1,11 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
+import {
+  COLUMN_KEYBOARD_STEP_PX,
+  clampColumnPairPercents,
+} from "@/lib/column-layout";
 
 interface ColumnResizeHandleProps {
   leftId: string;
@@ -10,6 +15,14 @@ interface ColumnResizeHandleProps {
   columns: { id: string; widthPercent?: number }[];
 }
 
+interface ResizeSnapshot {
+  leftPx: number;
+  rightPx: number;
+  leftPercent: number;
+  rightPercent: number;
+  equalPercent: number;
+}
+
 export function ColumnResizeHandle({
   leftId,
   rightId,
@@ -17,93 +30,156 @@ export function ColumnResizeHandle({
   onResizeEnd,
   columns,
 }: ColumnResizeHandleProps) {
+  const t = useTranslations();
   const handleRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 
+  const getResizeSnapshot = useCallback((): ResizeSnapshot | null => {
+    const element = handleRef.current;
+    if (!element) return null;
+
+    const container = element.closest("[data-columns-container]") as HTMLElement | null;
+    if (!container) return null;
+
+    const leftElement = container.querySelector(`[data-column-id="${leftId}"]`) as HTMLElement | null;
+    const rightElement = container.querySelector(`[data-column-id="${rightId}"]`) as HTMLElement | null;
+    if (!leftElement || !rightElement) return null;
+
+    const equalPercent = 100 / columns.length;
+    return {
+      leftPx: leftElement.getBoundingClientRect().width,
+      rightPx: rightElement.getBoundingClientRect().width,
+      leftPercent: columns.find((column) => column.id === leftId)?.widthPercent ?? equalPercent,
+      rightPercent: columns.find((column) => column.id === rightId)?.widthPercent ?? equalPercent,
+      equalPercent,
+    };
+  }, [columns, leftId, rightId]);
+
+  const buildWidthMap = useCallback(
+    (leftPercent: number, rightPercent: number, equalPercent: number) => {
+      const widths: Record<string, number> = {};
+
+      for (const column of columns) {
+        if (column.id === leftId) widths[column.id] = leftPercent;
+        else if (column.id === rightId) widths[column.id] = rightPercent;
+        else widths[column.id] = column.widthPercent ?? equalPercent;
+      }
+
+      return widths;
+    },
+    [columns, leftId, rightId],
+  );
+
   const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+    (event: React.PointerEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
 
-      const el = handleRef.current;
-      if (!el) return;
+      const element = handleRef.current;
+      if (!element) return;
 
-      // Capture pointer so we get all move/up events even outside the element
-      el.setPointerCapture(e.pointerId);
-      dragging.current = true;
-
-      const container = el.closest("[data-columns-container]") as HTMLElement | null;
+      const container = element.closest("[data-columns-container]") as HTMLElement | null;
       if (!container) return;
 
+      const leftElement = container.querySelector(`[data-column-id="${leftId}"]`) as HTMLElement | null;
+      const rightElement = container.querySelector(`[data-column-id="${rightId}"]`) as HTMLElement | null;
+      if (!leftElement || !rightElement) return;
+
       const containerRect = container.getBoundingClientRect();
-
-      const leftEl = container.querySelector(`[data-column-id="${leftId}"]`) as HTMLElement | null;
-      const rightEl = container.querySelector(`[data-column-id="${rightId}"]`) as HTMLElement | null;
-      if (!leftEl || !rightEl) return;
-
-      const leftRect = leftEl.getBoundingClientRect();
-      const rightRect = rightEl.getBoundingClientRect();
-      const combinedPx = leftRect.width + rightRect.width;
+      const leftRect = leftElement.getBoundingClientRect();
       const leftEdge = leftRect.left - containerRect.left;
-      const minPx = 280;
 
-      const equalPercent = 100 / columns.length;
-      const leftStartPercent = columns.find((c) => c.id === leftId)?.widthPercent ?? equalPercent;
-      const rightStartPercent = columns.find((c) => c.id === rightId)?.widthPercent ?? equalPercent;
-      const combinedPercent = leftStartPercent + rightStartPercent;
+      const snapshot = getResizeSnapshot();
+      if (!snapshot) return;
+
+      element.setPointerCapture(event.pointerId);
+      dragging.current = true;
 
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
 
       function computePercents(clientX: number) {
         const mouseX = clientX - containerRect.left;
-        let leftPx = mouseX - leftEdge;
-        leftPx = Math.max(minPx, Math.min(combinedPx - minPx, leftPx));
-        const ratio = leftPx / combinedPx;
-        return {
-          left: combinedPercent * ratio,
-          right: combinedPercent * (1 - ratio),
-        };
+        const nextLeftPx = mouseX - leftEdge;
+        return clampColumnPairPercents({
+          ...snapshot,
+          nextLeftPx,
+        });
       }
 
-      function onPointerMove(ev: PointerEvent) {
+      function cleanup(pointerId: number) {
+        dragging.current = false;
+        if (element.hasPointerCapture(pointerId)) {
+          element.releasePointerCapture(pointerId);
+        }
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        element.removeEventListener("pointermove", onPointerMove);
+        element.removeEventListener("pointerup", onPointerUp);
+        element.removeEventListener("pointercancel", onPointerCancel);
+      }
+
+      function onPointerMove(moveEvent: PointerEvent) {
         if (!dragging.current) return;
-        const { left, right } = computePercents(ev.clientX);
+        const { left, right } = computePercents(moveEvent.clientX);
         onResize(leftId, rightId, left, right);
       }
 
-      function onPointerUp(ev: PointerEvent) {
-        dragging.current = false;
-        el!.releasePointerCapture(ev.pointerId);
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
-
-        const { left, right } = computePercents(ev.clientX);
-        const widths: Record<string, number> = {};
-        for (const col of columns) {
-          if (col.id === leftId) widths[col.id] = left;
-          else if (col.id === rightId) widths[col.id] = right;
-          else widths[col.id] = col.widthPercent ?? equalPercent;
-        }
-        onResizeEnd(widths);
-
-        el!.removeEventListener("pointermove", onPointerMove);
-        el!.removeEventListener("pointerup", onPointerUp);
+      function onPointerUp(upEvent: PointerEvent) {
+        const { left, right } = computePercents(upEvent.clientX);
+        onResizeEnd(buildWidthMap(left, right, snapshot.equalPercent));
+        cleanup(upEvent.pointerId);
       }
 
-      el.addEventListener("pointermove", onPointerMove);
-      el.addEventListener("pointerup", onPointerUp);
+      function onPointerCancel(cancelEvent: PointerEvent) {
+        cleanup(cancelEvent.pointerId);
+      }
+
+      element.addEventListener("pointermove", onPointerMove);
+      element.addEventListener("pointerup", onPointerUp);
+      element.addEventListener("pointercancel", onPointerCancel);
     },
-    [leftId, rightId, onResize, onResizeEnd, columns],
+    [buildWidthMap, getResizeSnapshot, leftId, onResize, onResizeEnd, rightId],
   );
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+
+      event.preventDefault();
+      const snapshot = getResizeSnapshot();
+      if (!snapshot) return;
+
+      const deltaPx = event.key === "ArrowLeft" ? -COLUMN_KEYBOARD_STEP_PX : COLUMN_KEYBOARD_STEP_PX;
+      const nextWidths = clampColumnPairPercents({
+        ...snapshot,
+        nextLeftPx: snapshot.leftPx + deltaPx,
+      });
+
+      onResizeEnd(buildWidthMap(nextWidths.left, nextWidths.right, snapshot.equalPercent));
+    },
+    [buildWidthMap, getResizeSnapshot, onResizeEnd],
+  );
+
+  const equalPercent = 100 / columns.length;
+  const currentLeftPercent = columns.find((column) => column.id === leftId)?.widthPercent ?? equalPercent;
 
   return (
     <div
       ref={handleRef}
-      className="group flex h-full w-4 shrink-0 cursor-col-resize touch-none items-center justify-center"
+      role="separator"
+      tabIndex={0}
+      aria-controls={`column-${leftId} column-${rightId}`}
+      aria-label={t("columns.resizeHandle")}
+      aria-orientation="vertical"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(currentLeftPercent)}
+      className="group flex h-full w-4 shrink-0 cursor-col-resize touch-none items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-blue-strong focus:ring-offset-2 focus:ring-offset-background"
       onPointerDown={handlePointerDown}
+      onKeyDown={handleKeyDown}
     >
-      <div className="h-10 w-1 rounded-full bg-border-faint transition-colors group-hover:bg-blue-strong group-active:bg-blue-strong" />
+      <div className="h-10 w-1 rounded-full bg-border-faint transition-colors group-hover:bg-blue-strong group-focus:bg-blue-strong group-active:bg-blue-strong" />
     </div>
   );
 }

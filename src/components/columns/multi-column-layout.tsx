@@ -1,9 +1,9 @@
 "use client";
 
-import { memo, useCallback, useRef, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ColumnPanelId } from "@/lib/column-layout";
-import { MAX_COLUMNS } from "@/lib/column-layout";
+import { COLUMN_PANEL_LABELS, MAX_COLUMNS } from "@/lib/column-layout";
 import type { useColumnLayout } from "@/hooks/useColumnLayout";
 import { ColumnPanel } from "./column-panel";
 import { ColumnResizeHandle } from "./column-resize-handle";
@@ -11,35 +11,45 @@ import { ColumnResizeHandle } from "./column-resize-handle";
 interface MultiColumnLayoutProps {
   layout: ReturnType<typeof useColumnLayout>;
   contentMap: Record<ColumnPanelId, React.ReactNode>;
+  maxColumnsAllowed: number;
 }
 
 export const MultiColumnLayout = memo(function MultiColumnLayout({
   layout,
   contentMap,
+  maxColumnsAllowed,
 }: MultiColumnLayoutProps) {
   const t = useTranslations();
 
-  // Live resize overrides (not yet persisted — only during drag)
   const [liveWidths, setLiveWidths] = useState<Record<string, number> | null>(null);
-  const liveWidthsRef = useRef(liveWidths);
-  liveWidthsRef.current = liveWidths;
+  const [preferredPanelToAdd, setPreferredPanelToAdd] = useState<ColumnPanelId | "">("");
 
   const equalPercent = 100 / layout.columns.length;
+  const availablePanelsToAdd = layout.getAvailablePanels();
+  const panelToAdd = availablePanelsToAdd.includes(preferredPanelToAdd as ColumnPanelId)
+    ? preferredPanelToAdd
+    : (availablePanelsToAdd[0] ?? "");
+  const canAddPanel =
+    panelToAdd !== ""
+    && availablePanelsToAdd.length > 0
+    && layout.columns.length < Math.min(MAX_COLUMNS, maxColumnsAllowed);
 
   const handleResize = useCallback(
     (leftId: string, rightId: string, leftPercent: number, rightPercent: number) => {
       setLiveWidths((prev) => {
         const base = prev ?? {};
         const next = { ...base };
-        for (const col of layout.columns) {
-          if (col.id === leftId) next[col.id] = leftPercent;
-          else if (col.id === rightId) next[col.id] = rightPercent;
-          else if (!(col.id in next)) next[col.id] = col.widthPercent ?? 100 / layout.columns.length;
+
+        for (const column of layout.columns) {
+          if (column.id === leftId) next[column.id] = leftPercent;
+          else if (column.id === rightId) next[column.id] = rightPercent;
+          else if (!(column.id in next)) next[column.id] = column.widthPercent ?? equalPercent;
         }
+
         return next;
       });
     },
-    [layout.columns],
+    [equalPercent, layout.columns],
   );
 
   const handleResizeEnd = useCallback(
@@ -50,27 +60,57 @@ export const MultiColumnLayout = memo(function MultiColumnLayout({
     [layout],
   );
 
-  function getWidthPercent(colId: string, storedPercent?: number): number {
-    if (liveWidths && colId in liveWidths) return liveWidths[colId];
+  function getWidthPercent(columnId: string, storedPercent?: number): number {
+    if (liveWidths && columnId in liveWidths) return liveWidths[columnId];
     return storedPercent ?? equalPercent;
   }
 
   return (
     <div className="hidden min-h-0 flex-1 flex-col lg:flex">
-      {/* Toolbar */}
-      <div className="mb-3 flex shrink-0 items-center gap-2">
-        <button
-          type="button"
-          onClick={() => layout.addColumn("saved")}
-          disabled={layout.columns.length >= MAX_COLUMNS}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground-secondary shadow-sm transition-colors hover:bg-surface-raised disabled:opacity-40"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-            <path d="M5 12h14" />
-            <path d="M12 5v14" />
-          </svg>
-          {t("columns.addColumn")}
-        </button>
+      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
+          <select
+            value={panelToAdd}
+            onChange={(event) => setPreferredPanelToAdd(event.target.value as ColumnPanelId | "")}
+            aria-label={t("columns.addPanelLabel")}
+            className="min-w-[180px] rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground-secondary shadow-sm outline-none transition-colors hover:bg-surface-raised focus:ring-1 focus:ring-blue-strong disabled:opacity-50"
+            disabled={availablePanelsToAdd.length === 0}
+          >
+            {availablePanelsToAdd.length === 0 ? (
+              <option value="">{t("columns.noPanelsAvailable")}</option>
+            ) : (
+              availablePanelsToAdd.map((panelId) => (
+                <option key={panelId} value={panelId}>
+                  {t(COLUMN_PANEL_LABELS[panelId])}
+                </option>
+              ))
+            )}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (panelToAdd) layout.addColumn(panelToAdd);
+            }}
+            disabled={!canAddPanel}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground-secondary shadow-sm transition-colors hover:bg-surface-raised disabled:opacity-40"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3.5 w-3.5"
+            >
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>
+            {t("columns.addPanel")}
+          </button>
+        </div>
 
         <button
           type="button"
@@ -91,38 +131,45 @@ export const MultiColumnLayout = memo(function MultiColumnLayout({
         </button>
       </div>
 
-      {/* Columns with resize handles */}
       <div data-columns-container className="flex min-h-0 flex-1 gap-0 overflow-x-auto scroll-native pb-2">
-        {layout.columns.flatMap((col, idx) => {
+        {layout.columns.flatMap((column, index) => {
           const items: React.ReactNode[] = [];
-          if (idx > 0) {
+
+          if (index > 0) {
             items.push(
               <ColumnResizeHandle
-                key={`handle-${col.id}`}
-                leftId={layout.columns[idx - 1].id}
-                rightId={col.id}
+                key={`handle-${column.id}`}
+                leftId={layout.columns[index - 1].id}
+                rightId={column.id}
                 onResize={handleResize}
                 onResizeEnd={handleResizeEnd}
                 columns={layout.columns}
               />,
             );
           }
+
           items.push(
-            <div key={col.id} className="flex min-h-0 min-w-0 flex-col" style={{ flex: `${getWidthPercent(col.id, col.widthPercent)} 0 0%` }}>
+            <div
+              key={column.id}
+              className="flex min-h-0 min-w-0 flex-col"
+              style={{ flex: `${getWidthPercent(column.id, column.widthPercent)} 0 0%` }}
+            >
               <ColumnPanel
-                id={col.id}
-                panelId={col.panelId}
-                isFirst={idx === 0}
-                isLast={idx === layout.columns.length - 1}
+                id={column.id}
+                panelId={column.panelId}
+                panelOptions={layout.getAvailablePanels(column.id)}
+                isFirst={index === 0}
+                isLast={index === layout.columns.length - 1}
                 canClose={layout.columns.length > 1}
-                onSetPanel={(panelId) => layout.setPanelForColumn(col.id, panelId)}
-                onMoveLeft={() => layout.moveColumn(col.id, "left")}
-                onMoveRight={() => layout.moveColumn(col.id, "right")}
-                onClose={() => layout.removeColumn(col.id)}
+                onSetPanel={(panelId) => layout.setPanelForColumn(column.id, panelId)}
+                onMoveLeft={() => layout.moveColumn(column.id, "left")}
+                onMoveRight={() => layout.moveColumn(column.id, "right")}
+                onClose={() => layout.removeColumn(column.id)}
                 contentMap={contentMap}
               />
             </div>,
           );
+
           return items;
         })}
       </div>

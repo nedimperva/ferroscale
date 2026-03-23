@@ -154,11 +154,16 @@
   },
   "columns": {
     "addColumn": "Dodaj kolonu",
+    "addPanel": "Dodaj panel",
+    "addPanelLabel": "Panel za dodavanje",
+    "noPanelsAvailable": "Svi paneli su vec otvoreni",
+    "panelType": "Tip panela",
     "resetLayout": "Resetuj raspored",
     "exitColumns": "Izadji iz kolona",
     "moveLeft": "Pomjeri lijevo",
     "moveRight": "Pomjeri desno",
     "close": "Zatvori kolonu",
+    "resizeHandle": "Promijeni sirinu kolona",
     "columnsMode": "Kolone",
     "result": "Rezultat"
   },

@@ -15,6 +15,7 @@ import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { usePresets } from "@/hooks/usePresets";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useElementWidth } from "@/hooks/useElementWidth";
 import type { LengthUnit } from "@/lib/calculator/types";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
@@ -24,8 +25,12 @@ import { getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from 
 import { triggerHaptic } from "@/lib/haptics";
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
-import { useIsWideDesktop } from "@/hooks/useIsWideDesktop";
 import type { ColumnPanelId } from "@/lib/column-layout";
+import {
+  DEFAULT_COLUMN_LAYOUT,
+  canRenderColumnLayout,
+  getMaxColumnsForWidth,
+} from "@/lib/column-layout";
 import { IssueList } from "@/components/calculator/issue-list";
 import { ProfileSection } from "@/components/calculator/profile-section";
 import { ResultPanel } from "@/components/calculator/result-panel";
@@ -206,8 +211,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const quickCalcOpen = quickCalc.isOpen;
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
   const columnLayout = useColumnLayout();
-  const isWideDesktop = useIsWideDesktop();
-  const isMultiColumn = columnLayout.enabled && isWideDesktop;
+  const [mainContentRef, mainContentWidth] = useElementWidth<HTMLDivElement>();
+  const maxColumnsAllowed = getMaxColumnsForWidth(mainContentWidth);
+  const canFitCurrentColumns = canRenderColumnLayout(columnLayout.columns.length, mainContentWidth);
+  const minColumnsForToggle = Math.min(
+    DEFAULT_COLUMN_LAYOUT.columns.length,
+    Math.max(2, columnLayout.columns.length),
+  );
+  const canShowColumnsToggle = columnLayout.enabled || maxColumnsAllowed >= minColumnsForToggle;
+  const isMultiColumn = columnLayout.enabled && canFitCurrentColumns;
 
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
@@ -378,9 +390,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       showShortcuts: () => setShowShortcutsModal((prev) => !prev),
       undo: () => dispatch({ type: "UNDO" }),
       redo: () => dispatch({ type: "REDO" }),
-      toggleColumns: () => columnLayout.toggleEnabled(),
+      toggleColumns: () => {
+        if (canShowColumnsToggle) {
+          columnLayout.toggleEnabled();
+        }
+      },
     }),
-    [dispatch, navigateToTab, toggleQuickCalc, columnLayout],
+    [canShowColumnsToggle, columnLayout, dispatch, navigateToTab, toggleQuickCalc],
   );
   useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
 
@@ -715,27 +731,26 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       </div>
     ),
     result: (
-      <div className="p-4">
-        <ResultPanel
-          result={result}
-          isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-          onRemoveSaved={handleRemoveSaved}
-          includeVat={input.includeVat}
-          wastePercent={input.wastePercent}
-          vatPercent={input.vatPercent}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-        />
-      </div>
+      <ResultPanel
+        result={result}
+        isPending={isPending}
+        isSaved={isCurrentSaved}
+        onOpenSaveDialog={handleOpenSaveDialog}
+        onRemoveSaved={handleRemoveSaved}
+        includeVat={input.includeVat}
+        wastePercent={input.wastePercent}
+        vatPercent={input.vatPercent}
+        onCompare={handleCompare}
+        canCompare={canCompare}
+        isInCompare={currentIsInCompare}
+        compareCount={compareItems.length}
+        maxCompare={maxCompare}
+        onAddToProject={handleAddToProject}
+        hasProjects={projectCount > 0}
+        normalizedProfile={normalizedCurrentProfile}
+        weightAsMain={weightAsMain}
+        variant="embedded"
+      />
     ),
     saved: (
       <div className="p-4">
@@ -769,7 +784,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       </div>
     ),
     settings: (
-      <div className="flex min-h-[400px] flex-col p-4">
+      <div className="flex min-h-[400px] flex-1 flex-col">
         <SettingsWorkspaceContent
           input={input}
           dispatch={dispatch}
@@ -815,7 +830,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     deleteProject, duplicateProject, removeCalculation, updateCalculationNote,
     updateProjectDescription, updateProjectPaintingSettings, addCalculation,
     resetAll, compareLimit, setCompareLimit, isCompareMobileCapped,
-    navigateToTab, handleSavePreset, t,
+    navigateToTab, handleSavePreset,
   ]);
 
   const mobileScreen =
@@ -934,12 +949,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onToggleCollapsed={toggleSidebarCollapsed}
         theme={resolvedTheme}
         onToggleTheme={cycleTheme}
-        isWideDesktop={isWideDesktop}
+        canShowColumnsToggle={canShowColumnsToggle}
         isMultiColumnEnabled={columnLayout.enabled}
         onToggleMultiColumn={columnLayout.toggleEnabled}
       />
 
       <div
+        ref={mainContentRef}
         className={`flex flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
           isMultiColumn
             ? "h-dvh overflow-hidden pt-0 pb-0 lg:pt-4 lg:pb-4"
@@ -1047,7 +1063,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <PwaRegister />
 
         {isMultiColumn ? (
-          <MultiColumnLayout layout={columnLayout} contentMap={columnContentMap} />
+          <MultiColumnLayout
+            layout={columnLayout}
+            contentMap={columnContentMap}
+            maxColumnsAllowed={maxColumnsAllowed}
+          />
         ) : (
           desktopMain
         )}

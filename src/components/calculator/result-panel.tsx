@@ -24,6 +24,7 @@ interface ResultPanelProps {
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
   weightAsMain?: boolean;
+  variant?: "standalone" | "embedded";
 }
 
 export const ResultPanel = memo(function ResultPanel({
@@ -44,12 +45,19 @@ export const ResultPanel = memo(function ResultPanel({
   hasProjects = false,
   normalizedProfile = null,
   weightAsMain = false,
+  variant = "standalone",
 }: ResultPanelProps) {
   const t = useTranslations("result");
+  const sectionClassName =
+    variant === "embedded"
+      ? `bg-surface transition-opacity duration-200 ${isPending ? "opacity-60" : ""}`
+      : `rounded-xl border bg-surface transition-opacity duration-200 ${
+          isPending ? "border-border opacity-60" : "border-border"
+        }`;
 
   if (!result) {
     return (
-      <section className="rounded-xl border border-border bg-surface p-5">
+      <section className={variant === "embedded" ? "bg-surface p-5" : "rounded-xl border border-border bg-surface p-5"}>
         <h2 className="text-sm font-semibold text-muted-faint">{t("title")}</h2>
         <div className="mt-6 flex flex-col items-center gap-2 py-4 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-border">
@@ -64,11 +72,7 @@ export const ResultPanel = memo(function ResultPanel({
   }
 
   return (
-    <section
-      className={`rounded-xl border bg-surface transition-opacity duration-200 ${
-        isPending ? "border-border opacity-60" : "border-border"
-      }`}
-    >
+    <section className={sectionClassName}>
       <ResultContent
         result={result}
         includeVat={includeVat}

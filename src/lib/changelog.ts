@@ -40,8 +40,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Drawers are automatically suppressed when their content is already visible as a column",
       "Quantity stepper buttons and unit price input made responsive for narrow column widths",
       "JSON external store now caches parsed values to prevent infinite re-render loops with useSyncExternalStore",
+      "Column mode now adapts to actual workspace width, uses an Add panel picker for unused panels, and renders the result panel embedded inside the column shell instead of nesting a second outer card",
     ],
     changed_bs: [
+      "Režim kolona se sada prilagodjava stvarnoj sirini radnog prostora, koristi Dodaj panel birac za neiskoristene panele i prikazuje rezultat ugradjen u okvir kolone bez dodatne spoljne kartice",
       "Bočna traka rezultata na desktopu proširena sa 300/340px na 340/400px (lg/xl prijelomne tačke)",
       "Ladičari se automatski sakrivaju kada je njihov sadržaj već vidljiv kao kolona",
       "Dugmad za količinu i unos cijene po jedinici prilagođeni za uske širine kolona",
@@ -50,8 +52,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     fixed: [
       "Compare panel now renders full content in column mode instead of placeholder text",
       "Quantity +/- buttons no longer overflow into adjacent unit price field in narrow layouts",
+      "Saved column layouts are normalized on load, duplicate panels are blocked, resize handles respect one shared minimum width, and over-wide saved layouts now fall back to the standard desktop view until enough space is available",
     ],
     fixed_bs: [
+      "Sacuvani rasporedi kolona se sada normalizuju pri ucitavanju, dupli paneli su blokirani, rucke za promjenu velicine koriste jednu zajednicku minimalnu sirinu, a preuski prikazi privremeno vracaju standardni desktop raspored dok nema dovoljno prostora",
       "Panel za usporedbu sada prikazuje potpuni sadržaj u režimu kolona umjesto teksta zamjene",
       "Dugmad za količinu +/- se više ne preklapaju sa susjednim poljem za cijenu u uskim rasporedima",
     ],
