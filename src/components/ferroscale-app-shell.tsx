@@ -760,6 +760,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onLoad={handleLoad}
           onRemove={removeSaved}
           onUpdate={updateSaved}
+          layout="column"
+          weightAsMain={weightAsMain}
         />
       </div>
     ),
@@ -781,6 +783,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           currentResult={result}
           currentInput={result ? input : null}
           onAddCalculation={addCalculation}
+          layout="column"
+          weightAsMain={weightAsMain}
         />
       </div>
     ),
@@ -878,6 +882,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onLoad={handleLoad}
           onRemove={removeSaved}
           onUpdate={updateSaved}
+          layout="mobile"
+          weightAsMain={weightAsMain}
         />
       </MobilePageCard>
     ) : currentTab === "projects" ? (
@@ -898,6 +904,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           currentResult={result}
           currentInput={result ? input : null}
           onAddCalculation={addCalculation}
+          layout="mobile"
+          weightAsMain={weightAsMain}
         />
       </MobilePageCard>
     ) : (
@@ -1149,6 +1157,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             onLoad={handleLoad}
             onRemove={removeSaved}
             onUpdate={updateSaved}
+            weightAsMain={weightAsMain}
           />
         )}
 
@@ -1210,11 +1219,12 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             onRemoveCalculation={removeCalculation}
             onUpdateCalculationNote={updateCalculationNote}
             onUpdateProjectDescription={updateProjectDescription}
-          onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
+            onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
             onLoadCalculation={handleLoad}
             currentResult={result}
             currentInput={result ? input : null}
             onAddCalculation={addCalculation}
+            weightAsMain={weightAsMain}
           />
         )}
 

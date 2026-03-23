@@ -1,25 +1,45 @@
 "use client";
 
-import { memo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { memo, useState, type ReactNode } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CalculationInput } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { SwipeActionItem } from "@/components/ui/swipe-action-item";
+import {
+  formatPieceLength,
+  formatStaticNumber,
+  getWorkspacePanelSpacing,
+  PanelCompactChip,
+  PanelCompactMetric,
+  type WorkspacePanelLayout,
+} from "@/components/ui/result-style";
 import { triggerHaptic } from "@/lib/haptics";
 
 function categoryStyle(category: string): { iconBg: string; badge: string } {
   switch (category) {
     case "tubes":
-      return { iconBg: "bg-blue-surface text-blue-text", badge: "bg-blue-surface text-blue-text border border-blue-border" };
+      return {
+        iconBg: "bg-blue-surface text-blue-text",
+        badge: "bg-blue-surface text-blue-text border border-blue-border",
+      };
     case "plates_sheets":
-      return { iconBg: "bg-amber-surface text-amber-text", badge: "bg-amber-surface text-amber-text border border-amber-border" };
+      return {
+        iconBg: "bg-amber-surface text-amber-text",
+        badge: "bg-amber-surface text-amber-text border border-amber-border",
+      };
     case "structural":
-      return { iconBg: "bg-green-surface text-green-text", badge: "bg-green-surface text-green-text border border-green-border" };
+      return {
+        iconBg: "bg-green-surface text-green-text",
+        badge: "bg-green-surface text-green-text border border-green-border",
+      };
     default:
-      return { iconBg: "bg-purple-surface text-purple-text", badge: "bg-purple-surface text-purple-text border border-purple-border" };
+      return {
+        iconBg: "bg-purple-surface text-purple-text",
+        badge: "bg-purple-surface text-purple-text border border-purple-border",
+      };
   }
 }
 
@@ -28,6 +48,8 @@ interface SavedPanelProps {
   onLoad: (input: CalculationInput) => void;
   onRemove: (id: string) => void;
   onUpdate: (id: string, patch: { name?: string; notes?: string }) => void;
+  layout?: WorkspacePanelLayout;
+  weightAsMain?: boolean;
 }
 
 export const HistoryPanel = memo(function HistoryPanel({
@@ -35,12 +57,15 @@ export const HistoryPanel = memo(function HistoryPanel({
   onLoad,
   onRemove,
   onUpdate,
+  layout = "drawer",
+  weightAsMain = false,
 }: SavedPanelProps) {
   const t = useTranslations("saved");
+  const spacing = getWorkspacePanelSpacing(layout);
 
   if (saved.length === 0) {
     return (
-      <div className="mt-6 flex flex-col items-center gap-2 px-4 text-center">
+      <div className="mt-6 flex flex-col items-center gap-2 px-4 py-4 text-center">
         <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-inset text-muted-faint">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +85,7 @@ export const HistoryPanel = memo(function HistoryPanel({
   }
 
   return (
-    <ul className="grid gap-2">
+    <ul className={`grid ${spacing.listGap}`}>
       {saved.map((entry) => (
         <SwipeActionItem
           key={entry.id}
@@ -75,6 +100,8 @@ export const HistoryPanel = memo(function HistoryPanel({
             onLoad={onLoad}
             onRemove={() => onRemove(entry.id)}
             onUpdate={(patch) => onUpdate(entry.id, patch)}
+            layout={layout}
+            weightAsMain={weightAsMain}
           />
         </SwipeActionItem>
       ))}
@@ -82,15 +109,13 @@ export const HistoryPanel = memo(function HistoryPanel({
   );
 });
 
-/* ------------------------------------------------------------------ */
-/*  Single saved entry card                                           */
-/* ------------------------------------------------------------------ */
-
 interface SavedItemProps {
   entry: SavedEntry;
   onLoad: (input: CalculationInput) => void;
   onRemove: () => void;
   onUpdate: (patch: { name?: string; notes?: string }) => void;
+  layout: WorkspacePanelLayout;
+  weightAsMain: boolean;
 }
 
 const SavedItem = memo(function SavedItem({
@@ -98,9 +123,13 @@ const SavedItem = memo(function SavedItem({
   onLoad,
   onRemove,
   onUpdate,
+  layout,
+  weightAsMain,
 }: SavedItemProps) {
+  const locale = useLocale();
   const tBase = useTranslations();
-  const t = useTranslations("saved");
+  const tSaved = useTranslations("saved");
+  const tResult = useTranslations("result");
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
   const [editNotes, setEditNotes] = useState(entry.notes ?? "");
@@ -108,110 +137,197 @@ const SavedItem = memo(function SavedItem({
   const gradeLabel = resolveGradeLabel(entry.result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[entry.result.currency];
   const styles = categoryStyle(entry.normalizedProfile.iconKey);
+  const pieceLength = formatPieceLength(entry.input.length, entry.result.lengthMm, locale);
+  const profileSummary = gradeLabel
+    ? `${entry.normalizedProfile.shortLabel} - ${gradeLabel}`
+    : entry.normalizedProfile.shortLabel;
+
+  const orderedMetrics = weightAsMain
+    ? [
+        {
+          label: tResult("unitWeight"),
+          value: formatStaticNumber(entry.result.unitWeightKg),
+          unit: "kg",
+        },
+        {
+          label: tResult("totalWeight"),
+          value: formatStaticNumber(entry.result.totalWeightKg),
+          unit: "kg",
+        },
+        {
+          label: tResult("totalCost"),
+          value: formatStaticNumber(entry.result.grandTotalAmount),
+          unit: currency,
+        },
+      ]
+    : [
+        {
+          label: tResult("unitWeight"),
+          value: formatStaticNumber(entry.result.unitWeightKg),
+          unit: "kg",
+        },
+        {
+          label: tResult("totalCost"),
+          value: formatStaticNumber(entry.result.grandTotalAmount),
+          unit: currency,
+        },
+        {
+          label: tResult("totalWeight"),
+          value: formatStaticNumber(entry.result.totalWeightKg),
+          unit: "kg",
+        },
+      ];
 
   function handleSaveEdit() {
     const name = editName.trim();
-    if (name) onUpdate({ name, notes: editNotes.trim() || undefined });
+    if (name) {
+      onUpdate({ name, notes: editNotes.trim() || undefined });
+    }
     setEditing(false);
   }
 
   return (
-    <li className="rounded-lg border border-border bg-surface px-3 py-2.5">
-      <div className="flex items-start justify-between gap-2">
-        {/* Clickable main content — loads entry */}
-        <button
-          type="button"
-          onClick={() => onLoad(entry.input)}
-          className="min-w-0 flex-1 text-left"
-        >
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${styles.iconBg}`}>
-              <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-3.5 w-3.5" />
-            </span>
-            <span className="truncate text-sm font-medium text-foreground">
-              {entry.name}
-            </span>
-            {gradeLabel && (
-              <span className={`shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold ${styles.badge}`}>
-                {gradeLabel}
+    <li className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+      <div className={layout === "drawer" ? "px-3 py-2.5" : "px-3 py-2"}>
+        <div className="flex items-start justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => onLoad(entry.input)}
+            className="min-w-0 flex-1 text-left"
+          >
+            <div className="flex items-start gap-2.5">
+              <span
+                className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${styles.iconBg}`}
+              >
+                <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-4 w-4" />
               </span>
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-foreground">{entry.name}</p>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-muted">{profileSummary}</p>
+              </div>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <PanelCompactChip label={tResult("contextQuantity")} value={tResult("pieces", { qty: entry.result.quantity })} />
+              <PanelCompactChip label={tResult("contextLength")} value={pieceLength} />
+            </div>
+
+            <div className="mt-2 grid grid-cols-2 gap-1.5 xl:grid-cols-4">
+              {orderedMetrics.map((metric) => (
+                <PanelCompactMetric
+                  key={metric.label}
+                  label={metric.label}
+                  value={metric.value}
+                  unit={metric.unit}
+                />
+              ))}
+              <PanelCompactMetric
+                label={tResult("surfaceArea")}
+                value={
+                  entry.result.surfaceAreaM2 != null
+                    ? formatStaticNumber(entry.result.surfaceAreaM2)
+                    : "\u2014"
+                }
+                unit={entry.result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
+              />
+            </div>
+
+            {entry.notes && !editing && (
+              <div className="mt-2 rounded-lg border border-border-faint bg-surface-raised px-2.5 py-1.5">
+                <p className="text-[11px] italic text-muted-faint line-clamp-3">{entry.notes}</p>
+              </div>
             )}
-          </div>
-          <p className="mt-0.5 text-xs text-muted">{entry.normalizedProfile.shortLabel}</p>
-          <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted">
-            <span>{entry.result.totalWeightKg} kg</span>
-            <span>{entry.result.grandTotalAmount} {currency}</span>
-          </div>
-          {entry.notes && !editing && (
-            <p className="mt-1 text-[11px] text-muted-faint italic line-clamp-2">{entry.notes}</p>
-          )}
-        </button>
+          </button>
 
-        {/* Small icon buttons */}
-        <div className="flex shrink-0 items-start gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              setEditName(entry.name);
-              setEditNotes(entry.notes ?? "");
-              setEditing((v) => !v);
-            }}
-            className="rounded p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
-            title={t("edit")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-              <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic("light");
-              onRemove();
-            }}
-            className="rounded p-1 text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
-            title={t("remove")}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-              <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-            </svg>
-          </button>
+          <div className="flex shrink-0 items-start gap-1">
+            <IconButton
+              title={tSaved("edit")}
+              onClick={() => {
+                setEditName(entry.name);
+                setEditNotes(entry.notes ?? "");
+                setEditing((value) => !value);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+              </svg>
+            </IconButton>
+            <IconButton
+              title={tSaved("remove")}
+              tone="danger"
+              onClick={() => {
+                triggerHaptic("light");
+                onRemove();
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+              </svg>
+            </IconButton>
+          </div>
         </div>
+
+        {editing && (
+          <div className="mt-2 grid gap-2">
+            <input
+              type="text"
+              value={editName}
+              onChange={(event) => setEditName(event.target.value)}
+              className="w-full rounded-lg border border-blue-border bg-surface px-3 py-2 text-sm font-medium text-foreground outline-none focus:border-blue-strong"
+              maxLength={80}
+              autoFocus
+              onKeyDown={(event) => {
+                if (event.key === "Enter") handleSaveEdit();
+                if (event.key === "Escape") setEditing(false);
+              }}
+            />
+            <textarea
+              value={editNotes}
+              onChange={(event) => setEditNotes(event.target.value)}
+              rows={3}
+              placeholder={tSaved("notesPlaceholder")}
+              className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-faint outline-none focus:border-blue-border"
+              maxLength={200}
+            />
+            <div className="flex gap-3">
+              <button type="button" onClick={handleSaveEdit} className="text-xs font-medium text-blue-strong">
+                {tSaved("editSave")}
+              </button>
+              <button type="button" onClick={() => setEditing(false)} className="text-xs font-medium text-muted">
+                {tSaved("editCancel")}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Inline name/notes editor */}
-      {editing && (
-        <div className="mt-2 grid gap-1.5">
-          <input
-            type="text"
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            className="w-full rounded border border-blue-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground outline-none focus:border-blue-strong"
-            maxLength={80}
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSaveEdit();
-              if (e.key === "Escape") setEditing(false);
-            }}
-          />
-          <textarea
-            value={editNotes}
-            onChange={(e) => setEditNotes(e.target.value)}
-            rows={2}
-            placeholder={t("notesPlaceholder")}
-            className="w-full resize-none rounded border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground placeholder:text-muted-faint outline-none focus:border-blue-border"
-            maxLength={200}
-          />
-          <div className="flex gap-2">
-            <button type="button" onClick={handleSaveEdit} className="text-[11px] font-medium text-blue-strong">
-              {t("editSave")}
-            </button>
-            <button type="button" onClick={() => setEditing(false)} className="text-[11px] font-medium text-muted">
-              {t("editCancel")}
-            </button>
-          </div>
-        </div>
-      )}
     </li>
   );
 });
+
+function IconButton({
+  children,
+  title,
+  tone = "default",
+  onClick,
+}: {
+  children: ReactNode;
+  title: string;
+  tone?: "default" | "danger";
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        tone === "danger"
+          ? "rounded-lg p-1.5 text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
+          : "rounded-lg p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
+      }
+      title={title}
+    >
+      {children}
+    </button>
+  );
+}

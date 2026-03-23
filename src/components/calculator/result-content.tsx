@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useState, type ButtonHTMLAttributes } from "react";
+import { memo, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -12,36 +12,21 @@ import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
+import {
+  formatLocalizedNumber,
+  formatSquareMeters,
+  formatStaticNumber,
+  getDecimalPlaces,
+  PanelActionButton,
+  PanelMetricCard,
+  PanelSectionLabel,
+  PanelSummaryChip,
+} from "@/components/ui/result-style";
 
 export type ResultLayoutMode = "standalone" | "column" | "sheet";
 
-function getDecimalPlaces(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  const asString = String(value);
-  const dotIndex = asString.indexOf(".");
-  return dotIndex === -1 ? 0 : asString.length - dotIndex - 1;
-}
-
 function formatAnimatedNumber(animated: number, reference: number): string {
   return animated.toFixed(getDecimalPlaces(reference));
-}
-
-function formatStaticNumber(value: number): string {
-  const decimals = getDecimalPlaces(value);
-  return value.toFixed(decimals).replace(/\.?0+$/, "");
-}
-
-function formatSquareMeters(value: number): string {
-  return `${formatStaticNumber(value)} m\u00b2`;
-}
-
-function formatLocalizedNumber(value: number, locale: string): string {
-  if (!Number.isFinite(value)) return String(value);
-  const decimals = getDecimalPlaces(value);
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(value);
 }
 
 export function formatResultForClipboard(
@@ -110,7 +95,6 @@ export const ResultContent = memo(function ResultContent({
   const profileLabel = normalizedProfile?.shortLabel ?? result.profileLabel;
   const gradeLabel = resolveGradeLabel(result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[result.currency];
-  const priceUnit = result.priceUnit ?? "kg";
   const localizedUnitPrice = formatLocalizedNumber(result.unitPriceAmount, locale);
   const effectivePricePerKg = result.totalWeightKg > 0
     ? roundTo(result.subtotalAmount / result.totalWeightKg, 2)
@@ -199,14 +183,14 @@ export const ResultContent = memo(function ResultContent({
 
           <div className="mt-3 flex flex-wrap gap-2">
             {summaryChips.map((chip) => (
-              <SummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} />
+              <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} />
             ))}
           </div>
         </section>
 
         <section data-result-actions className={`${sectionPadding} pt-0`}>
           <div className="grid grid-cols-2 gap-2">
-            <ActionButton
+            <PanelActionButton
               type="button"
               onClick={() => {
                 triggerHaptic("light");
@@ -246,9 +230,9 @@ export const ResultContent = memo(function ResultContent({
                   ? t("inCompareCount", { count: compareCount, max: maxCompare })
                   : t("addToCompare")}
               </span>
-            </ActionButton>
+            </PanelActionButton>
 
-            <ActionButton
+            <PanelActionButton
               type="button"
               onClick={() => {
                 if (isSaved) {
@@ -278,9 +262,9 @@ export const ResultContent = memo(function ResultContent({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
               </motion.svg>
               <span>{isSaved ? t("saved") : t("save")}</span>
-            </ActionButton>
+            </PanelActionButton>
 
-            <ActionButton
+            <PanelActionButton
               type="button"
               onClick={() => {
                 triggerHaptic("light");
@@ -306,7 +290,7 @@ export const ResultContent = memo(function ResultContent({
                 <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
               </svg>
               <span>{t("project")}</span>
-            </ActionButton>
+            </PanelActionButton>
 
             <CopyButton
               result={result}
@@ -319,25 +303,25 @@ export const ResultContent = memo(function ResultContent({
 
       <div className={`${sectionPadding} ${sectionGap}`}>
         <section data-result-metrics>
-          <SectionLabel label={t("quickMetrics")} />
+          <PanelSectionLabel label={t("quickMetrics")} />
           <div className="mt-3 grid grid-cols-2 gap-3">
-            <MetricCard
+            <PanelMetricCard
               label={t("unitWeight")}
               value={formatAnimatedNumber(animatedUnitWeight, result.unitWeightKg)}
               unit="kg"
             />
-            <MetricCard
+            <PanelMetricCard
               label={t("totalWeight")}
               value={formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg)}
               unit="kg"
               sublabel={isMulti ? t("pieces", { qty: result.quantity }) : undefined}
             />
-            <MetricCard
+            <PanelMetricCard
               label={t("unitPrice")}
               value={localizedUnitPrice}
               unit={currency}
             />
-            <MetricCard
+            <PanelMetricCard
               label={t("surfaceArea")}
               value={result.surfaceAreaM2 != null ? formatStaticNumber(result.surfaceAreaM2) : "—"}
               unit={result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
@@ -353,7 +337,7 @@ export const ResultContent = memo(function ResultContent({
         </section>
 
         <section data-result-cost>
-          <SectionLabel label={t("costBreakdown")} />
+          <PanelSectionLabel label={t("costBreakdown")} />
           <div className="mt-3 rounded-2xl border border-border bg-surface-raised p-3">
             <CostRow label={t("subtotal")} value={`${formatStaticNumber(result.subtotalAmount)} ${currency}`} />
             {result.wasteAmount > 0 && (
@@ -474,67 +458,6 @@ export const ResultContent = memo(function ResultContent({
   );
 });
 
-function SectionLabel({ label }: { label: string }) {
-  return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-      {label}
-    </p>
-  );
-}
-
-function SummaryChip({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] text-foreground-secondary">
-      <span className="font-medium text-muted">{label}</span>
-      <span className="font-semibold">{value}</span>
-    </span>
-  );
-}
-
-function MetricCard({
-  label,
-  value,
-  unit,
-  sublabel,
-}: {
-  label: string;
-  value: string;
-  unit?: string;
-  sublabel?: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-surface-raised p-3">
-      <p className="text-xs font-medium text-muted">{label}</p>
-      <div className="mt-2 flex flex-wrap items-end gap-x-1.5 gap-y-1">
-        <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
-        {unit && <p className="pb-0.5 text-xs font-semibold uppercase tracking-wide text-muted">{unit}</p>}
-      </div>
-      {sublabel && <p className="mt-1 text-xs text-muted">{sublabel}</p>}
-    </div>
-  );
-}
-
-function ActionButton({
-  className,
-  children,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      {...props}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${className}`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function CostRow({
   label,
   value,
@@ -573,7 +496,7 @@ export function CopyButton({
   }, [result, normalizedProfile]);
 
   return (
-    <ActionButton
+    <PanelActionButton
       type="button"
       onClick={handleCopy}
       className={
@@ -612,6 +535,6 @@ export function CopyButton({
         </svg>
       )}
       <span>{copied ? t("copied") : t("copy")}</span>
-    </ActionButton>
+    </PanelActionButton>
   );
 }

@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.2.0",
+    date: "2026-03-23",
+    changed: [
+      "Saved calculations now use the same result-style card hierarchy across drawers, mobile screens, and column mode",
+      "Saved entries and project calculations now show quantity, piece length, unit weight, total weight, total cost, and surface area in a clearer layout",
+      "Project list and project detail views were redesigned around totals-first summaries, grouped actions, painting stats, and refreshed breakdown cards",
+    ],
+    changed_bs: [
+      "Sacuvani izracuni sada koriste istu hijerarhiju kartica kao rezultat kroz drawere, mobilne ekrane i rezim kolona",
+      "Sacuvane stavke i kalkulacije u projektu sada jasnije prikazuju kolicinu, duzinu komada, masu po komadu, ukupnu masu, ukupnu cijenu i povrsinu",
+      "Lista projekata i detalji projekta su redizajnirani oko pregleda sa glavnim totalima, grupisanih akcija, statistike farbanja i osvjezenih breakdown kartica",
+    ],
+  },
+  {
     version: "2.1.0",
     date: "2026-03-23",
     changed: [

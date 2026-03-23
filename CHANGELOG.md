@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.2.0] - 2026-03-23
+
+### Changed
+- Saved calculations now use the same result-style card hierarchy across drawers, mobile screens, and column mode
+- Saved entries and project calculations now show quantity, piece length, unit weight, total weight, total cost, and surface area in a clearer layout
+- Project list and project detail views were redesigned around totals-first summaries, grouped actions, painting stats, and refreshed breakdown cards
+
+---
+
 ## [2.1.0] - 2026-03-23
 
 ### Changed
@@ -204,7 +213,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/nedimperva/ferroscale/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/nedimperva/ferroscale/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/nedimperva/ferroscale/compare/v1.8.0...v2.0.0
 [1.8.0]: https://github.com/nedimperva/ferroscale/compare/v1.7.0...v1.8.0

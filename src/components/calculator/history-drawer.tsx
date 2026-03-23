@@ -17,6 +17,7 @@ interface SavedDrawerProps {
   onLoad: (input: CalculationInput) => void;
   onRemove: (id: string) => void;
   onUpdate: (id: string, patch: { name?: string; notes?: string }) => void;
+  weightAsMain?: boolean;
 }
 
 export const HistoryDrawer = memo(function HistoryDrawer({
@@ -26,6 +27,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
   onLoad,
   onRemove,
   onUpdate,
+  weightAsMain = false,
 }: SavedDrawerProps) {
   const t = useTranslations("saved");
   const isMobile = useIsMobile();
@@ -91,6 +93,8 @@ export const HistoryDrawer = memo(function HistoryDrawer({
           }}
           onRemove={onRemove}
           onUpdate={onUpdate}
+          layout={isMobile ? "mobile" : "drawer"}
+          weightAsMain={weightAsMain}
         />
       </div>
     </>
@@ -105,7 +109,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
   }
 
   return (
-    <AnimatedDrawer open={open} onClose={onClose} widthClass="w-[340px]" ariaLabel={t("drawerAria")}>
+    <AnimatedDrawer open={open} onClose={onClose} widthClass="w-[400px]" ariaLabel={t("drawerAria")}>
       {content}
     </AnimatedDrawer>
   );
