@@ -4,7 +4,7 @@ import { memo } from "react";
 import { useTranslations } from "next-intl";
 import type { CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
-import { ResultContent } from "./result-content";
+import { ResultContent, type ResultLayoutMode } from "./result-content";
 
 interface ResultPanelProps {
   result: CalculationResult | null;
@@ -24,7 +24,7 @@ interface ResultPanelProps {
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
   weightAsMain?: boolean;
-  variant?: "standalone" | "embedded";
+  layout?: ResultLayoutMode;
 }
 
 export const ResultPanel = memo(function ResultPanel({
@@ -45,19 +45,26 @@ export const ResultPanel = memo(function ResultPanel({
   hasProjects = false,
   normalizedProfile = null,
   weightAsMain = false,
-  variant = "standalone",
+  layout = "standalone",
 }: ResultPanelProps) {
   const t = useTranslations("result");
   const sectionClassName =
-    variant === "embedded"
-      ? `bg-surface transition-opacity duration-200 ${isPending ? "opacity-60" : ""}`
-      : `rounded-xl border bg-surface transition-opacity duration-200 ${
+    layout === "standalone"
+      ? `overflow-hidden rounded-xl border bg-surface transition-opacity duration-200 ${
           isPending ? "border-border opacity-60" : "border-border"
-        }`;
+        }`
+      : `h-full bg-surface transition-opacity duration-200 ${isPending ? "opacity-60" : ""}`;
 
   if (!result) {
     return (
-      <section className={variant === "embedded" ? "bg-surface p-5" : "rounded-xl border border-border bg-surface p-5"}>
+      <section
+        data-result-layout={layout}
+        className={
+          layout === "standalone"
+            ? "rounded-xl border border-border bg-surface p-5"
+            : "h-full bg-surface p-5"
+        }
+      >
         <h2 className="text-sm font-semibold text-muted-faint">{t("title")}</h2>
         <div className="mt-6 flex flex-col items-center gap-2 py-4 text-center">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-border">
@@ -72,7 +79,7 @@ export const ResultPanel = memo(function ResultPanel({
   }
 
   return (
-    <section className={sectionClassName}>
+    <section data-result-layout={layout} className={sectionClassName}>
       <ResultContent
         result={result}
         includeVat={includeVat}
@@ -90,6 +97,7 @@ export const ResultPanel = memo(function ResultPanel({
         hasProjects={hasProjects}
         normalizedProfile={normalizedProfile}
         weightAsMain={weightAsMain}
+        layout={layout}
       />
     </section>
   );

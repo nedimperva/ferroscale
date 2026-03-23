@@ -299,8 +299,15 @@
     "profile": "Profil:",
     "material": "Materijal:",
     "unitPrice": "Jedinicna cijena:",
+    "quickMetrics": "Brzi pregled",
     "costBreakdown": "Razrada cijene",
+    "calculationDetails": "Detalji izracuna",
     "subtotal": "Meduzbir:",
+    "contextQuantity": "Kol",
+    "contextLength": "Duzina",
+    "contextPricing": "Cijena",
+    "contextWaste": "Otpad",
+    "contextVat": "PDV",
     "waste": "Otpad ({percent}%):",
     "vat": "PDV ({percent}%):",
     "total": "Ukupno:",
@@ -332,7 +339,8 @@
     "expandAriaLabel": "Prosiri detalje rezultata",
     "share": "Podijeli",
     "shareCopied": "Link kopiran u meduspremnik",
-    "surfaceArea": "Površina"
+    "surfaceArea": "Površina",
+    "surfaceUnavailable": "Nema podataka o povrsini"
   },
   "resultRows": {
     "crossSectionArea": "Povrsina presjeka",

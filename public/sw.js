@@ -1,4 +1,4 @@
-const CACHE_NAME = "ferroscale-v2.0.0-ds2026.02.1";
+const CACHE_NAME = "ferroscale-v2.1.0-ds2026.02.1";
 const OFFLINE_FALLBACK_URL = "/offline.html";
 const APP_SHELL_URLS = [
   "/",

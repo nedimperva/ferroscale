@@ -39,6 +39,7 @@ export const ColumnPanel = memo(function ColumnPanel({
     <div
       id={`column-${id}`}
       data-column-id={id}
+      data-panel-type={panelId}
       className="flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-surface shadow-sm"
       style={{ minWidth: `${MIN_COLUMN_WIDTH}px` }}
     >
@@ -104,7 +105,7 @@ export const ColumnPanel = memo(function ColumnPanel({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto scroll-native">
+      <div data-column-scroll className="flex-1 overflow-y-auto scroll-native">
         <ColumnContent panelId={panelId} contentMap={contentMap} />
       </div>
     </div>

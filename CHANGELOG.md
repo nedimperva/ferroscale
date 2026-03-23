@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.1.0] - 2026-03-23
+
+### Changed
+- Results were redesigned across desktop and column mode with a grouped summary, quick metrics, clearer cost breakdown, and compact references
+- Column-mode result panels now keep the summary and primary actions sticky while you scroll through the details
+- Calculation details now switch to stacked rows in narrow result columns for better readability without horizontal scrolling
+
+---
+
 ## [2.0.0] - 2026-03-23
 
 ### Added
@@ -21,6 +30,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - Desktop result panel sidebar widened from 300/340px to 340/400px at `lg`/`xl` breakpoints
+- Result panels now use a grouped summary, quick metrics, clearer cost breakdown, and sticky top actions in column mode for faster scanning
 - Drawers are automatically suppressed when their content is already visible as a column
 - Quantity stepper buttons and unit price input were tightened for narrow column widths
 - JSON external store caching now prevents `useSyncExternalStore` render loops
@@ -194,7 +204,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/nedimperva/ferroscale/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/nedimperva/ferroscale/compare/v1.8.0...v2.0.0
 [1.8.0]: https://github.com/nedimperva/ferroscale/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/nedimperva/ferroscale/compare/v1.6.0...v1.7.0

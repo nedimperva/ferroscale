@@ -298,6 +298,7 @@ export const ResultOverlay = memo(function ResultOverlay({
               hasProjects={hasProjects}
               normalizedProfile={normalizedProfile}
               weightAsMain={weightAsMain}
+              layout="sheet"
             />
           </div>
         </Drawer.Content>

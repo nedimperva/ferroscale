@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.1.0",
+    date: "2026-03-23",
+    changed: [
+      "Results were redesigned across desktop and column mode with a grouped summary, quick metrics, clearer cost breakdown, and compact references",
+      "Column-mode result panels now keep the summary and primary actions sticky while you scroll through the details",
+      "Calculation details now switch to stacked rows in narrow result columns for better readability without horizontal scrolling",
+    ],
+    changed_bs: [
+      "Rezultati su redizajnirani na desktopu i u rezimu kolona sa grupisanim pregledom, brzim metrikama, jasnijom razradom cijene i kompaktnim referencama",
+      "Panel rezultata u rezimu kolona sada drzi pregled i glavne akcije ljepljivim dok skrolate kroz detalje",
+      "Detalji izracuna se sada prikazuju kao slozeni redovi u uskim kolonama rezultata radi bolje citljivosti bez horizontalnog skrolanja",
+    ],
+  },
+  {
     version: "2.0.0",
     date: "2026-03-23",
     added: [
@@ -37,12 +51,14 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
     changed: [
       "Desktop result panel sidebar widened from 300/340px to 340/400px (lg/xl breakpoints)",
+      "Result panels now use a grouped summary, quick metrics, clearer cost breakdown, and sticky top actions in column mode for faster scanning",
       "Drawers are automatically suppressed when their content is already visible as a column",
       "Quantity stepper buttons and unit price input made responsive for narrow column widths",
       "JSON external store now caches parsed values to prevent infinite re-render loops with useSyncExternalStore",
       "Column mode now adapts to actual workspace width, uses an Add panel picker for unused panels, and renders the result panel embedded inside the column shell instead of nesting a second outer card",
     ],
     changed_bs: [
+      "Panel rezultata sada koristi grupisani pregled, brze metrike, jasniju razradu cijene i ljepljive gornje akcije u rezimu kolona radi brzeg citanja",
       "Režim kolona se sada prilagodjava stvarnoj sirini radnog prostora, koristi Dodaj panel birac za neiskoristene panele i prikazuje rezultat ugradjen u okvir kolone bez dodatne spoljne kartice",
       "Bočna traka rezultata na desktopu proširena sa 300/340px na 340/400px (lg/xl prijelomne tačke)",
       "Ladičari se automatski sakrivaju kada je njihov sadržaj već vidljiv kao kolona",

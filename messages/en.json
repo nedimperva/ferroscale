@@ -299,8 +299,15 @@
     "profile": "Profile:",
     "material": "Material:",
     "unitPrice": "Unit price:",
+    "quickMetrics": "Quick metrics",
     "costBreakdown": "Cost breakdown",
+    "calculationDetails": "Calculation details",
     "subtotal": "Subtotal:",
+    "contextQuantity": "Qty",
+    "contextLength": "Length",
+    "contextPricing": "Pricing",
+    "contextWaste": "Waste",
+    "contextVat": "VAT",
     "waste": "Waste ({percent}%):",
     "vat": "VAT ({percent}%):",
     "total": "Total:",
@@ -332,7 +339,8 @@
     "expandAriaLabel": "Expand result details",
     "share": "Share",
     "shareCopied": "Link copied to clipboard",
-    "surfaceArea": "Surface area"
+    "surfaceArea": "Surface area",
+    "surfaceUnavailable": "No surface data"
   },
   "resultRows": {
     "crossSectionArea": "Cross-section area",

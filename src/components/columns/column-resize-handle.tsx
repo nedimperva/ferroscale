@@ -77,8 +77,9 @@ export function ColumnResizeHandle({
 
       const element = handleRef.current;
       if (!element) return;
+      const activeElement = element;
 
-      const container = element.closest("[data-columns-container]") as HTMLElement | null;
+      const container = activeElement.closest("[data-columns-container]") as HTMLElement | null;
       if (!container) return;
 
       const leftElement = container.querySelector(`[data-column-id="${leftId}"]`) as HTMLElement | null;
@@ -91,8 +92,15 @@ export function ColumnResizeHandle({
 
       const snapshot = getResizeSnapshot();
       if (!snapshot) return;
+      const {
+        leftPx,
+        rightPx,
+        leftPercent,
+        rightPercent,
+        equalPercent: snapshotEqualPercent,
+      } = snapshot;
 
-      element.setPointerCapture(event.pointerId);
+      activeElement.setPointerCapture(event.pointerId);
       dragging.current = true;
 
       document.body.style.cursor = "col-resize";
@@ -102,21 +110,24 @@ export function ColumnResizeHandle({
         const mouseX = clientX - containerRect.left;
         const nextLeftPx = mouseX - leftEdge;
         return clampColumnPairPercents({
-          ...snapshot,
+          leftPx,
+          rightPx,
+          leftPercent,
+          rightPercent,
           nextLeftPx,
         });
       }
 
       function cleanup(pointerId: number) {
         dragging.current = false;
-        if (element.hasPointerCapture(pointerId)) {
-          element.releasePointerCapture(pointerId);
+        if (activeElement.hasPointerCapture(pointerId)) {
+          activeElement.releasePointerCapture(pointerId);
         }
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
-        element.removeEventListener("pointermove", onPointerMove);
-        element.removeEventListener("pointerup", onPointerUp);
-        element.removeEventListener("pointercancel", onPointerCancel);
+        activeElement.removeEventListener("pointermove", onPointerMove);
+        activeElement.removeEventListener("pointerup", onPointerUp);
+        activeElement.removeEventListener("pointercancel", onPointerCancel);
       }
 
       function onPointerMove(moveEvent: PointerEvent) {
@@ -127,7 +138,7 @@ export function ColumnResizeHandle({
 
       function onPointerUp(upEvent: PointerEvent) {
         const { left, right } = computePercents(upEvent.clientX);
-        onResizeEnd(buildWidthMap(left, right, snapshot.equalPercent));
+        onResizeEnd(buildWidthMap(left, right, snapshotEqualPercent));
         cleanup(upEvent.pointerId);
       }
 
@@ -135,9 +146,9 @@ export function ColumnResizeHandle({
         cleanup(cancelEvent.pointerId);
       }
 
-      element.addEventListener("pointermove", onPointerMove);
-      element.addEventListener("pointerup", onPointerUp);
-      element.addEventListener("pointercancel", onPointerCancel);
+      activeElement.addEventListener("pointermove", onPointerMove);
+      activeElement.addEventListener("pointerup", onPointerUp);
+      activeElement.addEventListener("pointercancel", onPointerCancel);
     },
     [buildWidthMap, getResizeSnapshot, leftId, onResize, onResizeEnd, rightId],
   );

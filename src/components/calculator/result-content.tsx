@@ -1,16 +1,48 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState, type ButtonHTMLAttributes } from "react";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+import { roundTo } from "@/lib/calculator/units";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
+
+export type ResultLayoutMode = "standalone" | "column" | "sheet";
+
+function getDecimalPlaces(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  const asString = String(value);
+  const dotIndex = asString.indexOf(".");
+  return dotIndex === -1 ? 0 : asString.length - dotIndex - 1;
+}
+
+function formatAnimatedNumber(animated: number, reference: number): string {
+  return animated.toFixed(getDecimalPlaces(reference));
+}
+
+function formatStaticNumber(value: number): string {
+  const decimals = getDecimalPlaces(value);
+  return value.toFixed(decimals).replace(/\.?0+$/, "");
+}
+
+function formatSquareMeters(value: number): string {
+  return `${formatStaticNumber(value)} m\u00b2`;
+}
+
+function formatLocalizedNumber(value: number, locale: string): string {
+  if (!Number.isFinite(value)) return String(value);
+  const decimals = getDecimalPlaces(value);
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value);
+}
 
 export function formatResultForClipboard(
   result: CalculationResult,
@@ -22,7 +54,7 @@ export function formatResultForClipboard(
     `Material: ${result.gradeLabel}`,
     `Unit weight: ${result.unitWeightKg} kg`,
     `Total weight: ${result.totalWeightKg} kg`,
-    ...(result.surfaceAreaM2 != null ? [`Surface area: ${result.surfaceAreaM2} m²`] : []),
+    ...(result.surfaceAreaM2 != null ? [`Surface area: ${result.surfaceAreaM2} m\u00b2`] : []),
     `Total cost: ${result.grandTotalAmount} ${currency}`,
   ];
   return lines.join("\n");
@@ -45,6 +77,7 @@ export interface ResultContentProps {
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
   weightAsMain?: boolean;
+  layout?: ResultLayoutMode;
 }
 
 export const ResultContent = memo(function ResultContent({
@@ -64,7 +97,9 @@ export const ResultContent = memo(function ResultContent({
   hasProjects = false,
   normalizedProfile = null,
   weightAsMain = false,
+  layout = "standalone",
 }: ResultContentProps) {
+  const locale = useLocale();
   const tBase = useTranslations();
   const t = useTranslations("result");
 
@@ -72,257 +107,457 @@ export const ResultContent = memo(function ResultContent({
   const animatedUnitWeight = useAnimatedNumber(result.unitWeightKg);
   const animatedTotalWeight = useAnimatedNumber(result.totalWeightKg);
 
-  function fmtAnimated(animated: number, reference: number): string {
-    const dot = String(reference).indexOf(".");
-    const dec = dot === -1 ? 0 : String(reference).length - dot - 1;
-    return animated.toFixed(dec);
-  }
-
   const profileLabel = normalizedProfile?.shortLabel ?? result.profileLabel;
   const gradeLabel = resolveGradeLabel(result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[result.currency];
   const priceUnit = result.priceUnit ?? "kg";
-
+  const localizedUnitPrice = formatLocalizedNumber(result.unitPriceAmount, locale);
+  const effectivePricePerKg = result.totalWeightKg > 0
+    ? roundTo(result.subtotalAmount / result.totalWeightKg, 2)
+    : 0;
+  const localizedPricePerKg = formatLocalizedNumber(effectivePricePerKg, locale);
   const isMulti = result.quantity > 1;
+  const usesCompactSpacing = layout !== "standalone";
+  const stickyTopBlock = layout === "column";
+
+  const primaryValue = weightAsMain
+    ? formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg)
+    : formatAnimatedNumber(animatedTotal, result.grandTotalAmount);
+  const primaryUnit = weightAsMain ? "kg" : currency;
+  const secondaryValue = weightAsMain
+    ? formatAnimatedNumber(animatedTotal, result.grandTotalAmount)
+    : formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg);
+  const secondaryUnit = weightAsMain ? currency : "kg";
+
+  const sectionPadding = usesCompactSpacing ? "px-4 py-4" : "px-5 py-5";
+  const sectionGap = usesCompactSpacing ? "space-y-4" : "space-y-5";
+
+  const summaryChips = [
+    { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }) },
+    { label: t("contextPricing"), value: `${localizedPricePerKg}${currency}/kg` },
+    ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%` }] : []),
+    ...(includeVat ? [{ label: t("contextVat"), value: `${vatPercent}%` }] : []),
+  ];
 
   return (
-    <>
-      {/* ── Hero ── */}
-      <div className="border-b border-accent-border bg-linear-to-b from-accent-surface to-surface px-5 py-4 text-center">
-        {/* Primary value */}
-        <p className="mt-1 text-4xl font-extrabold tabular-nums tracking-tight text-foreground transition-all duration-300">
-          {weightAsMain
-            ? fmtAnimated(animatedTotalWeight, result.totalWeightKg)
-            : fmtAnimated(animatedTotal, result.grandTotalAmount)}
-          <span className="ml-1 text-lg font-bold text-accent">
-            {weightAsMain ? "kg" : currency}
-          </span>
-        </p>
-        {/* Secondary value */}
-        <p className="mt-1 text-lg font-semibold tabular-nums text-foreground-secondary">
-          {weightAsMain
-            ? fmtAnimated(animatedTotal, result.grandTotalAmount)
-            : fmtAnimated(animatedTotalWeight, result.totalWeightKg)}
-          <span className="ml-0.5 text-sm font-medium text-muted">
-            {weightAsMain ? currency : "kg"}
-          </span>
-        </p>
-        {/* Profile + material subtitle */}
-        <p className="mt-1.5 flex items-center justify-center gap-1.5 text-sm text-muted">
-          {normalizedProfile && (
-            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded bg-surface-inset">
-              <ProfileIcon category={normalizedProfile.iconKey} className="h-3 w-3" />
-            </span>
-          )}
-          <span className="truncate">{profileLabel} · {gradeLabel}</span>
-        </p>
+    <div
+      data-result-layout={layout}
+      className={`flex flex-col ${layout === "column" ? "min-h-full" : ""}`}
+    >
+      <div
+        data-result-top
+        className={
+          stickyTopBlock
+            ? "sticky top-0 z-10 border-b border-border bg-surface/95 shadow-sm backdrop-blur"
+            : "border-b border-border-faint"
+        }
+      >
+        <section
+          data-result-summary
+          className={`${sectionPadding} bg-linear-to-b from-accent-surface/80 to-surface`}
+        >
+          <div className="flex items-start gap-3">
+            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/12 text-accent ring-1 ring-accent/20">
+              {normalizedProfile ? (
+                <ProfileIcon category={normalizedProfile.iconKey} className="h-5 w-5" />
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                >
+                  <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
+                </svg>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
+                <p className="text-4xl font-extrabold tracking-tight text-foreground tabular-nums">
+                  {primaryValue}
+                </p>
+                <p className="pb-1 text-lg font-semibold text-accent">{primaryUnit}</p>
+              </div>
+
+              <p className="mt-1 text-sm font-medium text-foreground-secondary tabular-nums">
+                {secondaryValue}
+                <span className="ml-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                  {secondaryUnit}
+                </span>
+              </p>
+
+              <p className="mt-2 truncate text-sm text-muted">
+                {profileLabel} · {gradeLabel}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {summaryChips.map((chip) => (
+              <SummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} />
+            ))}
+          </div>
+        </section>
+
+        <section data-result-actions className={`${sectionPadding} pt-0`}>
+          <div className="grid grid-cols-2 gap-2">
+            <ActionButton
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                onCompare?.();
+              }}
+              disabled={!canCompare && !isInCompare}
+              className={
+                isInCompare
+                  ? "border-blue-border bg-blue-surface text-blue-text"
+                  : canCompare
+                    ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
+                    : "cursor-not-allowed border-border-faint bg-surface text-muted-faint"
+              }
+              title={
+                isInCompare
+                  ? t("alreadyInCompare")
+                  : canCompare
+                    ? t("addToCompare")
+                    : t("compareFull", { max: maxCompare })
+              }
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 shrink-0"
+              >
+                <rect x="3" y="3" width="7" height="18" rx="1" />
+                <rect x="14" y="3" width="7" height="18" rx="1" />
+              </svg>
+              <span>
+                {isInCompare
+                  ? t("inCompareCount", { count: compareCount, max: maxCompare })
+                  : t("addToCompare")}
+              </span>
+            </ActionButton>
+
+            <ActionButton
+              type="button"
+              onClick={() => {
+                if (isSaved) {
+                  triggerHaptic("light");
+                  onRemoveSaved();
+                } else {
+                  triggerHaptic("success");
+                  onOpenSaveDialog();
+                }
+              }}
+              className={
+                isSaved
+                  ? "border-accent-border bg-accent text-white hover:bg-accent"
+                  : "border-accent-border bg-accent-surface text-accent hover:bg-accent-surface/80"
+              }
+            >
+              <motion.svg
+                key={isSaved ? "saved" : "unsaved"}
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className={`h-4 w-4 ${isSaved ? "fill-current stroke-current" : "fill-none stroke-current"}`}
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </motion.svg>
+              <span>{isSaved ? t("saved") : t("save")}</span>
+            </ActionButton>
+
+            <ActionButton
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                onAddToProject?.();
+              }}
+              className={
+                hasProjects
+                  ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+                  : "border-border bg-surface text-foreground-secondary hover:bg-surface-raised"
+              }
+              title={t("addToProject")}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 shrink-0"
+              >
+                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
+              </svg>
+              <span>{t("project")}</span>
+            </ActionButton>
+
+            <CopyButton
+              result={result}
+              normalizedProfile={normalizedProfile}
+              className="border-border bg-surface text-foreground-secondary hover:bg-surface-raised"
+            />
+          </div>
+        </section>
       </div>
 
-      {/* ── Action buttons ── */}
-      <div className="flex flex-wrap gap-2 border-b border-border-faint px-4 py-3">
-        {/* Compare */}
-        <button
-          type="button"
-          onClick={() => {
-            triggerHaptic("light");
-            onCompare?.();
-          }}
-          disabled={!canCompare && !isInCompare}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-            isInCompare
-              ? "border-blue-border bg-blue-surface text-blue-text"
-              : canCompare
-                ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
-                : "cursor-not-allowed border-border-faint text-muted-faint"
-          }`}
-          title={
-            isInCompare
-              ? t("alreadyInCompare")
-              : canCompare
-                ? t("addToCompare")
-                : t("compareFull", { max: maxCompare })
-          }
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0">
-            <rect x="3" y="3" width="7" height="18" rx="1" />
-            <rect x="14" y="3" width="7" height="18" rx="1" />
-          </svg>
-          {isInCompare
-            ? t("inCompareCount", { count: compareCount, max: maxCompare })
-            : t("addToCompare")}
-        </button>
-
-        {/* Save / Saved */}
-        <button
-          type="button"
-          onClick={() => {
-            if (isSaved) {
-              triggerHaptic("light");
-              onRemoveSaved();
-            } else {
-              triggerHaptic("success");
-              onOpenSaveDialog();
-            }
-          }}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-            isSaved
-              ? "border-accent-border bg-accent-surface text-accent"
-              : "border-border text-foreground-secondary hover:bg-surface-raised"
-          }`}
-        >
-          <motion.svg
-            key={isSaved ? "saved" : "unsaved"}
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            className={`h-3.5 w-3.5 ${
-              isSaved ? "fill-accent stroke-accent" : "fill-none stroke-current"
-            }`}
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-          </motion.svg>
-          {isSaved ? t("saved") : t("save")}
-        </button>
-
-        {/* Project */}
-        <button
-          type="button"
-          onClick={() => {
-            triggerHaptic("light");
-            onAddToProject?.();
-          }}
-          className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
-            hasProjects
-              ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-              : "border-border text-foreground-secondary hover:bg-surface-raised"
-          }`}
-          title={t("addToProject")}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-            <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>
-          </svg>
-          {t("project")}
-        </button>
-
-        {/* Copy */}
-        <CopyButton result={result} normalizedProfile={normalizedProfile} />
-      </div>
-
-      {/* ── Receipt body ── */}
-      <div className="px-4 py-4 text-sm">
-        {/* Weight section */}
-        <div className="flex justify-between py-1.5">
-          <span className="text-muted">{t("unitWeight")}</span>
-          <span className="tabular-nums">{fmtAnimated(animatedUnitWeight, result.unitWeightKg)} kg</span>
-        </div>
-        {isMulti && (
-          <>
-            <div className="flex justify-between py-1.5 text-muted">
-              <span>× {t("pieces", { qty: result.quantity })}</span>
-            </div>
-            <div className="flex justify-between py-1.5">
-              <span className="text-muted">{t("totalWeight")}</span>
-              <span className="tabular-nums font-medium">{fmtAnimated(animatedTotalWeight, result.totalWeightKg)} kg</span>
-            </div>
-          </>
-        )}
-
-        {result.surfaceAreaM2 != null && (
-          <>
-            <hr className="my-2 border-border-faint" />
-            <div className="flex justify-between py-1.5">
-              <span className="text-muted">{t("surfaceArea")}</span>
-              <span className="tabular-nums">{result.surfaceAreaM2} m²</span>
-            </div>
-          </>
-        )}
-
-        <hr className="my-2 border-border-faint" />
-
-        {/* Cost section */}
-        <div className="flex justify-between py-1.5">
-          <span className="text-muted">{t("unitPrice")}</span>
-          <span className="tabular-nums">{result.unitPriceAmount} {currency}/{priceUnit}</span>
-        </div>
-        <div className="flex justify-between py-1.5">
-          <span className="text-muted">{t("subtotal")}</span>
-          <span className="tabular-nums">{result.subtotalAmount} {currency}</span>
-        </div>
-        {result.wasteAmount > 0 && (
-          <div className="flex justify-between py-1.5">
-            <span className="text-muted">{t("waste", { percent: wastePercent })}</span>
-            <span className="tabular-nums">{result.wasteAmount} {currency}</span>
+      <div className={`${sectionPadding} ${sectionGap}`}>
+        <section data-result-metrics>
+          <SectionLabel label={t("quickMetrics")} />
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <MetricCard
+              label={t("unitWeight")}
+              value={formatAnimatedNumber(animatedUnitWeight, result.unitWeightKg)}
+              unit="kg"
+            />
+            <MetricCard
+              label={t("totalWeight")}
+              value={formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg)}
+              unit="kg"
+              sublabel={isMulti ? t("pieces", { qty: result.quantity }) : undefined}
+            />
+            <MetricCard
+              label={t("unitPrice")}
+              value={localizedUnitPrice}
+              unit={currency}
+            />
+            <MetricCard
+              label={t("surfaceArea")}
+              value={result.surfaceAreaM2 != null ? formatStaticNumber(result.surfaceAreaM2) : "—"}
+              unit={result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
+              sublabel={
+                result.surfaceAreaM2 == null
+                  ? t("surfaceUnavailable")
+                  : isMulti && result.unitSurfaceAreaM2 != null
+                    ? `${formatSquareMeters(result.unitSurfaceAreaM2)} · ${t("perPiece")}`
+                    : undefined
+              }
+            />
           </div>
-        )}
-        {includeVat && (
-          <div className="flex justify-between py-1.5">
-            <span className="text-muted">{t("vat", { percent: vatPercent })}</span>
-            <span className="tabular-nums">{result.vatAmount} {currency}</span>
+        </section>
+
+        <section data-result-cost>
+          <SectionLabel label={t("costBreakdown")} />
+          <div className="mt-3 rounded-2xl border border-border bg-surface-raised p-3">
+            <CostRow label={t("subtotal")} value={`${formatStaticNumber(result.subtotalAmount)} ${currency}`} />
+            {result.wasteAmount > 0 && (
+              <CostRow
+                label={t("waste", { percent: wastePercent })}
+                value={`${formatStaticNumber(result.wasteAmount)} ${currency}`}
+              />
+            )}
+            {includeVat && (
+              <CostRow
+                label={t("vat", { percent: vatPercent })}
+                value={`${formatStaticNumber(result.vatAmount)} ${currency}`}
+              />
+            )}
+            <div className="mt-3 rounded-xl border border-accent-border bg-accent-surface px-3 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-foreground">{t("grandTotal")}</span>
+                <span className="text-xl font-bold text-accent tabular-nums">
+                  {formatAnimatedNumber(animatedTotal, result.grandTotalAmount)} {currency}
+                </span>
+              </div>
+            </div>
           </div>
-        )}
+        </section>
 
-        {/* Grand total */}
-        <div className="mt-2 flex justify-between border-y-2 border-border py-2.5 font-semibold">
-          <span>{t("grandTotal")}</span>
-          <span className="tabular-nums text-accent">{fmtAnimated(animatedTotal, result.grandTotalAmount)} {currency}</span>
-        </div>
-
-        {/* ── Full calculation steps ── */}
         <details
-          className="mt-4 border-t border-border-faint pt-3"
-          onToggle={(e) => {
-            if ((e.target as HTMLDetailsElement).open) {
+          data-result-details
+          className="rounded-2xl border border-border bg-surface-raised"
+          onToggle={(event) => {
+            if ((event.target as HTMLDetailsElement).open) {
               triggerHaptic("light");
             }
           }}
         >
-          <summary className="cursor-pointer text-xs font-medium text-muted select-none">
-            {t("fullSteps")}
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-foreground">
+            <span className="flex items-center justify-between gap-3">
+              <span>{t("calculationDetails")}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4 text-muted"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </span>
           </summary>
-          <div className="mt-2 overflow-x-auto">
-            <p className="mb-2 text-xs text-muted">
+
+          <div className="border-t border-border-faint px-4 py-4">
+            <p className="mb-3 text-xs text-muted">
               {t("formula")} {result.formulaLabel}
             </p>
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-muted">
-                  <th className="py-1">{t("step")}</th>
-                  <th className="py-1">{t("expression")}</th>
-                  <th className="py-1">{t("value")}</th>
-                </tr>
-              </thead>
-              <tbody>
+
+            {layout === "standalone" ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="text-muted">
+                      <th className="py-1">{t("step")}</th>
+                      <th className="py-1">{t("expression")}</th>
+                      <th className="py-1">{t("value")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.breakdownRows.map((row) => (
+                      <tr key={`${row.label}-${row.expression}`}>
+                        <td className="py-1 pr-2">
+                          {row.labelKey ? tBase(row.labelKey) : row.label}
+                        </td>
+                        <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
+                        <td className="py-1">
+                          {formatStaticNumber(row.value)} {row.unit}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div data-result-breakdown-stack className="grid gap-2">
                 {result.breakdownRows.map((row) => (
-                  <tr key={`${row.label}-${row.expression}`}>
-                    <td className="py-1 pr-2">{row.labelKey ? tBase(row.labelKey) : row.label}</td>
-                    <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
-                    <td className="py-1">{row.value} {row.unit}</td>
-                  </tr>
+                  <div
+                    key={`${row.label}-${row.expression}`}
+                    className="rounded-xl border border-border bg-surface px-3 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground">
+                          {row.labelKey ? tBase(row.labelKey) : row.label}
+                        </p>
+                        <p className="mt-1 break-words font-mono text-[11px] text-muted">
+                          {row.expression}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right text-xs font-semibold text-foreground tabular-nums">
+                        {formatStaticNumber(row.value)} {row.unit}
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            )}
           </div>
         </details>
 
-        {/* ── References ── */}
-        <ReferenceList
-          labels={result.referenceLabels}
-          className="mt-3 text-xs text-muted-faint"
-        />
+        <section>
+          <ReferenceList
+            labels={result.referenceLabels}
+            className="rounded-2xl border border-border bg-surface-raised px-4 py-3 text-xs text-muted-faint"
+          />
+        </section>
       </div>
-    </>
+    </div>
   );
 });
+
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+      {label}
+    </p>
+  );
+}
+
+function SummaryChip({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] text-foreground-secondary">
+      <span className="font-medium text-muted">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </span>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  unit,
+  sublabel,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  sublabel?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-surface-raised p-3">
+      <p className="text-xs font-medium text-muted">{label}</p>
+      <div className="mt-2 flex flex-wrap items-end gap-x-1.5 gap-y-1">
+        <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
+        {unit && <p className="pb-0.5 text-xs font-semibold uppercase tracking-wide text-muted">{unit}</p>}
+      </div>
+      {sublabel && <p className="mt-1 text-xs text-muted">{sublabel}</p>}
+    </div>
+  );
+}
+
+function ActionButton({
+  className,
+  children,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function CostRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1.5">
+      <span className="text-sm text-muted">{label}</span>
+      <span className="text-sm font-medium text-foreground tabular-nums">{value}</span>
+    </div>
+  );
+}
 
 export function CopyButton({
   result,
   normalizedProfile,
+  className = "",
 }: {
   result: CalculationResult;
   normalizedProfile: NormalizedProfileSnapshot | null;
+  className?: string;
 }) {
   const t = useTranslations("result");
   const [copied, setCopied] = useState(false);
@@ -338,27 +573,45 @@ export function CopyButton({
   }, [result, normalizedProfile]);
 
   return (
-    <button
+    <ActionButton
       type="button"
       onClick={handleCopy}
-      className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2.5 text-xs font-medium transition-colors ${
+      className={
         copied
-          ? "border-green-border bg-green-surface text-green-text"
-          : "border-border text-foreground-secondary hover:bg-surface-raised"
-      }`}
+          ? "border-green-border bg-green-surface text-green-text hover:bg-green-surface"
+          : className
+      }
       aria-label={t("copyAriaLabel")}
     >
       {copied ? (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4 shrink-0"
+        >
           <path d="M20 6 9 17l-5-5" />
         </svg>
       ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4 shrink-0"
+        >
           <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
           <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
         </svg>
       )}
-      {copied ? t("copied") : t("copy")}
-    </button>
+      <span>{copied ? t("copied") : t("copy")}</span>
+    </ActionButton>
   );
 }

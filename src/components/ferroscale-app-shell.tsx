@@ -690,6 +690,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           hasProjects={projectCount > 0}
           normalizedProfile={normalizedCurrentProfile}
           weightAsMain={weightAsMain}
+          layout="standalone"
         />
       </aside>
     </div>
@@ -749,7 +750,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         hasProjects={projectCount > 0}
         normalizedProfile={normalizedCurrentProfile}
         weightAsMain={weightAsMain}
-        variant="embedded"
+        layout="column"
       />
     ),
     saved: (
