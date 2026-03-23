@@ -23,6 +23,9 @@ import { toast } from "@/lib/toast";
 import { getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { triggerHaptic } from "@/lib/haptics";
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
+import { useColumnLayout } from "@/hooks/useColumnLayout";
+import { useIsWideDesktop } from "@/hooks/useIsWideDesktop";
+import type { ColumnPanelId } from "@/lib/column-layout";
 import { IssueList } from "@/components/calculator/issue-list";
 import { ProfileSection } from "@/components/calculator/profile-section";
 import { ResultPanel } from "@/components/calculator/result-panel";
@@ -31,7 +34,7 @@ import { HistoryDrawer } from "@/components/calculator/history-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
-import { CompareDrawer } from "@/components/compare/compare-drawer";
+import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
@@ -45,6 +48,7 @@ import { SavePresetModal } from "@/components/calculator/save-preset-modal";
 import { SaveDialog } from "@/components/calculator/save-dialog";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 import { HistoryPanel } from "@/components/calculator/history-panel";
+import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
 
 const sidebarStore = createSidebarStore();
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
@@ -201,6 +205,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const toggleQuickCalc = quickCalc.toggle;
   const quickCalcOpen = quickCalc.isOpen;
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
+  const columnLayout = useColumnLayout();
+  const isWideDesktop = useIsWideDesktop();
+  const isMultiColumn = columnLayout.enabled && isWideDesktop;
 
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
@@ -371,8 +378,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       showShortcuts: () => setShowShortcutsModal((prev) => !prev),
       undo: () => dispatch({ type: "UNDO" }),
       redo: () => dispatch({ type: "REDO" }),
+      toggleColumns: () => columnLayout.toggleEnabled(),
     }),
-    [dispatch, navigateToTab, toggleQuickCalc],
+    [dispatch, navigateToTab, toggleQuickCalc, columnLayout],
   );
   useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
 
@@ -610,7 +618,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px]">
+    <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
       <div className="flex w-full flex-1 flex-col self-start rounded-xl border border-border bg-surface shadow-sm">
         <div className="px-2.5 pb-0 pt-2 md:px-4 md:pb-0 md:pt-4">
           <IssueList issues={issues} />
@@ -670,6 +678,145 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       </aside>
     </div>
   );
+
+  const columnContentMap = useMemo((): Record<ColumnPanelId, React.ReactNode> => ({
+    calculator: (
+      <div className="flex flex-col">
+        <div className="px-2.5 pb-0 pt-2 md:px-4 md:pb-0 md:pt-4">
+          <IssueList issues={issues} />
+        </div>
+        {showSettingsPreview && (
+          <div className="px-2.5 pb-0.5 pt-1.5 md:px-4 md:pb-2 md:pt-3">
+            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
+          </div>
+        )}
+        <div className="px-2.5 py-1.5 md:p-4">
+          <ProfileSection
+            input={input}
+            dispatch={dispatch}
+            selectedProfile={selectedProfile}
+            issues={issues}
+            activeFamily={activeFamily}
+            showInlineMaterial={showInlineMaterial}
+            showInlinePrice={showInlinePrice}
+            defaultUnit={defaultUnit}
+            onSavePreset={handleSavePreset}
+            profilePresets={presetsForProfile(input.profileId)}
+            onRemovePreset={removePreset}
+          />
+        </div>
+        <div className="pb-4 md:px-4 md:pb-4">
+          <ReversePanel
+            reverse={reverse}
+            isManualProfile={selectedProfile.mode === "manual"}
+            input={input}
+          />
+        </div>
+      </div>
+    ),
+    result: (
+      <div className="p-4">
+        <ResultPanel
+          result={result}
+          isPending={isPending}
+          isSaved={isCurrentSaved}
+          onOpenSaveDialog={handleOpenSaveDialog}
+          onRemoveSaved={handleRemoveSaved}
+          includeVat={input.includeVat}
+          wastePercent={input.wastePercent}
+          vatPercent={input.vatPercent}
+          onCompare={handleCompare}
+          canCompare={canCompare}
+          isInCompare={currentIsInCompare}
+          compareCount={compareItems.length}
+          maxCompare={maxCompare}
+          onAddToProject={handleAddToProject}
+          hasProjects={projectCount > 0}
+          normalizedProfile={normalizedCurrentProfile}
+          weightAsMain={weightAsMain}
+        />
+      </div>
+    ),
+    saved: (
+      <div className="p-4">
+        <HistoryPanel
+          saved={saved}
+          onLoad={handleLoad}
+          onRemove={removeSaved}
+          onUpdate={updateSaved}
+        />
+      </div>
+    ),
+    projects: (
+      <div className="flex min-h-[400px] flex-col">
+        <ProjectsWorkspaceContent
+          projects={projects}
+          activeProjectId={activeProjectId}
+          onSetActiveProject={setActiveProjectId}
+          onCreateProject={createProject}
+          onRenameProject={renameProject}
+          onDeleteProject={deleteProject}
+          onDuplicateProject={duplicateProject}
+          onRemoveCalculation={removeCalculation}
+          onUpdateCalculationNote={updateCalculationNote}
+          onUpdateProjectDescription={updateProjectDescription}
+          onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
+          onLoadCalculation={handleLoad}
+          currentResult={result}
+          currentInput={result ? input : null}
+          onAddCalculation={addCalculation}
+        />
+      </div>
+    ),
+    settings: (
+      <div className="flex min-h-[400px] flex-col p-4">
+        <SettingsWorkspaceContent
+          input={input}
+          dispatch={dispatch}
+          activeFamily={activeFamily}
+          issues={issues}
+          onResetAll={resetAll}
+          onOpenChangelog={() => setShowChangelogDrawer(true)}
+          compareLimit={compareLimit}
+          onCompareLimitChange={setCompareLimit}
+          maxCompare={maxCompare}
+          isCompareMobileCapped={isCompareMobileCapped}
+          showInlineMaterial={showInlineMaterial}
+          onToggleInlineMaterial={inlineMaterialStore.toggle}
+          showInlinePrice={showInlinePrice}
+          onToggleInlinePrice={inlinePriceStore.toggle}
+          showSettingsPreview={showSettingsPreview}
+          onToggleSettingsPreview={settingsPreviewStore.toggle}
+          weightAsMain={weightAsMain}
+          onToggleWeightAsMain={weightAsMainStore.toggle}
+          defaultUnit={defaultUnit}
+          onDefaultUnitChange={defaultUnitStore.set}
+          unitOptions={UNIT_OPTIONS}
+        />
+      </div>
+    ),
+    compare: (
+      <CompareWorkspaceContent
+        items={compareItems}
+        onRemoveItem={removeCompareItem}
+        onClearAll={clearCompare}
+        maxCompare={maxCompare}
+      />
+    ),
+  }), [
+    issues, showSettingsPreview, input, dispatch, selectedProfile, activeFamily,
+    showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
+    reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog, handleRemoveSaved,
+    handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
+    handleAddToProject, projectCount, normalizedCurrentProfile, weightAsMain,
+    removeCompareItem, clearCompare,
+    saved, handleLoad, removeSaved, updateSaved,
+    projects, activeProjectId, setActiveProjectId, createProject, renameProject,
+    deleteProject, duplicateProject, removeCalculation, updateCalculationNote,
+    updateProjectDescription, updateProjectPaintingSettings, addCalculation,
+    resetAll, compareLimit, setCompareLimit, isCompareMobileCapped,
+    navigateToTab, handleSavePreset, t,
+  ]);
 
   const mobileScreen =
     currentTab === "calculator" ? (
@@ -787,10 +934,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onToggleCollapsed={toggleSidebarCollapsed}
         theme={resolvedTheme}
         onToggleTheme={cycleTheme}
+        isWideDesktop={isWideDesktop}
+        isMultiColumnEnabled={columnLayout.enabled}
+        onToggleMultiColumn={columnLayout.toggleEnabled}
       />
 
       <div
-        className={`mx-auto flex min-h-dvh max-w-7xl flex-col px-0 pb-32 pt-10 transition-[margin-left] duration-200 ease-in-out md:px-6 lg:pb-6 lg:pt-6 ${
+        className={`flex flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
+          isMultiColumn
+            ? "h-dvh overflow-hidden pt-0 pb-0 lg:pt-4 lg:pb-4"
+            : "mx-auto min-h-dvh max-w-7xl pb-32 pt-10 lg:pb-6 lg:pt-6"
+        } ${
           sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"
         }`}
       >
@@ -892,7 +1046,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
         <PwaRegister />
 
-        {desktopMain}
+        {isMultiColumn ? (
+          <MultiColumnLayout layout={columnLayout} contentMap={columnContentMap} />
+        ) : (
+          desktopMain
+        )}
 
         <div
           className="lg:hidden"
@@ -962,7 +1120,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         )}
 
-        {!isMobile && (
+        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("saved")) && (
           <HistoryDrawer
             open={currentTab === "saved"}
             onClose={navigateHome}
@@ -973,7 +1131,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         )}
 
-        {!isMobile && (
+        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("settings")) && (
           <SettingsDrawer
             open={currentTab === "settings"}
             onClose={navigateHome}
@@ -1009,7 +1167,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <ChangelogDrawer open={showChangelogDrawer} onClose={() => setShowChangelogDrawer(false)} />
 
         <CompareDrawer
-          open={showCompareDrawer}
+          open={showCompareDrawer && !(isMultiColumn && columnLayout.hasPanel("compare"))}
           onClose={closeCompare}
           items={compareItems}
           onRemoveItem={removeCompareItem}
@@ -1017,7 +1175,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           maxCompare={maxCompare}
         />
 
-        {!isMobile && (
+        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("projects")) && (
           <ProjectDrawer
             open={currentTab === "projects"}
             onClose={navigateHome}

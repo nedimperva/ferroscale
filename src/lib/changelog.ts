@@ -17,6 +17,46 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.0.0",
+    date: "2026-03-23",
+    added: [
+      "TweetDeck-style multi-column layout — open calculator, result, saved, projects, settings, and compare panels side-by-side on wide desktops (≥1440px)",
+      "Resizable columns — drag handles between columns to manually resize each panel",
+      "Column controls — add, remove, reorder, and switch panel types via column header dropdowns and buttons",
+      "Columns toggle button in sidebar with Ctrl+Shift+L keyboard shortcut",
+      "Column layout persists across page refreshes via localStorage",
+      "Full-viewport immersive mode — multi-column layout fills 100vh with independent per-column scrolling",
+    ],
+    added_bs: [
+      "TweetDeck-stil višekolonski raspored — otvorite kalkulator, rezultat, sačuvano, projekte, postavke i usporedbu jedan pored drugog na širokim ekranima (≥1440px)",
+      "Promjena veličine kolona — povucite ručke između kolona da ručno promijenite veličinu svakog panela",
+      "Kontrole kolona — dodajte, uklonite, preuredite i promijenite tip panela putem padajućih izbornika i dugmadi u zaglavlju kolone",
+      "Dugme za kolone u bočnoj traci sa Ctrl+Shift+L prečicom na tastaturi",
+      "Raspored kolona se čuva između osvježavanja stranice putem localStorage",
+      "Režim punog ekrana — višekolonski raspored zauzima 100vh sa nezavisnim skrolanjem po koloni",
+    ],
+    changed: [
+      "Desktop result panel sidebar widened from 300/340px to 340/400px (lg/xl breakpoints)",
+      "Drawers are automatically suppressed when their content is already visible as a column",
+      "Quantity stepper buttons and unit price input made responsive for narrow column widths",
+      "JSON external store now caches parsed values to prevent infinite re-render loops with useSyncExternalStore",
+    ],
+    changed_bs: [
+      "Bočna traka rezultata na desktopu proširena sa 300/340px na 340/400px (lg/xl prijelomne tačke)",
+      "Ladičari se automatski sakrivaju kada je njihov sadržaj već vidljiv kao kolona",
+      "Dugmad za količinu i unos cijene po jedinici prilagođeni za uske širine kolona",
+      "JSON eksterni store sada kešira parsirane vrijednosti da spriječi beskonačne petlje renderiranja sa useSyncExternalStore",
+    ],
+    fixed: [
+      "Compare panel now renders full content in column mode instead of placeholder text",
+      "Quantity +/- buttons no longer overflow into adjacent unit price field in narrow layouts",
+    ],
+    fixed_bs: [
+      "Panel za usporedbu sada prikazuje potpuni sadržaj u režimu kolona umjesto teksta zamjene",
+      "Dugmad za količinu +/- se više ne preklapaju sa susjednim poljem za cijenu u uskim rasporedima",
+    ],
+  },
+  {
     version: "1.8.0",
     date: "2026-03-19",
     added: [

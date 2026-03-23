@@ -440,13 +440,13 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Quantity + Price group ── */}
       <div className="form-group lg:bg-transparent lg:p-0">
-        <div className={`grid grid-cols-1 gap-2 ${showInlinePrice ? "sm:grid-cols-2" : ""}`}>
+        <div className={`grid gap-2 ${showInlinePrice ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
           {/* Quantity with stepper */}
-          <div className="grid gap-1 min-w-0">
+          <div className="grid min-w-0 gap-1">
             <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
               {t("profileSection.quantity")}
             </label>
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 items-center gap-1">
               <button
                 type="button"
                 onClick={() => {
@@ -456,10 +456,10 @@ export const ProfileSection = memo(function ProfileSection({
                   }
                 }}
                 disabled={input.quantity <= 1}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed md:h-11 md:w-11"
+                className="flex h-10 w-8 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-label={t("profileSection.decreaseQuantity")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                   <path d="M4 10a.75.75 0 01.75-.75h10.5a.75.75 0 010 1.5H4.75A.75.75 0 014 10z" />
                 </svg>
               </button>
@@ -469,7 +469,7 @@ export const ProfileSection = memo(function ProfileSection({
                 autoComplete="off"
                 value={input.quantity}
                 onValueChange={(value) => dispatch({ type: "SET_QUANTITY", value })}
-                className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 md:h-11 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
+                className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
                   }`}
                 aria-invalid={hasIssue("quantity")}
               />
@@ -479,10 +479,10 @@ export const ProfileSection = memo(function ProfileSection({
                   triggerHaptic("light");
                   dispatch({ type: "SET_QUANTITY", value: input.quantity + 1 });
                 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised md:h-11 md:w-11"
+                className="flex h-10 w-8 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised"
                 aria-label={t("profileSection.increaseQuantity")}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                   <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
                 </svg>
               </button>
@@ -491,7 +491,7 @@ export const ProfileSection = memo(function ProfileSection({
 
           {/* Inline unit price (optional, on by default) */}
           {showInlinePrice && (
-            <div className="grid gap-1 min-w-0">
+            <div className="grid min-w-0 gap-1">
               <label htmlFor="inline-unit-price" className="text-xs font-medium text-foreground-secondary">
                 {t("profileSection.unitPrice")}
               </label>
@@ -502,11 +502,11 @@ export const ProfileSection = memo(function ProfileSection({
                   autoComplete="off"
                   value={input.unitPrice}
                   onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-                  className={`h-10 min-w-0 flex-1 rounded-l-lg border bg-surface px-2.5 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
+                  className={`h-10 min-w-0 flex-1 rounded-l-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
                     }`}
                   aria-invalid={hasIssue("unitPrice")}
                 />
-                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-2 text-xs text-muted md:h-11">
+                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-1.5 text-[11px] text-muted">
                   {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
                 </span>
               </div>

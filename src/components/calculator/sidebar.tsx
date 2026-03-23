@@ -26,6 +26,9 @@ interface SidebarProps {
   onToggleCollapsed: () => void;
   theme: Theme;
   onToggleTheme: () => void;
+  isWideDesktop?: boolean;
+  isMultiColumnEnabled?: boolean;
+  onToggleMultiColumn?: () => void;
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -48,6 +51,9 @@ export const Sidebar = memo(function Sidebar({
   onToggleCollapsed,
   theme,
   onToggleTheme,
+  isWideDesktop,
+  isMultiColumnEnabled,
+  onToggleMultiColumn,
 }: SidebarProps) {
   const t = useTranslations();
 
@@ -184,6 +190,23 @@ export const Sidebar = memo(function Sidebar({
             active={isCompareOpen}
             collapsed={collapsed}
             onClick={onOpenCompare}
+          />
+        )}
+
+        {/* Columns toggle — only visible on wide desktops */}
+        {isWideDesktop && onToggleMultiColumn && (
+          <SidebarButton
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <rect x="2" y="3" width="6" height="18" rx="1" />
+                <rect x="9" y="3" width="6" height="18" rx="1" />
+                <rect x="16" y="3" width="6" height="18" rx="1" />
+              </svg>
+            }
+            label={t("columns.columnsMode")}
+            active={isMultiColumnEnabled}
+            collapsed={collapsed}
+            onClick={onToggleMultiColumn}
           />
         )}
 

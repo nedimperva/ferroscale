@@ -152,6 +152,16 @@
     "report": "Prijava",
     "whatsNew": "Novosti"
   },
+  "columns": {
+    "addColumn": "Dodaj kolonu",
+    "resetLayout": "Resetuj raspored",
+    "exitColumns": "Izadji iz kolona",
+    "moveLeft": "Pomjeri lijevo",
+    "moveRight": "Pomjeri desno",
+    "close": "Zatvori kolonu",
+    "columnsMode": "Kolone",
+    "result": "Rezultat"
+  },
   "changelog": {
     "title": "Novosti",
     "ariaLabel": "Pregled izmjena",

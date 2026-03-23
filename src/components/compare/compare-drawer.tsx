@@ -11,6 +11,126 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 
+interface CompareContentProps {
+  items: CompareItem[];
+  onRemoveItem: (id: string) => void;
+  onClearAll: () => void;
+  maxCompare: number;
+}
+
+export function CompareWorkspaceContent({
+  items,
+  onRemoveItem,
+  onClearAll,
+  maxCompare,
+}: CompareContentProps) {
+  const tBase = useTranslations();
+  const t = useTranslations("compare");
+
+  const csvHeaders = useMemo(
+    () => [
+      t("csvHeaders.profile"),
+      t("csvHeaders.profileLabel"),
+      t("csvHeaders.material"),
+      t("csvHeaders.unitWeight"),
+      t("csvHeaders.totalWeight"),
+      t("csvHeaders.subtotal"),
+      t("csvHeaders.waste"),
+      t("csvHeaders.vat"),
+      t("csvHeaders.grandTotal"),
+      t("csvHeaders.currency"),
+    ],
+    [t],
+  );
+
+  const handleExport = useCallback(() => {
+    exportCompareCsv(
+      items,
+      csvHeaders,
+      t("csvFilePrefix"),
+      (label) => resolveGradeLabel(label, tBase),
+      (profileId, fallback) => {
+        try {
+          return tBase(`dataset.profiles.${profileId}`);
+        } catch {
+          return fallback;
+        }
+      },
+    );
+  }, [items, csvHeaders, t, tBase]);
+
+  const reference = items.length > 0 ? items[0] : null;
+
+  return (
+    <>
+      {/* Toolbar */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          {t("title")}
+          <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
+            {items.length}/{maxCompare}
+          </span>
+        </h2>
+        <div className="flex items-center gap-1">
+          {items.length >= 2 && (
+            <button
+              type="button"
+              onClick={handleExport}
+              className="rounded-md px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
+              title={t("exportTitle")}
+            >
+              {t("export")}
+            </button>
+          )}
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="rounded-md px-2 py-1 text-xs font-medium text-red-interactive transition-colors hover:bg-red-surface"
+            >
+              {t("clear")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto scroll-native p-4">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-border">
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+            <p className="text-sm text-muted-faint">{t("empty")}</p>
+            <p className="text-xs text-muted-faint">{t("emptyHint")}</p>
+          </div>
+        ) : items.length === 1 ? (
+          <div className="space-y-3">
+            <CompareCard item={items[0]} reference={null} onRemove={onRemoveItem} />
+            <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
+              <p className="text-sm text-muted-faint">{t("needSecond")}</p>
+              <p className="mt-1 text-xs text-muted-faint">{t("needSecondHint")}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            <CompareChart items={items} />
+            {items.map((item) => (
+              <CompareCard key={item.id} item={item} reference={reference} onRemove={onRemoveItem} />
+            ))}
+            {items.length < maxCompare && (
+              <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
+                <p className="text-xs text-muted-faint">{t("slotAvailable")}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 interface CompareDrawerProps {
   open: boolean;
   onClose: () => void;

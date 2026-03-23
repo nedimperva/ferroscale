@@ -152,6 +152,16 @@
     "report": "Report",
     "whatsNew": "What's New"
   },
+  "columns": {
+    "addColumn": "Add Column",
+    "resetLayout": "Reset Layout",
+    "exitColumns": "Exit Columns",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "close": "Close column",
+    "columnsMode": "Columns",
+    "result": "Result"
+  },
   "changelog": {
     "title": "What's New",
     "ariaLabel": "Changelog drawer",
