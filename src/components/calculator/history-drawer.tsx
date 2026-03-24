@@ -54,7 +54,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
           </svg>
           {t("title")}
           {saved.length > 0 && (
-            <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-surface px-1 text-[10px] font-bold text-accent">
+            <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-surface px-1 text-2xs font-bold text-accent">
               {saved.length}
             </span>
           )}

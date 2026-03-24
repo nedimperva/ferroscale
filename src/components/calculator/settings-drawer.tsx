@@ -11,6 +11,7 @@ import { MaterialSection } from "./material-section";
 import { PricingSection } from "./pricing-section";
 import { PrecisionSection } from "./precision-section";
 import { WorkspaceSection } from "./workspace-section";
+import type { TextSize } from "@/hooks/useTextSize";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -40,6 +41,8 @@ interface SettingsDrawerProps {
   defaultUnit: LengthUnit;
   onDefaultUnitChange: (value: LengthUnit) => void;
   unitOptions: LengthUnit[];
+  textSize: TextSize;
+  onTextSizeChange: (size: TextSize) => void;
 }
 
 export function SettingsWorkspaceContent({
@@ -63,6 +66,8 @@ export function SettingsWorkspaceContent({
   defaultUnit,
   onDefaultUnitChange,
   unitOptions,
+  textSize,
+  onTextSizeChange,
 }: Omit<SettingsDrawerProps, "open" | "onClose" >) {
   const t = useTranslations("settingsDrawer");
   return (
@@ -117,6 +122,8 @@ export function SettingsWorkspaceContent({
               defaultUnit={defaultUnit}
               onDefaultUnitChange={onDefaultUnitChange}
               unitOptions={unitOptions}
+              textSize={textSize}
+              onTextSizeChange={onTextSizeChange}
             />
           </div>
         </CollapsibleSection>

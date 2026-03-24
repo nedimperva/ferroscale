@@ -1,6 +1,7 @@
 import { memo, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import type { LengthUnit } from "@/lib/calculator/types";
+import type { TextSize } from "@/hooks/useTextSize";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface WorkspaceSectionProps {
@@ -19,9 +20,12 @@ interface WorkspaceSectionProps {
   defaultUnit: LengthUnit;
   onDefaultUnitChange: (value: LengthUnit) => void;
   unitOptions: LengthUnit[];
+  textSize: TextSize;
+  onTextSizeChange: (size: TextSize) => void;
 }
 
 const COMPARE_OPTIONS = [3, 5, 8];
+const TEXT_SIZE_OPTIONS: TextSize[] = ["small", "medium", "large"];
 
 export const WorkspaceSection = memo(function WorkspaceSection({
   compareLimit,
@@ -39,6 +43,8 @@ export const WorkspaceSection = memo(function WorkspaceSection({
   defaultUnit,
   onDefaultUnitChange,
   unitOptions,
+  textSize,
+  onTextSizeChange,
 }: WorkspaceSectionProps) {
   const t = useTranslations("workspace");
 
@@ -67,7 +73,7 @@ export const WorkspaceSection = memo(function WorkspaceSection({
         </select>
       </div>
 
-      <p className="text-[11px] text-muted-faint">
+      <p className="text-xs text-muted-faint">
         {t("activeCompareLimit", { limit: maxCompare })}
         {isCompareMobileCapped ? ` ${t("mobileCap", { cap: 3 })}` : ""}
       </p>
@@ -87,7 +93,17 @@ export const WorkspaceSection = memo(function WorkspaceSection({
               <option key={u} value={u}>{u}</option>
             ))}
           </select>
-          <p className="text-[11px] text-muted-faint">{t("defaultUnitHint")}</p>
+          <p className="text-xs text-muted-faint">{t("defaultUnitHint")}</p>
+        </div>
+      </div>
+
+      <div className="mt-1 border-t border-border-faint pt-2 grid gap-2">
+        <div className="grid gap-1">
+          <span className="text-xs font-medium text-foreground-secondary">
+            {t("textSize")}
+          </span>
+          <TextSizeSelector value={textSize} onChange={onTextSizeChange} />
+          <p className="text-xs text-muted-faint">{t("textSizeHint")}</p>
         </div>
       </div>
 
@@ -116,6 +132,44 @@ export const WorkspaceSection = memo(function WorkspaceSection({
     </section>
   );
 });
+
+function TextSizeSelector({
+  value,
+  onChange,
+}: {
+  value: TextSize;
+  onChange: (size: TextSize) => void;
+}) {
+  const t = useTranslations("workspace");
+
+  const labels: Record<TextSize, string> = {
+    small: t("textSizeSmall"),
+    medium: t("textSizeMedium"),
+    large: t("textSizeLarge"),
+  };
+
+  return (
+    <div className="flex rounded-lg border border-border-strong overflow-hidden">
+      {TEXT_SIZE_OPTIONS.map((option) => (
+        <button
+          key={option}
+          type="button"
+          onClick={() => {
+            triggerHaptic("light");
+            onChange(option);
+          }}
+          className={`flex-1 py-2 text-xs font-medium transition-colors ${
+            value === option
+              ? "bg-blue-strong text-white"
+              : "bg-surface text-foreground-secondary hover:bg-surface-raised"
+          }`}
+        >
+          {labels[option]}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function ToggleRow({
   label,

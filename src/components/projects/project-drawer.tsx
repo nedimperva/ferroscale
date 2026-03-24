@@ -377,7 +377,7 @@ export const ProjectDrawer = memo(function ProjectDrawer({
             </svg>
             {activeProject ? activeProject.name : t("title")}
             {!activeProject && contentProps.projects.length > 0 && (
-              <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
+              <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-bold text-foreground-secondary">
                 {contentProps.projects.length}
               </span>
             )}
@@ -618,7 +618,7 @@ const ProjectListCard = memo(function ProjectListCard({
                     <p className="mt-1 text-xs text-muted-faint">{t("addDescription")}</p>
                   )}
                 </div>
-                <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-surface-raised px-2.5 py-1 text-[11px] font-semibold text-foreground-secondary">
+                <span className="inline-flex shrink-0 items-center rounded-full border border-border bg-surface-raised px-2.5 py-1 text-xs font-semibold text-foreground-secondary">
                   {aggregates.count}
                 </span>
               </div>
@@ -627,7 +627,7 @@ const ProjectListCard = memo(function ProjectListCard({
                 <>
                   <div className="mt-4 flex items-end justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                         {primary.label}
                       </p>
                       <div className="mt-2 flex flex-wrap items-end gap-1.5">
@@ -642,7 +642,7 @@ const ProjectListCard = memo(function ProjectListCard({
                       </div>
                     </div>
                     <div className="min-w-0 text-right">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                         {secondary.label}
                       </p>
                       <div className="mt-2 flex flex-wrap items-end justify-end gap-1.5">
@@ -650,7 +650,7 @@ const ProjectListCard = memo(function ProjectListCard({
                           {secondary.value}
                         </p>
                         {secondary.unit && (
-                          <p className="pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                          <p className="pb-0.5 text-xs font-semibold uppercase tracking-wide text-muted">
                             {secondary.unit}
                           </p>
                         )}
@@ -1174,8 +1174,8 @@ function ProjectDetail({
                       onClick={() => setFilterProfile(null)}
                       className={
                         filterProfile === null
-                          ? "rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] font-semibold text-foreground"
-                          : "rounded-full border border-transparent bg-surface-raised px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-foreground-secondary"
+                          ? "rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-semibold text-foreground"
+                          : "rounded-full border border-transparent bg-surface-raised px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:text-foreground-secondary"
                       }
                     >
                       {t("filterAll")}
@@ -1195,8 +1195,8 @@ function ProjectDetail({
                           onClick={() => setFilterProfile(option === filterProfile ? null : option)}
                           className={
                             filterProfile === option
-                              ? "rounded-full border border-blue-border bg-blue-surface px-2.5 py-1 text-[11px] font-semibold text-blue-text"
-                              : "rounded-full border border-transparent bg-surface-raised px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-foreground-secondary"
+                              ? "rounded-full border border-blue-border bg-blue-surface px-2.5 py-1 text-xs font-semibold text-blue-text"
+                              : "rounded-full border border-transparent bg-surface-raised px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:text-foreground-secondary"
                           }
                         >
                           {label}
@@ -1374,14 +1374,14 @@ function BreakdownRows({
     <div className="grid gap-2">
       {rows.map(([label, weight]) => (
         <div key={label} className="grid grid-cols-[minmax(0,auto)_1fr_auto] items-center gap-3">
-          <span className="truncate text-[11px] font-medium text-foreground-secondary">{label}</span>
+          <span className="truncate text-xs font-medium text-foreground-secondary">{label}</span>
           <div className="h-2 overflow-hidden rounded-full bg-surface-inset">
             <div
               className={`h-full rounded-full ${barClass}`}
               style={{ width: `${Math.round((weight / maxWeight) * 100)}%` }}
             />
           </div>
-          <span className="text-[11px] text-muted tabular-nums">{formatStaticNumber(weight)} kg</span>
+          <span className="text-xs text-muted tabular-nums">{formatStaticNumber(weight)} kg</span>
         </div>
       ))}
     </div>
@@ -1482,7 +1482,7 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
                   {isLightest && !isHeaviest && <Badge tone="green">{tProjects("badgeLightest")}</Badge>}
                   {isPriciest && <Badge tone="red">{tProjects("badgePriciest")}</Badge>}
                 </div>
-                <p className="mt-0.5 line-clamp-1 text-[11px] text-muted">{materialSummary}</p>
+                <p className="mt-0.5 line-clamp-1 text-xs text-muted">{materialSummary}</p>
               </div>
             </div>
           </div>
@@ -1546,7 +1546,7 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
 
         {calculation.note && !isEditingNote && (
           <div className="mt-2 rounded-lg border border-border-faint bg-surface-raised px-2.5 py-1.5">
-            <p className="text-[11px] italic text-muted-faint line-clamp-3">{calculation.note}</p>
+            <p className="text-xs italic text-muted-faint line-clamp-3">{calculation.note}</p>
           </div>
         )}
 
@@ -1598,7 +1598,7 @@ function Badge({
         : "border-red-border bg-red-surface text-red-text";
 
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${className}`}>
+    <span className={`rounded-full border px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide ${className}`}>
       {children}
     </span>
   );

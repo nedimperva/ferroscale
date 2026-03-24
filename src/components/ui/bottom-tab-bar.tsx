@@ -68,7 +68,7 @@ export const BottomTabBar = memo(function BottomTabBar({
                 onTabChange(tab.id);
               }}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className={`relative flex flex-1 flex-col items-center gap-0 pb-1 pt-1.5 text-[10px] font-medium transition-colors ${
+              className={`relative flex flex-1 flex-col items-center gap-0 pb-1 pt-1.5 text-2xs font-medium transition-colors ${
                 isActive
                   ? "text-accent"
                   : "text-muted-faint"
@@ -90,7 +90,7 @@ export const BottomTabBar = memo(function BottomTabBar({
               <span className="relative">
                 <TabIcon id={tab.id} active={isActive} />
                 {tab.badge !== undefined && (
-                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-strong px-1 text-[9px] font-bold leading-none text-white">
+                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-strong px-1 text-2xs font-bold leading-none text-white">
                     {tab.badge}
                   </span>
                 )}

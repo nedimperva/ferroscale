@@ -547,7 +547,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="truncate text-sm font-semibold text-foreground">{tSpecsSafe("title")}</h2>
               {specs.isCustomSelection && (
-                <span className="rounded-full border border-amber-border bg-amber-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-text">
+                <span className="rounded-full border border-amber-border bg-amber-surface px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-amber-text">
                   {tSpecsSafe("customSelection")}
                 </span>
               )}
@@ -582,7 +582,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
         <section className="rounded-2xl border border-border bg-surface-raised p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tSpecsSafe("metricsTitle")}</h3>
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeClass(!specs.isCustomSelection)}`}>
+            <span className={`rounded-full border px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide ${badgeClass(!specs.isCustomSelection)}`}>
               {specs.isCustomSelection ? tSpecsSafe("customSelection") : tSpecsSafe("matchedSelection")}
             </span>
           </div>
@@ -591,9 +591,9 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
             <dl className="grid grid-cols-2 gap-1.5">
               {specs.metrics.map((metric) => (
                 <div key={`${metric.key}-${metric.value}`} className="rounded-lg border border-border bg-surface px-2 py-1.5">
-                  <dt className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-faint">
+                  <dt className="flex items-center gap-1.5 text-2xs font-medium uppercase tracking-wide text-muted-faint">
                     {metricCode(metric.key) && (
-                      <span className="rounded border border-border bg-surface-inset px-1.5 py-0.5 font-semibold text-[9px] tracking-normal text-foreground-secondary">
+                      <span className="rounded border border-border bg-surface-inset px-1.5 py-0.5 font-semibold text-2xs tracking-normal text-foreground-secondary">
                         {metricCode(metric.key)}
                       </span>
                     )}
@@ -601,7 +601,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                       {metricLabel(metric.key, tBase, tSpecs)}
                     </span>
                   </dt>
-                  <dd className="mt-1 text-[13px] font-semibold leading-tight text-foreground">
+                  <dd className="mt-1 text-sm font-semibold leading-tight text-foreground">
                     {metricValue(locale, metric)}
                   </dd>
                 </div>
@@ -622,7 +622,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                 {specs.familyMode === "alternatives" ? tSpecsSafe("alternativesHint") : tSpecsSafe("familyTableHint")}
               </p>
             </div>
-            <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
+            <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-muted">
               {specs.familyMode === "alternatives" ? alternativeCountLabel : specs.familyRows.length}
             </span>
           </div>
@@ -631,7 +631,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
             specs.familyMode === "alternatives" ? (
               <div className="flex min-h-0 flex-1 flex-col gap-2.5">
                 <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_12rem]">
-                  <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-[13px] text-foreground-secondary">
+                  <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0 text-muted-faint">
                       <circle cx="8.5" cy="8.5" r="5.5" />
                       <path d="M13 13 17 17" />
@@ -641,19 +641,19 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                       value={alternativeQuery}
                       onChange={(event) => setAlternativeQuery(event.target.value)}
                       placeholder={tSpecsSafe("alternatives.searchPlaceholder")}
-                      className="w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-faint"
+                      className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-faint"
                       aria-label={tSpecsSafe("alternatives.searchPlaceholder")}
                     />
                   </label>
 
                   <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-faint">
+                    <span className="text-2xs font-semibold uppercase tracking-wide text-muted-faint">
                       {tSpecsSafe("alternatives.sortLabel")}
                     </span>
                     <select
                       value={alternativeSort}
                       onChange={(event) => setAlternativeSort(event.target.value as AlternativeSortKey)}
-                      className="w-full bg-transparent text-[13px] font-medium text-foreground outline-none"
+                      className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
                       aria-label={tSpecsSafe("alternatives.sortLabel")}
                     >
                       {alternativeSortOptions.map((option) => (
@@ -700,7 +700,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
               <div className="overflow-x-auto">
                 <table className="min-w-full border-separate border-spacing-y-1">
                   <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wide text-muted-faint">
+                    <tr className="text-left text-xs uppercase tracking-wide text-muted-faint">
                       <th className="px-3 py-1">{tSpecsSafe("table.size")}</th>
                       <th className="px-3 py-1 text-right">{tSpecsSafe("table.area")}</th>
                       <th className="px-3 py-1 text-right">{tSpecsSafe("table.perimeter")}</th>
@@ -806,10 +806,10 @@ function SpecsAlternativeRowButton({
       }`}
     >
       <div className="min-w-0">
-        <span className="block truncate text-[9px] font-semibold uppercase tracking-wide text-muted-faint">
+        <span className="block truncate text-2xs font-semibold uppercase tracking-wide text-muted-faint">
           {familyText}
         </span>
-        <span className="block truncate text-[12px] font-semibold">{row.label}</span>
+        <span className="block truncate text-xs font-semibold">{row.label}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-x-3.5 gap-y-1 sm:grid-cols-4">
@@ -836,10 +836,10 @@ function DenseMetricCell({
 }) {
   return (
     <div className="min-w-0">
-      <span className="block truncate text-[8px] font-semibold uppercase tracking-wide text-muted-faint">
+      <span className="block truncate text-2xs font-semibold uppercase tracking-wide text-muted-faint">
         {label}
       </span>
-      <span className={`block truncate text-[12px] font-semibold leading-snug ${subtle ? "" : "tabular-nums"}`}>
+      <span className={`block truncate text-xs font-semibold leading-snug ${subtle ? "" : "tabular-nums"}`}>
         {value}
       </span>
     </div>

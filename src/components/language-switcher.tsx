@@ -38,7 +38,7 @@ export function LanguageSwitcher({ className = "", compact = false }: LanguageSw
       className={`inline-flex items-center gap-2 rounded-lg border border-border-strong bg-surface px-1.5 py-1 text-foreground-secondary ${className}`}
     >
       {!compact && (
-        <span className="inline-flex items-center gap-1.5 pl-1 text-[11px] font-medium text-muted">
+        <span className="inline-flex items-center gap-1.5 pl-1 text-xs font-medium text-muted">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -69,7 +69,7 @@ export function LanguageSwitcher({ className = "", compact = false }: LanguageSw
               aria-pressed={active}
               aria-label={t(item)}
               title={t(item)}
-              className={`rounded-[6px] px-2 py-1 text-[11px] font-semibold tracking-wide transition-colors ${
+              className={`rounded-[6px] px-2 py-1 text-xs font-semibold tracking-wide transition-colors ${
                 active
                   ? "bg-surface text-foreground shadow-sm"
                   : "text-muted hover:bg-surface-raised hover:text-foreground-secondary"

@@ -68,7 +68,7 @@ export const SettingsSummary = memo(function SettingsSummary({
         {tags.map((tag) => (
           <span
             key={tag.label}
-            className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] leading-tight ${
+            className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-xs leading-tight ${
               tag.muted
                 ? "bg-surface-inset text-muted-faint"
                 : "bg-surface-inset text-foreground-secondary"
@@ -81,7 +81,7 @@ export const SettingsSummary = memo(function SettingsSummary({
           </span>
         ))}
       </span>
-      <span className="ml-auto shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-faint transition-colors group-hover:text-foreground-secondary">
+      <span className="ml-auto shrink-0 text-2xs font-medium uppercase tracking-wider text-muted-faint transition-colors group-hover:text-foreground-secondary">
         {t("edit")}
       </span>
     </button>

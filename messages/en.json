@@ -326,7 +326,12 @@
     "inlinePrice": "Show price in form",
     "weightAsMain": "Weight as main display",
     "defaultUnit": "Default unit",
-    "defaultUnitHint": "Used for all dimension and length inputs"
+    "defaultUnitHint": "Used for all dimension and length inputs",
+    "textSize": "Text size",
+    "textSizeSmall": "Small",
+    "textSizeMedium": "Medium",
+    "textSizeLarge": "Large",
+    "textSizeHint": "Scales all text in the interface"
   },
   "settingsDrawer": {
     "ariaLabel": "Settings drawer",

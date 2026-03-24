@@ -261,7 +261,7 @@ export const SizeCombobox = memo(function SizeCombobox({
           )}
         </AnimatePresence>
       </div>
-      {hint && <p className="text-[11px] text-muted-faint">{hint}</p>}
+      {hint && <p className="text-xs text-muted-faint">{hint}</p>}
     </div>
   );
 });

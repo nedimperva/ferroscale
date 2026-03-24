@@ -108,7 +108,7 @@ export const Sidebar = memo(function Sidebar({
             <button
               type="button"
               onClick={onOpenChangelog}
-              className={`inline-flex items-center gap-1 text-[10px] transition-colors hover:text-foreground-secondary ${isChangelogOpen ? "text-foreground-secondary" : "text-muted-faint"}`}
+              className={`inline-flex items-center gap-1 text-2xs transition-colors hover:text-foreground-secondary ${isChangelogOpen ? "text-foreground-secondary" : "text-muted-faint"}`}
               title={t("sidebar.whatsNew")}
             >
               v{APP_VERSION}
@@ -374,7 +374,7 @@ function SidebarButton({
         <span className="shrink-0">{icon}</span>
         {!collapsed && <span className="truncate">{label}</span>}
         {!collapsed && badge !== undefined && (
-          <span className="ml-auto shrink-0 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-semibold text-foreground-secondary">
+          <span className="ml-auto shrink-0 rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary">
             {badge}
           </span>
         )}
@@ -390,7 +390,7 @@ function SidebarButton({
           <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[1px] bg-slate-800 dark:bg-slate-700" />
           {label}
           {badge !== undefined && (
-            <span className="ml-1.5 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold">
+            <span className="ml-1.5 rounded-full bg-white/20 px-1.5 py-0.5 text-2xs font-semibold">
               {badge}
             </span>
           )}

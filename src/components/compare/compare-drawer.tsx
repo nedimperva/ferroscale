@@ -67,7 +67,7 @@ export function CompareWorkspaceContent({
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           {t("title")}
-          <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
+          <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-bold text-foreground-secondary">
             {items.length}/{maxCompare}
           </span>
         </h2>
@@ -242,7 +242,7 @@ export const CompareDrawer = memo(function CompareDrawer({
             <rect x="14" y="3" width="7" height="18" rx="1" />
           </svg>
           {t("title")}
-          <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-[10px] font-bold text-foreground-secondary">
+          <span className="ml-1 rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-bold text-foreground-secondary">
             {items.length}/{maxCompare}
           </span>
         </h2>

@@ -55,7 +55,7 @@ export const CompareCard = memo(function CompareCard({
 
       {/* Reference badge */}
       {isRef && (
-        <div className="mx-3 mt-3 mb-1 w-fit rounded-full bg-surface-inset px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
+        <div className="mx-3 mt-3 mb-1 w-fit rounded-full bg-surface-inset px-2 py-0.5 text-2xs font-semibold uppercase tracking-wider text-muted">
           {t("reference")}
         </div>
       )}
@@ -73,7 +73,7 @@ export const CompareCard = memo(function CompareCard({
 
       {/* Grand total */}
       <div className="border-t border-border-faint px-3 py-2.5 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-accent">
+        <p className="text-2xs font-semibold uppercase tracking-widest text-accent">
           {t("totalCost")}
         </p>
         <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-foreground">
@@ -82,7 +82,7 @@ export const CompareCard = memo(function CompareCard({
         <p className="text-xs font-medium text-muted">{CURRENCY_SYMBOLS[r.currency]}</p>
         {costDiff && (
           <span
-            className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+            className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${
               costDiff.positive
                 ? "bg-green-surface text-green-text"
                 : "bg-red-surface text-red-text"
@@ -101,7 +101,7 @@ export const CompareCard = memo(function CompareCard({
             {r.unitWeightKg} kg
             {unitWeightDiff && (
               <span
-                className={`text-[10px] font-semibold ${
+                className={`text-2xs font-semibold ${
                   unitWeightDiff.positive ? "text-green-text" : "text-red-interactive"
                 }`}
               >
@@ -116,7 +116,7 @@ export const CompareCard = memo(function CompareCard({
             {r.totalWeightKg} kg
             {weightDiff && (
               <span
-                className={`text-[10px] font-semibold ${
+                className={`text-2xs font-semibold ${
                   weightDiff.positive ? "text-green-text" : "text-red-interactive"
                 }`}
               >

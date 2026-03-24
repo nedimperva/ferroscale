@@ -359,7 +359,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                     onChange={handleTextChange}
                     placeholder={t("placeholder")}
                     rows={1}
-                    className="w-full resize-none bg-transparent text-[15px] font-medium text-foreground placeholder:text-muted-faint outline-none"
+                    className="w-full resize-none bg-transparent text-base font-medium text-foreground placeholder:text-muted-faint outline-none"
                     onKeyDown={(e) => {
                       if (showPresetPicker) {
                         if (e.key === "ArrowDown") {
@@ -403,11 +403,11 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {(successCount > 0 || (showPresetPicker && filteredItems.length > 0)) && (
-                    <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium text-muted sm:inline-flex items-center gap-0.5">
+                    <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-2xs font-medium text-muted sm:inline-flex items-center gap-0.5">
                       <span>&#9166;</span>
                     </kbd>
                   )}
-                  <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium text-muted-faint sm:inline-block">
+                  <kbd className="hidden rounded-md border border-border-faint bg-surface-inset px-1.5 py-0.5 text-2xs font-medium text-muted-faint sm:inline-block">
                     ESC
                   </kbd>
                 </div>
@@ -419,11 +419,11 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 text-blue-text">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                   </svg>
-                  <span className="text-[10px] font-medium text-blue-text">
+                  <span className="text-2xs font-medium text-blue-text">
                     {t("presetPickerHint")}
                   </span>
                   {filteredItems.length > 1 && (
-                    <span className="ml-auto text-[10px] tabular-nums text-blue-text/60">
+                    <span className="ml-auto text-2xs tabular-nums text-blue-text/60">
                       {highlightIdx + 1}/{filteredItems.length}
                     </span>
                   )}
@@ -460,7 +460,7 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                   {/* Empty state: recent queries */}
                   {lineResults.length === 0 && !query.trim() && recentQueries.length > 0 && (
                     <div className="px-4 py-3">
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-faint">
+                      <p className="mb-2 text-2xs font-semibold uppercase tracking-widest text-muted-faint">
                         {t("recent")}
                       </p>
                       <div className="flex flex-wrap gap-1.5">
@@ -494,9 +494,9 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                           </button>
                         ))}
                       </div>
-                      <p className="mt-3 text-[10px] text-muted-faint">{t("multiLineHint")}</p>
+                      <p className="mt-3 text-2xs text-muted-faint">{t("multiLineHint")}</p>
                       {presets.length > 0 && (
-                        <p className="mt-1 text-[10px] text-muted-faint">{t("atTriggerHint")}</p>
+                        <p className="mt-1 text-2xs text-muted-faint">{t("atTriggerHint")}</p>
                       )}
                     </div>
                   )}
@@ -576,11 +576,11 @@ function PresetPickerRow({
         <div className="flex items-center gap-1.5">
           <p className="truncate text-sm font-semibold text-foreground">{preset.label}</p>
           {preset.kind === "preset" && (
-            <span className="shrink-0 rounded bg-purple-surface px-1 py-0.5 text-[9px] font-medium text-purple-text">Custom</span>
+            <span className="shrink-0 rounded bg-purple-surface px-1 py-0.5 text-2xs font-medium text-purple-text">Custom</span>
           )}
         </div>
         {query && (
-          <p className="mt-0.5 truncate font-mono text-[11px] text-muted-faint">{query}</p>
+          <p className="mt-0.5 truncate font-mono text-xs text-muted-faint">{query}</p>
         )}
       </div>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`h-3.5 w-3.5 shrink-0 text-muted-faint transition-opacity ${highlighted ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
@@ -621,12 +621,12 @@ function QuickResultRow({
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
             <span>{r.lengthMm} mm</span>
             {r.quantity > 1 && (
-              <span className="rounded bg-surface-inset px-1.5 py-0.5 text-[10px] font-medium tabular-nums">
+              <span className="rounded bg-surface-inset px-1.5 py-0.5 text-2xs font-medium tabular-nums">
                 &times;{r.quantity}
               </span>
             )}
             {r.materialGradeId !== "steel-s235jr" && (
-              <span className="rounded bg-blue-surface px-1.5 py-0.5 text-[10px] font-medium text-blue-text">
+              <span className="rounded bg-blue-surface px-1.5 py-0.5 text-2xs font-medium text-blue-text">
                 {r.materialGradeId.split("-").pop()?.toUpperCase()}
               </span>
             )}
@@ -645,7 +645,7 @@ function QuickResultRow({
         <button
           type="button"
           onClick={() => onLoad(r)}
-          className="shrink-0 rounded-lg border border-border-faint bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-foreground-secondary opacity-0 transition-all hover:border-border hover:bg-surface-raised group-hover:opacity-100"
+          className="shrink-0 rounded-lg border border-border-faint bg-surface px-2.5 py-1.5 text-xs font-semibold text-foreground-secondary opacity-0 transition-all hover:border-border hover:bg-surface-raised group-hover:opacity-100"
           title={t("loadInCalculator")}
         >
           {t("load")}

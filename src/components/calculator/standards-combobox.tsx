@@ -182,7 +182,7 @@ export const StandardsCombobox = memo(function StandardsCombobox({
             setOpen(true);
           }
         }}
-        className={`inline-flex items-center gap-1.5 text-[11px] font-medium transition-colors ${
+        className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${
           open
             ? "text-blue-text"
             : "text-muted-faint hover:text-foreground-secondary"
@@ -279,7 +279,7 @@ export const StandardsCombobox = memo(function StandardsCombobox({
                       <span className="flex items-center gap-1.5 font-medium">
                         {size.label}
                         {isCustom && (
-                          <span className="rounded bg-purple-surface px-1 py-0.5 text-[9px] font-semibold text-purple-text">
+                          <span className="rounded bg-purple-surface px-1 py-0.5 text-2xs font-semibold text-purple-text">
                             Custom
                           </span>
                         )}
@@ -299,7 +299,7 @@ export const StandardsCombobox = memo(function StandardsCombobox({
                                 clipRule="evenodd"
                               />
                             </svg>
-                            <span className="rounded-full bg-green-100 px-1.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            <span className="rounded-full bg-green-100 px-1.5 text-2xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                               {t("matched")}
                             </span>
                           </>

@@ -73,7 +73,7 @@ export function SwipeActionItem({
             >
                 <div className="flex flex-col items-center gap-0.5">
                     {leftIcon}
-                    <span className="text-[10px] font-medium">{leftLabel}</span>
+                    <span className="text-2xs font-medium">{leftLabel}</span>
                 </div>
             </motion.div>
 

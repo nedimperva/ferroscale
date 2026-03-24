@@ -204,7 +204,7 @@ const SavedItem = memo(function SavedItem({
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">{entry.name}</p>
-                <p className="mt-0.5 line-clamp-1 text-[11px] text-muted">{profileSummary}</p>
+                <p className="mt-0.5 line-clamp-1 text-xs text-muted">{profileSummary}</p>
               </div>
             </div>
 
@@ -235,7 +235,7 @@ const SavedItem = memo(function SavedItem({
 
             {entry.notes && !editing && (
               <div className="mt-2 rounded-lg border border-border-faint bg-surface-raised px-2.5 py-1.5">
-                <p className="text-[11px] italic text-muted-faint line-clamp-3">{entry.notes}</p>
+                <p className="text-xs italic text-muted-faint line-clamp-3">{entry.notes}</p>
               </div>
             )}
           </button>
