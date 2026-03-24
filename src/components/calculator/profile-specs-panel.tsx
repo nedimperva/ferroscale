@@ -805,11 +805,11 @@ function SpecsAlternativeRowButton({
           : "border-border bg-surface hover:bg-surface-inset/80"
       }`}
     >
-      <div className="min-w-0">
-        <span className="block truncate text-2xs font-semibold uppercase tracking-wide text-muted-faint">
+      <div className="flex min-w-0 items-baseline gap-1.5">
+        <span className="truncate text-2xs font-semibold uppercase tracking-wide text-muted-faint">
           {familyText}
         </span>
-        <span className="block truncate text-xs font-semibold">{row.label}</span>
+        <span className="truncate text-xs font-semibold">{row.label}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-x-3.5 gap-y-1 sm:grid-cols-4">

@@ -211,8 +211,8 @@ html {
 }
 
 /* ── Text-size preference (scales all rem-based sizes) ── */
-html.text-size-small { font-size: 14px; }
-html.text-size-large { font-size: 18px; }
+html.text-size-small { font-size: 15px; }
+html.text-size-large { font-size: 17px; }
 
 html ::-webkit-scrollbar {
   display: none;
