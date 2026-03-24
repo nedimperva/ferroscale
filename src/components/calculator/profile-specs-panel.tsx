@@ -836,7 +836,7 @@ function DenseMetricCell({
 }) {
   return (
     <div className="min-w-0">
-      <span className="block truncate text-2xs font-semibold uppercase tracking-wide text-muted-faint">
+      <span className="block truncate text-xs font-medium uppercase tracking-wide text-muted-faint">
         {label}
       </span>
       <span className={`block truncate text-xs font-semibold leading-snug ${subtle ? "" : "tabular-nums"}`}>
