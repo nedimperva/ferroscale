@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useDeferredValue, useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type {
@@ -511,24 +511,13 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
     translateSpecs(tBase, tSpecs, key, values);
   const specs = useMemo(() => resolveProfileSpecs(input), [input]);
   const profile = useMemo(() => getProfileById(input.profileId), [input.profileId]);
-  const [alternativeQuery, setAlternativeQuery] = useState("");
   const [alternativeSort, setAlternativeSort] = useState<AlternativeSortKey>("logical");
-  const deferredAlternativeQuery = useDeferredValue(alternativeQuery);
 
   if (!specs || !profile) return null;
 
   const alternativeRows = specs.familyMode === "alternatives"
-    ? specs.familyRows
-      .filter((row) => {
-        const query = deferredAlternativeQuery.trim().toLocaleLowerCase(locale);
-        if (!query) return true;
-        const familyLabel = translatedProfileFamilyLabel(row, tBase).toLocaleLowerCase(locale);
-        return `${familyLabel} ${row.label.toLocaleLowerCase(locale)}`.includes(query);
-      })
-      .sort((left, right) => compareAlternativeRows(left, right, alternativeSort))
+    ? [...specs.familyRows].sort((left, right) => compareAlternativeRows(left, right, alternativeSort))
     : [];
-
-  const alternativeCountLabel = `${alternativeRows.length}/${specs.familyRows.length}`;
   const alternativeSortOptions: Array<{ value: AlternativeSortKey; label: string }> = [
     { value: "logical", label: tSpecsSafe("alternatives.sort.logical") },
     { value: "mass", label: tSpecsSafe("alternatives.sort.mass") },
@@ -623,37 +612,21 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
               </p>
             </div>
             <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide text-muted">
-              {specs.familyMode === "alternatives" ? alternativeCountLabel : specs.familyRows.length}
+              {specs.familyRows.length}
             </span>
           </div>
 
           {specs.familyRows.length > 0 ? (
             specs.familyMode === "alternatives" ? (
               <div className="flex min-h-0 flex-1 flex-col gap-2.5">
-                <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_12rem]">
-                  <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0 text-muted-faint">
-                      <circle cx="8.5" cy="8.5" r="5.5" />
-                      <path d="M13 13 17 17" />
-                    </svg>
-                    <input
-                      type="search"
-                      value={alternativeQuery}
-                      onChange={(event) => setAlternativeQuery(event.target.value)}
-                      placeholder={tSpecsSafe("alternatives.searchPlaceholder")}
-                      className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-faint"
-                      aria-label={tSpecsSafe("alternatives.searchPlaceholder")}
-                    />
-                  </label>
-
-                  <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
-                    <span className="text-2xs font-semibold uppercase tracking-wide text-muted-faint">
+                <label className="flex w-fit items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-faint">
                       {tSpecsSafe("alternatives.sortLabel")}
                     </span>
                     <select
                       value={alternativeSort}
                       onChange={(event) => setAlternativeSort(event.target.value as AlternativeSortKey)}
-                      className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
+                      className="bg-transparent text-sm font-medium text-foreground outline-none"
                       aria-label={tSpecsSafe("alternatives.sortLabel")}
                     >
                       {alternativeSortOptions.map((option) => (
@@ -663,7 +636,6 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                       ))}
                     </select>
                   </label>
-                </div>
 
                 {alternativeRows.length > 0 ? (
                   <div className="min-h-0 overflow-y-auto pr-1 scroll-native">
