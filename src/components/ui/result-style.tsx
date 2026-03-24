@@ -61,7 +61,7 @@ export function getWorkspacePanelSpacing(layout: WorkspacePanelLayout) {
 
 export function PanelSectionLabel({ label }: { label: string }) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
       {label}
     </p>
   );
@@ -75,7 +75,7 @@ export function PanelSummaryChip({
   value: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-[11px] text-foreground-secondary">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs text-foreground-secondary">
       <span className="font-medium text-muted">{label}</span>
       <span className="font-semibold">{value}</span>
     </span>
@@ -90,7 +90,7 @@ export function PanelCompactChip({
   value: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-raised px-2 py-0.5 text-[10px] text-foreground-secondary">
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-raised px-2 py-0.5 text-2xs text-foreground-secondary">
       <span className="font-medium text-muted">{label}</span>
       <span className="font-semibold">{value}</span>
     </span>
@@ -137,10 +137,10 @@ export function PanelCompactMetric({
 }) {
   return (
     <div className="rounded-lg border border-border-faint bg-surface-raised px-2.5 py-2">
-      <p className="text-[10px] font-medium text-muted">{label}</p>
+      <p className="text-2xs font-medium text-muted">{label}</p>
       <div className="mt-1 flex flex-wrap items-end gap-1">
         <p className="text-sm font-semibold text-foreground tabular-nums">{value}</p>
-        {unit && <p className="text-[10px] font-medium uppercase tracking-wide text-muted">{unit}</p>}
+        {unit && <p className="text-2xs font-medium uppercase tracking-wide text-muted">{unit}</p>}
       </div>
     </div>
   );

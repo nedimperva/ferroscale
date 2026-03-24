@@ -40,7 +40,7 @@ export const ChangelogDrawer = memo(function ChangelogDrawer({
               </span>
               <span className="text-xs text-muted">{entry.date}</span>
               {idx === 0 && (
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                <span className="rounded-full bg-green-100 px-2 py-0.5 text-2xs font-semibold text-green-800 dark:bg-green-900/30 dark:text-green-400">
                   {t("latest")}
                 </span>
               )}
@@ -49,7 +49,7 @@ export const ChangelogDrawer = memo(function ChangelogDrawer({
             {/* Added */}
             {added && added.length > 0 && (
               <div className="mb-2">
-                <span className="mb-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">
+                <span className="mb-1 inline-flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
                   {t("added")}
                 </span>
@@ -67,7 +67,7 @@ export const ChangelogDrawer = memo(function ChangelogDrawer({
             {/* Changed */}
             {changed && changed.length > 0 && (
               <div className="mb-2">
-                <span className="mb-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                <span className="mb-1 inline-flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
                   {t("changed")}
                 </span>
@@ -85,7 +85,7 @@ export const ChangelogDrawer = memo(function ChangelogDrawer({
             {/* Fixed */}
             {fixed && fixed.length > 0 && (
               <div>
-                <span className="mb-1 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
+                <span className="mb-1 inline-flex items-center gap-1 text-2xs font-semibold uppercase tracking-wide text-red-700 dark:text-red-400">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
                   {t("fixed")}
                 </span>

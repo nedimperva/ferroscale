@@ -83,6 +83,12 @@ export default async function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem("ferroscale-theme");if(t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
           }}
         />
+        {/* Synchronous text-size script — prevents font-size flash on reload */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem("ferroscale-font-size");if(s==="small")document.documentElement.classList.add("text-size-small");else if(s==="large")document.documentElement.classList.add("text-size-large")}catch(e){}})();`,
+          }}
+        />
       </head>
       <body
         className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh bg-surface md:bg-background text-foreground`}

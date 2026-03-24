@@ -74,7 +74,7 @@ export const ShortcutsModal = memo(function ShortcutsModal({ open, onClose }: Sh
                     {s.keys.map((k) => (
                       <kbd
                         key={k}
-                        className="rounded-md border border-border-faint bg-surface-inset px-2 py-0.5 text-[11px] font-medium text-muted"
+                        className="rounded-md border border-border-faint bg-surface-inset px-2 py-0.5 text-xs font-medium text-muted"
                       >
                         {k}
                       </kbd>
@@ -84,8 +84,8 @@ export const ShortcutsModal = memo(function ShortcutsModal({ open, onClose }: Sh
               ))}
             </div>
             <div className="border-t border-border-faint px-4 py-2">
-              <p className="text-center text-[10px] text-muted-faint">
-                Press <kbd className="rounded border border-border-faint bg-surface-inset px-1 py-0.5 text-[10px]">?</kbd> or <kbd className="rounded border border-border-faint bg-surface-inset px-1 py-0.5 text-[10px]">ESC</kbd> to close
+              <p className="text-center text-2xs text-muted-faint">
+                Press <kbd className="rounded border border-border-faint bg-surface-inset px-1 py-0.5 text-2xs">?</kbd> or <kbd className="rounded border border-border-faint bg-surface-inset px-1 py-0.5 text-2xs">ESC</kbd> to close
               </p>
             </div>
           </motion.div>

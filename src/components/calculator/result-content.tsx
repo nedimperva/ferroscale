@@ -411,7 +411,7 @@ export const ResultContent = memo(function ResultContent({
                         <td className="py-1 pr-2">
                           {row.labelKey ? tBase(row.labelKey) : row.label}
                         </td>
-                        <td className="py-1 pr-2 font-mono text-[11px]">{row.expression}</td>
+                        <td className="py-1 pr-2 font-mono text-xs">{row.expression}</td>
                         <td className="py-1">
                           {formatStaticNumber(row.value)} {row.unit}
                         </td>
@@ -432,7 +432,7 @@ export const ResultContent = memo(function ResultContent({
                         <p className="text-xs font-semibold text-foreground">
                           {row.labelKey ? tBase(row.labelKey) : row.label}
                         </p>
-                        <p className="mt-1 break-words font-mono text-[11px] text-muted">
+                        <p className="mt-1 break-words font-mono text-xs text-muted">
                           {row.expression}
                         </p>
                       </div>

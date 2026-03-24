@@ -326,7 +326,12 @@
     "inlinePrice": "Prikazi cijenu u formi",
     "weightAsMain": "Tezina kao glavni prikaz",
     "defaultUnit": "Podrazumijevana jedinica",
-    "defaultUnitHint": "Koristi se za sve dimenzije i duzine"
+    "defaultUnitHint": "Koristi se za sve dimenzije i duzine",
+    "textSize": "Velicina teksta",
+    "textSizeSmall": "Malo",
+    "textSizeMedium": "Srednje",
+    "textSizeLarge": "Veliko",
+    "textSizeHint": "Skalira sav tekst u interfejsu"
   },
   "settingsDrawer": {
     "ariaLabel": "Panel postavki",

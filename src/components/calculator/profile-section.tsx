@@ -250,7 +250,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -280,7 +280,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
+                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -395,7 +395,7 @@ export const ProfileSection = memo(function ProfileSection({
             <button
               type="button"
               onClick={onSavePreset}
-              className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-muted-faint transition-colors hover:text-foreground-secondary"
+              className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-muted-faint transition-colors hover:text-foreground-secondary"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <path d="M12 5v14" /><path d="M5 12h14" />
@@ -499,7 +499,7 @@ export const ProfileSection = memo(function ProfileSection({
                     }`}
                   aria-invalid={hasIssue("unitPrice")}
                 />
-                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-1.5 text-[11px] text-muted">
+                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-1.5 text-xs text-muted">
                   {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
                 </span>
               </div>

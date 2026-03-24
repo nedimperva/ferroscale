@@ -50,7 +50,7 @@ export const DimensionInput = memo(function DimensionInput({
         </span>
       </div>
       {hasIssue && issueMessage && (
-        <p id={`dimension-${dimension.key}-error`} className="text-[11px] text-red-interactive">
+        <p id={`dimension-${dimension.key}-error`} className="text-xs text-red-interactive">
           {issueMessage}
         </p>
       )}

@@ -114,7 +114,7 @@ export const PresetChips = memo(function PresetChips({
             triggerHaptic("light");
             setOpen((prev) => !prev);
           }}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
             open
               ? "border-blue-strong bg-blue-surface text-blue-text"
               : presets.length > 0
@@ -127,7 +127,7 @@ export const PresetChips = memo(function PresetChips({
           </svg>
           {t("title")}
           {presets.length > 0 && (
-            <span className={`rounded-full px-1 text-[10px] font-semibold tabular-nums ${
+            <span className={`rounded-full px-1 text-2xs font-semibold tabular-nums ${
               open ? "bg-blue-text/10 text-blue-text" : "bg-surface-inset text-muted"
             }`}>
               {presets.length}
@@ -167,7 +167,7 @@ export const PresetChips = memo(function PresetChips({
                     <p className="text-xs text-muted-faint">
                       No favourites yet
                     </p>
-                    <p className="mt-1 text-[10px] text-muted-faint">
+                    <p className="mt-1 text-2xs text-muted-faint">
                       Save current dimensions or type @ in Quick Calc
                     </p>
                   </div>
@@ -258,7 +258,7 @@ export const PresetChips = memo(function PresetChips({
             triggerHaptic("light");
             onSave();
           }}
-          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border-strong px-2 py-1.5 text-[11px] font-medium text-muted transition-all hover:border-blue-strong hover:bg-blue-surface hover:text-blue-text"
+          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border-strong px-2 py-1.5 text-xs font-medium text-muted transition-all hover:border-blue-strong hover:bg-blue-surface hover:text-blue-text"
           title={t("savePreset")}
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">

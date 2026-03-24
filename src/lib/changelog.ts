@@ -17,6 +17,26 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.3.0",
+    date: "2026-03-24",
+    added: [
+      "Text Size setting (Small / Medium / Large) in Workspace settings to scale all text in the app",
+    ],
+    added_bs: [
+      "Podesavanje velicine teksta (Mala / Srednja / Velika) u postavkama radnog prostora za skaliranje svog teksta u aplikaciji",
+    ],
+    changed: [
+      "Standardized all arbitrary pixel-based font sizes to Tailwind scale classes for consistent text scaling",
+      "Alternative profile cards now show family and designation on one line",
+      "Matched label sizes in key specs and alternative cards for a more uniform look",
+    ],
+    changed_bs: [
+      "Standardizirane sve proizvoljne velicine fontova u pikselima na Tailwind klase za konzistentno skaliranje teksta",
+      "Kartice alternativnih profila sada prikazuju porodicu i oznaku u jednom redu",
+      "Uskladjene velicine oznaka u kljucnim specifikacijama i karticama alternativa za ujednaceniji izgled",
+    ],
+  },
+  {
     version: "2.2.2",
     date: "2026-03-24",
     changed: [

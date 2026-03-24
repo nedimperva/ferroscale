@@ -229,17 +229,17 @@ function ReverseResult({
 
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-green-text">
+      <p className="text-2xs font-semibold uppercase tracking-widest text-green-text">
         {t("reverse.required", { label })}
       </p>
       <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-green-900">
         {displayValue}
         <span className="ml-1 text-sm font-medium text-green-600">{unit}</span>
       </p>
-      <p className="mt-1 text-[11px] text-green-600">
+      <p className="mt-1 text-xs text-green-600">
         {t("reverse.equivalent", { value: result.valueMm.toFixed(2) })}
       </p>
-      <p className="mt-0.5 text-[11px] text-green-600">
+      <p className="mt-0.5 text-xs text-green-600">
         {t("reverse.requiredArea", { value: result.requiredAreaMm2.toFixed(2) })}
       </p>
     </div>
@@ -270,19 +270,19 @@ function QuantityResultPanel({
 
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-green-text">
+      <p className="text-2xs font-semibold uppercase tracking-widest text-green-text">
         {t("quantityResult")}
       </p>
       <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-green-900">
         {t("pieces", { count: result.wholeQuantity })}
       </p>
-      <p className="mt-1 text-[11px] text-green-600">
+      <p className="mt-1 text-xs text-green-600">
         {t("piecesExact", { value: result.exactQuantity.toFixed(3) })}
       </p>
-      <p className="mt-0.5 text-[11px] text-green-600">
+      <p className="mt-0.5 text-xs text-green-600">
         {t("weightPerPiece", { value: result.unitWeightKg.toFixed(3) })}
       </p>
-      <p className="mt-0.5 text-[11px] text-green-600">
+      <p className="mt-0.5 text-xs text-green-600">
         {t("remainder", { value: result.remainderKg.toFixed(3) })}
       </p>
     </div>

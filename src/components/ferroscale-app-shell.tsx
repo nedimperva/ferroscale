@@ -11,6 +11,7 @@ import { useReverseCalculator } from "@/hooks/useReverseCalculator";
 import { useProjects } from "@/hooks/useProjects";
 import type { Theme } from "@/hooks/useTheme";
 import { useTheme } from "@/hooks/useTheme";
+import { useTextSize } from "@/hooks/useTextSize";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { usePresets } from "@/hooks/usePresets";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
@@ -190,6 +191,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const reverse = useReverseCalculator(input, selectedProfile);
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { textSize, setTextSize } = useTextSize();
   const {
     projects,
     activeProjectId,
@@ -821,6 +823,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           defaultUnit={defaultUnit}
           onDefaultUnitChange={defaultUnitStore.set}
           unitOptions={UNIT_OPTIONS}
+          textSize={textSize}
+          onTextSizeChange={setTextSize}
         />
       </div>
     ),
@@ -941,6 +945,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           defaultUnit={defaultUnit}
           onDefaultUnitChange={defaultUnitStore.set}
           unitOptions={UNIT_OPTIONS}
+          textSize={textSize}
+          onTextSizeChange={setTextSize}
         />
       </MobilePageCard>
     );
@@ -1002,7 +1008,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
           <div className="flex min-w-0 flex-1 flex-col">
             <h1 className="truncate text-xs font-semibold tracking-tight">{mobileHeaderTitle}</h1>
-            <p className="flex items-center gap-1 truncate text-[10px] leading-tight text-muted">
+            <p className="flex items-center gap-1 truncate text-2xs leading-tight text-muted">
               {normalizedCurrentProfile && (
                 <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded bg-surface-inset text-muted-faint">
                   <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
@@ -1017,7 +1023,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               <button
                 type="button"
                 onClick={openCompare}
-                className="inline-flex items-center gap-1 rounded-md border border-blue-border bg-blue-surface px-2 py-1 text-[11px] font-semibold text-blue-text"
+                className="inline-flex items-center gap-1 rounded-md border border-blue-border bg-blue-surface px-2 py-1 text-xs font-semibold text-blue-text"
                 aria-label={t("sidebar.compare")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
@@ -1198,6 +1204,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             defaultUnit={defaultUnit}
             onDefaultUnitChange={defaultUnitStore.set}
             unitOptions={UNIT_OPTIONS}
+            textSize={textSize}
+            onTextSizeChange={setTextSize}
           />
         )}
 

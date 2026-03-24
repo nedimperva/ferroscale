@@ -197,6 +197,10 @@
   /* ── Fonts ── */
   --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-ibm-plex-mono);
+
+  /* ── Typography — extra-small tier ── */
+  --font-size-2xs: 0.625rem;
+  --font-size-2xs--line-height: 1rem;
 }
 
 html {
@@ -205,6 +209,10 @@ html {
   -webkit-tap-highlight-color: transparent;
   scrollbar-width: none;
 }
+
+/* ── Text-size preference (scales all rem-based sizes) ── */
+html.text-size-small { font-size: 15px; }
+html.text-size-large { font-size: 17px; }
 
 html ::-webkit-scrollbar {
   display: none;

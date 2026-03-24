@@ -34,7 +34,7 @@ export const CompareChart = memo(function CompareChart({ items }: CompareChartPr
 
   return (
     <div className="rounded-lg border border-border bg-surface-inset/30 p-3">
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-faint">
+      <p className="mb-2 text-2xs font-semibold uppercase tracking-wider text-muted-faint">
         {t("chartTitle")}
       </p>
       <div className="space-y-2.5">
@@ -56,7 +56,7 @@ export const CompareChart = memo(function CompareChart({ items }: CompareChartPr
                     style={{ width: `${Math.max(weightPct, 2)}%` }}
                   />
                 </div>
-                <span className="w-20 shrink-0 text-right font-mono text-[11px] text-foreground-secondary">
+                <span className="w-20 shrink-0 text-right font-mono text-xs text-foreground-secondary">
                   {item.result.totalWeightKg} kg
                 </span>
               </div>
@@ -69,7 +69,7 @@ export const CompareChart = memo(function CompareChart({ items }: CompareChartPr
                       style={{ width: `${Math.max(costPct, 2)}%` }}
                     />
                   </div>
-                  <span className="w-20 shrink-0 text-right font-mono text-[10px] text-muted">
+                  <span className="w-20 shrink-0 text-right font-mono text-2xs text-muted">
                     {currencySymbol}{item.result.grandTotalAmount}
                   </span>
                 </div>
