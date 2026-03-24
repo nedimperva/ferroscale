@@ -178,9 +178,28 @@
     "metricsTitle": "Glavne specifikacije",
     "metricsEmpty": "Izracunate specifikacije ce se pojaviti kada aktivni profil ima dovoljno dimenzija.",
     "formulaLabel": "Formula / osnova",
+    "alternativesTitle": "Alternative",
+    "alternativesHint": "Uticaj poredi puni ukupni iznos za aktivnu duzinu, kolicinu, otpad i PDV.",
     "familyTableTitle": "Pregled porodice",
     "familyTableHint": "Odabir reda odmah azurira aktivni profil u kalkulatoru.",
     "noLookupRows": "Za ovaj profil jos nema lookup redova.",
+    "alternatives": {
+      "searchPlaceholder": "Pretrazi velicinu",
+      "sortLabel": "Sortiranje",
+      "filteredEmpty": "Nijedna alternativa ne odgovara ovoj pretrazi.",
+      "fit": "Podudaranje",
+      "impact": "Uticaj",
+      "current": "Trenutno",
+      "nearMatch": "Skoro isto",
+      "heavier": "{percent}% teze",
+      "lighter": "{percent}% lakse",
+      "sort": {
+        "selected": "Aktivni prvo",
+        "size": "Velicina rastuce",
+        "mass": "kg/m rastuce",
+        "impact": "Uticaj rastuce"
+      }
+    },
     "table": {
       "size": "Velicina",
       "area": "A (mm2)",

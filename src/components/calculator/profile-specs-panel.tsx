@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type {
@@ -10,7 +10,6 @@ import type {
   ProfileSpecGeometry,
 } from "@/lib/datasets/types";
 import { getProfileById } from "@/lib/datasets/profiles";
-import { ReferenceList } from "@/components/calculator/reference-list";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import {
   resolveProfileSpecs,
@@ -22,13 +21,122 @@ import {
 interface ProfileSpecsPanelProps {
   input: CalculationInput;
   onSelectStandardSize: (sizeId: string) => void;
+  onSelectStandardProfileSize: (profileId: ProfileId, sizeId: string) => void;
   onSelectManualDimensionsMm: (dimensions: Partial<Record<DimensionKey, number>>) => void;
 }
 
-type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
+type TranslationValues = Record<string, string | number | Date>;
+type TranslateFn = (key: string, values?: TranslationValues) => string;
+type TranslateWithHasFn = {
+  (key: string, values?: TranslationValues): string;
+  has: (key: string) => boolean;
+};
+type AlternativeSortKey = "selected" | "size" | "mass" | "impact";
+
+const SPECS_TEXT_FALLBACKS = {
+  title: "Profile specs",
+  customSelection: "Custom",
+  matchedSelection: "Matched",
+  drawingAria: "Profile engineering drawing",
+  incompleteTitle: "Drawing follows the active selection",
+  incompleteBody: "Fill the required dimensions or pick a row from the family table to generate the profile drawing and computed specs.",
+  metricsTitle: "Key specs",
+  metricsEmpty: "Calculated specs appear here once the active profile has enough dimensions.",
+  formulaLabel: "Formula / basis",
+  alternativesTitle: "Alternatives",
+  alternativesHint: "Impact compares full job total for the active length, quantity, waste, and VAT.",
+  familyTableTitle: "Family lookup",
+  familyTableHint: "Selecting a row updates the active calculator profile immediately.",
+  noLookupRows: "No lookup rows are available for this profile yet.",
+  "alternatives.searchPlaceholder": "Search size",
+  "alternatives.sortLabel": "Sort",
+  "alternatives.sort.selected": "Selected first",
+  "alternatives.sort.size": "Size ascending",
+  "alternatives.sort.mass": "kg/m ascending",
+  "alternatives.sort.impact": "Impact ascending",
+  "alternatives.filteredEmpty": "No alternatives match this search.",
+  "alternatives.fit": "Fit",
+  "alternatives.impact": "Impact",
+  "alternatives.current": "Current",
+  "alternatives.nearMatch": "Near match",
+  "alternatives.heavier": "{percent}% heavier",
+  "alternatives.lighter": "{percent}% lighter",
+  "table.size": "Size",
+  "table.area": "A (mm2)",
+  "table.perimeter": "P (mm)",
+  "table.massPerMeter": "kg/m",
+} as const;
+
+type SpecsTextKey = keyof typeof SPECS_TEXT_FALLBACKS;
+
+function isMissingTranslation(value: string, key: string, namespace?: string): boolean {
+  return value === key || (namespace != null && value === `${namespace}.${key}`);
+}
+
+function interpolateFallback(
+  template: string,
+  values?: TranslationValues,
+): string {
+  if (!values) return template;
+
+  return template.replace(/\{(\w+)\}/g, (_match, token: string) => {
+    const value = values[token];
+    return value == null ? `{${token}}` : String(value);
+  });
+}
+
+function translateSpecs(
+  tBase: TranslateWithHasFn,
+  tSpecs: TranslateWithHasFn,
+  key: SpecsTextKey,
+  values?: TranslationValues,
+): string {
+  if (tSpecs.has(key)) {
+    const translated = tSpecs(key, values);
+    if (!isMissingTranslation(translated, key, "specs")) return translated;
+  }
+
+  const rootedKey = `specs.${key}`;
+  if (tBase.has(rootedKey)) {
+    const rooted = tBase(rootedKey, values);
+    if (!isMissingTranslation(rooted, rootedKey)) return rooted;
+  }
+
+  return interpolateFallback(SPECS_TEXT_FALLBACKS[key], values);
+}
 
 function formatNumber(locale: string, value: number, maximumFractionDigits = 2): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value);
+}
+
+function parseAlternativeLabelNumber(label: string): number {
+  const match = label.match(/(\d+(?:\.\d+)?)/);
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
+
+function compareAlternativeRows(
+  left: ProfileSpecsFamilyRow,
+  right: ProfileSpecsFamilyRow,
+  sortKey: AlternativeSortKey,
+): number {
+  if (sortKey === "selected" && left.selected !== right.selected) {
+    return left.selected ? -1 : 1;
+  }
+
+  if (sortKey === "mass") {
+    const delta = (left.massPerMeterKg ?? Number.POSITIVE_INFINITY) - (right.massPerMeterKg ?? Number.POSITIVE_INFINITY);
+    if (delta !== 0) return delta;
+  }
+
+  if (sortKey === "impact") {
+    const delta = (left.impactValue ?? Number.POSITIVE_INFINITY) - (right.impactValue ?? Number.POSITIVE_INFINITY);
+    if (delta !== 0) return delta;
+  }
+
+  const numericDelta = parseAlternativeLabelNumber(left.label) - parseAlternativeLabelNumber(right.label);
+  if (numericDelta !== 0) return numericDelta;
+
+  return left.label.localeCompare(right.label);
 }
 
 function metricLabel(
@@ -56,9 +164,95 @@ function metricLabel(
   return tSpecs(`labels.${key}`);
 }
 
+function metricCode(key: ProfileSpecsMetricKey): string | null {
+  switch (key) {
+    case "diameter":
+      return "d";
+    case "outerDiameter":
+      return "OD";
+    case "innerDiameter":
+      return "ID";
+    case "wallThickness":
+    case "thickness":
+      return "t";
+    case "side":
+      return "a";
+    case "width":
+      return "b";
+    case "height":
+      return "h";
+    case "patternHeight":
+      return "p";
+    case "legA":
+      return "a";
+    case "legB":
+      return "b";
+    case "webThickness":
+      return "tw";
+    case "flangeThickness":
+      return "tf";
+    case "rootRadius":
+      return "r";
+    case "waveHeight":
+      return "hw";
+    case "wavePitch":
+      return "p";
+    case "meshPitch":
+      return "m";
+    case "strandWidth":
+      return "s";
+    case "areaMm2":
+      return "A";
+    case "perimeterMm":
+      return "P";
+    default:
+      return null;
+  }
+}
+
 function metricValue(locale: string, metric: ProfileSpecsMetric): string {
   const digits = metric.unit === "mm2" ? 0 : metric.unit === "kg/m" ? 3 : 2;
   return `${formatNumber(locale, metric.value, digits)} ${metric.unit}`;
+}
+
+function fitLabel(
+  locale: string,
+  row: ProfileSpecsFamilyRow,
+  tSpecs: TranslateFn,
+): string {
+  if (row.selected) return tSpecs("alternatives.active");
+  if (row.fitDeltaPercent == null) return "—";
+
+  const delta = row.fitDeltaPercent;
+  if (Math.abs(delta) < 1) return tSpecs("alternatives.nearMatch");
+
+  return tSpecs(delta > 0 ? "alternatives.heavier" : "alternatives.lighter", {
+    percent: formatNumber(locale, Math.abs(delta), 1),
+  });
+}
+
+function impactLabel(
+  locale: string,
+  currency: string,
+  row: ProfileSpecsFamilyRow,
+  tSpecs: TranslateFn,
+): string {
+  if (row.selected) return tSpecs("alternatives.current");
+  if (row.impactValue == null || !row.impactMode) return "—";
+
+  const sign = row.impactValue > 0 ? "+" : row.impactValue < 0 ? "-" : "±";
+  const absolute = Math.abs(row.impactValue);
+
+  if (row.impactMode === "currency") {
+    const formatted = new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(absolute);
+    return `${sign}${formatted}`;
+  }
+
+  return `${sign}${formatNumber(locale, absolute, 3)} kg`;
 }
 
 function drawingMetricText(key: ProfileSpecsMetricKey, valueText: string): string {
@@ -273,15 +467,40 @@ function buildCorrugatedPath(thickness: number): string {
 export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
   input,
   onSelectStandardSize,
+  onSelectStandardProfileSize,
   onSelectManualDimensionsMm,
 }: ProfileSpecsPanelProps) {
   const locale = useLocale();
-  const tBase = useTranslations();
-  const tSpecs = useTranslations("specs");
+  const tBase = useTranslations() as TranslateWithHasFn;
+  const tSpecs = useTranslations("specs") as TranslateWithHasFn;
+  const tSpecsSafe = (key: SpecsTextKey, values?: TranslationValues) =>
+    translateSpecs(tBase, tSpecs, key, values);
   const specs = useMemo(() => resolveProfileSpecs(input), [input]);
   const profile = useMemo(() => getProfileById(input.profileId), [input.profileId]);
+  const [alternativeQuery, setAlternativeQuery] = useState("");
+  const [alternativeSort, setAlternativeSort] = useState<AlternativeSortKey>("selected");
+  const deferredAlternativeQuery = useDeferredValue(alternativeQuery);
+
+  useEffect(() => {
+    setAlternativeQuery("");
+    setAlternativeSort("selected");
+  }, [specs?.profileId, specs?.selectedFamilyRowId]);
 
   if (!specs || !profile) return null;
+
+  const alternativeRows = specs.familyMode === "alternatives"
+    ? specs.familyRows
+      .filter((row) => row.label.toLocaleLowerCase(locale).includes(deferredAlternativeQuery.trim().toLocaleLowerCase(locale)))
+      .sort((left, right) => compareAlternativeRows(left, right, alternativeSort))
+    : [];
+
+  const alternativeCountLabel = `${alternativeRows.length}/${specs.familyRows.length}`;
+  const alternativeSortOptions: Array<{ value: AlternativeSortKey; label: string }> = [
+    { value: "selected", label: tSpecsSafe("alternatives.sort.selected") },
+    { value: "size", label: tSpecsSafe("alternatives.sort.size") },
+    { value: "mass", label: tSpecsSafe("alternatives.sort.mass") },
+    { value: "impact", label: tSpecsSafe("alternatives.sort.impact") },
+  ];
 
   return (
     <div className="flex min-h-full flex-col bg-surface">
@@ -293,10 +512,10 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate text-sm font-semibold text-foreground">{tSpecs("title")}</h2>
+              <h2 className="truncate text-sm font-semibold text-foreground">{tSpecsSafe("title")}</h2>
               {specs.isCustomSelection && (
                 <span className="rounded-full border border-amber-border bg-amber-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-text">
-                  {tSpecs("customSelection")}
+                  {tSpecsSafe("customSelection")}
                 </span>
               )}
             </div>
@@ -321,99 +540,163 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                   <path d="M12 3v18M3 12h18" />
                 </svg>
               </span>
-              <p className="text-sm font-semibold text-foreground-secondary">{tSpecs("incompleteTitle")}</p>
-              <p className="max-w-sm text-xs text-muted-faint">{tSpecs("incompleteBody")}</p>
+              <p className="text-sm font-semibold text-foreground-secondary">{tSpecsSafe("incompleteTitle")}</p>
+              <p className="max-w-sm text-xs text-muted-faint">{tSpecsSafe("incompleteBody")}</p>
             </div>
           )}
         </section>
 
         <section className="rounded-2xl border border-border bg-surface-raised p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tSpecs("metricsTitle")}</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tSpecsSafe("metricsTitle")}</h3>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeClass(!specs.isCustomSelection)}`}>
-              {specs.isCustomSelection ? tSpecs("customSelection") : tSpecs("matchedSelection")}
+              {specs.isCustomSelection ? tSpecsSafe("customSelection") : tSpecsSafe("matchedSelection")}
             </span>
           </div>
 
           {specs.metrics.length > 0 ? (
-            <dl className="grid gap-2.5 [grid-template-columns:repeat(auto-fit,minmax(9.25rem,1fr))]">
+            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 2xl:grid-cols-4">
               {specs.metrics.map((metric) => (
-                <div key={`${metric.key}-${metric.value}`} className="rounded-xl border border-border bg-surface px-3 py-2.5">
-                  <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-faint">
-                    {metricLabel(metric.key, tBase, tSpecs)}
+                <div key={`${metric.key}-${metric.value}`} className="rounded-lg border border-border bg-surface px-2.5 py-2">
+                  <dt className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-faint">
+                    {metricCode(metric.key) && (
+                      <span className="rounded border border-border bg-surface-inset px-1.5 py-0.5 font-semibold text-[9px] tracking-normal text-foreground-secondary">
+                        {metricCode(metric.key)}
+                      </span>
+                    )}
+                    <span className="min-w-0 leading-tight">
+                      {metricLabel(metric.key, tBase, tSpecs)}
+                    </span>
                   </dt>
-                  <dd className="mt-1 text-sm font-semibold text-foreground">
+                  <dd className="mt-1 text-sm font-semibold leading-tight text-foreground">
                     {metricValue(locale, metric)}
                   </dd>
                 </div>
               ))}
             </dl>
           ) : (
-            <p className="text-sm text-muted-faint">{tSpecs("metricsEmpty")}</p>
+            <p className="text-sm text-muted-faint">{tSpecsSafe("metricsEmpty")}</p>
           )}
-        </section>
-
-        <section className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))]">
-          <div className="rounded-2xl border border-border bg-surface-raised p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-faint">
-              {tSpecs("formulaLabel")}
-            </p>
-            <p className="mt-1 text-sm font-medium text-foreground-secondary">{specs.formulaLabel}</p>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-surface-raised p-4">
-            <ReferenceList
-              labels={specs.referenceLabels}
-              className="text-xs text-muted-faint"
-            />
-          </div>
         </section>
 
         <section className="rounded-2xl border border-border bg-surface-raised p-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">{tSpecs("familyTableTitle")}</h3>
-              <p className="text-xs text-muted-faint">{tSpecs("familyTableHint")}</p>
+              <h3 className="text-sm font-semibold text-foreground">
+                {specs.familyMode === "alternatives" ? tSpecsSafe("alternativesTitle") : tSpecsSafe("familyTableTitle")}
+              </h3>
+              <p className="text-xs text-muted-faint">
+                {specs.familyMode === "alternatives" ? tSpecsSafe("alternativesHint") : tSpecsSafe("familyTableHint")}
+              </p>
             </div>
             <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
-              {specs.familyRows.length}
+              {specs.familyMode === "alternatives" ? alternativeCountLabel : specs.familyRows.length}
             </span>
           </div>
 
           {specs.familyRows.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-separate border-spacing-y-1">
-                <thead>
-                  <tr className="text-left text-[11px] uppercase tracking-wide text-muted-faint">
-                    <th className="px-3 py-1">{tSpecs("table.size")}</th>
-                    <th className="px-3 py-1 text-right">{tSpecs("table.area")}</th>
-                    <th className="px-3 py-1 text-right">{tSpecs("table.perimeter")}</th>
-                    <th className="px-3 py-1 text-right">{tSpecs("table.massPerMeter")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {specs.familyRows.map((row) => (
-                    <SpecsFamilyRowButton
-                      key={row.id}
-                      locale={locale}
-                      row={row}
-                      onClick={() => {
-                        if (row.mode === "standard" && row.sizeId) {
-                          onSelectStandardSize(row.sizeId);
-                          return;
-                        }
-
-                        if (row.mode === "manual" && row.dimensionsMm) {
-                          onSelectManualDimensionsMm(row.dimensionsMm);
-                        }
-                      }}
+            specs.familyMode === "alternatives" ? (
+              <div className="space-y-2.5">
+                <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_12rem]">
+                  <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-[13px] text-foreground-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0 text-muted-faint">
+                      <circle cx="8.5" cy="8.5" r="5.5" />
+                      <path d="M13 13 17 17" />
+                    </svg>
+                    <input
+                      type="search"
+                      value={alternativeQuery}
+                      onChange={(event) => setAlternativeQuery(event.target.value)}
+                      placeholder={tSpecsSafe("alternatives.searchPlaceholder")}
+                      className="w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-faint"
+                      aria-label={tSpecsSafe("alternatives.searchPlaceholder")}
                     />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </label>
+
+                  <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-faint">
+                      {tSpecsSafe("alternatives.sortLabel")}
+                    </span>
+                    <select
+                      value={alternativeSort}
+                      onChange={(event) => setAlternativeSort(event.target.value as AlternativeSortKey)}
+                      className="w-full bg-transparent text-[13px] font-medium text-foreground outline-none"
+                      aria-label={tSpecsSafe("alternatives.sortLabel")}
+                    >
+                      {alternativeSortOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="hidden grid-cols-[minmax(0,1.35fr)_minmax(6rem,0.9fr)_5.25rem_minmax(6.5rem,0.9fr)] gap-3 px-3 pt-1 text-[9px] font-semibold uppercase tracking-wide text-muted-faint md:grid">
+                  <span>{tSpecsSafe("table.size")}</span>
+                  <span className="text-right">{tSpecsSafe("alternatives.fit")}</span>
+                  <span className="text-right">{tSpecsSafe("table.massPerMeter")}</span>
+                  <span className="text-right">{tSpecsSafe("alternatives.impact")}</span>
+                </div>
+
+                {alternativeRows.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {alternativeRows.map((row) => (
+                      <SpecsAlternativeRowButton
+                        key={row.id}
+                        locale={locale}
+                        currency={input.currency}
+                        row={row}
+                        tSpecs={tSpecsSafe}
+                        onClick={() => {
+                          if (row.mode === "standard" && row.sizeId) {
+                            onSelectStandardProfileSize(row.profileId, row.sizeId);
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted-faint">
+                    {tSpecsSafe("alternatives.filteredEmpty")}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-separate border-spacing-y-1">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-muted-faint">
+                      <th className="px-3 py-1">{tSpecsSafe("table.size")}</th>
+                      <th className="px-3 py-1 text-right">{tSpecsSafe("table.area")}</th>
+                      <th className="px-3 py-1 text-right">{tSpecsSafe("table.perimeter")}</th>
+                      <th className="px-3 py-1 text-right">{tSpecsSafe("table.massPerMeter")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {specs.familyRows.map((row) => (
+                      <SpecsFamilyRowButton
+                        key={row.id}
+                        locale={locale}
+                        row={row}
+                        onClick={() => {
+                          if (row.mode === "standard" && row.sizeId) {
+                            onSelectStandardSize(row.sizeId);
+                            return;
+                          }
+
+                          if (row.mode === "manual" && row.dimensionsMm) {
+                            onSelectManualDimensionsMm(row.dimensionsMm);
+                          }
+                        }}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           ) : (
-            <p className="text-sm text-muted-faint">{tSpecs("noLookupRows")}</p>
+            <p className="text-sm text-muted-faint">{tSpecsSafe("noLookupRows")}</p>
           )}
         </section>
       </div>
@@ -458,6 +741,65 @@ function SpecsFamilyRowButton({
   );
 }
 
+function SpecsAlternativeRowButton({
+  locale,
+  currency,
+  row,
+  tSpecs,
+  onClick,
+}: {
+  locale: string;
+  currency: string;
+  row: ProfileSpecsFamilyRow;
+  tSpecs: TranslateFn;
+  onClick: () => void;
+}) {
+  const fitText = fitLabel(locale, row, tSpecs);
+  const impactText = impactLabel(locale, currency, row, tSpecs);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`grid w-full gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors md:grid-cols-[minmax(0,1.35fr)_minmax(6rem,0.9fr)_5.25rem_minmax(6.5rem,0.9fr)] md:items-center ${
+        row.selected
+          ? "border-blue-border bg-blue-surface/35 text-blue-text"
+          : "border-border bg-surface hover:bg-surface-inset/80"
+      }`}
+    >
+      <div className="min-w-0">
+        <span className="block truncate text-[13px] font-semibold">{row.label}</span>
+      </div>
+
+      <AlternativeMetricCell label={tSpecs("alternatives.fit")} value={fitText} />
+      <AlternativeMetricCell
+        label={tSpecs("table.massPerMeter")}
+        value={row.massPerMeterKg != null ? formatNumber(locale, row.massPerMeterKg, 3) : "-"}
+      />
+      <AlternativeMetricCell label={tSpecs("alternatives.impact")} value={impactText} />
+    </button>
+  );
+}
+
+function AlternativeMetricCell({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 md:block md:text-right">
+      <span className="text-[8px] font-semibold uppercase tracking-wide text-muted-faint md:hidden">
+        {label}
+      </span>
+      <span className="text-[13px] font-semibold tabular-nums leading-snug">
+        {value}
+      </span>
+    </div>
+  );
+}
+
 export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
   profileId,
   drawingKind,
@@ -468,7 +810,10 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
   geometry: ProfileSpecGeometry;
 }) {
   const locale = useLocale();
-  const tSpecs = useTranslations("specs");
+  const tBase = useTranslations() as TranslateWithHasFn;
+  const tSpecs = useTranslations("specs") as TranslateWithHasFn;
+  const tSpecsSafe = (key: SpecsTextKey, values?: TranslationValues) =>
+    translateSpecs(tBase, tSpecs, key, values);
   const value = (raw: number | undefined) => (raw != null ? formatNumber(locale, raw, 1) : "-");
   const drawText = (key: ProfileSpecsMetricKey, raw: number | undefined) =>
     drawingMetricText(key, `${value(raw)} mm`);
@@ -494,6 +839,13 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
   const sectionWebRight = sectionCenter + (section.web / 2);
   const sectionTopFlange = sectionY + section.flange;
   const sectionBottomFlange = sectionBottom - section.flange;
+  const structuralCalloutTop = sectionY + 28;
+  const structuralCalloutGap = 22;
+  const structuralRightLabelX = 252;
+  const structuralRightLeaderX = 214;
+  const flangeCalloutY = structuralCalloutTop;
+  const radiusCalloutY = structuralCalloutTop + structuralCalloutGap;
+  const webCalloutY = structuralCalloutTop + (structuralCalloutGap * 2);
   const ipnTaper = clamp(section.width * 0.12, 10, 20);
   const upnTaper = clamp(section.width * 0.15, 10, 22);
   const channelWeb = clamp(section.web * 1.08, 12, section.width * 0.34);
@@ -508,7 +860,7 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
 
   return (
     <div className="bg-linear-to-b from-surface to-surface-raised/70 p-4">
-      <svg viewBox="0 0 260 220" className="h-auto w-full text-blue-text" role="img" aria-label={tSpecs("drawingAria")}>
+      <svg viewBox="0 0 260 220" className="h-auto w-full text-blue-text" role="img" aria-label={tSpecsSafe("drawingAria")}>
         <defs>
           <marker id="spec-arrow" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
             <path d="M0 0 8 4 0 8Z" fill="currentColor" />
@@ -620,18 +972,33 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
 
         {drawingKind === "rect_hollow" && (
           <>
-            <rect x="48" y="60" width="164" height="112" rx="10" fill="url(#spec-hatch)" stroke="currentColor" strokeWidth="3" />
-            <rect x="80" y="84" width="100" height="64" rx="6" fill="white" stroke="currentColor" strokeWidth="2" opacity="0.92" />
-            <DimensionArrow x1={48} y1={40} x2={212} y2={40} />
-            <GuideLine x1={48} y1={40} x2={48} y2={60} />
-            <GuideLine x1={212} y1={40} x2={212} y2={60} />
-            <DrawingLabel x={130} y={33} text={drawText(geometry.sideMm != null ? "side" : "width", geometry.sideMm ?? geometry.widthMm)} />
-            <DimensionArrow x1={26} y1={60} x2={26} y2={172} />
-            <GuideLine x1={48} y1={60} x2={26} y2={60} />
-            <GuideLine x1={48} y1={172} x2={26} y2={172} />
-            <DrawingLabel x={30} y={116} text={drawText(geometry.sideMm != null ? "side" : "height", geometry.sideMm ?? geometry.heightMm)} vertical />
-            <DimensionArrow x1={212} y1={84} x2={180} y2={84} />
-            <DrawingLabel x={212} y={78} text={drawText("wallThickness", geometry.wallThicknessMm)} anchor="end" />
+            {geometry.sideMm != null ? (
+              <>
+                <rect x="70" y="52" width="120" height="120" rx="10" fill="url(#spec-hatch)" stroke="currentColor" strokeWidth="3" />
+                <rect x="92" y="74" width="76" height="76" rx="6" fill="white" stroke="currentColor" strokeWidth="2" opacity="0.92" />
+                <DimensionArrow x1={70} y1={34} x2={190} y2={34} />
+                <GuideLine x1={70} y1={34} x2={70} y2={52} />
+                <GuideLine x1={190} y1={34} x2={190} y2={52} />
+                <DrawingLabel x={130} y={27} text={drawText("side", geometry.sideMm)} />
+                <DimensionArrow x1={190} y1={88} x2={168} y2={88} />
+                <DrawingLabel x={214} y={82} text={drawText("wallThickness", geometry.wallThicknessMm)} anchor="end" />
+              </>
+            ) : (
+              <>
+                <rect x="48" y="60" width="164" height="112" rx="10" fill="url(#spec-hatch)" stroke="currentColor" strokeWidth="3" />
+                <rect x="80" y="84" width="100" height="64" rx="6" fill="white" stroke="currentColor" strokeWidth="2" opacity="0.92" />
+                <DimensionArrow x1={48} y1={40} x2={212} y2={40} />
+                <GuideLine x1={48} y1={40} x2={48} y2={60} />
+                <GuideLine x1={212} y1={40} x2={212} y2={60} />
+                <DrawingLabel x={130} y={33} text={drawText("width", geometry.widthMm)} />
+                <DimensionArrow x1={26} y1={60} x2={26} y2={172} />
+                <GuideLine x1={48} y1={60} x2={26} y2={60} />
+                <GuideLine x1={48} y1={172} x2={26} y2={172} />
+                <DrawingLabel x={30} y={116} text={drawText("height", geometry.heightMm)} vertical />
+                <DimensionArrow x1={212} y1={84} x2={180} y2={84} />
+                <DrawingLabel x={212} y={78} text={drawText("wallThickness", geometry.wallThicknessMm)} anchor="end" />
+              </>
+            )}
           </>
         )}
 
@@ -679,13 +1046,14 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
             <GuideLine x1={sectionX} y1={sectionBottom} x2={24} y2={sectionBottom} />
             <DrawingLabel x={18} y={112} text={drawText("height", geometry.heightMm)} vertical />
             <DimensionArrow x1={sectionWebLeft} y1={112} x2={sectionWebRight} y2={112} />
-            <DrawingLabel x={sectionWebRight + 16} y={106} text={drawText("webThickness", geometry.webThicknessMm)} anchor="start" />
+            <DrawingLabel x={sectionWebRight + 16} y={webCalloutY} text={drawText("webThickness", geometry.webThicknessMm)} anchor="start" />
             <DimensionArrow x1={sectionX + section.width + 24} y1={sectionY} x2={sectionX + section.width + 24} y2={sectionTopFlange} />
             <GuideLine x1={sectionX + section.width} y1={sectionY} x2={sectionX + section.width + 24} y2={sectionY} />
             <GuideLine x1={sectionX + section.width} y1={sectionTopFlange} x2={sectionX + section.width + 24} y2={sectionTopFlange} />
-            <DrawingLabel x={sectionX + section.width + 10} y={sectionTopFlange + 14} text={drawText("flangeThickness", geometry.flangeThicknessMm)} anchor="end" />
-            <GuideLine x1={sectionWebRight + section.radius * 0.8} y1={sectionTopFlange + 2} x2={sectionWebRight + 24} y2={sectionTopFlange + 22} />
-            <DrawingLabel x={sectionWebRight + 27} y={sectionTopFlange + 22} text={drawText("rootRadius", geometry.rootRadiusMm)} anchor="start" />
+            <GuideLine x1={sectionX + section.width + 24} y1={sectionY + (section.flange / 2)} x2={structuralRightLeaderX} y2={flangeCalloutY - 2} />
+            <DrawingLabel x={structuralRightLabelX} y={flangeCalloutY} text={drawText("flangeThickness", geometry.flangeThicknessMm)} anchor="end" />
+            <GuideLine x1={sectionWebRight + section.radius * 0.8} y1={sectionTopFlange + 2} x2={sectionWebRight + 28} y2={radiusCalloutY} />
+            <DrawingLabel x={sectionWebRight + 32} y={radiusCalloutY} text={drawText("rootRadius", geometry.rootRadiusMm)} anchor="start" />
           </>
         )}
 
@@ -710,13 +1078,14 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
             <GuideLine x1={sectionX} y1={sectionBottom} x2={44} y2={sectionBottom} />
             <DrawingLabel x={36} y={112} text={drawText("height", geometry.heightMm)} vertical />
             <DimensionArrow x1={sectionX} y1={112} x2={channelWebRight} y2={112} />
-            <DrawingLabel x={channelWebRight + 15} y={106} text={drawText("webThickness", geometry.webThicknessMm)} anchor="start" />
+            <DrawingLabel x={channelWebRight + 15} y={webCalloutY} text={drawText("webThickness", geometry.webThicknessMm)} anchor="start" />
             <DimensionArrow x1={sectionX + section.width + 18} y1={sectionY} x2={sectionX + section.width + 18} y2={sectionTopFlange} />
             <GuideLine x1={sectionX + section.width} y1={sectionY} x2={sectionX + section.width + 18} y2={sectionY} />
             <GuideLine x1={sectionX + section.width} y1={sectionTopFlange} x2={sectionX + section.width + 18} y2={sectionTopFlange} />
-            <DrawingLabel x={sectionX + section.width + 4} y={sectionTopFlange + 14} text={drawText("flangeThickness", geometry.flangeThicknessMm)} anchor="end" />
-            <GuideLine x1={channelWebRight + section.radius * 0.8} y1={sectionTopFlange + 2} x2={channelWebRight + 22} y2={sectionTopFlange + 22} />
-            <DrawingLabel x={channelWebRight + 26} y={sectionTopFlange + 22} text={drawText("rootRadius", geometry.rootRadiusMm)} anchor="start" />
+            <GuideLine x1={sectionX + section.width + 18} y1={sectionY + (section.flange / 2)} x2={structuralRightLeaderX} y2={flangeCalloutY - 2} />
+            <DrawingLabel x={structuralRightLabelX} y={flangeCalloutY} text={drawText("flangeThickness", geometry.flangeThicknessMm)} anchor="end" />
+            <GuideLine x1={channelWebRight + section.radius * 0.8} y1={sectionTopFlange + 2} x2={channelWebRight + 26} y2={radiusCalloutY} />
+            <DrawingLabel x={channelWebRight + 30} y={radiusCalloutY} text={drawText("rootRadius", geometry.rootRadiusMm)} anchor="start" />
           </>
         )}
 
@@ -739,13 +1108,14 @@ export const ProfileSpecsDrawing = memo(function ProfileSpecsDrawing({
             <GuideLine x1={sectionX} y1={teeTop} x2={30} y2={teeTop} />
             <DrawingLabel x={24} y={112} text={drawText("height", geometry.heightMm)} vertical />
             <DimensionArrow x1={teeWebLeft} y1={114} x2={teeWebRight} y2={114} />
-            <DrawingLabel x={teeWebRight + 15} y={108} text={drawText("webThickness", geometry.webThicknessMm)} anchor="start" />
+            <DrawingLabel x={teeWebRight + 15} y={webCalloutY} text={drawText("webThickness", geometry.webThicknessMm)} anchor="start" />
             <DimensionArrow x1={sectionX + section.width + 18} y1={teeTop} x2={sectionX + section.width + 18} y2={teeTop + section.flange} />
             <GuideLine x1={sectionX + section.width} y1={teeTop} x2={sectionX + section.width + 18} y2={teeTop} />
             <GuideLine x1={sectionX + section.width} y1={teeTop + section.flange} x2={sectionX + section.width + 18} y2={teeTop + section.flange} />
-            <DrawingLabel x={sectionX + section.width + 5} y={teeTop + section.flange + 14} text={drawText("flangeThickness", geometry.flangeThicknessMm)} anchor="end" />
-            <GuideLine x1={teeWebRight + section.radius * 0.8} y1={teeTop + section.flange + 2} x2={teeWebRight + 22} y2={teeTop + section.flange + 22} />
-            <DrawingLabel x={teeWebRight + 26} y={teeTop + section.flange + 22} text={drawText("rootRadius", geometry.rootRadiusMm)} anchor="start" />
+            <GuideLine x1={sectionX + section.width + 18} y1={teeTop + (section.flange / 2)} x2={structuralRightLeaderX} y2={flangeCalloutY - 2} />
+            <DrawingLabel x={structuralRightLabelX} y={flangeCalloutY} text={drawText("flangeThickness", geometry.flangeThicknessMm)} anchor="end" />
+            <GuideLine x1={teeWebRight + section.radius * 0.8} y1={teeTop + section.flange + 2} x2={teeWebRight + 26} y2={radiusCalloutY} />
+            <DrawingLabel x={teeWebRight + 30} y={radiusCalloutY} text={drawText("rootRadius", geometry.rootRadiusMm)} anchor="start" />
           </>
         )}
       </svg>

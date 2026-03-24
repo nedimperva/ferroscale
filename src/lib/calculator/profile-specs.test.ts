@@ -21,6 +21,23 @@ describe("resolveProfileSpecs", () => {
       expect.arrayContaining(["height", "width", "webThickness", "flangeThickness", "areaMm2"]),
     );
     expect(specs?.familyRows).toHaveLength(24);
+    expect(new Set(specs?.familyRows.map((row) => row.profileId))).toEqual(new Set(["beam_hea_en"]));
+  });
+
+  it("keeps alternatives driven only by the selected active size", () => {
+    const input = {
+      ...getDefaultInput(),
+      profileId: "beam_ipn_en" as const,
+      selectedSizeId: "ipn80",
+      manualDimensions: {},
+    };
+
+    const specs = resolveProfileSpecs(input);
+
+    expect(specs).not.toBeNull();
+    expect(specs?.familyMode).toBe("alternatives");
+    expect(specs?.familyRows.some((row) => row.selected && row.label === "IPN 80")).toBe(true);
+    expect(specs?.familyRows.every((row) => !("recommended" in row))).toBe(true);
   });
 
   it("matches commercial lookup rows for manual hollow sections", () => {

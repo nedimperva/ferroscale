@@ -107,6 +107,7 @@ export type CalcAction =
   | { type: "SET_CUSTOM_DENSITY_TOGGLE"; value: boolean }
   | { type: "SET_CUSTOM_DENSITY"; value: number }
   | { type: "SET_PROFILE"; profileId: ProfileId }
+  | { type: "SET_PROFILE_AND_SIZE"; profileId: ProfileId; sizeId: string }
   | { type: "SET_SIZE"; sizeId: string }
   | { type: "SET_DIMENSION_VALUE"; key: DimensionKey; value: number }
   | { type: "SET_DIMENSION_UNIT"; key: DimensionKey; unit: LengthUnit }
@@ -151,6 +152,16 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
         profileId: action.profileId,
         selectedSizeId: defaults.selectedSizeId,
         manualDimensions: defaults.manualDimensions,
+      };
+    }
+    case "SET_PROFILE_AND_SIZE": {
+      const profile = getProfileById(action.profileId);
+      if (!profile || profile.mode !== "standard") return state;
+      return {
+        ...state,
+        profileId: action.profileId,
+        selectedSizeId: action.sizeId,
+        manualDimensions: {},
       };
     }
     case "SET_SIZE":

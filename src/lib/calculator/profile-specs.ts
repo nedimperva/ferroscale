@@ -1,5 +1,5 @@
-import { resolveAreaMm2, resolvePerimeterMm } from "@/lib/calculator/engine";
-import type { CalculationInput } from "@/lib/calculator/types";
+import { calculateMetal, resolveAreaMm2, resolvePerimeterMm } from "@/lib/calculator/engine";
+import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import { toMillimeters } from "@/lib/calculator/units";
 import { getMaterialGradeById } from "@/lib/datasets/materials";
 import { getProfileById } from "@/lib/datasets/profiles";
@@ -14,6 +14,19 @@ import type {
 } from "@/lib/datasets/types";
 
 const MATCH_TOLERANCE_MM = 0.01;
+const STRUCTURAL_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileId[]>> = {
+  beam_ipe_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
+  beam_ipn_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
+  beam_hea_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
+  beam_heb_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
+  beam_hem_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
+  channel_upn_en: ["channel_upn_en", "channel_upe_en"],
+  channel_upe_en: ["channel_upn_en", "channel_upe_en"],
+  tee_en: ["tee_en"],
+};
+
+export type ProfileSpecsFamilyMode = "lookup" | "alternatives";
+export type ProfileSpecsImpactMode = "currency" | "weight";
 
 export type ProfileSpecsMetricKey =
   | DimensionKey
@@ -43,6 +56,7 @@ export interface ProfileSpecsMetric {
 export interface ProfileSpecsFamilyRow {
   id: string;
   label: string;
+  profileId: ProfileId;
   mode: "standard" | "manual";
   selected: boolean;
   sizeId?: string;
@@ -50,6 +64,9 @@ export interface ProfileSpecsFamilyRow {
   areaMm2: number | null;
   perimeterMm: number | null;
   massPerMeterKg: number | null;
+  fitDeltaPercent?: number | null;
+  impactValue?: number | null;
+  impactMode?: ProfileSpecsImpactMode;
 }
 
 export interface ResolvedProfileSpecs {
@@ -61,6 +78,7 @@ export interface ResolvedProfileSpecs {
   drawingKind: ProfileSpecDrawingKind | null;
   geometry: ProfileSpecGeometry | null;
   metrics: ProfileSpecsMetric[];
+  familyMode: ProfileSpecsFamilyMode;
   familyRows: ProfileSpecsFamilyRow[];
   selectedFamilyRowId: string | null;
   isCustomSelection: boolean;
@@ -73,6 +91,11 @@ function dedupe(values: Array<string | undefined>): string[] {
 function formatMm(value: number | undefined): string {
   if (!Number.isFinite(value)) return "?";
   return Number(value!.toFixed(3)).toString();
+}
+
+function parseLeadingNumber(label: string): number {
+  const match = label.match(/(\d+(?:\.\d+)?)/);
+  return match ? Number(match[1]) : 0;
 }
 
 function getManualDimensionsMm(input: CalculationInput, profile: ProfileDefinition): Partial<Record<DimensionKey, number>> {
@@ -444,6 +467,28 @@ function getMassPerMeterKg(
   return (areaMm2 * densityKgPerM3) / 1_000_000;
 }
 
+function buildStandardSelectionInput(
+  input: CalculationInput,
+  profileId: ProfileId,
+  sizeId: string,
+): CalculationInput {
+  return {
+    ...input,
+    profileId,
+    selectedSizeId: sizeId,
+    manualDimensions: {},
+  };
+}
+
+function resolveAlternativeImpactMode(
+  input: CalculationInput,
+  currentResult: CalculationResult,
+): ProfileSpecsImpactMode {
+  return input.unitPrice > 0 || Math.abs(currentResult.grandTotalAmount) > 0.0001
+    ? "currency"
+    : "weight";
+}
+
 function dimensionsMatch(
   currentMm: Partial<Record<DimensionKey, number>>,
   candidateMm: Partial<Record<DimensionKey, number>>,
@@ -487,6 +532,7 @@ function buildManualFamilyRows(
     return {
       id: rowId,
       label: row.label,
+      profileId,
       mode: "manual" as const,
       selected,
       dimensionsMm: row.dimensions,
@@ -503,6 +549,74 @@ function buildManualFamilyRows(
   return {
     rows: rows.map(({ score, ...row }) => row),
     selectedFamilyRowId,
+  };
+}
+
+function buildStructuralAlternativeRows(
+  input: CalculationInput,
+  profileId: ProfileId,
+  selectedSizeId: string,
+  densityKgPerM3: number | null,
+): { rows: ProfileSpecsFamilyRow[]; selectedFamilyRowId: string } | null {
+  if (!STRUCTURAL_ALTERNATIVE_GROUPS[profileId]?.length) return null;
+
+  const currentProfile = getProfileById(profileId);
+  if (!currentProfile || currentProfile.mode !== "standard") return null;
+
+  const selectedIndex = currentProfile.sizes.findIndex((size) => size.id === selectedSizeId);
+  const selectedSize = currentProfile.sizes[selectedIndex];
+  if (!selectedSize) return null;
+
+  const currentCalculation = calculateMetal(buildStandardSelectionInput(input, profileId, selectedSizeId));
+  if (!currentCalculation.ok) return null;
+
+  const currentResult = currentCalculation.result;
+  const impactMode = resolveAlternativeImpactMode(input, currentResult);
+
+  type CandidateRow = ProfileSpecsFamilyRow & {
+    recommendationScore: number;
+  };
+
+  const candidates = currentProfile.sizes.flatMap((size, index) => {
+    const selected = size.id === selectedSizeId;
+    const massPerMeterKg = getMassPerMeterKg(size.areaMm2, densityKgPerM3);
+
+    const candidateCalculation = calculateMetal(buildStandardSelectionInput(input, profileId, size.id));
+    if (!candidateCalculation.ok) return [];
+
+    const result = candidateCalculation.result;
+    const fitDeltaPercent = currentResult.unitWeightKg > 0
+      ? ((result.unitWeightKg - currentResult.unitWeightKg) / currentResult.unitWeightKg) * 100
+      : 0;
+    const impactValue = impactMode === "currency"
+      ? result.grandTotalAmount - currentResult.grandTotalAmount
+      : result.totalWeightKg - currentResult.totalWeightKg;
+    const recommendationScore = selected
+      ? Number.POSITIVE_INFINITY
+      : fitDeltaPercent >= 0
+        ? Math.abs(fitDeltaPercent) + (Math.abs(index - selectedIndex) * 0.001)
+        : 1000 + Math.abs(fitDeltaPercent) + (Math.abs(index - selectedIndex) * 0.001);
+
+    return [{
+      id: size.id,
+      label: size.label,
+      profileId,
+      mode: "standard" as const,
+      selected,
+      sizeId: size.id,
+      areaMm2: size.areaMm2,
+      perimeterMm: size.perimeterMm ?? null,
+      massPerMeterKg,
+      fitDeltaPercent,
+      impactValue,
+      impactMode,
+      recommendationScore,
+    }];
+  });
+
+  return {
+    rows: candidates.map(({ recommendationScore, ...row }) => row),
+    selectedFamilyRowId: selectedSizeId,
   };
 }
 
@@ -526,6 +640,7 @@ export function resolveProfileSpecs(input: CalculationInput): ResolvedProfileSpe
           perimeterMm: selectedSize.perimeterMm ?? null,
         })
       : [];
+    const structuralAlternatives = buildStructuralAlternativeRows(input, profile.id, selectedSize.id, densityKgPerM3);
 
     return {
       profileId: profile.id,
@@ -536,17 +651,21 @@ export function resolveProfileSpecs(input: CalculationInput): ResolvedProfileSpe
       drawingKind: record?.drawingKind ?? null,
       geometry,
       metrics,
-      familyRows: profile.sizes.map((size) => ({
-        id: size.id,
-        label: size.label,
-        mode: "standard",
-        selected: size.id === selectedSize.id,
-        sizeId: size.id,
-        areaMm2: size.areaMm2,
-        perimeterMm: size.perimeterMm ?? null,
-        massPerMeterKg: getMassPerMeterKg(size.areaMm2, densityKgPerM3),
-      })),
-      selectedFamilyRowId: selectedSize.id,
+      familyMode: STRUCTURAL_ALTERNATIVE_GROUPS[profile.id] ? "alternatives" : "lookup",
+      familyRows: structuralAlternatives?.rows
+        ?? profile.sizes.map((size) => ({
+          id: size.id,
+          label: size.label,
+          profileId: profile.id,
+          mode: "standard" as const,
+          selected: size.id === selectedSize.id,
+          sizeId: size.id,
+          areaMm2: size.areaMm2,
+          perimeterMm: size.perimeterMm ?? null,
+          massPerMeterKg: getMassPerMeterKg(size.areaMm2, densityKgPerM3),
+        })),
+      selectedFamilyRowId: structuralAlternatives?.selectedFamilyRowId
+        ?? selectedSize.id,
       isCustomSelection: false,
     };
   }
@@ -581,6 +700,7 @@ export function resolveProfileSpecs(input: CalculationInput): ResolvedProfileSpe
           perimeterMm: manualMetrics.perimeterMm,
         })
       : [],
+    familyMode: "lookup",
     familyRows: family.rows,
     selectedFamilyRowId: family.selectedFamilyRowId,
     isCustomSelection: family.selectedFamilyRowId == null,

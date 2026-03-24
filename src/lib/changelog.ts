@@ -17,6 +17,32 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.2.1",
+    date: "2026-03-24",
+    changed: [
+      "Structural Alternatives now use a searchable, sortable family list with direct profile switching, selected-first ordering, and full-job impact values for the active size family",
+      "Alternatives rows were tightened into a denser list with smaller typography to match the compact desktop Specs layout",
+      "Alternatives now use only the blue active selection state and no longer show a shifting secondary badge",
+      "Specs panel now focuses the lower section on dimensions and alternatives by removing the separate Formula and References cards",
+    ],
+    changed_bs: [
+      "Konstrukcione Alternative sada koriste pretrazivu i sortiranu listu sa direktnim prebacivanjem profila, redoslijedom aktivni-prvo i vrijednostima uticaja na cijeli posao za aktivnu porodicu velicina",
+      "Redovi Alternative su zbijeni u guscu listu sa manjom tipografijom kako bi odgovarali kompaktnijem desktop rasporedu panela Specifikacije",
+      "Alternative sada koriste samo plavo stanje aktivnog odabira i vise ne prikazuju pomjerajucu sekundarnu oznaku",
+      "Panel Specifikacije sada fokusira donji dio na dimenzije i alternative uklanjanjem posebnih kartica Formula i Reference",
+    ],
+    fixed: [
+      "Specs panel Alternatives labels now fall back to readable copy instead of exposing raw translation keys when localized strings are unavailable",
+      "Specs panel Alternatives rows no longer stretch and misalign inside the desktop column layout",
+      "Square hollow sections in the Specs panel now render as true square tubes instead of reusing the same rectangular SVG proportions as RHS profiles",
+    ],
+    fixed_bs: [
+      "Oznake Alternative u panelu Specifikacije sada koriste citljiv rezervni tekst umjesto prikaza sirovih prevodnih kljuceva kada lokalizovani stringovi nisu dostupni",
+      "Redovi Alternative u panelu Specifikacije se vise ne razvuku i ne poravnavaju pogresno unutar desktop rasporeda kolona",
+      "Kvadratne cijevi u panelu Specifikacije sada se crtaju kao pravi kvadratni profili umjesto da koriste iste pravougaone SVG proporcije kao RHS profili",
+    ],
+  },
+  {
     version: "2.2.0",
     date: "2026-03-23",
     added: [

@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.2.1] - 2026-03-24
+
+### Changed
+- Structural Alternatives now use a searchable, sortable family list with direct profile switching, selected-first ordering, and full-job impact values for the active size family
+- Alternatives rows were tightened into a denser list with smaller typography to match the compact desktop Specs layout
+- Alternatives now use only the blue active selection state and no longer show a shifting secondary badge
+- Specs panel now focuses the lower section on dimensions and alternatives by removing the separate Formula and References cards
+
+### Fixed
+- Specs panel Alternatives labels now fall back to readable copy instead of exposing raw translation keys when localized strings are unavailable
+- Specs panel Alternatives rows no longer stretch and misalign inside the desktop column layout
+- Square hollow sections in the Specs panel now render as true square tubes instead of reusing the same rectangular SVG proportions as RHS profiles
+
+---
+
 ## [2.2.0] - 2026-03-23
 
 ### Added
@@ -222,7 +237,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/nedimperva/ferroscale/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/nedimperva/ferroscale/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/nedimperva/ferroscale/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/nedimperva/ferroscale/compare/v1.8.0...v2.0.0

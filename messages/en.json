@@ -178,9 +178,28 @@
     "metricsTitle": "Key specs",
     "metricsEmpty": "Calculated specs appear here once the active profile has enough dimensions.",
     "formulaLabel": "Formula / basis",
+    "alternativesTitle": "Alternatives",
+    "alternativesHint": "Impact compares full job total for the active length, quantity, waste, and VAT.",
     "familyTableTitle": "Family lookup",
     "familyTableHint": "Selecting a row updates the active calculator profile immediately.",
     "noLookupRows": "No lookup rows are available for this profile yet.",
+    "alternatives": {
+      "searchPlaceholder": "Search size",
+      "sortLabel": "Sort",
+      "filteredEmpty": "No alternatives match this search.",
+      "fit": "Fit",
+      "impact": "Impact",
+      "current": "Current",
+      "nearMatch": "Near match",
+      "heavier": "{percent}% heavier",
+      "lighter": "{percent}% lighter",
+      "sort": {
+        "selected": "Selected first",
+        "size": "Size ascending",
+        "mass": "kg/m ascending",
+        "impact": "Impact ascending"
+      }
+    },
     "table": {
       "size": "Size",
       "area": "A (mm2)",

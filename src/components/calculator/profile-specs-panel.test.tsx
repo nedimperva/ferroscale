@@ -21,6 +21,7 @@ function renderDrawing(
 describe("ProfileSpecsDrawing", () => {
   it.each<[string, ProfileId, ProfileSpecDrawingKind, ProfileSpecGeometry]>([
     ["round", "round_bar", "round", { diameterMm: 60 }],
+    ["square-hollow", "square_hollow", "rect_hollow", { widthMm: 80, heightMm: 80, sideMm: 80, wallThicknessMm: 4 }],
     ["hollow", "rectangular_tube", "rect_hollow", { widthMm: 120, heightMm: 80, wallThicknessMm: 4 }],
     ["sheet", "sheet", "sheet", { widthMm: 1250, thicknessMm: 2 }],
     ["angle-unequal", "angle", "angle", { legAMm: 80, legBMm: 60, thicknessMm: 8 }],
@@ -49,6 +50,7 @@ describe("ProfileSpecsDrawing", () => {
         <ProfileSpecsPanel
           input={input}
           onSelectStandardSize={() => undefined}
+          onSelectStandardProfileSize={() => undefined}
           onSelectManualDimensionsMm={() => undefined}
         />
       </NextIntlClientProvider>,
@@ -56,7 +58,51 @@ describe("ProfileSpecsDrawing", () => {
 
     expect(markup).toContain("Profile specs");
     expect(markup).toContain("HEA 200");
-    expect(markup).toContain("Family lookup");
+    expect(markup).toContain("Alternatives");
+    expect(markup).toContain("Impact");
     expect(markup).toContain("kg/m");
+    expect(markup).toContain("Search size");
+    expect(markup).toContain("Selected first");
+    expect(markup).toContain(">tw</span>");
+    expect(markup).toContain(">tf</span>");
+    expect(markup).toContain(">r</span>");
+  });
+
+  it("falls back to readable copy when alternatives translations are missing", () => {
+    const input = {
+      ...getDefaultInput(),
+      profileId: "beam_hea_en" as const,
+      selectedSizeId: "hea200",
+      manualDimensions: {},
+    };
+
+    const partialMessages = JSON.parse(JSON.stringify(messages)) as typeof messages;
+    delete partialMessages.specs.alternativesTitle;
+    delete partialMessages.specs.alternativesHint;
+    delete partialMessages.specs.alternatives;
+
+    const markup = renderToStaticMarkup(
+      <NextIntlClientProvider locale="en" messages={partialMessages} timeZone="Europe/Sarajevo">
+        <ProfileSpecsPanel
+          input={input}
+          onSelectStandardSize={() => undefined}
+          onSelectStandardProfileSize={() => undefined}
+          onSelectManualDimensionsMm={() => undefined}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    expect(markup).toContain("Alternatives");
+    expect(markup).toContain("Impact compares full job total for the active length, quantity, waste, and VAT.");
+    expect(markup).toContain("Current");
+    expect(markup).toContain("Fit");
+    expect(markup).toContain("Impact");
+    expect(markup).toContain("Search size");
+    expect(markup).toContain("Selected first");
+    expect(markup).not.toContain("specs.alternativesTitle");
+    expect(markup).not.toContain("specs.alternativesHint");
+    expect(markup).not.toContain("specs.alternatives.current");
+    expect(markup).not.toContain("specs.alternatives.fit");
+    expect(markup).not.toContain("specs.alternatives.impact");
   });
 });
