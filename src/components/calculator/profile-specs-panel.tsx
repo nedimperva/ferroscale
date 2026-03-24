@@ -79,6 +79,7 @@ const SPECS_TEXT_FALLBACKS = {
 } as const;
 
 type SpecsTextKey = keyof typeof SPECS_TEXT_FALLBACKS;
+type SpecsTranslateFn = (key: SpecsTextKey, values?: TranslationValues) => string;
 
 function isMissingTranslation(value: string, key: string, namespace?: string): boolean {
   return value === key || (namespace != null && value === `${namespace}.${key}`);
@@ -167,7 +168,7 @@ function translatedProfileFamilyLabel(
 
 function translatedMatchLabel(
   row: ProfileSpecsFamilyRow,
-  tSpecs: (key: SpecsTextKey, values?: TranslationValues) => string,
+  tSpecs: SpecsTranslateFn,
 ): string {
   return tSpecs(`alternatives.matchLabels.${row.matchKind}` as SpecsTextKey) || row.matchLabel;
 }
@@ -251,7 +252,7 @@ function metricValue(locale: string, metric: ProfileSpecsMetric): string {
 function fitLabel(
   locale: string,
   row: ProfileSpecsFamilyRow,
-  tSpecs: TranslateFn,
+  tSpecs: SpecsTranslateFn,
 ): string {
   if (row.selected) return "—";
   if (row.fitDeltaPercent == null) return "—";
@@ -268,7 +269,7 @@ function impactLabel(
   locale: string,
   currency: string,
   row: ProfileSpecsFamilyRow,
-  tSpecs: TranslateFn,
+  tSpecs: SpecsTranslateFn,
 ): string {
   if (row.selected) return tSpecs("alternatives.current");
   if (row.impactValue == null || !row.impactMode) return "—";
