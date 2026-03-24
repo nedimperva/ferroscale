@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.3.0] - 2026-03-24
+
+### Added
+- Text Size setting (Small / Medium / Large) in Workspace settings to scale all text in the app
+
+### Changed
+- Standardized all arbitrary pixel-based font sizes to Tailwind scale classes so text scales consistently with the Text Size setting
+- Alternative profile cards now show family and designation on one line (e.g. "HEB 120" instead of stacked)
+- Matched label sizes in key specs and alternative cards for a more uniform look
+
+---
+
 ## [2.2.2] - 2026-03-24
 
 ### Changed

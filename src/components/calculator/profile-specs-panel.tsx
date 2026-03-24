@@ -591,9 +591,9 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
             <dl className="grid grid-cols-2 gap-1.5">
               {specs.metrics.map((metric) => (
                 <div key={`${metric.key}-${metric.value}`} className="rounded-lg border border-border bg-surface px-2 py-1.5">
-                  <dt className="flex items-center gap-1.5 text-2xs font-medium uppercase tracking-wide text-muted-faint">
+                  <dt className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-faint">
                     {metricCode(metric.key) && (
-                      <span className="rounded border border-border bg-surface-inset px-1.5 py-0.5 font-semibold text-2xs tracking-normal text-foreground-secondary">
+                      <span className="rounded border border-border bg-surface-inset px-1.5 py-0.5 font-semibold text-xs tracking-normal text-foreground-secondary">
                         {metricCode(metric.key)}
                       </span>
                     )}
