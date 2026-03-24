@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - Structural Alternatives now use a searchable, sortable family list with direct profile switching, selected-first ordering, and full-job impact values for the active size family
+- Manual and commercial profile families now use the same Alternatives list style as structural profiles instead of a separate lookup table
 - Alternatives rows were tightened into a denser list with smaller typography to match the compact desktop Specs layout
 - Alternatives now use only the blue active selection state and no longer show a shifting secondary badge
 - Specs panel now focuses the lower section on dimensions and alternatives by removing the separate Formula and References cards

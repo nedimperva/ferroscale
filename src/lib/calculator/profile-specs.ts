@@ -507,6 +507,9 @@ function buildManualFamilyRows(
   const lookupRows = getStandardSizesForProfile(profileId);
   let selectedFamilyRowId: string | null = null;
   const densityKgPerM3 = resolveDensityKgPerM3(input);
+  const currentCalculation = calculateMetal(input);
+  const currentResult = currentCalculation.ok ? currentCalculation.result : null;
+  const impactMode = currentResult ? resolveAlternativeImpactMode(input, currentResult) : null;
 
   const scoreRow = (dimensions: Partial<Record<DimensionKey, number>>): number => {
     const entries = Object.entries(dimensions) as Array<[DimensionKey, number]>;
@@ -528,6 +531,16 @@ function buildManualFamilyRows(
 
     const rowInput = buildInputWithManualDimensions(input, row.dimensions);
     const { areaMm2, perimeterMm } = getAreaAndPerimeter(rowInput);
+    const rowCalculation = calculateMetal(rowInput);
+    const rowResult = rowCalculation.ok ? rowCalculation.result : null;
+    const fitDeltaPercent = currentResult && rowResult && currentResult.unitWeightKg > 0
+      ? ((rowResult.unitWeightKg - currentResult.unitWeightKg) / currentResult.unitWeightKg) * 100
+      : null;
+    const impactValue = currentResult && rowResult && impactMode
+      ? impactMode === "currency"
+        ? rowResult.grandTotalAmount - currentResult.grandTotalAmount
+        : rowResult.totalWeightKg - currentResult.totalWeightKg
+      : null;
 
     return {
       id: rowId,
@@ -539,6 +552,9 @@ function buildManualFamilyRows(
       areaMm2,
       perimeterMm,
       massPerMeterKg: getMassPerMeterKg(areaMm2, densityKgPerM3),
+      fitDeltaPercent,
+      impactValue,
+      impactMode: impactMode ?? undefined,
       score: scoreRow(row.dimensions),
     };
   }).sort((left, right) => {
@@ -651,7 +667,7 @@ export function resolveProfileSpecs(input: CalculationInput): ResolvedProfileSpe
       drawingKind: record?.drawingKind ?? null,
       geometry,
       metrics,
-      familyMode: STRUCTURAL_ALTERNATIVE_GROUPS[profile.id] ? "alternatives" : "lookup",
+      familyMode: "alternatives",
       familyRows: structuralAlternatives?.rows
         ?? profile.sizes.map((size) => ({
           id: size.id,
@@ -700,7 +716,7 @@ export function resolveProfileSpecs(input: CalculationInput): ResolvedProfileSpe
           perimeterMm: manualMetrics.perimeterMm,
         })
       : [],
-    familyMode: "lookup",
+    familyMode: "alternatives",
     familyRows: family.rows,
     selectedFamilyRowId: family.selectedFamilyRowId,
     isCustomSelection: family.selectedFamilyRowId == null,

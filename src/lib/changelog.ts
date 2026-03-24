@@ -21,12 +21,14 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-03-24",
     changed: [
       "Structural Alternatives now use a searchable, sortable family list with direct profile switching, selected-first ordering, and full-job impact values for the active size family",
+      "Manual and commercial profile families now use the same Alternatives list style as structural profiles instead of a separate lookup table",
       "Alternatives rows were tightened into a denser list with smaller typography to match the compact desktop Specs layout",
       "Alternatives now use only the blue active selection state and no longer show a shifting secondary badge",
       "Specs panel now focuses the lower section on dimensions and alternatives by removing the separate Formula and References cards",
     ],
     changed_bs: [
       "Konstrukcione Alternative sada koriste pretrazivu i sortiranu listu sa direktnim prebacivanjem profila, redoslijedom aktivni-prvo i vrijednostima uticaja na cijeli posao za aktivnu porodicu velicina",
+      "Rucne i komercijalne porodice profila sada koriste isti stil liste Alternative kao i konstrukcioni profili umjesto odvojene lookup tabele",
       "Redovi Alternative su zbijeni u guscu listu sa manjom tipografijom kako bi odgovarali kompaktnijem desktop rasporedu panela Specifikacije",
       "Alternative sada koriste samo plavo stanje aktivnog odabira i vise ne prikazuju pomjerajucu sekundarnu oznaku",
       "Panel Specifikacije sada fokusira donji dio na dimenzije i alternative uklanjanjem posebnih kartica Formula i Reference",

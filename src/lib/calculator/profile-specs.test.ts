@@ -55,6 +55,7 @@ describe("resolveProfileSpecs", () => {
     const specs = resolveProfileSpecs(input);
 
     expect(specs).not.toBeNull();
+    expect(specs?.familyMode).toBe("alternatives");
     expect(specs?.drawingKind).toBe("rect_hollow");
     expect(specs?.isCustomSelection).toBe(false);
     expect(specs?.selectedFamilyRowId).not.toBeNull();
@@ -79,6 +80,7 @@ describe("resolveProfileSpecs", () => {
     const specs = resolveProfileSpecs(input);
 
     expect(specs).not.toBeNull();
+    expect(specs?.familyMode).toBe("alternatives");
     expect(specs?.drawingKind).toBe("angle");
     expect(specs?.isCustomSelection).toBe(false);
     expect(specs?.familyRows.some((row) => row.label.includes("80×60×8"))).toBe(true);
@@ -98,6 +100,7 @@ describe("resolveProfileSpecs", () => {
     const specs = resolveProfileSpecs(input);
 
     expect(specs).not.toBeNull();
+    expect(specs?.familyMode).toBe("alternatives");
     expect(specs?.drawingKind).toBe("round");
     expect(specs?.isCustomSelection).toBe(true);
     expect(specs?.selectedFamilyRowId).toBeNull();
@@ -120,6 +123,7 @@ describe("resolveProfileSpecs", () => {
     const specs = resolveProfileSpecs(input);
 
     expect(specs).not.toBeNull();
+    expect(specs?.familyMode).toBe("alternatives");
     expect(specs?.drawingKind).toBe("corrugated");
     expect(specs?.familyRows.length).toBeGreaterThan(0);
     expect(specs?.metrics.map((metric) => metric.key)).toEqual(

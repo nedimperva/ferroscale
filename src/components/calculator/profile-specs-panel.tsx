@@ -220,7 +220,7 @@ function fitLabel(
   row: ProfileSpecsFamilyRow,
   tSpecs: TranslateFn,
 ): string {
-  if (row.selected) return tSpecs("alternatives.active");
+  if (row.selected) return "—";
   if (row.fitDeltaPercent == null) return "—";
 
   const delta = row.fitDeltaPercent;
@@ -651,6 +651,11 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                         onClick={() => {
                           if (row.mode === "standard" && row.sizeId) {
                             onSelectStandardProfileSize(row.profileId, row.sizeId);
+                            return;
+                          }
+
+                          if (row.mode === "manual" && row.dimensionsMm) {
+                            onSelectManualDimensionsMm(row.dimensionsMm);
                           }
                         }}
                       />
