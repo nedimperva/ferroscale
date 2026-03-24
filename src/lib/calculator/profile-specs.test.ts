@@ -20,15 +20,25 @@ describe("resolveProfileSpecs", () => {
     expect(specs?.metrics.map((metric) => metric.key)).toEqual(
       expect.arrayContaining(["height", "width", "webThickness", "flangeThickness", "areaMm2"]),
     );
-    expect(specs?.familyRows).toHaveLength(24);
-    expect(new Set(specs?.familyRows.map((row) => row.profileId))).toEqual(new Set(["beam_hea_en"]));
+    expect(specs?.familyRows[0]).toMatchObject({
+      label: "HEA 200",
+      matchKind: "current",
+      profileId: "beam_hea_en",
+    });
+    expect(new Set(specs?.familyRows.map((row) => row.profileId))).toEqual(new Set([
+      "beam_hea_en",
+      "beam_ipe_en",
+      "beam_ipn_en",
+      "beam_heb_en",
+      "beam_hem_en",
+    ]));
   });
 
-  it("keeps alternatives driven only by the selected active size", () => {
+  it("orders structural alternatives by logical exact peers before same-family nearby sizes", () => {
     const input = {
       ...getDefaultInput(),
-      profileId: "beam_ipn_en" as const,
-      selectedSizeId: "ipn80",
+      profileId: "beam_ipe_en" as const,
+      selectedSizeId: "ipe100",
       manualDimensions: {},
     };
 
@@ -36,8 +46,21 @@ describe("resolveProfileSpecs", () => {
 
     expect(specs).not.toBeNull();
     expect(specs?.familyMode).toBe("alternatives");
-    expect(specs?.familyRows.some((row) => row.selected && row.label === "IPN 80")).toBe(true);
-    expect(specs?.familyRows.every((row) => !("recommended" in row))).toBe(true);
+    expect(specs?.familyRows.slice(0, 5).map((row) => row.label)).toEqual([
+      "IPE 100",
+      "IPN 100",
+      "HEA 100",
+      "HEB 100",
+      "HEM 100",
+    ]);
+    expect(specs?.familyRows.slice(0, 5).map((row) => row.matchKind)).toEqual([
+      "current",
+      "exact_peer",
+      "exact_peer",
+      "exact_peer",
+      "exact_peer",
+    ]);
+    expect(specs?.familyRows.some((row) => row.label === "IPE 600")).toBe(false);
   });
 
   it("matches commercial lookup rows for manual hollow sections", () => {
@@ -59,7 +82,11 @@ describe("resolveProfileSpecs", () => {
     expect(specs?.drawingKind).toBe("rect_hollow");
     expect(specs?.isCustomSelection).toBe(false);
     expect(specs?.selectedFamilyRowId).not.toBeNull();
-    expect(specs?.familyRows.some((row) => row.selected)).toBe(true);
+    expect(specs?.familyRows[0]).toMatchObject({
+      selected: true,
+      matchKind: "current",
+      profileId: "rectangular_tube",
+    });
     expect(specs?.metrics.map((metric) => metric.key)).toEqual(
       expect.arrayContaining(["width", "height", "wallThickness", "areaMm2", "perimeterMm"]),
     );
@@ -83,8 +110,8 @@ describe("resolveProfileSpecs", () => {
     expect(specs?.familyMode).toBe("alternatives");
     expect(specs?.drawingKind).toBe("angle");
     expect(specs?.isCustomSelection).toBe(false);
-    expect(specs?.familyRows.some((row) => row.label.includes("80×60×8"))).toBe(true);
-    expect(specs?.familyRows.some((row) => row.selected && row.label.includes("80×60×8"))).toBe(true);
+    expect(specs?.familyRows.some((row) => row.profileId === "angle")).toBe(true);
+    expect(specs?.familyRows.some((row) => row.profileId === "angle" && row.matchKind === "current")).toBe(true);
   });
 
   it("keeps manual custom sizes unmatched while still computing specs", () => {
@@ -104,9 +131,56 @@ describe("resolveProfileSpecs", () => {
     expect(specs?.drawingKind).toBe("round");
     expect(specs?.isCustomSelection).toBe(true);
     expect(specs?.selectedFamilyRowId).toBeNull();
+    expect(specs?.familyRows[0]).toMatchObject({
+      matchKind: "current",
+      selected: true,
+    });
+    expect(specs?.familyRows[0]?.label).toContain("37");
     expect(specs?.metrics.map((metric) => metric.key)).toEqual(
       expect.arrayContaining(["diameter", "areaMm2", "perimeterMm"]),
     );
+  });
+
+  it("uses nearest peer fallbacks when no exact nominal channel peer exists", () => {
+    const input = {
+      ...getDefaultInput(),
+      profileId: "channel_upn_en" as const,
+      selectedSizeId: "upn50",
+      manualDimensions: {},
+    };
+
+    const specs = resolveProfileSpecs(input);
+
+    expect(specs).not.toBeNull();
+    const nearestPeer = specs?.familyRows.find((row) => row.profileId === "channel_upe_en");
+    expect(nearestPeer).toMatchObject({
+      label: "UPE 80",
+      matchKind: "nearest_peer",
+    });
+    expect(specs?.familyRows[1]?.matchKind).toBe("nearest_peer");
+  });
+
+  it("matches SHS and RHS alternatives by normalized outer dimensions and thickness", () => {
+    const input = {
+      ...getDefaultInput(),
+      profileId: "square_hollow" as const,
+      selectedSizeId: undefined,
+      manualDimensions: {
+        side: { value: 100, unit: "mm" as const },
+        wallThickness: { value: 4, unit: "mm" as const },
+      },
+    };
+
+    const specs = resolveProfileSpecs(input);
+
+    expect(specs).not.toBeNull();
+    expect(specs?.familyRows[0]).toMatchObject({
+      profileId: "square_hollow",
+      matchKind: "current",
+    });
+    expect(specs?.familyRows.some((row) =>
+      row.profileId === "rectangular_tube"
+      && (row.matchKind === "exact_peer" || row.matchKind === "nearest_peer"))).toBe(true);
   });
 
   it("provides curated lookup rows for manual sheet-style families that did not have them before", () => {

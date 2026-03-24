@@ -14,7 +14,9 @@ import type {
 } from "@/lib/datasets/types";
 
 const MATCH_TOLERANCE_MM = 0.01;
-const STRUCTURAL_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileId[]>> = {
+const MAX_STANDARD_NEARBY_ROWS = 4;
+const MAX_MANUAL_NEARBY_ROWS = 5;
+const STANDARD_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileId[]>> = {
   beam_ipe_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
   beam_ipn_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
   beam_hea_en: ["beam_ipe_en", "beam_ipn_en", "beam_hea_en", "beam_heb_en", "beam_hem_en"],
@@ -24,9 +26,14 @@ const STRUCTURAL_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileI
   channel_upe_en: ["channel_upn_en", "channel_upe_en"],
   tee_en: ["tee_en"],
 };
+const MANUAL_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileId[]>> = {
+  square_hollow: ["square_hollow", "rectangular_tube"],
+  rectangular_tube: ["square_hollow", "rectangular_tube"],
+};
 
 export type ProfileSpecsFamilyMode = "lookup" | "alternatives";
 export type ProfileSpecsImpactMode = "currency" | "weight";
+export type ProfileSpecsMatchKind = "current" | "exact_peer" | "nearest_peer" | "same_family_nearby";
 
 export type ProfileSpecsMetricKey =
   | DimensionKey
@@ -57,8 +64,12 @@ export interface ProfileSpecsFamilyRow {
   id: string;
   label: string;
   profileId: ProfileId;
+  familyLabel: string;
   mode: "standard" | "manual";
   selected: boolean;
+  matchKind: ProfileSpecsMatchKind;
+  matchLabel: string;
+  comparisonKey: string | null;
   sizeId?: string;
   dimensionsMm?: Partial<Record<DimensionKey, number>>;
   areaMm2: number | null;
@@ -86,6 +97,23 @@ export interface ResolvedProfileSpecs {
 
 function dedupe(values: Array<string | undefined>): string[] {
   return Array.from(new Set(values.filter((value): value is string => Boolean(value))));
+}
+
+function getProfileFamilyLabel(profileId: ProfileId): string {
+  return getProfileById(profileId)?.label ?? profileId;
+}
+
+function buildMatchLabel(matchKind: ProfileSpecsMatchKind): string {
+  switch (matchKind) {
+    case "current":
+      return "Current";
+    case "exact_peer":
+      return "Exact peer";
+    case "nearest_peer":
+      return "Nearest peer";
+    case "same_family_nearby":
+      return "Same family";
+  }
 }
 
 function formatMm(value: number | undefined): string {
@@ -489,14 +517,150 @@ function resolveAlternativeImpactMode(
     : "weight";
 }
 
-function dimensionsMatch(
-  currentMm: Partial<Record<DimensionKey, number>>,
-  candidateMm: Partial<Record<DimensionKey, number>>,
+type ComparableDimensions = Record<string, number>;
+
+function getComparableDimensions(
+  profileId: ProfileId,
+  dimensionsMm: Partial<Record<DimensionKey, number>>,
+): ComparableDimensions {
+  switch (profileId) {
+    case "square_hollow": {
+      if (!Number.isFinite(dimensionsMm.side) || !Number.isFinite(dimensionsMm.wallThickness)) return {};
+      return {
+        outerWidth: dimensionsMm.side!,
+        outerHeight: dimensionsMm.side!,
+        wallThickness: dimensionsMm.wallThickness!,
+      };
+    }
+    case "rectangular_tube": {
+      if (
+        !Number.isFinite(dimensionsMm.width)
+        || !Number.isFinite(dimensionsMm.height)
+        || !Number.isFinite(dimensionsMm.wallThickness)
+      ) return {};
+      const width = Math.max(dimensionsMm.width!, dimensionsMm.height!);
+      const height = Math.min(dimensionsMm.width!, dimensionsMm.height!);
+      return {
+        outerWidth: width,
+        outerHeight: height,
+        wallThickness: dimensionsMm.wallThickness!,
+      };
+    }
+    default:
+      return Object.fromEntries(
+        Object.entries(dimensionsMm).filter(([, value]) => Number.isFinite(value)),
+      ) as ComparableDimensions;
+  }
+}
+
+function buildManualComparisonKey(
+  profileId: ProfileId,
+  dimensionsMm: Partial<Record<DimensionKey, number>>,
+): string | null {
+  const comparable = getComparableDimensions(profileId, dimensionsMm);
+  const entries = Object.entries(comparable);
+  if (entries.length === 0) return null;
+  return entries.map(([key, value]) => `${key}:${formatMm(value)}`).join("|");
+}
+
+function comparableDimensionsMatch(
+  left: ComparableDimensions,
+  right: ComparableDimensions,
 ): boolean {
-  return Object.entries(candidateMm).every(([key, value]) => {
-    const current = currentMm[key as DimensionKey];
-    return current != null && value != null && Math.abs(current - value) <= MATCH_TOLERANCE_MM;
+  const leftKeys = Object.keys(left);
+  const rightKeys = Object.keys(right);
+  if (leftKeys.length === 0 || leftKeys.length !== rightKeys.length) return false;
+
+  return leftKeys.every((key) => {
+    const leftValue = left[key];
+    const rightValue = right[key];
+    return rightValue != null && Math.abs(leftValue - rightValue) <= MATCH_TOLERANCE_MM;
   });
+}
+
+function scoreComparableDimensions(
+  current: ComparableDimensions,
+  candidate: ComparableDimensions,
+): number {
+  const keys = Array.from(new Set([...Object.keys(current), ...Object.keys(candidate)]));
+  if (keys.length === 0) return Number.POSITIVE_INFINITY;
+
+  return keys.reduce((score, key) => {
+    const currentValue = current[key];
+    const candidateValue = candidate[key];
+    if (!Number.isFinite(currentValue) || !Number.isFinite(candidateValue)) return score + 1;
+    return score + (Math.abs(currentValue - candidateValue) / Math.max(candidateValue, 1));
+  }, 0);
+}
+
+function getStandardComparisonKey(label: string): string | null {
+  const nominal = parseLeadingNumber(label);
+  return nominal > 0 ? String(nominal) : null;
+}
+
+function parseComparisonNumber(comparisonKey: string | null): number {
+  if (!comparisonKey) return Number.POSITIVE_INFINITY;
+  const numeric = Number(comparisonKey);
+  return Number.isFinite(numeric) ? numeric : Number.POSITIVE_INFINITY;
+}
+
+function getStandardNearbyWindow(comparisonNumber: number): number {
+  if (!Number.isFinite(comparisonNumber)) return 60;
+  return Math.max(40, comparisonNumber * 0.35);
+}
+
+function buildAlternativeRow({
+  id,
+  label,
+  profileId,
+  mode,
+  selected,
+  matchKind,
+  comparisonKey,
+  areaMm2,
+  perimeterMm,
+  massPerMeterKg,
+  fitDeltaPercent,
+  impactValue,
+  impactMode,
+  sizeId,
+  dimensionsMm,
+}: {
+  id: string;
+  label: string;
+  profileId: ProfileId;
+  mode: "standard" | "manual";
+  selected: boolean;
+  matchKind: ProfileSpecsMatchKind;
+  comparisonKey: string | null;
+  areaMm2: number | null;
+  perimeterMm: number | null;
+  massPerMeterKg: number | null;
+  fitDeltaPercent?: number | null;
+  impactValue?: number | null;
+  impactMode?: ProfileSpecsImpactMode;
+  sizeId?: string;
+  dimensionsMm?: Partial<Record<DimensionKey, number>>;
+}): ProfileSpecsFamilyRow {
+  return {
+    id,
+    label,
+    profileId,
+    familyLabel: getProfileFamilyLabel(profileId),
+    mode,
+    selected,
+    matchKind,
+    matchLabel: buildMatchLabel(matchKind),
+    comparisonKey,
+    sizeId,
+    dimensionsMm,
+    areaMm2,
+    perimeterMm,
+    massPerMeterKg,
+    fitDeltaPercent,
+    impactValue,
+    impactMode,
+  };
 }
 
 function buildManualFamilyRows(
@@ -504,66 +668,138 @@ function buildManualFamilyRows(
   profileId: ProfileId,
   currentDimensionsMm: Partial<Record<DimensionKey, number>>,
 ): { rows: ProfileSpecsFamilyRow[]; selectedFamilyRowId: string | null } {
-  const lookupRows = getStandardSizesForProfile(profileId);
-  let selectedFamilyRowId: string | null = null;
+  const comparisonProfiles = MANUAL_ALTERNATIVE_GROUPS[profileId] ?? [profileId];
   const densityKgPerM3 = resolveDensityKgPerM3(input);
   const currentCalculation = calculateMetal(input);
   const currentResult = currentCalculation.ok ? currentCalculation.result : null;
   const impactMode = currentResult ? resolveAlternativeImpactMode(input, currentResult) : null;
+  const currentComparable = getComparableDimensions(profileId, currentDimensionsMm);
+  const currentComparisonKey = buildManualComparisonKey(profileId, currentDimensionsMm);
+  const currentAreaPerimeter = getAreaAndPerimeter(input);
+  const currentMassPerMeterKg = getMassPerMeterKg(currentAreaPerimeter.areaMm2, densityKgPerM3);
 
-  const scoreRow = (dimensions: Partial<Record<DimensionKey, number>>): number => {
-    const entries = Object.entries(dimensions) as Array<[DimensionKey, number]>;
-    if (entries.length === 0) return Number.POSITIVE_INFINITY;
+  let selectedFamilyRowId: string | null = null;
+  let currentRow: ProfileSpecsFamilyRow | null = null;
+  const exactPeers: ProfileSpecsFamilyRow[] = [];
+  const sameFamilyNearby: Array<ProfileSpecsFamilyRow & { score: number }> = [];
+  const nearestPeerCandidates = new Map<ProfileId, Array<ProfileSpecsFamilyRow & { score: number }>>();
 
-    return entries.reduce((score, [key, candidate]) => {
-      const current = currentDimensionsMm[key];
-      if (current == null || !Number.isFinite(current)) return score + 1;
-      return score + (Math.abs(current - candidate) / Math.max(candidate, 1));
-    }, 0);
-  };
+  for (const candidateProfileId of comparisonProfiles) {
+    const lookupRows = getStandardSizesForProfile(candidateProfileId);
 
-  const rows = lookupRows.map((row, index) => {
-    const rowId = `manual-${index}`;
-    const selected = dimensionsMatch(currentDimensionsMm, row.dimensions);
-    if (selected) {
-      selectedFamilyRowId = rowId;
-    }
+    lookupRows.forEach((row, index) => {
+      const rowId = `${candidateProfileId}-manual-${index}`;
+      const rowInput = buildInputWithManualDimensions(
+        candidateProfileId === profileId ? input : { ...input, profileId: candidateProfileId, selectedSizeId: undefined },
+        row.dimensions,
+      );
+      const comparable = getComparableDimensions(candidateProfileId, row.dimensions);
+      const comparisonKey = buildManualComparisonKey(candidateProfileId, row.dimensions);
+      const score = scoreComparableDimensions(currentComparable, comparable);
+      const isExact = comparableDimensionsMatch(currentComparable, comparable);
+      const { areaMm2, perimeterMm } = getAreaAndPerimeter(rowInput);
+      const rowCalculation = calculateMetal(rowInput);
+      const rowResult = rowCalculation.ok ? rowCalculation.result : null;
+      const fitDeltaPercent = currentResult && rowResult && currentResult.unitWeightKg > 0
+        ? ((rowResult.unitWeightKg - currentResult.unitWeightKg) / currentResult.unitWeightKg) * 100
+        : null;
+      const impactValue = currentResult && rowResult && impactMode
+        ? impactMode === "currency"
+          ? rowResult.grandTotalAmount - currentResult.grandTotalAmount
+          : rowResult.totalWeightKg - currentResult.totalWeightKg
+        : null;
 
-    const rowInput = buildInputWithManualDimensions(input, row.dimensions);
-    const { areaMm2, perimeterMm } = getAreaAndPerimeter(rowInput);
-    const rowCalculation = calculateMetal(rowInput);
-    const rowResult = rowCalculation.ok ? rowCalculation.result : null;
-    const fitDeltaPercent = currentResult && rowResult && currentResult.unitWeightKg > 0
-      ? ((rowResult.unitWeightKg - currentResult.unitWeightKg) / currentResult.unitWeightKg) * 100
-      : null;
-    const impactValue = currentResult && rowResult && impactMode
-      ? impactMode === "currency"
-        ? rowResult.grandTotalAmount - currentResult.grandTotalAmount
-        : rowResult.totalWeightKg - currentResult.totalWeightKg
-      : null;
+      const baseRow = buildAlternativeRow({
+        id: rowId,
+        label: row.label,
+        profileId: candidateProfileId,
+        mode: "manual",
+        selected: false,
+        matchKind: "same_family_nearby",
+        comparisonKey,
+        dimensionsMm: row.dimensions,
+        areaMm2,
+        perimeterMm,
+        massPerMeterKg: getMassPerMeterKg(areaMm2, densityKgPerM3),
+        fitDeltaPercent,
+        impactValue,
+        impactMode: impactMode ?? undefined,
+      });
 
-    return {
-      id: rowId,
-      label: row.label,
+      if (candidateProfileId === profileId && isExact && selectedFamilyRowId == null) {
+        selectedFamilyRowId = rowId;
+        currentRow = { ...baseRow, selected: true, matchKind: "current", matchLabel: buildMatchLabel("current") };
+        return;
+      }
+
+      if (candidateProfileId !== profileId && isExact) {
+        exactPeers.push({
+          ...baseRow,
+          matchKind: "exact_peer",
+          matchLabel: buildMatchLabel("exact_peer"),
+        });
+        return;
+      }
+
+      if (candidateProfileId === profileId) {
+        sameFamilyNearby.push({ ...baseRow, score });
+        return;
+      }
+
+      const candidates = nearestPeerCandidates.get(candidateProfileId) ?? [];
+      candidates.push({
+        ...baseRow,
+        matchKind: "nearest_peer",
+        matchLabel: buildMatchLabel("nearest_peer"),
+        score,
+      });
+      nearestPeerCandidates.set(candidateProfileId, candidates);
+    });
+  }
+
+  if (!currentRow && currentComparisonKey) {
+    currentRow = buildAlternativeRow({
+      id: `current-${profileId}`,
+      label: buildManualSelectionLabel(profileId, currentDimensionsMm, getProfileFamilyLabel(profileId)),
       profileId,
-      mode: "manual" as const,
-      selected,
-      dimensionsMm: row.dimensions,
-      areaMm2,
-      perimeterMm,
-      massPerMeterKg: getMassPerMeterKg(areaMm2, densityKgPerM3),
-      fitDeltaPercent,
-      impactValue,
+      mode: "manual",
+      selected: true,
+      matchKind: "current",
+      comparisonKey: currentComparisonKey,
+      dimensionsMm: currentDimensionsMm,
+      areaMm2: currentAreaPerimeter.areaMm2,
+      perimeterMm: currentAreaPerimeter.perimeterMm,
+      massPerMeterKg: currentMassPerMeterKg,
+      impactValue: 0,
       impactMode: impactMode ?? undefined,
-      score: scoreRow(row.dimensions),
-    };
-  }).sort((left, right) => {
-    if (left.selected !== right.selected) return left.selected ? -1 : 1;
-    return left.score - right.score;
-  });
+    });
+  }
+
+  const exactPeerFamilies = new Set(exactPeers.map((row) => row.profileId));
+  const nearestPeers = comparisonProfiles
+    .filter((candidateProfileId) => candidateProfileId !== profileId && !exactPeerFamilies.has(candidateProfileId))
+    .flatMap((candidateProfileId) => {
+      const candidates = nearestPeerCandidates.get(candidateProfileId) ?? [];
+      if (candidates.length === 0) return [];
+      return [candidates.sort((left, right) => left.score - right.score || left.label.localeCompare(right.label))[0]];
+    });
+
+  const rows: ProfileSpecsFamilyRow[] = [
+    ...(currentRow ? [currentRow] : []),
+    ...exactPeers,
+    ...nearestPeers,
+    ...sameFamilyNearby
+      .sort((left, right) => left.score - right.score || left.label.localeCompare(right.label))
+      .slice(0, MAX_MANUAL_NEARBY_ROWS)
+      .map((candidate) => {
+        const { score, ...row } = candidate;
+        void score;
+        return row;
+      }),
+  ];
 
   return {
-    rows: rows.map(({ score, ...row }) => row),
+    rows,
     selectedFamilyRowId,
   };
 }
@@ -574,13 +810,13 @@ function buildStructuralAlternativeRows(
   selectedSizeId: string,
   densityKgPerM3: number | null,
 ): { rows: ProfileSpecsFamilyRow[]; selectedFamilyRowId: string } | null {
-  if (!STRUCTURAL_ALTERNATIVE_GROUPS[profileId]?.length) return null;
+  const comparisonProfiles = STANDARD_ALTERNATIVE_GROUPS[profileId];
+  if (!comparisonProfiles?.length) return null;
 
   const currentProfile = getProfileById(profileId);
   if (!currentProfile || currentProfile.mode !== "standard") return null;
 
-  const selectedIndex = currentProfile.sizes.findIndex((size) => size.id === selectedSizeId);
-  const selectedSize = currentProfile.sizes[selectedIndex];
+  const selectedSize = currentProfile.sizes.find((size) => size.id === selectedSizeId);
   if (!selectedSize) return null;
 
   const currentCalculation = calculateMetal(buildStandardSelectionInput(input, profileId, selectedSizeId));
@@ -588,50 +824,132 @@ function buildStructuralAlternativeRows(
 
   const currentResult = currentCalculation.result;
   const impactMode = resolveAlternativeImpactMode(input, currentResult);
-
-  type CandidateRow = ProfileSpecsFamilyRow & {
-    recommendationScore: number;
-  };
-
-  const candidates = currentProfile.sizes.flatMap((size, index) => {
-    const selected = size.id === selectedSizeId;
-    const massPerMeterKg = getMassPerMeterKg(size.areaMm2, densityKgPerM3);
-
-    const candidateCalculation = calculateMetal(buildStandardSelectionInput(input, profileId, size.id));
-    if (!candidateCalculation.ok) return [];
-
-    const result = candidateCalculation.result;
-    const fitDeltaPercent = currentResult.unitWeightKg > 0
-      ? ((result.unitWeightKg - currentResult.unitWeightKg) / currentResult.unitWeightKg) * 100
-      : 0;
-    const impactValue = impactMode === "currency"
-      ? result.grandTotalAmount - currentResult.grandTotalAmount
-      : result.totalWeightKg - currentResult.totalWeightKg;
-    const recommendationScore = selected
-      ? Number.POSITIVE_INFINITY
-      : fitDeltaPercent >= 0
-        ? Math.abs(fitDeltaPercent) + (Math.abs(index - selectedIndex) * 0.001)
-        : 1000 + Math.abs(fitDeltaPercent) + (Math.abs(index - selectedIndex) * 0.001);
-
-    return [{
-      id: size.id,
-      label: size.label,
-      profileId,
-      mode: "standard" as const,
-      selected,
-      sizeId: size.id,
-      areaMm2: size.areaMm2,
-      perimeterMm: size.perimeterMm ?? null,
-      massPerMeterKg,
-      fitDeltaPercent,
-      impactValue,
-      impactMode,
-      recommendationScore,
-    }];
+  const currentComparisonKey = getStandardComparisonKey(selectedSize.label);
+  const currentComparisonNumber = parseComparisonNumber(currentComparisonKey);
+  const sameFamilyWindow = getStandardNearbyWindow(currentComparisonNumber);
+  const currentRow = buildAlternativeRow({
+    id: selectedSize.id,
+    label: selectedSize.label,
+    profileId,
+    mode: "standard",
+    selected: true,
+    matchKind: "current",
+    comparisonKey: currentComparisonKey,
+    sizeId: selectedSize.id,
+    areaMm2: selectedSize.areaMm2,
+    perimeterMm: selectedSize.perimeterMm ?? null,
+    massPerMeterKg: getMassPerMeterKg(selectedSize.areaMm2, densityKgPerM3),
+    impactValue: 0,
+    impactMode,
   });
 
+  const exactPeers: ProfileSpecsFamilyRow[] = [];
+  const sameFamilyNearby: Array<ProfileSpecsFamilyRow & { nominalDistance: number; areaDistance: number }> = [];
+  const nearestPeerCandidates = new Map<
+    ProfileId,
+    Array<ProfileSpecsFamilyRow & { nominalDistance: number; areaDistance: number }>
+  >();
+
+  for (const candidateProfileId of comparisonProfiles) {
+    const candidateProfile = getProfileById(candidateProfileId);
+    if (!candidateProfile || candidateProfile.mode !== "standard") continue;
+
+    for (const size of candidateProfile.sizes) {
+      if (candidateProfileId === profileId && size.id === selectedSizeId) continue;
+
+      const candidateComparisonKey = getStandardComparisonKey(size.label);
+      const candidateComparisonNumber = parseComparisonNumber(candidateComparisonKey);
+      const candidateCalculation = calculateMetal(buildStandardSelectionInput(input, candidateProfileId, size.id));
+      if (!candidateCalculation.ok) continue;
+
+      const result = candidateCalculation.result;
+      const fitDeltaPercent = currentResult.unitWeightKg > 0
+        ? ((result.unitWeightKg - currentResult.unitWeightKg) / currentResult.unitWeightKg) * 100
+        : 0;
+      const impactValue = impactMode === "currency"
+        ? result.grandTotalAmount - currentResult.grandTotalAmount
+        : result.totalWeightKg - currentResult.totalWeightKg;
+      const areaDistance = Math.abs(size.areaMm2 - selectedSize.areaMm2);
+      const nominalDistance = Math.abs(candidateComparisonNumber - currentComparisonNumber);
+
+      const baseRow = buildAlternativeRow({
+        id: `${candidateProfileId}-${size.id}`,
+        label: size.label,
+        profileId: candidateProfileId,
+        mode: "standard",
+        selected: false,
+        matchKind: "same_family_nearby",
+        comparisonKey: candidateComparisonKey,
+        sizeId: size.id,
+        areaMm2: size.areaMm2,
+        perimeterMm: size.perimeterMm ?? null,
+        massPerMeterKg: getMassPerMeterKg(size.areaMm2, densityKgPerM3),
+        fitDeltaPercent,
+        impactValue,
+        impactMode,
+      });
+
+      if (
+        candidateProfileId !== profileId
+        && currentComparisonKey != null
+        && candidateComparisonKey === currentComparisonKey
+      ) {
+        exactPeers.push({
+          ...baseRow,
+          matchKind: "exact_peer",
+          matchLabel: buildMatchLabel("exact_peer"),
+        });
+        continue;
+      }
+
+      if (candidateProfileId === profileId) {
+        sameFamilyNearby.push({ ...baseRow, nominalDistance, areaDistance });
+        continue;
+      }
+
+      const candidates = nearestPeerCandidates.get(candidateProfileId) ?? [];
+      candidates.push({
+        ...baseRow,
+        matchKind: "nearest_peer",
+        matchLabel: buildMatchLabel("nearest_peer"),
+        nominalDistance,
+        areaDistance,
+      });
+      nearestPeerCandidates.set(candidateProfileId, candidates);
+    }
+  }
+
+  const exactPeerFamilies = new Set(exactPeers.map((row) => row.profileId));
+  const nearestPeers = comparisonProfiles
+    .filter((candidateProfileId) => candidateProfileId !== profileId && !exactPeerFamilies.has(candidateProfileId))
+    .flatMap((candidateProfileId) => {
+      const candidates = nearestPeerCandidates.get(candidateProfileId) ?? [];
+      if (candidates.length === 0) return [];
+      return [candidates.sort((left, right) =>
+        left.nominalDistance - right.nominalDistance
+        || left.areaDistance - right.areaDistance
+        || left.label.localeCompare(right.label))[0]];
+    });
+
   return {
-    rows: candidates.map(({ recommendationScore, ...row }) => row),
+    rows: [
+      currentRow,
+      ...exactPeers,
+      ...nearestPeers,
+      ...sameFamilyNearby
+        .sort((left, right) =>
+          left.nominalDistance - right.nominalDistance
+          || left.areaDistance - right.areaDistance
+          || left.label.localeCompare(right.label))
+        .filter((candidate) => candidate.nominalDistance <= sameFamilyWindow)
+        .slice(0, MAX_STANDARD_NEARBY_ROWS)
+        .map((candidate) => {
+          const { nominalDistance, areaDistance, ...row } = candidate;
+          void nominalDistance;
+          void areaDistance;
+          return row;
+        }),
+    ],
     selectedFamilyRowId: selectedSizeId,
   };
 }
@@ -669,12 +987,14 @@ export function resolveProfileSpecs(input: CalculationInput): ResolvedProfileSpe
       metrics,
       familyMode: "alternatives",
       familyRows: structuralAlternatives?.rows
-        ?? profile.sizes.map((size) => ({
+        ?? profile.sizes.map((size) => buildAlternativeRow({
           id: size.id,
           label: size.label,
           profileId: profile.id,
-          mode: "standard" as const,
+          mode: "standard",
           selected: size.id === selectedSize.id,
+          matchKind: size.id === selectedSize.id ? "current" : "same_family_nearby",
+          comparisonKey: getStandardComparisonKey(size.label),
           sizeId: size.id,
           areaMm2: size.areaMm2,
           perimeterMm: size.perimeterMm ?? null,

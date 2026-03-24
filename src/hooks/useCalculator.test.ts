@@ -33,4 +33,23 @@ describe("undoableReducer", () => {
     expect(withBulkDimensions.present.manualDimensions.outerDiameter?.value).toBeCloseTo(6.03, 6);
     expect(withBulkDimensions.present.manualDimensions.wallThickness?.value).toBe(3.2);
   });
+
+  it("switches manual profile and dimensions together as a single undoable action", () => {
+    const initial = getInitialUndoableState();
+    const withProfile = undoableReducer(initial, { type: "SET_PROFILE", profileId: "square_hollow" });
+    const switched = undoableReducer(withProfile, {
+      type: "SET_PROFILE_AND_DIMENSIONS",
+      profileId: "rectangular_tube",
+      dimensions: { width: 100, height: 100, wallThickness: 4 },
+    });
+
+    expect(switched.present.profileId).toBe("rectangular_tube");
+    expect(switched.present.selectedSizeId).toBeUndefined();
+    expect(switched.present.manualDimensions.width?.value).toBe(100);
+    expect(switched.present.manualDimensions.height?.value).toBe(100);
+    expect(switched.present.manualDimensions.wallThickness?.value).toBe(4);
+
+    const undone = undoableReducer(switched, { type: "UNDO" });
+    expect(undone.present).toEqual(withProfile.present);
+  });
 });

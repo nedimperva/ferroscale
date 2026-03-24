@@ -17,6 +17,28 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.2.2",
+    date: "2026-03-24",
+    changed: [
+      "Specs panel Alternatives now compare compatible profile families by logical peers like IPE 100 vs IPN 100 or HEA 100 instead of surfacing only the active family",
+      "Alternatives are now narrowed to genuinely close suggestions, so far-away sizes such as IPE 600 no longer appear when the active selection is around 100",
+      "Specs panel Alternatives now use compact full-width cards that keep the content grouped inside each suggestion instead of stretching every metric into a flat table row",
+      "Selecting a compatible manual-profile alternative can now switch both the profile type and dimensions in one action",
+    ],
+    changed_bs: [
+      "Alternative u panelu Specifikacije sada porede kompatibilne porodice profila po logickim parovima kao sto su IPE 100 prema IPN 100 ili HEA 100 umjesto da prikazuju samo aktivnu porodicu",
+      "Alternative su sada suzene na stvarno bliske prijedloge, pa se udaljene velicine poput IPE 600 vise ne pojavljuju kada je aktivni odabir oko 100",
+      "Alternative u panelu Specifikacije sada koriste kompaktne kartice pune sirine koje drze sadrzaj grupisanim unutar svakog prijedloga umjesto razvucenih ravnih redova",
+      "Odabir kompatibilne alternative rucnog profila sada moze promijeniti i tip profila i dimenzije u jednoj akciji",
+    ],
+    fixed: [
+      "Square hollow and rectangular tube Alternatives now link across equivalent outer sizes and wall thicknesses instead of staying isolated inside a single manual profile family",
+    ],
+    fixed_bs: [
+      "Alternative za kvadratne i pravougaone cijevi sada povezuju ekvivalentne vanjske dimenzije i debljine stijenke umjesto da ostanu izolovane unutar jedne rucne porodice profila",
+    ],
+  },
+  {
     version: "2.2.1",
     date: "2026-03-24",
     changed: [

@@ -51,7 +51,7 @@ describe("ProfileSpecsDrawing", () => {
           input={input}
           onSelectStandardSize={() => undefined}
           onSelectStandardProfileSize={() => undefined}
-          onSelectManualDimensionsMm={() => undefined}
+          onSelectManualProfileDimensions={() => undefined}
         />
       </NextIntlClientProvider>,
     );
@@ -59,10 +59,13 @@ describe("ProfileSpecsDrawing", () => {
     expect(markup).toContain("Profile specs");
     expect(markup).toContain("HEA 200");
     expect(markup).toContain("Alternatives");
+    expect(markup).toContain("HEA");
+    expect(markup).toContain("Match");
     expect(markup).toContain("Impact");
     expect(markup).toContain("kg/m");
     expect(markup).toContain("Search size");
-    expect(markup).toContain("Selected first");
+    expect(markup).toContain("Logical order");
+    expect(markup).toContain("Exact peer");
     expect(markup).toContain(">tw</span>");
     expect(markup).toContain(">tf</span>");
     expect(markup).toContain(">r</span>");
@@ -87,7 +90,7 @@ describe("ProfileSpecsDrawing", () => {
           input={input}
           onSelectStandardSize={() => undefined}
           onSelectStandardProfileSize={() => undefined}
-          onSelectManualDimensionsMm={() => undefined}
+          onSelectManualProfileDimensions={() => undefined}
         />
       </NextIntlClientProvider>,
     );
@@ -95,10 +98,12 @@ describe("ProfileSpecsDrawing", () => {
     expect(markup).toContain("Alternatives");
     expect(markup).toContain("Impact compares full job total for the active length, quantity, waste, and VAT.");
     expect(markup).toContain("Current");
+    expect(markup).toContain("Exact peer");
+    expect(markup).toContain("Same family");
     expect(markup).toContain("Fit");
     expect(markup).toContain("Impact");
     expect(markup).toContain("Search size");
-    expect(markup).toContain("Selected first");
+    expect(markup).toContain("Logical order");
     expect(markup).not.toContain("specs.alternativesTitle");
     expect(markup).not.toContain("specs.alternativesHint");
     expect(markup).not.toContain("specs.alternatives.current");

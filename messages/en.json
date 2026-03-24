@@ -187,13 +187,22 @@
       "searchPlaceholder": "Search size",
       "sortLabel": "Sort",
       "filteredEmpty": "No alternatives match this search.",
+      "family": "Family",
+      "match": "Match",
       "fit": "Fit",
       "impact": "Impact",
       "current": "Current",
       "nearMatch": "Near match",
       "heavier": "{percent}% heavier",
       "lighter": "{percent}% lighter",
+      "matchLabels": {
+        "current": "Current",
+        "exact_peer": "Exact peer",
+        "nearest_peer": "Nearest peer",
+        "same_family_nearby": "Same family"
+      },
       "sort": {
+        "logical": "Logical order",
         "selected": "Selected first",
         "size": "Size ascending",
         "mass": "kg/m ascending",

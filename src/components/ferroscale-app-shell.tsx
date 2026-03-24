@@ -759,7 +759,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         input={input}
         onSelectStandardSize={(sizeId) => dispatch({ type: "SET_SIZE", sizeId })}
         onSelectStandardProfileSize={(profileId, sizeId) => dispatch({ type: "SET_PROFILE_AND_SIZE", profileId, sizeId })}
-        onSelectManualDimensionsMm={(dimensions) => dispatch({ type: "SET_DIMENSIONS_MM", dimensions })}
+        onSelectManualProfileDimensions={(profileId, dimensions) => dispatch({ type: "SET_PROFILE_AND_DIMENSIONS", profileId, dimensions })}
       />
     ),
     saved: (

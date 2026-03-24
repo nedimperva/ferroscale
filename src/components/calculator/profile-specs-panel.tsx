@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { memo, useDeferredValue, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type {
@@ -22,7 +22,7 @@ interface ProfileSpecsPanelProps {
   input: CalculationInput;
   onSelectStandardSize: (sizeId: string) => void;
   onSelectStandardProfileSize: (profileId: ProfileId, sizeId: string) => void;
-  onSelectManualDimensionsMm: (dimensions: Partial<Record<DimensionKey, number>>) => void;
+  onSelectManualProfileDimensions: (profileId: ProfileId, dimensions: Partial<Record<DimensionKey, number>>) => void;
 }
 
 type TranslationValues = Record<string, string | number | Date>;
@@ -31,7 +31,13 @@ type TranslateWithHasFn = {
   (key: string, values?: TranslationValues): string;
   has: (key: string) => boolean;
 };
-type AlternativeSortKey = "selected" | "size" | "mass" | "impact";
+type AlternativeSortKey = "logical" | "mass" | "impact";
+const ALTERNATIVE_MATCH_ORDER = {
+  current: 0,
+  exact_peer: 1,
+  nearest_peer: 2,
+  same_family_nearby: 3,
+} as const;
 
 const SPECS_TEXT_FALLBACKS = {
   title: "Profile specs",
@@ -50,17 +56,22 @@ const SPECS_TEXT_FALLBACKS = {
   noLookupRows: "No lookup rows are available for this profile yet.",
   "alternatives.searchPlaceholder": "Search size",
   "alternatives.sortLabel": "Sort",
-  "alternatives.sort.selected": "Selected first",
-  "alternatives.sort.size": "Size ascending",
+  "alternatives.sort.logical": "Logical order",
   "alternatives.sort.mass": "kg/m ascending",
   "alternatives.sort.impact": "Impact ascending",
   "alternatives.filteredEmpty": "No alternatives match this search.",
+  "alternatives.family": "Family",
+  "alternatives.match": "Match",
   "alternatives.fit": "Fit",
   "alternatives.impact": "Impact",
   "alternatives.current": "Current",
   "alternatives.nearMatch": "Near match",
   "alternatives.heavier": "{percent}% heavier",
   "alternatives.lighter": "{percent}% lighter",
+  "alternatives.matchLabels.current": "Current",
+  "alternatives.matchLabels.exact_peer": "Exact peer",
+  "alternatives.matchLabels.nearest_peer": "Nearest peer",
+  "alternatives.matchLabels.same_family_nearby": "Same family",
   "table.size": "Size",
   "table.area": "A (mm2)",
   "table.perimeter": "P (mm)",
@@ -119,9 +130,8 @@ function compareAlternativeRows(
   right: ProfileSpecsFamilyRow,
   sortKey: AlternativeSortKey,
 ): number {
-  if (sortKey === "selected" && left.selected !== right.selected) {
-    return left.selected ? -1 : 1;
-  }
+  const matchOrderDelta = ALTERNATIVE_MATCH_ORDER[left.matchKind] - ALTERNATIVE_MATCH_ORDER[right.matchKind];
+  if (matchOrderDelta !== 0) return matchOrderDelta;
 
   if (sortKey === "mass") {
     const delta = (left.massPerMeterKg ?? Number.POSITIVE_INFINITY) - (right.massPerMeterKg ?? Number.POSITIVE_INFINITY);
@@ -133,10 +143,33 @@ function compareAlternativeRows(
     if (delta !== 0) return delta;
   }
 
-  const numericDelta = parseAlternativeLabelNumber(left.label) - parseAlternativeLabelNumber(right.label);
+  if (sortKey === "logical") return 0;
+
+  const numericDelta = parseAlternativeLabelNumber(left.comparisonKey ?? left.label)
+    - parseAlternativeLabelNumber(right.comparisonKey ?? right.label);
   if (numericDelta !== 0) return numericDelta;
 
   return left.label.localeCompare(right.label);
+}
+
+function translatedProfileFamilyLabel(
+  row: ProfileSpecsFamilyRow,
+  tBase: TranslateWithHasFn,
+): string {
+  const key = `dataset.profileShort.${row.profileId}`;
+  if (tBase.has(key)) {
+    const translated = tBase(key);
+    if (!isMissingTranslation(translated, key)) return translated;
+  }
+
+  return row.familyLabel;
+}
+
+function translatedMatchLabel(
+  row: ProfileSpecsFamilyRow,
+  tSpecs: (key: SpecsTextKey, values?: TranslationValues) => string,
+): string {
+  return tSpecs(`alternatives.matchLabels.${row.matchKind}` as SpecsTextKey) || row.matchLabel;
 }
 
 function metricLabel(
@@ -468,7 +501,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
   input,
   onSelectStandardSize,
   onSelectStandardProfileSize,
-  onSelectManualDimensionsMm,
+  onSelectManualProfileDimensions,
 }: ProfileSpecsPanelProps) {
   const locale = useLocale();
   const tBase = useTranslations() as TranslateWithHasFn;
@@ -478,26 +511,25 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
   const specs = useMemo(() => resolveProfileSpecs(input), [input]);
   const profile = useMemo(() => getProfileById(input.profileId), [input.profileId]);
   const [alternativeQuery, setAlternativeQuery] = useState("");
-  const [alternativeSort, setAlternativeSort] = useState<AlternativeSortKey>("selected");
+  const [alternativeSort, setAlternativeSort] = useState<AlternativeSortKey>("logical");
   const deferredAlternativeQuery = useDeferredValue(alternativeQuery);
-
-  useEffect(() => {
-    setAlternativeQuery("");
-    setAlternativeSort("selected");
-  }, [specs?.profileId, specs?.selectedFamilyRowId]);
 
   if (!specs || !profile) return null;
 
   const alternativeRows = specs.familyMode === "alternatives"
     ? specs.familyRows
-      .filter((row) => row.label.toLocaleLowerCase(locale).includes(deferredAlternativeQuery.trim().toLocaleLowerCase(locale)))
+      .filter((row) => {
+        const query = deferredAlternativeQuery.trim().toLocaleLowerCase(locale);
+        if (!query) return true;
+        const familyLabel = translatedProfileFamilyLabel(row, tBase).toLocaleLowerCase(locale);
+        return `${familyLabel} ${row.label.toLocaleLowerCase(locale)}`.includes(query);
+      })
       .sort((left, right) => compareAlternativeRows(left, right, alternativeSort))
     : [];
 
   const alternativeCountLabel = `${alternativeRows.length}/${specs.familyRows.length}`;
   const alternativeSortOptions: Array<{ value: AlternativeSortKey; label: string }> = [
-    { value: "selected", label: tSpecsSafe("alternatives.sort.selected") },
-    { value: "size", label: tSpecsSafe("alternatives.sort.size") },
+    { value: "logical", label: tSpecsSafe("alternatives.sort.logical") },
     { value: "mass", label: tSpecsSafe("alternatives.sort.mass") },
     { value: "impact", label: tSpecsSafe("alternatives.sort.impact") },
   ];
@@ -525,7 +557,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
         </div>
       </div>
 
-      <div className="space-y-4 p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
         <section className="overflow-hidden rounded-2xl border border-border bg-surface-raised">
           {specs.geometry && specs.drawingKind ? (
             <ProfileSpecsDrawing
@@ -546,7 +578,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
           )}
         </section>
 
-        <section className="rounded-2xl border border-border bg-surface-raised p-4">
+        <section className="rounded-2xl border border-border bg-surface-raised p-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">{tSpecsSafe("metricsTitle")}</h3>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${badgeClass(!specs.isCustomSelection)}`}>
@@ -555,9 +587,9 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
           </div>
 
           {specs.metrics.length > 0 ? (
-            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 2xl:grid-cols-4">
+            <dl className="grid grid-cols-2 gap-1.5">
               {specs.metrics.map((metric) => (
-                <div key={`${metric.key}-${metric.value}`} className="rounded-lg border border-border bg-surface px-2.5 py-2">
+                <div key={`${metric.key}-${metric.value}`} className="rounded-lg border border-border bg-surface px-2 py-1.5">
                   <dt className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-faint">
                     {metricCode(metric.key) && (
                       <span className="rounded border border-border bg-surface-inset px-1.5 py-0.5 font-semibold text-[9px] tracking-normal text-foreground-secondary">
@@ -568,7 +600,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                       {metricLabel(metric.key, tBase, tSpecs)}
                     </span>
                   </dt>
-                  <dd className="mt-1 text-sm font-semibold leading-tight text-foreground">
+                  <dd className="mt-1 text-[13px] font-semibold leading-tight text-foreground">
                     {metricValue(locale, metric)}
                   </dd>
                 </div>
@@ -579,7 +611,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
           )}
         </section>
 
-        <section className="rounded-2xl border border-border bg-surface-raised p-4">
+        <section className="flex min-h-0 flex-1 flex-col rounded-2xl border border-border bg-surface-raised p-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-semibold text-foreground">
@@ -596,7 +628,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
 
           {specs.familyRows.length > 0 ? (
             specs.familyMode === "alternatives" ? (
-              <div className="space-y-2.5">
+              <div className="flex min-h-0 flex-1 flex-col gap-2.5">
                 <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_12rem]">
                   <label className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-[13px] text-foreground-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0 text-muted-faint">
@@ -632,34 +664,30 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                   </label>
                 </div>
 
-                <div className="hidden grid-cols-[minmax(0,1.35fr)_minmax(6rem,0.9fr)_5.25rem_minmax(6.5rem,0.9fr)] gap-3 px-3 pt-1 text-[9px] font-semibold uppercase tracking-wide text-muted-faint md:grid">
-                  <span>{tSpecsSafe("table.size")}</span>
-                  <span className="text-right">{tSpecsSafe("alternatives.fit")}</span>
-                  <span className="text-right">{tSpecsSafe("table.massPerMeter")}</span>
-                  <span className="text-right">{tSpecsSafe("alternatives.impact")}</span>
-                </div>
-
                 {alternativeRows.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {alternativeRows.map((row) => (
-                      <SpecsAlternativeRowButton
-                        key={row.id}
-                        locale={locale}
-                        currency={input.currency}
-                        row={row}
-                        tSpecs={tSpecsSafe}
-                        onClick={() => {
-                          if (row.mode === "standard" && row.sizeId) {
-                            onSelectStandardProfileSize(row.profileId, row.sizeId);
-                            return;
-                          }
+                  <div className="min-h-0 overflow-y-auto pr-1 scroll-native">
+                    <div className="grid gap-2">
+                      {alternativeRows.map((row) => (
+                        <SpecsAlternativeRowButton
+                          key={row.id}
+                          locale={locale}
+                          currency={input.currency}
+                          row={row}
+                          tBase={tBase}
+                          tSpecs={tSpecsSafe}
+                          onClick={() => {
+                            if (row.mode === "standard" && row.sizeId) {
+                              onSelectStandardProfileSize(row.profileId, row.sizeId);
+                              return;
+                            }
 
-                          if (row.mode === "manual" && row.dimensionsMm) {
-                            onSelectManualDimensionsMm(row.dimensionsMm);
-                          }
-                        }}
-                      />
-                    ))}
+                            if (row.mode === "manual" && row.dimensionsMm) {
+                              onSelectManualProfileDimensions(row.profileId, row.dimensionsMm);
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <p className="rounded-xl border border-dashed border-border bg-surface px-4 py-6 text-center text-sm text-muted-faint">
@@ -691,7 +719,7 @@ export const ProfileSpecsPanel = memo(function ProfileSpecsPanel({
                           }
 
                           if (row.mode === "manual" && row.dimensionsMm) {
-                            onSelectManualDimensionsMm(row.dimensionsMm);
+                            onSelectManualProfileDimensions(row.profileId, row.dimensionsMm);
                           }
                         }}
                       />
@@ -750,55 +778,67 @@ function SpecsAlternativeRowButton({
   locale,
   currency,
   row,
+  tBase,
   tSpecs,
   onClick,
 }: {
   locale: string;
   currency: string;
   row: ProfileSpecsFamilyRow;
-  tSpecs: TranslateFn;
+  tBase: TranslateWithHasFn;
+  tSpecs: (key: SpecsTextKey, values?: TranslationValues) => string;
   onClick: () => void;
 }) {
   const fitText = fitLabel(locale, row, tSpecs);
   const impactText = impactLabel(locale, currency, row, tSpecs);
+  const familyText = translatedProfileFamilyLabel(row, tBase);
+  const matchText = translatedMatchLabel(row, tSpecs);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`grid w-full gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors md:grid-cols-[minmax(0,1.35fr)_minmax(6rem,0.9fr)_5.25rem_minmax(6.5rem,0.9fr)] md:items-center ${
+      className={`grid w-full gap-x-2.5 gap-y-1.5 rounded-xl border px-3 py-2.5 text-left transition-colors ${
         row.selected
           ? "border-blue-border bg-blue-surface/35 text-blue-text"
           : "border-border bg-surface hover:bg-surface-inset/80"
       }`}
     >
       <div className="min-w-0">
-        <span className="block truncate text-[13px] font-semibold">{row.label}</span>
+        <span className="block truncate text-[9px] font-semibold uppercase tracking-wide text-muted-faint">
+          {familyText}
+        </span>
+        <span className="block truncate text-[12px] font-semibold">{row.label}</span>
       </div>
 
-      <AlternativeMetricCell label={tSpecs("alternatives.fit")} value={fitText} />
-      <AlternativeMetricCell
-        label={tSpecs("table.massPerMeter")}
-        value={row.massPerMeterKg != null ? formatNumber(locale, row.massPerMeterKg, 3) : "-"}
-      />
-      <AlternativeMetricCell label={tSpecs("alternatives.impact")} value={impactText} />
+      <div className="grid grid-cols-2 gap-x-3.5 gap-y-1 sm:grid-cols-4">
+        <DenseMetricCell label={tSpecs("alternatives.match")} value={matchText} subtle />
+        <DenseMetricCell
+          label={tSpecs("table.massPerMeter")}
+          value={row.massPerMeterKg != null ? formatNumber(locale, row.massPerMeterKg, 3) : "-"}
+        />
+        <DenseMetricCell label={tSpecs("alternatives.fit")} value={fitText} />
+        <DenseMetricCell label={tSpecs("alternatives.impact")} value={impactText} />
+      </div>
     </button>
   );
 }
 
-function AlternativeMetricCell({
+function DenseMetricCell({
   label,
   value,
+  subtle = false,
 }: {
   label: string;
   value: string;
+  subtle?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 md:block md:text-right">
-      <span className="text-[8px] font-semibold uppercase tracking-wide text-muted-faint md:hidden">
+    <div className="min-w-0">
+      <span className="block truncate text-[8px] font-semibold uppercase tracking-wide text-muted-faint">
         {label}
       </span>
-      <span className="text-[13px] font-semibold tabular-nums leading-snug">
+      <span className={`block truncate text-[12px] font-semibold leading-snug ${subtle ? "" : "tabular-nums"}`}>
         {value}
       </span>
     </div>

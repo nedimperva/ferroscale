@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.2.2] - 2026-03-24
+
+### Changed
+- Specs panel Alternatives now compare compatible profile families by logical peers like `IPE 100` vs `IPN 100` or `HEA 100` instead of surfacing only the active family
+- Alternatives are now narrowed to genuinely close suggestions, so far-away sizes such as `IPE 600` no longer appear when the active selection is around `100`
+- Specs panel Alternatives now use compact full-width cards that keep the content grouped inside each suggestion instead of stretching every metric into a flat table row
+- Selecting a compatible manual-profile alternative can now switch both the profile type and dimensions in one action
+
+### Fixed
+- Square hollow and rectangular tube Alternatives now link across equivalent outer sizes and wall thicknesses instead of staying isolated inside a single manual profile family
+
+---
+
 ## [2.2.1] - 2026-03-24
 
 ### Changed
@@ -238,7 +251,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.2.1...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.2.2...HEAD
+[2.2.2]: https://github.com/nedimperva/ferroscale/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/nedimperva/ferroscale/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/nedimperva/ferroscale/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/nedimperva/ferroscale/compare/v2.0.0...v2.1.0

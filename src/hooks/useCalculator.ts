@@ -108,6 +108,7 @@ export type CalcAction =
   | { type: "SET_CUSTOM_DENSITY"; value: number }
   | { type: "SET_PROFILE"; profileId: ProfileId }
   | { type: "SET_PROFILE_AND_SIZE"; profileId: ProfileId; sizeId: string }
+  | { type: "SET_PROFILE_AND_DIMENSIONS"; profileId: ProfileId; dimensions: Partial<Record<DimensionKey, number>> }
   | { type: "SET_SIZE"; sizeId: string }
   | { type: "SET_DIMENSION_VALUE"; key: DimensionKey; value: number }
   | { type: "SET_DIMENSION_UNIT"; key: DimensionKey; unit: LengthUnit }
@@ -162,6 +163,37 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
         profileId: action.profileId,
         selectedSizeId: action.sizeId,
         manualDimensions: {},
+      };
+    }
+    case "SET_PROFILE_AND_DIMENSIONS": {
+      const profile = getProfileById(action.profileId);
+      if (!profile || profile.mode !== "manual") return state;
+
+      const baseDimensions = profileDefaults(profile).manualDimensions;
+      const manualDimensions = Object.entries(action.dimensions).reduce(
+        (nextDimensions, [rawKey, rawValue]) => {
+          const key = rawKey as DimensionKey;
+          if (rawValue == null || !Number.isFinite(rawValue)) {
+            return nextDimensions;
+          }
+
+          const currentUnit = baseDimensions[key]?.unit ?? state.manualDimensions[key]?.unit ?? "mm";
+          return {
+            ...nextDimensions,
+            [key]: {
+              value: fromMillimeters(rawValue, currentUnit),
+              unit: currentUnit,
+            },
+          };
+        },
+        { ...baseDimensions },
+      );
+
+      return {
+        ...state,
+        profileId: action.profileId,
+        selectedSizeId: undefined,
+        manualDimensions,
       };
     }
     case "SET_SIZE":

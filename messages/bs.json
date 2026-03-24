@@ -187,13 +187,22 @@
       "searchPlaceholder": "Pretrazi velicinu",
       "sortLabel": "Sortiranje",
       "filteredEmpty": "Nijedna alternativa ne odgovara ovoj pretrazi.",
+      "family": "Porodica",
+      "match": "Tip",
       "fit": "Podudaranje",
       "impact": "Uticaj",
       "current": "Trenutno",
       "nearMatch": "Skoro isto",
       "heavier": "{percent}% teze",
       "lighter": "{percent}% lakse",
+      "matchLabels": {
+        "current": "Trenutno",
+        "exact_peer": "Tacan par",
+        "nearest_peer": "Najblizi par",
+        "same_family_nearby": "Ista porodica"
+      },
       "sort": {
+        "logical": "Logican redoslijed",
         "selected": "Aktivni prvo",
         "size": "Velicina rastuce",
         "mass": "kg/m rastuce",
