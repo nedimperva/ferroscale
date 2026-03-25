@@ -21,7 +21,6 @@ interface ResultBarProps {
   /* Actions */
   isSaved: boolean;
   onOpenSaveDialog: () => void;
-  onRemoveSaved: () => void;
   onCompare?: () => void;
   canCompare?: boolean;
   isInCompare?: boolean;
@@ -46,7 +45,6 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
     onExpand,
     isSaved,
     onOpenSaveDialog,
-    onRemoveSaved,
     onCompare,
     canCompare = false,
     isInCompare = false,
@@ -196,7 +194,6 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
           onCompare={onCompare ?? (() => {})}
           isSaved={isSaved}
           onSave={onOpenSaveDialog}
-          onRemoveSaved={onRemoveSaved}
           hasProjects={hasProjects}
           onAddToProject={onAddToProject ?? (() => {})}
         />
@@ -216,7 +213,6 @@ interface ResultOverlayProps {
   vatPercent: number;
   isSaved: boolean;
   onOpenSaveDialog: () => void;
-  onRemoveSaved: () => void;
   onClose: () => void;
   onCompare?: () => void;
   canCompare?: boolean;
@@ -236,7 +232,6 @@ export const ResultOverlay = memo(function ResultOverlay({
   vatPercent,
   isSaved,
   onOpenSaveDialog,
-  onRemoveSaved,
   onClose,
   onCompare,
   canCompare = false,
@@ -288,7 +283,6 @@ export const ResultOverlay = memo(function ResultOverlay({
               vatPercent={vatPercent}
               isSaved={isSaved}
               onOpenSaveDialog={onOpenSaveDialog}
-              onRemoveSaved={onRemoveSaved}
               onCompare={onCompare}
               canCompare={canCompare}
               isInCompare={isInCompare}

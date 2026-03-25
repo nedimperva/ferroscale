@@ -52,7 +52,6 @@ export interface ResultContentProps {
   vatPercent: number;
   isSaved: boolean;
   onOpenSaveDialog: () => void;
-  onRemoveSaved: () => void;
   onCompare?: () => void;
   canCompare?: boolean;
   isInCompare?: boolean;
@@ -72,7 +71,6 @@ export const ResultContent = memo(function ResultContent({
   vatPercent,
   isSaved,
   onOpenSaveDialog,
-  onRemoveSaved,
   onCompare,
   canCompare = false,
   isInCompare = false,
@@ -235,13 +233,8 @@ export const ResultContent = memo(function ResultContent({
             <PanelActionButton
               type="button"
               onClick={() => {
-                if (isSaved) {
-                  triggerHaptic("light");
-                  onRemoveSaved();
-                } else {
-                  triggerHaptic("success");
-                  onOpenSaveDialog();
-                }
+                triggerHaptic("success");
+                onOpenSaveDialog();
               }}
               className={
                 isSaved

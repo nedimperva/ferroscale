@@ -5,11 +5,11 @@ import { useTranslations } from "next-intl";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import type { SavedEntry } from "@/hooks/useSaved";
-import { HistoryPanel } from "./history-panel";
+import { TemplatesPanel } from "./templates-panel";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 
-interface SavedDrawerProps {
+interface TemplatesDrawerProps {
   open: boolean;
   onClose: () => void;
   saved: SavedEntry[];
@@ -25,7 +25,7 @@ interface SavedDrawerProps {
   onUpdate: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
 }
 
-export const HistoryDrawer = memo(function HistoryDrawer({
+export const TemplatesDrawer = memo(function TemplatesDrawer({
   open,
   onClose,
   saved,
@@ -39,7 +39,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
   onRemovePart,
   onReorderPart,
   onUpdate,
-}: SavedDrawerProps) {
+}: TemplatesDrawerProps) {
   const t = useTranslations("saved");
   const isMobile = useIsMobile();
 
@@ -96,7 +96,7 @@ export const HistoryDrawer = memo(function HistoryDrawer({
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
-        <HistoryPanel
+        <TemplatesPanel
           saved={saved}
           projectOptions={projectOptions}
           onLoad={(entry) => {

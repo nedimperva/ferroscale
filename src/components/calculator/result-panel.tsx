@@ -11,7 +11,6 @@ interface ResultPanelProps {
   isPending: boolean;
   isSaved: boolean;
   onOpenSaveDialog: () => void;
-  onRemoveSaved: () => void;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -32,7 +31,6 @@ export const ResultPanel = memo(function ResultPanel({
   isPending,
   isSaved,
   onOpenSaveDialog,
-  onRemoveSaved,
   includeVat,
   wastePercent,
   vatPercent,
@@ -87,7 +85,6 @@ export const ResultPanel = memo(function ResultPanel({
         vatPercent={vatPercent}
         isSaved={isSaved}
         onOpenSaveDialog={onOpenSaveDialog}
-        onRemoveSaved={onRemoveSaved}
         onCompare={onCompare}
         canCompare={canCompare}
         isInCompare={isInCompare}
