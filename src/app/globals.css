@@ -271,6 +271,15 @@ button:not(:disabled):active,
   outline-offset: 2px;
 }
 
+/* Details chevron rotation */
+.chevron-icon {
+  transition: transform 0.2s ease;
+}
+
+details[open] .chevron-icon {
+  transform: rotate(180deg);
+}
+
 /* Result value transitions */
 .transition-result {
   transition-property: opacity, transform;
@@ -358,6 +367,19 @@ button:not(:disabled):active,
 /* ═══════════════════════════════════════════════════════════════════ */
 /*  Card depth & visual grouping — native-feel elevation system       */
 /* ═══════════════════════════════════════════════════════════════════ */
+
+/* Interactive card — hover + focus affordance */
+.card-interactive {
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-interactive:hover {
+  background-color: color-mix(in srgb, var(--surface-raised) 50%, transparent);
+}
+
+.card-interactive:focus-within {
+  box-shadow: 0 0 0 2px var(--blue-surface);
+}
 
 /* Elevated card — subtle shadow for floating cards */
 .card-elevated {

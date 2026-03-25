@@ -182,7 +182,7 @@ export function ContactForm({ context, compact }: ContactFormProps) {
               type="button"
               onClick={() => void loadCaptcha()}
               disabled={captchaLoading}
-              className="w-fit rounded-md border border-border-strong px-3 py-1.5 text-xs hover:bg-surface-inset disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-fit rounded-md border border-border-strong px-3 py-1.5 text-xs hover:bg-surface-inset disabled:cursor-not-allowed disabled:opacity-50"
             >
               {captchaLoading ? t("loadingCaptcha") : t("loadCaptcha")}
             </button>
@@ -201,8 +201,8 @@ export function ContactForm({ context, compact }: ContactFormProps) {
           type="submit"
           disabled={status === "loading"}
           className={compact
-            ? "w-full rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
-            : "w-fit rounded-md bg-foreground px-4 py-2 font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+            ? "w-full rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+            : "w-fit rounded-md bg-foreground px-4 py-2 font-medium text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           }
         >
           {status === "loading" ? t("sending") : t("send")}

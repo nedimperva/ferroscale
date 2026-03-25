@@ -242,7 +242,7 @@ export const ProfileSection = memo(function ProfileSection({
         {/* Category pills */}
         <div className="grid gap-1">
           <span className="text-xs font-medium text-muted">{t("profileSection.category")}</span>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
             {CATEGORY_ORDER.map((cat) => {
               const isActive = cat === activeCategory;
               return (
@@ -250,7 +250,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
+                  className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -269,7 +269,7 @@ export const ProfileSection = memo(function ProfileSection({
         {/* Sub-type pills */}
         <div className="grid gap-1">
           <span className="text-xs font-medium text-muted">{t("profileSection.type")}</span>
-          <div className="flex flex-wrap gap-1">
+          <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
             {categoryProfiles.map((p) => {
               const isActive = p.id === input.profileId;
               return (
@@ -280,7 +280,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
+                  className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
                     ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
                     : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
                     }`}
@@ -395,7 +395,7 @@ export const ProfileSection = memo(function ProfileSection({
             <button
               type="button"
               onClick={onSavePreset}
-              className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-muted-faint transition-colors hover:text-foreground-secondary"
+              className="mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <path d="M12 5v14" /><path d="M5 12h14" />
@@ -449,7 +449,7 @@ export const ProfileSection = memo(function ProfileSection({
                   }
                 }}
                 disabled={input.quantity <= 1}
-                className="flex h-10 w-8 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-50 disabled:cursor-not-allowed md:w-8"
                 aria-label={t("profileSection.decreaseQuantity")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -472,7 +472,7 @@ export const ProfileSection = memo(function ProfileSection({
                   triggerHaptic("light");
                   dispatch({ type: "SET_QUANTITY", value: input.quantity + 1 });
                 }}
-                className="flex h-10 w-8 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised md:w-8"
                 aria-label={t("profileSection.increaseQuantity")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">

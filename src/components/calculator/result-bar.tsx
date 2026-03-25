@@ -108,7 +108,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
                 <span className="flex min-w-0 flex-1 flex-col text-left">
                   <span
                     className={`flex items-baseline gap-1.5 transition-opacity duration-200 ${
-                      isPending ? "opacity-50" : ""
+                      isPending ? "opacity-60" : ""
                     }`}
                   >
                     {/* Primary value */}

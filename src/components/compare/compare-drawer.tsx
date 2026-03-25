@@ -10,6 +10,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface CompareContentProps {
   items: CompareItem[];
@@ -97,14 +98,16 @@ export function CompareWorkspaceContent({
       {/* Content */}
       <div className="flex-1 overflow-y-auto scroll-native p-4">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-12 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-border">
-              <rect x="3" y="3" width="7" height="18" rx="1" />
-              <rect x="14" y="3" width="7" height="18" rx="1" />
-            </svg>
-            <p className="text-sm text-muted-faint">{t("empty")}</p>
-            <p className="text-xs text-muted-faint">{t("emptyHint")}</p>
-          </div>
+          <EmptyState
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                <rect x="3" y="3" width="7" height="18" rx="1" />
+                <rect x="14" y="3" width="7" height="18" rx="1" />
+              </svg>
+            }
+            title={t("empty")}
+            subtitle={t("emptyHint")}
+          />
         ) : items.length === 1 ? (
           <div className="space-y-3">
             <CompareCard item={items[0]} reference={null} onRemove={onRemoveItem} />
@@ -294,23 +297,16 @@ export const CompareDrawer = memo(function CompareDrawer({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
         {items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-12 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-10 w-10 text-border"
-            >
-              <rect x="3" y="3" width="7" height="18" rx="1" />
-              <rect x="14" y="3" width="7" height="18" rx="1" />
-            </svg>
-            <p className="text-sm text-muted-faint">{t("empty")}</p>
-            <p className="text-xs text-muted-faint">{t("emptyHint")}</p>
-          </div>
+          <EmptyState
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                <rect x="3" y="3" width="7" height="18" rx="1" />
+                <rect x="14" y="3" width="7" height="18" rx="1" />
+              </svg>
+            }
+            title={t("empty")}
+            subtitle={t("emptyHint")}
+          />
         ) : items.length === 1 ? (
           <div className="space-y-3">
             <CompareCard item={items[0]} reference={null} onRemove={onRemoveItem} />

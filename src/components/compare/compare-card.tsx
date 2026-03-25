@@ -40,7 +40,7 @@ export const CompareCard = memo(function CompareCard({
   const unitWeightDiff = isRef ? null : diffLabel(r.unitWeightKg, reference!.result.unitWeightKg);
 
   return (
-    <div className="relative flex flex-col rounded-lg border border-border bg-surface">
+    <div className="card-interactive relative flex flex-col rounded-lg border border-border bg-surface">
       {/* Remove button */}
       <button
         type="button"
