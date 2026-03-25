@@ -39,7 +39,7 @@ function categoryStyle(category: string): { iconBg: string; badge: string } {
   }
 }
 
-interface SavedPanelProps {
+interface TemplatesPanelProps {
   saved: SavedEntry[];
   projectOptions: Array<{ id: string; name: string }>;
   onLoad: (entry: SavedEntry) => void;
@@ -54,7 +54,7 @@ interface SavedPanelProps {
   layout?: WorkspacePanelLayout;
 }
 
-export const HistoryPanel = memo(function HistoryPanel({
+export const TemplatesPanel = memo(function TemplatesPanel({
   saved,
   projectOptions,
   onLoad,
@@ -67,7 +67,7 @@ export const HistoryPanel = memo(function HistoryPanel({
   onReorderPart,
   onUpdate,
   layout = "drawer",
-}: SavedPanelProps) {
+}: TemplatesPanelProps) {
   const t = useTranslations("saved");
   const labelSelectMode = t("selectMode");
   const labelCancelSelection = t("cancelSelection");
@@ -281,7 +281,7 @@ export const HistoryPanel = memo(function HistoryPanel({
               }}
               leftLabel={t("remove")}
             >
-              <SavedItem
+              <TemplateItem
                 entry={entry}
                 onLoad={onLoad}
                 onRemove={() => onRemove(entry.id)}
@@ -327,7 +327,7 @@ export const HistoryPanel = memo(function HistoryPanel({
   );
 });
 
-interface SavedItemProps {
+interface TemplateItemProps {
   entry: SavedEntry;
   projectOptions: Array<{ id: string; name: string }>;
   onLoad: (entry: SavedEntry) => void;
@@ -344,7 +344,7 @@ interface SavedItemProps {
 }
 
 
-const SavedItem = memo(function SavedItem({
+const TemplateItem = memo(function TemplateItem({
   entry,
   projectOptions,
   onLoad,
@@ -358,7 +358,7 @@ const SavedItem = memo(function SavedItem({
   selected,
   onToggleSelect,
   layout,
-}: SavedItemProps) {
+}: TemplateItemProps) {
   const locale = useLocale();
   const tBase = useTranslations();
   const tSaved = useTranslations("saved");

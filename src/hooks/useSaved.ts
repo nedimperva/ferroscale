@@ -148,6 +148,7 @@ export interface UseSavedReturn {
   updateSaved: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
   markSavedUsed: (id: string) => void;
   isSaved: (result: CalculationResult) => boolean;
+  getSavedCount: (result: CalculationResult) => number;
   getSavedEntry: (result: CalculationResult) => SavedEntry | undefined;
 }
 
@@ -443,6 +444,14 @@ export function useSaved(): UseSavedReturn {
     [saved],
   );
 
+  const getSavedCount = useCallback(
+    (result: CalculationResult) => {
+      const fp = fingerprint(result);
+      return saved.filter((e) => fingerprint(e.result) === fp).length;
+    },
+    [saved],
+  );
+
   const getSavedEntry = useCallback(
     (result: CalculationResult) => {
       const fp = fingerprint(result);
@@ -465,6 +474,7 @@ export function useSaved(): UseSavedReturn {
     updateSaved,
     markSavedUsed,
     isSaved,
+    getSavedCount,
     getSavedEntry,
   };
 }

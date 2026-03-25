@@ -37,7 +37,7 @@ import { IssueList } from "@/components/calculator/issue-list";
 import { ProfileSection } from "@/components/calculator/profile-section";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
-import { HistoryDrawer } from "@/components/calculator/history-drawer";
+import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
@@ -55,7 +55,7 @@ import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
 import { TemplateBuilder } from "@/components/calculator/template-builder";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
-import { HistoryPanel } from "@/components/calculator/history-panel";
+import { TemplatesPanel } from "@/components/calculator/templates-panel";
 import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
 
 const sidebarStore = createSidebarStore();
@@ -178,6 +178,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     updateSaved,
     markSavedUsed,
     isSaved: isSavedEntry,
+    getSavedCount,
     getSavedEntry,
   } = useSaved();
 
@@ -313,12 +314,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     setTemplateBuilderSession((session) => session + 1);
     setShowTemplateBuilder(true);
   }, [result]);
-
-  const handleRemoveSaved = useCallback(() => {
-    if (!currentSavedEntry) return;
-    removeSaved(currentSavedEntry.id);
-    toast.info(t("toasts.calculationUnstarred"));
-  }, [currentSavedEntry, removeSaved, t]);
 
   const handleConfirmSave = useCallback(
     (
@@ -758,7 +753,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           isPending={isPending}
           isSaved={isCurrentSaved}
           onOpenSaveDialog={handleOpenSaveDialog}
-          onRemoveSaved={handleRemoveSaved}
+
           includeVat={input.includeVat}
           wastePercent={input.wastePercent}
           vatPercent={input.vatPercent}
@@ -818,7 +813,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         isPending={isPending}
         isSaved={isCurrentSaved}
         onOpenSaveDialog={handleOpenSaveDialog}
-        onRemoveSaved={handleRemoveSaved}
         includeVat={input.includeVat}
         wastePercent={input.wastePercent}
         vatPercent={input.vatPercent}
@@ -844,7 +838,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     ),
     saved: (
       <div className="p-4">
-        <HistoryPanel
+        <TemplatesPanel
           saved={saved}
           projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
           onLoad={handleApplyTemplate}
@@ -923,7 +917,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }), [
     issues, showSettingsPreview, input, dispatch, selectedProfile, activeFamily,
     showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
-    reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog, handleRemoveSaved,
+    reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog,
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
     handleAddToProject, projectCount, normalizedCurrentProfile, weightAsMain,
     removeCompareItem, clearCompare,
@@ -974,7 +968,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       </MobilePageCard>
     ) : currentTab === "saved" ? (
       <MobilePageCard className="p-4">
-        <HistoryPanel
+        <TemplatesPanel
           saved={saved}
           projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
           onLoad={handleApplyTemplate}
@@ -1211,7 +1205,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           isPending={isPending}
           isSaved={isCurrentSaved}
           onOpenSaveDialog={handleOpenSaveDialog}
-          onRemoveSaved={handleRemoveSaved}
+
           onExpand={() => setShowOverlay(true)}
           onCompare={handleCompare}
           canCompare={canCompare}
@@ -1240,7 +1234,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             vatPercent={input.vatPercent}
             isSaved={isCurrentSaved}
             onOpenSaveDialog={handleOpenSaveDialog}
-            onRemoveSaved={handleRemoveSaved}
+  
             onClose={() => setShowOverlay(false)}
             onCompare={handleCompare}
             canCompare={canCompare}
@@ -1255,7 +1249,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
 
         {!isMobile && !(isMultiColumn && columnLayout.hasPanel("saved")) && (
-          <HistoryDrawer
+          <TemplatesDrawer
             open={currentTab === "saved"}
             onClose={navigateHome}
             saved={saved}
@@ -1366,6 +1360,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onSave={handleConfirmSave}
         onAppendToTemplate={handleAppendTemplateParts}
         savedTemplates={saved.map((entry) => ({ id: entry.id, name: entry.name, partCount: entry.parts.length }))}
+        savedTemplateCount={result ? getSavedCount(result) : 0}
         defaultName={defaultSaveName}
         seedInput={input}
         seedResult={result}

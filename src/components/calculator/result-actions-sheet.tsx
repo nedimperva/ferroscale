@@ -2,7 +2,6 @@
 
 import { memo } from "react";
 import { Drawer } from "vaul";
-import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -18,7 +17,6 @@ interface ResultActionsSheetProps {
   /* Save */
   isSaved: boolean;
   onSave: () => void;
-  onRemoveSaved: () => void;
   /* Project */
   hasProjects: boolean;
   onAddToProject: () => void;
@@ -34,7 +32,6 @@ export const ResultActionsSheet = memo(function ResultActionsSheet({
   onCompare,
   isSaved,
   onSave,
-  onRemoveSaved,
   hasProjects,
   onAddToProject,
 }: ResultActionsSheetProps) {
@@ -104,56 +101,32 @@ export const ResultActionsSheet = memo(function ResultActionsSheet({
               </span>
             </button>
 
-            {/* Save / Saved */}
-            {isSaved ? (
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("light");
-                  onRemoveSaved();
-                  onClose();
-                }}
-                className="flex w-full items-center gap-3 rounded-xl border border-accent-border bg-accent-surface px-4 py-3.5 text-sm font-medium text-accent transition-colors hover:bg-accent-surface/80"
+            {/* Save */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("success");
+                onSave();
+                onClose();
+              }}
+              className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-sm font-medium transition-colors ${
+                isSaved
+                  ? "border-accent-border bg-accent-surface text-accent hover:bg-accent-surface/80"
+                  : "border-border text-foreground-secondary hover:bg-surface-raised"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className={`h-5 w-5 shrink-0 ${isSaved ? "fill-current" : "fill-none stroke-current"}`}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <motion.svg
-                  key="saved-icon"
-                  initial={{ scale: 1 }}
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 0.25 }}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-5 w-5 shrink-0"
-                >
-                  <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                </motion.svg>
-                <span className="flex-1 text-left">{t("savedRemove")}</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("success");
-                  onSave();
-                  onClose();
-                }}
-                className="flex w-full items-center gap-3 rounded-xl border border-border px-4 py-3.5 text-sm font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5 shrink-0"
-                >
-                  <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                </svg>
-                <span className="flex-1 text-left">{t("save")}</span>
-              </button>
-            )}
+                <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+              <span className="flex-1 text-left">{isSaved ? t("saved") : t("save")}</span>
+            </button>
 
             {/* Add to Project */}
             <button
