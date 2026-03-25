@@ -94,7 +94,7 @@ export function ToastContainer() {
      * or any action buttons regardless of screen size.
      * Always rendered so AnimatePresence can play exit animations.
      */
-    <div className="fixed right-3 top-3 z-[300] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col gap-2 pointer-events-none">
+    <div className="pointer-events-none fixed inset-x-3 bottom-[calc(72px+env(safe-area-inset-bottom,0px))] z-[300] flex w-72 max-w-[calc(100vw-1.5rem)] flex-col gap-2 lg:inset-x-auto lg:bottom-auto lg:right-3 lg:top-3">
       <AnimatePresence mode="popLayout">
         {toasts.map((t) => (
           <div key={t.id} className="pointer-events-auto">

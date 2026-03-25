@@ -502,22 +502,17 @@
     "save": "Save Template"
   },
   "templateBuilder": {
-    "title": "Save Template",
-    "selectTemplate": "Target template",
+    "title": "New Template",
+    "appendTab": "Add to Existing",
+    "selectTemplate": "Choose template",
     "name": "Template name",
     "notes": "Notes",
-    "tags": "Tags",
-    "tagsPlaceholder": "e.g. anchor, deck, standard",
-    "partsLabel": "Parts",
-    "noParts": "No parts yet",
-    "addCurrent": "Add current part",
+    "optional": "(optional)",
+    "partsLabel": "parts",
     "alreadyInTemplates": "Already in {count, plural, one {# template} other {# templates}}",
-    "addToExistingLabel": "Or add to an existing template",
-    "close": "Close",
     "cancel": "Cancel",
     "publish": "Save",
-    "append": "Append",
-    "remove": "Remove"
+    "append": "Add"
   },
   "contact": {
     "page": {

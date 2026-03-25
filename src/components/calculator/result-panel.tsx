@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ResultContent, type ResultLayoutMode } from "./result-content";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ResultPanelProps {
   result: CalculationResult | null;
@@ -64,13 +65,15 @@ export const ResultPanel = memo(function ResultPanel({
         }
       >
         <h2 className="text-sm font-semibold text-muted-faint">{t("title")}</h2>
-        <div className="mt-6 flex flex-col items-center gap-2 py-4 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-border">
-            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
-          </svg>
-          <p className="text-sm text-muted-faint">
-            {t("empty")}
-          </p>
+        <div className="mt-4">
+          <EmptyState
+            icon={
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
+              </svg>
+            }
+            title={t("empty")}
+          />
         </div>
       </section>
     );

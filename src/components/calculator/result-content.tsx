@@ -17,6 +17,7 @@ import {
   formatSquareMeters,
   formatStaticNumber,
   getDecimalPlaces,
+  getWorkspacePanelSpacing,
   PanelActionButton,
   PanelMetricCard,
   PanelSectionLabel,
@@ -99,7 +100,8 @@ export const ResultContent = memo(function ResultContent({
     : 0;
   const localizedPricePerKg = formatLocalizedNumber(effectivePricePerKg, locale);
   const isMulti = result.quantity > 1;
-  const usesCompactSpacing = layout !== "standalone";
+  const spacingLayout = layout === "sheet" ? "mobile" : layout === "column" ? "column" : "drawer";
+  const spacing = getWorkspacePanelSpacing(spacingLayout);
   const stickyTopBlock = layout === "column";
 
   const primaryValue = weightAsMain
@@ -111,14 +113,14 @@ export const ResultContent = memo(function ResultContent({
     : formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg);
   const secondaryUnit = weightAsMain ? currency : "kg";
 
-  const sectionPadding = usesCompactSpacing ? "px-4 py-4" : "px-5 py-5";
-  const sectionGap = usesCompactSpacing ? "space-y-4" : "space-y-5";
+  const sectionPadding = spacing.sectionPadding;
+  const sectionGap = spacing.sectionGap;
 
   const summaryChips = [
-    { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }) },
-    { label: t("contextPricing"), value: `${localizedPricePerKg}${currency}/kg` },
-    ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%` }] : []),
-    ...(includeVat ? [{ label: t("contextVat"), value: `${vatPercent}%` }] : []),
+    { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }), variant: "default" as const },
+    { label: t("contextPricing"), value: `${localizedPricePerKg}${currency}/kg`, variant: "default" as const },
+    ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%`, variant: "amber" as const }] : []),
+    ...(includeVat ? [{ label: t("contextVat"), value: `${vatPercent}%`, variant: "green" as const }] : []),
   ];
 
   return (
@@ -181,7 +183,7 @@ export const ResultContent = memo(function ResultContent({
 
           <div className="mt-3 flex flex-wrap gap-2">
             {summaryChips.map((chip) => (
-              <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} />
+              <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} variant={chip.variant} />
             ))}
           </div>
         </section>
@@ -365,7 +367,7 @@ export const ResultContent = memo(function ResultContent({
             }
           }}
         >
-          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-foreground">
+          <summary className="cursor-pointer list-none rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface-inset">
             <span className="flex items-center justify-between gap-3">
               <span>{t("calculationDetails")}</span>
               <svg
@@ -376,7 +378,7 @@ export const ResultContent = memo(function ResultContent({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-4 w-4 text-muted"
+                className="chevron-icon h-4 w-4 text-muted"
               >
                 <path d="m6 9 6 6 6-6" />
               </svg>

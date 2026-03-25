@@ -502,22 +502,17 @@
     "save": "Sacuvaj sablon"
   },
   "templateBuilder": {
-    "title": "Sacuvaj sablon",
-    "selectTemplate": "Ciljni sablon",
+    "title": "Novi Sablon",
+    "appendTab": "Dodaj u Postojeci",
+    "selectTemplate": "Izaberi sablon",
     "name": "Naziv sablona",
     "notes": "Napomena",
-    "tags": "Oznake",
-    "tagsPlaceholder": "npr. anker, deck, standard",
-    "partsLabel": "Dijelovi",
-    "noParts": "Nema dijelova",
-    "addCurrent": "Dodaj trenutni dio",
+    "optional": "(opciono)",
+    "partsLabel": "dijelova",
     "alreadyInTemplates": "Vec u {count, plural, one {# sablonu} other {# sablona}}",
-    "addToExistingLabel": "Ili dodaj u postojeci sablon",
-    "close": "Zatvori",
     "cancel": "Otkazi",
     "publish": "Sacuvaj",
-    "append": "Dodaj",
-    "remove": "Ukloni"
+    "append": "Dodaj"
   },
   "contact": {
     "page": {

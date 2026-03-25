@@ -52,6 +52,7 @@ export function getWorkspacePanelSpacing(layout: WorkspacePanelLayout) {
     sectionPadding: compact ? "px-4 py-4" : "px-5 py-5",
     sectionGap: compact ? "space-y-4" : "space-y-5",
     listGap: compact ? "gap-2.5" : "gap-3",
+    headerPadding: compact ? "px-4 py-3" : "px-5 py-4",
     stickyTopClass:
       layout === "column"
         ? "sticky top-0 z-10 border-b border-border bg-surface/95 shadow-sm backdrop-blur"
@@ -67,16 +68,24 @@ export function PanelSectionLabel({ label }: { label: string }) {
   );
 }
 
+const CHIP_VARIANTS = {
+  default: "border-border bg-surface text-foreground-secondary",
+  amber: "border-amber-border bg-amber-surface text-amber-text",
+  green: "border-green-border bg-green-surface text-green-text",
+} as const;
+
 export function PanelSummaryChip({
   label,
   value,
+  variant = "default",
 }: {
   label: string;
   value: string;
+  variant?: keyof typeof CHIP_VARIANTS;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2.5 py-1 text-xs text-foreground-secondary">
-      <span className="font-medium text-muted">{label}</span>
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${CHIP_VARIANTS[variant]}`}>
+      <span className="font-medium opacity-70">{label}</span>
       <span className="font-semibold">{value}</span>
     </span>
   );
