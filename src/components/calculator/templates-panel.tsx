@@ -476,22 +476,24 @@ const TemplateItem = memo(function TemplateItem({
 
         {/* Action row */}
         {!editing && !selectionMode && (
-          <div className="mt-2 flex items-center gap-1.5 border-t border-border-faint pt-2">
-            {/* Add to project - compact inline */}
-            <div className="flex min-w-0 flex-1 items-center gap-1.5">
-              <input
-                type="number"
-                min={1}
-                value={partQuantityMultiplier}
-                onChange={(event) => setPartQuantityMultiplier(Math.max(1, Math.floor(Number(event.target.value) || 1)))}
-                className="w-12 rounded-md border border-border bg-surface px-1.5 py-1 text-center text-xs tabular-nums text-foreground outline-none focus:border-blue-border"
-                title={tSaved("quantityMultiplier")}
-              />
-              <span className="text-2xs text-muted-faint">x</span>
+          <div className="mt-2 grid gap-2 border-t border-border-faint pt-2">
+            {/* Add to project */}
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  min={1}
+                  value={partQuantityMultiplier}
+                  onChange={(event) => setPartQuantityMultiplier(Math.max(1, Math.floor(Number(event.target.value) || 1)))}
+                  className="w-11 rounded-lg border border-border bg-surface px-1.5 py-1.5 text-center text-xs tabular-nums text-foreground outline-none transition-colors focus:border-blue-border"
+                  title={tSaved("quantityMultiplier")}
+                />
+                <span className="text-2xs font-medium text-muted-faint">x</span>
+              </div>
               <select
                 value={targetProjectId}
                 onChange={(event) => setTargetProjectId(event.target.value)}
-                className="min-w-0 flex-1 truncate rounded-md border border-border bg-surface px-1.5 py-1 text-xs text-foreground outline-none focus:border-blue-border"
+                className="w-full min-w-0 truncate rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground outline-none transition-colors focus:border-blue-border"
                 title={tSaved("targetProject")}
               >
                 <option value="">{tSaved("autoProject")}</option>
@@ -507,14 +509,14 @@ const TemplateItem = memo(function TemplateItem({
                   quantityMultiplier: partQuantityMultiplier,
                   projectId: targetProjectId || undefined,
                 })}
-                className="shrink-0 rounded-md border border-purple-border bg-purple-surface px-2 py-1 text-2xs font-semibold text-purple-text transition-colors hover:bg-purple-surface/80"
+                className="shrink-0 rounded-lg border border-purple-border bg-purple-surface px-2.5 py-1.5 text-2xs font-semibold text-purple-text transition-colors hover:bg-purple-surface/80"
               >
                 {tSaved("addToProject")}
               </button>
             </div>
 
             {/* Secondary actions */}
-            <div className="flex shrink-0 items-center gap-0.5">
+            <div className="flex items-center gap-0.5">
               <IconButton title={tSaved("duplicate")} onClick={onDuplicate}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
