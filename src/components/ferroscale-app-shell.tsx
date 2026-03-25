@@ -208,6 +208,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     renameProject,
     deleteProject,
     addCalculation,
+    addTemplateCalculation,
     removeCalculation,
     duplicateProject,
     updateCalculationNote,
@@ -397,30 +398,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       const targetProjectName = projects.find((project) => project.id === targetProjectId)?.name ?? fallbackProject.name;
 
       const multiplier = Math.max(1, Math.floor(overrides.quantityMultiplier || 1));
-      let addedCount = 0;
-      for (const part of entry.parts) {
-        const nextInput = {
-          ...part.input,
-          quantity: Math.max(1, Math.floor((part.input.quantity || 1) * multiplier)),
-          useCustomDensity: false,
-        };
-        const calc = calculateMetal(nextInput);
-        if (!calc.ok) continue;
-        const added = addCalculation(targetProjectId, nextInput, calc.result);
-        if (added) addedCount += 1;
-      }
+      const added = addTemplateCalculation(targetProjectId, entry.name, entry.parts, multiplier);
 
-      if (addedCount === 0) {
+      if (!added) {
         toast.info(t("saved.alreadyInProject"));
         return;
       }
 
       markSavedUsed(entry.id);
-
       setActiveProjectId(targetProjectId);
-      toast.success(t("saved.addedPartsToProject", { count: addedCount, project: targetProjectName }));
+      toast.success(t("saved.addedTemplateToProject", { name: entry.name, project: targetProjectName }));
     },
-    [activeProjectId, addCalculation, createProject, markSavedUsed, projects, setActiveProjectId, t],
+    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId, t],
   );
 
   const handleRemoveTemplatePart = useCallback(

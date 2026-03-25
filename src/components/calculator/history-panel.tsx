@@ -74,13 +74,13 @@ export const HistoryPanel = memo(function HistoryPanel({
   weightAsMain = false,
 }: SavedPanelProps) {
   const t = useTranslations("saved");
-  const labelSelectMode = t.has("selectMode") ? t("selectMode") : "Select";
-  const labelCancelSelection = t.has("cancelSelection") ? t("cancelSelection") : "Cancel";
-  const labelSelectAllShown = t.has("selectAllShown") ? t("selectAllShown") : "Select shown";
-  const labelClearSelection = t.has("clearSelection") ? t("clearSelection") : "Clear shown";
-  const labelBulkDuplicate = t.has("bulkDuplicate") ? t("bulkDuplicate") : "Duplicate selected";
-  const labelBulkDelete = t.has("bulkDelete") ? t("bulkDelete") : "Delete selected";
-  const labelNoMatches = t.has("noMatches") ? t("noMatches") : "No templates match your search.";
+  const labelSelectMode = t("selectMode");
+  const labelCancelSelection = t("cancelSelection");
+  const labelSelectAllShown = t("selectAllShown");
+  const labelClearSelection = t("clearSelection");
+  const labelBulkDuplicate = t("bulkDuplicate");
+  const labelBulkDelete = t("bulkDelete");
+  const labelNoMatches = t("noMatches");
   const spacing = getWorkspacePanelSpacing(layout);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "used" | "popular">("recent");
@@ -370,24 +370,24 @@ const SavedItem = memo(function SavedItem({
   const tBase = useTranslations();
   const tSaved = useTranslations("saved");
   const tResult = useTranslations("result");
-  const labelSelectRow = tSaved.has("selectRow") ? tSaved("selectRow") : "Selected";
-  const labelNeverUsed = tSaved.has("neverUsed") ? tSaved("neverUsed") : "Never";
-  const labelDuplicate = tSaved.has("duplicate") ? tSaved("duplicate") : "Duplicate";
-  const labelAddToProject = tSaved.has("addAllParts") ? tSaved("addAllParts") : "Add all parts";
-  const labelPartCount = tSaved.has("partsCount") ? tSaved("partsCount") : "Parts";
-  const labelPartQuantity = tSaved.has("quantityMultiplier") ? tSaved("quantityMultiplier") : "Qty x";
-  const labelTargetProject = tSaved.has("targetProject") ? tSaved("targetProject") : "Project";
-  const labelAutoProject = tSaved.has("autoProject") ? tSaved("autoProject") : "Auto project";
-  const labelTemplateBuilder = tSaved.has("templateBuilder") ? tSaved("templateBuilder") : "Template builder";
-  const labelMoveUp = tSaved.has("moveUp") ? tSaved("moveUp") : "Move up";
-  const labelMoveDown = tSaved.has("moveDown") ? tSaved("moveDown") : "Move down";
-  const labelRemovePart = tSaved.has("removePart") ? tSaved("removePart") : "Remove part";
-  const labelEdit = tSaved.has("edit") ? tSaved("edit") : "Edit";
-  const labelRemove = tSaved.has("remove") ? tSaved("remove") : "Remove";
-  const labelUseTemplate = tSaved.has("useTemplate") ? tSaved("useTemplate") : "Use template";
-  const labelTagsPlaceholder = tSaved.has("tagsPlaceholder") ? tSaved("tagsPlaceholder") : "Tags (comma separated)";
-  const labelEditSave = tSaved.has("editSave") ? tSaved("editSave") : "Save";
-  const labelEditCancel = tSaved.has("editCancel") ? tSaved("editCancel") : "Cancel";
+  const labelSelectRow = tSaved("selectRow");
+  const labelNeverUsed = tSaved("neverUsed");
+  const labelDuplicate = tSaved("duplicate");
+  const labelAddToProject = tSaved("addAllParts");
+  const labelPartCount = tSaved("partsCount");
+  const labelPartQuantity = tSaved("quantityMultiplier");
+  const labelTargetProject = tSaved("targetProject");
+  const labelAutoProject = tSaved("autoProject");
+  const labelTemplateBuilder = tSaved("templateBuilder");
+  const labelMoveUp = tSaved("moveUp");
+  const labelMoveDown = tSaved("moveDown");
+  const labelRemovePart = tSaved("removePart");
+  const labelEdit = tSaved("edit");
+  const labelRemove = tSaved("remove");
+  const labelUseTemplate = tSaved("useTemplate");
+  const labelTagsPlaceholder = tSaved("tagsPlaceholder");
+  const labelEditSave = tSaved("editSave");
+  const labelEditCancel = tSaved("editCancel");
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
   const [editNotes, setEditNotes] = useState(entry.notes ?? "");
@@ -590,6 +590,9 @@ const SavedItem = memo(function SavedItem({
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-2xs text-muted-faint">
                           <span>{index + 1}/{entry.parts.length}</span>
+                          <span>{part.normalizedProfile.shortLabel}</span>
+                          <span>{formatStaticNumber(part.result.totalWeightKg)} kg</span>
+                          <span>{formatStaticNumber(part.result.grandTotalAmount)} {CURRENCY_SYMBOLS[part.result.currency]}</span>
                         </div>
                       </div>
                     ))}
