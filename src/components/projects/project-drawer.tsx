@@ -525,6 +525,7 @@ function ProjectList({
               onConfirmRename={onConfirmRename}
               onCancelRename={onCancelRename}
               paddingClass={spacing.cardPadding}
+              compact={spacing.compact}
             />
           ))}
         </div>
@@ -546,6 +547,7 @@ const ProjectListCard = memo(function ProjectListCard({
   onConfirmRename,
   onCancelRename,
   paddingClass,
+  compact = false,
 }: {
   project: Project;
   weightAsMain: boolean;
@@ -559,6 +561,7 @@ const ProjectListCard = memo(function ProjectListCard({
   onConfirmRename: () => void;
   onCancelRename: () => void;
   paddingClass: string;
+  compact?: boolean;
 }) {
   const t = useTranslations("projects");
   const aggregates = computeAggregates(project);
@@ -625,13 +628,13 @@ const ProjectListCard = memo(function ProjectListCard({
 
               {aggregates.count > 0 ? (
                 <>
-                  <div className="mt-4 flex items-end justify-between gap-4">
+                  <div className={`${compact ? "mt-3" : "mt-4"} flex items-end justify-between gap-4`}>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                         {primary.label}
                       </p>
-                      <div className="mt-2 flex flex-wrap items-end gap-1.5">
-                        <p className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+                      <div className="mt-1.5 flex flex-wrap items-end gap-1.5">
+                        <p className={`${compact ? "text-2xl" : "text-3xl"} font-bold tracking-tight text-foreground tabular-nums`}>
                           {primary.value}
                         </p>
                         {primary.unit && (
@@ -645,8 +648,8 @@ const ProjectListCard = memo(function ProjectListCard({
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                         {secondary.label}
                       </p>
-                      <div className="mt-2 flex flex-wrap items-end justify-end gap-1.5">
-                        <p className="text-lg font-semibold text-foreground tabular-nums">
+                      <div className="mt-1.5 flex flex-wrap items-end justify-end gap-1.5">
+                        <p className={`${compact ? "text-base" : "text-lg"} font-semibold text-foreground tabular-nums`}>
                           {secondary.value}
                         </p>
                         {secondary.unit && (
@@ -658,7 +661,7 @@ const ProjectListCard = memo(function ProjectListCard({
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className={`${compact ? "mt-3" : "mt-4"} flex flex-wrap gap-2`}>
                     <PanelSummaryChip label={t("aggregateItems")} value={String(aggregates.count)} />
                     <PanelSummaryChip
                       label={tertiary.label}
@@ -685,7 +688,7 @@ const ProjectListCard = memo(function ProjectListCard({
               )}
             </button>
 
-            <div className="mt-4 flex flex-wrap gap-3 border-t border-border-faint pt-3 text-xs">
+            <div className={`${compact ? "mt-3" : "mt-4"} flex flex-wrap gap-3 border-t border-border-faint pt-3 text-xs`}>
               <button
                 type="button"
                 onClick={onStartRename}
