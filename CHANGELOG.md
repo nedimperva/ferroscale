@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.0] - 2026-03-25
+
+### Added
+
+- Templates workspace for reusable multi-part assemblies with a dedicated full-screen Template Builder
+- Option to append newly prepared parts directly into an existing template from the builder
+
+### Changed
+
+- Saved workspace is now presented as Templates with clearer naming across tabs, sidebar, and save flow
+- Template entries now support search, sort (newest, recently used, most used), duplication, tags, and usage metadata
+- Applying a template now tracks usage count and last-used timestamp to support power-user workflows
+- Templates now include multi-select mode with bulk duplicate and bulk delete actions
+- Template-to-project flow now adds the whole template with quantity scaling, without per-part override rules
+
+---
+
 ## [2.3.0] - 2026-03-24
 
 ### Added

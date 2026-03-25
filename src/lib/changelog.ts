@@ -17,6 +17,32 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4.0",
+    date: "2026-03-25",
+    added: [
+      "Templates workspace for reusable multi-part assemblies with a dedicated full-screen Template Builder",
+      "Option to append newly prepared parts directly into an existing template from the builder",
+    ],
+    added_bs: [
+      "Radni prostor Sabloni za visekratne vise-dijelne sklopove sa posebnim full-screen Builderom sablona",
+      "Opcija dodavanja novo pripremljenih dijelova direktno u postojeci sablon iz buildera",
+    ],
+    changed: [
+      "Saved workspace is now presented as Templates with clearer naming across tabs, sidebar, and save flow",
+      "Template entries now support search, sort (newest, recently used, most used), duplication, tags, and usage metadata",
+      "Applying a template now tracks usage count and last-used timestamp to support power-user workflows",
+      "Templates now include multi-select mode with bulk duplicate and bulk delete actions",
+      "Template-to-project flow now adds the whole template with quantity scaling, without per-part override rules",
+    ],
+    changed_bs: [
+      "Radni prostor Sacuvano sada je predstavljen kao Sabloni sa jasnijim nazivima kroz tabove, bocni panel i tok cuvanja",
+      "Stavke sablona sada podrzavaju pretragu, sortiranje (najnovije, nedavno koristeno, najcesce koristeno), dupliranje, oznake i metapodatke o koristenju",
+      "Primjena sablona sada biljezi broj koristenja i vrijeme zadnjeg koristenja za naprednije tokove rada",
+      "Sabloni sada imaju rezim vise odabira sa grupnim dupliranjem i grupnim brisanjem",
+      "Tok dodavanja u projekat sada dodaje cijeli sablon sa skaliranjem kolicine, bez pravila override-a po dijelu",
+    ],
+  },
+  {
     version: "2.3.0",
     date: "2026-03-24",
     added: [

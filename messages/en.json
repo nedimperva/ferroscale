@@ -11,8 +11,8 @@
       "description": "Send a report or get in touch about FerroScale."
     },
     "saved": {
-      "title": "Saved - FerroScale",
-      "description": "Browse saved calculations in FerroScale."
+      "title": "Templates - FerroScale",
+      "description": "Browse and apply reusable calculation templates in FerroScale."
     },
     "projects": {
       "title": "Projects - FerroScale",
@@ -38,8 +38,8 @@
     "dismiss": "Dismiss"
   },
   "toasts": {
-    "calculationSaved": "Calculation saved.",
-    "calculationUnstarred": "Removed from saved.",
+    "calculationSaved": "Template saved.",
+    "calculationUnstarred": "Removed from templates.",
     "addedToCompare": "Added to compare.",
     "historyCleared": "History cleared."
   },
@@ -51,7 +51,7 @@
   },
   "tabs": {
     "calculator": "Calculator",
-    "saved": "Saved",
+    "saved": "Templates",
     "projects": "Projects",
     "settings": "Settings"
   },
@@ -143,7 +143,7 @@
   "sidebar": {
     "title": "FerroScale",
     "settings": "Settings",
-    "saved": "Saved",
+    "saved": "Templates",
     "projects": "Projects",
     "projectsCount": "Projects ({count})",
     "compare": "Compare",
@@ -430,27 +430,98 @@
     "customDensity": "User-provided custom density"
   },
   "saved": {
-    "drawerAria": "Saved drawer",
-    "title": "Saved",
-    "close": "Close saved",
-    "emptyTitle": "Nothing saved yet",
-    "emptySubtitle": "Save a calculation to access it here anytime.",
+    "drawerAria": "Templates drawer",
+    "title": "Templates",
+    "close": "Close templates",
+    "emptyTitle": "No templates yet",
+    "emptySubtitle": "Save a calculation as a template to reuse it quickly.",
     "remove": "Remove",
+    "duplicate": "Duplicate",
+    "createVariant": "Create variant",
     "edit": "Edit",
     "editCancel": "Cancel",
     "editSave": "Save",
-    "notesPlaceholder": "Add notes..."
+    "notesPlaceholder": "Add notes...",
+    "tagsPlaceholder": "Tags (comma separated)",
+    "searchPlaceholder": "Search templates...",
+    "summary": "Showing {shown} of {total} templates",
+    "selectMode": "Select",
+    "cancelSelection": "Cancel",
+    "selectAllShown": "Select shown",
+    "clearSelection": "Clear shown",
+    "bulkDuplicate": "Duplicate selected",
+    "bulkDelete": "Delete selected",
+    "selectedCount": "{count} selected",
+    "selectRow": "Selected",
+    "noMatches": "No templates match your search.",
+    "addToProject": "Add to project",
+    "useTemplate": "Use template",
+    "addCurrentPart": "Add current part",
+    "addAllParts": "Add template",
+    "partsCount": "Parts",
+    "templateBuilder": "Edit parts",
+    "targetProject": "Project",
+    "autoProject": "Auto project",
+    "allowQtyOverride": "Qty override",
+    "allowMaterialOverride": "Material override",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "removePart": "Remove part",
+    "cannotRemoveLastPart": "A template must keep at least one part.",
+    "quantityMultiplier": "Qty x",
+    "overrideMaterial": "Material override",
+    "useOriginalMaterial": "Use template materials",
+    "currentPartAdded": "Parts appended to template.",
+    "addCurrentPartFailed": "Could not append parts to template.",
+    "partQuantity": "Qty",
+    "partMaterial": "Material",
+    "addedToProject": "Added to {project}",
+    "addedPartsToProject": "Added {count} parts to {project}",
+    "alreadyInProject": "All template parts already exist in that project.",
+    "addToProjectFailed": "Could not add template to project.",
+    "lastUsed": "Last used",
+    "neverUsed": "Never",
+    "usageCount": "Uses",
+    "sort": {
+      "recent": "Newest",
+      "lastUsed": "Recently used",
+      "mostUsed": "Most used"
+    }
   },
   "saveDialog": {
-    "title": "Save Calculation",
-    "subtitle": "Give this calculation a name so you can find it later.",
+    "title": "Save As Template",
+    "subtitle": "Give this template a clear name so you can reuse it faster.",
     "labelName": "Name",
     "placeholderName": "e.g. HEA 200 · S355",
     "labelNotes": "Notes",
+    "labelTags": "Tags",
     "optional": "(optional)",
     "placeholderNotes": "Add any notes or context...",
+    "placeholderTags": "e.g. quote, workshop, stairs",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save Template"
+  },
+  "templateBuilder": {
+    "title": "Template Builder",
+    "summary": "{count} parts in this template",
+    "mode": "Save mode",
+    "modeNew": "Create new template",
+    "modeExisting": "Append to existing template",
+    "selectTemplate": "Target template",
+    "noTemplates": "No templates available",
+    "templateOption": "{name} ({count} parts)",
+    "name": "Template name",
+    "notes": "Notes",
+    "tags": "Tags",
+    "tagsPlaceholder": "e.g. anchor, deck, standard",
+    "addCurrent": "Add current part",
+    "close": "Close",
+    "cancel": "Cancel",
+    "publish": "Publish template",
+    "append": "Append parts to template",
+    "up": "Up",
+    "down": "Down",
+    "remove": "Remove"
   },
   "contact": {
     "page": {
