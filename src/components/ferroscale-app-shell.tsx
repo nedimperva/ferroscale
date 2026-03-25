@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCalculator } from "@/hooks/useCalculator";
-import { useSaved } from "@/hooks/useSaved";
+import { useSaved, type SavedEntry, type TemplatePartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useReverseCalculator } from "@/hooks/useReverseCalculator";
 import { useProjects } from "@/hooks/useProjects";
@@ -18,6 +18,7 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcut
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useElementWidth } from "@/hooks/useElementWidth";
 import type { LengthUnit } from "@/lib/calculator/types";
+import { calculateMetal } from "@/lib/calculator/engine";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
@@ -52,7 +53,7 @@ import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
-import { SaveDialog } from "@/components/calculator/save-dialog";
+import { TemplateBuilder } from "@/components/calculator/template-builder";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 import { HistoryPanel } from "@/components/calculator/history-panel";
 import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
@@ -168,7 +169,14 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     saved,
     saveCalculation,
     removeSaved,
+    removeSavedMany,
+    duplicateSaved,
+    duplicateSavedMany,
+    appendPartsToSaved,
+    removePartFromSaved,
+    reorderPartInSaved,
     updateSaved,
+    markSavedUsed,
     isSaved: isSavedEntry,
     getSavedEntry,
   } = useSaved();
@@ -200,6 +208,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     renameProject,
     deleteProject,
     addCalculation,
+    addTemplateCalculation,
     removeCalculation,
     duplicateProject,
     updateCalculationNote,
@@ -230,7 +239,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [presetProfileName, setPresetProfileName] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const [templateBuilderSession, setTemplateBuilderSession] = useState(0);
   const [showContactDrawer, setShowContactDrawer] = useState(false);
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
 
@@ -244,7 +254,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const closeTransientOverlays = useCallback(() => {
     setShowOverlay(false);
     setShowSaveModal(false);
-    setShowSaveDialog(false);
+    setShowTemplateBuilder(false);
     setShowShortcutsModal(false);
     setPresetModalOpen(false);
     setShowContactDrawer(false);
@@ -299,7 +309,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const currentSavedEntry = result ? getSavedEntry(result) : undefined;
 
   const handleOpenSaveDialog = useCallback(() => {
-    if (result) setShowSaveDialog(true);
+    if (!result) return;
+    setTemplateBuilderSession((session) => session + 1);
+    setShowTemplateBuilder(true);
   }, [result]);
 
   const handleRemoveSaved = useCallback(() => {
@@ -309,10 +321,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentSavedEntry, removeSaved, t]);
 
   const handleConfirmSave = useCallback(
-    (name: string, notes?: string) => {
+    (
+      name: string,
+      notes?: string,
+      tags?: string[],
+      parts?: TemplatePartDraft[],
+    ) => {
       if (!result) return;
-      saveCalculation(input, result, name, notes);
-      setShowSaveDialog(false);
+      saveCalculation(input, result, name, notes, tags, parts);
+      setShowTemplateBuilder(false);
       toast.success(t("toasts.calculationSaved"));
     },
     [input, result, saveCalculation, t],
@@ -349,6 +366,67 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       navigateHome();
     },
     [dispatch, navigateHome],
+  );
+
+  const handleApplyTemplate = useCallback(
+    (entry: SavedEntry) => {
+      markSavedUsed(entry.id);
+      dispatch({ type: "LOAD_ENTRY", input: entry.input });
+      navigateHome();
+    },
+    [dispatch, markSavedUsed, navigateHome],
+  );
+
+  const handleAppendTemplateParts = useCallback(
+    (templateId: string, parts: TemplatePartDraft[]) => {
+      const appended = appendPartsToSaved(templateId, parts);
+      if (!appended) {
+        toast.error(t("saved.addCurrentPartFailed"));
+        return;
+      }
+      markSavedUsed(templateId);
+      setShowTemplateBuilder(false);
+      toast.success(t("saved.currentPartAdded"));
+    },
+    [appendPartsToSaved, markSavedUsed, t],
+  );
+
+  const handleTemplateAddToProject = useCallback(
+    (entry: SavedEntry, overrides: { quantityMultiplier: number; projectId?: string }) => {
+      const fallbackProject = projects[0] ?? createProject("Common Parts");
+      const targetProjectId = overrides.projectId ?? activeProjectId ?? fallbackProject.id;
+      const targetProjectName = projects.find((project) => project.id === targetProjectId)?.name ?? fallbackProject.name;
+
+      const multiplier = Math.max(1, Math.floor(overrides.quantityMultiplier || 1));
+      const added = addTemplateCalculation(targetProjectId, entry.name, entry.parts, multiplier);
+
+      if (!added) {
+        toast.info(t("saved.alreadyInProject"));
+        return;
+      }
+
+      markSavedUsed(entry.id);
+      setActiveProjectId(targetProjectId);
+      toast.success(t("saved.addedTemplateToProject", { name: entry.name, project: targetProjectName }));
+    },
+    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId, t],
+  );
+
+  const handleRemoveTemplatePart = useCallback(
+    (entry: SavedEntry, partId: string) => {
+      const removed = removePartFromSaved(entry.id, partId);
+      if (!removed) {
+        toast.info(t("saved.cannotRemoveLastPart"));
+      }
+    },
+    [removePartFromSaved, t],
+  );
+
+  const handleReorderTemplatePart = useCallback(
+    (entry: SavedEntry, partId: string, direction: -1 | 1) => {
+      reorderPartInSaved(entry.id, partId, direction);
+    },
+    [reorderPartInSaved],
   );
 
   const handleQuickCalcLoad = useCallback(
@@ -553,7 +631,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     !isMobile ||
     showOverlay ||
     showSaveModal ||
-    showSaveDialog ||
+    showTemplateBuilder ||
     showShortcutsModal ||
     presetModalOpen ||
     showContactDrawer ||
@@ -768,11 +846,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       <div className="p-4">
         <HistoryPanel
           saved={saved}
-          onLoad={handleLoad}
+          projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
+          onLoad={handleApplyTemplate}
           onRemove={removeSaved}
+          onRemoveMany={removeSavedMany}
+          onDuplicate={duplicateSaved}
+          onDuplicateMany={duplicateSavedMany}
+          onAddToProject={handleTemplateAddToProject}
+          onRemovePart={handleRemoveTemplatePart}
+          onReorderPart={handleReorderTemplatePart}
           onUpdate={updateSaved}
           layout="column"
-          weightAsMain={weightAsMain}
         />
       </div>
     ),
@@ -843,12 +927,12 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
     handleAddToProject, projectCount, normalizedCurrentProfile, weightAsMain,
     removeCompareItem, clearCompare,
-    saved, handleLoad, removeSaved, updateSaved,
+    saved, handleLoad, handleApplyTemplate, handleTemplateAddToProject, handleRemoveTemplatePart, handleReorderTemplatePart, removeSaved, removeSavedMany, duplicateSaved, duplicateSavedMany, updateSaved,
     projects, activeProjectId, setActiveProjectId, createProject, renameProject,
     deleteProject, duplicateProject, removeCalculation, updateCalculationNote,
     updateProjectDescription, updateProjectPaintingSettings, addCalculation,
     resetAll, compareLimit, setCompareLimit, isCompareMobileCapped,
-    navigateToTab, handleSavePreset,
+    navigateToTab, handleSavePreset, textSize, setTextSize,
   ]);
 
   const mobileScreen =
@@ -892,11 +976,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       <MobilePageCard className="p-4">
         <HistoryPanel
           saved={saved}
-          onLoad={handleLoad}
+          projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
+          onLoad={handleApplyTemplate}
           onRemove={removeSaved}
+          onRemoveMany={removeSavedMany}
+          onDuplicate={duplicateSaved}
+          onDuplicateMany={duplicateSavedMany}
+          onAddToProject={handleTemplateAddToProject}
+          onRemovePart={handleRemoveTemplatePart}
+          onReorderPart={handleReorderTemplatePart}
           onUpdate={updateSaved}
           layout="mobile"
-          weightAsMain={weightAsMain}
         />
       </MobilePageCard>
     ) : currentTab === "projects" ? (
@@ -1169,10 +1259,16 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             open={currentTab === "saved"}
             onClose={navigateHome}
             saved={saved}
-            onLoad={handleLoad}
+            projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
+            onLoad={handleApplyTemplate}
             onRemove={removeSaved}
+            onRemoveMany={removeSavedMany}
+            onDuplicate={duplicateSaved}
+            onDuplicateMany={duplicateSavedMany}
+            onAddToProject={handleTemplateAddToProject}
+            onRemovePart={handleRemoveTemplatePart}
+            onReorderPart={handleReorderTemplatePart}
             onUpdate={updateSaved}
-            weightAsMain={weightAsMain}
           />
         )}
 
@@ -1263,11 +1359,16 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
 
-      <SaveDialog
-        open={showSaveDialog}
-        onClose={() => setShowSaveDialog(false)}
+      <TemplateBuilder
+        key={templateBuilderSession}
+        open={showTemplateBuilder}
+        onClose={() => setShowTemplateBuilder(false)}
         onSave={handleConfirmSave}
+        onAppendToTemplate={handleAppendTemplateParts}
+        savedTemplates={saved.map((entry) => ({ id: entry.id, name: entry.name, partCount: entry.parts.length }))}
         defaultName={defaultSaveName}
+        seedInput={input}
+        seedResult={result}
       />
 
       <SavePresetModal

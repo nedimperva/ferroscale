@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import type { SavedEntry } from "@/hooks/useSaved";
-import type { CalculationInput } from "@/lib/calculator/types";
 import { HistoryPanel } from "./history-panel";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -14,20 +13,32 @@ interface SavedDrawerProps {
   open: boolean;
   onClose: () => void;
   saved: SavedEntry[];
-  onLoad: (input: CalculationInput) => void;
+  projectOptions: Array<{ id: string; name: string }>;
+  onLoad: (entry: SavedEntry) => void;
   onRemove: (id: string) => void;
-  onUpdate: (id: string, patch: { name?: string; notes?: string }) => void;
-  weightAsMain?: boolean;
+  onRemoveMany: (ids: string[]) => void;
+  onDuplicate: (id: string) => void;
+  onDuplicateMany: (ids: string[]) => void;
+  onAddToProject: (entry: SavedEntry, overrides: { quantityMultiplier: number; projectId?: string }) => void;
+  onRemovePart: (entry: SavedEntry, partId: string) => void;
+  onReorderPart: (entry: SavedEntry, partId: string, direction: -1 | 1) => void;
+  onUpdate: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
 }
 
 export const HistoryDrawer = memo(function HistoryDrawer({
   open,
   onClose,
   saved,
+  projectOptions,
   onLoad,
   onRemove,
+  onRemoveMany,
+  onDuplicate,
+  onDuplicateMany,
+  onAddToProject,
+  onRemovePart,
+  onReorderPart,
   onUpdate,
-  weightAsMain = false,
 }: SavedDrawerProps) {
   const t = useTranslations("saved");
   const isMobile = useIsMobile();
@@ -87,14 +98,20 @@ export const HistoryDrawer = memo(function HistoryDrawer({
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom p-4">
         <HistoryPanel
           saved={saved}
-          onLoad={(loadedInput) => {
-            onLoad(loadedInput);
+          projectOptions={projectOptions}
+          onLoad={(entry) => {
+            onLoad(entry);
             onClose();
           }}
           onRemove={onRemove}
+          onRemoveMany={onRemoveMany}
+          onDuplicate={onDuplicate}
+          onDuplicateMany={onDuplicateMany}
+          onAddToProject={onAddToProject}
+          onRemovePart={onRemovePart}
+          onReorderPart={onReorderPart}
           onUpdate={onUpdate}
           layout={isMobile ? "mobile" : "drawer"}
-          weightAsMain={weightAsMain}
         />
       </div>
     </>

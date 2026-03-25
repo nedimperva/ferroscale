@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 interface SaveDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (name: string, notes?: string) => void;
+  onSave: (name: string, notes?: string, tags?: string[]) => void;
   defaultName: string;
 }
 
@@ -20,6 +20,7 @@ export const SaveDialog = memo(function SaveDialog({
   const t = useTranslations("saveDialog");
   const [name, setName] = useState(defaultName);
   const [notes, setNotes] = useState("");
+  const [tags, setTags] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export const SaveDialog = memo(function SaveDialog({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- sync with prop on open
       setName(defaultName);
       setNotes("");
+      setTags("");
       requestAnimationFrame(() => {
         inputRef.current?.focus();
         inputRef.current?.select();
@@ -49,8 +51,13 @@ export const SaveDialog = memo(function SaveDialog({
   const handleSave = useCallback(() => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
-    onSave(trimmedName, notes.trim() || undefined);
-  }, [name, notes, onSave]);
+    const normalizedTags = tags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .slice(0, 8);
+    onSave(trimmedName, notes.trim() || undefined, normalizedTags.length > 0 ? normalizedTags : undefined);
+  }, [name, notes, onSave, tags]);
 
   const canSave = name.trim().length > 0;
 
@@ -64,7 +71,7 @@ export const SaveDialog = memo(function SaveDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[85] bg-overlay"
+            className="fixed inset-0 z-85 bg-overlay"
             onClick={onClose}
             aria-hidden="true"
           />
@@ -77,7 +84,7 @@ export const SaveDialog = memo(function SaveDialog({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -8 }}
             transition={{ type: "spring", damping: 28, stiffness: 380, mass: 0.7 }}
-            className="fixed left-1/2 top-[20vh] z-[86] w-[90vw] max-w-sm -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-2xl"
+            className="fixed left-1/2 top-[20vh] z-86 w-[90vw] max-w-sm -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -122,6 +129,24 @@ export const SaveDialog = memo(function SaveDialog({
                   rows={2}
                   className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-foreground placeholder:text-muted-faint outline-none transition-colors focus:border-blue-border focus:ring-2 focus:ring-blue-surface"
                   maxLength={200}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="save-dialog-tags"
+                  className="mb-1.5 block text-xs font-medium text-foreground-secondary"
+                >
+                  {t("labelTags")}
+                  <span className="ml-1 text-muted-faint">{t("optional")}</span>
+                </label>
+                <input
+                  id="save-dialog-tags"
+                  type="text"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder={t("placeholderTags")}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-foreground placeholder:text-muted-faint outline-none transition-colors focus:border-blue-border focus:ring-2 focus:ring-blue-surface"
+                  maxLength={140}
                 />
               </div>
             </div>

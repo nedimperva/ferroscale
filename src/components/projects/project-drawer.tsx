@@ -1422,46 +1422,64 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
   const tBase = useTranslations();
   const tProjects = useTranslations("projects");
   const tResult = useTranslations("result");
+  const [partsExpanded, setPartsExpanded] = useState(false);
+  const isTemplate = !!calculation.templateName;
   const styles = categoryStyle(calculation.normalizedProfile.iconKey);
   const gradeLabel = resolveGradeLabel(calculation.result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[calculation.result.currency];
   const pieceLength = formatPieceLength(calculation.input.length, calculation.result.lengthMm, locale);
   const materialSummary = gradeLabel ?? calculation.result.gradeLabel;
-  const orderedMetrics = weightAsMain
-    ? [
-        {
-          label: tResult("unitWeight"),
-          value: formatStaticNumber(calculation.result.unitWeightKg),
-          unit: "kg",
-        },
-        {
-          label: tResult("totalWeight"),
-          value: formatStaticNumber(calculation.result.totalWeightKg),
-          unit: "kg",
-        },
-        {
-          label: tResult("totalCost"),
-          value: formatStaticNumber(calculation.result.grandTotalAmount),
-          unit: currency,
-        },
-      ]
-    : [
-        {
-          label: tResult("unitWeight"),
-          value: formatStaticNumber(calculation.result.unitWeightKg),
-          unit: "kg",
-        },
-        {
-          label: tResult("totalCost"),
-          value: formatStaticNumber(calculation.result.grandTotalAmount),
-          unit: currency,
-        },
-        {
-          label: tResult("totalWeight"),
-          value: formatStaticNumber(calculation.result.totalWeightKg),
-          unit: "kg",
-        },
-      ];
+
+  const templateMetrics = [
+    {
+      label: tResult("totalWeight"),
+      value: formatStaticNumber(calculation.result.totalWeightKg),
+      unit: "kg",
+    },
+    {
+      label: tResult("totalCost"),
+      value: formatStaticNumber(calculation.result.grandTotalAmount),
+      unit: currency,
+    },
+  ];
+
+  const orderedMetrics = isTemplate
+    ? templateMetrics
+    : weightAsMain
+      ? [
+          {
+            label: tResult("unitWeight"),
+            value: formatStaticNumber(calculation.result.unitWeightKg),
+            unit: "kg",
+          },
+          {
+            label: tResult("totalWeight"),
+            value: formatStaticNumber(calculation.result.totalWeightKg),
+            unit: "kg",
+          },
+          {
+            label: tResult("totalCost"),
+            value: formatStaticNumber(calculation.result.grandTotalAmount),
+            unit: currency,
+          },
+        ]
+      : [
+          {
+            label: tResult("unitWeight"),
+            value: formatStaticNumber(calculation.result.unitWeightKg),
+            unit: "kg",
+          },
+          {
+            label: tResult("totalCost"),
+            value: formatStaticNumber(calculation.result.grandTotalAmount),
+            unit: currency,
+          },
+          {
+            label: tResult("totalWeight"),
+            value: formatStaticNumber(calculation.result.totalWeightKg),
+            unit: "kg",
+          },
+        ];
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
@@ -1469,20 +1487,34 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-2.5">
-              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${styles.iconBg}`}>
-                <ProfileIcon category={calculation.normalizedProfile.iconKey} className="h-4 w-4" />
-              </span>
+              {isTemplate ? (
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent-surface text-accent">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path d="M2 4.25A2.25 2.25 0 014.25 2h2.5A2.25 2.25 0 019 4.25v2.5A2.25 2.25 0 016.75 9h-2.5A2.25 2.25 0 012 6.75v-2.5zM2 13.25A2.25 2.25 0 014.25 11h2.5A2.25 2.25 0 019 13.25v2.5A2.25 2.25 0 016.75 18h-2.5A2.25 2.25 0 012 15.75v-2.5zM11 4.25A2.25 2.25 0 0113.25 2h2.5A2.25 2.25 0 0118 4.25v2.5A2.25 2.25 0 0115.75 9h-2.5A2.25 2.25 0 0111 6.75v-2.5zM11 13.25A2.25 2.25 0 0113.25 11h2.5A2.25 2.25 0 0118 13.25v2.5A2.25 2.25 0 0115.75 18h-2.5A2.25 2.25 0 0111 15.75v-2.5z" />
+                  </svg>
+                </span>
+              ) : (
+                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${styles.iconBg}`}>
+                  <ProfileIcon category={calculation.normalizedProfile.iconKey} className="h-4 w-4" />
+                </span>
+              )}
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <p className="truncate text-sm font-semibold text-foreground">
-                    {calculation.normalizedProfile.shortLabel}
+                    {isTemplate
+                      ? `${calculation.templateName} x${calculation.quantityMultiplier ?? 1}`
+                      : calculation.normalizedProfile.shortLabel}
                   </p>
                   {isHeaviest && <Badge tone="amber">{tProjects("badgeHeaviest")}</Badge>}
                   {isLightest && !isHeaviest && <Badge tone="green">{tProjects("badgeLightest")}</Badge>}
                   {isPriciest && <Badge tone="red">{tProjects("badgePriciest")}</Badge>}
                 </div>
-                <p className="mt-0.5 line-clamp-1 text-xs text-muted">{materialSummary}</p>
+                <p className="mt-0.5 line-clamp-1 text-xs text-muted">
+                  {isTemplate
+                    ? tProjects("templateParts", { count: calculation.templateParts?.length ?? 0 })
+                    : materialSummary}
+                </p>
               </div>
             </div>
           </div>
@@ -1493,7 +1525,7 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
                 <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
               </svg>
             </IconButton>
-            {onLoadCalculation && (
+            {onLoadCalculation && !isTemplate && (
               <IconButton title={tProjects("loadIntoCalculator")} onClick={onLoadCalculation}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                   <path
@@ -1517,11 +1549,26 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
         </div>
 
         <div className="mt-2 flex flex-wrap gap-1.5">
-          <PanelCompactChip
-            label={tResult("contextQuantity")}
-            value={tResult("pieces", { qty: calculation.result.quantity })}
-          />
-          <PanelCompactChip label={tResult("contextLength")} value={pieceLength} />
+          {isTemplate ? (
+            <>
+              <PanelCompactChip
+                label={tProjects("templateLabel")}
+                value={`${calculation.templateParts?.length ?? 0} parts`}
+              />
+              <PanelCompactChip
+                label={tProjects("templateMultiplier")}
+                value={`x${calculation.quantityMultiplier ?? 1}`}
+              />
+            </>
+          ) : (
+            <>
+              <PanelCompactChip
+                label={tResult("contextQuantity")}
+                value={tResult("pieces", { qty: calculation.result.quantity })}
+              />
+              <PanelCompactChip label={tResult("contextLength")} value={pieceLength} />
+            </>
+          )}
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-1.5 xl:grid-cols-4">
@@ -1533,16 +1580,62 @@ const ProjectCalculationCard = memo(function ProjectCalculationCard({
               unit={metric.unit}
             />
           ))}
-          <PanelCompactMetric
-            label={tResult("surfaceArea")}
-            value={
-              calculation.result.surfaceAreaM2 != null
-                ? formatStaticNumber(calculation.result.surfaceAreaM2)
-                : "\u2014"
-            }
-            unit={calculation.result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
-          />
+          {!isTemplate && (
+            <PanelCompactMetric
+              label={tResult("surfaceArea")}
+              value={
+                calculation.result.surfaceAreaM2 != null
+                  ? formatStaticNumber(calculation.result.surfaceAreaM2)
+                  : "\u2014"
+              }
+              unit={calculation.result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
+            />
+          )}
         </div>
+
+        {/* Expandable template parts */}
+        {isTemplate && calculation.templateParts && calculation.templateParts.length > 0 && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setPartsExpanded((v) => !v)}
+              className="flex items-center gap-1 text-2xs font-medium text-muted-faint transition-colors hover:text-foreground-secondary"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className={`h-3 w-3 transition-transform ${partsExpanded ? "rotate-90" : ""}`}
+              >
+                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+              </svg>
+              {partsExpanded ? tProjects("collapseParts") : tProjects("expandParts")}
+            </button>
+            {partsExpanded && (
+              <div className="mt-1.5 grid gap-1">
+                {calculation.templateParts.map((part) => {
+                  const partStyles = categoryStyle(part.normalizedProfile.iconKey);
+                  const partCurrency = CURRENCY_SYMBOLS[part.result.currency];
+                  return (
+                    <div key={part.id} className="flex items-center gap-2 rounded-lg border border-border-faint bg-surface-raised px-2.5 py-1.5">
+                      <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${partStyles.iconBg}`}>
+                        <ProfileIcon category={part.normalizedProfile.iconKey} className="h-3 w-3" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-2xs font-semibold text-foreground">{part.name}</p>
+                        <p className="text-2xs text-muted-faint">{part.normalizedProfile.shortLabel}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-3 text-2xs text-muted">
+                        <span>{formatStaticNumber(part.result.totalWeightKg)} kg</span>
+                        <span>{formatStaticNumber(part.result.grandTotalAmount)} {partCurrency}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {calculation.note && !isEditingNote && (
           <div className="mt-2 rounded-lg border border-border-faint bg-surface-raised px-2.5 py-1.5">

@@ -4,12 +4,21 @@ import { useCallback, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
-import { fingerprint } from "@/lib/calculator/fingerprint";
+import { fingerprint, templateFingerprint } from "@/lib/calculator/fingerprint";
+import { calculateMetal } from "@/lib/calculator/engine";
 import { useStorageArray } from "@/hooks/useStorageState";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
+
+export interface ProjectTemplatePart {
+  id: string;
+  name: string;
+  input: CalculationInput;
+  result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot;
+}
 
 export interface ProjectCalculation {
   id: string;
@@ -18,6 +27,12 @@ export interface ProjectCalculation {
   result: CalculationResult;
   normalizedProfile: NormalizedProfileSnapshot;
   note?: string;
+  /** Present when this entry represents a template added as a single item. */
+  templateName?: string;
+  /** Individual parts of the template with their own calculations. */
+  templateParts?: ProjectTemplatePart[];
+  /** How many times the template was multiplied when added. */
+  quantityMultiplier?: number;
 }
 
 export interface Project {
@@ -147,6 +162,21 @@ export function exportProjectCsv(
   const headers = labels.headers;
   const rows = project.calculations.map((calc) => {
     const r = calc.result;
+    if (calc.templateName) {
+      return [
+        `"${calc.templateName} x${calc.quantityMultiplier ?? 1}"`,
+        "",
+        "Mixed",
+        "",
+        r.totalWeightKg,
+        r.surfaceAreaM2 ?? "",
+        "",
+        "",
+        "",
+        r.grandTotalAmount,
+        r.currency,
+      ].join(",");
+    }
     return [
       calc.normalizedProfile.shortLabel,
       labels.resolveProfileLabel
@@ -248,19 +278,32 @@ export function exportProjectPdf(
     let catSurface = 0;
 
     for (const calc of calcs) {
-      const profileLabel = calc.normalizedProfile.shortLabel;
-      const gradeLabel = labels.resolveGradeLabel
-        ? labels.resolveGradeLabel(calc.result.gradeLabel)
-        : calc.result.gradeLabel;
-      const qty = calc.result.quantity;
-      const unitWt = calc.result.unitWeightKg;
       const totalWt = calc.result.totalWeightKg;
       const surfArea = calc.result.surfaceAreaM2;
       const cost = calc.result.grandTotalAmount;
       catWeight += totalWt;
       catCost += cost;
       if (surfArea != null) catSurface += surfArea;
-      tableBody += `<tr>
+
+      if (calc.templateName) {
+        tableBody += `<tr>
+        <td>${calc.templateName} x${calc.quantityMultiplier ?? 1}</td>
+        <td>Mixed</td>
+        <td class="num">${calc.templateParts?.length ?? 0} parts</td>
+        <td class="num">—</td>
+        <td class="num">${totalWt} kg</td>
+        <td class="num">${surfArea != null ? surfArea + " m²" : "—"}</td>
+        <td class="num">${cost} ${currency}</td>
+        <td>${calc.note ?? ""}</td>
+      </tr>`;
+      } else {
+        const profileLabel = calc.normalizedProfile.shortLabel;
+        const gradeLabel = labels.resolveGradeLabel
+          ? labels.resolveGradeLabel(calc.result.gradeLabel)
+          : calc.result.gradeLabel;
+        const qty = calc.result.quantity;
+        const unitWt = calc.result.unitWeightKg;
+        tableBody += `<tr>
         <td>${profileLabel}</td>
         <td>${gradeLabel}</td>
         <td class="num">${qty}</td>
@@ -270,6 +313,7 @@ export function exportProjectPdf(
         <td class="num">${cost} ${currency}</td>
         <td>${calc.note ?? ""}</td>
       </tr>`;
+      }
     }
 
     if (multiCategory) {
@@ -298,14 +342,24 @@ export function exportProjectPdf(
   /* Material grade summary */
   const materialMap = new Map<string, { count: number; weight: number; cost: number }>();
   for (const calc of project.calculations) {
-    const mk = labels.resolveGradeLabel
-      ? labels.resolveGradeLabel(calc.result.gradeLabel)
-      : calc.result.gradeLabel;
-    if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
-    const entry = materialMap.get(mk)!;
-    entry.count++;
-    entry.weight += calc.result.totalWeightKg;
-    entry.cost += calc.result.grandTotalAmount;
+    if (calc.templateName) {
+      // Template entries contribute to "Mixed" material
+      const mk = "Mixed";
+      if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
+      const entry = materialMap.get(mk)!;
+      entry.count++;
+      entry.weight += calc.result.totalWeightKg;
+      entry.cost += calc.result.grandTotalAmount;
+    } else {
+      const mk = labels.resolveGradeLabel
+        ? labels.resolveGradeLabel(calc.result.gradeLabel)
+        : calc.result.gradeLabel;
+      if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
+      const entry = materialMap.get(mk)!;
+      entry.count++;
+      entry.weight += calc.result.totalWeightKg;
+      entry.cost += calc.result.grandTotalAmount;
+    }
   }
   const materialRows = [...materialMap.entries()]
     .sort((a, b) => b[1].weight - a[1].weight)
@@ -426,6 +480,7 @@ export interface UseProjectsReturn {
   deleteProject: (id: string) => void;
   duplicateProject: (id: string) => Project | null;
   addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
+  addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
   removeCalculation: (projectId: string, calcId: string) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   updateProjectDescription: (id: string, description: string) => void;
@@ -541,6 +596,97 @@ export function useProjects(): UseProjectsReturn {
     [setProjects],
   );
 
+  const addTemplateCalculation = useCallback(
+    (
+      projectId: string,
+      tplName: string,
+      parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>,
+      multiplier: number,
+    ): boolean => {
+      if (parts.length === 0) return false;
+
+      // Recalculate each part with adjusted quantity
+      const recalculatedParts: ProjectTemplatePart[] = [];
+      for (const part of parts) {
+        const adjustedInput = {
+          ...part.input,
+          quantity: Math.max(1, Math.floor((part.input.quantity || 1) * multiplier)),
+        };
+        const calc = calculateMetal(adjustedInput);
+        if (!calc.ok) continue;
+        recalculatedParts.push({
+          id: part.id,
+          name: part.name,
+          input: adjustedInput,
+          result: calc.result,
+          normalizedProfile: part.normalizedProfile,
+        });
+      }
+      if (recalculatedParts.length === 0) return false;
+
+      // Aggregate totals from all parts
+      let totalWeightKg = 0;
+      let totalCost = 0;
+      let totalSurface = 0;
+      for (const p of recalculatedParts) {
+        totalWeightKg += p.result.totalWeightKg;
+        totalCost += p.result.grandTotalAmount;
+        if (p.result.surfaceAreaM2 != null) totalSurface += p.result.surfaceAreaM2;
+      }
+      totalWeightKg = Math.round(totalWeightKg * 100) / 100;
+      totalCost = Math.round(totalCost * 100) / 100;
+      totalSurface = Math.round(totalSurface * 100) / 100;
+
+      // Use first part as representative for the top-level entry
+      const representative = recalculatedParts[0];
+      const syntheticResult: CalculationResult = {
+        ...representative.result,
+        totalWeightKg,
+        grandTotalAmount: totalCost,
+        surfaceAreaM2: totalSurface > 0 ? totalSurface : null,
+        // Keep unit values from first part as approximation
+        unitWeightKg: representative.result.unitWeightKg,
+        subtotalAmount: totalCost,
+        wasteAmount: 0,
+        vatAmount: 0,
+      };
+
+      const fp = templateFingerprint(tplName, totalWeightKg, totalCost);
+
+      let added = false;
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== projectId) return p;
+          if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
+          // Check for duplicate template entry
+          if (p.calculations.some((c) => {
+            if (c.templateName) return templateFingerprint(c.templateName, c.result.totalWeightKg, c.result.grandTotalAmount) === fp;
+            return false;
+          })) return p;
+
+          added = true;
+          const entry: ProjectCalculation = {
+            id: crypto.randomUUID(),
+            timestamp: new Date().toISOString(),
+            input: representative.input,
+            result: syntheticResult,
+            normalizedProfile: representative.normalizedProfile,
+            templateName: tplName,
+            templateParts: recalculatedParts,
+            quantityMultiplier: multiplier,
+          };
+          return {
+            ...p,
+            updatedAt: new Date().toISOString(),
+            calculations: [...p.calculations, entry],
+          };
+        }),
+      );
+      return added;
+    },
+    [setProjects],
+  );
+
   const removeCalculation = useCallback((projectId: string, calcId: string) => {
     setProjects((prev) =>
       prev.map((p) => {
@@ -587,6 +733,7 @@ export function useProjects(): UseProjectsReturn {
     deleteProject,
     duplicateProject,
     addCalculation,
+    addTemplateCalculation,
     removeCalculation,
     updateCalculationNote,
     updateProjectDescription,
