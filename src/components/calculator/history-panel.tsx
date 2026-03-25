@@ -8,11 +8,8 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { SwipeActionItem } from "@/components/ui/swipe-action-item";
 import {
-  formatPieceLength,
   formatStaticNumber,
   getWorkspacePanelSpacing,
-  PanelCompactChip,
-  PanelCompactMetric,
   type WorkspacePanelLayout,
 } from "@/components/ui/result-style";
 import { triggerHaptic } from "@/lib/haptics";
@@ -55,7 +52,6 @@ interface SavedPanelProps {
   onReorderPart: (entry: SavedEntry, partId: string, direction: -1 | 1) => void;
   onUpdate: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
   layout?: WorkspacePanelLayout;
-  weightAsMain?: boolean;
 }
 
 export const HistoryPanel = memo(function HistoryPanel({
@@ -71,7 +67,6 @@ export const HistoryPanel = memo(function HistoryPanel({
   onReorderPart,
   onUpdate,
   layout = "drawer",
-  weightAsMain = false,
 }: SavedPanelProps) {
   const t = useTranslations("saved");
   const labelSelectMode = t("selectMode");
@@ -300,7 +295,6 @@ export const HistoryPanel = memo(function HistoryPanel({
                 selected={validSelectedIds.has(entry.id)}
                 onToggleSelect={() => toggleSelected(entry.id)}
                 layout={layout}
-                weightAsMain={weightAsMain}
               />
             </SwipeActionItem>
           ))}
@@ -347,8 +341,8 @@ interface SavedItemProps {
   selected: boolean;
   onToggleSelect: () => void;
   layout: WorkspacePanelLayout;
-  weightAsMain: boolean;
 }
+
 
 const SavedItem = memo(function SavedItem({
   entry,
@@ -364,84 +358,25 @@ const SavedItem = memo(function SavedItem({
   selected,
   onToggleSelect,
   layout,
-  weightAsMain,
 }: SavedItemProps) {
   const locale = useLocale();
   const tBase = useTranslations();
   const tSaved = useTranslations("saved");
   const tResult = useTranslations("result");
-  const labelSelectRow = tSaved("selectRow");
-  const labelNeverUsed = tSaved("neverUsed");
-  const labelDuplicate = tSaved("duplicate");
-  const labelAddToProject = tSaved("addAllParts");
-  const labelPartCount = tSaved("partsCount");
-  const labelPartQuantity = tSaved("quantityMultiplier");
-  const labelTargetProject = tSaved("targetProject");
-  const labelAutoProject = tSaved("autoProject");
-  const labelTemplateBuilder = tSaved("templateBuilder");
-  const labelMoveUp = tSaved("moveUp");
-  const labelMoveDown = tSaved("moveDown");
-  const labelRemovePart = tSaved("removePart");
-  const labelEdit = tSaved("edit");
-  const labelRemove = tSaved("remove");
-  const labelUseTemplate = tSaved("useTemplate");
-  const labelTagsPlaceholder = tSaved("tagsPlaceholder");
-  const labelEditSave = tSaved("editSave");
-  const labelEditCancel = tSaved("editCancel");
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
   const [editNotes, setEditNotes] = useState(entry.notes ?? "");
   const [editTags, setEditTags] = useState((entry.tags ?? []).join(", "));
   const [partQuantityMultiplier, setPartQuantityMultiplier] = useState(1);
   const [targetProjectId, setTargetProjectId] = useState<string>("");
-  const [showBuilder, setShowBuilder] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const gradeLabel = resolveGradeLabel(entry.result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[entry.result.currency];
   const styles = categoryStyle(entry.normalizedProfile.iconKey);
-  const pieceLength = formatPieceLength(entry.input.length, entry.result.lengthMm, locale);
   const profileSummary = gradeLabel
-    ? `${entry.normalizedProfile.shortLabel} - ${gradeLabel}`
+    ? `${entry.normalizedProfile.shortLabel} · ${gradeLabel}`
     : entry.normalizedProfile.shortLabel;
-  const lastUsedLabel = entry.lastUsedAt
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(entry.lastUsedAt))
-    : labelNeverUsed;
-
-  const orderedMetrics = weightAsMain
-    ? [
-        {
-          label: tResult("unitWeight"),
-          value: formatStaticNumber(entry.result.unitWeightKg),
-          unit: "kg",
-        },
-        {
-          label: tResult("totalWeight"),
-          value: formatStaticNumber(entry.result.totalWeightKg),
-          unit: "kg",
-        },
-        {
-          label: tResult("totalCost"),
-          value: formatStaticNumber(entry.result.grandTotalAmount),
-          unit: currency,
-        },
-      ]
-    : [
-        {
-          label: tResult("unitWeight"),
-          value: formatStaticNumber(entry.result.unitWeightKg),
-          unit: "kg",
-        },
-        {
-          label: tResult("totalCost"),
-          value: formatStaticNumber(entry.result.grandTotalAmount),
-          unit: currency,
-        },
-        {
-          label: tResult("totalWeight"),
-          value: formatStaticNumber(entry.result.totalWeightKg),
-          unit: "kg",
-        },
-      ];
 
   function parseTagInput(value: string): string[] {
     return value
@@ -466,206 +401,196 @@ const SavedItem = memo(function SavedItem({
   return (
     <li className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
       <div className={layout === "drawer" ? "px-3 py-2.5" : "px-3 py-2"}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-start gap-2">
-            {selectionMode && (
-              <button
-                type="button"
-                onClick={onToggleSelect}
-                className={`mt-1 inline-flex h-5 w-5 items-center justify-center rounded border transition-colors ${selected ? "border-accent bg-accent text-white" : "border-border bg-surface text-transparent hover:bg-surface-raised"}`}
-                aria-label={labelSelectRow}
-                aria-pressed={selected}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                  <path fillRule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.312a1 1 0 0 1-1.42-.003L3.29 9.228a1 1 0 1 1 1.42-1.406l4.039 4.08 6.54-6.606a1 1 0 0 1 1.415-.006Z" clipRule="evenodd" />
-                </svg>
-              </button>
-            )}
+        {/* Header row: icon + name + actions */}
+        <div className="flex items-center gap-2.5">
+          {selectionMode && (
+            <button
+              type="button"
+              onClick={onToggleSelect}
+              className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${selected ? "border-accent bg-accent text-white" : "border-border bg-surface text-transparent hover:bg-surface-raised"}`}
+              aria-label={tSaved("selectRow")}
+              aria-pressed={selected}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                <path fillRule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.312a1 1 0 0 1-1.42-.003L3.29 9.228a1 1 0 1 1 1.42-1.406l4.039 4.08 6.54-6.606a1 1 0 0 1 1.415-.006Z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start gap-2.5">
-                <span
-                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${styles.iconBg}`}
-                >
-                  <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-4 w-4" />
-                </span>
+          <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${styles.iconBg}`}>
+            <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-4 w-4" />
+          </span>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-foreground">{entry.name}</p>
-                  <p className="mt-0.5 line-clamp-1 text-xs text-muted">{profileSummary}</p>
-                </div>
-              </div>
-
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <PanelCompactChip label={tResult("contextQuantity")} value={tResult("pieces", { qty: entry.result.quantity })} />
-                <PanelCompactChip label={tResult("contextLength")} value={pieceLength} />
-                <PanelCompactChip label={labelPartCount} value={String(entry.parts.length)} />
-                <PanelCompactChip label={tSaved("usageCount")} value={String(entry.useCount)} />
-                <PanelCompactChip label={tSaved("lastUsed")} value={lastUsedLabel} />
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-1.5 xl:grid-cols-4">
-                {orderedMetrics.map((metric) => (
-                  <PanelCompactMetric
-                    key={metric.label}
-                    label={metric.label}
-                    value={metric.value}
-                    unit={metric.unit}
-                  />
-                ))}
-                <PanelCompactMetric
-                  label={tResult("surfaceArea")}
-                  value={entry.result.surfaceAreaM2 != null ? formatStaticNumber(entry.result.surfaceAreaM2) : "\u2014"}
-                  unit={entry.result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
-                />
-              </div>
-
-              {!editing && (
-                <div className="mt-2 grid gap-1.5 rounded-lg border border-border-faint bg-surface-inset/50 p-2 sm:grid-cols-[auto,1fr,auto] sm:items-end">
-                  <label className="grid gap-1 text-2xs font-medium text-muted-faint">
-                    {labelPartQuantity}
-                    <input
-                      type="number"
-                      min={1}
-                      value={partQuantityMultiplier}
-                      onChange={(event) => setPartQuantityMultiplier(Math.max(1, Math.floor(Number(event.target.value) || 1)))}
-                      className="w-20 rounded-md border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-blue-border"
-                    />
-                  </label>
-                  <label className="grid gap-1 text-2xs font-medium text-muted-faint">
-                    {labelTargetProject}
-                    <select
-                      value={targetProjectId}
-                      onChange={(event) => setTargetProjectId(event.target.value)}
-                      className="min-w-0 rounded-md border border-border bg-surface px-2 py-1 text-xs text-foreground outline-none focus:border-blue-border"
-                    >
-                      <option value="">{labelAutoProject}</option>
-                      {projectOptions.map((project) => (
-                        <option key={project.id} value={project.id}>
-                          {project.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => onAddToProject({
-                        quantityMultiplier: partQuantityMultiplier,
-                        projectId: targetProjectId || undefined,
-                      })}
-                      className="rounded-md border border-green-border bg-green-surface px-2.5 py-1.5 text-xs font-semibold text-green-text transition-colors hover:bg-green-surface/80"
-                    >
-                      {labelAddToProject}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowBuilder((value) => !value)}
-                      className="rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-foreground-secondary transition-colors hover:bg-surface-raised"
-                    >
-                      {labelTemplateBuilder}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {!editing && showBuilder && (
-                <div className="mt-2 rounded-lg border border-border-faint bg-surface-raised p-2">
-                  <div className="grid gap-1.5">
-                    {entry.parts.map((part, index) => (
-                      <div key={part.id} className="grid gap-1 rounded-md border border-border-faint bg-surface px-2 py-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="truncate text-xs font-semibold text-foreground">{part.name}</p>
-                          <div className="flex items-center gap-1">
-                            <IconButton title={labelMoveUp} onClick={() => onReorderPart(part.id, -1)}>
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M9.47 4.22a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 1 1-1.06 1.06L10 5.81 6.03 9.78a.75.75 0 0 1-1.06-1.06l4.5-4.5Z" clipRule="evenodd" /></svg>
-                            </IconButton>
-                            <IconButton title={labelMoveDown} onClick={() => onReorderPart(part.id, 1)}>
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M10.53 15.78a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06L10 14.19l3.97-3.97a.75.75 0 1 1 1.06 1.06l-4.5 4.5Z" clipRule="evenodd" /></svg>
-                            </IconButton>
-                            <IconButton title={labelRemovePart} tone="danger" onClick={() => onRemovePart(part.id)}>
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5z" clipRule="evenodd" /></svg>
-                            </IconButton>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-3 text-2xs text-muted-faint">
-                          <span>{index + 1}/{entry.parts.length}</span>
-                          <span>{part.normalizedProfile.shortLabel}</span>
-                          <span>{formatStaticNumber(part.result.totalWeightKg)} kg</span>
-                          <span>{formatStaticNumber(part.result.grandTotalAmount)} {CURRENCY_SYMBOLS[part.result.currency]}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(entry.notes || (entry.tags?.length ?? 0) > 0) && !editing && (
-                <div className="mt-2 rounded-lg border border-border-faint bg-surface-raised px-2.5 py-1.5">
-                  {entry.notes && <p className="text-xs italic text-muted-faint line-clamp-3">{entry.notes}</p>}
-                  {(entry.tags?.length ?? 0) > 0 && (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {(entry.tags ?? []).map((tag) => (
-                        <span key={tag} className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${styles.badge}`}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">{entry.name}</p>
+            <p className="truncate text-xs text-muted">{profileSummary}</p>
           </div>
 
-          <div className="flex shrink-0 items-start gap-1">
-            {selectionMode ? null : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onLoad(entry)}
-                  className="inline-flex items-center gap-1 rounded-md border border-blue-border bg-blue-surface px-2 py-1 text-2xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                    <path d="m5 12 5 5L20 7" />
-                  </svg>
-                  {labelUseTemplate}
-                </button>
-                <IconButton title={labelDuplicate} onClick={onDuplicate}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                </IconButton>
-                <IconButton
-                  title={labelEdit}
-                  onClick={() => {
-                    setEditName(entry.name);
-                    setEditNotes(entry.notes ?? "");
-                    setEditTags((entry.tags ?? []).join(", "));
-                    setEditing((value) => !value);
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                    <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-                  </svg>
-                </IconButton>
-                <IconButton
-                  title={labelRemove}
-                  tone="danger"
-                  onClick={() => {
-                    triggerHaptic("light");
-                    onRemove();
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                    <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
-                  </svg>
-                </IconButton>
-              </>
-            )}
-          </div>
+          {!selectionMode && (
+            <button
+              type="button"
+              onClick={() => onLoad(entry)}
+              className="shrink-0 rounded-lg border border-blue-border bg-blue-surface px-2.5 py-1.5 text-2xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80"
+            >
+              {tSaved("useTemplate")}
+            </button>
+          )}
         </div>
 
+        {/* Key metrics - compact inline row */}
+        <div className="mt-2 flex items-center gap-3 text-xs">
+          <span className="font-semibold text-foreground tabular-nums">
+            {formatStaticNumber(entry.result.totalWeightKg)} <span className="font-medium text-muted">kg</span>
+          </span>
+          <span className="text-border-strong">·</span>
+          <span className="font-semibold text-foreground tabular-nums">
+            {formatStaticNumber(entry.result.grandTotalAmount)} <span className="font-medium text-muted">{currency}</span>
+          </span>
+          <span className="text-border-strong">·</span>
+          <span className="text-muted">
+            {entry.parts.length} {entry.parts.length === 1 ? "part" : "parts"}
+          </span>
+          {entry.useCount > 0 && (
+            <>
+              <span className="text-border-strong">·</span>
+              <span className="text-muted-faint">{entry.useCount}x used</span>
+            </>
+          )}
+        </div>
+
+        {/* Tags */}
+        {(entry.tags?.length ?? 0) > 0 && !editing && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {(entry.tags ?? []).map((tag) => (
+              <span key={tag} className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${styles.badge}`}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Notes */}
+        {entry.notes && !editing && (
+          <p className="mt-1.5 text-xs italic text-muted-faint line-clamp-2">{entry.notes}</p>
+        )}
+
+        {/* Action row */}
+        {!editing && !selectionMode && (
+          <div className="mt-2 flex items-center gap-1.5 border-t border-border-faint pt-2">
+            {/* Add to project - compact inline */}
+            <div className="flex min-w-0 flex-1 items-center gap-1.5">
+              <input
+                type="number"
+                min={1}
+                value={partQuantityMultiplier}
+                onChange={(event) => setPartQuantityMultiplier(Math.max(1, Math.floor(Number(event.target.value) || 1)))}
+                className="w-12 rounded-md border border-border bg-surface px-1.5 py-1 text-center text-xs tabular-nums text-foreground outline-none focus:border-blue-border"
+                title={tSaved("quantityMultiplier")}
+              />
+              <span className="text-2xs text-muted-faint">x</span>
+              <select
+                value={targetProjectId}
+                onChange={(event) => setTargetProjectId(event.target.value)}
+                className="min-w-0 flex-1 truncate rounded-md border border-border bg-surface px-1.5 py-1 text-xs text-foreground outline-none focus:border-blue-border"
+                title={tSaved("targetProject")}
+              >
+                <option value="">{tSaved("autoProject")}</option>
+                {projectOptions.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => onAddToProject({
+                  quantityMultiplier: partQuantityMultiplier,
+                  projectId: targetProjectId || undefined,
+                })}
+                className="shrink-0 rounded-md border border-purple-border bg-purple-surface px-2 py-1 text-2xs font-semibold text-purple-text transition-colors hover:bg-purple-surface/80"
+              >
+                {tSaved("addToProject")}
+              </button>
+            </div>
+
+            {/* Secondary actions */}
+            <div className="flex shrink-0 items-center gap-0.5">
+              <IconButton title={tSaved("duplicate")} onClick={onDuplicate}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </IconButton>
+              <IconButton
+                title={tSaved("edit")}
+                onClick={() => {
+                  setEditName(entry.name);
+                  setEditNotes(entry.notes ?? "");
+                  setEditTags((entry.tags ?? []).join(", "));
+                  setEditing((value) => !value);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                  <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                </svg>
+              </IconButton>
+              {entry.parts.length > 1 && (
+                <IconButton
+                  title={tSaved("templateBuilder")}
+                  onClick={() => setShowDetails((v) => !v)}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={`h-3.5 w-3.5 transition-transform ${showDetails ? "rotate-90" : ""}`}>
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                  </svg>
+                </IconButton>
+              )}
+              <IconButton
+                title={tSaved("remove")}
+                tone="danger"
+                onClick={() => {
+                  triggerHaptic("light");
+                  onRemove();
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                  <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                </svg>
+              </IconButton>
+            </div>
+          </div>
+        )}
+
+        {/* Expandable parts list */}
+        {!editing && showDetails && entry.parts.length > 1 && (
+          <div className="mt-2 grid gap-1">
+            {entry.parts.map((part, index) => (
+              <div key={part.id} className="flex items-center gap-2 rounded-lg border border-border-faint bg-surface-raised px-2 py-1.5">
+                <span className="text-2xs font-medium text-muted-faint">{index + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-2xs font-semibold text-foreground">{part.name}</p>
+                  <p className="text-2xs text-muted-faint">{part.normalizedProfile.shortLabel}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2 text-2xs text-muted tabular-nums">
+                  <span>{formatStaticNumber(part.result.totalWeightKg)} kg</span>
+                  <span>{formatStaticNumber(part.result.grandTotalAmount)} {CURRENCY_SYMBOLS[part.result.currency]}</span>
+                </div>
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <IconButton title={tSaved("moveUp")} onClick={() => onReorderPart(part.id, -1)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3"><path fillRule="evenodd" d="M9.47 4.22a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 1 1-1.06 1.06L10 5.81 6.03 9.78a.75.75 0 0 1-1.06-1.06l4.5-4.5Z" clipRule="evenodd" /></svg>
+                  </IconButton>
+                  <IconButton title={tSaved("moveDown")} onClick={() => onReorderPart(part.id, 1)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3"><path fillRule="evenodd" d="M10.53 15.78a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06L10 14.19l3.97-3.97a.75.75 0 1 1 1.06 1.06l-4.5 4.5Z" clipRule="evenodd" /></svg>
+                  </IconButton>
+                  <IconButton title={tSaved("removePart")} tone="danger" onClick={() => onRemovePart(part.id)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5z" clipRule="evenodd" /></svg>
+                  </IconButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Edit form */}
         {editing && (
           <div className="mt-2 grid gap-2">
             <input
@@ -683,7 +608,7 @@ const SavedItem = memo(function SavedItem({
             <textarea
               value={editNotes}
               onChange={(event) => setEditNotes(event.target.value)}
-              rows={3}
+              rows={2}
               placeholder={tSaved("notesPlaceholder")}
               className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-faint outline-none focus:border-blue-border"
               maxLength={200}
@@ -692,16 +617,16 @@ const SavedItem = memo(function SavedItem({
               type="text"
               value={editTags}
               onChange={(event) => setEditTags(event.target.value)}
-              placeholder={labelTagsPlaceholder}
+              placeholder={tSaved("tagsPlaceholder")}
               className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-faint outline-none focus:border-blue-border"
               maxLength={140}
             />
             <div className="flex gap-3">
               <button type="button" onClick={handleSaveEdit} className="text-xs font-medium text-blue-strong">
-                {labelEditSave}
+                {tSaved("editSave")}
               </button>
               <button type="button" onClick={() => setEditing(false)} className="text-xs font-medium text-muted">
-                {labelEditCancel}
+                {tSaved("editCancel")}
               </button>
             </div>
           </div>

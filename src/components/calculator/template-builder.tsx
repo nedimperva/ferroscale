@@ -4,10 +4,12 @@ import { memo, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { TemplatePartDraft } from "@/hooks/useSaved";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { formatStaticNumber } from "@/components/ui/result-style";
 
 interface TemplateBuilderProps {
   open: boolean;
@@ -68,10 +70,6 @@ export const TemplateBuilder = memo(function TemplateBuilder({
 
   const canPublish =
     parts.length > 0 && (mode === "new" ? name.trim().length > 0 : targetTemplateId.length > 0);
-
-  const headerSummary = useMemo(() => {
-    return t("summary", { count: parts.length });
-  }, [parts.length, t]);
 
   const addCurrentPart = () => {
     if (!seedInput || !seedResult) return;
@@ -157,63 +155,58 @@ export const TemplateBuilder = memo(function TemplateBuilder({
             className="fixed inset-2 z-86 flex flex-col overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-2xl sm:inset-4"
             onClick={(event) => event.stopPropagation()}
           >
+            {/* Header */}
             <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div className="min-w-0">
                 <h2 className="truncate text-base font-semibold text-foreground">{t("title")}</h2>
-                <p className="text-xs text-muted-faint">{headerSummary}</p>
+                <p className="text-xs text-muted-faint">{parts.length} {parts.length === 1 ? "part" : "parts"}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={addCurrentPart}
-                  className="rounded-lg border border-blue-border bg-blue-surface px-3 py-1.5 text-xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80"
-                >
-                  {t("addCurrent")}
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface-raised"
-                >
-                  {t("close")}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
+                aria-label={t("close")}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
             </header>
 
-            <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[320px,1fr]">
-              <section className="border-b border-border p-4 lg:border-b-0 lg:border-r">
-                <div className="grid gap-3">
-                  <div className="grid gap-1.5 text-xs font-medium text-foreground-secondary">
-                    <span>{t("mode")}</span>
-                    <div className="inline-flex rounded-lg border border-border bg-surface p-1">
-                      <button
-                        type="button"
-                        onClick={() => setMode("new")}
-                        className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
-                          mode === "new"
-                            ? "bg-accent-surface text-accent"
-                            : "text-foreground-secondary hover:bg-surface-raised"
-                        }`}
-                      >
-                        {t("modeNew")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMode("existing")}
-                        disabled={savedTemplates.length === 0}
-                        className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                          mode === "existing"
-                            ? "bg-accent-surface text-accent"
-                            : "text-foreground-secondary hover:bg-surface-raised"
-                        }`}
-                      >
-                        {t("modeExisting")}
-                      </button>
-                    </div>
+            {/* Scrollable body */}
+            <div className="min-h-0 flex-1 overflow-y-auto scroll-native">
+              <div className="grid gap-4 p-4 lg:grid-cols-[320px,1fr]">
+                {/* Left: Form fields */}
+                <div className="grid content-start gap-3">
+                  {/* Mode toggle */}
+                  <div className="inline-flex w-full rounded-lg border border-border bg-surface p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setMode("new")}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        mode === "new"
+                          ? "bg-accent-surface text-accent"
+                          : "text-foreground-secondary hover:bg-surface-raised"
+                      }`}
+                    >
+                      {t("modeNew")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMode("existing")}
+                      disabled={savedTemplates.length === 0}
+                      className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                        mode === "existing"
+                          ? "bg-accent-surface text-accent"
+                          : "text-foreground-secondary hover:bg-surface-raised"
+                      }`}
+                    >
+                      {t("modeExisting")}
+                    </button>
                   </div>
 
                   {mode === "existing" ? (
-                    <label className="grid gap-1.5 text-xs font-medium text-foreground-secondary">
+                    <label className="grid gap-1 text-xs font-medium text-foreground-secondary">
                       {t("selectTemplate")}
                       <select
                         value={targetTemplateId}
@@ -226,7 +219,7 @@ export const TemplateBuilder = memo(function TemplateBuilder({
                         ) : (
                           savedTemplates.map((template) => (
                             <option key={template.id} value={template.id}>
-                              {t("templateOption", { name: template.name, count: template.partCount })}
+                              {template.name} ({template.partCount})
                             </option>
                           ))
                         )}
@@ -234,85 +227,112 @@ export const TemplateBuilder = memo(function TemplateBuilder({
                     </label>
                   ) : (
                     <>
-                  <label className="grid gap-1.5 text-xs font-medium text-foreground-secondary">
-                    {t("name")}
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-blue-border"
-                      maxLength={80}
-                    />
-                  </label>
+                      <label className="grid gap-1 text-xs font-medium text-foreground-secondary">
+                        {t("name")}
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(event) => setName(event.target.value)}
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-blue-border"
+                          maxLength={80}
+                        />
+                      </label>
 
-                  <label className="grid gap-1.5 text-xs font-medium text-foreground-secondary">
-                    {t("notes")}
-                    <textarea
-                      value={notes}
-                      onChange={(event) => setNotes(event.target.value)}
-                      rows={3}
-                      className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-blue-border"
-                      maxLength={200}
-                    />
-                  </label>
+                      <label className="grid gap-1 text-xs font-medium text-foreground-secondary">
+                        {t("notes")}
+                        <textarea
+                          value={notes}
+                          onChange={(event) => setNotes(event.target.value)}
+                          rows={2}
+                          className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-blue-border"
+                          maxLength={200}
+                        />
+                      </label>
 
-                  <label className="grid gap-1.5 text-xs font-medium text-foreground-secondary">
-                    {t("tags")}
-                    <input
-                      type="text"
-                      value={tags}
-                      onChange={(event) => setTags(event.target.value)}
-                      placeholder={t("tagsPlaceholder")}
-                      className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-blue-border"
-                      maxLength={140}
-                    />
-                  </label>
+                      <label className="grid gap-1 text-xs font-medium text-foreground-secondary">
+                        {t("tags")}
+                        <input
+                          type="text"
+                          value={tags}
+                          onChange={(event) => setTags(event.target.value)}
+                          placeholder={t("tagsPlaceholder")}
+                          className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-blue-border"
+                          maxLength={140}
+                        />
+                      </label>
                     </>
                   )}
                 </div>
-              </section>
 
-              <section className="min-h-0 overflow-y-auto p-4">
-                <div className="grid gap-2">
-                  {parts.map((part, index) => {
-                    const profile = normalizeProfileSnapshot(part.input);
-                    const gradeLabel = resolveGradeLabel(part.result.gradeLabel, tBase);
-                    return (
-                      <div key={part.id} className="rounded-lg border border-border bg-surface p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-2.5">
-                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inset text-foreground-secondary">
-                              <ProfileIcon category={profile.iconKey} className="h-4 w-4" />
-                            </span>
-                            <div className="min-w-0">
-                              <input
-                                type="text"
-                                value={part.name}
-                                onChange={(event) => updatePart(part.id, { name: event.target.value })}
-                                className="w-full rounded-md border border-border bg-surface px-2 py-1 text-sm font-semibold text-foreground outline-none focus:border-blue-border"
-                                maxLength={80}
-                              />
-                              <p className="mt-1 text-xs text-muted-faint">
-                                {profile.shortLabel}{gradeLabel ? ` • ${gradeLabel}` : ""}
-                              </p>
+                {/* Right: Parts list */}
+                <div className="grid content-start gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-foreground-secondary">Parts</p>
+                    <button
+                      type="button"
+                      onClick={addCurrentPart}
+                      disabled={!seedInput || !seedResult}
+                      className="rounded-lg border border-blue-border bg-blue-surface px-2.5 py-1 text-2xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      + {t("addCurrent")}
+                    </button>
+                  </div>
+
+                  {parts.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-border bg-surface px-4 py-6 text-center text-xs text-muted">
+                      No parts yet
+                    </div>
+                  ) : (
+                    <div className="grid gap-1.5">
+                      {parts.map((part, index) => {
+                        const profile = normalizeProfileSnapshot(part.input);
+                        const gradeLabel = resolveGradeLabel(part.result.gradeLabel, tBase);
+                        const currency = CURRENCY_SYMBOLS[part.result.currency];
+                        return (
+                          <div key={part.id} className="rounded-lg border border-border bg-surface p-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-foreground-secondary">
+                                <ProfileIcon category={profile.iconKey} className="h-3.5 w-3.5" />
+                              </span>
+
+                              <div className="min-w-0 flex-1">
+                                <input
+                                  type="text"
+                                  value={part.name}
+                                  onChange={(event) => updatePart(part.id, { name: event.target.value })}
+                                  className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 text-xs font-semibold text-foreground outline-none hover:border-border focus:border-blue-border focus:bg-surface"
+                                  maxLength={80}
+                                />
+                              </div>
+
+                              <div className="flex shrink-0 items-center gap-0.5">
+                                <button type="button" onClick={() => movePart(part.id, -1)} className="rounded p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary" title={t("up")}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M9.47 4.22a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 1 1-1.06 1.06L10 5.81 6.03 9.78a.75.75 0 0 1-1.06-1.06l4.5-4.5Z" clipRule="evenodd" /></svg>
+                                </button>
+                                <button type="button" onClick={() => movePart(part.id, 1)} className="rounded p-1 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary" title={t("down")}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M10.53 15.78a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06L10 14.19l3.97-3.97a.75.75 0 1 1 1.06 1.06l-4.5 4.5Z" clipRule="evenodd" /></svg>
+                                </button>
+                                <button type="button" onClick={() => removePart(part.id)} className="rounded p-1 text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive" title={t("remove")}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5z" clipRule="evenodd" /></svg>
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="mt-1 flex items-center gap-3 pl-9 text-2xs text-muted-faint">
+                              <span>{profile.shortLabel}{gradeLabel ? ` · ${gradeLabel}` : ""}</span>
+                              <span className="ml-auto tabular-nums">{formatStaticNumber(part.result.totalWeightKg)} kg</span>
+                              <span className="tabular-nums">{formatStaticNumber(part.result.grandTotalAmount)} {currency}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <button type="button" onClick={() => movePart(part.id, -1)} className="rounded-md border border-border px-2 py-1 text-2xs text-foreground-secondary hover:bg-surface-raised">{t("up")}</button>
-                            <button type="button" onClick={() => movePart(part.id, 1)} className="rounded-md border border-border px-2 py-1 text-2xs text-foreground-secondary hover:bg-surface-raised">{t("down")}</button>
-                            <button type="button" onClick={() => removePart(part.id)} className="rounded-md border border-red-border px-2 py-1 text-2xs text-red-interactive hover:bg-red-surface">{t("remove")}</button>
-                          </div>
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-faint">
-                          <span>{index + 1}/{parts.length}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </section>
+              </div>
             </div>
 
+            {/* Footer */}
             <footer className="flex items-center justify-end gap-2 border-t border-border px-4 py-3">
               <button
                 type="button"

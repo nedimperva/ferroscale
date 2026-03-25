@@ -23,7 +23,6 @@ interface SavedDrawerProps {
   onRemovePart: (entry: SavedEntry, partId: string) => void;
   onReorderPart: (entry: SavedEntry, partId: string, direction: -1 | 1) => void;
   onUpdate: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
-  weightAsMain?: boolean;
 }
 
 export const HistoryDrawer = memo(function HistoryDrawer({
@@ -40,7 +39,6 @@ export const HistoryDrawer = memo(function HistoryDrawer({
   onRemovePart,
   onReorderPart,
   onUpdate,
-  weightAsMain = false,
 }: SavedDrawerProps) {
   const t = useTranslations("saved");
   const isMobile = useIsMobile();
@@ -114,7 +112,6 @@ export const HistoryDrawer = memo(function HistoryDrawer({
           onReorderPart={onReorderPart}
           onUpdate={onUpdate}
           layout={isMobile ? "mobile" : "drawer"}
-          weightAsMain={weightAsMain}
         />
       </div>
     </>

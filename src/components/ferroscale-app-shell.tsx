@@ -857,7 +857,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onReorderPart={handleReorderTemplatePart}
           onUpdate={updateSaved}
           layout="column"
-          weightAsMain={weightAsMain}
         />
       </div>
     ),
@@ -988,7 +987,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onReorderPart={handleReorderTemplatePart}
           onUpdate={updateSaved}
           layout="mobile"
-          weightAsMain={weightAsMain}
         />
       </MobilePageCard>
     ) : currentTab === "projects" ? (
@@ -1271,7 +1269,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             onRemovePart={handleRemoveTemplatePart}
             onReorderPart={handleReorderTemplatePart}
             onUpdate={updateSaved}
-            weightAsMain={weightAsMain}
           />
         )}
 
