@@ -283,7 +283,6 @@ export const TemplatesPanel = memo(function TemplatesPanel({
             >
               <TemplateItem
                 entry={entry}
-                onLoad={onLoad}
                 onRemove={() => onRemove(entry.id)}
                 onDuplicate={() => onDuplicate(entry.id)}
                 onAddToProject={(overrides) => onAddToProject(entry, overrides)}
@@ -330,7 +329,6 @@ export const TemplatesPanel = memo(function TemplatesPanel({
 interface TemplateItemProps {
   entry: SavedEntry;
   projectOptions: Array<{ id: string; name: string }>;
-  onLoad: (entry: SavedEntry) => void;
   onRemove: () => void;
   onDuplicate: () => void;
   onAddToProject: (overrides: { quantityMultiplier: number; projectId?: string }) => void;
@@ -347,7 +345,6 @@ interface TemplateItemProps {
 const TemplateItem = memo(function TemplateItem({
   entry,
   projectOptions,
-  onLoad,
   onRemove,
   onDuplicate,
   onAddToProject,
@@ -425,16 +422,6 @@ const TemplateItem = memo(function TemplateItem({
             <p className="truncate text-sm font-semibold text-foreground">{entry.name}</p>
             <p className="truncate text-xs text-muted">{profileSummary}</p>
           </div>
-
-          {!selectionMode && (
-            <button
-              type="button"
-              onClick={() => onLoad(entry)}
-              className="shrink-0 rounded-lg border border-blue-border bg-blue-surface px-2.5 py-1.5 text-2xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80"
-            >
-              {tSaved("useTemplate")}
-            </button>
-          )}
         </div>
 
         {/* Key metrics - compact inline row */}
