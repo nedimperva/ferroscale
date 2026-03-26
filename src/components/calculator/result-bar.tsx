@@ -112,7 +112,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
                     }`}
                   >
                     {/* Primary value */}
-                    <span className="text-lg font-extrabold tabular-nums tracking-tight text-foreground">
+                    <span className="select-text text-lg font-extrabold tabular-nums tracking-tight text-foreground">
                       {weightAsMain
                         ? fmtAnimated(animatedWeight, result.totalWeightKg)
                         : fmtAnimated(animatedTotal, result.grandTotalAmount)}
@@ -122,7 +122,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
                     </span>
                     <span className="text-2xs text-muted-faint">·</span>
                     {/* Secondary value */}
-                    <span className="text-sm font-semibold tabular-nums text-foreground-secondary">
+                    <span className="select-text text-sm font-semibold tabular-nums text-foreground-secondary">
                       {weightAsMain
                         ? fmtAnimated(animatedTotal, result.grandTotalAmount)
                         : fmtAnimated(animatedWeight, result.totalWeightKg)}

@@ -17,6 +17,32 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4.2",
+    date: "2026-03-26",
+    added: [
+      "iOS startup splash images for a native-feeling launch experience across iPhone and iPad screen sizes",
+    ],
+    added_bs: [
+      "iOS startup splash slike za prirodniji native-osjecaj pokretanja na iPhone i iPad velicinama ekrana",
+    ],
+    changed: [
+      "Viewport metadata now uses fixed scaling and keyboard overlay behavior for a more stable app-shell experience on mobile",
+      "Global touch behavior now suppresses browser callout artifacts and improves pointer/selection ergonomics in app-like interactions",
+      "Result values in key summary and cost sections can now be selected for easier copy/share workflows",
+    ],
+    changed_bs: [
+      "Viewport metapodaci sada koriste fiksno skaliranje i keyboard overlay ponasanje za stabilnije app-shell iskustvo na mobilnim uredjajima",
+      "Globalno touch ponasanje sada uklanja browser callout artefakte i poboljsava pointer/selection ergonomiju u app-like interakcijama",
+      "Vrijednosti rezultata u kljucnim summary i cost sekcijama sada se mogu oznaciti radi lakseg copy/share toka",
+    ],
+    fixed: [
+      "Fixed a hydration mismatch in the mobile bottom tab bar by rendering saved/projects badges only after client hydration",
+    ],
+    fixed_bs: [
+      "Ispravljen hydration mismatch u mobilnom donjem tab baru tako sto se oznake za sacuvano/projekte prikazuju tek nakon client hydration koraka",
+    ],
+  },
+  {
     version: "2.4.1",
     date: "2026-03-26",
     added: [

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { triggerHaptic } from "@/lib/haptics";
 import type { AppTabId } from "@/lib/app-shell";
+import { useHydrated } from "@/hooks/useHydrated";
 
 interface BottomTabBarProps {
   activeTab: AppTabId;
@@ -25,6 +26,7 @@ export const BottomTabBar = memo(function BottomTabBar({
   savedCount = 0,
 }: BottomTabBarProps) {
   const t = useTranslations("tabs");
+  const isHydrated = useHydrated();
 
   const tabs: { id: AppTabId; label: string; badge?: number }[] = [
     { id: "calculator", label: t("calculator") },
@@ -89,7 +91,7 @@ export const BottomTabBar = memo(function BottomTabBar({
               )}
               <span className="relative">
                 <TabIcon id={tab.id} active={isActive} />
-                {tab.badge !== undefined && (
+                {isHydrated && tab.badge !== undefined && (
                   <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-strong px-1 text-2xs font-bold leading-none text-white">
                     {tab.badge}
                   </span>

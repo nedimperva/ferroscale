@@ -9,6 +9,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.2] - 2026-03-26
+
+### Added
+
+- iOS startup splash images for a native-feeling launch experience across iPhone and iPad screen sizes
+
+### Changed
+
+- Viewport metadata now uses fixed scaling and keyboard overlay behavior for a more stable app-shell experience on mobile
+- Global touch behavior now suppresses browser callout artifacts and improves pointer/selection ergonomics in app-like interactions
+- Result values in key summary and cost sections can now be selected for easier copy/share workflows
+
+### Fixed
+
+- Fixed a hydration mismatch in the mobile bottom tab bar by rendering saved/projects badges only after client hydration
+
+---
+
 ## [2.4.1] - 2026-03-26
 
 ### Added

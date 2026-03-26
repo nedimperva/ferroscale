@@ -123,7 +123,7 @@ export function PanelMetricCard({
     <div className={`rounded-2xl border border-border bg-surface-raised p-3 ${className}`.trim()}>
       <p className="text-xs font-medium text-muted">{label}</p>
       <div className="mt-2 flex flex-wrap items-end gap-x-1.5 gap-y-1">
-        <p className="text-xl font-bold text-foreground tabular-nums">{value}</p>
+        <p className="select-text text-xl font-bold text-foreground tabular-nums">{value}</p>
         {unit && (
           <p className="pb-0.5 text-xs font-semibold uppercase tracking-wide text-muted">
             {unit}

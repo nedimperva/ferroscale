@@ -207,7 +207,16 @@ html {
   overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
   scrollbar-width: none;
+}
+
+/* Allow text selection in inputs and explicitly marked elements */
+input, textarea, .select-text {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* ── Text-size preference (scales all rem-based sizes) ── */
@@ -248,10 +257,18 @@ button {
 button,
 [role="button"],
 [role="tab"],
+a,
 label {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"],
+[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 button:not(:disabled),

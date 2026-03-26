@@ -162,13 +162,13 @@ export const ResultContent = memo(function ResultContent({
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
-                <p className="text-4xl font-extrabold tracking-tight text-foreground tabular-nums">
+                <p className="select-text text-4xl font-extrabold tracking-tight text-foreground tabular-nums">
                   {primaryValue}
                 </p>
                 <p className="pb-1 text-lg font-semibold text-accent">{primaryUnit}</p>
               </div>
 
-              <p className="mt-1 text-sm font-medium text-foreground-secondary tabular-nums">
+              <p className="select-text mt-1 text-sm font-medium text-foreground-secondary tabular-nums">
                 {secondaryValue}
                 <span className="ml-1 text-xs font-semibold uppercase tracking-wide text-muted">
                   {secondaryUnit}
@@ -350,7 +350,7 @@ export const ResultContent = memo(function ResultContent({
             <div className="mt-3 rounded-xl border border-accent-border bg-accent-surface px-3 py-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-semibold text-foreground">{t("grandTotal")}</span>
-                <span className="text-xl font-bold text-accent tabular-nums">
+                <span className="select-text text-xl font-bold text-accent tabular-nums">
                   {formatAnimatedNumber(animatedTotal, result.grandTotalAmount)} {currency}
                 </span>
               </div>
@@ -463,7 +463,7 @@ function CostRow({
   return (
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-sm text-muted">{label}</span>
-      <span className="text-sm font-medium text-foreground tabular-nums">{value}</span>
+      <span className="select-text text-sm font-medium text-foreground tabular-nums">{value}</span>
     </div>
   );
 }
