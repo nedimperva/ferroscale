@@ -17,6 +17,24 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4.1",
+    date: "2026-03-26",
+    added: [
+      "Custom mobile numpad for numeric inputs to deliver a more native app-like entry flow without relying on the OS keyboard",
+    ],
+    added_bs: [
+      "Prilagodjeni mobilni numpad za numericke unose koji pruza prirodniji app-like tok unosa bez oslanjanja na sistemsku tastaturu",
+    ],
+    fixed: [
+      "On mobile, opening Add to template from the result overlay now closes the result sheet first so the Template Builder appears in front",
+      "Result overlay close behavior is now synchronized with the Template Builder flow to prevent stuck overlay states",
+    ],
+    fixed_bs: [
+      "Na mobilnim uredjajima, otvaranje Dodaj u sablon iz result overlaya sada prvo zatvara result sheet kako bi se Builder sablona prikazao ispred",
+      "Ponasanje zatvaranja result overlaya sada je sinhronizovano sa tokom Buildera sablona kako bi se sprijecila zaglavljena stanja overlaya",
+    ],
+  },
+  {
     version: "2.4.0",
     date: "2026-03-25",
     added: [

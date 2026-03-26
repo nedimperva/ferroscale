@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.1] - 2026-03-26
+
+### Added
+
+- Custom mobile numpad for numeric inputs to deliver a more native app-like entry flow without relying on the OS keyboard
+
+### Fixed
+
+- On mobile, opening Add to template from the result overlay now closes the result sheet first so the Template Builder appears in front
+- Result overlay close behavior is now synchronized with the Template Builder flow to prevent stuck overlay states
+
+---
+
 ## [2.4.0] - 2026-03-25
 
 ### Added

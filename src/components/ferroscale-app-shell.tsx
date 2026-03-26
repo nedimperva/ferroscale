@@ -311,6 +311,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const handleOpenSaveDialog = useCallback(() => {
     if (!result) return;
+    setShowOverlay(false);
     setTemplateBuilderSession((session) => session + 1);
     setShowTemplateBuilder(true);
   }, [result]);
@@ -1226,7 +1227,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           savedCount={saved.length}
         />
 
-        {showOverlay && result && (
+        {showOverlay && !showTemplateBuilder && result && (
           <ResultOverlay
             result={result}
             includeVat={input.includeVat}
