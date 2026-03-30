@@ -6,7 +6,7 @@
   --surface: #fbfaf7;
   --surface-raised: #f5f1ea;
   --surface-inset: #ebe5da;
-  --surface-emphasis: #fff6eb;
+  --surface-emphasis: #f6efe8;
   --surface-inverted: #0f172a;
 
   /* ── Text ── */
@@ -24,11 +24,11 @@
   --overlay: rgba(0, 0, 0, 0.3);
 
   /* ── Accent (orange) ── */
-  --accent: #d97706;
-  --accent-hover: #b45309;
-  --accent-surface: #fff4e5;
-  --accent-border: #f1c996;
-  --accent-text: #9a4d08;
+  --accent: #8d5f45;
+  --accent-hover: #724934;
+  --accent-surface: #f5ece5;
+  --accent-border: #d7b59f;
+  --accent-text: #70442b;
 
   /* ── Blue (compare, active, inputs) ── */
   --blue-surface: #eef4ff;
@@ -79,7 +79,7 @@
   --surface: #171d25;
   --surface-raised: #1d2530;
   --surface-inset: #131921;
-  --surface-emphasis: #2a1c0d;
+  --surface-emphasis: #231a16;
   --surface-inverted: #f8fafc;
 
   /* ── Text ── */
@@ -97,11 +97,11 @@
   --overlay: rgba(0, 0, 0, 0.6);
 
   /* ── Accent (orange) ── */
-  --accent: #f2a44a;
-  --accent-hover: #dd8e2f;
-  --accent-surface: #332111;
-  --accent-border: #7d5628;
-  --accent-text: #ffd9ad;
+  --accent: #d0a184;
+  --accent-hover: #bc8a6c;
+  --accent-surface: #2d211b;
+  --accent-border: #715445;
+  --accent-text: #f5d8c3;
 
   /* ── Blue (compare, active, inputs) ── */
   --blue-surface: #18253c;
@@ -442,23 +442,22 @@ details[open] .chevron-icon {
 
 /* Form section group — iOS-style grouped section */
 .form-group {
-  background: color-mix(in srgb, var(--surface-raised) 86%, var(--surface) 14%);
-  border: 1px solid var(--border-faint);
-  border-radius: 1rem;
-  box-shadow: var(--panel-highlight);
-  padding: 0.75rem;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .form-group + .form-group {
-  margin-top: 0.5rem;
+  margin-top: 0;
+  border-top: 1px solid color-mix(in srgb, var(--border-faint) 72%, transparent);
+  padding-top: 1rem;
 }
 
 @media (min-width: 768px) {
-  .form-group {
-    padding: 0.9rem;
-  }
   .form-group + .form-group {
-    margin-top: 0.5rem;
+    padding-top: 1.1rem;
   }
 }
 
@@ -467,6 +466,17 @@ details[open] .chevron-icon {
   border-radius: var(--radius-panel);
   background: color-mix(in srgb, var(--surface) 95%, var(--background) 5%);
   box-shadow: var(--panel-shadow-soft);
+}
+
+.panel-unibody {
+  border: 1px solid color-mix(in srgb, var(--border-faint) 78%, transparent);
+  border-radius: calc(var(--radius-panel) + 0.1rem);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 88%, transparent) 0%,
+    color-mix(in srgb, var(--surface) 82%, var(--background) 18%) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .panel-raised {

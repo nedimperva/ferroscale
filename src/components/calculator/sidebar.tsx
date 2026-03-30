@@ -69,16 +69,16 @@ export const Sidebar = memo(function Sidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border bg-surface transition-[width] duration-200 ease-in-out lg:flex ${width}`}
+      className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border-faint bg-linear-to-b from-surface via-surface to-surface-raised/60 shadow-[10px_0_30px_rgba(15,23,42,0.06)] transition-[width] duration-200 ease-in-out lg:flex ${width}`}
       style={{
         paddingTop: "env(safe-area-inset-top, 0px)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
       {/* ---- Branding ---- */}
-      <div className={`flex items-center gap-3 pt-4 pb-3 ${collapsed ? "justify-center px-2" : "px-4"}`}>
+      <div className={`flex items-center gap-3 pt-5 pb-4 ${collapsed ? "justify-center px-2" : "px-4"}`}>
         {/* Logo */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-inverted">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_10px_24px_rgba(15,23,42,0.16)]">
           <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
             {/* Support pillar */}
             <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
@@ -97,18 +97,21 @@ export const Sidebar = memo(function Sidebar({
             {/* Right weighing pan */}
             <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
             {/* Orange accent bar */}
-            <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#d97706" />
+            <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#8d5f45" />
           </svg>
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">
+            <p className="truncate text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
+              Workspace
+            </p>
+            <h1 className="truncate text-base font-semibold tracking-tight text-foreground">
               {t("sidebar.title")}
             </h1>
             <button
               type="button"
               onClick={onOpenChangelog}
-              className={`inline-flex items-center gap-1 text-2xs transition-colors hover:text-foreground-secondary ${isChangelogOpen ? "text-foreground-secondary" : "text-muted-faint"}`}
+              className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-1 text-2xs transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${isChangelogOpen ? "bg-surface-raised text-foreground-secondary" : "text-muted-faint"}`}
               title={t("sidebar.whatsNew")}
             >
               v{APP_VERSION}
@@ -122,10 +125,10 @@ export const Sidebar = memo(function Sidebar({
         )}
       </div>
 
-      <div className={`border-t border-border-faint ${collapsed ? "mx-2" : "mx-3"}`} />
+      <div className={`border-t border-border-faint ${collapsed ? "mx-2" : "mx-4"}`} />
 
       {/* ---- Navigation ---- */}
-      <nav className={`flex flex-1 flex-col gap-0.5 pt-3 ${collapsed ? "px-1.5" : "px-3"}`}>
+      <nav className={`flex flex-1 flex-col gap-1 pt-4 ${collapsed ? "px-2" : "px-3.5"}`}>
         {/* Quick Calculate */}
         <SidebarButton
           icon={
@@ -213,7 +216,7 @@ export const Sidebar = memo(function Sidebar({
         {/* Spacer */}
         <div className="flex-1" />
 
-        <div className={`border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"} mt-1`} />
+        <div className={`mt-2 border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"}`} />
 
         <SidebarButton
           icon={
@@ -228,10 +231,10 @@ export const Sidebar = memo(function Sidebar({
           onClick={onOpenContact}
         />
 
-        <div className={`border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"} mt-0.5`} />
+        <div className={`mt-1 border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"}`} />
 
         {!collapsed && (
-          <div className="px-1 py-1.5">
+          <div className="panel-raised px-2 py-2">
             <LanguageSwitcher className="w-full justify-between" />
           </div>
         )}
@@ -240,7 +243,7 @@ export const Sidebar = memo(function Sidebar({
         <button
           type="button"
           onClick={onToggleTheme}
-          className={`flex w-full items-center rounded-lg text-sm font-medium text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-2.5 py-2"
+          className={`premium-action-button flex w-full items-center border border-transparent text-sm font-medium text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${collapsed ? "justify-center px-0 py-2.5" : "gap-2.5 px-3 py-2.5"
             }`}
           aria-label={
             theme === "light"
@@ -300,7 +303,7 @@ export const Sidebar = memo(function Sidebar({
         <button
           type="button"
           onClick={onToggleCollapsed}
-          className="flex w-full items-center justify-center rounded-lg px-2.5 py-2 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+          className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
           aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
           title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
         >
@@ -319,7 +322,7 @@ export const Sidebar = memo(function Sidebar({
           </svg>
         </button>
 
-        <div className="h-2" />
+        <div className="h-3" />
       </nav>
     </aside>
   );
@@ -348,33 +351,33 @@ function SidebarButton({
 }: SidebarButtonProps) {
   const variantClasses = {
     default: active
-      ? "text-foreground bg-surface-inset"
-      : "text-foreground-secondary hover:bg-surface-raised hover:text-foreground",
+      ? "border-border bg-surface-raised text-foreground shadow-[var(--panel-highlight)]"
+      : "border-transparent text-foreground-secondary hover:bg-surface-raised hover:text-foreground",
     blue: active
       ? "border border-blue-border text-blue-text bg-blue-surface"
-      : "border border-blue-border text-blue-text bg-blue-surface/70 hover:bg-blue-surface",
+      : "border border-blue-border/70 text-blue-text bg-blue-surface/65 hover:bg-blue-surface",
     purple: active
-      ? "text-purple-text bg-purple-surface"
-      : "text-purple-text bg-purple-surface/60 hover:bg-purple-surface",
+      ? "border border-purple-border text-purple-text bg-purple-surface"
+      : "border border-purple-border/70 text-purple-text bg-purple-surface/60 hover:bg-purple-surface",
   };
 
   return (
     <div className="group relative">
       {/* Active left border accent */}
       {active && (
-        <div className="absolute top-1 bottom-1 left-0 w-[3px] rounded-full bg-blue-strong" />
+        <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-accent" />
       )}
       <button
         type="button"
         onClick={onClick}
-        className={`flex w-full items-center rounded-lg text-sm font-medium transition-colors ${collapsed ? "justify-center px-0 py-2" : "gap-2.5 px-2.5 py-2"
+        className={`flex w-full items-center rounded-xl border text-sm font-medium transition-colors ${collapsed ? "justify-center px-0 py-2.5" : "gap-2.5 px-3 py-2.5"
           } ${variantClasses[variant]}`}
         aria-label={label}
       >
         <span className="shrink-0">{icon}</span>
         {!collapsed && <span className="truncate">{label}</span>}
         {!collapsed && badge !== undefined && (
-          <span className="ml-auto shrink-0 rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary">
+          <span className="ml-auto shrink-0 rounded-full bg-surface px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary shadow-[var(--panel-highlight)]">
             {badge}
           </span>
         )}
@@ -384,13 +387,13 @@ function SidebarButton({
       {collapsed && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute top-1/2 left-full z-50 ml-2.5 -translate-y-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity delay-75 duration-150 group-hover:opacity-100 dark:bg-slate-700"
+          className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(15,23,42,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
         >
           {/* Arrow */}
-          <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 rounded-[1px] bg-slate-800 dark:bg-slate-700" />
+          <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 border-l border-b border-border bg-surface" />
           {label}
           {badge !== undefined && (
-            <span className="ml-1.5 rounded-full bg-white/20 px-1.5 py-0.5 text-2xs font-semibold">
+            <span className="ml-1.5 rounded-full bg-surface-raised px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary">
               {badge}
             </span>
           )}

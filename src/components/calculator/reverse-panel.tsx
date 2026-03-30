@@ -25,12 +25,12 @@ export const ReversePanel = memo(function ReversePanel({
   const tBase = useTranslations();
 
   return (
-    <section className="border-t border-border bg-surface md:rounded-lg md:border">
+    <section className="border-t border-border-faint/80 bg-transparent">
       {/* Toggle header */}
       <button
         type="button"
         onClick={reverse.toggle}
-        className="flex w-full items-center justify-between px-4 py-3 text-left"
+        className="flex w-full items-center justify-between px-4 py-3.5 text-left"
       >
         <div className="flex items-center gap-2">
           {/* reverse/swap icon */}
@@ -57,7 +57,7 @@ export const ReversePanel = memo(function ReversePanel({
 
       {/* Body — visible only when enabled */}
       {reverse.enabled && (
-        <div className="border-t border-border-faint px-4 py-3 space-y-3">
+        <div className="space-y-3 border-t border-border-faint/70 px-4 py-3.5">
 
           {/* Mode toggle */}
           <div className="flex gap-1">

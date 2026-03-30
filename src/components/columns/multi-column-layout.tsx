@@ -67,13 +67,13 @@ export const MultiColumnLayout = memo(function MultiColumnLayout({
 
   return (
     <div className="hidden min-h-0 flex-1 flex-col lg:flex">
-      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-2">
+      <div className="panel-base mb-4 flex shrink-0 flex-wrap items-center gap-2 rounded-[1.25rem] px-3.5 py-3">
         <div className="flex items-center gap-2">
           <select
             value={panelToAdd}
             onChange={(event) => setPreferredPanelToAdd(event.target.value as ColumnPanelId | "")}
             aria-label={t("columns.addPanelLabel")}
-            className="min-w-[180px] rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground-secondary shadow-sm outline-none transition-colors hover:bg-surface-raised focus:ring-1 focus:ring-blue-strong disabled:opacity-50"
+            className="premium-control min-w-[190px] px-3 py-2 text-xs font-medium text-foreground-secondary outline-none disabled:opacity-50"
             disabled={availablePanelsToAdd.length === 0}
           >
             {availablePanelsToAdd.length === 0 ? (
@@ -93,7 +93,7 @@ export const MultiColumnLayout = memo(function MultiColumnLayout({
               if (panelToAdd) layout.addColumn(panelToAdd);
             }}
             disabled={!canAddPanel}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground-secondary shadow-sm transition-colors hover:bg-surface-raised disabled:opacity-40"
+            className="premium-action-button inline-flex items-center gap-1.5 border border-border bg-surface-raised px-3 py-2 text-xs font-medium text-foreground-secondary hover:bg-surface disabled:opacity-40"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -115,17 +115,21 @@ export const MultiColumnLayout = memo(function MultiColumnLayout({
         <button
           type="button"
           onClick={layout.resetLayout}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-muted-faint shadow-sm transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+          className="premium-action-button inline-flex items-center gap-1.5 border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-faint hover:bg-surface-raised hover:text-foreground-secondary"
         >
           {t("columns.resetLayout")}
         </button>
 
         <div className="flex-1" />
 
+        <span className="rounded-full border border-border bg-surface-raised px-2.5 py-1 text-2xs font-semibold text-foreground-secondary">
+          {layout.columns.length}/{Math.min(MAX_COLUMNS, maxColumnsAllowed)}
+        </span>
+
         <button
           type="button"
           onClick={layout.toggleEnabled}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-muted-faint shadow-sm transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+          className="premium-action-button inline-flex items-center gap-1.5 border border-border bg-surface px-3 py-2 text-xs font-medium text-muted-faint hover:bg-surface-raised hover:text-foreground-secondary"
         >
           {t("columns.exitColumns")}
         </button>

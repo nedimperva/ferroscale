@@ -143,7 +143,7 @@ function MobilePageCard({
   className?: string;
 }) {
   return (
-    <section className={`panel-base overflow-hidden rounded-[1.35rem] ${className}`}>
+    <section className={`panel-unibody overflow-hidden rounded-[1.35rem] ${className}`}>
       {children}
     </section>
   );
@@ -1065,13 +1065,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         className={`flex flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
           isMultiColumn
             ? "h-dvh overflow-hidden pt-0 pb-0 lg:pt-4 lg:pb-4"
-            : "mx-auto min-h-dvh max-w-7xl pb-32 pt-12 lg:pb-6 lg:pt-6"
+            : "mx-auto min-h-dvh max-w-[94rem] pb-32 pt-0 lg:pb-6 lg:pt-8"
         } ${
           sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"
         }`}
       >
         <header
-          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/88 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden"
+          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
@@ -1084,14 +1084,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               <rect x="20.2" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
               <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
               <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
-              <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#d97706" />
+              <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#8d5f45" />
             </svg>
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <p className="truncate text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
-              FerroScale
-            </p>
             <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">{mobileHeaderTitle}</h1>
             <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
               {normalizedCurrentProfile && (
@@ -1182,10 +1179,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
 
         <div
-          className="px-3 pt-2 lg:hidden"
+          className="px-3 lg:hidden"
           onTouchStart={handleMobileTouchStart}
           onTouchEnd={handleMobileTouchEnd}
-          style={{ paddingBottom: resultBarBottomPadding }}
+          style={{
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
+            paddingBottom: resultBarBottomPadding,
+          }}
         >
           <AnimatePresence initial={false} mode="wait">
             <motion.div

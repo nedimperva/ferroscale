@@ -40,17 +40,17 @@ export const ColumnPanel = memo(function ColumnPanel({
       id={`column-${id}`}
       data-column-id={id}
       data-panel-type={panelId}
-      className="flex min-h-0 flex-1 flex-col rounded-xl border border-border bg-surface shadow-sm"
+      className="panel-base flex min-h-0 flex-1 flex-col rounded-[1.35rem]"
       style={{ minWidth: `${MIN_COLUMN_WIDTH}px` }}
     >
       {/* Header */}
-      <div className="flex items-center gap-1.5 border-b border-border-faint px-3 py-2">
+      <div className="flex items-center gap-2 border-b border-border-faint bg-linear-to-b from-surface to-surface-raised/45 px-3.5 py-2.5">
         {/* Panel selector */}
         <select
           value={panelId}
           onChange={(e) => onSetPanel(e.target.value as ColumnPanelId)}
           aria-label={t("columns.panelType")}
-          className="min-w-0 flex-1 truncate rounded-md border border-border bg-transparent px-2 py-1 text-xs font-semibold text-foreground outline-none transition-colors hover:bg-surface-raised focus:ring-1 focus:ring-blue-strong"
+          className="premium-control min-w-0 flex-1 truncate bg-transparent px-3 py-2 text-xs font-semibold text-foreground outline-none"
         >
           {panelOptions.map((pid) => (
             <option key={pid} value={pid}>
@@ -64,7 +64,7 @@ export const ColumnPanel = memo(function ColumnPanel({
           type="button"
           onClick={onMoveLeft}
           disabled={isFirst}
-          className="rounded-md p-1 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground disabled:opacity-30"
+          className="premium-icon-button h-8 w-8 text-muted-faint disabled:opacity-30"
           aria-label={t("columns.moveLeft")}
           title={t("columns.moveLeft")}
         >
@@ -78,7 +78,7 @@ export const ColumnPanel = memo(function ColumnPanel({
           type="button"
           onClick={onMoveRight}
           disabled={isLast}
-          className="rounded-md p-1 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground disabled:opacity-30"
+          className="premium-icon-button h-8 w-8 text-muted-faint disabled:opacity-30"
           aria-label={t("columns.moveRight")}
           title={t("columns.moveRight")}
         >
@@ -92,7 +92,7 @@ export const ColumnPanel = memo(function ColumnPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
+            className="premium-icon-button h-8 w-8 text-muted-faint hover:border-red-border hover:bg-red-surface hover:text-red-interactive"
             aria-label={t("columns.close")}
             title={t("columns.close")}
           >

@@ -186,11 +186,11 @@ export function ColumnResizeHandle({
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(currentLeftPercent)}
-      className="group flex h-full w-4 shrink-0 cursor-col-resize touch-none items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-blue-strong focus:ring-offset-2 focus:ring-offset-background"
+      className="group flex h-full w-5 shrink-0 cursor-col-resize touch-none items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background"
       onPointerDown={handlePointerDown}
       onKeyDown={handleKeyDown}
     >
-      <div className="h-10 w-1 rounded-full bg-border-faint transition-colors group-hover:bg-blue-strong group-focus:bg-blue-strong group-active:bg-blue-strong" />
+      <div className="h-12 w-1.5 rounded-full bg-border transition-colors group-hover:bg-accent group-focus:bg-accent group-active:bg-accent" />
     </div>
   );
 }
