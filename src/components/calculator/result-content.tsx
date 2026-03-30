@@ -177,28 +177,28 @@ export const ResultContent = memo(function ResultContent({
     ...(includeVat ? [{ label: t("contextVat"), value: `${vatPercent}%`, variant: "green" as const }] : []),
   ];
 
-  const quickMetrics = {
+  const quickMetrics: Record<"totalWeight" | "unitPrice" | "unitWeight" | "surfaceArea", QuickMetric> = {
     totalWeight: {
       label: t("totalWeight"),
       value: formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg),
       unit: "kg",
       sublabel: isMulti ? t("pieces", { qty: result.quantity }) : undefined,
       tone: "weight",
-    } satisfies QuickMetric,
+    },
     unitPrice: {
       label: tBase("resultRows.unitPrice"),
       value: localizedUnitPrice,
       unit: currency,
       sublabel: `${localizedPricePerKg}${currency}/kg`,
       tone: "price",
-    } satisfies QuickMetric,
+    },
     unitWeight: {
       label: t("unitWeight"),
       value: formatAnimatedNumber(animatedUnitWeight, result.unitWeightKg),
       unit: "kg",
       sublabel: t("perPiece"),
       tone: "neutral",
-    } satisfies QuickMetric,
+    },
     surfaceArea: {
       label: t("surfaceArea"),
       value: result.surfaceAreaM2 != null ? formatStaticNumber(result.surfaceAreaM2) : "—",
@@ -211,7 +211,7 @@ export const ResultContent = memo(function ResultContent({
             : undefined,
       tone: "surface",
       muted: result.surfaceAreaM2 == null,
-    } satisfies QuickMetric,
+    },
   };
 
   const featuredQuickMetrics = weightAsMain
