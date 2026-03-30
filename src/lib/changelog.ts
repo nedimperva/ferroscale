@@ -25,6 +25,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Desktop sidebar and multi-column workspace now use a more refined shell with calmer hierarchy, clearer panel controls, and more cohesive column framing",
       "Accent color now uses a darker burnished-copper tone instead of the previous yellow-leaning highlight for a more premium visual feel",
       "Mobile screen shells now blend more closely into the page background so the app feels more unibody and less like a separate inner slab",
+      "Result quick metrics now use a clearer card hierarchy with stronger scanability across desktop results and the expanded mobile result sheet",
     ],
     changed_bs: [
       "Mobilne povrsine kalkulatora sada koriste smireniji industrijski izgled sa toplijim neutralnim povrsinama, ujednacenijim razmacima i manje konkurentskog kolor naglasavanja",
@@ -32,6 +33,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Desktop sidebar i visekolonski radni prostor sada koriste profinjeniji shell sa smirenijom hijerarhijom, jasnijim panel kontrolama i skladnijim uokvirivanjem kolona",
       "Naglasena boja sada koristi tamniji burnished-copper ton umjesto prethodnog zuto-orijentisanog highlighta za premium vizuelni osjecaj",
       "Mobilni ekrani sada se vise stapaju sa pozadinom stranice tako da aplikacija djeluje vise unibody, a manje kao odvojena unutrasnja ploca",
+      "Brze metrike rezultata sada koriste jasniju hijerarhiju kartica sa boljom preglednoscu kroz desktop rezultate i prosireni mobilni result sheet",
     ],
   },
   {

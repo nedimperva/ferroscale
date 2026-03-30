@@ -139,18 +139,33 @@ export function PanelCompactMetric({
   label,
   value,
   unit,
+  sublabel,
+  className = "",
+  labelClassName = "",
+  valueClassName = "",
+  unitClassName = "",
 }: {
   label: string;
   value: string;
   unit?: string;
+  sublabel?: string;
+  className?: string;
+  labelClassName?: string;
+  valueClassName?: string;
+  unitClassName?: string;
 }) {
   return (
-    <div className="panel-raised rounded-xl px-2.5 py-2.5">
-      <p className="text-2xs font-medium text-muted">{label}</p>
+    <div className={`panel-raised rounded-xl px-2.5 py-2.5 ${className}`.trim()}>
+      <p className={`text-2xs font-medium text-muted ${labelClassName}`.trim()}>{label}</p>
       <div className="mt-1 flex flex-wrap items-end gap-1">
-        <p className="text-sm font-semibold text-foreground tabular-nums">{value}</p>
-        {unit && <p className="text-2xs font-medium uppercase tracking-wide text-muted">{unit}</p>}
+        <p className={`text-sm font-semibold text-foreground tabular-nums ${valueClassName}`.trim()}>{value}</p>
+        {unit && (
+          <p className={`text-2xs font-medium uppercase tracking-wide text-muted ${unitClassName}`.trim()}>
+            {unit}
+          </p>
+        )}
       </div>
+      {sublabel && <p className="mt-1 text-2xs text-muted">{sublabel}</p>}
     </div>
   );
 }

@@ -18,6 +18,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Desktop sidebar and multi-column workspace now use a more refined shell with calmer hierarchy, clearer panel controls, and more cohesive column framing
 - Accent color now uses a darker burnished-copper tone instead of the previous yellow-leaning highlight for a more premium visual feel
 - Mobile screen shells now blend more closely into the page background so the app feels more unibody and less like a separate inner slab
+- Result quick metrics now use a clearer card hierarchy with stronger scanability across desktop results and the expanded mobile result sheet
 
 ---
 

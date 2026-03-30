@@ -19,14 +19,52 @@ import {
   getDecimalPlaces,
   getWorkspacePanelSpacing,
   PanelActionButton,
+  PanelCompactMetric,
+  PanelMetricCard,
   PanelSectionLabel,
   PanelSummaryChip,
 } from "@/components/ui/result-style";
 
 export type ResultLayoutMode = "standalone" | "column" | "sheet";
 
+type QuickMetricTone = "price" | "weight" | "surface" | "neutral";
+
+interface QuickMetric {
+  label: string;
+  value: string;
+  unit?: string;
+  sublabel?: string;
+  tone: QuickMetricTone;
+  muted?: boolean;
+}
+
 function formatAnimatedNumber(animated: number, reference: number): string {
   return animated.toFixed(getDecimalPlaces(reference));
+}
+
+function featuredMetricClass(tone: QuickMetricTone) {
+  switch (tone) {
+    case "price":
+      return "border-accent-border bg-linear-to-br from-accent-surface to-surface";
+    case "weight":
+      return "border-blue-border bg-linear-to-br from-blue-surface to-surface";
+    case "surface":
+      return "border-green-border bg-linear-to-br from-green-surface to-surface";
+    default:
+      return "border-border bg-surface-raised";
+  }
+}
+
+function supportingMetricClass(metric: QuickMetric) {
+  if (metric.muted) {
+    return "border-border-faint bg-surface-raised/75";
+  }
+
+  if (metric.tone === "surface") {
+    return "border-green-border bg-linear-to-br from-green-surface to-surface";
+  }
+
+  return "border-border bg-surface-raised";
 }
 
 export function formatResultForClipboard(
@@ -39,7 +77,7 @@ export function formatResultForClipboard(
     `Material: ${result.gradeLabel}`,
     `Unit weight: ${result.unitWeightKg} kg`,
     `Total weight: ${result.totalWeightKg} kg`,
-    ...(result.surfaceAreaM2 != null ? [`Surface area: ${result.surfaceAreaM2} m\u00b2`] : []),
+    ...(result.surfaceAreaM2 != null ? [`Surface area: ${result.surfaceAreaM2} m²`] : []),
     `Total cost: ${result.grandTotalAmount} ${currency}`,
   ];
   return lines.join("\n");
@@ -102,6 +140,7 @@ export const ResultContent = memo(function ResultContent({
   const spacingLayout = layout === "sheet" ? "mobile" : layout === "column" ? "column" : "drawer";
   const spacing = getWorkspacePanelSpacing(spacingLayout);
   const stickyTopBlock = layout === "column";
+  const useCompactQuickMetrics = layout !== "standalone";
 
   const primaryValue = weightAsMain
     ? formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg)
@@ -137,6 +176,48 @@ export const ResultContent = memo(function ResultContent({
     ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%`, variant: "amber" as const }] : []),
     ...(includeVat ? [{ label: t("contextVat"), value: `${vatPercent}%`, variant: "green" as const }] : []),
   ];
+
+  const quickMetrics = {
+    totalWeight: {
+      label: t("totalWeight"),
+      value: formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg),
+      unit: "kg",
+      sublabel: isMulti ? t("pieces", { qty: result.quantity }) : undefined,
+      tone: "weight",
+    } satisfies QuickMetric,
+    unitPrice: {
+      label: tBase("resultRows.unitPrice"),
+      value: localizedUnitPrice,
+      unit: currency,
+      sublabel: `${localizedPricePerKg}${currency}/kg`,
+      tone: "price",
+    } satisfies QuickMetric,
+    unitWeight: {
+      label: t("unitWeight"),
+      value: formatAnimatedNumber(animatedUnitWeight, result.unitWeightKg),
+      unit: "kg",
+      sublabel: t("perPiece"),
+      tone: "neutral",
+    } satisfies QuickMetric,
+    surfaceArea: {
+      label: t("surfaceArea"),
+      value: result.surfaceAreaM2 != null ? formatStaticNumber(result.surfaceAreaM2) : "—",
+      unit: result.surfaceAreaM2 != null ? "m²" : undefined,
+      sublabel:
+        result.surfaceAreaM2 == null
+          ? t("surfaceUnavailable")
+          : isMulti && result.unitSurfaceAreaM2 != null
+            ? `${formatSquareMeters(result.unitSurfaceAreaM2)} / ${t("perPiece")}`
+            : undefined,
+      tone: "surface",
+      muted: result.surfaceAreaM2 == null,
+    } satisfies QuickMetric,
+  };
+
+  const featuredQuickMetrics = weightAsMain
+    ? [quickMetrics.totalWeight, quickMetrics.unitPrice]
+    : [quickMetrics.unitPrice, quickMetrics.totalWeight];
+  const supportingQuickMetrics = [quickMetrics.unitWeight, quickMetrics.surfaceArea];
 
   return (
     <div
@@ -315,35 +396,47 @@ export const ResultContent = memo(function ResultContent({
       <div className={`${sectionPadding} ${sectionGap}`}>
         <section data-result-metrics>
           <PanelSectionLabel label={t("quickMetrics")} />
-          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-4">
-            <MetricItem
-              label={t("unitWeight")}
-              value={formatAnimatedNumber(animatedUnitWeight, result.unitWeightKg)}
-              unit="kg"
-            />
-            <MetricItem
-              label={t("totalWeight")}
-              value={formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg)}
-              unit="kg"
-              sublabel={isMulti ? t("pieces", { qty: result.quantity }) : undefined}
-            />
-            <MetricItem
-              label={t("unitPrice")}
-              value={localizedUnitPrice}
-              unit={currency}
-            />
-            <MetricItem
-              label={t("surfaceArea")}
-              value={result.surfaceAreaM2 != null ? formatStaticNumber(result.surfaceAreaM2) : "—"}
-              unit={result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
-              sublabel={
-                result.surfaceAreaM2 == null
-                  ? t("surfaceUnavailable")
-                  : isMulti && result.unitSurfaceAreaM2 != null
-                    ? `${formatSquareMeters(result.unitSurfaceAreaM2)} / ${t("perPiece")}`
-                    : undefined
-              }
-            />
+
+          <div className={`mt-3 grid gap-2.5 ${useCompactQuickMetrics ? "grid-cols-2" : "md:grid-cols-2"}`}>
+            {featuredQuickMetrics.map((metric) => (
+              useCompactQuickMetrics ? (
+                <PanelCompactMetric
+                  key={metric.label}
+                  label={metric.label}
+                  value={metric.value}
+                  unit={metric.unit}
+                  sublabel={metric.sublabel}
+                  className={featuredMetricClass(metric.tone)}
+                  labelClassName="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-faint"
+                  valueClassName="text-base font-bold"
+                  unitClassName={metric.tone === "price" ? "text-accent" : metric.tone === "weight" ? "text-blue-text" : ""}
+                />
+              ) : (
+                <PanelMetricCard
+                  key={metric.label}
+                  label={metric.label}
+                  value={metric.value}
+                  unit={metric.unit}
+                  sublabel={metric.sublabel}
+                  className={featuredMetricClass(metric.tone)}
+                />
+              )
+            ))}
+          </div>
+
+          <div className={`mt-2.5 grid gap-2 ${useCompactQuickMetrics ? "grid-cols-2" : "md:grid-cols-2"}`}>
+            {supportingQuickMetrics.map((metric) => (
+              <PanelCompactMetric
+                key={metric.label}
+                label={metric.label}
+                value={metric.value}
+                unit={metric.unit}
+                sublabel={metric.sublabel}
+                className={supportingMetricClass(metric)}
+                labelClassName="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-faint"
+                valueClassName={metric.muted ? "text-muted" : "text-foreground"}
+              />
+            ))}
           </div>
         </section>
 
@@ -478,29 +571,6 @@ function CostRow({
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-sm text-muted">{label}</span>
       <span className="select-text text-sm font-medium text-foreground tabular-nums">{value}</span>
-    </div>
-  );
-}
-
-function MetricItem({
-  label,
-  value,
-  unit,
-  sublabel,
-}: {
-  label: string;
-  value: string;
-  unit?: string;
-  sublabel?: string;
-}) {
-  return (
-    <div className="min-w-0">
-      <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-muted-faint">{label}</p>
-      <div className="mt-1.5 flex flex-wrap items-end gap-1.5">
-        <p className="select-text text-lg font-semibold text-foreground tabular-nums">{value}</p>
-        {unit && <p className="pb-0.5 text-xs font-medium uppercase tracking-wide text-muted">{unit}</p>}
-      </div>
-      {sublabel && <p className="mt-1 text-xs text-muted">{sublabel}</p>}
     </div>
   );
 }
