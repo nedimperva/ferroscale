@@ -24,12 +24,14 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Primary calculator controls, result bar, and result sheet were tightened into a more deliberate mobile-first hierarchy with unified motion and panel styling",
       "Desktop sidebar and multi-column workspace now use a more refined shell with calmer hierarchy, clearer panel controls, and more cohesive column framing",
       "Accent color now uses a darker burnished-copper tone instead of the previous yellow-leaning highlight for a more premium visual feel",
+      "Mobile screen shells now blend more closely into the page background so the app feels more unibody and less like a separate inner slab",
     ],
     changed_bs: [
       "Mobilne povrsine kalkulatora sada koriste smireniji industrijski izgled sa toplijim neutralnim povrsinama, ujednacenijim razmacima i manje konkurentskog kolor naglasavanja",
       "Primarne kontrole kalkulatora, result bar i result sheet su zategnuti u namjerniju mobile-first hijerarhiju sa ujednacenim motion i panel stilovima",
       "Desktop sidebar i visekolonski radni prostor sada koriste profinjeniji shell sa smirenijom hijerarhijom, jasnijim panel kontrolama i skladnijim uokvirivanjem kolona",
       "Naglasena boja sada koristi tamniji burnished-copper ton umjesto prethodnog zuto-orijentisanog highlighta za premium vizuelni osjecaj",
+      "Mobilni ekrani sada se vise stapaju sa pozadinom stranice tako da aplikacija djeluje vise unibody, a manje kao odvojena unutrasnja ploca",
     ],
   },
   {

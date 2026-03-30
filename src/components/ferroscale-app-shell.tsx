@@ -143,7 +143,7 @@ function MobilePageCard({
   className?: string;
 }) {
   return (
-    <section className={`panel-unibody overflow-hidden rounded-[1.35rem] ${className}`}>
+    <section className={`overflow-hidden rounded-[1.35rem] ${className}`}>
       {children}
     </section>
   );
