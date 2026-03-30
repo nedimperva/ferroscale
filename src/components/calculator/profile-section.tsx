@@ -235,14 +235,22 @@ export const ProfileSection = memo(function ProfileSection({
     }
   };
 
+  const sectionLabelClass = "text-2xs font-semibold uppercase tracking-[0.16em] text-muted-faint";
+  const pillBaseClass = "premium-segment inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium";
+  const pillStateClass = (isActive: boolean) =>
+    isActive
+      ? "premium-segment-active shadow-[var(--panel-highlight)]"
+      : "premium-segment-muted";
+  const controlClass = "premium-control w-full bg-surface px-3 text-sm text-foreground";
+
   return (
-    <section className="grid gap-1 md:gap-3">
+    <section className="grid gap-2.5 md:gap-3.5">
       {/* ── Profile selection group ── */}
-      <div className="form-group lg:bg-transparent lg:p-0">
+      <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         {/* Category pills */}
-        <div className="grid gap-1">
-          <span className="text-xs font-medium text-muted">{t("profileSection.category")}</span>
-          <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        <div className="grid gap-1.5">
+          <span className={sectionLabelClass}>{t("profileSection.category")}</span>
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
             {CATEGORY_ORDER.map((cat) => {
               const isActive = cat === activeCategory;
               return (
@@ -250,10 +258,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
-                    ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
-                    : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-                    }`}
+                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
                 >
                   {CATEGORY_ICONS[cat]}
                   {t(`dataset.profileCategories.${cat}`)}
@@ -264,12 +269,12 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
 
         {/* Divider */}
-        <div className="my-1.5 border-t border-border-faint lg:hidden" />
+        <div className="h-1.5 lg:hidden" />
 
         {/* Sub-type pills */}
-        <div className="grid gap-1">
-          <span className="text-xs font-medium text-muted">{t("profileSection.type")}</span>
-          <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        <div className="grid gap-1.5">
+          <span className={sectionLabelClass}>{t("profileSection.type")}</span>
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
             {categoryProfiles.map((p) => {
               const isActive = p.id === input.profileId;
               return (
@@ -280,10 +285,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition-all md:px-2.5 md:py-1.5 md:text-xs ${isActive
-                    ? "border-blue-strong bg-blue-surface text-blue-text shadow-sm"
-                    : "border-border bg-surface text-foreground-secondary hover:border-border-strong hover:bg-surface-raised"
-                    }`}
+                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
                 >
                   {PROFILE_ICONS[p.id]}
                   {t(`dataset.profileShort.${p.id}`)}
@@ -296,10 +298,10 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Inline material selector (optional, off by default) ── */}
       {showInlineMaterial && (
-        <div className="form-group lg:bg-transparent lg:p-0">
-          <div className="grid gap-1">
-            <span className="text-xs font-medium text-muted">{t("material.title")}</span>
-            <div className="grid grid-cols-2 gap-1.5">
+        <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+          <div className="grid gap-1.5">
+            <span className={sectionLabelClass}>{t("material.title")}</span>
+            <div className="grid grid-cols-2 gap-2">
               <div className="relative">
                 <select
                   value={activeFamily}
@@ -307,7 +309,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_FAMILY", familyId: e.target.value as MetalFamilyId });
                   }}
-                  className="h-9 w-full appearance-none rounded-lg border border-border bg-surface px-2.5 pr-7 text-xs font-medium transition-colors focus:border-blue-500"
+                  className={`${controlClass} appearance-none pr-9 text-xs font-medium`}
                   aria-label={t("material.family")}
                 >
                   {METAL_FAMILIES.map((f) => (
@@ -327,10 +329,10 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_GRADE", gradeId: e.target.value });
                   }}
-                  className={`h-9 w-full appearance-none rounded-lg border bg-surface px-2.5 pr-7 text-xs font-medium transition-colors focus:border-blue-500 ${
+                  className={`${controlClass} appearance-none pr-9 text-xs font-medium ${
                     issues.some((i) => i.field === "materialGradeId")
                       ? "border-red-border"
-                      : "border-border"
+                      : ""
                   }`}
                   aria-label={t("material.grade")}
                 >
@@ -350,7 +352,7 @@ export const ProfileSection = memo(function ProfileSection({
       )}
 
       {/* ── Size / Dimensions + Length group ── */}
-      <div className="form-group lg:bg-transparent lg:p-0">
+      <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         {/* Standard profile: searchable size combobox */}
         {selectedProfile.mode === "standard" && (
           <SizeCombobox
@@ -377,7 +379,7 @@ export const ProfileSection = memo(function ProfileSection({
               }))}
               onRemoveCustom={onRemovePreset}
             />
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
               {selectedProfile.dimensions.map((dim) => (
                 <DimensionInput
                   key={dim.key}
@@ -395,7 +397,7 @@ export const ProfileSection = memo(function ProfileSection({
             <button
               type="button"
               onClick={onSavePreset}
-              className="mt-1 inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+              className="mt-1 inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <path d="M12 5v14" /><path d="M5 12h14" />
@@ -406,11 +408,11 @@ export const ProfileSection = memo(function ProfileSection({
         )}
 
         {/* Divider between dimensions and length */}
-        <div className="my-1.5 border-t border-border-faint" />
+        <div className="h-2" />
 
         {/* Piece length */}
-        <div className="grid gap-1 min-w-0">
-          <label htmlFor="length" className="text-xs font-medium text-foreground-secondary">
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor="length" className={sectionLabelClass}>
             {t("profileSection.pieceLength")}
           </label>
           <div className="relative min-w-0">
@@ -420,8 +422,7 @@ export const ProfileSection = memo(function ProfileSection({
               autoComplete="off"
               value={input.length.value}
               onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-              className={`h-10 w-full rounded-lg border bg-surface px-2.5 pr-10 text-sm transition-colors focus:border-blue-500 md:h-11 ${hasIssue("length") ? "border-red-border" : "border-border-strong"
-                }`}
+              className={`${controlClass} pr-10 ${hasIssue("length") ? "border-red-border" : ""}`}
               aria-invalid={hasIssue("length")}
             />
             <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
@@ -432,14 +433,14 @@ export const ProfileSection = memo(function ProfileSection({
       </div>
 
       {/* ── Quantity + Price group ── */}
-      <div className="form-group lg:bg-transparent lg:p-0">
-        <div className={`grid gap-2 ${showInlinePrice ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
+      <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <div className={`grid gap-2.5 ${showInlinePrice ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
           {/* Quantity with stepper */}
-          <div className="grid min-w-0 gap-1">
-            <label htmlFor="quantity" className="text-xs font-medium text-foreground-secondary">
+          <div className="grid min-w-0 gap-1.5">
+            <label htmlFor="quantity" className={sectionLabelClass}>
               {t("profileSection.quantity")}
             </label>
-            <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => {
@@ -449,7 +450,7 @@ export const ProfileSection = memo(function ProfileSection({
                   }
                 }}
                 disabled={input.quantity <= 1}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised disabled:opacity-50 disabled:cursor-not-allowed md:w-8"
+                className="premium-control flex h-11 w-11 shrink-0 items-center justify-center text-foreground-secondary disabled:cursor-not-allowed disabled:opacity-50 md:w-10"
                 aria-label={t("profileSection.decreaseQuantity")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -462,8 +463,7 @@ export const ProfileSection = memo(function ProfileSection({
                 autoComplete="off"
                 value={input.quantity}
                 onValueChange={(value) => dispatch({ type: "SET_QUANTITY", value })}
-                className={`h-10 min-w-0 flex-1 rounded-lg border bg-surface px-2 text-center text-sm font-medium transition-colors focus:border-blue-500 ${hasIssue("quantity") ? "border-red-border" : "border-border-strong"
-                  }`}
+                className={`${controlClass} min-w-0 flex-1 px-3 text-center text-sm font-semibold ${hasIssue("quantity") ? "border-red-border" : ""}`}
                 aria-invalid={hasIssue("quantity")}
               />
               <button
@@ -472,7 +472,7 @@ export const ProfileSection = memo(function ProfileSection({
                   triggerHaptic("light");
                   dispatch({ type: "SET_QUANTITY", value: input.quantity + 1 });
                 }}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border-strong bg-surface text-foreground-secondary transition-colors hover:bg-surface-raised md:w-8"
+                className="premium-control flex h-11 w-11 shrink-0 items-center justify-center text-foreground-secondary md:w-10"
                 aria-label={t("profileSection.increaseQuantity")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -484,8 +484,8 @@ export const ProfileSection = memo(function ProfileSection({
 
           {/* Inline unit price (optional, on by default) */}
           {showInlinePrice && (
-            <div className="grid min-w-0 gap-1">
-              <label htmlFor="inline-unit-price" className="text-xs font-medium text-foreground-secondary">
+            <div className="grid min-w-0 gap-1.5">
+              <label htmlFor="inline-unit-price" className={sectionLabelClass}>
                 {t("profileSection.unitPrice")}
               </label>
               <div className="flex min-w-0">
@@ -495,11 +495,10 @@ export const ProfileSection = memo(function ProfileSection({
                   autoComplete="off"
                   value={input.unitPrice}
                   onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-                  className={`h-10 min-w-0 flex-1 rounded-l-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-border" : "border-border-strong"
-                    }`}
+                  className={`${controlClass} min-w-0 flex-1 rounded-r-none border-r-0 px-3 ${hasIssue("unitPrice") ? "border-red-border" : ""}`}
                   aria-invalid={hasIssue("unitPrice")}
                 />
-                <span className="flex h-10 shrink-0 items-center rounded-r-lg border border-l-0 border-border-strong bg-surface-raised px-1.5 text-xs text-muted">
+                <span className="premium-control flex shrink-0 items-center rounded-l-none border-l-0 bg-surface-raised px-2 text-xs font-medium text-muted">
                   {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
                 </span>
               </div>

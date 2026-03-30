@@ -18,7 +18,6 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcut
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useElementWidth } from "@/hooks/useElementWidth";
 import type { LengthUnit } from "@/lib/calculator/types";
-import { calculateMetal } from "@/lib/calculator/engine";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
@@ -144,7 +143,7 @@ function MobilePageCard({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-xl border border-border bg-surface shadow-sm ${className}`}>
+    <section className={`panel-base overflow-hidden rounded-[1.35rem] ${className}`}>
       {children}
     </section>
   );
@@ -179,7 +178,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     markSavedUsed,
     isSaved: isSavedEntry,
     getSavedCount,
-    getSavedEntry,
   } = useSaved();
 
   const {
@@ -307,7 +305,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     [input, result],
   );
   const isCurrentSaved = result ? isSavedEntry(result) : false;
-  const currentSavedEntry = result ? getSavedEntry(result) : undefined;
 
   const handleOpenSaveDialog = useCallback(() => {
     if (!result) return;
@@ -619,8 +616,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const mobileHeaderSubtitle = normalizedCurrentProfile ? headerContext : t("app.mobileHeaderSubtitle");
   const resultBarBottomPadding = result
-    ? "calc(132px + env(safe-area-inset-bottom, 0px))"
-    : "calc(72px + env(safe-area-inset-bottom, 0px))";
+    ? "calc(146px + env(safe-area-inset-bottom, 0px))"
+    : "calc(82px + env(safe-area-inset-bottom, 0px))";
 
   const swipeStateRef = useRef<{ edge: "left" | "right"; x: number; y: number } | null>(null);
   const isSwipeBlocked =
@@ -712,18 +709,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const desktopMain = (
     <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
-      <div className="flex w-full flex-1 flex-col self-start rounded-xl border border-border bg-surface shadow-sm">
-        <div className="px-2.5 pb-0 pt-2 md:px-4 md:pb-0 md:pt-4">
+      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-[1.35rem]">
+        <div className="px-3 pb-0 pt-3 md:px-4 md:pb-0 md:pt-4">
           <IssueList issues={issues} />
         </div>
 
         {showSettingsPreview && (
-          <div className="px-2.5 pb-0.5 pt-1.5 md:px-4 md:pb-2 md:pt-3">
+          <div className="px-3 pb-1 pt-2 md:px-4 md:pb-2 md:pt-3">
             <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
           </div>
         )}
 
-        <div className="px-2.5 py-1.5 md:p-4">
+        <div className="px-3 py-2 md:p-4">
           <ProfileSection
             input={input}
             dispatch={dispatch}
@@ -933,17 +930,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const mobileScreen =
     currentTab === "calculator" ? (
       <MobilePageCard>
-        <div className="px-2.5 pb-0 pt-2">
+        <div className="px-3 pb-0 pt-3">
           <IssueList issues={issues} />
         </div>
 
         {showSettingsPreview && (
-          <div className="px-2.5 pb-0.5 pt-1.5">
+          <div className="px-3 pb-1 pt-2">
             <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
           </div>
         )}
 
-        <div className="px-2.5 py-1.5">
+        <div className="px-3 py-2">
           <ProfileSection
             input={input}
             dispatch={dispatch}
@@ -959,7 +956,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         </div>
 
-        <div className="pb-4">
+        <div className="pb-5">
           <ReversePanel
             reverse={reverse}
             isManualProfile={selectedProfile.mode === "manual"}
@@ -1068,17 +1065,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         className={`flex flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
           isMultiColumn
             ? "h-dvh overflow-hidden pt-0 pb-0 lg:pt-4 lg:pb-4"
-            : "mx-auto min-h-dvh max-w-7xl pb-32 pt-10 lg:pb-6 lg:pt-6"
+            : "mx-auto min-h-dvh max-w-7xl pb-32 pt-12 lg:pb-6 lg:pt-6"
         } ${
           sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"
         }`}
       >
         <header
-          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-2.5 border-b border-border-faint bg-surface/95 px-3 py-1.5 backdrop-blur-md lg:hidden"
-          style={{ paddingTop: "max(0.375rem, env(safe-area-inset-top, 0px))" }}
+          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/88 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden"
+          style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-surface-inverted">
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
               <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
               <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
               <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
@@ -1092,10 +1089,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col">
-            <h1 className="truncate text-xs font-semibold tracking-tight">{mobileHeaderTitle}</h1>
-            <p className="flex items-center gap-1 truncate text-2xs leading-tight text-muted">
+            <p className="truncate text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
+              FerroScale
+            </p>
+            <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">{mobileHeaderTitle}</h1>
+            <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
               {normalizedCurrentProfile && (
-                <span className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded bg-surface-inset text-muted-faint">
+                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted-faint">
                   <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
                 </span>
               )}
@@ -1108,7 +1108,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               <button
                 type="button"
                 onClick={openCompare}
-                className="inline-flex items-center gap-1 rounded-md border border-blue-border bg-blue-surface px-2 py-1 text-xs font-semibold text-blue-text"
+                className="premium-segment premium-segment-muted inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold"
                 aria-label={t("sidebar.compare")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
@@ -1121,7 +1121,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             <button
               type="button"
               onClick={() => setShowChangelogDrawer(true)}
-              className="rounded-md p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
+              className="premium-icon-button h-9 w-9"
               aria-label={t("changelog.title")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -1133,7 +1133,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             <button
               type="button"
               onClick={cycleTheme}
-              className="rounded-md p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
+              className="premium-icon-button h-9 w-9"
               aria-label={
                 resolvedTheme === "light"
                   ? t("theme.switchToDark")
@@ -1182,7 +1182,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
 
         <div
-          className="lg:hidden"
+          className="px-3 pt-2 lg:hidden"
           onTouchStart={handleMobileTouchStart}
           onTouchEnd={handleMobileTouchEnd}
           style={{ paddingBottom: resultBarBottomPadding }}
@@ -1193,7 +1193,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               initial={{ opacity: 0, x: pageDirection >= 0 ? 20 : -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: pageDirection >= 0 ? -20 : 20 }}
-              transition={{ duration: 0.18, ease: "easeOut" }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               className="grid gap-4"
             >
               {mobileScreen}

@@ -2,46 +2,47 @@
 
 :root {
   /* ── Neutral / Surface ── */
-  --background: #f5f5f4;
-  --surface: #ffffff;
-  --surface-raised: #f8fafc;
-  --surface-inset: #f1f5f9;
+  --background: #f2efe9;
+  --surface: #fbfaf7;
+  --surface-raised: #f5f1ea;
+  --surface-inset: #ebe5da;
+  --surface-emphasis: #fff6eb;
   --surface-inverted: #0f172a;
 
   /* ── Text ── */
-  --foreground: #111827;
-  --foreground-secondary: #475569;
-  --muted: #64748b;
-  --muted-faint: #94a3b8;
+  --foreground: #172033;
+  --foreground-secondary: #445066;
+  --muted: #667085;
+  --muted-faint: #8a94a6;
 
   /* ── Borders ── */
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-faint: #f1f5f9;
+  --border: #ddd5c9;
+  --border-strong: #c8beaf;
+  --border-faint: #ebe5da;
 
   /* ── Overlay ── */
   --overlay: rgba(0, 0, 0, 0.3);
 
   /* ── Accent (orange) ── */
-  --accent: #ea580c;
-  --accent-hover: #c2410c;
-  --accent-surface: #fff7ed;
-  --accent-border: #fed7aa;
-  --accent-text: #9a3412;
+  --accent: #d97706;
+  --accent-hover: #b45309;
+  --accent-surface: #fff4e5;
+  --accent-border: #f1c996;
+  --accent-text: #9a4d08;
 
   /* ── Blue (compare, active, inputs) ── */
-  --blue-surface: #eff6ff;
-  --blue-text: #1d4ed8;
-  --blue-border: #bfdbfe;
-  --blue-strong: #2563eb;
-  --blue-strong-hover: #1d4ed8;
+  --blue-surface: #eef4ff;
+  --blue-text: #2759b5;
+  --blue-border: #cbd9f6;
+  --blue-strong: #3568c8;
+  --blue-strong-hover: #2a55a5;
 
   /* ── Purple (projects) ── */
-  --purple-surface: #faf5ff;
-  --purple-text: #7e22ce;
-  --purple-border: #e9d5ff;
-  --purple-strong: #9333ea;
-  --purple-strong-hover: #7e22ce;
+  --purple-surface: #f6f1fb;
+  --purple-text: #7350a0;
+  --purple-border: #ddd0ef;
+  --purple-strong: #7e5ab3;
+  --purple-strong-hover: #684791;
 
   /* ── Green (success) ── */
   --green-surface: #f0fdf4;
@@ -63,50 +64,58 @@
   --focus-ring: #2563eb;
   --disabled-bg: #e2e8f0;
   --disabled-text: #94a3b8;
+  --radius-panel: 1.25rem;
+  --radius-control: 0.9rem;
+  --motion-fast: 140ms;
+  --motion-medium: 220ms;
+  --panel-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.06);
+  --panel-shadow-strong: 0 1px 2px rgba(15, 23, 42, 0.08), 0 18px 40px rgba(15, 23, 42, 0.12);
+  --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .dark {
   /* ── Neutral / Surface ── */
-  --background: #0f172a;
-  --surface: #1e293b;
-  --surface-raised: #334155;
-  --surface-inset: #1e293b;
+  --background: #0f141b;
+  --surface: #171d25;
+  --surface-raised: #1d2530;
+  --surface-inset: #131921;
+  --surface-emphasis: #2a1c0d;
   --surface-inverted: #f8fafc;
 
   /* ── Text ── */
-  --foreground: #f1f5f9;
-  --foreground-secondary: #94a3b8;
-  --muted: #94a3b8;
-  --muted-faint: #64748b;
+  --foreground: #eef2f8;
+  --foreground-secondary: #acb6c8;
+  --muted: #96a2b7;
+  --muted-faint: #677287;
 
   /* ── Borders ── */
-  --border: #334155;
-  --border-strong: #475569;
-  --border-faint: #1e293b;
+  --border: #2b3441;
+  --border-strong: #3b4757;
+  --border-faint: #222a34;
 
   /* ── Overlay ── */
   --overlay: rgba(0, 0, 0, 0.6);
 
   /* ── Accent (orange) ── */
-  --accent: #fb923c;
-  --accent-hover: #f97316;
-  --accent-surface: #431407;
-  --accent-border: #9a3412;
-  --accent-text: #fed7aa;
+  --accent: #f2a44a;
+  --accent-hover: #dd8e2f;
+  --accent-surface: #332111;
+  --accent-border: #7d5628;
+  --accent-text: #ffd9ad;
 
   /* ── Blue (compare, active, inputs) ── */
-  --blue-surface: #172554;
-  --blue-text: #93c5fd;
-  --blue-border: #1e40af;
-  --blue-strong: #3b82f6;
-  --blue-strong-hover: #60a5fa;
+  --blue-surface: #18253c;
+  --blue-text: #a9c5ff;
+  --blue-border: #29446d;
+  --blue-strong: #5e8fe0;
+  --blue-strong-hover: #7ba6eb;
 
   /* ── Purple (projects) ── */
-  --purple-surface: #3b0764;
-  --purple-text: #c4b5fd;
-  --purple-border: #6b21a8;
-  --purple-strong: #a855f7;
-  --purple-strong-hover: #c084fc;
+  --purple-surface: #241a30;
+  --purple-text: #d1bfef;
+  --purple-border: #514063;
+  --purple-strong: #9c7cd4;
+  --purple-strong-hover: #b393e8;
 
   /* ── Green (success) ── */
   --green-surface: #052e16;
@@ -128,6 +137,9 @@
   --focus-ring: #3b82f6;
   --disabled-bg: #334155;
   --disabled-text: #64748b;
+  --panel-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.24), 0 16px 34px rgba(0, 0, 0, 0.26);
+  --panel-shadow-strong: 0 1px 2px rgba(0, 0, 0, 0.3), 0 24px 52px rgba(0, 0, 0, 0.34);
+  --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 @theme inline {
@@ -136,6 +148,7 @@
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-surface-inset: var(--surface-inset);
+  --color-surface-emphasis: var(--surface-emphasis);
   --color-surface-inverted: var(--surface-inverted);
 
   /* ── Text ── */
@@ -233,6 +246,9 @@ body {
   line-height: 1.5;
   min-height: 100dvh;
   overflow-x: hidden;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--accent-surface) 45%, transparent) 0, transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--background) 92%, var(--surface) 8%), var(--background));
 }
 
 *,
@@ -274,13 +290,19 @@ button:disabled,
 button:not(:disabled),
 [role="button"]:not(:disabled) {
   /* Base transition so active state responds instantly (no delay before scale) */
-  transition: transform 0.08s ease-out, background-color 0.1s ease, color 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform var(--motion-fast) ease-out,
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    opacity var(--motion-fast) ease;
   will-change: transform;
 }
 
 button:not(:disabled):active,
 [role="button"]:not(:disabled):active {
-  transform: scale(0.97);
+  transform: scale(0.985);
 }
 
 :focus-visible {
@@ -290,7 +312,7 @@ button:not(:disabled):active,
 
 /* Details chevron rotation */
 .chevron-icon {
-  transition: transform 0.2s ease;
+  transition: transform var(--motion-fast) ease;
 }
 
 details[open] .chevron-icon {
@@ -301,7 +323,7 @@ details[open] .chevron-icon {
 .transition-result {
   transition-property: opacity, transform;
   transition-timing-function: ease-out;
-  transition-duration: 200ms;
+  transition-duration: var(--motion-medium);
 }
 
 /* Keep details open on lg with Tailwind open attribute workaround */
@@ -387,7 +409,10 @@ details[open] .chevron-icon {
 
 /* Interactive card — hover + focus affordance */
 .card-interactive {
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    border-color var(--motion-fast) ease;
 }
 
 .card-interactive:hover {
@@ -400,37 +425,149 @@ details[open] .chevron-icon {
 
 /* Elevated card — subtle shadow for floating cards */
 .card-elevated {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-  border-radius: 0.75rem;
+  box-shadow: var(--panel-shadow-soft);
+  border-radius: var(--radius-panel);
 }
 
 .dark .card-elevated {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--panel-shadow-soft);
 }
 
 /* Inset card — grouped section background */
 .card-inset {
   background: var(--surface-raised);
-  border-radius: 0.75rem;
+  border-radius: calc(var(--radius-panel) - 0.125rem);
   padding: 0.75rem;
 }
 
 /* Form section group — iOS-style grouped section */
 .form-group {
-  background: var(--surface-raised);
-  border-radius: 0.75rem;
-  padding: 0.5rem;
+  background: color-mix(in srgb, var(--surface-raised) 86%, var(--surface) 14%);
+  border: 1px solid var(--border-faint);
+  border-radius: 1rem;
+  box-shadow: var(--panel-highlight);
+  padding: 0.75rem;
 }
 
 .form-group + .form-group {
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
 }
 
 @media (min-width: 768px) {
   .form-group {
-    padding: 0.875rem;
+    padding: 0.9rem;
   }
   .form-group + .form-group {
     margin-top: 0.5rem;
   }
+}
+
+.panel-base {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--surface) 95%, var(--background) 5%);
+  box-shadow: var(--panel-shadow-soft);
+}
+
+.panel-raised {
+  border: 1px solid var(--border-faint);
+  border-radius: calc(var(--radius-panel) - 0.125rem);
+  background: color-mix(in srgb, var(--surface-raised) 88%, var(--surface) 12%);
+  box-shadow: var(--panel-highlight);
+}
+
+.panel-emphasis {
+  border: 1px solid color-mix(in srgb, var(--accent-border) 82%, var(--border) 18%);
+  border-radius: var(--radius-panel);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-emphasis) 92%, var(--surface) 8%), var(--surface));
+  box-shadow: var(--panel-shadow-soft);
+}
+
+.premium-control {
+  min-height: 2.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--surface) 94%, var(--surface-raised) 6%);
+  box-shadow: var(--panel-highlight);
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.premium-control:hover {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--surface-raised) 30%, var(--surface) 70%);
+}
+
+.premium-control:focus-visible,
+.premium-control:focus-within {
+  border-color: var(--accent-border);
+  box-shadow:
+    var(--panel-highlight),
+    0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  outline: none;
+}
+
+.premium-segment {
+  min-height: 2.25rem;
+  border: 1px solid var(--border-faint);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--surface-raised) 12%);
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.premium-segment-muted {
+  color: var(--foreground-secondary);
+}
+
+.premium-segment-muted:hover {
+  border-color: var(--border);
+  background: var(--surface-raised);
+  color: var(--foreground);
+}
+
+.premium-segment-active {
+  border-color: var(--accent-border);
+  background: color-mix(in srgb, var(--accent-surface) 88%, var(--surface) 12%);
+  color: var(--accent-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.premium-action-button {
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  box-shadow: var(--panel-highlight);
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
+}
+
+.premium-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.9rem;
+  background: transparent;
+  color: var(--muted-faint);
+  transition:
+    border-color var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.premium-icon-button:hover {
+  border-color: var(--border-faint);
+  background: color-mix(in srgb, var(--surface-raised) 72%, var(--surface) 28%);
+  color: var(--foreground-secondary);
 }

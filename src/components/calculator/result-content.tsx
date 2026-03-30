@@ -132,16 +132,16 @@ export const ResultContent = memo(function ResultContent({
         data-result-top
         className={
           stickyTopBlock
-            ? "sticky top-0 z-10 border-b border-border bg-surface/95 shadow-sm backdrop-blur"
+            ? "sticky top-0 z-10 border-b border-border-faint bg-surface/92 shadow-[0_14px_32px_rgba(15,23,42,0.08)] backdrop-blur-xl"
             : "border-b border-border-faint"
         }
       >
         <section
           data-result-summary
-          className={`${sectionPadding} bg-linear-to-b from-accent-surface/80 to-surface`}
+          className={`${sectionPadding} bg-linear-to-b from-surface-emphasis to-surface`}
         >
           <div className="flex items-start gap-3">
-            <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/12 text-accent ring-1 ring-accent/20">
+            <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.15rem] bg-accent/12 text-accent ring-1 ring-accent/15">
               {normalizedProfile ? (
                 <ProfileIcon category={normalizedProfile.iconKey} className="h-5 w-5" />
               ) : (
@@ -161,27 +161,28 @@ export const ResultContent = memo(function ResultContent({
             </div>
 
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
-                <p className="select-text text-4xl font-extrabold tracking-tight text-foreground tabular-nums">
+              <PanelSectionLabel label={t("title")} />
+              <div className="mt-1.5 flex flex-wrap items-end gap-x-2 gap-y-1">
+                <p className="select-text text-[2.4rem] font-extrabold tracking-tight text-foreground tabular-nums">
                   {primaryValue}
                 </p>
-                <p className="pb-1 text-lg font-semibold text-accent">{primaryUnit}</p>
+                <p className="pb-1 text-base font-semibold text-accent">{primaryUnit}</p>
               </div>
 
-              <p className="select-text mt-1 text-sm font-medium text-foreground-secondary tabular-nums">
+              <p className="select-text mt-1.5 text-sm font-medium text-foreground-secondary tabular-nums">
                 {secondaryValue}
                 <span className="ml-1 text-xs font-semibold uppercase tracking-wide text-muted">
                   {secondaryUnit}
                 </span>
               </p>
 
-              <p className="mt-2 truncate text-sm text-muted">
-                {profileLabel} · {gradeLabel}
+              <p className="mt-2.5 truncate text-sm text-muted">
+                {profileLabel} - {gradeLabel}
               </p>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             {summaryChips.map((chip) => (
               <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} variant={chip.variant} />
             ))}
@@ -189,7 +190,7 @@ export const ResultContent = memo(function ResultContent({
         </section>
 
         <section data-result-actions className={`${sectionPadding} pt-0`}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             <PanelActionButton
               type="button"
               onClick={() => {
@@ -201,7 +202,7 @@ export const ResultContent = memo(function ResultContent({
                 isInCompare
                   ? "border-blue-border bg-blue-surface text-blue-text"
                   : canCompare
-                    ? "border-blue-border bg-blue-surface/70 text-blue-text hover:bg-blue-surface"
+                    ? "border-border bg-surface-raised text-foreground-secondary hover:border-blue-border hover:bg-blue-surface/75 hover:text-blue-text"
                     : "cursor-not-allowed border-border-faint bg-surface text-muted-faint"
               }
               title={
@@ -240,7 +241,7 @@ export const ResultContent = memo(function ResultContent({
               }}
               className={
                 isSaved
-                  ? "border-accent-border bg-accent text-white hover:bg-accent"
+                  ? "border-accent-border bg-accent text-white hover:bg-accent-hover"
                   : "border-accent-border bg-accent-surface text-accent hover:bg-accent-surface/80"
               }
             >
@@ -248,7 +249,7 @@ export const ResultContent = memo(function ResultContent({
                 key={isSaved ? "saved" : "unsaved"}
                 initial={{ scale: 1 }}
                 animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 className={`h-4 w-4 ${isSaved ? "fill-current stroke-current" : "fill-none stroke-current"}`}
@@ -268,7 +269,7 @@ export const ResultContent = memo(function ResultContent({
               className={
                 hasProjects
                   ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-                  : "border-border bg-surface text-foreground-secondary hover:bg-surface-raised"
+                  : "border-border bg-surface-raised text-foreground-secondary hover:border-border-strong hover:bg-surface"
               }
               title={t("addToProject")}
             >
@@ -290,7 +291,7 @@ export const ResultContent = memo(function ResultContent({
             <CopyButton
               result={result}
               normalizedProfile={normalizedProfile}
-              className="border-border bg-surface text-foreground-secondary hover:bg-surface-raised"
+              className="border-border bg-surface-raised text-foreground-secondary hover:border-border-strong hover:bg-surface"
             />
           </div>
         </section>
@@ -324,7 +325,7 @@ export const ResultContent = memo(function ResultContent({
                 result.surfaceAreaM2 == null
                   ? t("surfaceUnavailable")
                   : isMulti && result.unitSurfaceAreaM2 != null
-                    ? `${formatSquareMeters(result.unitSurfaceAreaM2)} · ${t("perPiece")}`
+                    ? `${formatSquareMeters(result.unitSurfaceAreaM2)} / ${t("perPiece")}`
                     : undefined
               }
             />
@@ -333,7 +334,7 @@ export const ResultContent = memo(function ResultContent({
 
         <section data-result-cost>
           <PanelSectionLabel label={t("costBreakdown")} />
-          <div className="mt-3 rounded-2xl border border-border bg-surface-raised p-3">
+          <div className="panel-raised mt-3 rounded-[1.15rem] p-3.5">
             <CostRow label={t("subtotal")} value={`${formatStaticNumber(result.subtotalAmount)} ${currency}`} />
             {result.wasteAmount > 0 && (
               <CostRow
@@ -347,7 +348,7 @@ export const ResultContent = memo(function ResultContent({
                 value={`${formatStaticNumber(result.vatAmount)} ${currency}`}
               />
             )}
-            <div className="mt-3 rounded-xl border border-accent-border bg-accent-surface px-3 py-3">
+            <div className="panel-emphasis mt-4 rounded-[1.15rem] px-3.5 py-3.5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-semibold text-foreground">{t("grandTotal")}</span>
                 <span className="select-text text-xl font-bold text-accent tabular-nums">
@@ -360,14 +361,14 @@ export const ResultContent = memo(function ResultContent({
 
         <details
           data-result-details
-          className="rounded-2xl border border-border bg-surface-raised"
+          className="panel-raised rounded-[1.15rem]"
           onToggle={(event) => {
             if ((event.target as HTMLDetailsElement).open) {
               triggerHaptic("light");
             }
           }}
         >
-          <summary className="cursor-pointer list-none rounded-2xl px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-surface-inset">
+          <summary className="cursor-pointer list-none rounded-[1.15rem] px-4 py-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-inset">
             <span className="flex items-center justify-between gap-3">
               <span>{t("calculationDetails")}</span>
               <svg
@@ -420,7 +421,7 @@ export const ResultContent = memo(function ResultContent({
                 {result.breakdownRows.map((row) => (
                   <div
                     key={`${row.label}-${row.expression}`}
-                    className="rounded-xl border border-border bg-surface px-3 py-3"
+                    className="panel-base rounded-xl px-3 py-3"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -445,7 +446,7 @@ export const ResultContent = memo(function ResultContent({
         <section>
           <ReferenceList
             labels={result.referenceLabels}
-            className="rounded-2xl border border-border bg-surface-raised px-4 py-3 text-xs text-muted-faint"
+            className="panel-raised rounded-[1.15rem] px-4 py-3.5 text-xs text-muted-faint"
           />
         </section>
       </div>

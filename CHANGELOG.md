@@ -9,6 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.3] - 2026-03-30
+
+### Changed
+
+- Mobile calculator surfaces now use a calmer industrial look with warmer neutral surfaces, more consistent spacing, and less competing color emphasis
+- Primary calculator controls, result bar, and result sheet were tightened into a more deliberate mobile-first hierarchy with unified motion and panel styling
+
+---
+
 ## [2.4.2] - 2026-03-26
 
 ### Added
@@ -311,7 +320,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.2.2...HEAD
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.4.3...HEAD
+[2.4.3]: https://github.com/nedimperva/ferroscale/compare/v2.4.2...v2.4.3
+[2.4.2]: https://github.com/nedimperva/ferroscale/compare/v2.4.1...v2.4.2
+[2.4.1]: https://github.com/nedimperva/ferroscale/compare/v2.4.0...v2.4.1
+[2.4.0]: https://github.com/nedimperva/ferroscale/compare/v2.3.0...v2.4.0
+[2.3.0]: https://github.com/nedimperva/ferroscale/compare/v2.2.2...v2.3.0
 [2.2.2]: https://github.com/nedimperva/ferroscale/compare/v2.2.1...v2.2.2
 [2.2.1]: https://github.com/nedimperva/ferroscale/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/nedimperva/ferroscale/compare/v2.1.0...v2.2.0

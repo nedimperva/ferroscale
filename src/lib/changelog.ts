@@ -17,6 +17,18 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4.3",
+    date: "2026-03-30",
+    changed: [
+      "Mobile calculator surfaces now use a calmer industrial look with warmer neutral surfaces, more consistent spacing, and less competing color emphasis",
+      "Primary calculator controls, result bar, and result sheet were tightened into a more deliberate mobile-first hierarchy with unified motion and panel styling",
+    ],
+    changed_bs: [
+      "Mobilne povrsine kalkulatora sada koriste smireniji industrijski izgled sa toplijim neutralnim povrsinama, ujednacenijim razmacima i manje konkurentskog kolor naglasavanja",
+      "Primarne kontrole kalkulatora, result bar i result sheet su zategnuti u namjerniju mobile-first hijerarhiju sa ujednacenim motion i panel stilovima",
+    ],
+  },
+  {
     version: "2.4.2",
     date: "2026-03-26",
     added: [

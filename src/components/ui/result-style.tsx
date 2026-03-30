@@ -48,21 +48,21 @@ export function getWorkspacePanelSpacing(layout: WorkspacePanelLayout) {
   const compact = layout !== "drawer";
   return {
     compact,
-    cardPadding: compact ? "p-3" : "p-4",
+    cardPadding: compact ? "p-3.5" : "p-4.5",
     sectionPadding: compact ? "px-4 py-4" : "px-5 py-5",
-    sectionGap: compact ? "space-y-4" : "space-y-5",
+    sectionGap: compact ? "space-y-5" : "space-y-6",
     listGap: compact ? "gap-2.5" : "gap-3",
     headerPadding: compact ? "px-4 py-3" : "px-5 py-4",
     stickyTopClass:
       layout === "column"
-        ? "sticky top-0 z-10 border-b border-border bg-surface/95 shadow-sm backdrop-blur"
+        ? "sticky top-0 z-10 border-b border-border-faint bg-surface/92 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl"
         : "",
   };
 }
 
 export function PanelSectionLabel({ label }: { label: string }) {
   return (
-    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+    <p className="text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
       {label}
     </p>
   );
@@ -84,7 +84,7 @@ export function PanelSummaryChip({
   variant?: keyof typeof CHIP_VARIANTS;
 }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${CHIP_VARIANTS[variant]}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs ${CHIP_VARIANTS[variant]}`}>
       <span className="font-medium opacity-70">{label}</span>
       <span className="font-semibold">{value}</span>
     </span>
@@ -99,7 +99,7 @@ export function PanelCompactChip({
   value: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-surface-raised px-2 py-0.5 text-2xs text-foreground-secondary">
+    <span className="panel-raised inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-2xs text-foreground-secondary">
       <span className="font-medium text-muted">{label}</span>
       <span className="font-semibold">{value}</span>
     </span>
@@ -120,9 +120,9 @@ export function PanelMetricCard({
   className?: string;
 }) {
   return (
-    <div className={`rounded-2xl border border-border bg-surface-raised p-3 ${className}`.trim()}>
+    <div className={`panel-raised rounded-[1.15rem] p-3.5 ${className}`.trim()}>
       <p className="text-xs font-medium text-muted">{label}</p>
-      <div className="mt-2 flex flex-wrap items-end gap-x-1.5 gap-y-1">
+      <div className="mt-2.5 flex flex-wrap items-end gap-x-1.5 gap-y-1">
         <p className="select-text text-xl font-bold text-foreground tabular-nums">{value}</p>
         {unit && (
           <p className="pb-0.5 text-xs font-semibold uppercase tracking-wide text-muted">
@@ -145,7 +145,7 @@ export function PanelCompactMetric({
   unit?: string;
 }) {
   return (
-    <div className="rounded-lg border border-border-faint bg-surface-raised px-2.5 py-2">
+    <div className="panel-raised rounded-xl px-2.5 py-2.5">
       <p className="text-2xs font-medium text-muted">{label}</p>
       <div className="mt-1 flex flex-wrap items-end gap-1">
         <p className="text-sm font-semibold text-foreground tabular-nums">{value}</p>
@@ -163,7 +163,7 @@ export function PanelActionButton({
   return (
     <button
       {...props}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${className ?? ""}`.trim()}
+      className={`premium-action-button inline-flex items-center justify-center gap-2 border px-3.5 py-2.5 text-sm font-semibold ${className ?? ""}`.trim()}
     >
       {children}
     </button>
