@@ -75,22 +75,22 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
             className="fixed inset-x-0 z-40 lg:hidden"
             style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
           >
-            <div className="panel-base mx-3 mb-1 rounded-[1.35rem] bg-surface/92 px-2.5 py-2 shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl">
-              <div className="flex items-center gap-2">
+            <div className="panel-base mx-3 mb-1 rounded-[1.2rem] bg-surface/94 px-2 py-1.5 shadow-[0_14px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={onExpand}
                   aria-label={t("expandAriaLabel")}
-                  className="group flex min-w-0 flex-1 items-center gap-3 rounded-[1.1rem] px-1 py-1 text-left"
+                  className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1rem] px-1 py-0.5 text-left"
                 >
                   <span className="relative flex shrink-0 items-center justify-center">
                     {normalizedProfile ? (
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] bg-accent/12 text-accent ring-1 ring-accent/15">
-                        <ProfileIcon category={normalizedProfile.iconKey} className="h-4 w-4" />
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-[0.95rem] bg-accent/12 text-accent ring-1 ring-accent/15">
+                        <ProfileIcon category={normalizedProfile.iconKey} className="h-3.5 w-3.5" />
                       </span>
                     ) : (
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] bg-accent/12 text-accent ring-1 ring-accent/15">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-[0.95rem] bg-accent/12 text-accent ring-1 ring-accent/15">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
                           <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
                         </svg>
                       </span>
@@ -98,41 +98,32 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
                   </span>
 
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-2xs font-semibold uppercase tracking-[0.16em] text-muted-faint">
-                      {weightAsMain ? t("totalWeight") : t("grandTotal")}
-                    </span>
                     <span
-                      className={`mt-0.5 flex items-baseline gap-1.5 transition-opacity duration-200 ${
+                      className={`flex items-baseline gap-1 transition-opacity duration-200 ${
                         isPending ? "opacity-60" : ""
                       }`}
                     >
-                      <span className="select-text text-[1.35rem] font-extrabold tabular-nums tracking-tight text-foreground">
+                      <span className="select-text text-[1.18rem] font-extrabold tabular-nums tracking-tight text-foreground">
                         {weightAsMain
                           ? fmtAnimated(animatedWeight, result.totalWeightKg)
                           : fmtAnimated(animatedTotal, result.grandTotalAmount)}
                       </span>
-                      <span className="text-xs font-semibold text-accent">
+                      <span className="text-[11px] font-semibold text-accent">
                         {weightAsMain ? "kg" : CURRENCY_SYMBOLS[result.currency]}
                       </span>
-                      <span className="text-2xs text-muted-faint">/</span>
-                      <span className="select-text text-sm font-semibold tabular-nums text-foreground-secondary">
+                      <span className="text-[10px] text-muted-faint">/</span>
+                      <span className="select-text text-[13px] font-semibold tabular-nums text-foreground-secondary">
                         {weightAsMain
                           ? fmtAnimated(animatedTotal, result.grandTotalAmount)
                           : fmtAnimated(animatedWeight, result.totalWeightKg)}
                       </span>
-                      <span className="text-2xs font-medium text-muted">
+                      <span className="text-[10px] font-medium text-muted">
                         {weightAsMain ? CURRENCY_SYMBOLS[result.currency] : "kg"}
                       </span>
                     </span>
-                    <span className="mt-1 truncate text-2xs leading-tight text-muted">
+                    <span className="mt-0.5 truncate text-[10px] leading-tight text-muted">
                       {normalizedProfile?.shortLabel ?? result.profileLabel} - {resolveGradeLabel(result.gradeLabel, tBase)}
                     </span>
-                  </span>
-
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.95rem] bg-surface-raised text-muted-faint transition-colors group-hover:text-foreground-secondary">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5">
-                      <path fillRule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 9.168l-3.71 3.602a.75.75 0 01-1.042-1.08l4.25-4.12a.75.75 0 011.042 0l4.25 4.12a.75.75 0 01-.02 1.1z" clipRule="evenodd" />
-                    </svg>
                   </span>
                 </button>
 
@@ -142,20 +133,20 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
                     triggerHaptic("light");
                     setShowActions(true);
                   }}
-                  className={`premium-icon-button h-10 w-10 shrink-0 ${
-                    isSaved ? "border-accent-border bg-accent-surface text-accent" : "border-border-faint bg-surface-raised"
+                  className={`premium-segment inline-flex h-8 shrink-0 items-center justify-center gap-1.5 px-2.5 text-[11px] font-semibold leading-none ${
+                    isSaved
+                      ? "border-accent-border bg-accent-surface text-accent"
+                      : "premium-segment-muted border-border-faint bg-surface-raised"
                   }`}
                   aria-label={t("moreActions")}
                 >
-                  {isSaved ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                      <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                      <path fillRule="evenodd" d="M4.5 12a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Zm6 0a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" clipRule="evenodd" />
-                    </svg>
-                  )}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 shrink-0">
+                    <path d="M4 7h16" />
+                    <path d="M4 12h10" />
+                    <path d="M4 17h16" />
+                    <circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  </svg>
+                  <span className="leading-none">{t("actionsTitle")}</span>
                 </button>
               </div>
             </div>
@@ -240,7 +231,7 @@ export const ResultOverlay = memo(function ResultOverlay({
           className="fixed inset-x-0 bottom-0 z-[90] flex max-h-[95dvh] flex-col rounded-t-[1.6rem] border-t border-border-faint bg-surface/98 shadow-[0_-18px_40px_rgba(15,23,42,0.18)] outline-none backdrop-blur-xl lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
-          <div className="flex justify-center pt-3 pb-1">
+          <div className="flex justify-center pb-1 pt-3">
             <div className="h-1.5 w-10 rounded-full bg-border-strong" />
           </div>
 

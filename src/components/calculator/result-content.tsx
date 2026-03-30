@@ -19,7 +19,6 @@ import {
   getDecimalPlaces,
   getWorkspacePanelSpacing,
   PanelActionButton,
-  PanelMetricCard,
   PanelSectionLabel,
   PanelSummaryChip,
 } from "@/components/ui/result-style";
@@ -115,6 +114,22 @@ export const ResultContent = memo(function ResultContent({
 
   const sectionPadding = spacing.sectionPadding;
   const sectionGap = spacing.sectionGap;
+  const isDesktopSummary = layout !== "sheet";
+  const stackedSectionClass = layout === "sheet"
+    ? "border-t border-border-faint/70 pt-4"
+    : "border-t border-border-faint/70 pt-5";
+  const primaryValueClass = isDesktopSummary
+    ? "text-[2rem] font-bold tracking-tight text-foreground tabular-nums xl:text-[2.15rem]"
+    : "text-[2.45rem] font-extrabold tracking-tight text-foreground tabular-nums";
+  const primaryUnitClass = isDesktopSummary
+    ? "pb-0.5 text-base font-semibold text-accent"
+    : "pb-1 text-lg font-semibold text-accent";
+  const secondaryValueClass = isDesktopSummary
+    ? "select-text mt-1 text-sm font-medium text-foreground-secondary tabular-nums"
+    : "select-text mt-1.5 text-base font-semibold text-foreground-secondary tabular-nums";
+  const secondaryUnitClass = isDesktopSummary
+    ? "ml-1 text-xs font-semibold uppercase tracking-wide text-muted"
+    : "ml-1 text-xs font-medium uppercase tracking-wide text-muted";
 
   const summaryChips = [
     { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }), variant: "default" as const },
@@ -161,17 +176,17 @@ export const ResultContent = memo(function ResultContent({
             </div>
 
             <div className="min-w-0 flex-1">
-              <PanelSectionLabel label={t("title")} />
+              {layout === "sheet" && <PanelSectionLabel label={t("title")} />}
               <div className="mt-1.5 flex flex-wrap items-end gap-x-2 gap-y-1">
-                <p className="select-text text-[2.4rem] font-extrabold tracking-tight text-foreground tabular-nums">
+                <p className={`select-text ${primaryValueClass}`}>
                   {primaryValue}
                 </p>
-                <p className="pb-1 text-base font-semibold text-accent">{primaryUnit}</p>
+                <p className={primaryUnitClass}>{primaryUnit}</p>
               </div>
 
-              <p className="select-text mt-1.5 text-sm font-medium text-foreground-secondary tabular-nums">
+              <p className={secondaryValueClass}>
                 {secondaryValue}
-                <span className="ml-1 text-xs font-semibold uppercase tracking-wide text-muted">
+                <span className={secondaryUnitClass}>
                   {secondaryUnit}
                 </span>
               </p>
@@ -300,24 +315,24 @@ export const ResultContent = memo(function ResultContent({
       <div className={`${sectionPadding} ${sectionGap}`}>
         <section data-result-metrics>
           <PanelSectionLabel label={t("quickMetrics")} />
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <PanelMetricCard
+          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-4">
+            <MetricItem
               label={t("unitWeight")}
               value={formatAnimatedNumber(animatedUnitWeight, result.unitWeightKg)}
               unit="kg"
             />
-            <PanelMetricCard
+            <MetricItem
               label={t("totalWeight")}
               value={formatAnimatedNumber(animatedTotalWeight, result.totalWeightKg)}
               unit="kg"
               sublabel={isMulti ? t("pieces", { qty: result.quantity }) : undefined}
             />
-            <PanelMetricCard
+            <MetricItem
               label={t("unitPrice")}
               value={localizedUnitPrice}
               unit={currency}
             />
-            <PanelMetricCard
+            <MetricItem
               label={t("surfaceArea")}
               value={result.surfaceAreaM2 != null ? formatStaticNumber(result.surfaceAreaM2) : "—"}
               unit={result.surfaceAreaM2 != null ? "m\u00b2" : undefined}
@@ -332,9 +347,9 @@ export const ResultContent = memo(function ResultContent({
           </div>
         </section>
 
-        <section data-result-cost>
+        <section data-result-cost className={stackedSectionClass}>
           <PanelSectionLabel label={t("costBreakdown")} />
-          <div className="panel-raised mt-3 rounded-[1.15rem] p-3.5">
+          <div className="mt-3">
             <CostRow label={t("subtotal")} value={`${formatStaticNumber(result.subtotalAmount)} ${currency}`} />
             {result.wasteAmount > 0 && (
               <CostRow
@@ -348,27 +363,25 @@ export const ResultContent = memo(function ResultContent({
                 value={`${formatStaticNumber(result.vatAmount)} ${currency}`}
               />
             )}
-            <div className="panel-emphasis mt-4 rounded-[1.15rem] px-3.5 py-3.5">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-foreground">{t("grandTotal")}</span>
-                <span className="select-text text-xl font-bold text-accent tabular-nums">
-                  {formatAnimatedNumber(animatedTotal, result.grandTotalAmount)} {currency}
-                </span>
-              </div>
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+              <span className="text-sm font-semibold text-foreground">{t("grandTotal")}</span>
+              <span className="select-text text-lg font-bold text-accent tabular-nums">
+                {formatAnimatedNumber(animatedTotal, result.grandTotalAmount)} {currency}
+              </span>
             </div>
           </div>
         </section>
 
         <details
           data-result-details
-          className="panel-raised rounded-[1.15rem]"
+          className={stackedSectionClass}
           onToggle={(event) => {
             if ((event.target as HTMLDetailsElement).open) {
               triggerHaptic("light");
             }
           }}
         >
-          <summary className="cursor-pointer list-none rounded-[1.15rem] px-4 py-3.5 text-sm font-semibold text-foreground transition-colors hover:bg-surface-inset">
+          <summary className="cursor-pointer list-none py-0 text-sm font-semibold text-foreground transition-colors hover:text-foreground-secondary">
             <span className="flex items-center justify-between gap-3">
               <span>{t("calculationDetails")}</span>
               <svg
@@ -386,7 +399,7 @@ export const ResultContent = memo(function ResultContent({
             </span>
           </summary>
 
-          <div className="border-t border-border-faint px-4 py-4">
+          <div className="pt-3">
             <p className="mb-3 text-xs text-muted">
               {t("formula")} {result.formulaLabel}
             </p>
@@ -421,7 +434,7 @@ export const ResultContent = memo(function ResultContent({
                 {result.breakdownRows.map((row) => (
                   <div
                     key={`${row.label}-${row.expression}`}
-                    className="panel-base rounded-xl px-3 py-3"
+                    className="border-t border-border-faint/70 px-0 py-3 first:border-t-0 first:pt-0"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -443,10 +456,10 @@ export const ResultContent = memo(function ResultContent({
           </div>
         </details>
 
-        <section>
+        <section className={stackedSectionClass}>
           <ReferenceList
             labels={result.referenceLabels}
-            className="panel-raised rounded-[1.15rem] px-4 py-3.5 text-xs text-muted-faint"
+            className="px-0 py-0 text-xs text-muted-faint"
           />
         </section>
       </div>
@@ -465,6 +478,29 @@ function CostRow({
     <div className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-sm text-muted">{label}</span>
       <span className="select-text text-sm font-medium text-foreground tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function MetricItem({
+  label,
+  value,
+  unit,
+  sublabel,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  sublabel?: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-2xs font-semibold uppercase tracking-[0.14em] text-muted-faint">{label}</p>
+      <div className="mt-1.5 flex flex-wrap items-end gap-1.5">
+        <p className="select-text text-lg font-semibold text-foreground tabular-nums">{value}</p>
+        {unit && <p className="pb-0.5 text-xs font-medium uppercase tracking-wide text-muted">{unit}</p>}
+      </div>
+      {sublabel && <p className="mt-1 text-xs text-muted">{sublabel}</p>}
     </div>
   );
 }
