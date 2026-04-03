@@ -570,7 +570,12 @@ export function useGoogleDriveSync() {
       const current = getSyncMetadata();
       if (current.authState === "awaiting_browser" && current.pendingAuthRequestId) {
         void resumePendingAuth();
-      } else if (current.syncEnabled && current.authState === "connected") {
+      } else if (
+        current.syncEnabled
+        && current.authState === "connected"
+        && current.syncStatus === "pending"
+        && (current.pendingUploadCount > 0 || current.pendingDownloadCount > 0)
+      ) {
         scheduleSync(250);
       }
     });

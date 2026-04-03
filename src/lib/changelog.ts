@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.4.5",
+    date: "2026-04-03",
+    fixed: [
+      "Google Drive sync status no longer loops between connected and syncing when there are no pending data changes",
+    ],
+    fixed_bs: [
+      "Status Google Drive sync-a vise ne ulazi u petlju izmedju connected i syncing kada nema promjena podataka za slanje",
+    ],
+  },
+  {
     version: "2.4.4",
     date: "2026-03-30",
     added: [

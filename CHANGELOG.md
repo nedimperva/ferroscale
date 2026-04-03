@@ -9,6 +9,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.4.5] - 2026-04-03
+
+### Fixed
+
+- Google Drive sync status no longer loops between connected and syncing when there are no pending data changes
+
+---
+
 ## [2.4.4] - 2026-03-30
 
 ### Added
