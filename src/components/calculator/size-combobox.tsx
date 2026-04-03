@@ -9,15 +9,31 @@ interface SizeComboboxProps {
   sizes: StandardSizeOption[];
   value: string;
   onChange: (sizeId: string) => void;
+  customSizes?: Array<{
+    id: string;
+    label: string;
+    sizeId: string;
+  }>;
+  onRemoveCustom?: (id: string) => void;
   hasIssue?: boolean;
   label?: string;
   hint?: string;
 }
 
+type ComboItem = {
+  id: string;
+  label: string;
+  sizeId: string;
+  isCustom: boolean;
+  customId?: string;
+};
+
 export const SizeCombobox = memo(function SizeCombobox({
   sizes,
   value,
   onChange,
+  customSizes = [],
+  onRemoveCustom,
   hasIssue = false,
   label,
   hint,
@@ -31,13 +47,29 @@ export const SizeCombobox = memo(function SizeCombobox({
   const listRef = useRef<HTMLUListElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selected = sizes.find((s) => s.id === value);
+  const items: ComboItem[] = [
+    ...customSizes.map((custom) => ({
+      id: `custom-${custom.id}`,
+      label: custom.label,
+      sizeId: custom.sizeId,
+      isCustom: true,
+      customId: custom.id,
+    })),
+    ...sizes.map((size) => ({
+      id: size.id,
+      label: size.label,
+      sizeId: size.id,
+      isCustom: false,
+    })),
+  ];
+
+  const selected = items.find((s) => s.sizeId === value);
 
   const filtered = query.trim()
-    ? sizes.filter((s) =>
+    ? items.filter((s) =>
         s.label.toLowerCase().includes(query.trim().toLowerCase()),
       )
-    : sizes;
+    : items;
 
   const handleSelect = useCallback(
     (sizeId: string) => {
@@ -76,7 +108,7 @@ export const SizeCombobox = memo(function SizeCombobox({
         case "Enter":
           e.preventDefault();
           if (highlightIdx >= 0 && highlightIdx < filtered.length) {
-            handleSelect(filtered[highlightIdx].id);
+            handleSelect(filtered[highlightIdx].sizeId);
           }
           break;
         case "Escape":
@@ -123,7 +155,7 @@ export const SizeCombobox = memo(function SizeCombobox({
 
   useEffect(() => {
     if (open && !query) {
-      const idx = filtered.findIndex((s) => s.id === value);
+      const idx = filtered.findIndex((s) => s.sizeId === value);
       pendingHighlightRef.current = idx >= 0 ? idx : 0;
       const raf = requestAnimationFrame(() => {
         if (pendingHighlightRef.current !== null) {
@@ -218,7 +250,7 @@ export const SizeCombobox = memo(function SizeCombobox({
                 </li>
               ) : (
                 filtered.map((s, i) => {
-                  const isSelected = s.id === value;
+                  const isSelected = s.sizeId === value;
                   const isHighlighted = i === highlightIdx;
                   return (
                     <li
@@ -228,31 +260,58 @@ export const SizeCombobox = memo(function SizeCombobox({
                       onMouseEnter={() => setHighlightIdx(i)}
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        handleSelect(s.id);
+                        handleSelect(s.sizeId);
                       }}
-                      className={`flex cursor-pointer items-center justify-between px-3 py-2 text-sm transition-colors ${
+                      className={`flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-sm transition-colors ${
                         isHighlighted
                           ? "bg-blue-surface text-blue-text"
+                          : s.isCustom
+                            ? "bg-purple-surface/30 text-foreground hover:bg-purple-surface/50"
                           : isSelected
                             ? "bg-surface-raised font-medium"
                             : "text-foreground hover:bg-surface-raised"
                       }`}
                     >
-                      <span className="font-medium">{s.label}</span>
-                      {isSelected && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          className="h-4 w-4 shrink-0"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
+                      <span className="flex items-center gap-1.5 font-medium">
+                        {s.label}
+                        {s.isCustom && (
+                          <span className="rounded bg-purple-surface px-1 py-0.5 text-2xs font-semibold text-purple-text">
+                            Custom
+                          </span>
+                        )}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1">
+                        {isSelected && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="h-4 w-4 shrink-0"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                        {s.isCustom && onRemoveCustom && s.customId && (
+                          <button
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              onRemoveCustom(s.customId!);
+                            }}
+                            className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
+                            title="Remove custom"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                              <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                            </svg>
+                          </button>
+                        )}
+                      </span>
                     </li>
                   );
                 })

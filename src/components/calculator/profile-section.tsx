@@ -359,6 +359,14 @@ export const ProfileSection = memo(function ProfileSection({
             sizes={selectedProfile.sizes}
             value={input.selectedSizeId ?? selectedProfile.sizes[0]?.id}
             onChange={(sizeId) => dispatch({ type: "SET_SIZE", sizeId })}
+            customSizes={profilePresets
+              .filter((preset) => typeof preset.selectedSizeId === "string" && preset.selectedSizeId.length > 0)
+              .map((preset) => ({
+                id: preset.id,
+                label: preset.label,
+                sizeId: preset.selectedSizeId!,
+              }))}
+            onRemoveCustom={onRemovePreset}
             hasIssue={hasIssue("selectedSizeId")}
             label={t("profileSection.size")}
             hint={t("profileSection.enArea")}

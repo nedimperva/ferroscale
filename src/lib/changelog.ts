@@ -19,9 +19,15 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "2.5.1",
     date: "2026-04-03",
+    changed: [
+      "Saved custom presets for standard profiles now appear directly in the size picker alongside EN standard sizes",
+    ],
     fixed: [
       "Google Drive sync status no longer loops between connected and syncing when there are no pending data changes",
       "Google Drive sync no longer treats quick-calc history as constantly changed when older local data is missing its sync timestamp marker",
+    ],
+    changed_bs: [
+      "Sacuvani custom preseti za standardne profile sada se prikazuju direktno u izboru velicina zajedno sa EN standardnim velicinama",
     ],
     fixed_bs: [
       "Status Google Drive sync-a vise ne ulazi u petlju izmedju connected i syncing kada nema promjena podataka za slanje",

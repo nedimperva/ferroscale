@@ -11,6 +11,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [2.5.1] - 2026-04-03
 
+### Changed
+
+- Saved custom presets for standard profiles now appear directly in the size picker alongside EN standard sizes
+
 ### Fixed
 
 - Google Drive sync status no longer loops between connected and syncing when there are no pending data changes
