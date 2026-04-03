@@ -17,7 +17,7 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "2.4.5",
+    version: "2.5.1",
     date: "2026-04-03",
     fixed: [
       "Google Drive sync status no longer loops between connected and syncing when there are no pending data changes",
@@ -29,7 +29,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
   {
-    version: "2.4.4",
+    version: "2.5.0",
     date: "2026-03-30",
     added: [
       "Backend-assisted Google Drive sync for templates, projects, favourites, compare items, and quick-calc history using encrypted per-record app-data storage",
