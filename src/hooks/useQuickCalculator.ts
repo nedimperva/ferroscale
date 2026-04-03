@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { calculateQuickFromQuery } from "@ferroscale/metal-core";
 import type { QuickWeightResult, QuickParseIssue } from "@ferroscale/metal-core";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { loadQuickHistory, persistQuickHistory } from "@/lib/sync/collections";
 
-const QUICK_HISTORY_KEY = "ferroscale-quick-history";
 const MAX_QUICK_HISTORY = 20;
 
 export interface QuickLineResult {
@@ -38,7 +37,7 @@ export function useQuickCalculator(): UseQuickCalculatorReturn {
   // Hydrate recent queries from localStorage
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount hydration from storage
-    setRecentQueries(loadArrayFromStorage<string>(QUICK_HISTORY_KEY));
+    setRecentQueries(loadQuickHistory());
   }, []);
 
   // Debounced calculation on query change
@@ -82,7 +81,7 @@ export function useQuickCalculator(): UseQuickCalculatorReturn {
     setRecentQueries((prev) => {
       const deduped = prev.filter((item) => item !== trimmed);
       const next = [trimmed, ...deduped].slice(0, MAX_QUICK_HISTORY);
-      persistToStorage(QUICK_HISTORY_KEY, next);
+      persistQuickHistory(next);
       return next;
     });
   }, []);
@@ -108,7 +107,7 @@ export function useQuickCalculator(): UseQuickCalculatorReturn {
 
   const clearHistory = useCallback(() => {
     setRecentQueries([]);
-    persistToStorage(QUICK_HISTORY_KEY, []);
+    persistQuickHistory([]);
   }, []);
 
   return {

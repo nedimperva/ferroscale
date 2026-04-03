@@ -9,7 +9,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [2.4.3] - 2026-03-30
+## [2.4.4] - 2026-03-30
+
+### Added
+
+- Backend-assisted Google Drive sync for templates, projects, favourites, compare items, and quick-calc history using encrypted per-record app-data storage
 
 ### Changed
 
@@ -19,6 +23,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Accent color now uses a darker burnished-copper tone instead of the previous yellow-leaning highlight for a more premium visual feel
 - Mobile screen shells now blend more closely into the page background so the app feels more unibody and less like a separate inner slab
 - Result quick metrics now use a clearer card hierarchy with stronger scanability across desktop results and the expanded mobile result sheet
+- Settings now include a Data & Sync section with passphrase-based encryption, reconnect, remote reset, manual sync, and local import/export controls
+
+### Fixed
+
+- Google Drive sync now survives expired file ids by recreating missing remote records and resumes auth handoff cleanly across popup and mobile redirect flows
 
 ---
 
@@ -324,8 +333,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ---
 
 <!-- Links -->
-[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.4.3...HEAD
-[2.4.3]: https://github.com/nedimperva/ferroscale/compare/v2.4.2...v2.4.3
+[Unreleased]: https://github.com/nedimperva/ferroscale/compare/v2.4.4...HEAD
+[2.4.4]: https://github.com/nedimperva/ferroscale/compare/v2.4.2...v2.4.4
 [2.4.2]: https://github.com/nedimperva/ferroscale/compare/v2.4.1...v2.4.2
 [2.4.1]: https://github.com/nedimperva/ferroscale/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/nedimperva/ferroscale/compare/v2.3.0...v2.4.0

@@ -17,8 +17,14 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    version: "2.4.3",
+    version: "2.4.4",
     date: "2026-03-30",
+    added: [
+      "Backend-assisted Google Drive sync for templates, projects, favourites, compare items, and quick-calc history using encrypted per-record app-data storage",
+    ],
+    added_bs: [
+      "Backend-assisted Google Drive sync za sablone, projekte, favorite, compare stavke i quick-calc historiju koristeci sifrovano cuvanje zapis-po-zapis u app-data prostoru",
+    ],
     changed: [
       "Mobile calculator surfaces now use a calmer industrial look with warmer neutral surfaces, more consistent spacing, and less competing color emphasis",
       "Primary calculator controls, result bar, and result sheet were tightened into a more deliberate mobile-first hierarchy with unified motion and panel styling",
@@ -26,14 +32,22 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Accent color now uses a darker burnished-copper tone instead of the previous yellow-leaning highlight for a more premium visual feel",
       "Mobile screen shells now blend more closely into the page background so the app feels more unibody and less like a separate inner slab",
       "Result quick metrics now use a clearer card hierarchy with stronger scanability across desktop results and the expanded mobile result sheet",
+      "Settings now include a Data & Sync section with passphrase-based encryption, reconnect, remote reset, manual sync, and local import/export controls",
     ],
     changed_bs: [
+      "Postavke sada ukljucuju Podaci i sync sekciju sa sifrovanjem preko lozinke, ponovnim povezivanjem, resetom udaljene kopije, rucnim sync-om i lokalnim import/export kontrolama",
       "Mobilne povrsine kalkulatora sada koriste smireniji industrijski izgled sa toplijim neutralnim povrsinama, ujednacenijim razmacima i manje konkurentskog kolor naglasavanja",
       "Primarne kontrole kalkulatora, result bar i result sheet su zategnuti u namjerniju mobile-first hijerarhiju sa ujednacenim motion i panel stilovima",
       "Desktop sidebar i visekolonski radni prostor sada koriste profinjeniji shell sa smirenijom hijerarhijom, jasnijim panel kontrolama i skladnijim uokvirivanjem kolona",
       "Naglasena boja sada koristi tamniji burnished-copper ton umjesto prethodnog zuto-orijentisanog highlighta za premium vizuelni osjecaj",
       "Mobilni ekrani sada se vise stapaju sa pozadinom stranice tako da aplikacija djeluje vise unibody, a manje kao odvojena unutrasnja ploca",
       "Brze metrike rezultata sada koriste jasniju hijerarhiju kartica sa boljom preglednoscu kroz desktop rezultate i prosireni mobilni result sheet",
+    ],
+    fixed: [
+      "Google Drive sync now survives expired file ids by recreating missing remote records and resumes auth handoff cleanly across popup and mobile redirect flows",
+    ],
+    fixed_bs: [
+      "Google Drive sync sada prezivljava istekle file id vrijednosti ponovnim kreiranjem nedostajucih udaljenih zapisa i uredno nastavlja auth handoff kroz popup i mobilni redirect tok",
     ],
   },
   {

@@ -40,7 +40,7 @@ export default async function LocaleLayout({
       </a>
       <NextIntlClientProvider locale={locale} messages={messages}>
         <ErrorBoundary>
-          <main id="main-content">
+          <main id="main-content" suppressHydrationWarning>
             <RouteAwareAppShell>{children}</RouteAwareAppShell>
           </main>
         </ErrorBoundary>

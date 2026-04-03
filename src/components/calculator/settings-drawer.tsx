@@ -16,6 +16,8 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { SyncSection } from "./sync-section";
+import type { SyncStatus } from "@/lib/sync/types";
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -43,6 +45,15 @@ interface SettingsDrawerProps {
   unitOptions: LengthUnit[];
   textSize: TextSize;
   onTextSizeChange: (size: TextSize) => void;
+  syncStatus: SyncStatus;
+  onConnectSync: (passphrase: string) => Promise<unknown>;
+  onReconnectSync: () => Promise<unknown>;
+  onChangeSyncPassphrase: (passphrase: string) => Promise<unknown>;
+  onSyncNow: () => Promise<unknown>;
+  onDisconnectSync: () => Promise<unknown>;
+  onResetRemoteSync: () => Promise<unknown>;
+  onExportSync: () => void;
+  onImportSync: (file: File) => Promise<unknown>;
 }
 
 export function SettingsWorkspaceContent({
@@ -68,6 +79,15 @@ export function SettingsWorkspaceContent({
   unitOptions,
   textSize,
   onTextSizeChange,
+  syncStatus,
+  onConnectSync,
+  onReconnectSync,
+  onChangeSyncPassphrase,
+  onSyncNow,
+  onDisconnectSync,
+  onResetRemoteSync,
+  onExportSync,
+  onImportSync,
 }: Omit<SettingsDrawerProps, "open" | "onClose" >) {
   const t = useTranslations("settingsDrawer");
   return (
@@ -124,6 +144,23 @@ export function SettingsWorkspaceContent({
               unitOptions={unitOptions}
               textSize={textSize}
               onTextSizeChange={onTextSizeChange}
+            />
+          </div>
+        </CollapsibleSection>
+
+        <div className="h-px bg-border" />
+        <CollapsibleSection title={t("sectionSync")} defaultOpen>
+          <div className="p-4 pt-1">
+            <SyncSection
+              status={syncStatus}
+              onConnect={onConnectSync}
+              onReconnect={onReconnectSync}
+              onChangePassphrase={onChangeSyncPassphrase}
+              onSyncNow={onSyncNow}
+              onDisconnect={onDisconnectSync}
+              onResetRemote={onResetRemoteSync}
+              onExport={onExportSync}
+              onImport={onImportSync}
             />
           </div>
         </CollapsibleSection>

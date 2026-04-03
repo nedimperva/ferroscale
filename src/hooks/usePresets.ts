@@ -1,10 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import type { DimensionKey, ProfileId } from "@/lib/datasets/types";
+import {
+  isActiveSyncEntity,
+  loadPresets,
+  markEntityDeleted,
+  persistPresets,
+} from "@/lib/sync/collections";
 
-const PRESETS_KEY = "ferroscale-presets-v1";
 const MAX_PRESETS = 50;
 
 export interface DimensionPreset {
@@ -13,10 +17,10 @@ export interface DimensionPreset {
   label: string;
   manualDimensionsMm: Partial<Record<DimensionKey, number>>;
   selectedSizeId?: string;
-  /** Saved piece length (raw value in whatever unit the user had active at save time).
-   *  Only stored for plates_sheets profiles where length is as important as width/thickness. */
   lengthValue?: number;
   createdAt: number;
+  updatedAt: string;
+  deletedAt?: string;
 }
 
 function generateId(): string {
@@ -26,63 +30,83 @@ function generateId(): string {
 export interface UsePresetsReturn {
   presets: DimensionPreset[];
   presetsForProfile: (profileId: ProfileId) => DimensionPreset[];
-  addPreset: (preset: Omit<DimensionPreset, "id" | "createdAt">) => void;
+  addPreset: (preset: Omit<DimensionPreset, "id" | "createdAt" | "updatedAt" | "deletedAt">) => void;
   removePreset: (id: string) => void;
   renamePreset: (id: string, label: string) => void;
 }
 
 export function usePresets(): UsePresetsReturn {
-  const [presets, setPresets] = useState<DimensionPreset[]>([]);
+  const [allPresets, setAllPresets] = useState<DimensionPreset[]>([]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount hydration from storage
-    setPresets(loadArrayFromStorage<DimensionPreset>(PRESETS_KEY));
+    setAllPresets(loadPresets()); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
 
+  const persist = useCallback((updater: React.SetStateAction<DimensionPreset[]>) => {
+    setAllPresets((previous) => {
+      const next = typeof updater === "function"
+        ? (updater as (prev: DimensionPreset[]) => DimensionPreset[])(previous)
+        : updater;
+      persistPresets(next);
+      return next;
+    });
+  }, []);
+
+  const presets = useMemo(
+    () => allPresets.filter((preset) => isActiveSyncEntity(preset)),
+    [allPresets],
+  );
+
   const addPreset = useCallback(
-    (preset: Omit<DimensionPreset, "id" | "createdAt">) => {
-      setPresets((prev) => {
+    (preset: Omit<DimensionPreset, "id" | "createdAt" | "updatedAt" | "deletedAt">) => {
+      persist((previous) => {
+        const timestamp = new Date().toISOString();
         const entry: DimensionPreset = {
           ...preset,
           id: generateId(),
           createdAt: Date.now(),
+          updatedAt: timestamp,
         };
-        const next = [entry, ...prev].slice(0, MAX_PRESETS);
-        persistToStorage(PRESETS_KEY, next);
-        return next;
+        const active = previous.filter((item) => !item.deletedAt);
+        const deleted = previous.filter((item) => item.deletedAt);
+        return [entry, ...active].slice(0, MAX_PRESETS).concat(deleted);
       });
     },
-    [],
+    [persist],
   );
 
   const removePreset = useCallback(
     (id: string) => {
-      setPresets((prev) => {
-        const next = prev.filter((p) => p.id !== id);
-        persistToStorage(PRESETS_KEY, next);
-        return next;
-      });
+      const deletedAt = new Date().toISOString();
+      persist((previous) =>
+        previous.map((preset) => (
+          preset.id === id && !preset.deletedAt ? markEntityDeleted(preset, deletedAt) : preset
+        )),
+      );
     },
-    [],
+    [persist],
   );
 
   const renamePreset = useCallback(
     (id: string, label: string) => {
-      setPresets((prev) => {
-        const next = prev.map((p) => (p.id === id ? { ...p, label } : p));
-        persistToStorage(PRESETS_KEY, next);
-        return next;
-      });
+      const updatedAt = new Date().toISOString();
+      persist((previous) =>
+        previous.map((preset) => (
+          preset.id === id && !preset.deletedAt
+            ? { ...preset, label, updatedAt }
+            : preset
+        )),
+      );
     },
-    [],
+    [persist],
   );
 
   const presetsByProfile = useMemo(() => {
     const map = new Map<ProfileId, DimensionPreset[]>();
-    for (const p of presets) {
-      const list = map.get(p.profileId);
-      if (list) list.push(p);
-      else map.set(p.profileId, [p]);
+    for (const preset of presets) {
+      const list = map.get(preset.profileId);
+      if (list) list.push(preset);
+      else map.set(preset.profileId, [preset]);
     }
     return map;
   }, [presets]);

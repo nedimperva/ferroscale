@@ -14,6 +14,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useTextSize } from "@/hooks/useTextSize";
 import { useQuickCalculator } from "@/hooks/useQuickCalculator";
 import { usePresets } from "@/hooks/usePresets";
+import { useSync } from "@/hooks/useSync";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useElementWidth } from "@/hooks/useElementWidth";
@@ -221,6 +222,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const toggleQuickCalc = quickCalc.toggle;
   const quickCalcOpen = quickCalc.isOpen;
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
+  const sync = useSync();
   const columnLayout = useColumnLayout();
   const [mainContentRef, mainContentWidth] = useElementWidth<HTMLDivElement>();
   const maxColumnsAllowed = getMaxColumnsForWidth(mainContentWidth);
@@ -901,6 +903,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           unitOptions={UNIT_OPTIONS}
           textSize={textSize}
           onTextSizeChange={setTextSize}
+          syncStatus={sync.status}
+          onConnectSync={sync.connectProvider}
+          onReconnectSync={sync.reconnectProvider}
+          onChangeSyncPassphrase={sync.changePassphrase}
+          onSyncNow={() => sync.syncNow()}
+          onDisconnectSync={sync.disconnectProvider}
+          onResetRemoteSync={sync.resetRemoteCopy}
+          onExportSync={sync.exportSnapshot}
+          onImportSync={sync.importSnapshot}
         />
       </div>
     ),
@@ -924,7 +935,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     deleteProject, duplicateProject, removeCalculation, updateCalculationNote,
     updateProjectDescription, updateProjectPaintingSettings, addCalculation,
     resetAll, compareLimit, setCompareLimit, isCompareMobileCapped,
-    navigateToTab, handleSavePreset, textSize, setTextSize,
+    navigateToTab, handleSavePreset, textSize, setTextSize, sync,
   ]);
 
   const mobileScreen =
@@ -1029,6 +1040,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           unitOptions={UNIT_OPTIONS}
           textSize={textSize}
           onTextSizeChange={setTextSize}
+          syncStatus={sync.status}
+          onConnectSync={sync.connectProvider}
+          onReconnectSync={sync.reconnectProvider}
+          onChangeSyncPassphrase={sync.changePassphrase}
+          onSyncNow={() => sync.syncNow()}
+          onDisconnectSync={sync.disconnectProvider}
+          onResetRemoteSync={sync.resetRemoteCopy}
+          onExportSync={sync.exportSnapshot}
+          onImportSync={sync.importSnapshot}
         />
       </MobilePageCard>
     );
@@ -1297,6 +1317,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             unitOptions={UNIT_OPTIONS}
             textSize={textSize}
             onTextSizeChange={setTextSize}
+            syncStatus={sync.status}
+            onConnectSync={sync.connectProvider}
+            onReconnectSync={sync.reconnectProvider}
+            onChangeSyncPassphrase={sync.changePassphrase}
+            onSyncNow={() => sync.syncNow()}
+            onDisconnectSync={sync.disconnectProvider}
+            onResetRemoteSync={sync.resetRemoteCopy}
+            onExportSync={sync.exportSnapshot}
+            onImportSync={sync.importSnapshot}
           />
         )}
 
