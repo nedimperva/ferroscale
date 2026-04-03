@@ -14,6 +14,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - Google Drive sync status no longer loops between connected and syncing when there are no pending data changes
+- Google Drive sync no longer treats quick-calc history as constantly changed when older local data is missing its sync timestamp marker
 
 ---
 

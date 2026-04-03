@@ -231,7 +231,12 @@ export function loadQuickHistory(): string[] {
 export function getQuickHistoryUpdatedAt(): string {
   const stored = readListUpdatedAt("quickHistory");
   if (stored !== new Date(0).toISOString()) return stored;
-  return loadQuickHistory().length > 0 ? nowIso() : stored;
+  if (loadQuickHistory().length === 0) return stored;
+
+  // Initialize a stable timestamp once for existing legacy history entries.
+  const initialized = nowIso();
+  writeListUpdatedAt("quickHistory", initialized);
+  return initialized;
 }
 
 export function persistQuickHistory(items: string[], options?: PersistOptions): void {

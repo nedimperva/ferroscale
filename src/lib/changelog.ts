@@ -21,9 +21,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-04-03",
     fixed: [
       "Google Drive sync status no longer loops between connected and syncing when there are no pending data changes",
+      "Google Drive sync no longer treats quick-calc history as constantly changed when older local data is missing its sync timestamp marker",
     ],
     fixed_bs: [
       "Status Google Drive sync-a vise ne ulazi u petlju izmedju connected i syncing kada nema promjena podataka za slanje",
+      "Google Drive sync vise ne tretira quick-calc historiju kao stalno promijenjenu kada starijim lokalnim podacima nedostaje oznaka vremena sync-a",
     ],
   },
   {

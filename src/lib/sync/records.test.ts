@@ -5,6 +5,7 @@ import { persistSavedEntries, persistCompareItems } from "./collections";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import { saveSyncRecordIndex } from "./metadata";
+import { SYNC_COLLECTION_UPDATED_AT_KEYS } from "./keys";
 
 function createSavedEntry(overrides?: Partial<SavedEntry>): SavedEntry {
   return {
@@ -107,5 +108,33 @@ describe("sync records", () => {
 
     const stored = JSON.parse(localStorage.getItem("ferroscale-saved-v2") || "[]") as SavedEntry[];
     expect(stored[0]?.deletedAt).toBe("2026-04-03T10:00:00.000Z");
+  });
+
+  it("does not keep quick history pending forever when updatedAt key was missing", async () => {
+    localStorage.setItem("ferroscale-quick-history", JSON.stringify(["quick-input"]));
+
+    const firstPending = await getPendingSyncRecords("device-a");
+    expect(firstPending.some((record) => record.recordKey === "quickHistory:root")).toBe(true);
+
+    const quickRecord = firstPending.find((record) => record.recordKey === "quickHistory:root");
+    expect(quickRecord).toBeDefined();
+    if (!quickRecord) return;
+
+    saveSyncRecordIndex({
+      [quickRecord.recordKey]: {
+        recordKey: quickRecord.recordKey,
+        kind: quickRecord.kind,
+        entityId: quickRecord.entityId,
+        updatedAt: quickRecord.updatedAt,
+        contentHash: quickRecord.contentHash,
+        driveFileId: "drive-quick-history",
+      },
+    });
+
+    const initializedUpdatedAt = localStorage.getItem(SYNC_COLLECTION_UPDATED_AT_KEYS.quickHistory);
+    expect(initializedUpdatedAt).toBeTruthy();
+
+    const secondPending = await getPendingSyncRecords("device-a");
+    expect(secondPending.some((record) => record.recordKey === "quickHistory:root")).toBe(false);
   });
 });
