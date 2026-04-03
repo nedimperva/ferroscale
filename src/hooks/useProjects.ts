@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { fingerprint, templateFingerprint } from "@/lib/calculator/fingerprint";
 import { calculateMetal } from "@/lib/calculator/engine";
-import { useStorageArray } from "@/hooks/useStorageState";
+import {
+  isActiveSyncEntity,
+  loadProjects,
+  markEntityDeleted,
+  persistProjects,
+} from "@/lib/sync/collections";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -41,6 +46,7 @@ export interface Project {
   description?: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string;
   calculations: ProjectCalculation[];
   /** Paint price per kg. */
   paintingPricePerKg?: number;
@@ -81,7 +87,6 @@ export interface ProjectCsvLabels {
   resolveProfileLabel?: (profileId: string, fallback: string) => string;
 }
 
-const PROJECTS_KEY = "advanced-calc-projects-v2";
 const MAX_PROJECTS = 20;
 const MAX_CALCS_PER_PROJECT = 50;
 
@@ -490,9 +495,25 @@ export interface UseProjectsReturn {
 }
 
 export function useProjects(): UseProjectsReturn {
-  const [projects, setProjects] = useStorageArray<Project>(PROJECTS_KEY);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+
+  const setProjects = useCallback((updater: React.SetStateAction<Project[]>) => {
+    setAllProjects((previous) => {
+      const next = typeof updater === "function"
+        ? (updater as (prev: Project[]) => Project[])(previous)
+        : updater;
+      persistProjects(next);
+      return next;
+    });
+  }, []);
+
+  const projects = allProjects.filter((project) => isActiveSyncEntity(project));
+
+  useEffect(() => {
+    setAllProjects(loadProjects()); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
 
   const createProject = useCallback((name: string): Project => {
     const now = new Date().toISOString();
@@ -505,7 +526,7 @@ export function useProjects(): UseProjectsReturn {
       calculations: [],
     };
     setProjects((prev) => {
-      if (prev.length >= MAX_PROJECTS) return prev;
+      if (prev.filter((project) => !project.deletedAt).length >= MAX_PROJECTS) return prev;
       return [project, ...prev];
     });
     return project;
@@ -514,7 +535,7 @@ export function useProjects(): UseProjectsReturn {
   const renameProject = useCallback((id: string, name: string) => {
     setProjects((prev) =>
       prev.map((p) =>
-        p.id === id
+        p.id === id && !p.deletedAt
           ? { ...p, name: name.trim() || p.name, updatedAt: new Date().toISOString() }
           : p,
       ),
@@ -524,7 +545,7 @@ export function useProjects(): UseProjectsReturn {
   const updateProjectDescription = useCallback((id: string, description: string) => {
     setProjects((prev) =>
       prev.map((p) =>
-        p.id === id
+        p.id === id && !p.deletedAt
           ? { ...p, description: description.trim() || undefined, updatedAt: new Date().toISOString() }
           : p,
       ),
@@ -534,7 +555,7 @@ export function useProjects(): UseProjectsReturn {
   const updateProjectPaintingSettings = useCallback((id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => {
     setProjects((prev) =>
       prev.map((p) =>
-        p.id === id
+        p.id === id && !p.deletedAt
           ? { ...p, paintingPricePerKg: pricePerKg, paintingCoverageM2PerKg: coverageM2PerKg, paintingCoats: coats, updatedAt: new Date().toISOString() }
           : p,
       ),
@@ -542,15 +563,20 @@ export function useProjects(): UseProjectsReturn {
   }, [setProjects]);
 
   const deleteProject = useCallback((id: string) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    const deletedAt = new Date().toISOString();
+    setProjects((prev) =>
+      prev.map((project) => (
+        project.id === id && !project.deletedAt ? markEntityDeleted(project, deletedAt) : project
+      )),
+    );
     setActiveProjectId((current) => (current === id ? null : current));
   }, [setProjects]);
 
   const duplicateProject = useCallback((id: string): Project | null => {
     let duplicate: Project | null = null;
     setProjects((prev) => {
-      if (prev.length >= MAX_PROJECTS) return prev;
-      const original = prev.find((p) => p.id === id);
+      if (prev.filter((project) => !project.deletedAt).length >= MAX_PROJECTS) return prev;
+      const original = prev.find((p) => p.id === id && !p.deletedAt);
       if (!original) return prev;
       const now = new Date().toISOString();
       duplicate = {
@@ -559,6 +585,7 @@ export function useProjects(): UseProjectsReturn {
         name: `${original.name} (copy)`,
         createdAt: now,
         updatedAt: now,
+        deletedAt: undefined,
         calculations: original.calculations.map((c) => ({ ...c, id: crypto.randomUUID() })),
       };
       return [duplicate, ...prev];
@@ -571,7 +598,7 @@ export function useProjects(): UseProjectsReturn {
       let added = false;
       setProjects((prev) =>
         prev.map((p) => {
-          if (p.id !== projectId) return p;
+          if (p.id !== projectId || p.deletedAt) return p;
           if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
           const fp = fingerprint(result);
           if (p.calculations.some((c) => fingerprint(c.result) === fp)) return p;
@@ -656,7 +683,7 @@ export function useProjects(): UseProjectsReturn {
       let added = false;
       setProjects((prev) =>
         prev.map((p) => {
-          if (p.id !== projectId) return p;
+          if (p.id !== projectId || p.deletedAt) return p;
           if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
           // Check for duplicate template entry
           if (p.calculations.some((c) => {
@@ -690,7 +717,7 @@ export function useProjects(): UseProjectsReturn {
   const removeCalculation = useCallback((projectId: string, calcId: string) => {
     setProjects((prev) =>
       prev.map((p) => {
-        if (p.id !== projectId) return p;
+        if (p.id !== projectId || p.deletedAt) return p;
         return {
           ...p,
           updatedAt: new Date().toISOString(),
@@ -703,7 +730,7 @@ export function useProjects(): UseProjectsReturn {
   const updateCalculationNote = useCallback((projectId: string, calcId: string, note: string) => {
     setProjects((prev) =>
       prev.map((p) => {
-        if (p.id !== projectId) return p;
+        if (p.id !== projectId || p.deletedAt) return p;
         return {
           ...p,
           updatedAt: new Date().toISOString(),

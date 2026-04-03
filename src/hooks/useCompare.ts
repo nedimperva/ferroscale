@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { fingerprint } from "@/lib/calculator/fingerprint";
+import {
+  loadCompareItems,
+  persistCompareItems,
+} from "@/lib/sync/collections";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -19,7 +22,6 @@ export interface CompareItem {
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-const COMPARE_KEY = "advanced-calc-compare-v2";
 const COMPARE_LIMIT_KEY = "advanced-calc-compare-limit-v1";
 const DEFAULT_COMPARE_LIMIT = 3;
 
@@ -29,13 +31,6 @@ function clampCompareLimit(value: number): number {
 
 /* ------------------------------------------------------------------ */
 /*  Local-storage helpers (delegated to shared utility)               */
-/* ------------------------------------------------------------------ */
-
-const loadItems = () => loadArrayFromStorage<CompareItem>(COMPARE_KEY);
-const persistItems = (items: CompareItem[]) => persistToStorage(COMPARE_KEY, items);
-
-/* ------------------------------------------------------------------ */
-/*  Hook                                                              */
 /* ------------------------------------------------------------------ */
 
 export interface UseCompareReturn {
@@ -69,8 +64,26 @@ export function useCompare(): UseCompareReturn {
 
   /* Hydrate from localStorage on mount (empty [] during SSR to avoid hydration mismatch) */
   const hydrated = useRef(false);
+  const setItemsWithPersist = useCallback(
+    (
+      action: React.SetStateAction<CompareItem[]>,
+      options?: { updatedAt?: string; persist?: boolean },
+    ) => {
+      setItems((previous) => {
+        const next = typeof action === "function"
+          ? (action as (prev: CompareItem[]) => CompareItem[])(previous)
+          : action;
+        if (hydrated.current && (options?.persist ?? true)) {
+          persistCompareItems(next, { updatedAt: options?.updatedAt });
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   useEffect(() => {
-    const stored = loadItems();
+    const stored = loadCompareItems();
     const storedLimitRaw = localStorage.getItem(COMPARE_LIMIT_KEY);
     const storedLimit = storedLimitRaw ? Number(storedLimitRaw) : DEFAULT_COMPARE_LIMIT;
     const nextLimit = Number.isFinite(storedLimit)
@@ -84,7 +97,7 @@ export function useCompare(): UseCompareReturn {
       const desktop = media.matches;
       setIsDesktop(desktop);
       const effectiveLimit = desktop ? compareLimitRef.current : Math.min(compareLimitRef.current, 3);
-      setItems((prev) => (prev.length > effectiveLimit ? prev.slice(0, effectiveLimit) : prev));
+      setItemsWithPersist((prev) => (prev.length > effectiveLimit ? prev.slice(0, effectiveLimit) : prev));
     };
     syncDesktop();
     media.addEventListener("change", syncDesktop);
@@ -95,12 +108,7 @@ export function useCompare(): UseCompareReturn {
     hydrated.current = true;
 
     return () => media.removeEventListener("change", syncDesktop);
-  }, []);
-
-  /* Persist on change (skip the initial hydration write-back) */
-  useEffect(() => {
-    if (hydrated.current) persistItems(items);
-  }, [items]);
+  }, [setItemsWithPersist]);
 
   useEffect(() => {
     if (!hydrated.current) return;
@@ -111,8 +119,8 @@ export function useCompare(): UseCompareReturn {
     const nextLimit = clampCompareLimit(value);
     setCompareLimitState(nextLimit);
     const effectiveLimit = isDesktop ? nextLimit : Math.min(nextLimit, 3);
-    setItems((prev) => (prev.length > effectiveLimit ? prev.slice(0, effectiveLimit) : prev));
-  }, [isDesktop]);
+    setItemsWithPersist((prev) => (prev.length > effectiveLimit ? prev.slice(0, effectiveLimit) : prev));
+  }, [isDesktop, setItemsWithPersist]);
 
   const isDuplicate = useCallback(
     (result: CalculationResult): boolean => {
@@ -124,7 +132,7 @@ export function useCompare(): UseCompareReturn {
 
   const addItem = useCallback(
     (input: CalculationInput, result: CalculationResult) => {
-      setItems((prev) => {
+      setItemsWithPersist((prev) => {
         if (prev.length >= maxCompare) return prev;
         const fp = fingerprint(result);
         if (prev.some((item) => fingerprint(item.result) === fp)) return prev;
@@ -142,24 +150,21 @@ export function useCompare(): UseCompareReturn {
         return next;
       });
     },
-    [maxCompare],
+    [maxCompare, setItemsWithPersist],
   );
 
   const removeItem = useCallback((id: string) => {
-    setItems((prev) => {
+    setItemsWithPersist((prev) => {
       const next = prev.filter((item) => item.id !== id);
       if (next.length === 0) setIsOpen(false);
       return next;
     });
-  }, []);
+  }, [setItemsWithPersist]);
 
   const clearAll = useCallback(() => {
-    setItems([]);
+    setItemsWithPersist([]);
     setIsOpen(false);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem(COMPARE_KEY);
-    }
-  }, []);
+  }, [setItemsWithPersist]);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
