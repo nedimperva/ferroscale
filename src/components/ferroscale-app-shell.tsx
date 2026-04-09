@@ -542,6 +542,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     defaultUnitStore.getServerSnapshot,
   );
 
+  useEffect(() => {
+    defaultUnitStore.set(input.length.unit);
+  }, [input.length.unit]);
+
+  const handleDefaultUnitChange = useCallback(
+    (unit: LengthUnit) => {
+      defaultUnitStore.set(unit);
+      dispatch({ type: "SET_LENGTH_UNIT", unit });
+    },
+    [dispatch],
+  );
+
   const handleSavePreset = useCallback(() => {
     const profile = getProfileById(input.profileId);
     if (!profile) return;
@@ -732,6 +744,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             showInlineMaterial={showInlineMaterial}
             showInlinePrice={showInlinePrice}
             defaultUnit={defaultUnit}
+            lengthUnitOptions={UNIT_OPTIONS}
             onSavePreset={handleSavePreset}
             profilePresets={presetsForProfile(input.profileId)}
             onRemovePreset={removePreset}
@@ -750,6 +763,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       <aside className="hidden gap-4 self-start lg:sticky lg:top-4 lg:grid">
         <ResultPanel
           result={result}
+          pieceLength={input.length}
           isPending={isPending}
           isSaved={isCurrentSaved}
           onOpenSaveDialog={handleOpenSaveDialog}
@@ -793,6 +807,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             showInlineMaterial={showInlineMaterial}
             showInlinePrice={showInlinePrice}
             defaultUnit={defaultUnit}
+            lengthUnitOptions={UNIT_OPTIONS}
             onSavePreset={handleSavePreset}
             profilePresets={presetsForProfile(input.profileId)}
             onRemovePreset={removePreset}
@@ -810,6 +825,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     result: (
       <ResultPanel
         result={result}
+        pieceLength={input.length}
         isPending={isPending}
         isSaved={isCurrentSaved}
         onOpenSaveDialog={handleOpenSaveDialog}
@@ -899,7 +915,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           weightAsMain={weightAsMain}
           onToggleWeightAsMain={weightAsMainStore.toggle}
           defaultUnit={defaultUnit}
-          onDefaultUnitChange={defaultUnitStore.set}
+          onDefaultUnitChange={handleDefaultUnitChange}
           unitOptions={UNIT_OPTIONS}
           textSize={textSize}
           onTextSizeChange={setTextSize}
@@ -935,7 +951,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     deleteProject, duplicateProject, removeCalculation, updateCalculationNote,
     updateProjectDescription, updateProjectPaintingSettings, addCalculation,
     resetAll, compareLimit, setCompareLimit, isCompareMobileCapped,
-    navigateToTab, handleSavePreset, textSize, setTextSize, sync,
+    navigateToTab, handleSavePreset, textSize, setTextSize, sync, handleDefaultUnitChange,
   ]);
 
   const mobileScreen =
@@ -961,6 +977,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             showInlineMaterial={showInlineMaterial}
             showInlinePrice={showInlinePrice}
             defaultUnit={defaultUnit}
+            lengthUnitOptions={UNIT_OPTIONS}
             onSavePreset={handleSavePreset}
             profilePresets={presetsForProfile(input.profileId)}
             onRemovePreset={removePreset}
@@ -1036,7 +1053,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           weightAsMain={weightAsMain}
           onToggleWeightAsMain={weightAsMainStore.toggle}
           defaultUnit={defaultUnit}
-          onDefaultUnitChange={defaultUnitStore.set}
+          onDefaultUnitChange={handleDefaultUnitChange}
           unitOptions={UNIT_OPTIONS}
           textSize={textSize}
           onTextSizeChange={setTextSize}
@@ -1186,7 +1203,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           </div>
         </header>
 
-        <PwaRegister />
+        <PwaRegister onOpenChangelog={() => setShowChangelogDrawer(true)} />
 
         {isMultiColumn ? (
           <MultiColumnLayout
@@ -1250,6 +1267,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         {showOverlay && !showTemplateBuilder && result && (
           <ResultOverlay
             result={result}
+            pieceLength={input.length}
             includeVat={input.includeVat}
             wastePercent={input.wastePercent}
             vatPercent={input.vatPercent}
@@ -1313,7 +1331,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             weightAsMain={weightAsMain}
             onToggleWeightAsMain={weightAsMainStore.toggle}
             defaultUnit={defaultUnit}
-            onDefaultUnitChange={defaultUnitStore.set}
+            onDefaultUnitChange={handleDefaultUnitChange}
             unitOptions={UNIT_OPTIONS}
             textSize={textSize}
             onTextSizeChange={setTextSize}

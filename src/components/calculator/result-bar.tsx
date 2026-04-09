@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Drawer } from "vaul";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import type { CalculationResult } from "@/lib/calculator/types";
+import type { CalculationResult, UnitValue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
@@ -175,6 +175,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
 
 interface ResultOverlayProps {
   result: CalculationResult;
+  pieceLength?: UnitValue | null;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -194,6 +195,7 @@ interface ResultOverlayProps {
 
 export const ResultOverlay = memo(function ResultOverlay({
   result,
+  pieceLength = null,
   includeVat,
   wastePercent,
   vatPercent,
@@ -242,6 +244,7 @@ export const ResultOverlay = memo(function ResultOverlay({
           <div className="flex-1 overflow-y-auto overscroll-contain">
             <ResultContent
               result={result}
+              pieceLength={pieceLength}
               includeVat={includeVat}
               wastePercent={wastePercent}
               vatPercent={vatPercent}

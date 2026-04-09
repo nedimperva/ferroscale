@@ -4,7 +4,7 @@ import { memo, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import type { CalculationResult } from "@/lib/calculator/types";
+import type { CalculationResult, UnitValue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { roundTo } from "@/lib/calculator/units";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
@@ -14,6 +14,7 @@ import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
 import {
   formatLocalizedNumber,
+  formatPieceLength,
   formatSquareMeters,
   formatStaticNumber,
   getDecimalPlaces,
@@ -24,6 +25,7 @@ import {
   PanelSectionLabel,
   PanelSummaryChip,
 } from "@/components/ui/result-style";
+import { DATASET_VERSION } from "@/lib/datasets/version";
 
 export type ResultLayoutMode = "standalone" | "column" | "sheet";
 
@@ -85,6 +87,8 @@ export function formatResultForClipboard(
 
 export interface ResultContentProps {
   result: CalculationResult;
+  /** Piece length as entered (summary chips); optional for standalone compare views. */
+  pieceLength?: UnitValue | null;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -104,6 +108,7 @@ export interface ResultContentProps {
 
 export const ResultContent = memo(function ResultContent({
   result,
+  pieceLength = null,
   includeVat,
   wastePercent,
   vatPercent,
@@ -170,7 +175,10 @@ export const ResultContent = memo(function ResultContent({
     ? "ml-1 text-xs font-semibold uppercase tracking-wide text-muted"
     : "ml-1 text-xs font-medium uppercase tracking-wide text-muted";
 
+  const lengthLabel = formatPieceLength(pieceLength, result.lengthMm, locale);
+
   const summaryChips = [
+    { label: t("contextLength"), value: lengthLabel, variant: "default" as const },
     { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }), variant: "default" as const },
     { label: t("contextPricing"), value: `${localizedPricePerKg}${currency}/kg`, variant: "default" as const },
     ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%`, variant: "amber" as const }] : []),
@@ -283,6 +291,10 @@ export const ResultContent = memo(function ResultContent({
               <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} variant={chip.variant} />
             ))}
           </div>
+
+          <p className="mt-3 text-xs leading-relaxed text-muted-faint">
+            {t("roundingNote")}
+          </p>
         </section>
 
         <section data-result-actions className={`${sectionPadding} pt-0`}>
@@ -554,6 +566,9 @@ export const ResultContent = memo(function ResultContent({
             labels={result.referenceLabels}
             className="px-0 py-0 text-xs text-muted-faint"
           />
+          <p className="mt-2 text-[11px] text-muted-faint">
+            {t("datasetLine", { version: result.datasetVersion ?? DATASET_VERSION })}
+          </p>
         </section>
       </div>
     </div>

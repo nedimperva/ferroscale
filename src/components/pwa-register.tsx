@@ -30,7 +30,11 @@ function getServerOfflineSnapshot(): boolean {
 
 type BannerState = "offline" | "update" | "ready" | "install" | null;
 
-export function PwaRegister() {
+interface PwaRegisterProps {
+  onOpenChangelog?: () => void;
+}
+
+export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
   const t = useTranslations("pwa");
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const [banner, setBanner] = useState<BannerState>(null);
@@ -142,14 +146,26 @@ export function PwaRegister() {
 
   if (activeBanner === "update") {
     return (
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
-        <span>{t("updateAvailable")}</span>
-        <button
-          onClick={handleUpdate}
-          className="shrink-0 rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
-        >
-          {t("updateNow")}
-        </button>
+      <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
+        <span className="min-w-0 flex-1">{t("updateAvailable")}</span>
+        <div className="flex shrink-0 items-center gap-2">
+          {onOpenChangelog && (
+            <button
+              type="button"
+              onClick={onOpenChangelog}
+              className="rounded border border-blue-300 bg-white/80 px-2.5 py-1 text-xs font-semibold text-blue-900 hover:bg-white dark:border-blue-700 dark:bg-blue-900/60 dark:text-blue-100 dark:hover:bg-blue-900"
+            >
+              {t("whatsNew")}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleUpdate}
+            className="rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+          >
+            {t("updateNow")}
+          </button>
+        </div>
       </div>
     );
   }

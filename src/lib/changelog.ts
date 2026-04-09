@@ -17,6 +17,24 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.5.2",
+    date: "2026-04-09",
+    changed: [
+      "Calculator form is grouped into clearer sections with a single unit control for dimensions and piece length",
+      "Switching profile or the workspace length unit now keeps manual dimensions and piece length in sync without silent mm-only defaults",
+      "Validation messages for hollow sections and angles explain the conflicting values in millimetres",
+      "Results show length, quantity, pricing, waste, and VAT in a consistent chip order, with rounding context and dataset version near references",
+      "PWA update banner can open the changelog before applying an update; number animations are slightly faster",
+    ],
+    changed_bs: [
+      "Kalkulator forma je grupisana u jasnije sekcije sa jednom kontrolom jedinica za dimenzije i duzinu komada",
+      "Promjena profila ili jedinice duzine u radnom prostoru drzi rucne dimenzije i duzinu komada uskladjenima bez tihih mm podrazumijevanja",
+      "Poruke validacije za suplje profile i ugaone profile objasnjavaju konfliktne vrijednosti u milimetrima",
+      "Rezultati prikazuju duzinu, kolicinu, cijenu, otpad i PDV u konzistentnom redoslijedu cipova, sa kontekstom zaokruzivanja i verzijom dataseta kod referenci",
+      "PWA update baner moze otvoriti changelog prije primjene azuriranja; animacije brojeva su malo brze",
+    ],
+  },
+  {
     version: "2.5.1",
     date: "2026-04-03",
     changed: [

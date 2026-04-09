@@ -184,6 +184,7 @@ interface ProfileSectionProps {
   showInlineMaterial: boolean;
   showInlinePrice: boolean;
   defaultUnit: LengthUnit;
+  lengthUnitOptions: LengthUnit[];
   onSavePreset: () => void;
   profilePresets: DimensionPreset[];
   onRemovePreset: (id: string) => void;
@@ -198,6 +199,7 @@ export const ProfileSection = memo(function ProfileSection({
   showInlineMaterial,
   showInlinePrice,
   defaultUnit,
+  lengthUnitOptions,
   onSavePreset,
   profilePresets,
   onRemovePreset,
@@ -236,6 +238,8 @@ export const ProfileSection = memo(function ProfileSection({
   };
 
   const sectionLabelClass = "text-2xs font-semibold uppercase tracking-[0.16em] text-muted-faint";
+  const groupHeadingClass =
+    "text-[11px] font-semibold uppercase tracking-[0.14em] text-muted mb-2";
   const pillBaseClass = "premium-segment inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium";
   const pillStateClass = (isActive: boolean) =>
     isActive
@@ -243,10 +247,13 @@ export const ProfileSection = memo(function ProfileSection({
       : "premium-segment-muted";
   const controlClass = "premium-control w-full bg-surface px-3 text-sm text-foreground";
 
+  const lengthUnit = input.length.unit;
+
   return (
-    <section className="grid gap-2.5 md:gap-3.5">
+    <section className="grid gap-5 md:gap-6">
       {/* ── Profile selection group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <h3 className={groupHeadingClass}>{t("profileSection.groupProfile")}</h3>
         {/* Category pills */}
         <div className="grid gap-1.5">
           <span className={sectionLabelClass}>{t("profileSection.category")}</span>
@@ -299,9 +306,8 @@ export const ProfileSection = memo(function ProfileSection({
       {/* ── Inline material selector (optional, off by default) ── */}
       {showInlineMaterial && (
         <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-          <div className="grid gap-1.5">
-            <span className={sectionLabelClass}>{t("material.title")}</span>
-            <div className="grid grid-cols-2 gap-2">
+          <h3 className={groupHeadingClass}>{t("material.title")}</h3>
+          <div className="grid grid-cols-2 gap-2">
               <div className="relative">
                 <select
                   value={activeFamily}
@@ -346,13 +352,41 @@ export const ProfileSection = memo(function ProfileSection({
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </div>
-            </div>
           </div>
         </div>
       )}
 
       {/* ── Size / Dimensions + Length group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <h3 className={groupHeadingClass}>{t("profileSection.groupGeometry")}</h3>
+        <p className="mb-3 text-xs leading-relaxed text-muted">
+          {selectedProfile.mode === "standard"
+            ? t("profileSection.hintStandardSize")
+            : t("profileSection.hintManualDimensions")}
+        </p>
+
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-border-faint bg-surface-raised/60 px-3 py-2.5">
+          <label htmlFor="length-unit-global" className="text-2xs font-semibold uppercase tracking-wide text-muted-faint">
+            {t("profileSection.unitStripLabel")}
+          </label>
+          <select
+            id="length-unit-global"
+            value={lengthUnit}
+            onChange={(e) => {
+              triggerHaptic("light");
+              dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit });
+            }}
+            className="h-9 min-w-[5.5rem] rounded-lg border border-border-strong bg-surface px-2 text-xs font-semibold text-foreground transition-colors focus:border-blue-500 focus:outline-none"
+          >
+            {lengthUnitOptions.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-faint">{t("profileSection.unitStripHint")}</span>
+        </div>
+
         {/* Standard profile: searchable size combobox */}
         {selectedProfile.mode === "standard" && (
           <SizeCombobox
@@ -393,7 +427,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={dim.key}
                   dimension={dim}
                   value={input.manualDimensions[dim.key]}
-                  unit={defaultUnit}
+                  unit={lengthUnit}
                   hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
                   issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
                   onValueChange={(v) =>
@@ -433,8 +467,8 @@ export const ProfileSection = memo(function ProfileSection({
               className={`${controlClass} pr-10 ${hasIssue("length") ? "border-red-border" : ""}`}
               aria-invalid={hasIssue("length")}
             />
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
-              {defaultUnit}
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
+              {lengthUnit}
             </span>
           </div>
         </div>
@@ -442,6 +476,7 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Quantity + Price group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <h3 className={groupHeadingClass}>{t("profileSection.groupQuantityPrice")}</h3>
         <div className={`grid gap-2.5 ${showInlinePrice ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
           {/* Quantity with stepper */}
           <div className="grid min-w-0 gap-1.5">

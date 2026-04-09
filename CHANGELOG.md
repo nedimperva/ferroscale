@@ -9,6 +9,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.5.2] - 2026-04-09
+
+### Changed
+
+- Calculator form is grouped into clearer sections with a single unit control for dimensions and piece length
+- Switching profile or the workspace length unit now keeps manual dimensions and piece length in sync without silent mm-only defaults
+- Validation messages for hollow sections and angles explain the conflicting values in millimetres
+- Results show length, quantity, pricing, waste, and VAT in a consistent chip order, with rounding context and dataset version near references
+- PWA update banner can open the changelog before applying an update; number animations are slightly faster
+
+---
+
 ## [2.5.1] - 2026-04-03
 
 ### Changed
