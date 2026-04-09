@@ -4,7 +4,7 @@ import { memo, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import type { CalculationResult, UnitValue } from "@/lib/calculator/types";
+import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { roundTo } from "@/lib/calculator/units";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
@@ -14,7 +14,6 @@ import { ReferenceList } from "./reference-list";
 import { triggerHaptic } from "@/lib/haptics";
 import {
   formatLocalizedNumber,
-  formatPieceLength,
   formatSquareMeters,
   formatStaticNumber,
   getDecimalPlaces,
@@ -87,8 +86,6 @@ export function formatResultForClipboard(
 
 export interface ResultContentProps {
   result: CalculationResult;
-  /** Piece length as entered (summary chips); optional for standalone compare views. */
-  pieceLength?: UnitValue | null;
   includeVat: boolean;
   wastePercent: number;
   vatPercent: number;
@@ -108,7 +105,6 @@ export interface ResultContentProps {
 
 export const ResultContent = memo(function ResultContent({
   result,
-  pieceLength = null,
   includeVat,
   wastePercent,
   vatPercent,
@@ -175,10 +171,7 @@ export const ResultContent = memo(function ResultContent({
     ? "ml-1 text-xs font-semibold uppercase tracking-wide text-muted"
     : "ml-1 text-xs font-medium uppercase tracking-wide text-muted";
 
-  const lengthLabel = formatPieceLength(pieceLength, result.lengthMm, locale);
-
   const summaryChips = [
-    { label: t("contextLength"), value: lengthLabel, variant: "default" as const },
     { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }), variant: "default" as const },
     { label: t("contextPricing"), value: `${localizedPricePerKg}${currency}/kg`, variant: "default" as const },
     ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%`, variant: "amber" as const }] : []),

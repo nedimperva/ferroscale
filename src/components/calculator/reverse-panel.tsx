@@ -1,10 +1,11 @@
 "use client";
 
 import { memo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { UseReverseReturn } from "@/hooks/useReverseCalculator";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
-import { fromMillimeters, roundTo } from "@/lib/calculator/units";
+import { fromMillimeters, roundTo, toMillimeters } from "@/lib/calculator/units";
+import { formatLocalizedNumber } from "@/components/ui/result-style";
 import type { DimensionKey } from "@/lib/datasets/types";
 import type { QuantityResponse } from "@/lib/calculator/reverse";
 import { NumericInput } from "./numeric-input";
@@ -180,6 +181,7 @@ export const ReversePanel = memo(function ReversePanel({
               {/* Quantity result */}
               <QuantityResultPanel
                 result={reverse.quantityResult}
+                lengthMm={toMillimeters(input.length.value, input.length.unit)}
               />
             </>
           )}
@@ -250,11 +252,14 @@ function ReverseResult({
 
 function QuantityResultPanel({
   result,
+  lengthMm,
 }: {
   result: QuantityResponse | null;
+  lengthMm: number;
 }) {
   const t = useTranslations("reverse");
   const tRoot = useTranslations();
+  const locale = useLocale();
 
   if (!result) return null;
 
@@ -268,6 +273,9 @@ function QuantityResultPanel({
     );
   }
 
+  const lengthM = (lengthMm / 1000) * result.wholeQuantity;
+  const lengthMFormatted = formatLocalizedNumber(lengthM, locale);
+
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
       <p className="text-2xs font-semibold uppercase tracking-widest text-green-text">
@@ -275,6 +283,9 @@ function QuantityResultPanel({
       </p>
       <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-green-900">
         {t("pieces", { count: result.wholeQuantity })}
+      </p>
+      <p className="mt-1 text-xs text-green-600">
+        {t("totalLengthM", { value: lengthMFormatted })}
       </p>
       <p className="mt-1 text-xs text-green-600">
         {t("piecesExact", { value: result.exactQuantity.toFixed(3) })}

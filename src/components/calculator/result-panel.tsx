@@ -2,15 +2,13 @@
 
 import { memo } from "react";
 import { useTranslations } from "next-intl";
-import type { CalculationResult, UnitValue } from "@/lib/calculator/types";
+import type { CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { ResultContent, type ResultLayoutMode } from "./result-content";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface ResultPanelProps {
   result: CalculationResult | null;
-  /** Piece length as entered (for chips); falls back to mm from result when absent. */
-  pieceLength?: UnitValue | null;
   isPending: boolean;
   isSaved: boolean;
   onOpenSaveDialog: () => void;
@@ -31,7 +29,6 @@ interface ResultPanelProps {
 
 export const ResultPanel = memo(function ResultPanel({
   result,
-  pieceLength = null,
   isPending,
   isSaved,
   onOpenSaveDialog,
@@ -86,7 +83,6 @@ export const ResultPanel = memo(function ResultPanel({
     <section data-result-layout={layout} className={sectionClassName}>
       <ResultContent
         result={result}
-        pieceLength={pieceLength}
         includeVat={includeVat}
         wastePercent={wastePercent}
         vatPercent={vatPercent}

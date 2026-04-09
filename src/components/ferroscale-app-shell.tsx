@@ -762,7 +762,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       <aside className="hidden gap-4 self-start lg:sticky lg:top-4 lg:grid">
         <ResultPanel
           result={result}
-          pieceLength={input.length}
           isPending={isPending}
           isSaved={isCurrentSaved}
           onOpenSaveDialog={handleOpenSaveDialog}
@@ -823,7 +822,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     result: (
       <ResultPanel
         result={result}
-        pieceLength={input.length}
         isPending={isPending}
         isSaved={isCurrentSaved}
         onOpenSaveDialog={handleOpenSaveDialog}
@@ -990,43 +988,47 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         </div>
       </MobilePageCard>
     ) : currentTab === "saved" ? (
-      <MobilePageCard className="p-4">
-        <TemplatesPanel
-          saved={saved}
-          projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
-          onLoad={handleApplyTemplate}
-          onRemove={removeSaved}
-          onRemoveMany={removeSavedMany}
-          onDuplicate={duplicateSaved}
-          onDuplicateMany={duplicateSavedMany}
-          onAddToProject={handleTemplateAddToProject}
-          onRemovePart={handleRemoveTemplatePart}
-          onReorderPart={handleReorderTemplatePart}
-          onUpdate={updateSaved}
-          layout="mobile"
-        />
+      <MobilePageCard>
+        <div className="px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
+          <TemplatesPanel
+            saved={saved}
+            projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
+            onLoad={handleApplyTemplate}
+            onRemove={removeSaved}
+            onRemoveMany={removeSavedMany}
+            onDuplicate={duplicateSaved}
+            onDuplicateMany={duplicateSavedMany}
+            onAddToProject={handleTemplateAddToProject}
+            onRemovePart={handleRemoveTemplatePart}
+            onReorderPart={handleReorderTemplatePart}
+            onUpdate={updateSaved}
+            layout="mobile"
+          />
+        </div>
       </MobilePageCard>
     ) : currentTab === "projects" ? (
       <MobilePageCard className="flex min-h-[60dvh] flex-col">
-        <ProjectsWorkspaceContent
-          projects={projects}
-          activeProjectId={activeProjectId}
-          onSetActiveProject={setActiveProjectId}
-          onCreateProject={createProject}
-          onRenameProject={renameProject}
-          onDeleteProject={deleteProject}
-          onDuplicateProject={duplicateProject}
-          onRemoveCalculation={removeCalculation}
-          onUpdateCalculationNote={updateCalculationNote}
-          onUpdateProjectDescription={updateProjectDescription}
-          onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
-          onLoadCalculation={handleLoad}
-          currentResult={result}
-          currentInput={result ? input : null}
-          onAddCalculation={addCalculation}
-          layout="mobile"
-          weightAsMain={weightAsMain}
-        />
+        <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
+          <ProjectsWorkspaceContent
+            projects={projects}
+            activeProjectId={activeProjectId}
+            onSetActiveProject={setActiveProjectId}
+            onCreateProject={createProject}
+            onRenameProject={renameProject}
+            onDeleteProject={deleteProject}
+            onDuplicateProject={duplicateProject}
+            onRemoveCalculation={removeCalculation}
+            onUpdateCalculationNote={updateCalculationNote}
+            onUpdateProjectDescription={updateProjectDescription}
+            onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
+            onLoadCalculation={handleLoad}
+            currentResult={result}
+            currentInput={result ? input : null}
+            onAddCalculation={addCalculation}
+            layout="mobile"
+            weightAsMain={weightAsMain}
+          />
+        </div>
       </MobilePageCard>
     ) : (
       <MobilePageCard className="flex min-h-[60dvh] flex-col">
@@ -1264,7 +1266,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         {showOverlay && !showTemplateBuilder && result && (
           <ResultOverlay
             result={result}
-            pieceLength={input.length}
             includeVat={input.includeVat}
             wastePercent={input.wastePercent}
             vatPercent={input.vatPercent}
