@@ -184,7 +184,6 @@ interface ProfileSectionProps {
   showInlineMaterial: boolean;
   showInlinePrice: boolean;
   defaultUnit: LengthUnit;
-  lengthUnitOptions: LengthUnit[];
   onSavePreset: () => void;
   profilePresets: DimensionPreset[];
   onRemovePreset: (id: string) => void;
@@ -199,7 +198,6 @@ export const ProfileSection = memo(function ProfileSection({
   showInlineMaterial,
   showInlinePrice,
   defaultUnit,
-  lengthUnitOptions,
   onSavePreset,
   profilePresets,
   onRemovePreset,
@@ -246,8 +244,6 @@ export const ProfileSection = memo(function ProfileSection({
       ? "premium-segment-active shadow-[var(--panel-highlight)]"
       : "premium-segment-muted";
   const controlClass = "premium-control w-full bg-surface px-3 text-sm text-foreground";
-
-  const lengthUnit = input.length.unit;
 
   return (
     <section className="grid gap-5 md:gap-6">
@@ -365,28 +361,6 @@ export const ProfileSection = memo(function ProfileSection({
             : t("profileSection.hintManualDimensions")}
         </p>
 
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-border-faint bg-surface-raised/60 px-3 py-2.5">
-          <label htmlFor="length-unit-global" className="text-2xs font-semibold uppercase tracking-wide text-muted-faint">
-            {t("profileSection.unitStripLabel")}
-          </label>
-          <select
-            id="length-unit-global"
-            value={lengthUnit}
-            onChange={(e) => {
-              triggerHaptic("light");
-              dispatch({ type: "SET_LENGTH_UNIT", unit: e.target.value as LengthUnit });
-            }}
-            className="h-9 min-w-[5.5rem] rounded-lg border border-border-strong bg-surface px-2 text-xs font-semibold text-foreground transition-colors focus:border-blue-500 focus:outline-none"
-          >
-            {lengthUnitOptions.map((u) => (
-              <option key={u} value={u}>
-                {u}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs text-muted-faint">{t("profileSection.unitStripHint")}</span>
-        </div>
-
         {/* Standard profile: searchable size combobox */}
         {selectedProfile.mode === "standard" && (
           <SizeCombobox
@@ -427,7 +401,7 @@ export const ProfileSection = memo(function ProfileSection({
                   key={dim.key}
                   dimension={dim}
                   value={input.manualDimensions[dim.key]}
-                  unit={lengthUnit}
+                  unit={defaultUnit}
                   hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
                   issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
                   onValueChange={(v) =>
@@ -468,7 +442,7 @@ export const ProfileSection = memo(function ProfileSection({
               aria-invalid={hasIssue("length")}
             />
             <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
-              {lengthUnit}
+              {defaultUnit}
             </span>
           </div>
         </div>

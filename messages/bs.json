@@ -252,8 +252,6 @@
     "groupQuantityPrice": "Kolicina i cijena",
     "hintStandardSize": "Odaberite EN velicinu, zatim unesite duzinu svakog komada.",
     "hintManualDimensions": "Unesite dimenzije presjeka, zatim duzinu svakog komada.",
-    "unitStripLabel": "Jedinice",
-    "unitStripHint": "Vrijedi za dimenzije i duzinu komada",
     "size": "Velicina",
     "enArea": "Povrsina iz EN tabele",
     "pieceLength": "Duzina komada",

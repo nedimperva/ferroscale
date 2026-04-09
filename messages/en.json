@@ -252,8 +252,6 @@
     "groupQuantityPrice": "Quantity and price",
     "hintStandardSize": "Pick an EN size, then set how long each piece is.",
     "hintManualDimensions": "Enter cross-section dimensions, then the length of each piece.",
-    "unitStripLabel": "Units",
-    "unitStripHint": "Applies to dimensions and piece length",
     "size": "Size",
     "enArea": "Area from EN table",
     "pieceLength": "Piece length",

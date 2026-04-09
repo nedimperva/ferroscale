@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Calculator form is grouped into clearer sections with a single unit control for dimensions and piece length
+- Calculator form is grouped into clearer sections; default length unit is set in Settings (workspace), not duplicated on the calculator page
 - Switching profile or the workspace length unit now keeps manual dimensions and piece length in sync without silent mm-only defaults
 - Validation messages for hollow sections and angles explain the conflicting values in millimetres
 - Results show length, quantity, pricing, waste, and VAT in a consistent chip order, with rounding context and dataset version near references

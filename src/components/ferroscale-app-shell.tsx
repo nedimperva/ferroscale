@@ -744,7 +744,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             showInlineMaterial={showInlineMaterial}
             showInlinePrice={showInlinePrice}
             defaultUnit={defaultUnit}
-            lengthUnitOptions={UNIT_OPTIONS}
             onSavePreset={handleSavePreset}
             profilePresets={presetsForProfile(input.profileId)}
             onRemovePreset={removePreset}
@@ -807,7 +806,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             showInlineMaterial={showInlineMaterial}
             showInlinePrice={showInlinePrice}
             defaultUnit={defaultUnit}
-            lengthUnitOptions={UNIT_OPTIONS}
             onSavePreset={handleSavePreset}
             profilePresets={presetsForProfile(input.profileId)}
             onRemovePreset={removePreset}
@@ -977,7 +975,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             showInlineMaterial={showInlineMaterial}
             showInlinePrice={showInlinePrice}
             defaultUnit={defaultUnit}
-            lengthUnitOptions={UNIT_OPTIONS}
             onSavePreset={handleSavePreset}
             profilePresets={presetsForProfile(input.profileId)}
             onRemovePreset={removePreset}
