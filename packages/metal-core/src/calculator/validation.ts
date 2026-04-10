@@ -145,6 +145,10 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of the outer diameter.",
             messageKey: "validation.pipeWall",
+            messageValues: {
+              wallMm: Math.round(wallMm * 100) / 100,
+              halfOdMm: Math.round((odMm / 2) * 100) / 100,
+            },
           });
         }
       }
@@ -163,6 +167,10 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of width and height.",
             messageKey: "validation.rectangularWall",
+            messageValues: {
+              wallMm: Math.round(wallMm * 100) / 100,
+              maxWallMm: Math.round((Math.min(widthMm, heightMm) / 2) * 100) / 100,
+            },
           });
         }
       }
@@ -179,6 +187,10 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
             field: "manualDimensions.wallThickness",
             message: "Wall thickness must be less than half of the side length.",
             messageKey: "validation.squareWall",
+            messageValues: {
+              wallMm: Math.round(wallMm * 100) / 100,
+              halfSideMm: Math.round((sideMm / 2) * 100) / 100,
+            },
           });
         }
       }
@@ -197,6 +209,10 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
             field: "manualDimensions.thickness",
             message: "Thickness must be less than the shorter leg.",
             messageKey: "validation.angleThickness",
+            messageValues: {
+              thicknessMm: Math.round(tMm * 100) / 100,
+              shorterLegMm: Math.round(Math.min(legAMm, legBMm) * 100) / 100,
+            },
           });
         }
       }

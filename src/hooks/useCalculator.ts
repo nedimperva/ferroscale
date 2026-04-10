@@ -22,6 +22,7 @@ import type {
   ProfileId,
 } from "@/lib/datasets/types";
 import { decodeParamsToInput } from "@/lib/calculator/url-state";
+import { toMillimeters } from "@/lib/calculator/units";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -29,6 +30,21 @@ import { decodeParamsToInput } from "@/lib/calculator/url-state";
 
 export function parseNumber(value: string): number {
   return parseLocaleNumber(value) ?? 0;
+}
+
+/** Re-express manual dimensions in `unit` (values may be in mm from profile defaults). */
+function mapManualDimensionsToUnit(
+  dims: CalculationInput["manualDimensions"],
+  unit: LengthUnit,
+): CalculationInput["manualDimensions"] {
+  const out: CalculationInput["manualDimensions"] = {};
+  for (const key of Object.keys(dims) as DimensionKey[]) {
+    const entry = dims[key];
+    if (!entry) continue;
+    const mm = toMillimeters(entry.value, entry.unit);
+    out[key] = { value: fromMillimeters(mm, unit), unit };
+  }
+  return out;
 }
 
 /* ------------------------------------------------------------------ */
@@ -147,12 +163,17 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
     case "SET_PROFILE": {
       const profile = getProfileById(action.profileId);
       if (!profile) return state;
+      const prev = getProfileById(state.profileId);
       const defaults = profileDefaults(profile);
+      const manualDimensions =
+        profile.mode === "manual"
+          ? mapManualDimensionsToUnit(profileDefaults(profile).manualDimensions, state.length.unit)
+          : defaults.manualDimensions;
       return {
         ...state,
         profileId: action.profileId,
         selectedSizeId: defaults.selectedSizeId,
-        manualDimensions: defaults.manualDimensions,
+        manualDimensions,
       };
     }
     case "SET_PROFILE_AND_SIZE": {
@@ -193,7 +214,7 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
         ...state,
         profileId: action.profileId,
         selectedSizeId: undefined,
-        manualDimensions,
+        manualDimensions: mapManualDimensionsToUnit(manualDimensions, state.length.unit),
       };
     }
     case "SET_SIZE":
@@ -244,8 +265,21 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
       };
     case "SET_LENGTH_VALUE":
       return { ...state, length: { ...state.length, value: action.value } };
-    case "SET_LENGTH_UNIT":
-      return { ...state, length: { ...state.length, unit: action.unit } };
+    case "SET_LENGTH_UNIT": {
+      const nextUnit = action.unit;
+      if (state.length.unit === nextUnit) return state;
+      const lenMm = toMillimeters(state.length.value, state.length.unit);
+      const profile = getProfileById(state.profileId);
+      const manualDimensions =
+        profile?.mode === "manual"
+          ? mapManualDimensionsToUnit(state.manualDimensions, nextUnit)
+          : state.manualDimensions;
+      return {
+        ...state,
+        length: { value: fromMillimeters(lenMm, nextUnit), unit: nextUnit },
+        manualDimensions,
+      };
+    }
     case "SET_QUANTITY":
       return { ...state, quantity: Math.max(1, Math.floor(action.value)) };
     case "SET_PRICE_BASIS": {

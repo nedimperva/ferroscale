@@ -219,6 +219,11 @@ export const ProfileSection = memo(function ProfileSection({
   };
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
 
+  const alignDimensionErrorRows = useMemo(() => {
+    if (selectedProfile.mode !== "manual") return false;
+    return issues.some((i) => i.field.startsWith("manualDimensions."));
+  }, [issues, selectedProfile.mode]);
+
   const activeCategory = selectedProfile.category;
   const categoryProfiles = useMemo(
     () => grouped.get(activeCategory) ?? [],
@@ -236,6 +241,8 @@ export const ProfileSection = memo(function ProfileSection({
   };
 
   const sectionLabelClass = "text-2xs font-semibold uppercase tracking-[0.16em] text-muted-faint";
+  const groupHeadingClass =
+    "text-[11px] font-semibold uppercase tracking-[0.14em] text-muted mb-2";
   const pillBaseClass = "premium-segment inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium";
   const pillStateClass = (isActive: boolean) =>
     isActive
@@ -244,9 +251,10 @@ export const ProfileSection = memo(function ProfileSection({
   const controlClass = "premium-control w-full bg-surface px-3 text-sm text-foreground";
 
   return (
-    <section className="grid gap-2.5 md:gap-3.5">
+    <section className="grid gap-5 md:gap-6">
       {/* ── Profile selection group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <h3 className={groupHeadingClass}>{t("profileSection.groupProfile")}</h3>
         {/* Category pills */}
         <div className="grid gap-1.5">
           <span className={sectionLabelClass}>{t("profileSection.category")}</span>
@@ -299,9 +307,8 @@ export const ProfileSection = memo(function ProfileSection({
       {/* ── Inline material selector (optional, off by default) ── */}
       {showInlineMaterial && (
         <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-          <div className="grid gap-1.5">
-            <span className={sectionLabelClass}>{t("material.title")}</span>
-            <div className="grid grid-cols-2 gap-2">
+          <h3 className={groupHeadingClass}>{t("material.title")}</h3>
+          <div className="grid grid-cols-2 gap-2">
               <div className="relative">
                 <select
                   value={activeFamily}
@@ -346,14 +353,14 @@ export const ProfileSection = memo(function ProfileSection({
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </div>
-            </div>
           </div>
         </div>
       )}
 
       {/* ── Size / Dimensions + Length group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-        {/* Standard profile: searchable size combobox */}
+        <h3 className={groupHeadingClass}>{t("profileSection.groupGeometry")}</h3>
+
         {selectedProfile.mode === "standard" && (
           <SizeCombobox
             sizes={selectedProfile.sizes}
@@ -373,7 +380,6 @@ export const ProfileSection = memo(function ProfileSection({
           />
         )}
 
-        {/* Manual dimensions */}
         {selectedProfile.mode === "manual" && (
           <>
             <StandardsCombobox
@@ -387,7 +393,7 @@ export const ProfileSection = memo(function ProfileSection({
               }))}
               onRemoveCustom={onRemovePreset}
             />
-            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+            <div className="grid grid-cols-2 items-stretch gap-2.5 lg:grid-cols-3">
               {selectedProfile.dimensions.map((dim) => (
                 <DimensionInput
                   key={dim.key}
@@ -396,6 +402,7 @@ export const ProfileSection = memo(function ProfileSection({
                   unit={defaultUnit}
                   hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
                   issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
+                  alignErrorRows={alignDimensionErrorRows}
                   onValueChange={(v) =>
                     dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
                   }
@@ -415,10 +422,8 @@ export const ProfileSection = memo(function ProfileSection({
           </>
         )}
 
-        {/* Divider between dimensions and length */}
         <div className="h-2" />
 
-        {/* Piece length */}
         <div className="grid min-w-0 gap-1.5">
           <label htmlFor="length" className={sectionLabelClass}>
             {t("profileSection.pieceLength")}
@@ -433,7 +438,7 @@ export const ProfileSection = memo(function ProfileSection({
               className={`${controlClass} pr-10 ${hasIssue("length") ? "border-red-border" : ""}`}
               aria-invalid={hasIssue("length")}
             />
-            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
               {defaultUnit}
             </span>
           </div>
@@ -442,8 +447,8 @@ export const ProfileSection = memo(function ProfileSection({
 
       {/* ── Quantity + Price group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <h3 className={groupHeadingClass}>{t("profileSection.groupQuantityPrice")}</h3>
         <div className={`grid gap-2.5 ${showInlinePrice ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
-          {/* Quantity with stepper */}
           <div className="grid min-w-0 gap-1.5">
             <label htmlFor="quantity" className={sectionLabelClass}>
               {t("profileSection.quantity")}
@@ -490,7 +495,6 @@ export const ProfileSection = memo(function ProfileSection({
             </div>
           </div>
 
-          {/* Inline unit price (optional, on by default) */}
           {showInlinePrice && (
             <div className="grid min-w-0 gap-1.5">
               <label htmlFor="inline-unit-price" className={sectionLabelClass}>

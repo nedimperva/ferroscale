@@ -16,7 +16,7 @@ function easeOut(t: number): number {
  *   disabled.
  * - Safe to call with NaN / Infinity (passes through unchanged).
  */
-export function useAnimatedNumber(value: number, duration = 350): number {
+export function useAnimatedNumber(value: number, duration = 220): number {
   const [displayed, setDisplayed] = useState(value);
 
   // Track whether this is the first render and the "from" value.

@@ -24,6 +24,7 @@ import {
   PanelSectionLabel,
   PanelSummaryChip,
 } from "@/components/ui/result-style";
+import { DATASET_VERSION } from "@/lib/datasets/version";
 
 export type ResultLayoutMode = "standalone" | "column" | "sheet";
 
@@ -554,6 +555,9 @@ export const ResultContent = memo(function ResultContent({
             labels={result.referenceLabels}
             className="px-0 py-0 text-xs text-muted-faint"
           />
+          <p className="mt-2 text-[11px] text-muted-faint">
+            {t("datasetLine", { version: result.datasetVersion ?? DATASET_VERSION })}
+          </p>
         </section>
       </div>
     </div>

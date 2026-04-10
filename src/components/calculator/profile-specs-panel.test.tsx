@@ -63,7 +63,7 @@ describe("ProfileSpecsDrawing", () => {
     expect(markup).toContain("Match");
     expect(markup).toContain("Impact");
     expect(markup).toContain("kg/m");
-    expect(markup).toContain("Search size");
+    expect(markup).toContain("Key specs");
     expect(markup).toContain("Logical order");
     expect(markup).toContain("Exact peer");
     expect(markup).toContain(">tw</span>");
@@ -102,7 +102,7 @@ describe("ProfileSpecsDrawing", () => {
     expect(markup).toContain("Same family");
     expect(markup).toContain("Fit");
     expect(markup).toContain("Impact");
-    expect(markup).toContain("Search size");
+    expect(markup).toContain("Key specs");
     expect(markup).toContain("Logical order");
     expect(markup).not.toContain("specs.alternativesTitle");
     expect(markup).not.toContain("specs.alternativesHint");

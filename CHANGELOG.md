@@ -9,6 +9,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.5.2] - 2026-04-09
+
+### Changed
+
+- Calculator form is grouped into clearer sections; default length unit is set in Settings (workspace), not duplicated on the calculator page
+- Switching profile or the workspace length unit now keeps manual dimensions and piece length in sync without silent mm-only defaults
+- Validation messages for hollow sections and angles explain the conflicting values in millimetres
+- Result summary chips show quantity, pricing, waste, and VAT (length removed from chips); dataset version stays near references
+- Removed instructional hint text under size fields and the result rounding disclaimer
+- Reverse calculator quantity mode shows equivalent total length in metres for the exact (fractional) piece count
+- Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell
+- PWA update banner can open the changelog before applying an update; number animations are slightly faster
+
+### Fixed
+
+- Calculator validation no longer duplicates in a top banner; dimension fields reserve equal error space only while a dimension error is shown, so valid inputs stay tight on mobile
+
+---
+
 ## [2.5.1] - 2026-04-03
 
 ### Changed

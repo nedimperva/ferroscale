@@ -34,6 +34,16 @@ describe("undoableReducer", () => {
     expect(withBulkDimensions.present.manualDimensions.wallThickness?.value).toBe(3.2);
   });
 
+  it("maps new manual profile defaults to the current length unit when switching between manual profiles", () => {
+    const initial = getInitialUndoableState();
+    const withCm = undoableReducer(initial, { type: "SET_LENGTH_UNIT", unit: "cm" });
+    const switched = undoableReducer(withCm, { type: "SET_PROFILE", profileId: "pipe" });
+
+    expect(switched.present.length.unit).toBe("cm");
+    expect(switched.present.manualDimensions.outerDiameter?.unit).toBe("cm");
+    expect(switched.present.manualDimensions.outerDiameter?.value).toBeCloseTo(6.03, 4);
+  });
+
   it("switches manual profile and dimensions together as a single undoable action", () => {
     const initial = getInitialUndoableState();
     const withProfile = undoableReducer(initial, { type: "SET_PROFILE", profileId: "square_hollow" });

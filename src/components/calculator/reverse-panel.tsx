@@ -1,10 +1,10 @@
 "use client";
 
 import { memo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { UseReverseReturn } from "@/hooks/useReverseCalculator";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
-import { fromMillimeters, roundTo } from "@/lib/calculator/units";
+import { fromMillimeters, roundTo, toMillimeters } from "@/lib/calculator/units";
 import type { DimensionKey } from "@/lib/datasets/types";
 import type { QuantityResponse } from "@/lib/calculator/reverse";
 import { NumericInput } from "./numeric-input";
@@ -180,6 +180,7 @@ export const ReversePanel = memo(function ReversePanel({
               {/* Quantity result */}
               <QuantityResultPanel
                 result={reverse.quantityResult}
+                lengthMm={toMillimeters(input.length.value, input.length.unit)}
               />
             </>
           )}
@@ -250,11 +251,14 @@ function ReverseResult({
 
 function QuantityResultPanel({
   result,
+  lengthMm,
 }: {
   result: QuantityResponse | null;
+  lengthMm: number;
 }) {
   const t = useTranslations("reverse");
   const tRoot = useTranslations();
+  const locale = useLocale();
 
   if (!result) return null;
 
@@ -268,6 +272,13 @@ function QuantityResultPanel({
     );
   }
 
+  const lengthMPerPiece = lengthMm / 1000;
+  const exactLengthM = lengthMPerPiece * result.exactQuantity;
+  const exactLengthMFormatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(roundTo(exactLengthM, 2));
+
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
       <p className="text-2xs font-semibold uppercase tracking-widest text-green-text">
@@ -278,6 +289,9 @@ function QuantityResultPanel({
       </p>
       <p className="mt-1 text-xs text-green-600">
         {t("piecesExact", { value: result.exactQuantity.toFixed(3) })}
+      </p>
+      <p className="mt-0.5 text-xs text-green-600">
+        {t("exactLengthM", { value: exactLengthMFormatted })}
       </p>
       <p className="mt-0.5 text-xs text-green-600">
         {t("weightPerPiece", { value: result.unitWeightKg.toFixed(3) })}

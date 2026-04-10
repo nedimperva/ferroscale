@@ -267,7 +267,9 @@ export function ProjectsWorkspaceContent({
       className={
         layout === "column"
           ? "flex-1 safe-area-bottom p-4"
-          : "flex-1 overflow-y-auto scroll-native safe-area-bottom p-4"
+          : layout === "mobile"
+            ? "flex-1 overflow-y-auto scroll-native safe-area-bottom px-0 py-0"
+            : "flex-1 overflow-y-auto scroll-native safe-area-bottom p-4"
       }
     >
       {activeProject ? (

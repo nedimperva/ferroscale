@@ -17,6 +17,36 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.5.2",
+    date: "2026-04-09",
+    changed: [
+      "Calculator form is grouped into clearer sections; default length unit is set in Settings (workspace), not duplicated on the calculator page",
+      "Switching profile or the workspace length unit now keeps manual dimensions and piece length in sync without silent mm-only defaults",
+      "Validation messages for hollow sections and angles explain the conflicting values in millimetres",
+      "Result summary chips show quantity, pricing, waste, and VAT (length removed from chips); dataset version stays near references",
+      "Removed instructional hint text under size fields and the result rounding disclaimer",
+      "Reverse calculator quantity mode shows equivalent total length in metres for the exact (fractional) piece count, matching the target weight line",
+      "Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell",
+      "PWA update banner can open the changelog before applying an update; number animations are slightly faster",
+    ],
+    fixed: [
+      "Calculator validation no longer duplicates in a top banner; dimension fields reserve equal error space only while a dimension error is shown, so valid inputs stay tight on mobile",
+    ],
+    fixed_bs: [
+      "Validacija na kalkulatoru vise se ne duplira u gornjem baneru; polja dimenzija dijele jednak prostor za gresku samo dok postoji greska dimenzije, tako da su validni unosi zbijeni na mobilnom",
+    ],
+    changed_bs: [
+      "Kalkulator forma je grupisana u jasnije sekcije; podrazumijevana jedinica duzine je u Postavkama (radni prostor), ne duplirana na stranici kalkulatora",
+      "Promjena profila ili jedinice duzine u radnom prostoru drzi rucne dimenzije i duzinu komada uskladjenima bez tihih mm podrazumijevanja",
+      "Poruke validacije za suplje profile i ugaone profile objasnjavaju konfliktne vrijednosti u milimetrima",
+      "Sazetak rezultata (cipovi) prikazuje kolicinu, cijenu, otpad i PDV (duzina uklonjena sa cipova); verzija dataseta ostaje kod referenci",
+      "Uklonjeni uvodni tekstovi ispod polja velicine i napomena o zaokruzivanju u rezultatu",
+      "Obrnuti kalkulator rezim kolicine prikazuje ekvivalentnu ukupnu duzinu u metrima za tacnu (decimalnu) kolicinu komada",
+      "Mobilni ekrani Sabloni i Projekti koriste iste horizontalne margine kao kalkulator radi konzistentnog okvira",
+      "PWA update baner moze otvoriti changelog prije primjene azuriranja; animacije brojeva su malo brze",
+    ],
+  },
+  {
     version: "2.5.1",
     date: "2026-04-03",
     changed: [
