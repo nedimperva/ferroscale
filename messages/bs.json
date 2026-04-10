@@ -766,7 +766,7 @@
     "modeQuantity": "Nadji kolicinu",
     "quantityDescription": "Unesite ciljnu masu da vidite koliko komada trenutnog profila stane.",
     "quantityResult": "Komada stane",
-    "totalLengthM": "Ukupna duzina sipke (cijeli komadi): {value} m",
+    "exactLengthM": "Ekvivalentna duzina: {value} m (tacna kolicina)",
     "pieces": "{count, plural, one {# komad} few {# komada} other {# komada}}",
     "piecesExact": "{value} tacno",
     "weightPerPiece": "{value} kg / komad",

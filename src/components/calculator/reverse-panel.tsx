@@ -273,8 +273,9 @@ function QuantityResultPanel({
     );
   }
 
-  const lengthM = (lengthMm / 1000) * result.wholeQuantity;
-  const lengthMFormatted = formatLocalizedNumber(lengthM, locale);
+  const lengthMPerPiece = lengthMm / 1000;
+  const exactLengthM = lengthMPerPiece * result.exactQuantity;
+  const exactLengthMFormatted = formatLocalizedNumber(exactLengthM, locale);
 
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
@@ -285,10 +286,10 @@ function QuantityResultPanel({
         {t("pieces", { count: result.wholeQuantity })}
       </p>
       <p className="mt-1 text-xs text-green-600">
-        {t("totalLengthM", { value: lengthMFormatted })}
-      </p>
-      <p className="mt-1 text-xs text-green-600">
         {t("piecesExact", { value: result.exactQuantity.toFixed(3) })}
+      </p>
+      <p className="mt-0.5 text-xs text-green-600">
+        {t("exactLengthM", { value: exactLengthMFormatted })}
       </p>
       <p className="mt-0.5 text-xs text-green-600">
         {t("weightPerPiece", { value: result.unitWeightKg.toFixed(3) })}

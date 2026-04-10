@@ -766,7 +766,7 @@
     "modeQuantity": "Find quantity",
     "quantityDescription": "Enter a target weight to see how many pieces of the current profile fit.",
     "quantityResult": "Pieces that fit",
-    "totalLengthM": "Total bar length (whole pieces): {value} m",
+    "exactLengthM": "Equivalent length: {value} m (exact quantity)",
     "pieces": "{count, plural, one {# piece} other {# pieces}}",
     "piecesExact": "{value} exact",
     "weightPerPiece": "{value} kg / piece",
