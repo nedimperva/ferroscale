@@ -284,10 +284,6 @@ export const ResultContent = memo(function ResultContent({
               <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} variant={chip.variant} />
             ))}
           </div>
-
-          <p className="mt-3 text-xs leading-relaxed text-muted-faint">
-            {t("roundingNote")}
-          </p>
         </section>
 
         <section data-result-actions className={`${sectionPadding} pt-0`}>
