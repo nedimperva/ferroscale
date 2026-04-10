@@ -352,9 +352,9 @@ export const ProfileSection = memo(function ProfileSection({
         </div>
       )}
 
-      {/* ── Size (EN designation or manual cross-section) ── */}
+      {/* ── Size / Dimensions + Length group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-        <h3 className={groupHeadingClass}>{t("profileSection.groupSize")}</h3>
+        <h3 className={groupHeadingClass}>{t("profileSection.groupGeometry")}</h3>
 
         {selectedProfile.mode === "standard" && (
           <SizeCombobox
@@ -388,7 +388,7 @@ export const ProfileSection = memo(function ProfileSection({
               }))}
               onRemoveCustom={onRemovePreset}
             />
-            <div className="mt-2.5 grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
               {selectedProfile.dimensions.map((dim) => (
                 <DimensionInput
                   key={dim.key}
@@ -406,7 +406,7 @@ export const ProfileSection = memo(function ProfileSection({
             <button
               type="button"
               onClick={onSavePreset}
-              className="mt-2 inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+              className="mt-1 inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold text-muted transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <path d="M12 5v14" /><path d="M5 12h14" />
@@ -415,32 +415,34 @@ export const ProfileSection = memo(function ProfileSection({
             </button>
           </>
         )}
+
+        <div className="h-2" />
+
+        <div className="grid min-w-0 gap-1.5">
+          <label htmlFor="length" className={sectionLabelClass}>
+            {t("profileSection.pieceLength")}
+          </label>
+          <div className="relative min-w-0">
+            <NumericInput
+              id="length"
+              inputMode="decimal"
+              autoComplete="off"
+              value={input.length.value}
+              onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
+              className={`${controlClass} pr-10 ${hasIssue("length") ? "border-red-border" : ""}`}
+              aria-invalid={hasIssue("length")}
+            />
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
+              {defaultUnit}
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* ── Piece length & quantity (same row on md+) ── */}
-      <div className="form-group rounded-xl border border-border-faint/90 bg-surface-raised/35 p-3 md:p-3.5 lg:border-0 lg:bg-transparent lg:p-0">
-        <h3 className={`${groupHeadingClass} mb-3`}>{t("profileSection.groupLengthQty")}</h3>
-        <div className="grid gap-3 md:grid-cols-2 md:items-end md:gap-4">
-          <div className="grid min-w-0 gap-1.5">
-            <label htmlFor="length" className={sectionLabelClass}>
-              {t("profileSection.pieceLength")}
-            </label>
-            <div className="relative min-w-0">
-              <NumericInput
-                id="length"
-                inputMode="decimal"
-                autoComplete="off"
-                value={input.length.value}
-                onValueChange={(value) => dispatch({ type: "SET_LENGTH_VALUE", value })}
-                className={`${controlClass} pr-10 ${hasIssue("length") ? "border-red-border" : ""}`}
-                aria-invalid={hasIssue("length")}
-              />
-              <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted">
-                {defaultUnit}
-              </span>
-            </div>
-          </div>
-
+      {/* ── Quantity + Price group ── */}
+      <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+        <h3 className={groupHeadingClass}>{t("profileSection.groupQuantityPrice")}</h3>
+        <div className={`grid gap-2.5 ${showInlinePrice ? "grid-cols-[1fr_1fr]" : "grid-cols-1"}`}>
           <div className="grid min-w-0 gap-1.5">
             <label htmlFor="quantity" className={sectionLabelClass}>
               {t("profileSection.quantity")}
@@ -486,33 +488,30 @@ export const ProfileSection = memo(function ProfileSection({
               </button>
             </div>
           </div>
+
+          {showInlinePrice && (
+            <div className="grid min-w-0 gap-1.5">
+              <label htmlFor="inline-unit-price" className={sectionLabelClass}>
+                {t("profileSection.unitPrice")}
+              </label>
+              <div className="flex min-w-0">
+                <NumericInput
+                  id="inline-unit-price"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  value={input.unitPrice}
+                  onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
+                  className={`${controlClass} min-w-0 flex-1 rounded-r-none border-r-0 px-3 ${hasIssue("unitPrice") ? "border-red-border" : ""}`}
+                  aria-invalid={hasIssue("unitPrice")}
+                />
+                <span className="premium-control flex shrink-0 items-center rounded-l-none border-l-0 bg-surface-raised px-2 text-xs font-medium text-muted">
+                  {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {showInlinePrice && (
-        <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
-          <h3 className={groupHeadingClass}>{t("profileSection.groupPrice")}</h3>
-          <div className="grid min-w-0 gap-1.5">
-            <label htmlFor="inline-unit-price" className={sectionLabelClass}>
-              {t("profileSection.unitPrice")}
-            </label>
-            <div className="flex min-w-0 max-w-md">
-              <NumericInput
-                id="inline-unit-price"
-                inputMode="decimal"
-                autoComplete="off"
-                value={input.unitPrice}
-                onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-                className={`${controlClass} min-w-0 flex-1 rounded-r-none border-r-0 px-3 ${hasIssue("unitPrice") ? "border-red-border" : ""}`}
-                aria-invalid={hasIssue("unitPrice")}
-              />
-              <span className="premium-control flex shrink-0 items-center rounded-l-none border-l-0 bg-surface-raised px-2.5 text-xs font-medium text-muted">
-                {CURRENCY_SYMBOLS[input.currency]}/{input.priceUnit}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 });
