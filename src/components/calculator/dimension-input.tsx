@@ -11,6 +11,8 @@ interface DimensionInputProps {
   unit: LengthUnit;
   hasIssue?: boolean;
   issueMessage?: string;
+  /** When any dimension in the row has an error, reserve space so inputs stay aligned. Omit when all valid to avoid empty gaps (e.g. mobile). */
+  alignErrorRows?: boolean;
 }
 
 export const DimensionInput = memo(function DimensionInput({
@@ -20,6 +22,7 @@ export const DimensionInput = memo(function DimensionInput({
   unit,
   hasIssue = false,
   issueMessage,
+  alignErrorRows = false,
 }: DimensionInputProps) {
   const t = useTranslations();
   const dimensionLabel = t(`dataset.dimensions.${dimension.key}`);
@@ -49,18 +52,30 @@ export const DimensionInput = memo(function DimensionInput({
           {unit}
         </span>
       </div>
-      {/* Fixed-height slot keeps inputs aligned across columns; full text in title + screen readers */}
-      <div className="min-h-[3.25rem]">
-        {hasIssue && issueMessage ? (
+      {alignErrorRows ? (
+        <div className="min-h-[3.25rem]">
+          {hasIssue && issueMessage ? (
+            <p
+              id={`dimension-${dimension.key}-error`}
+              className="line-clamp-3 text-xs leading-snug text-red-interactive"
+              title={issueMessage}
+            >
+              {issueMessage}
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        hasIssue &&
+        issueMessage && (
           <p
             id={`dimension-${dimension.key}-error`}
-            className="line-clamp-3 text-xs leading-snug text-red-interactive"
+            className="text-xs leading-snug text-red-interactive"
             title={issueMessage}
           >
             {issueMessage}
           </p>
-        ) : null}
-      </div>
+        )
+      )}
     </div>
   );
 });

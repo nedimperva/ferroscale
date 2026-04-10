@@ -30,10 +30,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "PWA update banner can open the changelog before applying an update; number animations are slightly faster",
     ],
     fixed: [
-      "Calculator validation no longer duplicates in a top banner; dimension fields stay aligned with a fixed error area and clamped text",
+      "Calculator validation no longer duplicates in a top banner; dimension fields reserve equal error space only while a dimension error is shown, so valid inputs stay tight on mobile",
     ],
     fixed_bs: [
-      "Validacija na kalkulatoru vise se ne duplira u gornjem baneru; polja dimenzija ostaju poravnata sa fiksnim prostorom za gresku i skracenim tekstom",
+      "Validacija na kalkulatoru vise se ne duplira u gornjem baneru; polja dimenzija dijele jednak prostor za gresku samo dok postoji greska dimenzije, tako da su validni unosi zbijeni na mobilnom",
     ],
     changed_bs: [
       "Kalkulator forma je grupisana u jasnije sekcije; podrazumijevana jedinica duzine je u Postavkama (radni prostor), ne duplirana na stranici kalkulatora",

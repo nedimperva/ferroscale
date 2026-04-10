@@ -219,6 +219,11 @@ export const ProfileSection = memo(function ProfileSection({
   };
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
 
+  const alignDimensionErrorRows = useMemo(() => {
+    if (selectedProfile.mode !== "manual") return false;
+    return issues.some((i) => i.field.startsWith("manualDimensions."));
+  }, [issues, selectedProfile.mode]);
+
   const activeCategory = selectedProfile.category;
   const categoryProfiles = useMemo(
     () => grouped.get(activeCategory) ?? [],
@@ -397,6 +402,7 @@ export const ProfileSection = memo(function ProfileSection({
                   unit={defaultUnit}
                   hasIssue={hasIssue(`manualDimensions.${dim.key}`)}
                   issueMessage={getIssueMessage(`manualDimensions.${dim.key}`)}
+                  alignErrorRows={alignDimensionErrorRows}
                   onValueChange={(v) =>
                     dispatch({ type: "SET_DIMENSION_VALUE", key: dim.key, value: v })
                   }
