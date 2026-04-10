@@ -29,6 +29,12 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell",
       "PWA update banner can open the changelog before applying an update; number animations are slightly faster",
     ],
+    fixed: [
+      "Calculator validation no longer duplicates in a top banner; dimension fields stay aligned with a fixed error area and clamped text",
+    ],
+    fixed_bs: [
+      "Validacija na kalkulatoru vise se ne duplira u gornjem baneru; polja dimenzija ostaju poravnata sa fiksnim prostorom za gresku i skracenim tekstom",
+    ],
     changed_bs: [
       "Kalkulator forma je grupisana u jasnije sekcije; podrazumijevana jedinica duzine je u Postavkama (radni prostor), ne duplirana na stranici kalkulatora",
       "Promjena profila ili jedinice duzine u radnom prostoru drzi rucne dimenzije i duzinu komada uskladjenima bez tihih mm podrazumijevanja",

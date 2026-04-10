@@ -25,7 +25,7 @@ export const DimensionInput = memo(function DimensionInput({
   const dimensionLabel = t(`dataset.dimensions.${dimension.key}`);
 
   return (
-    <div className="grid gap-1">
+    <div className="flex min-h-0 flex-col gap-1">
       <label className="truncate text-xs font-medium text-foreground-secondary" htmlFor={`dimension-${dimension.key}`}>
         {dimensionLabel}{" "}
         <span className="font-normal text-muted-faint">
@@ -43,17 +43,24 @@ export const DimensionInput = memo(function DimensionInput({
           className={`h-11 w-full rounded-lg border bg-surface px-2 pr-10 text-sm transition-colors focus:border-blue-500 ${hasIssue ? "border-red-border" : "border-border-strong"
             }`}
           aria-invalid={hasIssue}
-          aria-describedby={hasIssue ? `dimension-${dimension.key}-error` : undefined}
+          aria-describedby={hasIssue && issueMessage ? `dimension-${dimension.key}-error` : undefined}
         />
         <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
           {unit}
         </span>
       </div>
-      {hasIssue && issueMessage && (
-        <p id={`dimension-${dimension.key}-error`} className="text-xs text-red-interactive">
-          {issueMessage}
-        </p>
-      )}
+      {/* Fixed-height slot keeps inputs aligned across columns; full text in title + screen readers */}
+      <div className="min-h-[3.25rem]">
+        {hasIssue && issueMessage ? (
+          <p
+            id={`dimension-${dimension.key}-error`}
+            className="line-clamp-3 text-xs leading-snug text-red-interactive"
+            title={issueMessage}
+          >
+            {issueMessage}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 });

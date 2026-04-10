@@ -22,6 +22,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell
 - PWA update banner can open the changelog before applying an update; number animations are slightly faster
 
+### Fixed
+
+- Calculator validation no longer duplicates in a top banner; dimension fields stay aligned with a fixed error area and clamped text
+
 ---
 
 ## [2.5.1] - 2026-04-03

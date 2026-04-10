@@ -388,7 +388,7 @@ export const ProfileSection = memo(function ProfileSection({
               }))}
               onRemoveCustom={onRemovePreset}
             />
-            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+            <div className="grid grid-cols-2 items-stretch gap-2.5 lg:grid-cols-3">
               {selectedProfile.dimensions.map((dim) => (
                 <DimensionInput
                   key={dim.key}
