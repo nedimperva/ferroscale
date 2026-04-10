@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import type { UseReverseReturn } from "@/hooks/useReverseCalculator";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import { fromMillimeters, roundTo, toMillimeters } from "@/lib/calculator/units";
-import { formatLocalizedNumber } from "@/components/ui/result-style";
 import type { DimensionKey } from "@/lib/datasets/types";
 import type { QuantityResponse } from "@/lib/calculator/reverse";
 import { NumericInput } from "./numeric-input";
@@ -275,7 +274,10 @@ function QuantityResultPanel({
 
   const lengthMPerPiece = lengthMm / 1000;
   const exactLengthM = lengthMPerPiece * result.exactQuantity;
-  const exactLengthMFormatted = formatLocalizedNumber(exactLengthM, locale);
+  const exactLengthMFormatted = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(roundTo(exactLengthM, 2));
 
   return (
     <div className="rounded-lg border border-green-border bg-green-surface px-3 py-3">
