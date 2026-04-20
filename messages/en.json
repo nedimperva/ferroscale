@@ -50,6 +50,11 @@
     "datasetVersion": "v{version}",
     "moreActions": "More actions"
   },
+  "loading": {
+    "title": "Loading workspace",
+    "opening": "Opening {tab}",
+    "subtitle": "Preparing your calculator, projects, and live results."
+  },
   "tabs": {
     "calculator": "Calculator",
     "saved": "Templates",

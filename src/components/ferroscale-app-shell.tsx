@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCalculator } from "@/hooks/useCalculator";
@@ -23,7 +23,7 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { toast } from "@/lib/toast";
-import { getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
+import { APP_TABS, getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { triggerHaptic } from "@/lib/haptics";
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
@@ -153,6 +153,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const t = useTranslations();
   const router = useRouter();
   const isMobile = useIsMobile();
+  const shouldReduceMotion = useReducedMotion();
+  const [isRouteNavigationPending, startRouteNavigation] = useTransition();
 
   const {
     input,
@@ -272,15 +274,33 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         return;
       }
       closeTransientOverlays();
-      router.push(getAppTabHref(tab));
+      startRouteNavigation(() => {
+        router.push(getAppTabHref(tab));
+      });
     },
     [closeTransientOverlays, currentTab, router],
   );
 
   const navigateHome = useCallback(() => {
+    if (currentTab === "calculator") {
+      closeTransientOverlays();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
     closeTransientOverlays();
-    router.push("/");
-  }, [closeTransientOverlays, router]);
+    startRouteNavigation(() => {
+      router.push("/");
+    });
+  }, [closeTransientOverlays, currentTab, router]);
+
+  useEffect(() => {
+    APP_TABS.forEach(({ id, href }) => {
+      if (id !== currentTab) {
+        router.prefetch(href);
+      }
+    });
+  }, [currentTab, router]);
 
   const previousRouteTabRef = useRef(currentTab);
   useEffect(() => {
@@ -1206,6 +1226,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           className="px-3 lg:hidden"
           onTouchStart={handleMobileTouchStart}
           onTouchEnd={handleMobileTouchEnd}
+          aria-busy={isRouteNavigationPending || undefined}
           style={{
             paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
             paddingBottom: resultBarBottomPadding,
@@ -1214,11 +1235,23 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           <AnimatePresence initial={false} mode="wait">
             <motion.div
               key={currentTab}
-              initial={{ opacity: 0, x: pageDirection >= 0 ? 20 : -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: pageDirection >= 0 ? -20 : 20 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="grid gap-4"
+              initial={
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, x: pageDirection >= 0 ? 24 : -24, scale: 0.992 }
+              }
+              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0, scale: 1 }}
+              exit={
+                shouldReduceMotion
+                  ? { opacity: 0 }
+                  : { opacity: 0, x: pageDirection >= 0 ? -18 : 18, scale: 0.988 }
+              }
+              transition={
+                shouldReduceMotion
+                  ? { duration: 0.12, ease: "linear" }
+                  : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
+              }
+              className="grid gap-4 will-change-transform"
             >
               {mobileScreen}
             </motion.div>

@@ -50,6 +50,11 @@
     "datasetVersion": "v{version}",
     "moreActions": "Vise opcija"
   },
+  "loading": {
+    "title": "Ucitavanje radnog prostora",
+    "opening": "Otvaranje: {tab}",
+    "subtitle": "Pripremamo kalkulator, projekte i zive rezultate."
+  },
   "tabs": {
     "calculator": "Kalkulator",
     "saved": "Sabloni",

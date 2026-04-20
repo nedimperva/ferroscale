@@ -11,6 +11,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [2.5.2] - 2026-04-09
 
+### Added
+
+- Branded startup splash on mobile during the first app load, with a snappy fade-out once the shell is ready
+
 ### Changed
 
 - Calculator form is grouped into clearer sections; default length unit is set in Settings (workspace), not duplicated on the calculator page
@@ -21,6 +25,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Reverse calculator quantity mode shows equivalent total length in metres for the exact (fractional) piece count
 - Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell
 - PWA update banner can open the changelog before applying an update; number animations are slightly faster
+- Mobile tab routes prefetch in the background and switch with a smoother directional slide (no interstitial overlay)
 
 ### Fixed
 

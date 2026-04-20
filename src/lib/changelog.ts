@@ -19,6 +19,9 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "2.5.2",
     date: "2026-04-09",
+    added: [
+      "Branded startup splash on mobile during the first app load, with a snappy fade-out once the shell is ready",
+    ],
     changed: [
       "Calculator form is grouped into clearer sections; default length unit is set in Settings (workspace), not duplicated on the calculator page",
       "Switching profile or the workspace length unit now keeps manual dimensions and piece length in sync without silent mm-only defaults",
@@ -28,6 +31,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Reverse calculator quantity mode shows equivalent total length in metres for the exact (fractional) piece count, matching the target weight line",
       "Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell",
       "PWA update banner can open the changelog before applying an update; number animations are slightly faster",
+      "Mobile tab routes prefetch in the background and switch with a smoother directional slide (no interstitial overlay)",
+    ],
+    added_bs: [
+      "Brendirani splash ekran na mobilnom tokom prvog ucitavanja aplikacije, s brzim nestankom cim je shell spreman",
     ],
     fixed: [
       "Calculator validation no longer duplicates in a top banner; dimension fields reserve equal error space only while a dimension error is shown, so valid inputs stay tight on mobile",
@@ -44,6 +51,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Obrnuti kalkulator rezim kolicine prikazuje ekvivalentnu ukupnu duzinu u metrima za tacnu (decimalnu) kolicinu komada",
       "Mobilni ekrani Sabloni i Projekti koriste iste horizontalne margine kao kalkulator radi konzistentnog okvira",
       "PWA update baner moze otvoriti changelog prije primjene azuriranja; animacije brojeva su malo brze",
+      "Mobilne tab rute se prefetch-uju u pozadini i prelaze uz smireniji usmjereni slide (bez medjusloja)",
     ],
   },
   {
