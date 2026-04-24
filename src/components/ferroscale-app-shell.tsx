@@ -45,7 +45,7 @@ import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
-import { Sidebar } from "@/components/calculator/sidebar";
+import { Sidebar, type SidebarRecent } from "@/components/calculator/sidebar";
 import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
@@ -627,6 +627,43 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     dispatch({ type: "RESET_ALL" });
   }, [dispatch]);
 
+  const recents = useMemo<SidebarRecent[]>(() => {
+    return [...saved]
+      .sort((a, b) => {
+        const ta = new Date(a.lastUsedAt ?? a.updatedAt).getTime();
+        const tb = new Date(b.lastUsedAt ?? b.updatedAt).getTime();
+        return tb - ta;
+      })
+      .slice(0, 3)
+      .map((entry) => {
+        const totalKg = entry.parts.reduce((sum, part) => sum + (part.result.totalWeightKg || 0), 0);
+        const weightLabel = totalKg >= 1000
+          ? `${(totalKg / 1000).toFixed(2)} t`
+          : `${totalKg.toFixed(1)} kg`;
+        const grade = resolveGradeLabel(entry.result.gradeLabel, t);
+        const totalPieces = entry.parts.reduce((sum, part) => sum + (part.input.quantity || 0), 0);
+        const detail = totalPieces > 0
+          ? `${grade} · ${t("sidebar.pieceCount", { qty: totalPieces })}`
+          : grade;
+        return {
+          id: entry.id,
+          name: entry.name,
+          detail,
+          valueLabel: weightLabel,
+          iconKey: entry.normalizedProfile.iconKey,
+        };
+      });
+  }, [saved, t]);
+
+  const handleLoadRecent = useCallback(
+    (id: string) => {
+      const entry = saved.find((item) => item.id === id);
+      if (!entry) return;
+      handleApplyTemplate(entry);
+    },
+    [saved, handleApplyTemplate],
+  );
+
   const headerContext = useMemo(() => {
     const profileShort = normalizedCurrentProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
     if (result) {
@@ -1102,6 +1139,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         canShowColumnsToggle={canShowColumnsToggle}
         isMultiColumnEnabled={columnLayout.enabled}
         onToggleMultiColumn={columnLayout.toggleEnabled}
+        recents={recents}
+        onLoadRecent={handleLoadRecent}
       />
 
       <div
