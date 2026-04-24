@@ -184,3 +184,18 @@ export function PanelActionButton({
     </button>
   );
 }
+
+export function PanelIconButton({
+  className,
+  children,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`premium-action-button inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors ${className ?? ""}`.trim()}
+    >
+      {children}
+    </button>
+  );
+}

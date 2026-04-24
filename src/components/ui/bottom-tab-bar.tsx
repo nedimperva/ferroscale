@@ -58,7 +58,7 @@ export const BottomTabBar = memo(function BottomTabBar({
       className="fixed inset-x-0 bottom-0 z-50 border-t border-border-faint bg-background/88 shadow-[0_-10px_26px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="mx-auto flex max-w-lg items-stretch" role="tablist">
+      <div className="mx-auto flex max-w-lg items-stretch gap-1 px-1.5 py-1" role="tablist">
         {tabs.map((tab, index) => {
           const isActive = activeTab === tab.id;
           return (
@@ -70,9 +70,9 @@ export const BottomTabBar = memo(function BottomTabBar({
                 onTabChange(tab.id);
               }}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className={`relative flex flex-1 flex-col items-center gap-0 pb-1 pt-1.5 text-2xs font-medium transition-colors ${
+              className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-2xs font-medium transition-colors ${
                 isActive
-                  ? "text-foreground"
+                  ? "text-accent-text"
                   : "text-muted-faint"
               }`}
               aria-label={tab.label}
@@ -81,23 +81,26 @@ export const BottomTabBar = memo(function BottomTabBar({
               role="tab"
               tabIndex={isActive ? 0 : -1}
             >
-              {/* Animated active indicator bar — slides between tabs */}
+              {/* Animated active capsule — slides between tabs */}
               {isActive && (
                 <motion.span
                   layoutId="tab-indicator"
-                  className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-accent"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  className="absolute inset-0 rounded-2xl border border-accent-border bg-accent-surface"
+                  transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                  aria-hidden
                 />
               )}
-              <span className="relative">
-                <TabIcon id={tab.id} active={isActive} />
-                {isHydrated && tab.badge !== undefined && (
-                  <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-strong px-1 text-2xs font-bold leading-none text-white">
-                    {tab.badge}
-                  </span>
-                )}
+              <span className="relative flex flex-col items-center gap-0.5 py-1.5">
+                <span className="relative">
+                  <TabIcon id={tab.id} active={isActive} />
+                  {isHydrated && tab.badge !== undefined && (
+                    <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-strong px-1 text-2xs font-bold leading-none text-white">
+                      {tab.badge}
+                    </span>
+                  )}
+                </span>
+                <span className={isActive ? "font-semibold" : ""}>{tab.label}</span>
               </span>
-              <span>{tab.label}</span>
             </button>
           );
         })}
@@ -109,7 +112,7 @@ export const BottomTabBar = memo(function BottomTabBar({
 /* ---- Tab icons ---- */
 
 function TabIcon({ id, active }: { id: AppTabId; active: boolean }) {
-  const cls = `h-5 w-5 ${active ? "stroke-accent" : "stroke-current"}`;
+  const cls = `h-5 w-5 stroke-current`;
   const fill = active ? "currentColor" : "none";
 
   switch (id) {

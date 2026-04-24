@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.6.0] - 2026-04-24
+
+### Added
+
+- Desktop sidebar shows a Recent strip with your last 3 saved templates; one click loads it back into the calculator
+
+### Changed
+
+- Profile category picker swapped for a visual 4-card grid with icons and sub-labels — easier to scan and tap
+- Result panel header reorganized: compact icon actions (Compare, Save, Project, Copy) sit in the top row, primary value grows for readability, and effective €/kg is inline with the kg total
+- Bottom tab bar uses an animated capsule background on the active tab instead of a thin top line — active state is clearer at a glance
+- Desktop sidebar active item now reads as an accent capsule, and the collapse toggle lives in the branding row
+- Settings summary strip gets a solid border, color-coded Price (accent) and VAT (green) tokens, and a prominent accent Edit pill
+- Dark mode Result header picks up a subtle engineering-grid texture that warms the palette
+
+---
+
 ## [2.5.2] - 2026-04-09
 
 ### Added

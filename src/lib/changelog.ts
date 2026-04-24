@@ -17,6 +17,32 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "2.6.0",
+    date: "2026-04-24",
+    added: [
+      "Desktop sidebar shows a Recent strip with your last 3 saved templates; one click loads it back into the calculator",
+    ],
+    changed: [
+      "Profile category picker swapped for a visual 4-card grid with icons and sub-labels — easier to scan and tap",
+      "Result panel header reorganized: compact icon actions (Compare, Save, Project, Copy) sit in the top row, primary value grows for readability, and effective €/kg is inline with the kg total",
+      "Bottom tab bar uses an animated capsule background on the active tab instead of a thin top line — active state is clearer at a glance",
+      "Desktop sidebar active item now reads as an accent capsule, and the collapse toggle lives in the branding row",
+      "Settings summary strip gets a solid border, color-coded Price (accent) and VAT (green) tokens, and a prominent accent Edit pill",
+      "Dark mode Result header picks up a subtle engineering-grid texture that warms the palette",
+    ],
+    added_bs: [
+      "Bocna traka na desktopu prikazuje Nedavno sa posljednja 3 sacuvana sablona; jedan klik ih vraca u kalkulator",
+    ],
+    changed_bs: [
+      "Izbor kategorije profila zamijenjen vizualnom mrezom sa 4 kartice sa ikonama i podnaslovima — lakse za pregled i dodir",
+      "Zaglavlje panela rezultata je reorganizirano: kompaktne akcijske ikone (Poredi, Sacuvaj, Projekat, Kopiraj) u gornjem redu, vece primarno polje i efektivna €/kg cijena u liniji sa kg",
+      "Donja traka kartica koristi animiranu kapsulu umjesto tanke linije iznad — aktivno stanje je jasnije",
+      "Aktivna stavka u desktop bocnoj traci je u akcent kapsuli, a dugme za skupljanje je u redu brendinga",
+      "Traka sa postavkama ima punu ivicu, obojene oznake za Cijenu (akcent) i PDV (zelena) i istaknutu Uredi pilulu",
+      "Tamni mod zaglavlja rezultata dobio je suptilnu teksturu inzenjerske mreze koja utopljava paletu",
+    ],
+  },
+  {
     version: "2.5.2",
     date: "2026-04-09",
     added: [

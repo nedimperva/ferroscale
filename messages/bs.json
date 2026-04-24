@@ -86,6 +86,12 @@
       "plates_sheets": "Limovi i ploce",
       "structural": "Konstrukcioni profili"
     },
+    "profileCategoryHints": {
+      "tubes": "CHS · RHS · SHS",
+      "bars": "Okrugla · Kvadratna · Pljosnata",
+      "plates_sheets": "Ravne i limovi",
+      "structural": "I/H profili, U-profili"
+    },
     "profiles": {
       "round_bar": "Okrugla sipka",
       "square_bar": "Kvadratna sipka",
@@ -156,7 +162,10 @@
     "compareCount": "Poredi ({count})",
     "reportIssue": "Prijavi problem",
     "report": "Prijava",
-    "whatsNew": "Novosti"
+    "whatsNew": "Novosti",
+    "recent": "Nedavno",
+    "recentEmpty": "Sačuvani šabloni se pojavljuju ovdje",
+    "pieceCount": "{qty, plural, one {# komad} few {# komada} other {# komada}}"
   },
   "columns": {
     "addColumn": "Dodaj kolonu",
@@ -412,6 +421,8 @@
     "empty": "Unesite dimenzije za prikaz rezultata uzivo.",
     "moreActions": "Vise opcija",
     "totalCost": "Ukupna cijena",
+    "totalPrice": "Ukupna cijena",
+    "effective": "efektivno",
     "unitWeight": "Masa po komadu",
     "totalWeight": "Ukupna masa",
     "perPiece": "Po komadu",

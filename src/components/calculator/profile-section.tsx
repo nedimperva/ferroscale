@@ -16,29 +16,35 @@ import { triggerHaptic } from "@/lib/haptics";
 /** Ordered list of categories for the top-level tabs. */
 const CATEGORY_ORDER: ProfileCategory[] = ["structural", "tubes", "plates_sheets", "bars"];
 
-/** SVG icons per category (small, inline). */
-const CATEGORY_ICONS: Record<ProfileCategory, React.ReactNode> = {
-  structural: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-      <path d="M4 4h16v4H4zM8 8v12M16 8v12" />
-    </svg>
-  ),
-  tubes: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-      <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" />
-    </svg>
-  ),
-  plates_sheets: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-      <rect x="3" y="8" width="18" height="8" rx="1" />
-    </svg>
-  ),
-  bars: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className="h-4 w-4">
-      <circle cx="12" cy="12" r="9" />
-    </svg>
-  ),
-};
+/** SVG icons per category — rendered at a configurable size for both compact pills and card views. */
+function categoryIcon(cat: ProfileCategory, sizeClass: string): React.ReactNode {
+  switch (cat) {
+    case "structural":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={sizeClass}>
+          <path d="M4 4h16v3H4zM7 7v10M17 7v10M4 17h16v3H4z" />
+        </svg>
+      );
+    case "tubes":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={sizeClass}>
+          <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" />
+        </svg>
+      );
+    case "plates_sheets":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={sizeClass}>
+          <rect x="3" y="8" width="18" height="8" rx="1" />
+        </svg>
+      );
+    case "bars":
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={sizeClass}>
+          <circle cx="12" cy="12" r="9" />
+        </svg>
+      );
+  }
+}
 
 /** SVG icon per profile — represents the cross-section shape. */
 const PROFILE_ICONS: Partial<Record<ProfileId, React.ReactNode>> = {
@@ -255,10 +261,10 @@ export const ProfileSection = memo(function ProfileSection({
       {/* ── Profile selection group ── */}
       <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <h3 className={groupHeadingClass}>{t("profileSection.groupProfile")}</h3>
-        {/* Category pills */}
+        {/* Category cards — visual-weight grid */}
         <div className="grid gap-1.5">
           <span className={sectionLabelClass}>{t("profileSection.category")}</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+          <div className="grid grid-cols-4 gap-1.5 lg:gap-2">
             {CATEGORY_ORDER.map((cat) => {
               const isActive = cat === activeCategory;
               return (
@@ -266,10 +272,28 @@ export const ProfileSection = memo(function ProfileSection({
                   key={cat}
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
-                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
+                  aria-pressed={isActive}
+                  className={`flex flex-col items-center gap-1.5 rounded-2xl border px-1.5 py-2.5 text-center transition-colors lg:flex-row lg:items-center lg:justify-start lg:gap-2 lg:px-2.5 lg:py-2 lg:text-left ${
+                    isActive
+                      ? "border-accent-border bg-accent-surface text-accent-text shadow-[var(--panel-highlight)]"
+                      : "border-border-faint bg-surface-raised text-foreground-secondary hover:border-border hover:bg-surface"
+                  }`}
                 >
-                  {CATEGORY_ICONS[cat]}
-                  {t(`dataset.profileCategories.${cat}`)}
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors lg:h-8 lg:w-8 lg:rounded-[0.7rem] ${
+                      isActive ? "bg-accent-border/60 text-accent-text" : "bg-surface-inset text-foreground-secondary"
+                    }`}
+                  >
+                    {categoryIcon(cat, "h-5 w-5 lg:h-4 lg:w-4")}
+                  </span>
+                  <span className="flex min-w-0 flex-col items-center leading-tight lg:items-start">
+                    <span className={`truncate text-[11px] ${isActive ? "font-semibold" : "font-medium"}`}>
+                      {t(`dataset.profileCategories.${cat}`)}
+                    </span>
+                    <span className="hidden truncate text-[10px] text-muted lg:block">
+                      {t(`dataset.profileCategoryHints.${cat}`)}
+                    </span>
+                  </span>
                 </button>
               );
             })}
