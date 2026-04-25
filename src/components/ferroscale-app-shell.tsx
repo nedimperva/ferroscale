@@ -45,7 +45,7 @@ import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
-import { Sidebar } from "@/components/calculator/sidebar";
+import { Sidebar, type SidebarRecent } from "@/components/calculator/sidebar";
 import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
@@ -143,7 +143,7 @@ function MobilePageCard({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-[1.35rem] ${className}`}>
+    <section className={`overflow-hidden rounded-card ${className}`}>
       {children}
     </section>
   );
@@ -627,6 +627,43 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     dispatch({ type: "RESET_ALL" });
   }, [dispatch]);
 
+  const recents = useMemo<SidebarRecent[]>(() => {
+    return [...saved]
+      .sort((a, b) => {
+        const ta = new Date(a.lastUsedAt ?? a.updatedAt).getTime();
+        const tb = new Date(b.lastUsedAt ?? b.updatedAt).getTime();
+        return tb - ta;
+      })
+      .slice(0, 3)
+      .map((entry) => {
+        const totalKg = entry.parts.reduce((sum, part) => sum + (part.result.totalWeightKg || 0), 0);
+        const weightLabel = totalKg >= 1000
+          ? `${(totalKg / 1000).toFixed(2)} t`
+          : `${totalKg.toFixed(1)} kg`;
+        const grade = resolveGradeLabel(entry.result.gradeLabel, t);
+        const totalPieces = entry.parts.reduce((sum, part) => sum + (part.input.quantity || 0), 0);
+        const detail = totalPieces > 0
+          ? `${grade} · ${t("sidebar.pieceCount", { qty: totalPieces })}`
+          : grade;
+        return {
+          id: entry.id,
+          name: entry.name,
+          detail,
+          valueLabel: weightLabel,
+          iconKey: entry.normalizedProfile.iconKey,
+        };
+      });
+  }, [saved, t]);
+
+  const handleLoadRecent = useCallback(
+    (id: string) => {
+      const entry = saved.find((item) => item.id === id);
+      if (!entry) return;
+      handleApplyTemplate(entry);
+    },
+    [saved, handleApplyTemplate],
+  );
+
   const headerContext = useMemo(() => {
     const profileShort = normalizedCurrentProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
     if (result) {
@@ -742,7 +779,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const desktopMain = (
     <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
-      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-[1.35rem]">
+      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-card">
         {showSettingsPreview && (
           <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
             <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
@@ -1102,6 +1139,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         canShowColumnsToggle={canShowColumnsToggle}
         isMultiColumnEnabled={columnLayout.enabled}
         onToggleMultiColumn={columnLayout.toggleEnabled}
+        recents={recents}
+        onLoadRecent={handleLoadRecent}
       />
 
       <div
@@ -1118,7 +1157,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
               <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
               <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
@@ -1137,7 +1176,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
               {normalizedCurrentProfile && (
                 <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted-faint">
-                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
+                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2.5 w-2.5" />
                 </span>
               )}
               <span className="truncate">{mobileHeaderSubtitle}</span>

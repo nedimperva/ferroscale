@@ -101,7 +101,7 @@ export const SyncSection = memo(function SyncSection({
                 : t("localOnlyHint")}
             </p>
           </div>
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${syncBadgeClass}`}>
+          <span className={`rounded-full px-2 py-0.5 text-2xs font-medium ${syncBadgeClass}`}>
             {syncBadgeLabel}
           </span>
         </div>

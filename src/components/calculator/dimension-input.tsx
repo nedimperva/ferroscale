@@ -28,10 +28,10 @@ export const DimensionInput = memo(function DimensionInput({
   const dimensionLabel = t(`dataset.dimensions.${dimension.key}`);
 
   return (
-    <div className="flex min-h-0 flex-col gap-1">
-      <label className="truncate text-xs font-medium text-foreground-secondary" htmlFor={`dimension-${dimension.key}`}>
-        {dimensionLabel}{" "}
-        <span className="font-normal text-muted-faint">
+    <div className="flex min-h-0 flex-col gap-1.5">
+      <label className="flex min-w-0 items-baseline gap-1.5 text-xs font-medium text-foreground-secondary" htmlFor={`dimension-${dimension.key}`}>
+        <span className="truncate">{dimensionLabel}</span>
+        <span className="shrink-0 font-normal text-muted-faint">
           {dimension.minMm}–{dimension.maxMm}
         </span>
       </label>
@@ -43,7 +43,7 @@ export const DimensionInput = memo(function DimensionInput({
           autoComplete="off"
           value={value?.value}
           onValueChange={onValueChange}
-          className={`h-11 w-full rounded-lg border bg-surface px-2 pr-10 text-sm transition-colors focus:border-blue-500 ${hasIssue ? "border-red-border" : "border-border-strong"
+          className={`h-11 w-full rounded-lg border bg-surface px-3 pr-10 text-sm transition-colors focus:border-blue-500 ${hasIssue ? "border-red-border" : "border-border-strong"
             }`}
           aria-invalid={hasIssue}
           aria-describedby={hasIssue && issueMessage ? `dimension-${dimension.key}-error` : undefined}

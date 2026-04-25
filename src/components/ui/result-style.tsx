@@ -61,11 +61,7 @@ export function getWorkspacePanelSpacing(layout: WorkspacePanelLayout) {
 }
 
 export function PanelSectionLabel({ label }: { label: string }) {
-  return (
-    <p className="text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
-      {label}
-    </p>
-  );
+  return <p className="text-eyebrow tracking-[0.18em]">{label}</p>;
 }
 
 const CHIP_VARIANTS = {
@@ -120,7 +116,7 @@ export function PanelMetricCard({
   className?: string;
 }) {
   return (
-    <div className={`panel-raised rounded-[1.15rem] p-3.5 ${className}`.trim()}>
+    <div className={`panel-raised rounded-2xl p-4 ${className}`.trim()}>
       <p className="text-xs font-medium text-muted">{label}</p>
       <div className="mt-2.5 flex flex-wrap items-end gap-x-1.5 gap-y-1">
         <p className="select-text text-xl font-bold text-foreground tabular-nums">{value}</p>
@@ -155,12 +151,12 @@ export function PanelCompactMetric({
   unitClassName?: string;
 }) {
   return (
-    <div className={`panel-raised rounded-xl px-2.5 py-2.5 ${className}`.trim()}>
+    <div className={`panel-raised rounded-2xl px-3 py-3 ${className}`.trim()}>
       <p className={`text-2xs font-medium text-muted ${labelClassName}`.trim()}>{label}</p>
       <div className="mt-1 flex flex-wrap items-end gap-1">
-        <p className={`text-sm font-semibold text-foreground tabular-nums ${valueClassName}`.trim()}>{value}</p>
+        <p className={`text-base font-semibold text-foreground tabular-nums ${valueClassName}`.trim()}>{value}</p>
         {unit && (
-          <p className={`text-2xs font-medium uppercase tracking-wide text-muted ${unitClassName}`.trim()}>
+          <p className={`pb-0.5 text-2xs font-medium uppercase tracking-wide text-muted ${unitClassName}`.trim()}>
             {unit}
           </p>
         )}
@@ -179,6 +175,21 @@ export function PanelActionButton({
     <button
       {...props}
       className={`premium-action-button inline-flex items-center justify-center gap-2 border px-3.5 py-2.5 text-sm font-semibold ${className ?? ""}`.trim()}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function PanelIconButton({
+  className,
+  children,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      className={`premium-action-button inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-colors lg:h-9 lg:w-9 ${className ?? ""}`.trim()}
     >
       {children}
     </button>

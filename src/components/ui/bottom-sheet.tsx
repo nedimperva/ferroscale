@@ -36,7 +36,7 @@ export function BottomSheet({
                 <Drawer.Content
                     aria-modal="true"
                     role="dialog"
-                    className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-2xl bg-surface shadow-xl outline-none"
+                    className="fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-sheet border-t border-border-faint bg-surface/98 shadow-[0_-18px_40px_rgba(15,23,42,0.18)] outline-none backdrop-blur-xl"
                     style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
                 >
                     {/* Drag handle */}

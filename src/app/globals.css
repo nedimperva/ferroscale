@@ -65,7 +65,11 @@
   --disabled-bg: #e2e8f0;
   --disabled-text: #94a3b8;
   --radius-panel: 1.25rem;
+  --radius-card: 1.35rem;
+  --radius-sheet: 1.6rem;
+  --radius-pill: 999px;
   --radius-control: 0.9rem;
+  --radius-chip: 0.95rem;
   --motion-fast: 140ms;
   --motion-medium: 220ms;
   --panel-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.06);
@@ -214,6 +218,11 @@
   /* ── Typography — extra-small tier ── */
   --font-size-2xs: 0.625rem;
   --font-size-2xs--line-height: 1rem;
+
+  /* ── Radius tokens (Tailwind v4 utility surface) ── */
+  --radius-card: var(--radius-card);
+  --radius-sheet: var(--radius-sheet);
+  --radius-chip: var(--radius-chip);
 }
 
 html {
@@ -360,6 +369,75 @@ details[open] .chevron-icon {
 .safe-area-x {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* Compose with existing pb-*, adds the device safe-area on top of authored padding. */
+.pb-safe {
+  padding-bottom: max(var(--pb-safe-base, 0px), env(safe-area-inset-bottom, 0px));
+}
+
+/* ── Mobile-first touch target — at least 44px on touch devices ── */
+.touch-target {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+@media (min-width: 1024px) {
+  .touch-target {
+    min-height: 0;
+    min-width: 0;
+  }
+}
+
+/* ── Eyebrow / display helpers — replace ad-hoc text-[10px..2.625rem] ── */
+.text-eyebrow {
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--muted-faint);
+}
+
+.text-meta {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+.text-meta-strong {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+  color: var(--foreground-secondary);
+}
+
+.text-display {
+  font-size: 2.25rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1280px) {
+  .text-display {
+    font-size: 2.5rem;
+  }
+}
+
+.text-display-mobile {
+  font-size: 2.375rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 360px) {
+  .text-display-mobile {
+    font-size: 2rem;
+  }
 }
 
 /* Standalone (installed PWA) — hide web-only UI */
@@ -672,6 +750,8 @@ details[open] .chevron-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
   border: 1px solid transparent;
   border-radius: 0.9rem;
   background: transparent;
@@ -681,6 +761,13 @@ details[open] .chevron-icon {
     background-color var(--motion-fast) ease,
     color var(--motion-fast) ease,
     box-shadow var(--motion-fast) ease;
+}
+
+@media (min-width: 1024px) {
+  .premium-icon-button {
+    min-height: 0;
+    min-width: 0;
+  }
 }
 
 .premium-icon-button:hover {

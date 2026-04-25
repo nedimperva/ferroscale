@@ -86,6 +86,12 @@
       "plates_sheets": "Plates and sheets",
       "structural": "Structural profiles"
     },
+    "profileCategoryHints": {
+      "tubes": "CHS · RHS · SHS",
+      "bars": "Round · Square · Flat",
+      "plates_sheets": "Flat & sheet",
+      "structural": "I/H beams, channels"
+    },
     "profiles": {
       "round_bar": "Round bar",
       "square_bar": "Square bar",
@@ -156,7 +162,10 @@
     "compareCount": "Compare ({count})",
     "reportIssue": "Report an issue",
     "report": "Report",
-    "whatsNew": "What's New"
+    "whatsNew": "What's New",
+    "recent": "Recent",
+    "recentEmpty": "Saved templates appear here",
+    "pieceCount": "{qty, plural, one {# piece} other {# pieces}}"
   },
   "columns": {
     "addColumn": "Add Column",
@@ -412,6 +421,8 @@
     "empty": "Enter dimensions to see live results.",
     "moreActions": "More actions",
     "totalCost": "Total cost",
+    "totalPrice": "Total price",
+    "effective": "effective",
     "unitWeight": "Unit weight",
     "totalWeight": "Total weight",
     "perPiece": "Per piece",

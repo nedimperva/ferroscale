@@ -20,9 +20,9 @@ import {
   getWorkspacePanelSpacing,
   PanelActionButton,
   PanelCompactMetric,
+  PanelIconButton,
   PanelMetricCard,
   PanelSectionLabel,
-  PanelSummaryChip,
 } from "@/components/ui/result-style";
 import { DATASET_VERSION } from "@/lib/datasets/version";
 
@@ -159,24 +159,11 @@ export const ResultContent = memo(function ResultContent({
     ? "border-t border-border-faint/70 pt-4"
     : "border-t border-border-faint/70 pt-5";
   const primaryValueClass = isDesktopSummary
-    ? "text-[2rem] font-bold tracking-tight text-foreground tabular-nums xl:text-[2.15rem]"
-    : "text-[2.45rem] font-extrabold tracking-tight text-foreground tabular-nums";
+    ? "text-display text-foreground"
+    : "text-display-mobile text-foreground";
   const primaryUnitClass = isDesktopSummary
-    ? "pb-0.5 text-base font-semibold text-accent"
-    : "pb-1 text-lg font-semibold text-accent";
-  const secondaryValueClass = isDesktopSummary
-    ? "select-text mt-1 text-sm font-medium text-foreground-secondary tabular-nums"
-    : "select-text mt-1.5 text-base font-semibold text-foreground-secondary tabular-nums";
-  const secondaryUnitClass = isDesktopSummary
-    ? "ml-1 text-xs font-semibold uppercase tracking-wide text-muted"
-    : "ml-1 text-xs font-medium uppercase tracking-wide text-muted";
-
-  const summaryChips = [
-    { label: t("contextQuantity"), value: t("pieces", { qty: result.quantity }), variant: "default" as const },
-    { label: t("contextPricing"), value: `${localizedPricePerKg}${currency}/kg`, variant: "default" as const },
-    ...(wastePercent > 0 ? [{ label: t("contextWaste"), value: `${wastePercent}%`, variant: "amber" as const }] : []),
-    ...(includeVat ? [{ label: t("contextVat"), value: `${vatPercent}%`, variant: "green" as const }] : []),
-  ];
+    ? "pb-0.5 text-lg font-semibold text-accent"
+    : "pb-1 text-xl font-semibold text-accent";
 
   const quickMetrics: Record<"totalWeight" | "unitPrice" | "unitWeight" | "surfaceArea", QuickMetric> = {
     totalWeight: {
@@ -235,161 +222,178 @@ export const ResultContent = memo(function ResultContent({
       >
         <section
           data-result-summary
-          className={`${sectionPadding} bg-linear-to-b from-surface-emphasis to-surface`}
+          className={`relative overflow-hidden ${sectionPadding} bg-linear-to-b from-surface-emphasis to-surface`}
         >
-          <div className="flex items-start gap-3">
-            <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.15rem] bg-accent/12 text-accent ring-1 ring-accent/15">
-              {normalizedProfile ? (
-                <ProfileIcon category={normalizedProfile.iconKey} className="h-5 w-5" />
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
+          {/* Engineering-grid texture — visible in dark mode only. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0 dark:opacity-[0.055]"
+            style={{
+              backgroundImage:
+                "linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+          <div className="relative">
+            {/* Top row: profile chip + label + compact icon actions */}
+            <div className="flex items-center gap-2.5">
+              <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/12 text-accent ring-1 ring-accent/15">
+                {normalizedProfile ? (
+                  <ProfileIcon category={normalizedProfile.iconKey} className="h-4 w-4" />
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
+                  </svg>
+                )}
+              </div>
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate text-sm font-semibold text-foreground">{profileLabel}</p>
+                <p className="truncate text-xs text-muted">
+                  {gradeLabel}
+                  {result.quantity > 1 ? ` · ${t("pieces", { qty: result.quantity })}` : ""}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <PanelIconButton
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    onCompare?.();
+                  }}
+                  disabled={!canCompare && !isInCompare}
+                  className={
+                    isInCompare
+                      ? "border-blue-border bg-blue-surface text-blue-text"
+                      : canCompare
+                        ? "border-border bg-surface-raised text-foreground-secondary hover:border-blue-border hover:bg-blue-surface/75 hover:text-blue-text"
+                        : "cursor-not-allowed border-border-faint bg-surface text-muted-faint"
+                  }
+                  title={
+                    isInCompare
+                      ? t("inCompareCount", { count: compareCount, max: maxCompare })
+                      : canCompare
+                        ? t("addToCompare")
+                        : t("compareFull", { max: maxCompare })
+                  }
+                  aria-label={isInCompare ? t("alreadyInCompare") : t("addToCompare")}
                 >
-                  <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83" />
-                </svg>
-              )}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <rect x="3" y="3" width="7" height="18" rx="1" />
+                    <rect x="14" y="3" width="7" height="18" rx="1" />
+                  </svg>
+                </PanelIconButton>
+
+                <PanelIconButton
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("success");
+                    onOpenSaveDialog();
+                  }}
+                  className={
+                    isSaved
+                      ? "border-accent-border bg-accent text-white hover:bg-accent-hover"
+                      : "border-accent-border bg-accent-surface text-accent hover:bg-accent-surface/80"
+                  }
+                  title={isSaved ? t("saved") : t("save")}
+                  aria-label={isSaved ? t("saved") : t("save")}
+                >
+                  <motion.svg
+                    key={isSaved ? "saved" : "unsaved"}
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className={`h-4 w-4 ${isSaved ? "fill-current stroke-current" : "fill-none stroke-current"}`}
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </motion.svg>
+                </PanelIconButton>
+
+                <PanelIconButton
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic("light");
+                    onAddToProject?.();
+                  }}
+                  className={
+                    hasProjects
+                      ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
+                      : "border-border bg-surface-raised text-foreground-secondary hover:border-border-strong hover:bg-surface"
+                  }
+                  title={t("addToProject")}
+                  aria-label={t("addToProject")}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
+                  </svg>
+                </PanelIconButton>
+
+                <CopyIconButton result={result} normalizedProfile={normalizedProfile} />
+              </div>
             </div>
 
-            <div className="min-w-0 flex-1">
-              {layout === "sheet" && <PanelSectionLabel label={t("title")} />}
-              <div className="mt-1.5 flex flex-wrap items-end gap-x-2 gap-y-1">
-                <p className={`select-text ${primaryValueClass}`}>
-                  {primaryValue}
-                </p>
+            {/* Primary value — dominant, breathing room */}
+            <div className="mt-4">
+              <p className="text-eyebrow">
+                {weightAsMain ? t("totalWeight") : t("totalPrice")}
+              </p>
+              <div className="mt-1.5 flex items-baseline gap-2">
+                <p className={`select-text ${primaryValueClass}`}>{primaryValue}</p>
                 <p className={primaryUnitClass}>{primaryUnit}</p>
               </div>
-
-              <p className={secondaryValueClass}>
-                {secondaryValue}
-                <span className={secondaryUnitClass}>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="select-text text-sm font-semibold tabular-nums text-foreground-secondary">
+                  {secondaryValue}
+                </span>
+                <span className="text-2xs font-semibold uppercase tracking-wider text-muted">
                   {secondaryUnit}
                 </span>
-              </p>
-
-              <p className="mt-2.5 truncate text-sm text-muted">
-                {profileLabel} - {gradeLabel}
-              </p>
+                <span className="h-3 w-px bg-border" aria-hidden />
+                <span className="text-xs text-muted">
+                  {localizedPricePerKg}
+                  {currency}/kg {t("effective")}
+                </span>
+                {wastePercent > 0 && (
+                  <span className="rounded-md border border-amber-border bg-amber-surface px-1.5 py-0.5 text-2xs font-semibold text-amber-text">
+                    {t("contextWaste")} {wastePercent}%
+                  </span>
+                )}
+                {includeVat && (
+                  <span className="rounded-md border border-green-border bg-green-surface px-1.5 py-0.5 text-2xs font-semibold text-green-text">
+                    {t("contextVat")} {vatPercent}%
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {summaryChips.map((chip) => (
-              <PanelSummaryChip key={`${chip.label}-${chip.value}`} label={chip.label} value={chip.value} variant={chip.variant} />
-            ))}
-          </div>
-        </section>
-
-        <section data-result-actions className={`${sectionPadding} pt-0`}>
-          <div className="grid grid-cols-2 gap-2.5">
-            <PanelActionButton
-              type="button"
-              onClick={() => {
-                triggerHaptic("light");
-                onCompare?.();
-              }}
-              disabled={!canCompare && !isInCompare}
-              className={
-                isInCompare
-                  ? "border-blue-border bg-blue-surface text-blue-text"
-                  : canCompare
-                    ? "border-border bg-surface-raised text-foreground-secondary hover:border-blue-border hover:bg-blue-surface/75 hover:text-blue-text"
-                    : "cursor-not-allowed border-border-faint bg-surface text-muted-faint"
-              }
-              title={
-                isInCompare
-                  ? t("alreadyInCompare")
-                  : canCompare
-                    ? t("addToCompare")
-                    : t("compareFull", { max: maxCompare })
-              }
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4 shrink-0"
-              >
-                <rect x="3" y="3" width="7" height="18" rx="1" />
-                <rect x="14" y="3" width="7" height="18" rx="1" />
-              </svg>
-              <span>
-                {isInCompare
-                  ? t("inCompareCount", { count: compareCount, max: maxCompare })
-                  : t("addToCompare")}
-              </span>
-            </PanelActionButton>
-
-            <PanelActionButton
-              type="button"
-              onClick={() => {
-                triggerHaptic("success");
-                onOpenSaveDialog();
-              }}
-              className={
-                isSaved
-                  ? "border-accent-border bg-accent text-white hover:bg-accent-hover"
-                  : "border-accent-border bg-accent-surface text-accent hover:bg-accent-surface/80"
-              }
-            >
-              <motion.svg
-                key={isSaved ? "saved" : "unsaved"}
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                className={`h-4 w-4 ${isSaved ? "fill-current stroke-current" : "fill-none stroke-current"}`}
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
-              </motion.svg>
-              <span>{isSaved ? t("saved") : t("save")}</span>
-            </PanelActionButton>
-
-            <PanelActionButton
-              type="button"
-              onClick={() => {
-                triggerHaptic("light");
-                onAddToProject?.();
-              }}
-              className={
-                hasProjects
-                  ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
-                  : "border-border bg-surface-raised text-foreground-secondary hover:border-border-strong hover:bg-surface"
-              }
-              title={t("addToProject")}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4 shrink-0"
-              >
-                <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
-              </svg>
-              <span>{t("project")}</span>
-            </PanelActionButton>
-
-            <CopyButton
-              result={result}
-              normalizedProfile={normalizedProfile}
-              className="border-border bg-surface-raised text-foreground-secondary hover:border-border-strong hover:bg-surface"
-            />
           </div>
         </section>
       </div>
@@ -408,7 +412,7 @@ export const ResultContent = memo(function ResultContent({
                   unit={metric.unit}
                   sublabel={metric.sublabel}
                   className={featuredMetricClass(metric.tone)}
-                  labelClassName="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-faint"
+                  labelClassName="text-eyebrow"
                   valueClassName="text-base font-bold"
                   unitClassName={metric.tone === "price" ? "text-accent" : metric.tone === "weight" ? "text-blue-text" : ""}
                 />
@@ -434,7 +438,7 @@ export const ResultContent = memo(function ResultContent({
                 unit={metric.unit}
                 sublabel={metric.sublabel}
                 className={supportingMetricClass(metric)}
-                labelClassName="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-faint"
+                labelClassName="text-eyebrow"
                 valueClassName={metric.muted ? "text-muted" : "text-foreground"}
               />
             ))}
@@ -555,7 +559,7 @@ export const ResultContent = memo(function ResultContent({
             labels={result.referenceLabels}
             className="px-0 py-0 text-xs text-muted-faint"
           />
-          <p className="mt-2 text-[11px] text-muted-faint">
+          <p className="mt-2 text-meta text-muted-faint">
             {t("datasetLine", { version: result.datasetVersion ?? DATASET_VERSION })}
           </p>
         </section>
@@ -576,6 +580,70 @@ function CostRow({
       <span className="text-sm text-muted">{label}</span>
       <span className="select-text text-sm font-medium text-foreground tabular-nums">{value}</span>
     </div>
+  );
+}
+
+function CopyIconButton({
+  result,
+  normalizedProfile,
+}: {
+  result: CalculationResult;
+  normalizedProfile: NormalizedProfileSnapshot | null;
+}) {
+  const t = useTranslations("result");
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(() => {
+    const label = normalizedProfile?.shortLabel ?? result.profileLabel;
+    const text = formatResultForClipboard(result, label);
+    navigator.clipboard.writeText(text).then(() => {
+      triggerHaptic("success");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [result, normalizedProfile]);
+
+  return (
+    <PanelIconButton
+      type="button"
+      onClick={handleCopy}
+      className={
+        copied
+          ? "border-green-border bg-green-surface text-green-text"
+          : "border-border bg-surface-raised text-foreground-secondary hover:border-border-strong hover:bg-surface"
+      }
+      title={copied ? t("copied") : t("copy")}
+      aria-label={t("copyAriaLabel")}
+    >
+      {copied ? (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4"
+        >
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      ) : (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4"
+        >
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+        </svg>
+      )}
+    </PanelIconButton>
   );
 }
 

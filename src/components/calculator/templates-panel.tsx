@@ -168,15 +168,15 @@ export const TemplatesPanel = memo(function TemplatesPanel({
 
   if (saved.length === 0) {
     return (
-      <div className="mt-6 flex flex-col items-center gap-2 px-4 py-4 text-center">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface-inset text-muted-faint">
+      <div className="mt-6 flex flex-col items-center gap-2 px-4 py-6 text-center">
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-surface-inset text-muted-faint md:h-10 md:w-10">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth={1.5}
-            className="h-5 w-5"
+            className="h-6 w-6 md:h-5 md:w-5"
           >
             <path d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
           </svg>
@@ -201,7 +201,7 @@ export const TemplatesPanel = memo(function TemplatesPanel({
                 setSelectionMode(true);
               }
             }}
-            className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground-secondary transition-colors hover:bg-surface"
+            className="min-h-9 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground-secondary transition-colors hover:bg-surface"
           >
             {selectionMode ? labelCancelSelection : labelSelectMode}
           </button>
@@ -211,7 +211,7 @@ export const TemplatesPanel = memo(function TemplatesPanel({
               <button
                 type="button"
                 onClick={toggleSelectAllVisible}
-                className="rounded-lg border border-border px-2 py-1 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface"
+                className="min-h-9 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-surface"
               >
                 {allVisibleSelected ? labelClearSelection : labelSelectAllShown}
               </button>
@@ -221,7 +221,7 @@ export const TemplatesPanel = memo(function TemplatesPanel({
                     type="button"
                     disabled={selectedCount === 0}
                     onClick={handleBulkDuplicate}
-                    className="rounded-lg border border-blue-border bg-blue-surface px-2 py-1 text-xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-9 rounded-lg border border-blue-border bg-blue-surface px-2.5 py-1.5 text-xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {labelBulkDuplicate}
                   </button>
@@ -229,7 +229,7 @@ export const TemplatesPanel = memo(function TemplatesPanel({
                     type="button"
                     disabled={selectedCount === 0}
                     onClick={handleBulkDelete}
-                    className="rounded-lg border border-red-border bg-red-surface px-2 py-1 text-xs font-semibold text-red-interactive transition-colors hover:bg-red-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-9 rounded-lg border border-red-border bg-red-surface px-2.5 py-1.5 text-xs font-semibold text-red-interactive transition-colors hover:bg-red-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {labelBulkDelete}
                   </button>
@@ -245,12 +245,12 @@ export const TemplatesPanel = memo(function TemplatesPanel({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-faint focus:border-blue-border"
+            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-faint focus:border-blue-border"
           />
           <select
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value as "recent" | "used" | "popular")}
-            className="w-full rounded-lg border border-border bg-surface px-2.5 py-2 text-sm text-foreground outline-none transition-colors focus:border-blue-border sm:w-45"
+            className="h-11 w-full rounded-lg border border-border bg-surface px-2.5 text-sm text-foreground outline-none transition-colors focus:border-blue-border sm:w-45"
           >
             <option value="recent">{t("sort.recent")}</option>
             <option value="used">{t("sort.lastUsed")}</option>
@@ -301,13 +301,16 @@ export const TemplatesPanel = memo(function TemplatesPanel({
       )}
 
       {selectionMode && layout === "mobile" && (
-        <div className="sticky bottom-0 z-10 rounded-xl border border-border bg-surface/95 p-2 backdrop-blur-md">
+        <div
+          className="sticky z-10 rounded-2xl border border-border bg-surface/95 p-2 backdrop-blur-md"
+          style={{ bottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
+        >
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               disabled={selectedCount === 0}
               onClick={handleBulkDuplicate}
-              className="rounded-lg border border-blue-border bg-blue-surface px-3 py-2 text-xs font-semibold text-blue-text transition-colors hover:bg-blue-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-11 rounded-lg border border-blue-border bg-blue-surface px-3 py-2.5 text-sm font-semibold text-blue-text transition-colors hover:bg-blue-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {labelBulkDuplicate}
             </button>
@@ -315,7 +318,7 @@ export const TemplatesPanel = memo(function TemplatesPanel({
               type="button"
               disabled={selectedCount === 0}
               onClick={handleBulkDelete}
-              className="rounded-lg border border-red-border bg-red-surface px-3 py-2 text-xs font-semibold text-red-interactive transition-colors hover:bg-red-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-11 rounded-lg border border-red-border bg-red-surface px-3 py-2.5 text-sm font-semibold text-red-interactive transition-colors hover:bg-red-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {labelBulkDelete}
             </button>
@@ -396,25 +399,25 @@ const TemplateItem = memo(function TemplateItem({
   }
 
   return (
-    <li className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
-      <div className={layout === "drawer" ? "px-3 py-2.5" : "px-3 py-2"}>
+    <li className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+      <div className={layout === "drawer" ? "px-3 py-3" : "px-3 py-2.5"}>
         {/* Header row: icon + name + actions */}
         <div className="flex items-center gap-2.5">
           {selectionMode && (
             <button
               type="button"
               onClick={onToggleSelect}
-              className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${selected ? "border-accent bg-accent text-white" : "border-border bg-surface text-transparent hover:bg-surface-raised"}`}
+              className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition-colors ${selected ? "border-accent bg-accent text-white" : "border-border bg-surface text-transparent hover:bg-surface-raised"}`}
               aria-label={tSaved("selectRow")}
               aria-pressed={selected}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                 <path fillRule="evenodd" d="M16.704 5.29a1 1 0 0 1 .006 1.414l-7.25 7.312a1 1 0 0 1-1.42-.003L3.29 9.228a1 1 0 1 1 1.42-1.406l4.039 4.08 6.54-6.606a1 1 0 0 1 1.415-.006Z" clipRule="evenodd" />
               </svg>
             </button>
           )}
 
-          <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${styles.iconBg}`}>
+          <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-chip ${styles.iconBg}`}>
             <ProfileIcon category={entry.normalizedProfile.iconKey} className="h-4 w-4" />
           </span>
 
@@ -424,23 +427,23 @@ const TemplateItem = memo(function TemplateItem({
           </div>
         </div>
 
-        {/* Key metrics - compact inline row */}
-        <div className="mt-2 flex items-center gap-3 text-xs">
+        {/* Key metrics - compact inline row, wraps on narrow screens */}
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <span className="font-semibold text-foreground tabular-nums">
             {formatStaticNumber(entry.result.totalWeightKg)} <span className="font-medium text-muted">kg</span>
           </span>
-          <span className="text-border-strong">·</span>
+          <span className="text-border-strong" aria-hidden>·</span>
           <span className="font-semibold text-foreground tabular-nums">
             {formatStaticNumber(entry.result.grandTotalAmount)} <span className="font-medium text-muted">{currency}</span>
           </span>
-          <span className="text-border-strong">·</span>
+          <span className="text-border-strong" aria-hidden>·</span>
           <span className="text-muted">
             {entry.parts.length} {entry.parts.length === 1 ? "part" : "parts"}
           </span>
           {entry.useCount > 0 && (
             <>
-              <span className="text-border-strong">·</span>
-              <span className="text-muted-faint">{entry.useCount}x used</span>
+              <span className="text-border-strong" aria-hidden>·</span>
+              <span className="text-muted-faint">{entry.useCount}× used</span>
             </>
           )}
         </div>
@@ -640,12 +643,13 @@ function IconButton({
     <button
       type="button"
       onClick={onClick}
-      className={
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-faint transition-colors lg:h-7 lg:w-7 ${
         tone === "danger"
-          ? "rounded-lg p-1.5 text-muted-faint transition-colors hover:bg-red-surface hover:text-red-interactive"
-          : "rounded-lg p-1.5 text-muted-faint transition-colors hover:bg-surface-inset hover:text-foreground-secondary"
-      }
+          ? "hover:bg-red-surface hover:text-red-interactive"
+          : "hover:bg-surface-inset hover:text-foreground-secondary"
+      }`}
       title={title}
+      aria-label={title}
     >
       {children}
     </button>

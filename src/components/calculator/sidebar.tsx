@@ -5,6 +5,16 @@ import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
 import { APP_VERSION } from "@/lib/changelog";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
+import type { ProfileCategory } from "@/lib/datasets/types";
+
+export interface SidebarRecent {
+  id: string;
+  name: string;
+  detail: string;
+  valueLabel: string;
+  iconKey: ProfileCategory;
+}
 
 interface SidebarProps {
   onOpenContact: () => void;
@@ -29,6 +39,8 @@ interface SidebarProps {
   canShowColumnsToggle?: boolean;
   isMultiColumnEnabled?: boolean;
   onToggleMultiColumn?: () => void;
+  recents?: SidebarRecent[];
+  onLoadRecent?: (id: string) => void;
 }
 
 export const Sidebar = memo(function Sidebar({
@@ -54,6 +66,8 @@ export const Sidebar = memo(function Sidebar({
   canShowColumnsToggle,
   isMultiColumnEnabled,
   onToggleMultiColumn,
+  recents,
+  onLoadRecent,
 }: SidebarProps) {
   const t = useTranslations();
 
@@ -66,6 +80,7 @@ export const Sidebar = memo(function Sidebar({
   const quickCalcShortcut = isMac ? "⌘K" : "Ctrl+K";
 
   const width = collapsed ? "w-[56px]" : "w-[220px]";
+  const showRecents = !collapsed && recents && recents.length > 0;
 
   return (
     <aside
@@ -101,24 +116,37 @@ export const Sidebar = memo(function Sidebar({
           </svg>
         </div>
         {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
-              Workspace
-            </p>
-            <h1 className="truncate text-base font-semibold tracking-tight text-foreground">
-              {t("sidebar.title")}
-            </h1>
+          <div className="flex min-w-0 flex-1 items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
+                Workspace
+              </p>
+              <h1 className="truncate text-base font-semibold tracking-tight text-foreground">
+                {t("sidebar.title")}
+              </h1>
+              <button
+                type="button"
+                onClick={onOpenChangelog}
+                className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-1 text-2xs transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${isChangelogOpen ? "bg-surface-raised text-foreground-secondary" : "text-muted-faint"}`}
+                title={t("sidebar.whatsNew")}
+              >
+                v{APP_VERSION}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4" />
+                  <path d="M12 8h.01" />
+                </svg>
+              </button>
+            </div>
             <button
               type="button"
-              onClick={onOpenChangelog}
-              className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-1 text-2xs transition-colors hover:bg-surface-raised hover:text-foreground-secondary ${isChangelogOpen ? "bg-surface-raised text-foreground-secondary" : "text-muted-faint"}`}
-              title={t("sidebar.whatsNew")}
+              onClick={onToggleCollapsed}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border-faint text-muted-faint transition-colors hover:border-border hover:bg-surface-raised hover:text-foreground-secondary"
+              aria-label={t("theme.collapseSidebar")}
+              title={t("theme.collapseSidebar")}
             >
-              v{APP_VERSION}
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
+                <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
           </div>
@@ -137,7 +165,8 @@ export const Sidebar = memo(function Sidebar({
               <path d="m21 21-4.3-4.3" />
             </svg>
           }
-          label={collapsed ? t("quickCalc.sidebarLabel") : `${t("quickCalc.sidebarLabel")}  ${quickCalcShortcut}`}
+          label={t("quickCalc.sidebarLabel")}
+          hint={!collapsed ? quickCalcShortcut : undefined}
           collapsed={collapsed}
           onClick={onOpenQuickCalc}
         />
@@ -211,6 +240,43 @@ export const Sidebar = memo(function Sidebar({
             collapsed={collapsed}
             onClick={onToggleMultiColumn}
           />
+        )}
+
+        {/* Recents strip — shown on expanded sidebar */}
+        {showRecents && (
+          <>
+            <div className="mx-1 mt-3 border-t border-border-faint" />
+            <div className="px-2 pt-3">
+              <div className="px-1.5 pb-1.5 text-eyebrow">
+                {t("sidebar.recent")}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {recents!.map((entry) => (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => onLoadRecent?.(entry.id)}
+                    className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-surface-raised"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-accent">
+                      <ProfileIcon category={entry.iconKey} className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-2xs font-semibold leading-tight text-foreground">
+                        {entry.name}
+                      </span>
+                      <span className="truncate text-2xs leading-tight text-muted">
+                        {entry.detail}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-2xs font-semibold tabular-nums text-foreground-secondary">
+                      {entry.valueLabel}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Spacer */}
@@ -299,28 +365,30 @@ export const Sidebar = memo(function Sidebar({
           )}
         </button>
 
-        {/* Collapse toggle */}
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
-          aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
-          title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`h-4 w-4 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`}
+        {/* Collapse toggle — only shown on collapsed state (expanded has branding toggle) */}
+        {collapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+            aria-label={t("theme.expandSidebar")}
+            title={t("theme.expandSidebar")}
           >
-            <path d="m11 17-5-5 5-5" />
-            <path d="m18 17-5-5 5-5" />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 rotate-180"
+            >
+              <path d="m11 17-5-5 5-5" />
+              <path d="m18 17-5-5 5-5" />
+            </svg>
+          </button>
+        )}
 
         <div className="h-3" />
       </nav>
@@ -333,6 +401,7 @@ export const Sidebar = memo(function Sidebar({
 interface SidebarButtonProps {
   icon: React.ReactNode;
   label: string;
+  hint?: string;
   badge?: number;
   variant?: "default" | "blue" | "purple";
   active?: boolean;
@@ -343,6 +412,7 @@ interface SidebarButtonProps {
 function SidebarButton({
   icon,
   label,
+  hint,
   badge,
   variant = "default",
   active = false,
@@ -351,7 +421,7 @@ function SidebarButton({
 }: SidebarButtonProps) {
   const variantClasses = {
     default: active
-      ? "border-border bg-surface-raised text-foreground shadow-[var(--panel-highlight)]"
+      ? "border-accent-border bg-accent-surface text-accent-text shadow-[var(--panel-highlight)]"
       : "border-transparent text-foreground-secondary hover:bg-surface-raised hover:text-foreground",
     blue: active
       ? "border border-blue-border text-blue-text bg-blue-surface"
@@ -363,10 +433,6 @@ function SidebarButton({
 
   return (
     <div className="group relative">
-      {/* Active left border accent */}
-      {active && (
-        <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-accent" />
-      )}
       <button
         type="button"
         onClick={onClick}
@@ -375,7 +441,12 @@ function SidebarButton({
         aria-label={label}
       >
         <span className="shrink-0">{icon}</span>
-        {!collapsed && <span className="truncate">{label}</span>}
+        {!collapsed && <span className="flex-1 truncate text-left">{label}</span>}
+        {!collapsed && hint !== undefined && (
+          <span className="ml-auto shrink-0 rounded-md bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-muted-faint">
+            {hint}
+          </span>
+        )}
         {!collapsed && badge !== undefined && (
           <span className="ml-auto shrink-0 rounded-full bg-surface px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary shadow-[var(--panel-highlight)]">
             {badge}

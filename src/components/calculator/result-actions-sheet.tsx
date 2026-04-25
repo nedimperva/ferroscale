@@ -50,7 +50,7 @@ export const ResultActionsSheet = memo(function ResultActionsSheet({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[80] bg-overlay" />
         <Drawer.Content
-          className="fixed inset-x-0 bottom-0 z-[90] flex flex-col rounded-t-2xl bg-surface shadow-xl outline-none lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-[90] flex flex-col rounded-t-sheet border-t border-border-faint bg-surface/98 shadow-[0_-18px_40px_rgba(15,23,42,0.18)] outline-none backdrop-blur-xl lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           {/* Handle */}
@@ -71,7 +71,7 @@ export const ResultActionsSheet = memo(function ResultActionsSheet({
                 onClose();
               }}
               disabled={!canCompare && !isInCompare}
-              className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-sm font-medium transition-colors ${
+              className={`flex min-h-12 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${
                 isInCompare
                   ? "border-blue-border bg-blue-surface text-blue-text"
                   : canCompare
@@ -109,7 +109,7 @@ export const ResultActionsSheet = memo(function ResultActionsSheet({
                 onSave();
                 onClose();
               }}
-              className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-sm font-medium transition-colors ${
+              className={`flex min-h-12 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${
                 isSaved
                   ? "border-accent-border bg-accent-surface text-accent hover:bg-accent-surface/80"
                   : "border-border text-foreground-secondary hover:bg-surface-raised"
@@ -136,7 +136,7 @@ export const ResultActionsSheet = memo(function ResultActionsSheet({
                 onAddToProject();
                 onClose();
               }}
-              className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-sm font-medium transition-colors ${
+              className={`flex min-h-12 w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${
                 hasProjects
                   ? "border-purple-border bg-purple-surface text-purple-text hover:bg-purple-surface"
                   : "border-border text-foreground-secondary hover:bg-surface-raised"
