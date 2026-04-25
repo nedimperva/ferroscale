@@ -24,22 +24,32 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
     changed: [
       "Profile category picker swapped for a visual 4-card grid with icons and sub-labels — easier to scan and tap",
+      "Profile category cards now adapt to very small phones with a 2-column layout before expanding to 4 columns, preventing cramped labels",
       "Result panel header reorganized: compact icon actions (Compare, Save, Project, Copy) sit in the top row, primary value grows for readability, and effective €/kg is inline with the kg total",
       "Bottom tab bar uses an animated capsule background on the active tab instead of a thin top line — active state is clearer at a glance",
       "Desktop sidebar active item now reads as an accent capsule, and the collapse toggle lives in the branding row",
       "Settings summary strip gets a solid border, color-coded Price (accent) and VAT (green) tokens, and a prominent accent Edit pill",
       "Dark mode Result header picks up a subtle engineering-grid texture that warms the palette",
+      "Profile type chips now snap while horizontally scrolling and keep labels on one line for cleaner touch navigation",
+    ],
+    fixed: [
+      "Fixed mobile overflow in profile category cards so long labels stay inside each selection tile instead of spilling outside the icon area",
     ],
     added_bs: [
       "Bocna traka na desktopu prikazuje Nedavno sa posljednja 3 sacuvana sablona; jedan klik ih vraca u kalkulator",
     ],
     changed_bs: [
       "Izbor kategorije profila zamijenjen vizualnom mrezom sa 4 kartice sa ikonama i podnaslovima — lakse za pregled i dodir",
+      "Kartice kategorija profila sada se prilagodjavaju vrlo malim telefonima sa rasporedom od 2 kolone prije prelaska na 4, kako bi oznake ostale citljive",
       "Zaglavlje panela rezultata je reorganizirano: kompaktne akcijske ikone (Poredi, Sacuvaj, Projekat, Kopiraj) u gornjem redu, vece primarno polje i efektivna €/kg cijena u liniji sa kg",
       "Donja traka kartica koristi animiranu kapsulu umjesto tanke linije iznad — aktivno stanje je jasnije",
       "Aktivna stavka u desktop bocnoj traci je u akcent kapsuli, a dugme za skupljanje je u redu brendinga",
       "Traka sa postavkama ima punu ivicu, obojene oznake za Cijenu (akcent) i PDV (zelena) i istaknutu Uredi pilulu",
       "Tamni mod zaglavlja rezultata dobio je suptilnu teksturu inzenjerske mreze koja utopljava paletu",
+      "Chipovi tipa profila sada se poravnavaju (snap) pri horizontalnom skrolu i drze oznake u jednom redu radi urednije mobilne navigacije",
+    ],
+    fixed_bs: [
+      "Ispravljeno prelijevanje teksta na mobilnim karticama kategorija profila tako da duze oznake ostaju unutar plocice umjesto izvan zone ikone",
     ],
   },
   {
@@ -642,5 +652,4 @@ export const CHANGELOG: ChangelogEntry[] = [
 
 /** Latest app version — matches the first (newest) entry in CHANGELOG. */
 export const APP_VERSION = CHANGELOG[0].version;
-
 
