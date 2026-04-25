@@ -264,7 +264,7 @@ export const ProfileSection = memo(function ProfileSection({
         {/* Category cards — visual-weight grid */}
         <div className="grid gap-1.5">
           <span className={sectionLabelClass}>{t("profileSection.category")}</span>
-          <div className="grid grid-cols-4 gap-1.5 lg:gap-2">
+          <div className="grid grid-cols-2 gap-1.5 min-[420px]:grid-cols-4 lg:gap-2">
             {CATEGORY_ORDER.map((cat) => {
               const isActive = cat === activeCategory;
               return (
@@ -273,7 +273,7 @@ export const ProfileSection = memo(function ProfileSection({
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
                   aria-pressed={isActive}
-                  className={`flex flex-col items-center gap-1.5 rounded-2xl border px-1.5 py-2.5 text-center transition-colors lg:flex-row lg:items-center lg:justify-start lg:gap-2 lg:px-2.5 lg:py-2 lg:text-left ${
+                  className={`flex min-w-0 flex-col items-center gap-1.5 overflow-hidden rounded-2xl border px-1.5 py-2.5 text-center transition-colors lg:flex-row lg:items-center lg:justify-start lg:gap-2 lg:px-2.5 lg:py-2 lg:text-left ${
                     isActive
                       ? "border-accent-border bg-accent-surface text-accent-text shadow-[var(--panel-highlight)]"
                       : "border-border-faint bg-surface-raised text-foreground-secondary hover:border-border hover:bg-surface"
@@ -286,11 +286,15 @@ export const ProfileSection = memo(function ProfileSection({
                   >
                     {categoryIcon(cat, "h-5 w-5 lg:h-4 lg:w-4")}
                   </span>
-                  <span className="flex min-w-0 flex-col items-center leading-tight lg:items-start">
-                    <span className={`truncate text-[11px] ${isActive ? "font-semibold" : "font-medium"}`}>
+                  <span className="flex min-w-0 w-full flex-col items-center leading-tight lg:items-start">
+                    <span
+                      className={`line-clamp-2 w-full text-[11px] break-words min-[420px]:line-clamp-1 min-[420px]:truncate ${
+                        isActive ? "font-semibold" : "font-medium"
+                      }`}
+                    >
                       {t(`dataset.profileCategories.${cat}`)}
                     </span>
-                    <span className="hidden truncate text-[10px] text-muted lg:block">
+                    <span className="hidden w-full truncate text-[10px] text-muted lg:block">
                       {t(`dataset.profileCategoryHints.${cat}`)}
                     </span>
                   </span>
@@ -306,7 +310,10 @@ export const ProfileSection = memo(function ProfileSection({
         {/* Sub-type pills */}
         <div className="grid gap-1.5">
           <span className={sectionLabelClass}>{t("profileSection.type")}</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+          <div
+            className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto pb-0.5"
+            style={{ scrollbarWidth: "none" }}
+          >
             {categoryProfiles.map((p) => {
               const isActive = p.id === input.profileId;
               return (
@@ -317,7 +324,7 @@ export const ProfileSection = memo(function ProfileSection({
                     triggerHaptic("light");
                     dispatch({ type: "SET_PROFILE", profileId: p.id });
                   }}
-                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
+                  className={`snap-start whitespace-nowrap ${pillBaseClass} ${pillStateClass(isActive)}`}
                 >
                   {PROFILE_ICONS[p.id]}
                   {t(`dataset.profileShort.${p.id}`)}

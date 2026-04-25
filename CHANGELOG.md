@@ -18,11 +18,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Profile category picker swapped for a visual 4-card grid with icons and sub-labels — easier to scan and tap
+- Profile category cards now adapt to very small phones with a 2-column layout before expanding to 4 columns, preventing cramped labels
 - Result panel header reorganized: compact icon actions (Compare, Save, Project, Copy) sit in the top row, primary value grows for readability, and effective €/kg is inline with the kg total
 - Bottom tab bar uses an animated capsule background on the active tab instead of a thin top line — active state is clearer at a glance
 - Desktop sidebar active item now reads as an accent capsule, and the collapse toggle lives in the branding row
 - Settings summary strip gets a solid border, color-coded Price (accent) and VAT (green) tokens, and a prominent accent Edit pill
 - Dark mode Result header picks up a subtle engineering-grid texture that warms the palette
+- Profile type chips now snap while horizontally scrolling and keep labels on one line for cleaner touch navigation
+
+### Fixed
+
+- Fixed mobile overflow in profile category cards so long labels stay inside each selection tile instead of spilling outside the icon area
 
 ---
 
