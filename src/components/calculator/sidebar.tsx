@@ -247,7 +247,7 @@ export const Sidebar = memo(function Sidebar({
           <>
             <div className="mx-1 mt-3 border-t border-border-faint" />
             <div className="px-2 pt-3">
-              <div className="px-1.5 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-faint">
+              <div className="px-1.5 pb-1.5 text-eyebrow">
                 {t("sidebar.recent")}
               </div>
               <div className="flex flex-col gap-0.5">
@@ -262,14 +262,14 @@ export const Sidebar = memo(function Sidebar({
                       <ProfileIcon category={entry.iconKey} className="h-3.5 w-3.5" />
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-[11px] font-semibold leading-tight text-foreground">
+                      <span className="truncate text-2xs font-semibold leading-tight text-foreground">
                         {entry.name}
                       </span>
-                      <span className="truncate text-[10px] leading-tight text-muted">
+                      <span className="truncate text-2xs leading-tight text-muted">
                         {entry.detail}
                       </span>
                     </span>
-                    <span className="shrink-0 text-[10px] font-semibold tabular-nums text-foreground-secondary">
+                    <span className="shrink-0 text-2xs font-semibold tabular-nums text-foreground-secondary">
                       {entry.valueLabel}
                     </span>
                   </button>
@@ -443,7 +443,7 @@ function SidebarButton({
         <span className="shrink-0">{icon}</span>
         {!collapsed && <span className="flex-1 truncate text-left">{label}</span>}
         {!collapsed && hint !== undefined && (
-          <span className="ml-auto shrink-0 rounded-md bg-surface-inset px-1.5 py-0.5 text-[10px] font-semibold text-muted-faint">
+          <span className="ml-auto shrink-0 rounded-md bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-muted-faint">
             {hint}
           </span>
         )}

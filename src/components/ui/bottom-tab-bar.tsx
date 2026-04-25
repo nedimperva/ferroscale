@@ -66,11 +66,12 @@ export const BottomTabBar = memo(function BottomTabBar({
               key={tab.id}
               type="button"
               onClick={() => {
+                if (isActive) return;
                 triggerHaptic("light");
                 onTabChange(tab.id);
               }}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className={`relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-2xs font-medium transition-colors ${
+              className={`relative flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-2xs font-medium transition-colors ${
                 isActive
                   ? "text-accent-text"
                   : "text-muted-faint"
@@ -78,6 +79,7 @@ export const BottomTabBar = memo(function BottomTabBar({
               aria-label={tab.label}
               aria-controls={`tabpanel-${tab.id}`}
               aria-selected={isActive}
+              aria-current={isActive ? "page" : undefined}
               role="tab"
               tabIndex={isActive ? 0 : -1}
             >
@@ -94,12 +96,14 @@ export const BottomTabBar = memo(function BottomTabBar({
                 <span className="relative">
                   <TabIcon id={tab.id} active={isActive} />
                   {isHydrated && tab.badge !== undefined && (
-                    <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-purple-strong px-1 text-2xs font-bold leading-none text-white">
+                    <span className="absolute -right-2 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full border border-surface bg-accent px-1 text-2xs font-bold leading-none text-white shadow-[0_2px_6px_rgba(15,23,42,0.18)]">
                       {tab.badge}
                     </span>
                   )}
                 </span>
-                <span className={isActive ? "font-semibold" : ""}>{tab.label}</span>
+                <span className={`max-w-full truncate ${isActive ? "font-semibold" : ""}`}>
+                  {tab.label}
+                </span>
               </span>
             </button>
           );

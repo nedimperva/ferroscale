@@ -246,10 +246,9 @@ export const ProfileSection = memo(function ProfileSection({
     }
   };
 
-  const sectionLabelClass = "text-2xs font-semibold uppercase tracking-[0.16em] text-muted-faint";
-  const groupHeadingClass =
-    "text-[11px] font-semibold uppercase tracking-[0.14em] text-muted mb-2";
-  const pillBaseClass = "premium-segment inline-flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium";
+  const sectionLabelClass = "text-eyebrow tracking-[0.16em]";
+  const groupHeadingClass = "text-eyebrow text-muted mb-2";
+  const pillBaseClass = "premium-segment inline-flex min-h-9 shrink-0 items-center gap-1.5 px-3 py-1.5 text-xs font-medium";
   const pillStateClass = (isActive: boolean) =>
     isActive
       ? "premium-segment-active shadow-[var(--panel-highlight)]"
@@ -273,24 +272,24 @@ export const ProfileSection = memo(function ProfileSection({
                   type="button"
                   onClick={() => handleCategoryChange(cat)}
                   aria-pressed={isActive}
-                  className={`flex flex-col items-center gap-1.5 rounded-2xl border px-1.5 py-2.5 text-center transition-colors lg:flex-row lg:items-center lg:justify-start lg:gap-2 lg:px-2.5 lg:py-2 lg:text-left ${
+                  className={`touch-target flex flex-col items-center gap-1.5 rounded-2xl border px-1.5 py-2.5 text-center transition-colors lg:flex-row lg:items-center lg:justify-start lg:gap-2 lg:px-2.5 lg:py-2 lg:text-left ${
                     isActive
                       ? "border-accent-border bg-accent-surface text-accent-text shadow-[var(--panel-highlight)]"
                       : "border-border-faint bg-surface-raised text-foreground-secondary hover:border-border hover:bg-surface"
                   }`}
                 >
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors lg:h-8 lg:w-8 lg:rounded-[0.7rem] ${
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors lg:h-8 lg:w-8 lg:rounded-chip ${
                       isActive ? "bg-accent-border/60 text-accent-text" : "bg-surface-inset text-foreground-secondary"
                     }`}
                   >
                     {categoryIcon(cat, "h-5 w-5 lg:h-4 lg:w-4")}
                   </span>
                   <span className="flex min-w-0 flex-col items-center leading-tight lg:items-start">
-                    <span className={`truncate text-[11px] ${isActive ? "font-semibold" : "font-medium"}`}>
+                    <span className={`truncate text-xs ${isActive ? "font-semibold" : "font-medium"}`}>
                       {t(`dataset.profileCategories.${cat}`)}
                     </span>
-                    <span className="hidden truncate text-[10px] text-muted lg:block">
+                    <span className="hidden truncate text-2xs text-muted lg:block">
                       {t(`dataset.profileCategoryHints.${cat}`)}
                     </span>
                   </span>

@@ -159,8 +159,8 @@ export const ResultContent = memo(function ResultContent({
     ? "border-t border-border-faint/70 pt-4"
     : "border-t border-border-faint/70 pt-5";
   const primaryValueClass = isDesktopSummary
-    ? "text-[2.25rem] font-bold tracking-tight text-foreground tabular-nums xl:text-[2.5rem]"
-    : "text-[2.625rem] font-extrabold tracking-tight text-foreground tabular-nums";
+    ? "text-display text-foreground"
+    : "text-display-mobile text-foreground";
   const primaryUnitClass = isDesktopSummary
     ? "pb-0.5 text-lg font-semibold text-accent"
     : "pb-1 text-xl font-semibold text-accent";
@@ -363,7 +363,7 @@ export const ResultContent = memo(function ResultContent({
 
             {/* Primary value — dominant, breathing room */}
             <div className="mt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-faint">
+              <p className="text-eyebrow">
                 {weightAsMain ? t("totalWeight") : t("totalPrice")}
               </p>
               <div className="mt-1.5 flex items-baseline gap-2">
@@ -374,7 +374,7 @@ export const ResultContent = memo(function ResultContent({
                 <span className="select-text text-sm font-semibold tabular-nums text-foreground-secondary">
                   {secondaryValue}
                 </span>
-                <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+                <span className="text-2xs font-semibold uppercase tracking-wider text-muted">
                   {secondaryUnit}
                 </span>
                 <span className="h-3 w-px bg-border" aria-hidden />
@@ -383,12 +383,12 @@ export const ResultContent = memo(function ResultContent({
                   {currency}/kg {t("effective")}
                 </span>
                 {wastePercent > 0 && (
-                  <span className="rounded-md border border-amber-border bg-amber-surface px-1.5 py-0.5 text-[10px] font-semibold text-amber-text">
+                  <span className="rounded-md border border-amber-border bg-amber-surface px-1.5 py-0.5 text-2xs font-semibold text-amber-text">
                     {t("contextWaste")} {wastePercent}%
                   </span>
                 )}
                 {includeVat && (
-                  <span className="rounded-md border border-green-border bg-green-surface px-1.5 py-0.5 text-[10px] font-semibold text-green-text">
+                  <span className="rounded-md border border-green-border bg-green-surface px-1.5 py-0.5 text-2xs font-semibold text-green-text">
                     {t("contextVat")} {vatPercent}%
                   </span>
                 )}
@@ -412,7 +412,7 @@ export const ResultContent = memo(function ResultContent({
                   unit={metric.unit}
                   sublabel={metric.sublabel}
                   className={featuredMetricClass(metric.tone)}
-                  labelClassName="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-faint"
+                  labelClassName="text-eyebrow"
                   valueClassName="text-base font-bold"
                   unitClassName={metric.tone === "price" ? "text-accent" : metric.tone === "weight" ? "text-blue-text" : ""}
                 />
@@ -438,7 +438,7 @@ export const ResultContent = memo(function ResultContent({
                 unit={metric.unit}
                 sublabel={metric.sublabel}
                 className={supportingMetricClass(metric)}
-                labelClassName="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-faint"
+                labelClassName="text-eyebrow"
                 valueClassName={metric.muted ? "text-muted" : "text-foreground"}
               />
             ))}
@@ -559,7 +559,7 @@ export const ResultContent = memo(function ResultContent({
             labels={result.referenceLabels}
             className="px-0 py-0 text-xs text-muted-faint"
           />
-          <p className="mt-2 text-[11px] text-muted-faint">
+          <p className="mt-2 text-meta text-muted-faint">
             {t("datasetLine", { version: result.datasetVersion ?? DATASET_VERSION })}
           </p>
         </section>

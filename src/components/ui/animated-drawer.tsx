@@ -63,7 +63,11 @@ export function AnimatedDrawer({
                         }}
                         onAnimationStart={() => triggerHaptic("light")}
                         aria-label={ariaLabel}
-                        className={`fixed inset-y-0 right-0 z-50 flex ${widthClass} max-w-[95vw] flex-col bg-surface-raised shadow-xl`}
+                        className={`fixed inset-y-0 right-0 z-50 flex ${widthClass} max-w-[95vw] flex-col bg-surface-raised shadow-xl safe-area-x`}
+                        style={{
+                            paddingTop: "env(safe-area-inset-top, 0px)",
+                            paddingBottom: "env(safe-area-inset-bottom, 0px)",
+                        }}
                     >
                         {children}
                     </motion.aside>

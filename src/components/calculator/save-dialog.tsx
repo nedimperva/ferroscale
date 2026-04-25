@@ -123,7 +123,7 @@ function SaveDialogFields({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-border-faint bg-surface px-3 py-2 text-sm font-medium text-foreground-secondary transition-colors hover:border-border hover:bg-surface-raised"
+          className="min-h-11 rounded-lg border border-border-faint bg-surface px-4 py-2 text-sm font-medium text-foreground-secondary transition-colors hover:border-border hover:bg-surface-raised"
         >
           {t("cancel")}
         </button>
@@ -131,7 +131,7 @@ function SaveDialogFields({
           type="button"
           onClick={handleSave}
           disabled={!canSave}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-accent-border bg-accent-surface px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-accent-border bg-accent-surface px-4 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent-surface/80 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -65,10 +65,10 @@ export const SettingsSummary = memo(function SettingsSummary({
     <button
       type="button"
       onClick={onOpen}
-      className="group flex w-full items-center gap-2.5 rounded-xl border border-border-faint bg-surface px-2 py-1.5 text-left shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-colors hover:border-accent-border hover:bg-accent-surface/40 md:px-2.5 md:py-2"
+      className="group flex w-full items-center gap-2.5 rounded-2xl border border-border-faint bg-surface px-2.5 py-2 text-left shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-colors hover:border-accent-border hover:bg-accent-surface/40 md:px-3 md:py-2.5"
     >
       {/* Gear icon chip */}
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.6rem] bg-surface-inset text-muted-faint transition-colors group-hover:text-foreground-secondary">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-muted-faint transition-colors group-hover:text-foreground-secondary">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -77,7 +77,7 @@ export const SettingsSummary = memo(function SettingsSummary({
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-3.5 w-3.5"
+          className="h-4 w-4"
         >
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
           <circle cx="12" cy="12" r="3" />
@@ -87,7 +87,7 @@ export const SettingsSummary = memo(function SettingsSummary({
         {tags.map((tag) => (
           <span
             key={`${tag.prefix ?? ""}-${tag.label}`}
-            className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs leading-tight ${toneClass(tag.tone, tag.muted)}`}
+            className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-medium leading-tight md:text-xs ${toneClass(tag.tone, tag.muted)}`}
           >
             {tag.prefix && (
               <span className="text-muted-faint">{tag.prefix}</span>
@@ -96,7 +96,7 @@ export const SettingsSummary = memo(function SettingsSummary({
           </span>
         ))}
       </span>
-      <span className="ml-auto inline-flex shrink-0 items-center rounded-lg border border-accent-border bg-accent-surface px-2.5 py-1 text-xs font-semibold text-accent-text transition-colors group-hover:bg-accent group-hover:text-white">
+      <span className="ml-auto inline-flex shrink-0 items-center rounded-lg border border-accent-border bg-accent-surface px-2.5 py-1.5 text-xs font-semibold text-accent-text transition-colors group-hover:bg-accent group-hover:text-white">
         {t("edit")}
       </span>
     </button>

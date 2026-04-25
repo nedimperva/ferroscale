@@ -143,7 +143,7 @@ function MobilePageCard({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-[1.35rem] ${className}`}>
+    <section className={`overflow-hidden rounded-card ${className}`}>
       {children}
     </section>
   );
@@ -779,7 +779,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const desktopMain = (
     <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
-      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-[1.35rem]">
+      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-card">
         {showSettingsPreview && (
           <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
             <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
@@ -1157,7 +1157,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
               <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
               <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
@@ -1176,7 +1176,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
               {normalizedCurrentProfile && (
                 <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted-faint">
-                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
+                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2.5 w-2.5" />
                 </span>
               )}
               <span className="truncate">{mobileHeaderSubtitle}</span>

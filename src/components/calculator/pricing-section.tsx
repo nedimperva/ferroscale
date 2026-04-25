@@ -72,7 +72,7 @@ export const PricingSection = memo(function PricingSection({
             onChange={(e) =>
               dispatch({ type: "SET_PRICE_BASIS", priceBasis: e.target.value as PriceBasis })
             }
-            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+            className="h-11 rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             <option value="weight">{t("basisWeight")}</option>
             <option value="length">{t("basisLength")}</option>
@@ -90,7 +90,7 @@ export const PricingSection = memo(function PricingSection({
               autoComplete="off"
               value={input.unitPrice}
               onValueChange={(value) => dispatch({ type: "SET_UNIT_PRICE", value })}
-              className={`h-10 min-w-0 flex-1 rounded-l-md border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-400" : "border-border-strong"
+              className={`h-11 min-w-0 flex-1 rounded-l-lg border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("unitPrice") ? "border-red-400" : "border-border-strong"
                 }`}
               aria-invalid={hasIssue("unitPrice")}
             />
@@ -100,7 +100,7 @@ export const PricingSection = memo(function PricingSection({
               onChange={(e) =>
                 dispatch({ type: "SET_PRICE_UNIT", priceUnit: e.target.value as PriceUnit })
               }
-              className={`h-10 shrink-0 rounded-r-md border border-l-0 bg-surface px-1.5 text-xs transition-colors focus:border-blue-500 ${hasIssue("priceUnit") ? "border-red-400" : "border-border-strong"
+              className={`h-11 shrink-0 rounded-r-lg border border-l-0 bg-surface px-2 text-xs transition-colors focus:border-blue-500 ${hasIssue("priceUnit") ? "border-red-400" : "border-border-strong"
                 }`}
               aria-label={t("priceUnitAria")}
             >
@@ -125,7 +125,7 @@ export const PricingSection = memo(function PricingSection({
                 currency: e.target.value as CalculationInput["currency"],
               })
             }
-            className="h-10 rounded-md border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
+            className="h-11 rounded-lg border border-border-strong bg-surface px-2 text-sm transition-colors focus:border-blue-500"
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>
@@ -138,23 +138,29 @@ export const PricingSection = memo(function PricingSection({
           <label htmlFor="waste" className="text-xs font-medium text-foreground-secondary">
             {t("waste")}
           </label>
-          <NumericInput
-            id="waste"
-            inputMode="decimal"
-            autoComplete="off"
-            value={input.wastePercent}
-            onValueChange={(value) => dispatch({ type: "SET_WASTE", value })}
-            className={`h-10 min-w-0 rounded-md border bg-surface px-2 text-sm transition-colors focus:border-blue-500 ${hasIssue("wastePercent") ? "border-red-400" : "border-border-strong"
-              }`}
-            aria-invalid={hasIssue("wastePercent")}
-          />
+          <div className="relative">
+            <NumericInput
+              id="waste"
+              inputMode="decimal"
+              autoComplete="off"
+              value={input.wastePercent}
+              onValueChange={(value) => dispatch({ type: "SET_WASTE", value })}
+              className={`h-11 w-full min-w-0 rounded-lg border bg-surface px-2 pr-7 text-sm transition-colors focus:border-blue-500 ${hasIssue("wastePercent") ? "border-red-400" : "border-border-strong"
+                }`}
+              aria-invalid={hasIssue("wastePercent")}
+            />
+            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
+              %
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <label className="inline-flex items-center gap-1.5 text-xs font-medium">
+        <label className="inline-flex min-h-9 items-center gap-2 text-sm font-medium">
           <input
             type="checkbox"
+            className="h-4 w-4 accent-accent"
             checked={input.includeVat}
             onChange={(e) =>
               dispatch({ type: "SET_VAT_TOGGLE", value: e.target.checked })
@@ -163,17 +169,22 @@ export const PricingSection = memo(function PricingSection({
           {t("vat")}
         </label>
         {input.includeVat && (
-          <NumericInput
-            id="vat-percent"
-            aria-label={t("vatPercentAria")}
-            inputMode="decimal"
-            autoComplete="off"
-            value={input.vatPercent}
-            onValueChange={(value) => dispatch({ type: "SET_VAT_PERCENT", value })}
-            className={`h-10 w-16 rounded-md border bg-surface px-2 text-center text-sm transition-colors focus:border-blue-500 ${hasIssue("vatPercent") ? "border-red-400" : "border-border-strong"
-              }`}
-            aria-invalid={hasIssue("vatPercent")}
-          />
+          <div className="relative">
+            <NumericInput
+              id="vat-percent"
+              aria-label={t("vatPercentAria")}
+              inputMode="decimal"
+              autoComplete="off"
+              value={input.vatPercent}
+              onValueChange={(value) => dispatch({ type: "SET_VAT_PERCENT", value })}
+              className={`h-11 w-20 rounded-lg border bg-surface px-2 pr-6 text-center text-sm transition-colors focus:border-blue-500 ${hasIssue("vatPercent") ? "border-red-400" : "border-border-strong"
+                }`}
+              aria-invalid={hasIssue("vatPercent")}
+            />
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-faint">
+              %
+            </span>
+          </div>
         )}
       </div>
     </section>
