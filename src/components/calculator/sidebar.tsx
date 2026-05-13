@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { Theme } from "@/hooks/useTheme";
 import { APP_VERSION } from "@/lib/changelog";
@@ -79,32 +80,16 @@ export const Sidebar = memo(function Sidebar({
       <div className={`flex items-center gap-3 pt-5 pb-4 ${collapsed ? "justify-center px-2" : "px-4"}`}>
         {/* Logo */}
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_10px_24px_rgba(15,23,42,0.16)]">
-          <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-            {/* Support pillar */}
-            <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
-            {/* Base plate */}
-            <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
-            {/* Balance beam */}
-            <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
-            {/* Central pivot knob */}
-            <circle cx="12" cy="5.75" r="1.8" fill="currentColor" className="text-surface" />
-            {/* Left suspension cord */}
-            <rect x="2.8" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
-            {/* Right suspension cord */}
-            <rect x="20.2" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
-            {/* Left weighing pan */}
-            <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
-            {/* Right weighing pan */}
-            <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
-            {/* Orange accent bar */}
-            <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#8d5f45" />
-          </svg>
+          <Image
+            src="/icon-192.png"
+            alt=""
+            width={40}
+            height={40}
+            className="h-full w-full rounded-xl"
+          />
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <p className="truncate text-2xs font-semibold uppercase tracking-[0.18em] text-muted-faint">
-              Workspace
-            </p>
             <h1 className="truncate text-base font-semibold tracking-tight text-foreground">
               {t("sidebar.title")}
             </h1>

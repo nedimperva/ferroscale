@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -1119,17 +1120,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
-              <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" className="text-surface" />
-              <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
-              <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="currentColor" className="text-surface" />
-              <circle cx="12" cy="5.75" r="1.8" fill="currentColor" className="text-surface" />
-              <rect x="2.8" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
-              <rect x="20.2" y="6.5" width="1" height="4.5" fill="currentColor" className="text-surface" />
-              <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
-              <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" className="text-surface" />
-              <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#8d5f45" />
-            </svg>
+            <Image
+              src="/icon-192.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-full w-full rounded-xl"
+            />
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col">

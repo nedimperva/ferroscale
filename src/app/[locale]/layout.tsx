@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { hasLocale } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { RouteAwareAppShell } from "@/components/route-aware-app-shell";
 import { ToastContainer } from "@/components/ui/toast-container";
@@ -44,17 +45,13 @@ export default async function LocaleLayout({
           <div className="boot-splash-card">
             <div className="boot-splash-glow" />
             <div className="boot-splash-mark">
-              <svg viewBox="0 0 24 24" className="h-7 w-7 text-surface" fill="none">
-                <rect x="11.5" y="7.6" width="1" height="8.9" fill="currentColor" />
-                <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="currentColor" />
-                <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="currentColor" />
-                <circle cx="12" cy="5.75" r="1.8" fill="currentColor" />
-                <rect x="2.8" y="6.5" width="1" height="4.5" fill="currentColor" />
-                <rect x="20.2" y="6.5" width="1" height="4.5" fill="currentColor" />
-                <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="currentColor" />
-                <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="currentColor" />
-                <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#8d5f45" />
-              </svg>
+              <Image
+                src="/icon-192.png"
+                alt=""
+                width={56}
+                height={56}
+                className="h-full w-full rounded-[1.15rem]"
+              />
             </div>
             <div className="space-y-1">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-accent-text">

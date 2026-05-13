@@ -26,6 +26,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell
 - PWA update banner can open the changelog before applying an update; number animations are slightly faster
 - Mobile tab routes prefetch in the background and switch with a smoother directional slide (no interstitial overlay)
+- App icons, favicons, desktop sidebar mark, offline page mark, and iOS startup images now use the new FerroScale logo artwork
+- Desktop sidebar branding now shows only the FerroScale name without the Workspace eyebrow
+- Mobile header branding now uses the new app icon, and iOS startup screens use the standalone F logo artwork
 
 ### Fixed
 

@@ -9,8 +9,8 @@
       html.dark { --bg: #0f141b; --card: #171d25; --text: #eef2f8; --muted: #96a2b7; --border: #2b3441; --accent: #d0a184; --link: #60a5fa; }
       body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:'Space Grotesk','Segoe UI',sans-serif; background:var(--bg); color:var(--text); }
       main { max-width:28rem; padding:2rem; border:1px solid var(--border); background:var(--card); border-radius:1rem; text-align:center; }
-      .logo { display:inline-flex; align-items:center; justify-content:center; width:3rem; height:3rem; border-radius:0.75rem; background:var(--text); margin-bottom:1rem; }
-      .logo svg { width:1.5rem; height:1.5rem; }
+      .logo { display:inline-flex; align-items:center; justify-content:center; width:3.25rem; height:3.25rem; border-radius:0.9rem; background:var(--text); margin-bottom:1rem; overflow:hidden; box-shadow:0 14px 32px rgba(15,23,42,0.18); }
+      .logo img { display:block; width:100%; height:100%; object-fit:cover; }
       h1 { margin:0 0 0.5rem; font-size:1.25rem; font-weight:700; }
       p { color:var(--muted); font-size:0.875rem; line-height:1.6; }
       .btn { display:inline-block; margin-top:1.25rem; padding:0.625rem 1.5rem; background:var(--accent); color:#fff; border:none; border-radius:0.5rem; font-size:0.875rem; font-weight:600; cursor:pointer; text-decoration:none; }
@@ -42,17 +42,7 @@
   <body>
     <main>
       <div class="logo">
-        <svg viewBox="0 0 24 24" fill="none">
-          <rect x="11.5" y="7.6" width="1" height="8.9" fill="#f5f5f4" />
-          <rect x="8" y="16.5" width="8" height="1.5" rx="0.5" fill="#f5f5f4" />
-          <rect x="2" y="5" width="20" height="1.5" rx="0.5" fill="#f5f5f4" />
-          <circle cx="12" cy="5.75" r="1.8" fill="#f5f5f4" />
-          <rect x="2.8" y="6.5" width="1" height="4.5" fill="#f5f5f4" />
-          <rect x="20.2" y="6.5" width="1" height="4.5" fill="#f5f5f4" />
-          <ellipse cx="3.3" cy="11.8" rx="2.8" ry="1" fill="#f5f5f4" />
-          <ellipse cx="20.7" cy="11.8" rx="2.8" ry="1" fill="#f5f5f4" />
-          <rect x="2" y="21" width="20" height="1.5" rx="0.75" fill="#8d5f45" />
-        </svg>
+        <img src="/icon-192.png" alt="" width="52" height="52" />
       </div>
       <h1 id="title">You're offline</h1>
       <p id="desc">

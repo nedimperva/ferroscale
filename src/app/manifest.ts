@@ -14,14 +14,15 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["business", "productivity", "utilities"],
     icons: [
       {
-        src: "/favicon.ico",
-        sizes: "48x48",
-        type: "image/x-icon",
+        src: "/favicon-32.png",
+        sizes: "32x32",
+        type: "image/png",
+        purpose: "any",
       },
       {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/favicon-48.png",
+        sizes: "48x48",
+        type: "image/png",
         purpose: "any",
       },
       {

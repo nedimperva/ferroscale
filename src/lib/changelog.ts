@@ -32,6 +32,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Templates and Projects mobile screens use the same horizontal padding as the calculator for a consistent shell",
       "PWA update banner can open the changelog before applying an update; number animations are slightly faster",
       "Mobile tab routes prefetch in the background and switch with a smoother directional slide (no interstitial overlay)",
+      "App icons, favicons, desktop sidebar mark, offline page mark, and iOS startup images now use the new FerroScale logo artwork",
+      "Desktop sidebar branding now shows only the FerroScale name without the Workspace eyebrow",
+      "Mobile header branding now uses the new app icon, and iOS startup screens use the standalone F logo artwork",
     ],
     added_bs: [
       "Brendirani splash ekran na mobilnom tokom prvog ucitavanja aplikacije, s brzim nestankom cim je shell spreman",
@@ -52,6 +55,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Mobilni ekrani Sabloni i Projekti koriste iste horizontalne margine kao kalkulator radi konzistentnog okvira",
       "PWA update baner moze otvoriti changelog prije primjene azuriranja; animacije brojeva su malo brze",
       "Mobilne tab rute se prefetch-uju u pozadini i prelaze uz smireniji usmjereni slide (bez medjusloja)",
+      "Ikone aplikacije, faviconi, desktop oznaka u bocnoj traci, offline stranica i iOS startup slike sada koriste novi FerroScale logo",
+      "Desktop branding u bocnoj traci sada prikazuje samo FerroScale naziv bez Workspace oznake",
+      "Mobilni header sada koristi novu ikonu aplikacije, a iOS startup ekrani koriste samostalni F logo",
     ],
   },
   {

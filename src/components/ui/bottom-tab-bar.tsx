@@ -116,7 +116,6 @@ function TabIcon({ id, active }: { id: AppTabId; active: boolean }) {
     case "calculator":
       return (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}>
-          {/* Scale icon */}
           <path d="M12 3v17" />
           <path d="M2 7h4l3 9H2" />
           <path d="M15 7h4l3 9h-7" />
