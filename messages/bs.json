@@ -167,6 +167,26 @@
     "title": "Meni",
     "more": "Vise"
   },
+  "mobileSettings": {
+    "sectionDisplay": "Prikaz",
+    "sectionDefaults": "Defaulti",
+    "sectionPower": "Napredno",
+    "appearance": "Izgled",
+    "themeLight": "Svijetla",
+    "themeDark": "Tamna",
+    "themeSystem": "Sistem",
+    "textSize": "Velicina teksta",
+    "textSmall": "Mala",
+    "textRegular": "Srednja",
+    "textLarge": "Velika",
+    "priceInline": "Prikazi cijenu unutar",
+    "lengthUnit": "Jedinica duzine",
+    "currency": "Valuta",
+    "waste": "Otpad",
+    "weightAsMain": "Prikazi tezinu kao glavnu vrijednost",
+    "whatsNew": "Novosti",
+    "versionTag": "Ferroscale · Napravljeno za radionice"
+  },
   "onboarding": {
     "skip": "Preskoci",
     "back": "Nazad",

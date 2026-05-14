@@ -41,6 +41,7 @@ import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
 import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
 import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
+import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -963,42 +964,25 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         </div>
       </MobilePageCard>
     ) : (
-      <MobilePageCard className="flex min-h-[60dvh] flex-col">
-        <SettingsWorkspaceContent
-          input={input}
-          dispatch={dispatch}
-          activeFamily={activeFamily}
-          issues={issues}
-          onResetAll={resetAll}
-          onOpenChangelog={() => setShowChangelogDrawer(true)}
-          compareLimit={compareLimit}
-          onCompareLimitChange={setCompareLimit}
-          maxCompare={maxCompare}
-          isCompareMobileCapped={isCompareMobileCapped}
-          showInlineMaterial={showInlineMaterial}
-          onToggleInlineMaterial={inlineMaterialStore.toggle}
-          showInlinePrice={showInlinePrice}
-          onToggleInlinePrice={inlinePriceStore.toggle}
-          showSettingsPreview={showSettingsPreview}
-          onToggleSettingsPreview={settingsPreviewStore.toggle}
-          weightAsMain={weightAsMain}
-          onToggleWeightAsMain={weightAsMainStore.toggle}
-          defaultUnit={defaultUnit}
-          onDefaultUnitChange={handleDefaultUnitChange}
-          unitOptions={UNIT_OPTIONS}
-          textSize={textSize}
-          onTextSizeChange={setTextSize}
-          syncStatus={sync.status}
-          onConnectSync={sync.connectProvider}
-          onReconnectSync={sync.reconnectProvider}
-          onChangeSyncPassphrase={sync.changePassphrase}
-          onSyncNow={() => sync.syncNow()}
-          onDisconnectSync={sync.disconnectProvider}
-          onResetRemoteSync={sync.resetRemoteCopy}
-          onExportSync={sync.exportSnapshot}
-          onImportSync={sync.importSnapshot}
-        />
-      </MobilePageCard>
+      <MobileSettingsContent
+        input={input}
+        dispatch={dispatch}
+        activeFamily={activeFamily}
+        defaultUnit={defaultUnit}
+        unitOptions={UNIT_OPTIONS}
+        onDefaultUnitChange={handleDefaultUnitChange}
+        textSize={textSize}
+        onTextSizeChange={setTextSize}
+        theme={theme}
+        resolvedTheme={resolvedTheme}
+        onThemeChange={setTheme}
+        showInlinePrice={showInlinePrice}
+        onToggleInlinePrice={inlinePriceStore.toggle}
+        weightAsMain={weightAsMain}
+        onToggleWeightAsMain={weightAsMainStore.toggle}
+        onResetAll={resetAll}
+        onOpenChangelog={() => setShowChangelogDrawer(true)}
+      />
     );
 
   return (

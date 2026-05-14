@@ -22,6 +22,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Mobile bottom tab bar is gone — navigation moves to a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Saved, Projects, Settings, plus Compare, What's New, Report an issue, and Replay onboarding. Matches the numpad-native concept's mobile shell.
 - Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is now the single nav entry point.
 - Mobile result sheet no longer shows a duplicate Save button at the full-snap; "Save" lives in the peek, and the full view's primary action is the full-width terracotta "Add to project".
+- Mobile Settings rebuilt as a defaults dashboard with grouped rounded sections — Display (Appearance, Text size, Show price inline), Defaults (Material, Length unit, Currency, Waste allowance), and Power (Show weight as main, What's New). Each row is a single tappable card with an accent-tinted icon and either a toggle or a sub-sheet picker. Replay onboarding and Reset all moved into the footer.
 
 ### Changed
 

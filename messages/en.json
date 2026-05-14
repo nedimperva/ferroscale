@@ -167,6 +167,26 @@
     "title": "Menu",
     "more": "More"
   },
+  "mobileSettings": {
+    "sectionDisplay": "Display",
+    "sectionDefaults": "Defaults",
+    "sectionPower": "Power",
+    "appearance": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "textSize": "Text size",
+    "textSmall": "Small",
+    "textRegular": "Regular",
+    "textLarge": "Large",
+    "priceInline": "Show price inline",
+    "lengthUnit": "Length unit",
+    "currency": "Currency",
+    "waste": "Waste allowance",
+    "weightAsMain": "Show weight as main value",
+    "whatsNew": "What's New",
+    "versionTag": "Ferroscale · Built for shopfloors"
+  },
   "onboarding": {
     "skip": "Skip",
     "back": "Back",
