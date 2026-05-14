@@ -24,8 +24,7 @@ import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
 import { toast } from "@/lib/toast";
-import { APP_TABS, getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
-import { triggerHaptic } from "@/lib/haptics";
+import { APP_TABS, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
 import type { ColumnPanelId } from "@/lib/column-layout";
@@ -41,6 +40,7 @@ import { MobileMaterialSheet } from "@/components/calculator/mobile-material-she
 import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
 import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
+import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -53,7 +53,6 @@ import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
-import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
@@ -85,10 +84,6 @@ const SETTINGS_ISSUE_FIELDS = new Set([
   "wastePercent",
   "vatPercent",
 ]);
-
-const EDGE_SWIPE_PX = 28;
-const EDGE_SWIPE_MIN_DISTANCE = 70;
-const EDGE_SWIPE_MAX_VERTICAL = 56;
 
 function issueFieldToInputId(field: string): string | null {
   if (field.startsWith("manualDimensions.")) {
@@ -128,19 +123,6 @@ function focusInputById(id: string): boolean {
   if (!element) return false;
   element.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
   element.focus({ preventScroll: true });
-  return true;
-}
-
-function isSwipeEligibleTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  if (target.closest("[data-app-swipe-lock='true']")) return false;
-  if (
-    target.closest(
-      "button, a, input, textarea, select, label, summary, [role='button'], [role='tab'], [role='dialog'], [contenteditable='true']",
-    )
-  ) {
-    return false;
-  }
   return true;
 }
 
@@ -232,7 +214,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const closeQuickCalc = quickCalc.close;
   const openQuickCalc = quickCalc.open;
   const toggleQuickCalc = quickCalc.toggle;
-  const quickCalcOpen = quickCalc.isOpen;
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
   const sync = useSync();
   const columnLayout = useColumnLayout();
@@ -258,6 +239,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
   const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
   const [showMobileMaterialSheet, setShowMobileMaterialSheet] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const onboarded = useSyncExternalStore(
     onboardedStore.subscribe,
     onboardedStore.getSnapshot,
@@ -281,6 +263,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     setShowChangelogDrawer(false);
     setShowMobileProfileSheet(false);
     setShowMobileMaterialSheet(false);
+    setShowMobileMenu(false);
     closeQuickCalc();
     closeCompare();
   }, [closeCompare, closeQuickCalc]);
@@ -669,81 +652,16 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const mobileHeaderSubtitle = normalizedCurrentProfile ? headerContext : t("app.mobileHeaderSubtitle");
   const hideResultBar = isMobile && currentTab === "calculator";
+  // No bottom tab bar on mobile anymore; the floating ResultBar (when
+  // shown on non-calc tabs) sits ~80px tall above the safe area.
   const resultBarBottomPadding = hideResultBar
-    ? "calc(82px + env(safe-area-inset-bottom, 0px))"
+    ? "calc(24px + env(safe-area-inset-bottom, 0px))"
     : result
-      ? "calc(146px + env(safe-area-inset-bottom, 0px))"
-      : "calc(82px + env(safe-area-inset-bottom, 0px))";
+      ? "calc(96px + env(safe-area-inset-bottom, 0px))"
+      : "calc(24px + env(safe-area-inset-bottom, 0px))";
 
-  const swipeStateRef = useRef<{ edge: "left" | "right"; x: number; y: number } | null>(null);
-  const isSwipeBlocked =
-    !isMobile ||
-    showOverlay ||
-    showSaveModal ||
-    showTemplateBuilder ||
-    showShortcutsModal ||
-    presetModalOpen ||
-    showContactDrawer ||
-    showChangelogDrawer ||
-    showCompareDrawer ||
-    showMobileProfileSheet ||
-    showMobileMaterialSheet ||
-    quickCalcOpen;
-
-  const handleMobileTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      if (isSwipeBlocked || !isSwipeEligibleTarget(event.target)) {
-        swipeStateRef.current = null;
-        return;
-      }
-
-      const touch = event.touches[0];
-      const width = window.innerWidth;
-      const isLeftEdge = touch.clientX <= EDGE_SWIPE_PX;
-      const isRightEdge = touch.clientX >= width - EDGE_SWIPE_PX;
-      if (!isLeftEdge && !isRightEdge) {
-        swipeStateRef.current = null;
-        return;
-      }
-
-      swipeStateRef.current = {
-        edge: isLeftEdge ? "left" : "right",
-        x: touch.clientX,
-        y: touch.clientY,
-      };
-    },
-    [isSwipeBlocked],
-  );
-
-  const handleMobileTouchEnd = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      const swipe = swipeStateRef.current;
-      swipeStateRef.current = null;
-      if (!swipe) return;
-
-      const touch = event.changedTouches[0];
-      const deltaX = touch.clientX - swipe.x;
-      const deltaY = touch.clientY - swipe.y;
-      if (Math.abs(deltaY) > EDGE_SWIPE_MAX_VERTICAL) return;
-
-      if (swipe.edge === "left" && deltaX > EDGE_SWIPE_MIN_DISTANCE) {
-        const previousTab = getAdjacentAppTab(currentTab, -1);
-        if (previousTab) {
-          triggerHaptic("light");
-          navigateToTab(previousTab);
-        }
-      }
-
-      if (swipe.edge === "right" && deltaX < -EDGE_SWIPE_MIN_DISTANCE) {
-        const nextTab = getAdjacentAppTab(currentTab, 1);
-        if (nextTab) {
-          triggerHaptic("light");
-          navigateToTab(nextTab);
-        }
-      }
-    },
-    [currentTab, navigateToTab],
-  );
+  // Edge-swipe tab navigation removed alongside the bottom tab bar — the
+  // hamburger menu is the single mobile nav entry point now.
 
   const [lastAnimatedTab, setLastAnimatedTab] = useState(currentTab);
   const pageDirection =
@@ -1147,32 +1065,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
-            {compareItems.length > 0 && (
-              <button
-                type="button"
-                onClick={openCompare}
-                className="premium-segment premium-segment-muted inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold"
-                aria-label={t("sidebar.compare")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                  <rect x="3" y="3" width="7" height="18" rx="1" />
-                  <rect x="14" y="3" width="7" height="18" rx="1" />
-                </svg>
-                {compareItems.length}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowChangelogDrawer(true)}
-              className="premium-icon-button h-9 w-9"
-              aria-label={t("changelog.title")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
-              </svg>
-            </button>
             <button
               type="button"
               onClick={cycleTheme}
@@ -1209,6 +1101,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
                 </svg>
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(true)}
+              className="premium-icon-button relative h-9 w-9"
+              aria-label={t("menu.title")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+              {(compareItems.length > 0 || saved.length > 0 || projectCount > 0) && (
+                <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
+              )}
+            </button>
           </div>
         </header>
 
@@ -1234,8 +1139,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
         <div
           className="px-3 lg:hidden"
-          onTouchStart={handleMobileTouchStart}
-          onTouchEnd={handleMobileTouchEnd}
           aria-busy={isRouteNavigationPending || undefined}
           style={{
             paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
@@ -1288,13 +1191,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         )}
 
-        <BottomTabBar
-          activeTab={currentTab}
-          onTabChange={navigateToTab}
-          projectCount={projectCount}
-          compareCount={compareItems.length}
-          savedCount={saved.length}
-        />
+        {/* Bottom tab bar replaced by the mobile hamburger menu on small
+            screens. Desktop keeps the sidebar; mobile relies on
+            MobileMenuSheet (rendered below). */}
 
         {showOverlay && !showTemplateBuilder && result && (
           isMobile ? (
@@ -1418,6 +1317,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               input={input}
               dispatch={dispatch}
               activeFamily={activeFamily}
+            />
+            <MobileMenuSheet
+              open={showMobileMenu}
+              onOpenChange={setShowMobileMenu}
+              currentTab={currentTab}
+              onNavigate={navigateToTab}
+              onOpenCompare={openCompare}
+              onOpenChangelog={() => setShowChangelogDrawer(true)}
+              onOpenContact={() => setShowContactDrawer(true)}
+              onReplayOnboarding={() => onboardedStore.set(false)}
+              savedCount={saved.length}
+              projectCount={projectCount}
+              compareCount={compareItems.length}
             />
           </>
         )}

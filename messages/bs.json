@@ -163,6 +163,10 @@
     "searchHint": "Pretrazi profil, preset ili kalkulaciju…",
     "new": "Novo"
   },
+  "menu": {
+    "title": "Meni",
+    "more": "Vise"
+  },
   "onboarding": {
     "skip": "Preskoci",
     "back": "Nazad",

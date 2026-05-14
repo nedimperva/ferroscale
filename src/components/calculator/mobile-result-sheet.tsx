@@ -258,36 +258,22 @@ export const MobileResultSheet = memo(function MobileResultSheet({
               </div>
             </div>
 
-            {/* Secondary actions in full view */}
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("medium");
-                  onOpenSaveDialog();
-                }}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-white active:bg-accent-hover"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                </svg>
-                {t("mobileResult.saveAsPreset")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("light");
-                  onAddToProject?.();
-                }}
-                disabled={!onAddToProject}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface-raised text-sm font-semibold text-foreground active:bg-surface-inset disabled:opacity-50"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 7h-3V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2H4M5 7l1 13a2 2 0 002 2h8a2 2 0 002-2l1-13" />
-                </svg>
-                {hasProjects ? t("mobileResult.addToProject") : t("mobileResult.newProject")}
-              </button>
-            </div>
+            {/* Secondary action in full view — full-width Add to project.
+                Save lives in the peek above; no duplicate here. */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("medium");
+                onAddToProject?.();
+              }}
+              disabled={!onAddToProject}
+              className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-white active:bg-accent-hover disabled:opacity-50"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 7h-3V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2H4M5 7l1 13a2 2 0 002 2h8a2 2 0 002-2l1-13" />
+              </svg>
+              {hasProjects ? t("mobileResult.addToProject") : t("mobileResult.newProject")}
+            </button>
 
             <p className="mt-4 text-center text-2xs text-muted">
               {t("mobileResult.swipeHint")}

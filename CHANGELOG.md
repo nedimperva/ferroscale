@@ -17,6 +17,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Mobile shell extrapolation pass: every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Saved, Projects, Compare and Settings tabs inherit the polished mobile shell automatically.
 - Desktop "Workstation" top bar above the main content (lg+ only): page title, optional calculation context chip (HEA 100 · S235 · 6 m × 4), ⌘K quick-calc search trigger, and a primary "New" reset button. Aligns with the D1 desktop mock from the numpad-native handoff.
 
+### Changed (mobile shell)
+
+- Mobile bottom tab bar is gone — navigation moves to a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Saved, Projects, Settings, plus Compare, What's New, Report an issue, and Replay onboarding. Matches the numpad-native concept's mobile shell.
+- Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is now the single nav entry point.
+- Mobile result sheet no longer shows a duplicate Save button at the full-snap; "Save" lives in the peek, and the full view's primary action is the full-width terracotta "Add to project".
+
 ### Changed
 
 - Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.

@@ -163,6 +163,10 @@
     "searchHint": "Find profile, preset, or calc…",
     "new": "New"
   },
+  "menu": {
+    "title": "Menu",
+    "more": "More"
+  },
   "onboarding": {
     "skip": "Skip",
     "back": "Back",
