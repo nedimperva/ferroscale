@@ -325,39 +325,36 @@ export const ProfileSection = memo(function ProfileSection({
         </button>
 
         {pickerOpen && (
-          <div className="mt-2 grid gap-3 border border-border-faint bg-surface p-3">
-            {/* Pin toggle row */}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  triggerHaptic("light");
-                  profilePickerPinnedStore.toggle();
-                }}
-                aria-pressed={pickerPinned}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-2xs font-semibold transition-colors ${
-                  pickerPinned
-                    ? "border-accent-border bg-accent-surface text-accent"
-                    : "border-border-faint bg-surface-raised text-muted hover:text-foreground-secondary"
-                }`}
-                aria-label={pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+          <div className="relative mt-2 grid gap-3 border border-border-faint bg-surface p-3">
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                profilePickerPinnedStore.toggle();
+              }}
+              aria-pressed={pickerPinned}
+              aria-label={pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+              title={pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+              className={`absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors ${
+                pickerPinned
+                  ? "text-accent"
+                  : "text-muted-faint hover:text-foreground-secondary"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill={pickerPinned ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill={pickerPinned ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-3 w-3"
-                >
-                  <path d="M12 17v5" />
-                  <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
-                </svg>
-                {pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
-              </button>
-            </div>
+                <path d="M12 17v5" />
+                <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+              </svg>
+            </button>
 
             {/* Category pills */}
             <div className="grid gap-1.5">
