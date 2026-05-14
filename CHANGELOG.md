@@ -17,6 +17,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Collapsed the calculator profile picker into a single button that expands the category and sub-type pills on demand — saves vertical space on every layout
 - Regrouped the overflow menu around a Library section (Saved, Projects, Compare) so the three stashes feel like one concept
 - Added "Save as template" and "Add to project" actions on Compare items, so a comparison can land in the persistent library without re-entering it in the calculator
+- Wide desktops (≥ 1280 px) now show the calculator form and result side-by-side, with the result column sticky and scroll-contained so the page itself does not scroll when the result is visible. Laptops (1024–1279 px) keep the single-column layout from the previous round
 
 ---
 

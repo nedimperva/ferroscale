@@ -994,8 +994,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex">
-      <div className="flex w-full flex-col border border-border bg-surface">
+    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex xl:grid xl:max-w-[94rem] xl:gap-6 xl:[grid-template-columns:minmax(0,1fr)_clamp(380px,32%,520px)]">
+      <div className="flex w-full flex-col self-start border border-border bg-surface">
         <div className="px-4 py-4">
           <ProfileSection
             input={input}
@@ -1021,25 +1021,27 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         </div>
       </div>
 
-      <ResultPanel
-        result={result}
-        isPending={isPending}
-        isSaved={isCurrentSaved}
-        onOpenSaveDialog={handleOpenSaveDialog}
-        includeVat={input.includeVat}
-        wastePercent={input.wastePercent}
-        vatPercent={input.vatPercent}
-        onCompare={handleCompare}
-        canCompare={canCompare}
-        isInCompare={currentIsInCompare}
-        compareCount={compareItems.length}
-        maxCompare={maxCompare}
-        onAddToProject={handleAddToProject}
-        hasProjects={projectCount > 0}
-        normalizedProfile={normalizedCurrentProfile}
-        weightAsMain={weightAsMain}
-        layout="standalone"
-      />
+      <aside className="xl:sticky xl:top-[4.5rem] xl:max-h-[calc(100dvh-5rem)] xl:self-start xl:overflow-y-auto">
+        <ResultPanel
+          result={result}
+          isPending={isPending}
+          isSaved={isCurrentSaved}
+          onOpenSaveDialog={handleOpenSaveDialog}
+          includeVat={input.includeVat}
+          wastePercent={input.wastePercent}
+          vatPercent={input.vatPercent}
+          onCompare={handleCompare}
+          canCompare={canCompare}
+          isInCompare={currentIsInCompare}
+          compareCount={compareItems.length}
+          maxCompare={maxCompare}
+          onAddToProject={handleAddToProject}
+          hasProjects={projectCount > 0}
+          normalizedProfile={normalizedCurrentProfile}
+          weightAsMain={weightAsMain}
+          layout="standalone"
+        />
+      </aside>
     </div>
   );
 
