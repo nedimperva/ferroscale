@@ -159,6 +159,27 @@
     "family": "Family",
     "done": "Done"
   },
+  "mobileResult": {
+    "perPiece": "Per piece",
+    "perMetre": "Per metre",
+    "length": "Length",
+    "linearWeight": "Linear weight",
+    "lengthPerPiece": "Length per piece",
+    "weightPerPiece": "Weight per piece",
+    "pieces": "Pieces",
+    "waste": "Waste allowance",
+    "vat": "VAT",
+    "breakdown": "Breakdown",
+    "totalWeight": "Total weight",
+    "save": "Save",
+    "saved": "Saved",
+    "compare": "Compare",
+    "inCompare": "In compare {count}/{max}",
+    "saveAsPreset": "Save as preset",
+    "addToProject": "Add to project",
+    "newProject": "New project",
+    "swipeHint": "Swipe down to keep editing"
+  },
   "sidebar": {
     "title": "FerroScale",
     "settings": "Settings",

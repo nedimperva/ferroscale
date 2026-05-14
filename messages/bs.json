@@ -159,6 +159,27 @@
     "family": "Porodica",
     "done": "Gotovo"
   },
+  "mobileResult": {
+    "perPiece": "Po komadu",
+    "perMetre": "Po metru",
+    "length": "Duzina",
+    "linearWeight": "Linearna tezina",
+    "lengthPerPiece": "Duzina po komadu",
+    "weightPerPiece": "Tezina po komadu",
+    "pieces": "Komada",
+    "waste": "Otpad",
+    "vat": "PDV",
+    "breakdown": "Razrada",
+    "totalWeight": "Ukupna tezina",
+    "save": "Sacuvaj",
+    "saved": "Sacuvano",
+    "compare": "Uporedi",
+    "inCompare": "U poredjenju {count}/{max}",
+    "saveAsPreset": "Sacuvaj kao preset",
+    "addToProject": "Dodaj u projekat",
+    "newProject": "Novi projekat",
+    "swipeHint": "Povuci dolje da nastavis uredjivati"
+  },
   "sidebar": {
     "title": "FerroScale",
     "settings": "Postavke",

@@ -38,6 +38,7 @@ import { ProfileSection } from "@/components/calculator/profile-section";
 import { MobileNumpadCalculator } from "@/components/calculator/mobile-numpad-calculator";
 import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet";
 import { MobileMaterialSheet } from "@/components/calculator/mobile-material-sheet";
+import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -1279,25 +1280,45 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         />
 
         {showOverlay && !showTemplateBuilder && result && (
-          <ResultOverlay
-            result={result}
-            includeVat={input.includeVat}
-            wastePercent={input.wastePercent}
-            vatPercent={input.vatPercent}
-            isSaved={isCurrentSaved}
-            onOpenSaveDialog={handleOpenSaveDialog}
-  
-            onClose={() => setShowOverlay(false)}
-            onCompare={handleCompare}
-            canCompare={canCompare}
-            isInCompare={currentIsInCompare}
-            compareCount={compareItems.length}
-            maxCompare={maxCompare}
-            onAddToProject={handleAddToProject}
-            hasProjects={projectCount > 0}
-            normalizedProfile={normalizedCurrentProfile}
-            weightAsMain={weightAsMain}
-          />
+          isMobile ? (
+            <MobileResultSheet
+              result={result}
+              includeVat={input.includeVat}
+              wastePercent={input.wastePercent}
+              vatPercent={input.vatPercent}
+              isSaved={isCurrentSaved}
+              onOpenSaveDialog={handleOpenSaveDialog}
+              onClose={() => setShowOverlay(false)}
+              onCompare={handleCompare}
+              canCompare={canCompare}
+              isInCompare={currentIsInCompare}
+              compareCount={compareItems.length}
+              maxCompare={maxCompare}
+              onAddToProject={handleAddToProject}
+              hasProjects={projectCount > 0}
+              normalizedProfile={normalizedCurrentProfile}
+            />
+          ) : (
+            <ResultOverlay
+              result={result}
+              includeVat={input.includeVat}
+              wastePercent={input.wastePercent}
+              vatPercent={input.vatPercent}
+              isSaved={isCurrentSaved}
+              onOpenSaveDialog={handleOpenSaveDialog}
+
+              onClose={() => setShowOverlay(false)}
+              onCompare={handleCompare}
+              canCompare={canCompare}
+              isInCompare={currentIsInCompare}
+              compareCount={compareItems.length}
+              maxCompare={maxCompare}
+              onAddToProject={handleAddToProject}
+              hasProjects={projectCount > 0}
+              normalizedProfile={normalizedCurrentProfile}
+              weightAsMain={weightAsMain}
+            />
+          )
         )}
 
         {!isMobile && !(isMultiColumn && columnLayout.hasPanel("saved")) && (
