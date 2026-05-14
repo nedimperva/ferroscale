@@ -185,31 +185,28 @@ export const ResultOverlay = memo(function ResultOverlay({
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 12, opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 flex max-h-full w-full max-w-[36rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
+        className="relative z-10 flex max-h-full w-full max-w-[36rem] flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-[0_18px_36px_rgba(15,23,42,0.18)]"
       >
-        <div className="flex items-center justify-between border-b border-border-faint px-4 py-3 md:px-5">
-          <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("close")}
-            className="rounded-md p-1.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground"
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("close")}
+          className="absolute right-3 top-3 z-20 rounded-md p-1.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-            >
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
-            </svg>
-          </button>
-        </div>
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
         <div className="flex-1 overflow-y-auto overscroll-contain">
           <ResultContent
             result={result}
