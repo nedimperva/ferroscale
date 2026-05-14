@@ -271,7 +271,9 @@
     "increaseQuantity": "Povecaj kolicinu",
     "toggleSizeList": "Otvori/zatvori listu velicina",
     "changeProfile": "Promijeni profil",
-    "currentProfile": "Trenutni profil"
+    "currentProfile": "Trenutni profil",
+    "pinPicker": "Drzi otvoreno",
+    "unpinPicker": "Automatski zatvori"
   },
   "material": {
     "title": "Materijal",

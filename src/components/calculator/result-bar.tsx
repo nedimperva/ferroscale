@@ -2,10 +2,8 @@
 
 import { memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Drawer } from "vaul";
 import { useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { useDrawerBehavior } from "@/hooks/useDrawerBehavior";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -160,71 +158,21 @@ export const ResultOverlay = memo(function ResultOverlay({
   weightAsMain = false,
 }: ResultOverlayProps) {
   const t = useTranslations("result");
-  const isMobile = useIsMobile();
-  useDrawerBehavior(!isMobile, onClose);
-
-  const content = (
-    <ResultContent
-      result={result}
-      includeVat={includeVat}
-      wastePercent={wastePercent}
-      vatPercent={vatPercent}
-      isSaved={isSaved}
-      onOpenSaveDialog={onOpenSaveDialog}
-      onCompare={onCompare}
-      canCompare={canCompare}
-      isInCompare={isInCompare}
-      compareCount={compareCount}
-      maxCompare={maxCompare}
-      onAddToProject={onAddToProject}
-      hasProjects={hasProjects}
-      normalizedProfile={normalizedProfile}
-      weightAsMain={weightAsMain}
-      layout="sheet"
-    />
-  );
-
-  if (isMobile) {
-    return (
-      <Drawer.Root
-        open
-        onOpenChange={(open) => {
-          if (!open) {
-            triggerHaptic("light");
-            onClose();
-          }
-        }}
-        snapPoints={[0.55, 1]}
-        activeSnapPoint={0.55}
-        fadeFromIndex={0}
-      >
-        <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 z-[80] bg-overlay backdrop-blur-[2px]" />
-          <Drawer.Content
-            className="fixed inset-x-0 bottom-0 z-[90] flex max-h-[95dvh] flex-col rounded-t-[1.6rem] border-t border-border-faint bg-surface/98 shadow-[0_-18px_40px_rgba(15,23,42,0.18)] outline-none backdrop-blur-xl"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-          >
-            <div className="flex justify-center pb-1 pt-3">
-              <div className="h-1.5 w-10 rounded-full bg-border-strong" />
-            </div>
-
-            <Drawer.Title className="px-5 pb-2 text-center text-sm font-semibold text-foreground">
-              {t("title")}
-            </Drawer.Title>
-
-            <div className="flex-1 overflow-y-auto overscroll-contain">{content}</div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
-    );
-  }
+  useDrawerBehavior(true, () => {
+    triggerHaptic("light");
+    onClose();
+  });
 
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={t("title")}
-      className="fixed inset-0 z-[90] flex items-center justify-center p-6"
+      className="fixed inset-0 z-[90] flex items-center justify-center p-3 md:p-6"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)",
+      }}
     >
       <button
         type="button"
@@ -237,9 +185,9 @@ export const ResultOverlay = memo(function ResultOverlay({
         animate={{ y: 0, opacity: 1, scale: 1 }}
         exit={{ y: 12, opacity: 0, scale: 0.98 }}
         transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 flex max-h-[90dvh] w-full max-w-[36rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
+        className="relative z-10 flex max-h-full w-full max-w-[36rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
       >
-        <div className="flex items-center justify-between border-b border-border-faint px-5 py-3">
+        <div className="flex items-center justify-between border-b border-border-faint px-4 py-3 md:px-5">
           <h2 className="text-sm font-semibold text-foreground">{t("title")}</h2>
           <button
             type="button"
@@ -262,7 +210,26 @@ export const ResultOverlay = memo(function ResultOverlay({
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain">{content}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          <ResultContent
+            result={result}
+            includeVat={includeVat}
+            wastePercent={wastePercent}
+            vatPercent={vatPercent}
+            isSaved={isSaved}
+            onOpenSaveDialog={onOpenSaveDialog}
+            onCompare={onCompare}
+            canCompare={canCompare}
+            isInCompare={isInCompare}
+            compareCount={compareCount}
+            maxCompare={maxCompare}
+            onAddToProject={onAddToProject}
+            hasProjects={hasProjects}
+            normalizedProfile={normalizedProfile}
+            weightAsMain={weightAsMain}
+            layout="sheet"
+          />
+        </div>
       </motion.div>
     </div>
   );

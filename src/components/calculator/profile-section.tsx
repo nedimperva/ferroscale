@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -12,6 +12,9 @@ import { NumericInput } from "./numeric-input";
 import { SizeCombobox } from "./size-combobox";
 import { StandardsCombobox } from "./standards-combobox";
 import { triggerHaptic } from "@/lib/haptics";
+import { createBoolStore } from "@/lib/external-stores";
+
+const profilePickerPinnedStore = createBoolStore("ferroscale-profile-picker-pinned", false);
 
 /** Ordered list of categories for the top-level tabs. */
 const CATEGORY_ORDER: ProfileCategory[] = ["structural", "tubes", "plates_sheets", "bars"];
@@ -218,18 +221,24 @@ export const ProfileSection = memo(function ProfileSection({
       : issue.message;
   };
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerPinned = useSyncExternalStore(
+    profilePickerPinnedStore.subscribe,
+    profilePickerPinnedStore.getSnapshot,
+    profilePickerPinnedStore.getServerSnapshot,
+  );
+  const [pickerManualOpen, setPickerManualOpen] = useState(false);
+  const pickerOpen = pickerPinned || pickerManualOpen;
   const pickerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!pickerOpen) return;
+    if (!pickerOpen || pickerPinned) return;
     const onPointerDown = (event: PointerEvent) => {
       if (!pickerRef.current) return;
       if (event.target instanceof Node && pickerRef.current.contains(event.target)) return;
-      setPickerOpen(false);
+      setPickerManualOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPickerOpen(false);
+      if (event.key === "Escape") setPickerManualOpen(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -237,7 +246,7 @@ export const ProfileSection = memo(function ProfileSection({
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [pickerOpen]);
+  }, [pickerOpen, pickerPinned]);
 
   const alignDimensionErrorRows = useMemo(() => {
     if (selectedProfile.mode !== "manual") return false;
@@ -280,7 +289,12 @@ export const ProfileSection = memo(function ProfileSection({
           type="button"
           onClick={() => {
             triggerHaptic("light");
-            setPickerOpen((value) => !value);
+            if (pickerPinned) {
+              profilePickerPinnedStore.toggle();
+              setPickerManualOpen(false);
+              return;
+            }
+            setPickerManualOpen((value) => !value);
           }}
           aria-expanded={pickerOpen}
           aria-haspopup="true"
@@ -312,6 +326,39 @@ export const ProfileSection = memo(function ProfileSection({
 
         {pickerOpen && (
           <div className="mt-2 grid gap-3 border border-border-faint bg-surface p-3">
+            {/* Pin toggle row */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("light");
+                  profilePickerPinnedStore.toggle();
+                }}
+                aria-pressed={pickerPinned}
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-2xs font-semibold transition-colors ${
+                  pickerPinned
+                    ? "border-accent-border bg-accent-surface text-accent"
+                    : "border-border-faint bg-surface-raised text-muted hover:text-foreground-secondary"
+                }`}
+                aria-label={pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill={pickerPinned ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-3 w-3"
+                >
+                  <path d="M12 17v5" />
+                  <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+                </svg>
+                {pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+              </button>
+            </div>
+
             {/* Category pills */}
             <div className="grid gap-1.5">
               <span className={sectionLabelClass}>{t("profileSection.category")}</span>
@@ -346,7 +393,9 @@ export const ProfileSection = memo(function ProfileSection({
                       onClick={() => {
                         triggerHaptic("light");
                         dispatch({ type: "SET_PROFILE", profileId: p.id });
-                        setPickerOpen(false);
+                        if (!pickerPinned) {
+                          setPickerManualOpen(false);
+                        }
                       }}
                       className={`${pillBaseClass} ${pillStateClass(isActive)}`}
                     >

@@ -271,7 +271,9 @@
     "increaseQuantity": "Increase quantity",
     "toggleSizeList": "Toggle size list",
     "changeProfile": "Change profile",
-    "currentProfile": "Current profile"
+    "currentProfile": "Current profile",
+    "pinPicker": "Keep open",
+    "unpinPicker": "Auto-close"
   },
   "material": {
     "title": "Material",
