@@ -75,7 +75,7 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
             className="fixed inset-x-0 z-40 lg:hidden"
             style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
           >
-            <div className="panel-base mx-3 mb-1 rounded-[1.2rem] bg-surface/94 px-2 py-1.5 shadow-[0_14px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+            <div className="panel-base mx-3 mb-1 rounded-[1.2rem] bg-surface/94 px-2 py-1.5 shadow-[0_14px_30px_rgba(20,18,15,0.14)] backdrop-blur-xl">
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
@@ -228,7 +228,7 @@ export const ResultOverlay = memo(function ResultOverlay({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[80] bg-overlay backdrop-blur-[2px]" />
         <Drawer.Content
-          className="fixed inset-x-0 bottom-0 z-[90] flex max-h-[95dvh] flex-col rounded-t-[1.6rem] border-t border-border-faint bg-surface/98 shadow-[0_-18px_40px_rgba(15,23,42,0.18)] outline-none backdrop-blur-xl lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-[90] flex max-h-[95dvh] flex-col rounded-t-[1.6rem] border-t border-border-faint bg-surface/98 shadow-[0_-18px_40px_rgba(20,18,15,0.18)] outline-none backdrop-blur-xl lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
         >
           <div className="flex justify-center pb-1 pt-3">

@@ -70,7 +70,7 @@ export const Sidebar = memo(function Sidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border-faint bg-linear-to-b from-surface via-surface to-surface-raised/60 shadow-[10px_0_30px_rgba(15,23,42,0.06)] transition-[width] duration-200 ease-in-out lg:flex ${width}`}
+      className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border-faint bg-linear-to-b from-surface via-surface to-surface-raised/60 shadow-[10px_0_30px_rgba(20,18,15,0.06)] transition-[width] duration-200 ease-in-out lg:flex ${width}`}
       style={{
         paddingTop: "env(safe-area-inset-top, 0px)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -79,7 +79,7 @@ export const Sidebar = memo(function Sidebar({
       {/* ---- Branding ---- */}
       <div className={`flex items-center gap-3 pt-5 pb-4 ${collapsed ? "justify-center px-2" : "px-4"}`}>
         {/* Logo */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_10px_24px_rgba(15,23,42,0.16)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_10px_24px_rgba(20,18,15,0.16)]">
           <Image
             src="/icon-192.png"
             alt=""
@@ -372,7 +372,7 @@ function SidebarButton({
       {collapsed && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(15,23,42,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
+          className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(20,18,15,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
         >
           {/* Arrow */}
           <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 border-l border-b border-border bg-surface" />

@@ -1120,10 +1120,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         }`}
       >
         <header
-          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
+          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(20,18,15,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(20,18,15,0.18)]">
             <Image
               src="/icon-192.png"
               alt=""

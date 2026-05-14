@@ -14,6 +14,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Mobile result sheet redesigned to match the numpad-native concept: big tabular weight headline with profile glyph, price + €/kg subtitle, three quick-stat cards (per piece / per metre / length), peek-vs-full breakdown table with total weight rule, and terracotta "Save as preset" + "Add to project" actions at the full snap.
 - Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
 - First-run onboarding flow: three short steps to pick a default material, starting profile, and length unit + currency. Skipped or completed only once per device; can be replayed from Settings → "Replay onboarding".
+- Mobile shell extrapolation pass: every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Saved, Projects, Compare and Settings tabs inherit the polished mobile shell automatically.
 
 ### Changed
 

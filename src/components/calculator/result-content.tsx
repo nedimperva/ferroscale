@@ -229,7 +229,7 @@ export const ResultContent = memo(function ResultContent({
         data-result-top
         className={
           stickyTopBlock
-            ? "sticky top-0 z-10 border-b border-border-faint bg-surface/92 shadow-[0_14px_32px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+            ? "sticky top-0 z-10 border-b border-border-faint bg-surface/92 shadow-[0_14px_32px_rgba(20,18,15,0.08)] backdrop-blur-xl"
             : "border-b border-border-faint"
         }
       >
