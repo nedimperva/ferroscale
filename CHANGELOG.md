@@ -23,6 +23,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Removed the unused `ResultActionsSheet` component; result actions live inside the expanded result overlay
 - Result overlay is now a centered modal on every screen size (the mobile bottom sheet has been retired)
 - Profile picker has a pin option that keeps the category and sub-type pill grid open across selections and outside clicks; the pin preference is persisted
+- Removed the toast notification system entirely (no more transient success/info/warning/error popups). State changes still surface through inline UI and sync status badges
 
 ---
 

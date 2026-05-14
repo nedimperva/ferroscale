@@ -38,12 +38,6 @@
     "installNow": "Instaliraj",
     "dismiss": "Zatvori"
   },
-  "toasts": {
-    "calculationSaved": "Sablon je sacuvan.",
-    "calculationUnstarred": "Uklonjeno iz sablona.",
-    "addedToCompare": "Dodano za poredenje.",
-    "historyCleared": "Historija ociscena."
-  },
   "app": {
     "mobileHeaderTitle": "FerroScale",
     "mobileHeaderSubtitle": "Procjena mase i cijene uzivo za EN standardne profile.",

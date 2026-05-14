@@ -23,7 +23,6 @@ import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calc
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
-import { toast } from "@/lib/toast";
 import { APP_TABS, getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { triggerHaptic } from "@/lib/haptics";
 import { APP_VERSION } from "@/lib/changelog";
@@ -591,9 +590,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       saveCalculation(source.input, source.result, name, notes, tags, parts);
       setShowTemplateBuilder(false);
       setExternalSource(null);
-      toast.success(t("toasts.calculationSaved"));
     },
-    [externalSource, input, result, saveCalculation, t],
+    [externalSource, input, result, saveCalculation],
   );
 
   const currentIsInCompare = result ? isInCompare(result) : false;
@@ -620,8 +618,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       return;
     }
     addCompareItem(input, result);
-    toast.info(t("toasts.addedToCompare"));
-  }, [addCompareItem, currentIsInCompare, input, openCompare, result, t]);
+  }, [addCompareItem, currentIsInCompare, input, openCompare, result]);
 
   const handleAddToProject = useCallback(() => {
     if (!result) return;
@@ -659,46 +656,33 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const handleAppendTemplateParts = useCallback(
     (templateId: string, parts: TemplatePartDraft[]) => {
       const appended = appendPartsToSaved(templateId, parts);
-      if (!appended) {
-        toast.error(t("saved.addCurrentPartFailed"));
-        return;
-      }
+      if (!appended) return;
       markSavedUsed(templateId);
       setShowTemplateBuilder(false);
-      toast.success(t("saved.currentPartAdded"));
     },
-    [appendPartsToSaved, markSavedUsed, t],
+    [appendPartsToSaved, markSavedUsed],
   );
 
   const handleTemplateAddToProject = useCallback(
     (entry: SavedEntry, overrides: { quantityMultiplier: number; projectId?: string }) => {
       const fallbackProject = projects[0] ?? createProject("Common Parts");
       const targetProjectId = overrides.projectId ?? activeProjectId ?? fallbackProject.id;
-      const targetProjectName = projects.find((project) => project.id === targetProjectId)?.name ?? fallbackProject.name;
 
       const multiplier = Math.max(1, Math.floor(overrides.quantityMultiplier || 1));
       const added = addTemplateCalculation(targetProjectId, entry.name, entry.parts, multiplier);
-
-      if (!added) {
-        toast.info(t("saved.alreadyInProject"));
-        return;
-      }
+      if (!added) return;
 
       markSavedUsed(entry.id);
       setActiveProjectId(targetProjectId);
-      toast.success(t("saved.addedTemplateToProject", { name: entry.name, project: targetProjectName }));
     },
-    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId, t],
+    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId],
   );
 
   const handleRemoveTemplatePart = useCallback(
     (entry: SavedEntry, partId: string) => {
-      const removed = removePartFromSaved(entry.id, partId);
-      if (!removed) {
-        toast.info(t("saved.cannotRemoveLastPart"));
-      }
+      removePartFromSaved(entry.id, partId);
     },
-    [removePartFromSaved, t],
+    [removePartFromSaved],
   );
 
   const handleReorderTemplatePart = useCallback(
@@ -873,10 +857,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         selectedSizeId: input.selectedSizeId,
         lengthValue: isPlateSheet ? input.length.value : undefined,
       });
-      toast.success(t("presets.saved"));
       setPresetModalOpen(false);
     },
-    [addPreset, input, t],
+    [addPreset, input],
   );
 
   const resetAll = useCallback(() => {

@@ -5,7 +5,6 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { RouteAwareAppShell } from "@/components/route-aware-app-shell";
-import { ToastContainer } from "@/components/ui/toast-container";
 import { routing } from "@/i18n/routing";
 
 interface LocaleLayoutProps {
@@ -74,8 +73,6 @@ export default async function LocaleLayout({
             <RouteAwareAppShell>{children}</RouteAwareAppShell>
           </main>
         </ErrorBoundary>
-        {/* Toast notifications — rendered after children so they layer on top */}
-        <ToastContainer />
       </NextIntlClientProvider>
     </>
   );
