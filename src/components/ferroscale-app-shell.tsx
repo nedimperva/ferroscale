@@ -336,7 +336,7 @@ function BareTopBar({
 
   return (
     <header
-      className="sticky top-0 z-[70] border-b border-border-faint bg-background/94 backdrop-blur-xl"
+      className="fixed inset-x-0 top-0 z-[70] border-b border-border-faint bg-background/94 backdrop-blur-xl"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <div className="mx-auto flex h-14 max-w-[86rem] items-center gap-3 px-3 md:px-6">
@@ -1294,6 +1294,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             ? "overflow-hidden pb-0"
             : "pb-8"
         }`}
+        style={{ paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
         <BareTopBar
           currentTab={currentTab}
@@ -1370,6 +1371,36 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           normalizedProfile={normalizedCurrentProfile}
           weightAsMain={weightAsMain}
         />
+
+        {compareItems.length > 0 && (
+          <button
+            type="button"
+            onClick={openCompare}
+            aria-label={t("sidebar.compare")}
+            className="fixed z-40 inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/96 px-2.5 py-2 shadow-[0_18px_36px_rgba(15,23,42,0.18)] backdrop-blur-xl transition-shadow hover:shadow-[0_22px_44px_rgba(15,23,42,0.22)]"
+            style={{
+              bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+              left: "calc(1rem + env(safe-area-inset-left, 0px))",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 text-foreground-secondary"
+            >
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+            <span className="text-xs font-semibold tabular-nums text-foreground">
+              {compareItems.length}
+            </span>
+          </button>
+        )}
 
         {showOverlay && !showTemplateBuilder && result && (
           <ResultOverlay
