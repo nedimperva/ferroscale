@@ -146,6 +146,15 @@
     "unknown": "Unknown",
     "unknownProfile": "Unknown profile"
   },
+  "mobileCalc": {
+    "profile": "Profile",
+    "material": "Material",
+    "length": "Length",
+    "pieces": "Pieces",
+    "unitPrice": "Unit price",
+    "live": "live",
+    "calculating": "calculating"
+  },
   "sidebar": {
     "title": "FerroScale",
     "settings": "Settings",

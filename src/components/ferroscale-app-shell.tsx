@@ -35,6 +35,7 @@ import {
   getMaxColumnsForWidth,
 } from "@/lib/column-layout";
 import { ProfileSection } from "@/components/calculator/profile-section";
+import { MobileNumpadCalculator } from "@/components/calculator/mobile-numpad-calculator";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -139,12 +140,14 @@ function isSwipeEligibleTarget(target: EventTarget | null): boolean {
 function MobilePageCard({
   children,
   className = "",
+  id,
 }: {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-[1.35rem] ${className}`}>
+    <section id={id} className={`overflow-hidden rounded-[1.35rem] ${className}`}>
       {children}
     </section>
   );
@@ -649,9 +652,12 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [activeProject, currentTab, t]);
 
   const mobileHeaderSubtitle = normalizedCurrentProfile ? headerContext : t("app.mobileHeaderSubtitle");
-  const resultBarBottomPadding = result
-    ? "calc(146px + env(safe-area-inset-bottom, 0px))"
-    : "calc(82px + env(safe-area-inset-bottom, 0px))";
+  const hideResultBar = isMobile && currentTab === "calculator";
+  const resultBarBottomPadding = hideResultBar
+    ? "calc(82px + env(safe-area-inset-bottom, 0px))"
+    : result
+      ? "calc(146px + env(safe-area-inset-bottom, 0px))"
+      : "calc(82px + env(safe-area-inset-bottom, 0px))";
 
   const swipeStateRef = useRef<{ edge: "left" | "right"; x: number; y: number } | null>(null);
   const isSwipeBlocked =
@@ -963,39 +969,60 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     navigateToTab, handleSavePreset, textSize, setTextSize, sync, handleDefaultUnitChange,
   ]);
 
+  const scrollToMobileCalcForm = useCallback(() => {
+    const el = document.getElementById("mobile-calc-form");
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const mobileScreen =
     currentTab === "calculator" ? (
-      <MobilePageCard>
-        {showSettingsPreview && (
-          <div className="px-3 pb-1 pt-3">
-            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
+      <>
+        <MobileNumpadCalculator
+          input={input}
+          dispatch={dispatch}
+          result={result}
+          isPending={isPending}
+          activeFamily={activeFamily}
+          normalizedProfile={normalizedCurrentProfile}
+          onOpenProfilePicker={scrollToMobileCalcForm}
+          onOpenMaterialPicker={scrollToMobileCalcForm}
+          onOpenResult={() => setShowOverlay(true)}
+          scrollPaddingBottom="0px"
+        />
+
+        <MobilePageCard className="mt-3" id="mobile-calc-form">
+          {showSettingsPreview && (
+            <div className="px-3 pb-1 pt-3">
+              <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
+            </div>
+          )}
+
+          <div className="px-3 py-2">
+            <ProfileSection
+              input={input}
+              dispatch={dispatch}
+              selectedProfile={selectedProfile}
+              issues={issues}
+              activeFamily={activeFamily}
+              showInlineMaterial={showInlineMaterial}
+              showInlinePrice={showInlinePrice}
+              defaultUnit={defaultUnit}
+              onSavePreset={handleSavePreset}
+              profilePresets={presetsForProfile(input.profileId)}
+              onRemovePreset={removePreset}
+            />
           </div>
-        )}
 
-        <div className="px-3 py-2">
-          <ProfileSection
-            input={input}
-            dispatch={dispatch}
-            selectedProfile={selectedProfile}
-            issues={issues}
-            activeFamily={activeFamily}
-            showInlineMaterial={showInlineMaterial}
-            showInlinePrice={showInlinePrice}
-            defaultUnit={defaultUnit}
-            onSavePreset={handleSavePreset}
-            profilePresets={presetsForProfile(input.profileId)}
-            onRemovePreset={removePreset}
-          />
-        </div>
-
-        <div className="pb-5">
-          <ReversePanel
-            reverse={reverse}
-            isManualProfile={selectedProfile.mode === "manual"}
-            input={input}
-          />
-        </div>
-      </MobilePageCard>
+          <div className="pb-5">
+            <ReversePanel
+              reverse={reverse}
+              isManualProfile={selectedProfile.mode === "manual"}
+              input={input}
+            />
+          </div>
+        </MobilePageCard>
+      </>
     ) : currentTab === "saved" ? (
       <MobilePageCard>
         <div className="px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
@@ -1255,23 +1282,25 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           </AnimatePresence>
         </div>
 
-        <ResultBar
-          result={result}
-          isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
+        {!(isMobile && currentTab === "calculator") && (
+          <ResultBar
+            result={result}
+            isPending={isPending}
+            isSaved={isCurrentSaved}
+            onOpenSaveDialog={handleOpenSaveDialog}
 
-          onExpand={() => setShowOverlay(true)}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-        />
+            onExpand={() => setShowOverlay(true)}
+            onCompare={handleCompare}
+            canCompare={canCompare}
+            isInCompare={currentIsInCompare}
+            compareCount={compareItems.length}
+            maxCompare={maxCompare}
+            onAddToProject={handleAddToProject}
+            hasProjects={projectCount > 0}
+            normalizedProfile={normalizedCurrentProfile}
+            weightAsMain={weightAsMain}
+          />
+        )}
 
         <BottomTabBar
           activeTab={currentTab}

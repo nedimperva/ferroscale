@@ -146,6 +146,15 @@
     "unknown": "Nepoznato",
     "unknownProfile": "Nepoznati profil"
   },
+  "mobileCalc": {
+    "profile": "Profil",
+    "material": "Materijal",
+    "length": "Duzina",
+    "pieces": "Komada",
+    "unitPrice": "Jedinicna cijena",
+    "live": "uzivo",
+    "calculating": "racuna"
+  },
   "sidebar": {
     "title": "FerroScale",
     "settings": "Postavke",

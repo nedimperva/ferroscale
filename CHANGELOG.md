@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details. Existing form remains accessible below until dedicated profile/material picker sheets land.
+
 ### Changed
 
 - Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.

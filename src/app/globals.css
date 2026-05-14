@@ -405,6 +405,18 @@ details[open] .chevron-icon {
   }
 }
 
+/* Caret blink for numpad-native active-field chip */
+@keyframes aCaret {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0.18;
+  }
+}
+
 /* Momentum scrolling for lists / panels — no scroll-behavior: smooth
    (it conflicts with programmatic scrollIntoView and causes mobile jank) */
 .scroll-native {
