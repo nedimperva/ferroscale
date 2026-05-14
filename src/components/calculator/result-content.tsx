@@ -46,11 +46,11 @@ function formatAnimatedNumber(animated: number, reference: number): string {
 function featuredMetricClass(tone: QuickMetricTone) {
   switch (tone) {
     case "price":
-      return "border-accent-border bg-linear-to-br from-accent-surface to-surface";
+      return "border-accent-border bg-accent-surface";
     case "weight":
-      return "border-blue-border bg-linear-to-br from-blue-surface to-surface";
+      return "border-blue-border bg-blue-surface";
     case "surface":
-      return "border-green-border bg-linear-to-br from-green-surface to-surface";
+      return "border-green-border bg-green-surface";
     default:
       return "border-border bg-surface-raised";
   }
@@ -62,7 +62,7 @@ function supportingMetricClass(metric: QuickMetric) {
   }
 
   if (metric.tone === "surface") {
-    return "border-green-border bg-linear-to-br from-green-surface to-surface";
+    return "border-green-border bg-green-surface";
   }
 
   return "border-border bg-surface-raised";
@@ -235,7 +235,7 @@ export const ResultContent = memo(function ResultContent({
       >
         <section
           data-result-summary
-          className={`${sectionPadding} bg-linear-to-b from-surface-emphasis to-surface`}
+          className={`${sectionPadding} bg-surface`}
         >
           <div className="flex items-start gap-3">
             <div className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.15rem] bg-accent/12 text-accent ring-1 ring-accent/15">

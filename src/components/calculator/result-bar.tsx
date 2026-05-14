@@ -73,9 +73,9 @@ export const ResultBar = memo(function ResultBar(props: ResultBarProps) {
             exit={{ y: 20, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-x-0 z-40 lg:hidden"
-            style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
+            style={{ top: "calc(3.75rem + env(safe-area-inset-top, 0px))" }}
           >
-            <div className="panel-base mx-3 mb-1 rounded-[1.2rem] bg-surface/94 px-2 py-1.5 shadow-[0_14px_30px_rgba(15,23,42,0.14)] backdrop-blur-xl">
+            <div className="mx-3 mb-1 border border-border bg-surface px-2 py-1.5 shadow-[0_10px_24px_rgba(15,23,42,0.12)]">
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
