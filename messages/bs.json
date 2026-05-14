@@ -386,7 +386,9 @@
     "sectionPricing": "Cijena",
     "sectionPrecision": "Preciznost i zaokruzivanje",
     "sectionWorkspace": "Prikaz i limiti",
-    "sectionSync": "Podaci i sinhronizacija"
+    "sectionSync": "Podaci i sinhronizacija",
+    "defaultsAppliedTitle": "Primijenjeni defaulti",
+    "defaultsAppliedHint": "Koriste se svaki put kad otvoris aplikaciju"
   },
   "sync": {
     "title": "Podaci i sinhronizacija",

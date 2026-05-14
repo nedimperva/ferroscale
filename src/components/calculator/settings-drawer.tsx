@@ -11,6 +11,7 @@ import { MaterialSection } from "./material-section";
 import { PricingSection } from "./pricing-section";
 import { PrecisionSection } from "./precision-section";
 import { WorkspaceSection } from "./workspace-section";
+import { SettingsDefaultsCard } from "./settings-defaults-card";
 import type { TextSize } from "@/hooks/useTextSize";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
@@ -93,6 +94,8 @@ export function SettingsWorkspaceContent({
   return (
     <>
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom">
+        <SettingsDefaultsCard input={input} defaultUnit={defaultUnit} />
+
         <div className="px-4 pt-3 pb-1">
           <LanguageSwitcher className="w-full justify-between" />
         </div>

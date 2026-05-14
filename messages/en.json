@@ -386,7 +386,9 @@
     "sectionPricing": "Pricing",
     "sectionPrecision": "Precision & Rounding",
     "sectionWorkspace": "Display & Limits",
-    "sectionSync": "Data & Sync"
+    "sectionSync": "Data & Sync",
+    "defaultsAppliedTitle": "Defaults applied",
+    "defaultsAppliedHint": "These are used every time you open the app"
   },
   "sync": {
     "title": "Data & Sync",

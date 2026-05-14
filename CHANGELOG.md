@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details.
 - Dedicated profile and material picker bottom sheets on mobile, opened from the chip cards. Profile sheet: category row, profile-type grid, and size/dimension inputs in one place. Material sheet: family chips + grade list with EN reference + density.
 - Mobile result sheet redesigned to match the numpad-native concept: big tabular weight headline with profile glyph, price + €/kg subtitle, three quick-stat cards (per piece / per metre / length), peek-vs-full breakdown table with total weight rule, and terracotta "Save as preset" + "Add to project" actions at the full snap.
+- Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
 
 ### Changed
 
