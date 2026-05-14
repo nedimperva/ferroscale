@@ -36,6 +36,8 @@ import {
 } from "@/lib/column-layout";
 import { ProfileSection } from "@/components/calculator/profile-section";
 import { MobileNumpadCalculator } from "@/components/calculator/mobile-numpad-calculator";
+import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet";
+import { MobileMaterialSheet } from "@/components/calculator/mobile-material-sheet";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -249,6 +251,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [templateBuilderSession, setTemplateBuilderSession] = useState(0);
   const [showContactDrawer, setShowContactDrawer] = useState(false);
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
+  const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
+  const [showMobileMaterialSheet, setShowMobileMaterialSheet] = useState(false);
 
   const cycleTheme = useCallback(() => {
     const order: Theme[] = ["light", "dark", "system"];
@@ -265,6 +269,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     setPresetModalOpen(false);
     setShowContactDrawer(false);
     setShowChangelogDrawer(false);
+    setShowMobileProfileSheet(false);
+    setShowMobileMaterialSheet(false);
     closeQuickCalc();
     closeCompare();
   }, [closeCompare, closeQuickCalc]);
@@ -670,6 +676,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     showContactDrawer ||
     showChangelogDrawer ||
     showCompareDrawer ||
+    showMobileProfileSheet ||
+    showMobileMaterialSheet ||
     quickCalcOpen;
 
   const handleMobileTouchStart = useCallback(
@@ -969,60 +977,20 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     navigateToTab, handleSavePreset, textSize, setTextSize, sync, handleDefaultUnitChange,
   ]);
 
-  const scrollToMobileCalcForm = useCallback(() => {
-    const el = document.getElementById("mobile-calc-form");
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
-
   const mobileScreen =
     currentTab === "calculator" ? (
-      <>
-        <MobileNumpadCalculator
-          input={input}
-          dispatch={dispatch}
-          result={result}
-          isPending={isPending}
-          activeFamily={activeFamily}
-          normalizedProfile={normalizedCurrentProfile}
-          onOpenProfilePicker={scrollToMobileCalcForm}
-          onOpenMaterialPicker={scrollToMobileCalcForm}
-          onOpenResult={() => setShowOverlay(true)}
-          scrollPaddingBottom="0px"
-        />
-
-        <MobilePageCard className="mt-3" id="mobile-calc-form">
-          {showSettingsPreview && (
-            <div className="px-3 pb-1 pt-3">
-              <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
-            </div>
-          )}
-
-          <div className="px-3 py-2">
-            <ProfileSection
-              input={input}
-              dispatch={dispatch}
-              selectedProfile={selectedProfile}
-              issues={issues}
-              activeFamily={activeFamily}
-              showInlineMaterial={showInlineMaterial}
-              showInlinePrice={showInlinePrice}
-              defaultUnit={defaultUnit}
-              onSavePreset={handleSavePreset}
-              profilePresets={presetsForProfile(input.profileId)}
-              onRemovePreset={removePreset}
-            />
-          </div>
-
-          <div className="pb-5">
-            <ReversePanel
-              reverse={reverse}
-              isManualProfile={selectedProfile.mode === "manual"}
-              input={input}
-            />
-          </div>
-        </MobilePageCard>
-      </>
+      <MobileNumpadCalculator
+        input={input}
+        dispatch={dispatch}
+        result={result}
+        isPending={isPending}
+        activeFamily={activeFamily}
+        normalizedProfile={normalizedCurrentProfile}
+        onOpenProfilePicker={() => setShowMobileProfileSheet(true)}
+        onOpenMaterialPicker={() => setShowMobileMaterialSheet(true)}
+        onOpenResult={() => setShowOverlay(true)}
+        scrollPaddingBottom="0px"
+      />
     ) : currentTab === "saved" ? (
       <MobilePageCard>
         <div className="px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
@@ -1395,6 +1363,26 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <ContactDrawer open={showContactDrawer} onClose={() => setShowContactDrawer(false)} />
 
         <ChangelogDrawer open={showChangelogDrawer} onClose={() => setShowChangelogDrawer(false)} />
+
+        {isMobile && (
+          <>
+            <MobileProfileSheet
+              open={showMobileProfileSheet}
+              onOpenChange={setShowMobileProfileSheet}
+              input={input}
+              dispatch={dispatch}
+              selectedProfile={selectedProfile}
+              issues={issues}
+            />
+            <MobileMaterialSheet
+              open={showMobileMaterialSheet}
+              onOpenChange={setShowMobileMaterialSheet}
+              input={input}
+              dispatch={dispatch}
+              activeFamily={activeFamily}
+            />
+          </>
+        )}
 
         <CompareDrawer
           open={showCompareDrawer && !(isMultiColumn && columnLayout.hasPanel("compare"))}

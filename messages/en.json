@@ -153,7 +153,11 @@
     "pieces": "Pieces",
     "unitPrice": "Unit price",
     "live": "live",
-    "calculating": "calculating"
+    "calculating": "calculating",
+    "dimensions": "Dimensions",
+    "grade": "Grade",
+    "family": "Family",
+    "done": "Done"
   },
   "sidebar": {
     "title": "FerroScale",

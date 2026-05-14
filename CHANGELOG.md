@@ -9,11 +9,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details. Existing form remains accessible below until dedicated profile/material picker sheets land.
+- Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details.
+- Dedicated profile and material picker bottom sheets on mobile, opened from the chip cards. Profile sheet: category row, profile-type grid, and size/dimension inputs in one place. Material sheet: family chips + grade list with EN reference + density.
 
 ### Changed
 
 - Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
+- Mobile calculator no longer renders the legacy inline profile/material/dimensions form below the new numpad — profile and material live in their own bottom sheets now. The reverse calculator and inline pricing toggles still appear on desktop; mobile homes for them ship in a follow-up.
 
 ---
 

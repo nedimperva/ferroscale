@@ -153,7 +153,11 @@
     "pieces": "Komada",
     "unitPrice": "Jedinicna cijena",
     "live": "uzivo",
-    "calculating": "racuna"
+    "calculating": "racuna",
+    "dimensions": "Dimenzije",
+    "grade": "Kvalitet",
+    "family": "Porodica",
+    "done": "Gotovo"
   },
   "sidebar": {
     "title": "FerroScale",
