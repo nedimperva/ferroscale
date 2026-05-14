@@ -167,6 +167,16 @@
     "title": "Menu",
     "more": "More"
   },
+  "mobileTabHero": {
+    "savedCount": "{count, plural, one {# template saved} other {# templates saved}}",
+    "savedEmpty": "No templates yet",
+    "savedHint": "{weight} kg total · used {used, plural, one {# time} other {# times}}",
+    "projectsCount": "{count, plural, one {# project} other {# projects}}",
+    "projectsEmpty": "No projects yet",
+    "projectsPickHint": "Pick a project below to see its parts",
+    "projectsCreateHint": "Create one to group your calculations",
+    "projectsActiveHint": "{count, plural, one {# part} other {# parts}}"
+  },
   "mobileSettings": {
     "sectionDisplay": "Display",
     "sectionDefaults": "Defaults",

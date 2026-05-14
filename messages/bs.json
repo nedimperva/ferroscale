@@ -167,6 +167,16 @@
     "title": "Meni",
     "more": "Vise"
   },
+  "mobileTabHero": {
+    "savedCount": "{count, plural, one {# sablon sacuvan} few {# sablona sacuvana} other {# sablona sacuvano}}",
+    "savedEmpty": "Jos nema sablona",
+    "savedHint": "{weight} kg ukupno · koristeno {used, plural, one {# put} few {# puta} other {# puta}}",
+    "projectsCount": "{count, plural, one {# projekat} few {# projekta} other {# projekata}}",
+    "projectsEmpty": "Jos nema projekata",
+    "projectsPickHint": "Odaberi projekat ispod da vidis dijelove",
+    "projectsCreateHint": "Kreiraj projekat da grupises kalkulacije",
+    "projectsActiveHint": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}"
+  },
   "mobileSettings": {
     "sectionDisplay": "Prikaz",
     "sectionDefaults": "Defaulti",

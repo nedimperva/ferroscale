@@ -42,6 +42,7 @@ import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
 import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
 import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
+import { MobileSavedHero, MobileProjectsHero } from "@/components/calculator/mobile-tab-hero";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -923,6 +924,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     ) : currentTab === "saved" ? (
       <MobilePageCard>
         <div className="px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
+          <MobileSavedHero saved={saved} />
           <TemplatesPanel
             saved={saved}
             projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
@@ -942,6 +944,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     ) : currentTab === "projects" ? (
       <MobilePageCard className="flex min-h-[60dvh] flex-col">
         <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
+          <MobileProjectsHero projects={projects} activeProjectId={activeProjectId} />
           <ProjectsWorkspaceContent
             projects={projects}
             activeProjectId={activeProjectId}

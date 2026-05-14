@@ -23,6 +23,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is now the single nav entry point.
 - Mobile result sheet no longer shows a duplicate Save button at the full-snap; "Save" lives in the peek, and the full view's primary action is the full-width terracotta "Add to project".
 - Mobile Settings rebuilt as a defaults dashboard with grouped rounded sections — Display (Appearance, Text size, Show price inline), Defaults (Material, Length unit, Currency, Waste allowance), and Power (Show weight as main, What's New). Each row is a single tappable card with an accent-tinted icon and either a toggle or a sub-sheet picker. Replay onboarding and Reset all moved into the footer.
+- Saved and Projects mobile tabs gain a hero card at the top of the screen — same warm rounded-surface treatment used by Settings. Saved shows the template count + total weight + total uses; Projects shows the active project's name + parts count + weight + cost (or a "no active project" prompt when none is selected).
+- Floating result bar on mobile now hugs the bottom edge instead of reserving 56px for the removed tab bar.
 
 ### Changed
 
