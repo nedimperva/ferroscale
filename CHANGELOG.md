@@ -7,6 +7,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
+
 ---
 
 ## [2.5.2] - 2026-04-09
