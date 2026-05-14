@@ -19,14 +19,14 @@ import { useSync } from "@/hooks/useSync";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useElementWidth } from "@/hooks/useElementWidth";
-import type { LengthUnit } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calculator/types";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
-import { toast } from "@/lib/toast";
 import { APP_TABS, getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { triggerHaptic } from "@/lib/haptics";
-import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
+import { APP_VERSION } from "@/lib/changelog";
+import { createBoolStore, createStringStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
 import type { ColumnPanelId } from "@/lib/column-layout";
 import {
@@ -39,17 +39,14 @@ import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
-import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
 import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
-import { Sidebar } from "@/components/calculator/sidebar";
-import { BottomTabBar } from "@/components/ui/bottom-tab-bar";
 import { PwaRegister } from "@/components/pwa-register";
-import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
@@ -58,8 +55,7 @@ import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 import { TemplatesPanel } from "@/components/calculator/templates-panel";
 import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
 
-const sidebarStore = createSidebarStore();
-const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false);
+const inlineMaterialStore = createBoolStore("ferroscale-inline-material", true);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
 const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
@@ -144,9 +140,253 @@ function MobilePageCard({
   className?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-[1.35rem] ${className}`}>
+    <section className={`overflow-hidden ${className}`}>
       {children}
     </section>
+  );
+}
+
+function ThemeIcon({ theme }: { theme: Theme }) {
+  if (theme === "light") {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+      </svg>
+    );
+  }
+
+  if (theme === "dark") {
+    return (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2" />
+        <path d="M12 20v2" />
+        <path d="M2 12h2" />
+        <path d="M20 12h2" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+      <rect width="20" height="14" x="2" y="3" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+    </svg>
+  );
+}
+
+function MoreMenuButton({
+  currentTab,
+  compareCount,
+  projectCount,
+  savedCount,
+  canShowColumnsToggle,
+  isMultiColumnEnabled,
+  onNavigate,
+  onOpenCompare,
+  onOpenQuickCalc,
+  onOpenContact,
+  onOpenChangelog,
+  onToggleMultiColumn,
+}: {
+  currentTab: AppTabId;
+  compareCount: number;
+  projectCount: number;
+  savedCount: number;
+  canShowColumnsToggle: boolean;
+  isMultiColumnEnabled: boolean;
+  onNavigate: (tab: AppTabId) => void;
+  onOpenCompare: () => void;
+  onOpenQuickCalc: () => void;
+  onOpenContact: () => void;
+  onOpenChangelog: () => void;
+  onToggleMultiColumn: () => void;
+}) {
+  const t = useTranslations();
+  const [open, setOpen] = useState(false);
+  const itemClass = "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-foreground-secondary transition-colors hover:bg-surface-raised hover:text-foreground";
+  const badgeClass = "rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-muted";
+  const groupLabelClass = "px-3 pt-2 pb-1 text-2xs font-semibold uppercase tracking-wide text-muted-faint";
+
+  const run = (action: () => void) => {
+    triggerHaptic("light");
+    action();
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="premium-icon-button h-9 w-9 rounded-md border-border-faint"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("result.moreActions")}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+          <circle cx="12" cy="12" r="1" />
+          <circle cx="19" cy="12" r="1" />
+          <circle cx="5" cy="12" r="1" />
+        </svg>
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[75] cursor-default"
+            aria-label={t("settingsDrawer.close")}
+            onClick={() => setOpen(false)}
+          />
+          <div
+            role="menu"
+            className="absolute right-0 top-11 z-[80] w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-[0_18px_40px_rgba(15,23,42,0.14)]"
+          >
+            <div className="border-b border-border-faint px-3 py-2">
+              <p className="text-xs font-semibold uppercase text-muted-faint">FerroScale</p>
+              <p className="text-2xs text-muted-faint">v{APP_VERSION}</p>
+            </div>
+
+            <p className={groupLabelClass}>{t("menu.groupLibrary")}</p>
+            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("saved"))} role="menuitem" aria-current={currentTab === "saved" ? "page" : undefined}>
+              <span>{t("tabs.saved")}</span>
+              {savedCount > 0 && <span className={badgeClass}>{savedCount}</span>}
+            </button>
+            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("projects"))} role="menuitem" aria-current={currentTab === "projects" ? "page" : undefined}>
+              <span>{t("tabs.projects")}</span>
+              {projectCount > 0 && <span className={badgeClass}>{projectCount}</span>}
+            </button>
+            <button type="button" className={itemClass} onClick={() => run(onOpenCompare)} role="menuitem">
+              <span>{t("sidebar.compare")}</span>
+              {compareCount > 0 && <span className={badgeClass}>{compareCount}</span>}
+            </button>
+
+            <div className="border-t border-border-faint" />
+            <p className={groupLabelClass}>{t("menu.groupTools")}</p>
+            <button type="button" className={itemClass} onClick={() => run(onOpenQuickCalc)} role="menuitem">
+              <span>{t("quickCalc.sidebarLabel")}</span>
+              <span className="text-2xs text-muted-faint">Ctrl K</span>
+            </button>
+            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("settings"))} role="menuitem" aria-current={currentTab === "settings" ? "page" : undefined}>
+              <span>{t("tabs.settings")}</span>
+            </button>
+            {canShowColumnsToggle && (
+              <button type="button" className={itemClass} onClick={() => run(onToggleMultiColumn)} role="menuitem">
+                <span>{t("columns.columnsMode")}</span>
+                {isMultiColumnEnabled && <span className={badgeClass}>On</span>}
+              </button>
+            )}
+
+            <div className="border-t border-border-faint" />
+            <p className={groupLabelClass}>{t("menu.groupHelp")}</p>
+            <button type="button" className={itemClass} onClick={() => run(onOpenChangelog)} role="menuitem">
+              <span>{t("changelog.title")}</span>
+            </button>
+            <button type="button" className={itemClass} onClick={() => run(onOpenContact)} role="menuitem">
+              <span>{t("sidebar.reportIssue")}</span>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BareTopBar({
+  currentTab,
+  subtitle,
+  hasResult,
+  compareCount,
+  projectCount,
+  savedCount,
+  theme,
+  onToggleTheme,
+  onHome,
+  onNavigate,
+  onOpenCompare,
+  onOpenQuickCalc,
+  onOpenContact,
+  onOpenChangelog,
+  canShowColumnsToggle,
+  isMultiColumnEnabled,
+  onToggleMultiColumn,
+}: {
+  currentTab: AppTabId;
+  subtitle: string;
+  hasResult: boolean;
+  compareCount: number;
+  projectCount: number;
+  savedCount: number;
+  theme: Theme;
+  onToggleTheme: () => void;
+  onHome: () => void;
+  onNavigate: (tab: AppTabId) => void;
+  onOpenCompare: () => void;
+  onOpenQuickCalc: () => void;
+  onOpenContact: () => void;
+  onOpenChangelog: () => void;
+  canShowColumnsToggle: boolean;
+  isMultiColumnEnabled: boolean;
+  onToggleMultiColumn: () => void;
+}) {
+  const t = useTranslations();
+
+  return (
+    <header
+      className="fixed inset-x-0 top-0 z-[70] border-b border-border-faint bg-background/94 backdrop-blur-xl"
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
+      <div className="mx-auto flex h-14 max-w-[86rem] items-center gap-3 px-3 md:px-6">
+        <button type="button" onClick={onHome} className="flex min-w-0 items-center gap-2 text-left" aria-label={t("tabs.calculator")}>
+          <Image src="/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold leading-tight text-foreground">FerroScale</span>
+            <span
+              className={`max-w-[38vw] truncate text-2xs leading-tight text-muted md:block md:max-w-none ${hasResult ? "hidden" : "block"}`}
+            >
+              {subtitle}
+            </span>
+          </span>
+        </button>
+
+        <div className="ml-auto hidden items-center gap-2 md:flex">
+          <LanguageSwitcher />
+        </div>
+
+        <div className="ml-auto flex items-center gap-1.5 md:ml-0">
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="premium-icon-button h-9 w-9 rounded-md border-border-faint"
+            aria-label={
+              theme === "light"
+                ? t("theme.switchToDark")
+                : theme === "dark"
+                  ? t("theme.switchToSystem")
+                  : t("theme.switchToLight")
+            }
+          >
+            <ThemeIcon theme={theme} />
+          </button>
+          <MoreMenuButton
+            currentTab={currentTab}
+            compareCount={compareCount}
+            projectCount={projectCount}
+            savedCount={savedCount}
+            canShowColumnsToggle={canShowColumnsToggle}
+            isMultiColumnEnabled={isMultiColumnEnabled}
+            onNavigate={onNavigate}
+            onOpenCompare={onOpenCompare}
+            onOpenQuickCalc={onOpenQuickCalc}
+            onOpenContact={onOpenContact}
+            onOpenChangelog={onOpenChangelog}
+            onToggleMultiColumn={onToggleMultiColumn}
+          />
+        </div>
+      </div>
+    </header>
   );
 }
 
@@ -244,6 +484,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [templateBuilderSession, setTemplateBuilderSession] = useState(0);
+  const [externalSource, setExternalSource] = useState<{ input: CalculationInput; result: CalculationResult } | null>(null);
   const [showContactDrawer, setShowContactDrawer] = useState(false);
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
 
@@ -262,6 +503,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     setPresetModalOpen(false);
     setShowContactDrawer(false);
     setShowChangelogDrawer(false);
+    setExternalSource(null);
     closeQuickCalc();
     closeCompare();
   }, [closeCompare, closeQuickCalc]);
@@ -330,6 +572,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const handleOpenSaveDialog = useCallback(() => {
     if (!result) return;
+    setExternalSource(null);
     setShowOverlay(false);
     setTemplateBuilderSession((session) => session + 1);
     setShowTemplateBuilder(true);
@@ -342,12 +585,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       tags?: string[],
       parts?: TemplatePartDraft[],
     ) => {
-      if (!result) return;
-      saveCalculation(input, result, name, notes, tags, parts);
+      const source = externalSource ?? (result ? { input, result } : null);
+      if (!source) return;
+      saveCalculation(source.input, source.result, name, notes, tags, parts);
       setShowTemplateBuilder(false);
-      toast.success(t("toasts.calculationSaved"));
+      setExternalSource(null);
     },
-    [input, result, saveCalculation, t],
+    [externalSource, input, result, saveCalculation],
   );
 
   const currentIsInCompare = result ? isInCompare(result) : false;
@@ -359,6 +603,14 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return grade ? `${profileLabel} - ${grade}` : profileLabel;
   }, [normalizedCurrentProfile, result, t]);
 
+  const externalSourceDefaultName = useMemo(() => {
+    if (!externalSource) return "";
+    const profile = normalizeProfileSnapshot(externalSource.input);
+    const profileLabel = profile?.shortLabel ?? externalSource.result.profileLabel;
+    const grade = resolveGradeLabel(externalSource.result.gradeLabel, t);
+    return grade ? `${profileLabel} - ${grade}` : profileLabel;
+  }, [externalSource, t]);
+
   const handleCompare = useCallback(() => {
     if (!result) return;
     if (currentIsInCompare) {
@@ -366,14 +618,23 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       return;
     }
     addCompareItem(input, result);
-    toast.info(t("toasts.addedToCompare"));
-  }, [addCompareItem, currentIsInCompare, input, openCompare, result, t]);
+  }, [addCompareItem, currentIsInCompare, input, openCompare, result]);
 
   const handleAddToProject = useCallback(() => {
     if (!result) return;
+    setExternalSource(null);
     setShowOverlay(false);
     setShowSaveModal(true);
   }, [result]);
+
+  const handleAddExternalToProject = useCallback(
+    (source: { input: CalculationInput; result: CalculationResult }) => {
+      setExternalSource(source);
+      setShowOverlay(false);
+      setShowSaveModal(true);
+    },
+    [],
+  );
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -395,46 +656,33 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const handleAppendTemplateParts = useCallback(
     (templateId: string, parts: TemplatePartDraft[]) => {
       const appended = appendPartsToSaved(templateId, parts);
-      if (!appended) {
-        toast.error(t("saved.addCurrentPartFailed"));
-        return;
-      }
+      if (!appended) return;
       markSavedUsed(templateId);
       setShowTemplateBuilder(false);
-      toast.success(t("saved.currentPartAdded"));
     },
-    [appendPartsToSaved, markSavedUsed, t],
+    [appendPartsToSaved, markSavedUsed],
   );
 
   const handleTemplateAddToProject = useCallback(
     (entry: SavedEntry, overrides: { quantityMultiplier: number; projectId?: string }) => {
       const fallbackProject = projects[0] ?? createProject("Common Parts");
       const targetProjectId = overrides.projectId ?? activeProjectId ?? fallbackProject.id;
-      const targetProjectName = projects.find((project) => project.id === targetProjectId)?.name ?? fallbackProject.name;
 
       const multiplier = Math.max(1, Math.floor(overrides.quantityMultiplier || 1));
       const added = addTemplateCalculation(targetProjectId, entry.name, entry.parts, multiplier);
-
-      if (!added) {
-        toast.info(t("saved.alreadyInProject"));
-        return;
-      }
+      if (!added) return;
 
       markSavedUsed(entry.id);
       setActiveProjectId(targetProjectId);
-      toast.success(t("saved.addedTemplateToProject", { name: entry.name, project: targetProjectName }));
     },
-    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId, t],
+    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId],
   );
 
   const handleRemoveTemplatePart = useCallback(
     (entry: SavedEntry, partId: string) => {
-      const removed = removePartFromSaved(entry.id, partId);
-      if (!removed) {
-        toast.info(t("saved.cannotRemoveLastPart"));
-      }
+      removePartFromSaved(entry.id, partId);
     },
-    [removePartFromSaved, t],
+    [removePartFromSaved],
   );
 
   const handleReorderTemplatePart = useCallback(
@@ -527,15 +775,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     window.setTimeout(tryFocus, 0);
   }, [currentTab, firstIssueField, isMobile, navigateToTab]);
 
-  const sidebarCollapsed = useSyncExternalStore(
-    sidebarStore.subscribe,
-    sidebarStore.getSnapshot,
-    sidebarStore.getServerSnapshot,
-  );
-  const toggleSidebarCollapsed = useCallback(() => {
-    sidebarStore.toggle();
-  }, []);
-
   const showInlineMaterial = useSyncExternalStore(
     inlineMaterialStore.subscribe,
     inlineMaterialStore.getSnapshot,
@@ -618,10 +857,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         selectedSizeId: input.selectedSizeId,
         lengthValue: isPlateSheet ? input.length.value : undefined,
       });
-      toast.success(t("presets.saved"));
       setPresetModalOpen(false);
     },
-    [addPreset, input, t],
+    [addPreset, input],
   );
 
   const resetAll = useCallback(() => {
@@ -637,21 +875,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return profileShort;
   }, [input.profileId, normalizedCurrentProfile, result, t]);
 
-  const activeProject = useMemo(
-    () => (activeProjectId ? projects.find((project) => project.id === activeProjectId) ?? null : null),
-    [activeProjectId, projects],
-  );
-
-  const mobileHeaderTitle = useMemo(() => {
-    if (currentTab === "calculator") return t("app.mobileHeaderTitle");
-    if (currentTab === "projects" && activeProject) return activeProject.name;
-    return t(`tabs.${currentTab}`);
-  }, [activeProject, currentTab, t]);
-
-  const mobileHeaderSubtitle = normalizedCurrentProfile ? headerContext : t("app.mobileHeaderSubtitle");
+  const mobileResultOffset = "0px";
   const resultBarBottomPadding = result
-    ? "calc(146px + env(safe-area-inset-bottom, 0px))"
-    : "calc(82px + env(safe-area-inset-bottom, 0px))";
+    ? "calc(5rem + env(safe-area-inset-bottom, 0px))"
+    : "calc(1rem + env(safe-area-inset-bottom, 0px))";
 
   const swipeStateRef = useRef<{ edge: "left" | "right"; x: number; y: number } | null>(null);
   const isSwipeBlocked =
@@ -742,15 +969,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
-      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-[1.35rem]">
-        {showSettingsPreview && (
-          <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
-            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
-          </div>
-        )}
-
-        <div className="px-3 py-2 md:p-4">
+    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex">
+      <div className="flex w-full flex-col border border-border bg-surface">
+        <div className="px-4 py-4">
           <ProfileSection
             input={input}
             dispatch={dispatch}
@@ -766,7 +987,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         </div>
 
-        <div className="pb-4 md:px-4 md:pb-4">
+        <div className="border-t border-border-faint px-4 pb-4 pt-3">
           <ReversePanel
             reverse={reverse}
             isManualProfile={selectedProfile.mode === "manual"}
@@ -774,41 +995,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         </div>
       </div>
-
-      <aside className="hidden gap-4 self-start lg:sticky lg:top-4 lg:grid">
-        <ResultPanel
-          result={result}
-          isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-
-          includeVat={input.includeVat}
-          wastePercent={input.wastePercent}
-          vatPercent={input.vatPercent}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-          layout="standalone"
-        />
-      </aside>
     </div>
   );
 
   const columnContentMap = useMemo((): Record<ColumnPanelId, React.ReactNode> => ({
     calculator: (
       <div className="flex flex-col">
-        {showSettingsPreview && (
-          <div className="px-2.5 pb-0.5 pt-2 md:px-4 md:pb-2 md:pt-4">
-            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
-          </div>
-        )}
-        <div className="px-2.5 py-1.5 md:p-4">
+        <div className="px-2.5 py-3 md:p-4">
           <ProfileSection
             input={input}
             dispatch={dispatch}
@@ -946,6 +1139,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onRemoveItem={removeCompareItem}
         onClearAll={clearCompare}
         maxCompare={maxCompare}
+        onAddToProject={handleAddExternalToProject}
+        hasProjects={projectCount > 0}
       />
     ),
   }), [
@@ -953,7 +1148,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
     reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog,
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
-    handleAddToProject, projectCount, normalizedCurrentProfile, weightAsMain,
+    handleAddToProject, handleAddExternalToProject,
+    projectCount, normalizedCurrentProfile, weightAsMain,
     removeCompareItem, clearCompare,
     saved, handleLoad, handleApplyTemplate, handleTemplateAddToProject, handleRemoveTemplatePart, handleReorderTemplatePart, removeSaved, removeSavedMany, duplicateSaved, duplicateSavedMany, updateSaved,
     projects, activeProjectId, setActiveProjectId, createProject, renameProject,
@@ -966,13 +1162,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const mobileScreen =
     currentTab === "calculator" ? (
       <MobilePageCard>
-        {showSettingsPreview && (
-          <div className="px-3 pb-1 pt-3">
-            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
-          </div>
-        )}
-
-        <div className="px-3 py-2">
+        <div className="px-3 py-4">
           <ProfileSection
             input={input}
             dispatch={dispatch}
@@ -1080,132 +1270,34 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   return (
     <>
-      <Sidebar
-        onOpenContact={() => setShowContactDrawer(true)}
-        onOpenCompare={openCompare}
-        onOpenProjects={() => navigateToTab("projects")}
-        onOpenSettings={() => navigateToTab("settings")}
-        onOpenHistory={() => navigateToTab("saved")}
-        onOpenQuickCalc={openQuickCalc}
-        onOpenChangelog={() => setShowChangelogDrawer(true)}
-        compareCount={compareItems.length}
-        projectCount={projectCount}
-        isSettingsOpen={currentTab === "settings"}
-        isHistoryOpen={currentTab === "saved"}
-        isProjectsOpen={currentTab === "projects"}
-        isCompareOpen={showCompareDrawer}
-        isContactOpen={showContactDrawer}
-        isChangelogOpen={showChangelogDrawer}
-        collapsed={sidebarCollapsed}
-        onToggleCollapsed={toggleSidebarCollapsed}
-        theme={resolvedTheme}
-        onToggleTheme={cycleTheme}
-        canShowColumnsToggle={canShowColumnsToggle}
-        isMultiColumnEnabled={columnLayout.enabled}
-        onToggleMultiColumn={columnLayout.toggleEnabled}
-      />
-
       <div
         ref={mainContentRef}
-        className={`flex flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
+        className={`mx-auto flex min-h-dvh w-full max-w-[94rem] flex-col px-0 ${
           isMultiColumn
-            ? "h-dvh overflow-hidden pt-0 pb-0 lg:pt-4 lg:pb-4"
-            : "mx-auto min-h-dvh max-w-[94rem] pb-32 pt-0 lg:pb-6 lg:pt-8"
-        } ${
-          sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"
+            ? "overflow-hidden pb-0"
+            : "pb-8"
         }`}
+        style={{ paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
-        <header
-          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
-          style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(15,23,42,0.18)]">
-            <Image
-              src="/icon-192.png"
-              alt=""
-              width={32}
-              height={32}
-              className="h-full w-full rounded-xl"
-            />
-          </div>
-
-          <div className="flex min-w-0 flex-1 flex-col">
-            <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">{mobileHeaderTitle}</h1>
-            <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
-              {normalizedCurrentProfile && (
-                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted-faint">
-                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
-                </span>
-              )}
-              <span className="truncate">{mobileHeaderSubtitle}</span>
-            </p>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1.5">
-            {compareItems.length > 0 && (
-              <button
-                type="button"
-                onClick={openCompare}
-                className="premium-segment premium-segment-muted inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold"
-                aria-label={t("sidebar.compare")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
-                  <rect x="3" y="3" width="7" height="18" rx="1" />
-                  <rect x="14" y="3" width="7" height="18" rx="1" />
-                </svg>
-                {compareItems.length}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowChangelogDrawer(true)}
-              className="premium-icon-button h-9 w-9"
-              aria-label={t("changelog.title")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={cycleTheme}
-              className="premium-icon-button h-9 w-9"
-              aria-label={
-                resolvedTheme === "light"
-                  ? t("theme.switchToDark")
-                  : resolvedTheme === "dark"
-                    ? t("theme.switchToSystem")
-                    : t("theme.switchToLight")
-              }
-            >
-              {resolvedTheme === "light" ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-              ) : resolvedTheme === "dark" ? (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="m4.93 4.93 1.41 1.41" />
-                  <path d="m17.66 17.66 1.41 1.41" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="m6.34 17.66-1.41 1.41" />
-                  <path d="m19.07 4.93-1.41 1.41" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <rect width="20" height="14" x="2" y="3" rx="2" />
-                  <path d="M8 21h8" />
-                  <path d="M12 17v4" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </header>
+        <BareTopBar
+          currentTab={currentTab}
+          subtitle={headerContext}
+          hasResult={Boolean(result)}
+          compareCount={compareItems.length}
+          projectCount={projectCount}
+          savedCount={saved.length}
+          theme={resolvedTheme}
+          onToggleTheme={cycleTheme}
+          onHome={navigateHome}
+          onNavigate={navigateToTab}
+          onOpenCompare={openCompare}
+          onOpenQuickCalc={openQuickCalc}
+          onOpenContact={() => setShowContactDrawer(true)}
+          onOpenChangelog={() => setShowChangelogDrawer(true)}
+          canShowColumnsToggle={canShowColumnsToggle}
+          isMultiColumnEnabled={columnLayout.enabled}
+          onToggleMultiColumn={columnLayout.toggleEnabled}
+        />
 
         <PwaRegister onOpenChangelog={() => setShowChangelogDrawer(true)} />
 
@@ -1225,7 +1317,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onTouchEnd={handleMobileTouchEnd}
           aria-busy={isRouteNavigationPending || undefined}
           style={{
-            paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
+            paddingTop: mobileResultOffset,
             paddingBottom: resultBarBottomPadding,
           }}
         >
@@ -1258,28 +1350,40 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <ResultBar
           result={result}
           isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-
           onExpand={() => setShowOverlay(true)}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
           normalizedProfile={normalizedCurrentProfile}
           weightAsMain={weightAsMain}
         />
 
-        <BottomTabBar
-          activeTab={currentTab}
-          onTabChange={navigateToTab}
-          projectCount={projectCount}
-          compareCount={compareItems.length}
-          savedCount={saved.length}
-        />
+        {compareItems.length > 0 && (
+          <button
+            type="button"
+            onClick={openCompare}
+            aria-label={t("sidebar.compare")}
+            className="fixed z-40 inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/96 px-2.5 py-2 shadow-[0_18px_36px_rgba(15,23,42,0.18)] backdrop-blur-xl transition-shadow hover:shadow-[0_22px_44px_rgba(15,23,42,0.22)]"
+            style={{
+              bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+              left: "calc(1rem + env(safe-area-inset-left, 0px))",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4 text-foreground-secondary"
+            >
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+            <span className="text-xs font-semibold tabular-nums text-foreground">
+              {compareItems.length}
+            </span>
+          </button>
+        )}
 
         {showOverlay && !showTemplateBuilder && result && (
           <ResultOverlay
@@ -1374,6 +1478,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onRemoveItem={removeCompareItem}
           onClearAll={clearCompare}
           maxCompare={maxCompare}
+          onAddToProject={handleAddExternalToProject}
+          hasProjects={projectCount > 0}
         />
 
         {!isMobile && !(isMultiColumn && columnLayout.hasPanel("projects")) && (
@@ -1399,15 +1505,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         )}
 
-        {result && (
+        {(externalSource || result) && (
           <SaveToProjectModal
             open={showSaveModal}
-            onClose={() => setShowSaveModal(false)}
+            onClose={() => {
+              setShowSaveModal(false);
+              setExternalSource(null);
+            }}
             projects={projects}
             onCreateProject={createProject}
             onAddCalculation={addCalculation}
-            currentInput={input}
-            currentResult={result}
+            currentInput={externalSource?.input ?? input}
+            currentResult={(externalSource?.result ?? result)!}
             onOpenDrawer={() => navigateToTab("projects")}
           />
         )}
@@ -1420,14 +1529,23 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       <TemplateBuilder
         key={templateBuilderSession}
         open={showTemplateBuilder}
-        onClose={() => setShowTemplateBuilder(false)}
+        onClose={() => {
+          setShowTemplateBuilder(false);
+          setExternalSource(null);
+        }}
         onSave={handleConfirmSave}
         onAppendToTemplate={handleAppendTemplateParts}
         savedTemplates={saved.map((entry) => ({ id: entry.id, name: entry.name, partCount: entry.parts.length }))}
-        savedTemplateCount={result ? getSavedCount(result) : 0}
-        defaultName={defaultSaveName}
-        seedInput={input}
-        seedResult={result}
+        savedTemplateCount={
+          externalSource
+            ? getSavedCount(externalSource.result)
+            : result
+              ? getSavedCount(result)
+              : 0
+        }
+        defaultName={externalSource ? externalSourceDefaultName : defaultSaveName}
+        seedInput={externalSource?.input ?? input}
+        seedResult={externalSource?.result ?? result}
       />
 
       <SavePresetModal

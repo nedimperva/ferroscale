@@ -38,12 +38,6 @@
     "installNow": "Instaliraj",
     "dismiss": "Zatvori"
   },
-  "toasts": {
-    "calculationSaved": "Sablon je sacuvan.",
-    "calculationUnstarred": "Uklonjeno iz sablona.",
-    "addedToCompare": "Dodano za poredenje.",
-    "historyCleared": "Historija ociscena."
-  },
   "app": {
     "mobileHeaderTitle": "FerroScale",
     "mobileHeaderSubtitle": "Procjena mase i cijene uzivo za EN standardne profile.",
@@ -158,6 +152,11 @@
     "report": "Prijava",
     "whatsNew": "Novosti"
   },
+  "menu": {
+    "groupLibrary": "Biblioteka",
+    "groupTools": "Alati",
+    "groupHelp": "Pomoć"
+  },
   "columns": {
     "addColumn": "Dodaj kolonu",
     "addPanel": "Dodaj panel",
@@ -264,7 +263,11 @@
     "dimensionUnitAria": "Jedinica za {label}",
     "decreaseQuantity": "Smanji kolicinu",
     "increaseQuantity": "Povecaj kolicinu",
-    "toggleSizeList": "Otvori/zatvori listu velicina"
+    "toggleSizeList": "Otvori/zatvori listu velicina",
+    "changeProfile": "Promijeni profil",
+    "currentProfile": "Trenutni profil",
+    "pinPicker": "Drzi otvoreno",
+    "unpinPicker": "Automatski zatvori"
   },
   "material": {
     "title": "Materijal",
@@ -639,6 +642,7 @@
     "copyChart": "Kopiraj",
     "chartCopied": "Kopirano!",
     "remove": "Ukloni iz poredenja",
+    "addToProject": "Dodaj u projekat",
     "reference": "Referenca",
     "totalCost": "Ukupna cijena",
     "unitWeight": "Masa/kom:",

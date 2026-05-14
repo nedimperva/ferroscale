@@ -5,7 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [3.0.0] - 2026-05-14
+
+### Changed
+
+- Redesigned the default workspace around a bare calculator-first layout with a compact top bar, overflow menu, flatter controls, and mobile result summary without the bottom tab bar
+- Removed the duplicate "Calculator" section header from desktop, multi-column, and mobile layouts — the top bar already conveys page identity
+- Grouped the overflow menu into Workspace, Tools, and Help sections for easier scanning
+- Desktop now uses a single centered column (form on top, result inline below) instead of a fixed 360 px right column, so the calc form gets meaningful width
+- Mobile top-bar subtitle hides while a result is showing, since the floating result bar already carries the live numbers
+- Collapsed the calculator profile picker into a single button that expands the category and sub-type pills on demand — saves vertical space on every layout
+- Regrouped the overflow menu around a Library section (Saved, Projects, Compare) so the three stashes feel like one concept
+- Added "Save as template" and "Add to project" actions on Compare items, so a comparison can land in the persistent library without re-entering it in the calculator
+- Wide desktops (≥ 1280 px) now show the calculator form and result side-by-side, with the result column sticky and scroll-contained so the page itself does not scroll when the result is visible. Laptops (1024–1279 px) keep the single-column layout from the previous round
+- Replaced the inline desktop result panel with a floating result chip in the bottom-right corner of the viewport (consistent across mobile and desktop). Click the chip to expand: bottom sheet on mobile, centered modal on desktop
+- Compare cards now show only "Add to project" — the save-as-template button on Compare has been removed (the calculator's own save flow still applies)
+- Removed the unused `ResultActionsSheet` component; result actions live inside the expanded result overlay
+- Result overlay is now a centered modal on every screen size (the mobile bottom sheet has been retired)
+- Profile picker has a pin option that keeps the category and sub-type pill grid open across selections and outside clicks; the pin preference is persisted
+- Removed the toast notification system entirely (no more transient success/info/warning/error popups). State changes still surface through inline UI and sync status badges
+- Rebuilt the result modal in a minimal, typography-led style: dropped the icon-avatar hero, tinted metric cards (price/weight/surface/project tones), and the colored summary-chip row in favor of a single accent (warm tan) for the primary value, neutral label-on-left/value-on-right metric rows, an inline context line, and a flatter ghost-style action grid. The modal shell now matches the floating result chip — `rounded-xl`, lighter shadow, corner close button instead of a titled header bar
 
 ---
 

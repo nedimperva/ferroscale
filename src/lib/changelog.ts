@@ -35,6 +35,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "App icons, favicons, desktop sidebar mark, offline page mark, and iOS startup images now use the new FerroScale logo artwork",
       "Desktop sidebar branding now shows only the FerroScale name without the Workspace eyebrow",
       "Mobile header branding now uses the new app icon, and iOS startup screens use the standalone F logo artwork",
+      "Redesigned the default workspace around a bare calculator-first layout with a compact top bar, overflow menu, flatter controls, and mobile result summary without the bottom tab bar",
     ],
     added_bs: [
       "Brendirani splash ekran na mobilnom tokom prvog ucitavanja aplikacije, s brzim nestankom cim je shell spreman",
@@ -58,6 +59,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Ikone aplikacije, faviconi, desktop oznaka u bocnoj traci, offline stranica i iOS startup slike sada koriste novi FerroScale logo",
       "Desktop branding u bocnoj traci sada prikazuje samo FerroScale naziv bez Workspace oznake",
       "Mobilni header sada koristi novu ikonu aplikacije, a iOS startup ekrani koriste samostalni F logo",
+      "Podrazumijevani radni prostor je redizajniran oko jednostavnog calculator-first layouta sa kompaktnom gornjom trakom, overflow menijem, ravnijim kontrolama i mobilnim sazetkom rezultata bez donje tab trake",
     ],
   },
   {
