@@ -159,6 +159,10 @@
     "family": "Family",
     "done": "Done"
   },
+  "workstation": {
+    "searchHint": "Find profile, preset, or calc…",
+    "new": "New"
+  },
   "onboarding": {
     "skip": "Skip",
     "back": "Back",

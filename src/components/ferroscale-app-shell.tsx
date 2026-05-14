@@ -40,6 +40,7 @@ import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet
 import { MobileMaterialSheet } from "@/components/calculator/mobile-material-sheet";
 import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
+import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -765,7 +766,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="hidden gap-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
+    <div className="hidden gap-4 lg:mt-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
       <div className="panel-base flex w-full flex-1 flex-col self-start rounded-[1.35rem]">
         {showSettingsPreview && (
           <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
@@ -1220,7 +1221,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             maxColumnsAllowed={maxColumnsAllowed}
           />
         ) : (
-          desktopMain
+          <>
+            <DesktopWorkstationTopbar
+              currentTab={currentTab}
+              contextLabel={result ? headerContext : null}
+              onOpenQuickCalc={openQuickCalc}
+              onReset={resetAll}
+            />
+            {desktopMain}
+          </>
         )}
 
         <div

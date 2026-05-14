@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
 - First-run onboarding flow: three short steps to pick a default material, starting profile, and length unit + currency. Skipped or completed only once per device; can be replayed from Settings → "Replay onboarding".
 - Mobile shell extrapolation pass: every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Saved, Projects, Compare and Settings tabs inherit the polished mobile shell automatically.
+- Desktop "Workstation" top bar above the main content (lg+ only): page title, optional calculation context chip (HEA 100 · S235 · 6 m × 4), ⌘K quick-calc search trigger, and a primary "New" reset button. Aligns with the D1 desktop mock from the numpad-native handoff.
 
 ### Changed
 

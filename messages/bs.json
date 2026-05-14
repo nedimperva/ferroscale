@@ -159,6 +159,10 @@
     "family": "Porodica",
     "done": "Gotovo"
   },
+  "workstation": {
+    "searchHint": "Pretrazi profil, preset ili kalkulaciju…",
+    "new": "Novo"
+  },
   "onboarding": {
     "skip": "Preskoci",
     "back": "Nazad",
