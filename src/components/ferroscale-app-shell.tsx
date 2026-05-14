@@ -23,7 +23,6 @@ import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calc
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
-import { toast } from "@/lib/toast";
 import { APP_TABS, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
@@ -47,6 +46,7 @@ import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
+import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
@@ -55,7 +55,7 @@ import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/p
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
 import { PwaRegister } from "@/components/pwa-register";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
@@ -64,6 +64,7 @@ import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
 import { TemplatesPanel } from "@/components/calculator/templates-panel";
 import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
 
+const sidebarStore = createSidebarStore();
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", true);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
@@ -142,249 +143,6 @@ function MobilePageCard({
   );
 }
 
-function ThemeIcon({ theme }: { theme: Theme }) {
-  if (theme === "light") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-      </svg>
-    );
-  }
-
-  if (theme === "dark") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2" />
-        <path d="M12 20v2" />
-        <path d="M2 12h2" />
-        <path d="M20 12h2" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-      <rect width="20" height="14" x="2" y="3" rx="2" />
-      <path d="M8 21h8" />
-      <path d="M12 17v4" />
-    </svg>
-  );
-}
-
-function MoreMenuButton({
-  currentTab,
-  compareCount,
-  projectCount,
-  savedCount,
-  canShowColumnsToggle,
-  isMultiColumnEnabled,
-  onNavigate,
-  onOpenCompare,
-  onOpenQuickCalc,
-  onOpenContact,
-  onOpenChangelog,
-  onToggleMultiColumn,
-}: {
-  currentTab: AppTabId;
-  compareCount: number;
-  projectCount: number;
-  savedCount: number;
-  canShowColumnsToggle: boolean;
-  isMultiColumnEnabled: boolean;
-  onNavigate: (tab: AppTabId) => void;
-  onOpenCompare: () => void;
-  onOpenQuickCalc: () => void;
-  onOpenContact: () => void;
-  onOpenChangelog: () => void;
-  onToggleMultiColumn: () => void;
-}) {
-  const t = useTranslations();
-  const [open, setOpen] = useState(false);
-  const itemClass = "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-foreground-secondary transition-colors hover:bg-surface-raised hover:text-foreground";
-  const badgeClass = "rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-muted";
-  const groupLabelClass = "px-3 pt-2 pb-1 text-2xs font-semibold uppercase tracking-wide text-muted-faint";
-
-  const run = (action: () => void) => {
-    triggerHaptic("light");
-    action();
-    setOpen(false);
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="premium-icon-button h-9 w-9 rounded-md border-border-faint"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={t("result.moreActions")}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-          <circle cx="12" cy="12" r="1" />
-          <circle cx="19" cy="12" r="1" />
-          <circle cx="5" cy="12" r="1" />
-        </svg>
-      </button>
-
-      {open && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[75] cursor-default"
-            aria-label={t("settingsDrawer.close")}
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="menu"
-            className="absolute right-0 top-11 z-[80] w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-[0_18px_40px_rgba(15,23,42,0.14)]"
-          >
-            <div className="border-b border-border-faint px-3 py-2">
-              <p className="text-xs font-semibold uppercase text-muted-faint">FerroScale</p>
-              <p className="text-2xs text-muted-faint">v{APP_VERSION}</p>
-            </div>
-
-            <p className={groupLabelClass}>{t("menu.groupLibrary")}</p>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("saved"))} role="menuitem" aria-current={currentTab === "saved" ? "page" : undefined}>
-              <span>{t("tabs.saved")}</span>
-              {savedCount > 0 && <span className={badgeClass}>{savedCount}</span>}
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("projects"))} role="menuitem" aria-current={currentTab === "projects" ? "page" : undefined}>
-              <span>{t("tabs.projects")}</span>
-              {projectCount > 0 && <span className={badgeClass}>{projectCount}</span>}
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(onOpenCompare)} role="menuitem">
-              <span>{t("sidebar.compare")}</span>
-              {compareCount > 0 && <span className={badgeClass}>{compareCount}</span>}
-            </button>
-
-            <div className="border-t border-border-faint" />
-            <p className={groupLabelClass}>{t("menu.groupTools")}</p>
-            <button type="button" className={itemClass} onClick={() => run(onOpenQuickCalc)} role="menuitem">
-              <span>{t("quickCalc.sidebarLabel")}</span>
-              <span className="text-2xs text-muted-faint">Ctrl K</span>
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("settings"))} role="menuitem" aria-current={currentTab === "settings" ? "page" : undefined}>
-              <span>{t("tabs.settings")}</span>
-            </button>
-            {canShowColumnsToggle && (
-              <button type="button" className={itemClass} onClick={() => run(onToggleMultiColumn)} role="menuitem">
-                <span>{t("columns.columnsMode")}</span>
-                {isMultiColumnEnabled && <span className={badgeClass}>On</span>}
-              </button>
-            )}
-
-            <div className="border-t border-border-faint" />
-            <p className={groupLabelClass}>{t("menu.groupHelp")}</p>
-            <button type="button" className={itemClass} onClick={() => run(onOpenChangelog)} role="menuitem">
-              <span>{t("changelog.title")}</span>
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(onOpenContact)} role="menuitem">
-              <span>{t("sidebar.reportIssue")}</span>
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function BareTopBar({
-  currentTab,
-  subtitle,
-  hasResult,
-  compareCount,
-  projectCount,
-  savedCount,
-  theme,
-  onToggleTheme,
-  onHome,
-  onNavigate,
-  onOpenCompare,
-  onOpenQuickCalc,
-  onOpenContact,
-  onOpenChangelog,
-  canShowColumnsToggle,
-  isMultiColumnEnabled,
-  onToggleMultiColumn,
-}: {
-  currentTab: AppTabId;
-  subtitle: string;
-  hasResult: boolean;
-  compareCount: number;
-  projectCount: number;
-  savedCount: number;
-  theme: Theme;
-  onToggleTheme: () => void;
-  onHome: () => void;
-  onNavigate: (tab: AppTabId) => void;
-  onOpenCompare: () => void;
-  onOpenQuickCalc: () => void;
-  onOpenContact: () => void;
-  onOpenChangelog: () => void;
-  canShowColumnsToggle: boolean;
-  isMultiColumnEnabled: boolean;
-  onToggleMultiColumn: () => void;
-}) {
-  const t = useTranslations();
-
-  return (
-    <header
-      className="fixed inset-x-0 top-0 z-[70] border-b border-border-faint bg-background/94 backdrop-blur-xl"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-    >
-      <div className="mx-auto flex h-14 max-w-[86rem] items-center gap-3 px-3 md:px-6">
-        <button type="button" onClick={onHome} className="flex min-w-0 items-center gap-2 text-left" aria-label={t("tabs.calculator")}>
-          <Image src="/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold leading-tight text-foreground">FerroScale</span>
-            <span
-              className={`max-w-[38vw] truncate text-2xs leading-tight text-muted md:block md:max-w-none ${hasResult ? "hidden" : "block"}`}
-            >
-              {subtitle}
-            </span>
-          </span>
-        </button>
-
-        <div className="ml-auto hidden items-center gap-2 md:flex">
-          <LanguageSwitcher />
-        </div>
-
-        <div className="ml-auto flex items-center gap-1.5 md:ml-0">
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className="premium-icon-button h-9 w-9 rounded-md border-border-faint"
-            aria-label={
-              theme === "light"
-                ? t("theme.switchToDark")
-                : theme === "dark"
-                  ? t("theme.switchToSystem")
-                  : t("theme.switchToLight")
-            }
-          >
-            <ThemeIcon theme={theme} />
-          </button>
-          <MoreMenuButton
-            currentTab={currentTab}
-            compareCount={compareCount}
-            projectCount={projectCount}
-            savedCount={savedCount}
-            canShowColumnsToggle={canShowColumnsToggle}
-            isMultiColumnEnabled={isMultiColumnEnabled}
-            onNavigate={onNavigate}
-            onOpenCompare={onOpenCompare}
-            onOpenQuickCalc={onOpenQuickCalc}
-            onOpenContact={onOpenContact}
-            onOpenChangelog={onOpenChangelog}
-            onToggleMultiColumn={onToggleMultiColumn}
-          />
-        </div>
-      </div>
-    </header>
-  );
-}
 
 export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const t = useTranslations();
@@ -800,6 +558,14 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     weightAsMainStore.getSnapshot,
     weightAsMainStore.getServerSnapshot,
   );
+  const sidebarCollapsed = useSyncExternalStore(
+    sidebarStore.subscribe,
+    sidebarStore.getSnapshot,
+    sidebarStore.getServerSnapshot,
+  );
+  const toggleSidebarCollapsed = useCallback(() => {
+    sidebarStore.toggle();
+  }, []);
   const defaultUnit = useSyncExternalStore(
     defaultUnitStore.subscribe,
     defaultUnitStore.getSnapshot,
@@ -1199,13 +965,38 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   return (
     <>
+      <Sidebar
+        onOpenContact={() => setShowContactDrawer(true)}
+        onOpenCompare={openCompare}
+        onOpenProjects={() => navigateToTab("projects")}
+        onOpenSettings={() => navigateToTab("settings")}
+        onOpenHistory={() => navigateToTab("saved")}
+        onOpenQuickCalc={openQuickCalc}
+        onOpenChangelog={() => setShowChangelogDrawer(true)}
+        compareCount={compareItems.length}
+        projectCount={projectCount}
+        isSettingsOpen={currentTab === "settings"}
+        isHistoryOpen={currentTab === "saved"}
+        isProjectsOpen={currentTab === "projects"}
+        isCompareOpen={showCompareDrawer}
+        isContactOpen={showContactDrawer}
+        isChangelogOpen={showChangelogDrawer}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={toggleSidebarCollapsed}
+        theme={resolvedTheme}
+        onToggleTheme={cycleTheme}
+        canShowColumnsToggle={canShowColumnsToggle}
+        isMultiColumnEnabled={columnLayout.enabled}
+        onToggleMultiColumn={columnLayout.toggleEnabled}
+      />
+
       <div
         ref={mainContentRef}
-        className={`mx-auto flex min-h-dvh w-full max-w-[94rem] flex-col px-0 ${
+        className={`flex min-h-dvh w-full flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
           isMultiColumn
             ? "overflow-hidden pb-0"
-            : "pb-8"
-        }`}
+            : "mx-auto max-w-[94rem] pb-8"
+        } ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}
         style={{ paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
         <header
@@ -1311,7 +1102,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           className="px-3 lg:hidden"
           aria-busy={isRouteNavigationPending || undefined}
           style={{
-            paddingTop: mobileResultOffset,
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
             paddingBottom: resultBarBottomPadding,
           }}
         >

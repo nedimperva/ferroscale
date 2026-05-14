@@ -7,6 +7,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [3.0.0] - 2026-05-14
 
+Numpad-native redesign. The mobile calculator becomes an iOS-Calculator-style screen with a live result card, profile + material chip cards, a length/pieces/price input strip, and a persistent 4×4 numpad. Desktop gains a Workstation top bar above the existing two-column layout. The cream/orange palette and warm-ink shadows apply across every screen. Supersedes the floating result chip and centered modal introduced in 2.6.0.
+
+### Added
+
+- Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details.
+- Dedicated profile and material picker bottom sheets on mobile, opened from the chip cards. Profile sheet: category row, profile-type grid, and size/dimension inputs in one place. Material sheet: family chips + grade list with EN reference + density.
+- Mobile result sheet redesigned to match the numpad-native concept: big tabular weight headline with profile glyph, price + €/kg subtitle, three quick-stat cards (per piece / per metre / length), peek-vs-full breakdown table with total weight rule, and terracotta "Add to project" action at the full snap.
+- Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
+- First-run onboarding flow: three short steps to pick a default material, starting profile, and length unit + currency. Skipped or completed only once per device; can be replayed from Settings → "Replay onboarding".
+- Mobile Settings rebuilt as a defaults dashboard with grouped rounded sections — Display (Appearance, Text size, Show price inline), Defaults (Material, Length unit, Currency, Waste allowance), and Power (Show weight as main, What's New). Each row is a single tappable card with an accent-tinted icon and either a toggle or a sub-sheet picker. Replay onboarding and Reset all moved into the footer.
+- Saved and Projects mobile tabs gain a hero card at the top of the screen — same warm rounded-surface treatment used by Settings. Saved shows the template count + total weight + total uses; Projects shows the active project's name + parts count + weight + cost (or a "no active project" prompt when none is selected).
+- Desktop "Workstation" top bar above the main content (lg+ only): page title, optional calculation context chip (HEA 100 · S235 · 6 m × 4), ⌘K quick-calc search trigger, and a primary "New" reset button. Aligns with the D1 desktop mock from the numpad-native handoff.
+
+### Changed
+
+- Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
+- Every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Saved, Projects, Compare and Settings tabs inherit the polished mobile shell automatically.
+- Mobile bottom tab bar replaced by a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Saved, Projects, Settings, plus Compare, What's New, Report an issue, and Replay onboarding.
+- Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is the single nav entry point.
+- Mobile calculator no longer renders the legacy inline profile/material/dimensions form below the new numpad — profile and material live in their own bottom sheets now. The reverse calculator and inline pricing toggles still appear on desktop; mobile homes for them ship in a follow-up.
+- Floating mobile result bar removed entirely. The calculator tab owns its own live result card; Saved, Projects and Settings are scroll-only with no floating result UI. Desktop continues to use the sticky right-column result panel.
+
+---
+
+## [2.6.0] - 2026-05-14
+
+First calculator-first overhaul that landed in parallel with the numpad-native redesign. Most of this is superseded by 3.0.0 on mobile (floating result chip and centered modal are replaced by the numpad-native screen and snap-sheet), but the shared cleanups — toast removal, profile picker collapse, Compare → Library actions, and result-modal minimal style — remain in 3.0.0.
+
 ### Changed
 
 - Redesigned the default workspace around a bare calculator-first layout with a compact top bar, overflow menu, flatter controls, and mobile result summary without the bottom tab bar
@@ -17,7 +45,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Collapsed the calculator profile picker into a single button that expands the category and sub-type pills on demand — saves vertical space on every layout
 - Regrouped the overflow menu around a Library section (Saved, Projects, Compare) so the three stashes feel like one concept
 - Added "Save as template" and "Add to project" actions on Compare items, so a comparison can land in the persistent library without re-entering it in the calculator
-- Wide desktops (≥ 1280 px) now show the calculator form and result side-by-side, with the result column sticky and scroll-contained so the page itself does not scroll when the result is visible. Laptops (1024–1279 px) keep the single-column layout from the previous round
+- Wide desktops (≥ 1280 px) show the calculator form and result side-by-side, with the result column sticky and scroll-contained so the page itself does not scroll when the result is visible. Laptops (1024–1279 px) keep the single-column layout
 - Replaced the inline desktop result panel with a floating result chip in the bottom-right corner of the viewport (consistent across mobile and desktop). Click the chip to expand: bottom sheet on mobile, centered modal on desktop
 - Compare cards now show only "Add to project" — the save-as-template button on Compare has been removed (the calculator's own save flow still applies)
 - Removed the unused `ResultActionsSheet` component; result actions live inside the expanded result overlay
@@ -25,30 +53,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Profile picker has a pin option that keeps the category and sub-type pill grid open across selections and outside clicks; the pin preference is persisted
 - Removed the toast notification system entirely (no more transient success/info/warning/error popups). State changes still surface through inline UI and sync status badges
 - Rebuilt the result modal in a minimal, typography-led style: dropped the icon-avatar hero, tinted metric cards (price/weight/surface/project tones), and the colored summary-chip row in favor of a single accent (warm tan) for the primary value, neutral label-on-left/value-on-right metric rows, an inline context line, and a flatter ghost-style action grid. The modal shell now matches the floating result chip — `rounded-xl`, lighter shadow, corner close button instead of a titled header bar
-
-### Added
-
-- Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details.
-- Dedicated profile and material picker bottom sheets on mobile, opened from the chip cards. Profile sheet: category row, profile-type grid, and size/dimension inputs in one place. Material sheet: family chips + grade list with EN reference + density.
-- Mobile result sheet redesigned to match the numpad-native concept: big tabular weight headline with profile glyph, price + €/kg subtitle, three quick-stat cards (per piece / per metre / length), peek-vs-full breakdown table with total weight rule, and terracotta "Save as preset" + "Add to project" actions at the full snap.
-- Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
-- First-run onboarding flow: three short steps to pick a default material, starting profile, and length unit + currency. Skipped or completed only once per device; can be replayed from Settings → "Replay onboarding".
-- Mobile shell extrapolation pass: every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Saved, Projects, Compare and Settings tabs inherit the polished mobile shell automatically.
-- Desktop "Workstation" top bar above the main content (lg+ only): page title, optional calculation context chip (HEA 100 · S235 · 6 m × 4), ⌘K quick-calc search trigger, and a primary "New" reset button. Aligns with the D1 desktop mock from the numpad-native handoff.
-
-### Changed (mobile shell)
-
-- Mobile bottom tab bar is gone — navigation moves to a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Saved, Projects, Settings, plus Compare, What's New, Report an issue, and Replay onboarding. Matches the numpad-native concept's mobile shell.
-- Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is now the single nav entry point.
-- Mobile result sheet no longer shows a duplicate Save button at the full-snap; "Save" lives in the peek, and the full view's primary action is the full-width terracotta "Add to project".
-- Mobile Settings rebuilt as a defaults dashboard with grouped rounded sections — Display (Appearance, Text size, Show price inline), Defaults (Material, Length unit, Currency, Waste allowance), and Power (Show weight as main, What's New). Each row is a single tappable card with an accent-tinted icon and either a toggle or a sub-sheet picker. Replay onboarding and Reset all moved into the footer.
-- Saved and Projects mobile tabs gain a hero card at the top of the screen — same warm rounded-surface treatment used by Settings. Saved shows the template count + total weight + total uses; Projects shows the active project's name + parts count + weight + cost (or a "no active project" prompt when none is selected).
-- Floating mobile result bar removed entirely. The calculator tab owns its own live result card; Saved, Projects and Settings are scroll-only with no floating result UI. Desktop continues to use the sticky right-column result panel.
-
-### Changed
-
-- Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
-- Mobile calculator no longer renders the legacy inline profile/material/dimensions form below the new numpad — profile and material live in their own bottom sheets now. The reverse calculator and inline pricing toggles still appear on desktop; mobile homes for them ship in a follow-up.
 
 ---
 
