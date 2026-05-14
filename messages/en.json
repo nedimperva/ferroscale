@@ -159,6 +159,21 @@
     "family": "Family",
     "done": "Done"
   },
+  "onboarding": {
+    "skip": "Skip",
+    "back": "Back",
+    "continue": "Continue",
+    "finish": "Finish",
+    "step1Title": "What do you work with most?",
+    "step1Subtitle": "We'll preselect this so opening Ferroscale drops you one tap from a result.",
+    "step2Title": "Pick a starting profile",
+    "step2Subtitle": "This is what shows on the calculator when you open the app. You can switch any time.",
+    "step3Title": "Units and currency",
+    "step3Subtitle": "Pick how lengths and prices are shown by default.",
+    "lengthUnit": "Length unit",
+    "currency": "Currency",
+    "replay": "Replay onboarding"
+  },
   "mobileResult": {
     "perPiece": "Per piece",
     "perMetre": "Per metre",

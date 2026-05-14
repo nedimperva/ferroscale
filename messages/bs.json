@@ -159,6 +159,21 @@
     "family": "Porodica",
     "done": "Gotovo"
   },
+  "onboarding": {
+    "skip": "Preskoci",
+    "back": "Nazad",
+    "continue": "Nastavi",
+    "finish": "Zavrsi",
+    "step1Title": "S cim najcesce radis?",
+    "step1Subtitle": "Ovo cemo unaprijed odabrati pa svaki put kad otvoris Ferroscale budes na jedan dodir od rezultata.",
+    "step2Title": "Odaberi pocetni profil",
+    "step2Subtitle": "Ovo se pojavljuje na kalkulatoru kad otvoris aplikaciju. Mozes promijeniti bilo kad.",
+    "step3Title": "Jedinice i valuta",
+    "step3Subtitle": "Odaberi kako se prikazuju duzine i cijene po defaultu.",
+    "lengthUnit": "Jedinica duzine",
+    "currency": "Valuta",
+    "replay": "Pokreni uvod ponovo"
+  },
   "mobileResult": {
     "perPiece": "Po komadu",
     "perMetre": "Po metru",

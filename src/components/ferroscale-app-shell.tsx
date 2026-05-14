@@ -39,6 +39,7 @@ import { MobileNumpadCalculator } from "@/components/calculator/mobile-numpad-ca
 import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet";
 import { MobileMaterialSheet } from "@/components/calculator/mobile-material-sheet";
 import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
+import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
@@ -67,6 +68,8 @@ const inlineMaterialStore = createBoolStore("ferroscale-inline-material", false)
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
 const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
+const onboardedStore = createBoolStore("ferroscale-onboarded", false);
+export { onboardedStore as ferroscaleOnboardedStore };
 
 const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
@@ -254,6 +257,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
   const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
   const [showMobileMaterialSheet, setShowMobileMaterialSheet] = useState(false);
+  const onboarded = useSyncExternalStore(
+    onboardedStore.subscribe,
+    onboardedStore.getSnapshot,
+    onboardedStore.getServerSnapshot,
+  );
 
   const cycleTheme = useCallback(() => {
     const order: Theme[] = ["light", "dark", "system"];
@@ -1474,6 +1482,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onSave={handleConfirmSavePreset}
         defaultLabel={presetDefaultLabel}
         profileName={presetProfileName}
+      />
+
+      <OnboardingFlow
+        open={!onboarded}
+        initialGradeId={input.materialGradeId}
+        initialProfileId={input.profileId}
+        initialUnit={input.length.unit}
+        initialCurrency={input.currency}
+        dispatch={dispatch}
+        onComplete={() => onboardedStore.set(true)}
+        onSkip={() => onboardedStore.set(true)}
       />
     </>
   );

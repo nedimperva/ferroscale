@@ -22,7 +22,11 @@ export function createBoolStore(key: string, defaultValue: boolean) {
     try { localStorage.setItem(key, String(next)); } catch { /* noop */ }
     for (const l of _listeners) l();
   }
-  return { subscribe, getSnapshot, getServerSnapshot, toggle };
+  function set(value: boolean) {
+    try { localStorage.setItem(key, String(value)); } catch { /* noop */ }
+    for (const l of _listeners) l();
+  }
+  return { subscribe, getSnapshot, getServerSnapshot, toggle, set };
 }
 
 export function createStringStore<T extends string>(key: string, defaultValue: T) {
