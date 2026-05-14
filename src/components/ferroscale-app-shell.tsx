@@ -892,8 +892,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return profileShort;
   }, [input.profileId, normalizedCurrentProfile, result, t]);
 
-  const mobileResultOffset = result ? "4.75rem" : "0px";
-  const resultBarBottomPadding = "calc(28px + env(safe-area-inset-bottom, 0px))";
+  const mobileResultOffset = "0px";
+  const resultBarBottomPadding = result
+    ? "calc(5rem + env(safe-area-inset-bottom, 0px))"
+    : "calc(1rem + env(safe-area-inset-bottom, 0px))";
 
   const swipeStateRef = useRef<{ edge: "left" | "right"; x: number; y: number } | null>(null);
   const isSwipeBlocked =
