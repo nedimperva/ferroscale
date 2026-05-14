@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [3.0.0] - 2026-05-14
 
 ### Changed
 
@@ -24,6 +24,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Result overlay is now a centered modal on every screen size (the mobile bottom sheet has been retired)
 - Profile picker has a pin option that keeps the category and sub-type pill grid open across selections and outside clicks; the pin preference is persisted
 - Removed the toast notification system entirely (no more transient success/info/warning/error popups). State changes still surface through inline UI and sync status badges
+- Rebuilt the result modal in a minimal, typography-led style: dropped the icon-avatar hero, tinted metric cards (price/weight/surface/project tones), and the colored summary-chip row in favor of a single accent (warm tan) for the primary value, neutral label-on-left/value-on-right metric rows, an inline context line, and a flatter ghost-style action grid. The modal shell now matches the floating result chip — `rounded-xl`, lighter shadow, corner close button instead of a titled header bar
 
 ---
 
