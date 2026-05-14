@@ -579,16 +579,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     setShowTemplateBuilder(true);
   }, [result]);
 
-  const handleSaveExternal = useCallback(
-    (source: { input: CalculationInput; result: CalculationResult }) => {
-      setExternalSource(source);
-      setShowOverlay(false);
-      setTemplateBuilderSession((session) => session + 1);
-      setShowTemplateBuilder(true);
-    },
-    [],
-  );
-
   const handleConfirmSave = useCallback(
     (
       name: string,
@@ -994,8 +984,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex xl:grid xl:max-w-[94rem] xl:gap-6 xl:[grid-template-columns:minmax(0,1fr)_clamp(380px,32%,520px)]">
-      <div className="flex w-full flex-col self-start border border-border bg-surface">
+    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex">
+      <div className="flex w-full flex-col border border-border bg-surface">
         <div className="px-4 py-4">
           <ProfileSection
             input={input}
@@ -1020,28 +1010,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         </div>
       </div>
-
-      <aside className="xl:sticky xl:top-[4.5rem] xl:max-h-[calc(100dvh-5rem)] xl:self-start xl:overflow-y-auto">
-        <ResultPanel
-          result={result}
-          isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-          includeVat={input.includeVat}
-          wastePercent={input.wastePercent}
-          vatPercent={input.vatPercent}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-          layout="standalone"
-        />
-      </aside>
     </div>
   );
 
@@ -1186,7 +1154,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onRemoveItem={removeCompareItem}
         onClearAll={clearCompare}
         maxCompare={maxCompare}
-        onSaveAsTemplate={handleSaveExternal}
         onAddToProject={handleAddExternalToProject}
         hasProjects={projectCount > 0}
       />
@@ -1196,7 +1163,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
     reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog,
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
-    handleAddToProject, handleSaveExternal, handleAddExternalToProject,
+    handleAddToProject, handleAddExternalToProject,
     projectCount, normalizedCurrentProfile, weightAsMain,
     removeCompareItem, clearCompare,
     saved, handleLoad, handleApplyTemplate, handleTemplateAddToProject, handleRemoveTemplatePart, handleReorderTemplatePart, removeSaved, removeSavedMany, duplicateSaved, duplicateSavedMany, updateSaved,
@@ -1397,17 +1364,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <ResultBar
           result={result}
           isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-
           onExpand={() => setShowOverlay(true)}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
           normalizedProfile={normalizedCurrentProfile}
           weightAsMain={weightAsMain}
         />
@@ -1505,7 +1462,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onRemoveItem={removeCompareItem}
           onClearAll={clearCompare}
           maxCompare={maxCompare}
-          onSaveAsTemplate={handleSaveExternal}
           onAddToProject={handleAddExternalToProject}
           hasProjects={projectCount > 0}
         />

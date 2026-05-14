@@ -17,7 +17,6 @@ interface CompareContentProps {
   onRemoveItem: (id: string) => void;
   onClearAll: () => void;
   maxCompare: number;
-  onSaveAsTemplate?: (item: CompareItem) => void;
   onAddToProject?: (item: CompareItem) => void;
   hasProjects?: boolean;
 }
@@ -27,7 +26,6 @@ export function CompareWorkspaceContent({
   onRemoveItem,
   onClearAll,
   maxCompare,
-  onSaveAsTemplate,
   onAddToProject,
   hasProjects = false,
 }: CompareContentProps) {
@@ -120,7 +118,6 @@ export function CompareWorkspaceContent({
               item={items[0]}
               reference={null}
               onRemove={onRemoveItem}
-              onSaveAsTemplate={onSaveAsTemplate}
               onAddToProject={onAddToProject}
               hasProjects={hasProjects}
             />
@@ -138,7 +135,6 @@ export function CompareWorkspaceContent({
                 item={item}
                 reference={reference}
                 onRemove={onRemoveItem}
-                onSaveAsTemplate={onSaveAsTemplate}
                 onAddToProject={onAddToProject}
                 hasProjects={hasProjects}
               />
@@ -162,7 +158,6 @@ interface CompareDrawerProps {
   onRemoveItem: (id: string) => void;
   onClearAll: () => void;
   maxCompare: number;
-  onSaveAsTemplate?: (item: CompareItem) => void;
   onAddToProject?: (item: CompareItem) => void;
   hasProjects?: boolean;
 }
@@ -209,7 +204,6 @@ export const CompareDrawer = memo(function CompareDrawer({
   onRemoveItem,
   onClearAll,
   maxCompare,
-  onSaveAsTemplate,
   onAddToProject,
   hasProjects = false,
 }: CompareDrawerProps) {
@@ -340,7 +334,6 @@ export const CompareDrawer = memo(function CompareDrawer({
               item={items[0]}
               reference={null}
               onRemove={onRemoveItem}
-              onSaveAsTemplate={onSaveAsTemplate}
               onAddToProject={onAddToProject}
               hasProjects={hasProjects}
             />
@@ -358,7 +351,6 @@ export const CompareDrawer = memo(function CompareDrawer({
                 item={item}
                 reference={reference}
                 onRemove={onRemoveItem}
-                onSaveAsTemplate={onSaveAsTemplate}
                 onAddToProject={onAddToProject}
                 hasProjects={hasProjects}
               />
