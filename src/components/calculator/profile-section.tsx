@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -218,6 +218,26 @@ export const ProfileSection = memo(function ProfileSection({
       : issue.message;
   };
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!pickerRef.current) return;
+      if (event.target instanceof Node && pickerRef.current.contains(event.target)) return;
+      setPickerOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPickerOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [pickerOpen]);
 
   const alignDimensionErrorRows = useMemo(() => {
     if (selectedProfile.mode !== "manual") return false;
@@ -253,55 +273,92 @@ export const ProfileSection = memo(function ProfileSection({
   return (
     <section className="grid gap-5 md:gap-6">
       {/* ── Profile selection group ── */}
-      <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+      <div ref={pickerRef} className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <h3 className={groupHeadingClass}>{t("profileSection.groupProfile")}</h3>
-        {/* Category pills */}
-        <div className="grid gap-1.5">
-          <span className={sectionLabelClass}>{t("profileSection.category")}</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-            {CATEGORY_ORDER.map((cat) => {
-              const isActive = cat === activeCategory;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat)}
-                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
-                >
-                  {CATEGORY_ICONS[cat]}
-                  {t(`dataset.profileCategories.${cat}`)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Divider */}
-        <div className="h-1.5 lg:hidden" />
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic("light");
+            setPickerOpen((value) => !value);
+          }}
+          aria-expanded={pickerOpen}
+          aria-haspopup="true"
+          aria-label={t("profileSection.changeProfile")}
+          className={`${controlClass} flex items-center justify-between gap-3 text-left`}
+        >
+          <span className="flex min-w-0 items-center gap-2.5 text-foreground">
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent/12 text-accent ring-1 ring-accent/15">
+              {PROFILE_ICONS[input.profileId] ?? CATEGORY_ICONS[activeCategory]}
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-sm font-semibold">
+                {t(`dataset.profileShort.${input.profileId}`)}
+              </span>
+              <span className="truncate text-2xs text-muted">
+                {t(`dataset.profileCategories.${activeCategory}`)}
+              </span>
+            </span>
+          </span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className={`h-4 w-4 shrink-0 text-muted-faint transition-transform ${pickerOpen ? "rotate-180" : ""}`}
+          >
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+          </svg>
+        </button>
 
-        {/* Sub-type pills */}
-        <div className="grid gap-1.5">
-          <span className={sectionLabelClass}>{t("profileSection.type")}</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-            {categoryProfiles.map((p) => {
-              const isActive = p.id === input.profileId;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic("light");
-                    dispatch({ type: "SET_PROFILE", profileId: p.id });
-                  }}
-                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
-                >
-                  {PROFILE_ICONS[p.id]}
-                  {t(`dataset.profileShort.${p.id}`)}
-                </button>
-              );
-            })}
+        {pickerOpen && (
+          <div className="mt-2 grid gap-3 border border-border-faint bg-surface p-3">
+            {/* Category pills */}
+            <div className="grid gap-1.5">
+              <span className={sectionLabelClass}>{t("profileSection.category")}</span>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                {CATEGORY_ORDER.map((cat) => {
+                  const isActive = cat === activeCategory;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => handleCategoryChange(cat)}
+                      className={`${pillBaseClass} ${pillStateClass(isActive)}`}
+                    >
+                      {CATEGORY_ICONS[cat]}
+                      {t(`dataset.profileCategories.${cat}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sub-type pills */}
+            <div className="grid gap-1.5">
+              <span className={sectionLabelClass}>{t("profileSection.type")}</span>
+              <div className="flex flex-wrap gap-1.5 pb-0.5">
+                {categoryProfiles.map((p) => {
+                  const isActive = p.id === input.profileId;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("light");
+                        dispatch({ type: "SET_PROFILE", profileId: p.id });
+                        setPickerOpen(false);
+                      }}
+                      className={`${pillBaseClass} ${pillStateClass(isActive)}`}
+                    >
+                      {PROFILE_ICONS[p.id]}
+                      {t(`dataset.profileShort.${p.id}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── Inline material selector (optional, off by default) ── */}

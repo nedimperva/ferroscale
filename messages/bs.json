@@ -158,6 +158,11 @@
     "report": "Prijava",
     "whatsNew": "Novosti"
   },
+  "menu": {
+    "groupWorkspace": "Radni prostor",
+    "groupTools": "Alati",
+    "groupHelp": "Pomoć"
+  },
   "columns": {
     "addColumn": "Dodaj kolonu",
     "addPanel": "Dodaj panel",
@@ -264,7 +269,9 @@
     "dimensionUnitAria": "Jedinica za {label}",
     "decreaseQuantity": "Smanji kolicinu",
     "increaseQuantity": "Povecaj kolicinu",
-    "toggleSizeList": "Otvori/zatvori listu velicina"
+    "toggleSizeList": "Otvori/zatvori listu velicina",
+    "changeProfile": "Promijeni profil",
+    "currentProfile": "Trenutni profil"
   },
   "material": {
     "title": "Materijal",

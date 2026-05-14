@@ -10,6 +10,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 
 - Redesigned the default workspace around a bare calculator-first layout with a compact top bar, overflow menu, flatter controls, and mobile result summary without the bottom tab bar
+- Removed the duplicate "Calculator" section header from desktop, multi-column, and mobile layouts — the top bar already conveys page identity
+- Grouped the overflow menu into Workspace, Tools, and Help sections for easier scanning
+- Desktop now uses a single centered column (form on top, result inline below) instead of a fixed 360 px right column, so the calc form gets meaningful width
+- Mobile top-bar subtitle hides while a result is showing, since the floating result bar already carries the live numbers
+- Collapsed the calculator profile picker into a single button that expands the category and sub-type pills on demand — saves vertical space on every layout
 
 ---
 

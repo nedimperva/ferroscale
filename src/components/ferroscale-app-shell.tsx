@@ -208,6 +208,7 @@ function MoreMenuButton({
   const [open, setOpen] = useState(false);
   const itemClass = "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-foreground-secondary transition-colors hover:bg-surface-raised hover:text-foreground";
   const badgeClass = "rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-muted";
+  const groupLabelClass = "px-3 pt-2 pb-1 text-2xs font-semibold uppercase tracking-wide text-muted-faint";
 
   const run = (action: () => void) => {
     triggerHaptic("light");
@@ -248,10 +249,8 @@ function MoreMenuButton({
               <p className="text-xs font-semibold uppercase text-muted-faint">FerroScale</p>
               <p className="text-2xs text-muted-faint">v{APP_VERSION}</p>
             </div>
-            <button type="button" className={itemClass} onClick={() => run(onOpenQuickCalc)} role="menuitem">
-              <span>{t("quickCalc.sidebarLabel")}</span>
-              <span className="text-2xs text-muted-faint">Ctrl K</span>
-            </button>
+
+            <p className={groupLabelClass}>{t("menu.groupWorkspace")}</p>
             <button type="button" className={itemClass} onClick={() => run(() => onNavigate("saved"))} role="menuitem" aria-current={currentTab === "saved" ? "page" : undefined}>
               <span>{t("tabs.saved")}</span>
               {savedCount > 0 && <span className={badgeClass}>{savedCount}</span>}
@@ -263,6 +262,13 @@ function MoreMenuButton({
             <button type="button" className={itemClass} onClick={() => run(() => onNavigate("settings"))} role="menuitem" aria-current={currentTab === "settings" ? "page" : undefined}>
               <span>{t("tabs.settings")}</span>
             </button>
+
+            <div className="border-t border-border-faint" />
+            <p className={groupLabelClass}>{t("menu.groupTools")}</p>
+            <button type="button" className={itemClass} onClick={() => run(onOpenQuickCalc)} role="menuitem">
+              <span>{t("quickCalc.sidebarLabel")}</span>
+              <span className="text-2xs text-muted-faint">Ctrl K</span>
+            </button>
             <button type="button" className={itemClass} onClick={() => run(onOpenCompare)} role="menuitem">
               <span>{t("sidebar.compare")}</span>
               {compareCount > 0 && <span className={badgeClass}>{compareCount}</span>}
@@ -273,7 +279,9 @@ function MoreMenuButton({
                 {isMultiColumnEnabled && <span className={badgeClass}>On</span>}
               </button>
             )}
+
             <div className="border-t border-border-faint" />
+            <p className={groupLabelClass}>{t("menu.groupHelp")}</p>
             <button type="button" className={itemClass} onClick={() => run(onOpenChangelog)} role="menuitem">
               <span>{t("changelog.title")}</span>
             </button>
@@ -290,6 +298,7 @@ function MoreMenuButton({
 function BareTopBar({
   currentTab,
   subtitle,
+  hasResult,
   compareCount,
   projectCount,
   savedCount,
@@ -307,6 +316,7 @@ function BareTopBar({
 }: {
   currentTab: AppTabId;
   subtitle: string;
+  hasResult: boolean;
   compareCount: number;
   projectCount: number;
   savedCount: number;
@@ -334,7 +344,11 @@ function BareTopBar({
           <Image src="/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold leading-tight text-foreground">FerroScale</span>
-            <span className="block max-w-[38vw] truncate text-2xs leading-tight text-muted md:max-w-none">{subtitle}</span>
+            <span
+              className={`max-w-[38vw] truncate text-2xs leading-tight text-muted md:block md:max-w-none ${hasResult ? "hidden" : "block"}`}
+            >
+              {subtitle}
+            </span>
           </span>
         </button>
 
@@ -947,13 +961,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="hidden gap-5 px-6 py-5 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
-      <div className="flex w-full flex-1 flex-col self-start border border-border bg-surface">
-        <div className="border-b border-border-faint px-4 py-3">
-          <h1 className="text-sm font-semibold text-foreground">{t("tabs.calculator")}</h1>
-          <p className="mt-0.5 text-xs text-muted">{headerContext}</p>
-        </div>
-
+    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex">
+      <div className="flex w-full flex-col border border-border bg-surface">
         <div className="px-4 py-4">
           <ProfileSection
             input={input}
@@ -979,38 +988,31 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         </div>
       </div>
 
-      <aside className="hidden gap-4 self-start lg:sticky lg:top-[4.5rem] lg:grid">
-        <ResultPanel
-          result={result}
-          isPending={isPending}
-          isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-
-          includeVat={input.includeVat}
-          wastePercent={input.wastePercent}
-          vatPercent={input.vatPercent}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-          layout="standalone"
-        />
-      </aside>
+      <ResultPanel
+        result={result}
+        isPending={isPending}
+        isSaved={isCurrentSaved}
+        onOpenSaveDialog={handleOpenSaveDialog}
+        includeVat={input.includeVat}
+        wastePercent={input.wastePercent}
+        vatPercent={input.vatPercent}
+        onCompare={handleCompare}
+        canCompare={canCompare}
+        isInCompare={currentIsInCompare}
+        compareCount={compareItems.length}
+        maxCompare={maxCompare}
+        onAddToProject={handleAddToProject}
+        hasProjects={projectCount > 0}
+        normalizedProfile={normalizedCurrentProfile}
+        weightAsMain={weightAsMain}
+        layout="standalone"
+      />
     </div>
   );
 
   const columnContentMap = useMemo((): Record<ColumnPanelId, React.ReactNode> => ({
     calculator: (
       <div className="flex flex-col">
-        <div className="border-b border-border-faint px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">{t("tabs.calculator")}</h2>
-          <p className="mt-0.5 text-xs text-muted">{headerContext}</p>
-        </div>
         <div className="px-2.5 py-3 md:p-4">
           <ProfileSection
             input={input}
@@ -1154,7 +1156,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }), [
     issues, showSettingsPreview, input, dispatch, selectedProfile, activeFamily,
     showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
-    headerContext, t,
     reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog,
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
     handleAddToProject, projectCount, normalizedCurrentProfile, weightAsMain,
@@ -1170,11 +1171,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const mobileScreen =
     currentTab === "calculator" ? (
       <MobilePageCard>
-        <div className="border-b border-border-faint px-3 pb-3 pt-4">
-          <h1 className="text-sm font-semibold text-foreground">{t("tabs.calculator")}</h1>
-          <p className="mt-0.5 text-xs text-muted">{headerContext}</p>
-        </div>
-
         <div className="px-3 py-4">
           <ProfileSection
             input={input}
@@ -1294,6 +1290,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <BareTopBar
           currentTab={currentTab}
           subtitle={headerContext}
+          hasResult={Boolean(result)}
           compareCount={compareItems.length}
           projectCount={projectCount}
           savedCount={saved.length}

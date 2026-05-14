@@ -158,6 +158,11 @@
     "report": "Report",
     "whatsNew": "What's New"
   },
+  "menu": {
+    "groupWorkspace": "Workspace",
+    "groupTools": "Tools",
+    "groupHelp": "Help"
+  },
   "columns": {
     "addColumn": "Add Column",
     "addPanel": "Add panel",
@@ -264,7 +269,9 @@
     "dimensionUnitAria": "{label} unit",
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
-    "toggleSizeList": "Toggle size list"
+    "toggleSizeList": "Toggle size list",
+    "changeProfile": "Change profile",
+    "currentProfile": "Current profile"
   },
   "material": {
     "title": "Material",
