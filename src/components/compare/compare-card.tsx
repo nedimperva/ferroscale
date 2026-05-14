@@ -12,6 +12,9 @@ interface CompareCardProps {
   /** The first item in the compare list — used as reference for diff percentages. */
   reference: CompareItem | null;
   onRemove: (id: string) => void;
+  onSaveAsTemplate?: (item: CompareItem) => void;
+  onAddToProject?: (item: CompareItem) => void;
+  hasProjects?: boolean;
 }
 
 /** Format a percentage diff vs reference. Returns null when there is no reference or same item. */
@@ -27,6 +30,9 @@ export const CompareCard = memo(function CompareCard({
   item,
   reference,
   onRemove,
+  onSaveAsTemplate,
+  onAddToProject,
+  hasProjects = false,
 }: CompareCardProps) {
   const tBase = useTranslations();
   const t = useTranslations("compare");
@@ -146,6 +152,29 @@ export const CompareCard = memo(function CompareCard({
           </div>
         )}
       </div>
+
+      {(onSaveAsTemplate || onAddToProject) && (
+        <div className="flex gap-2 border-t border-border-faint px-3 py-2">
+          {onSaveAsTemplate && (
+            <button
+              type="button"
+              onClick={() => onSaveAsTemplate(item)}
+              className="flex-1 rounded-md border border-border-faint bg-surface-raised px-2 py-1.5 text-xs font-semibold text-foreground-secondary transition-colors hover:border-border hover:text-foreground"
+            >
+              {t("saveAsTemplate")}
+            </button>
+          )}
+          {onAddToProject && hasProjects && (
+            <button
+              type="button"
+              onClick={() => onAddToProject(item)}
+              className="flex-1 rounded-md border border-border-faint bg-surface-raised px-2 py-1.5 text-xs font-semibold text-foreground-secondary transition-colors hover:border-border hover:text-foreground"
+            >
+              {t("addToProject")}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 });

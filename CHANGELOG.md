@@ -15,6 +15,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Desktop now uses a single centered column (form on top, result inline below) instead of a fixed 360 px right column, so the calc form gets meaningful width
 - Mobile top-bar subtitle hides while a result is showing, since the floating result bar already carries the live numbers
 - Collapsed the calculator profile picker into a single button that expands the category and sub-type pills on demand — saves vertical space on every layout
+- Regrouped the overflow menu around a Library section (Saved, Projects, Compare) so the three stashes feel like one concept
+- Added "Save as template" and "Add to project" actions on Compare items, so a comparison can land in the persistent library without re-entering it in the calculator
 
 ---
 

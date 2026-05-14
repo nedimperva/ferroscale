@@ -17,6 +17,9 @@ interface CompareContentProps {
   onRemoveItem: (id: string) => void;
   onClearAll: () => void;
   maxCompare: number;
+  onSaveAsTemplate?: (item: CompareItem) => void;
+  onAddToProject?: (item: CompareItem) => void;
+  hasProjects?: boolean;
 }
 
 export function CompareWorkspaceContent({
@@ -24,6 +27,9 @@ export function CompareWorkspaceContent({
   onRemoveItem,
   onClearAll,
   maxCompare,
+  onSaveAsTemplate,
+  onAddToProject,
+  hasProjects = false,
 }: CompareContentProps) {
   const tBase = useTranslations();
   const t = useTranslations("compare");
@@ -110,7 +116,14 @@ export function CompareWorkspaceContent({
           />
         ) : items.length === 1 ? (
           <div className="space-y-3">
-            <CompareCard item={items[0]} reference={null} onRemove={onRemoveItem} />
+            <CompareCard
+              item={items[0]}
+              reference={null}
+              onRemove={onRemoveItem}
+              onSaveAsTemplate={onSaveAsTemplate}
+              onAddToProject={onAddToProject}
+              hasProjects={hasProjects}
+            />
             <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
               <p className="text-sm text-muted-faint">{t("needSecond")}</p>
               <p className="mt-1 text-xs text-muted-faint">{t("needSecondHint")}</p>
@@ -120,7 +133,15 @@ export function CompareWorkspaceContent({
           <div className="grid gap-3">
             <CompareChart items={items} />
             {items.map((item) => (
-              <CompareCard key={item.id} item={item} reference={reference} onRemove={onRemoveItem} />
+              <CompareCard
+                key={item.id}
+                item={item}
+                reference={reference}
+                onRemove={onRemoveItem}
+                onSaveAsTemplate={onSaveAsTemplate}
+                onAddToProject={onAddToProject}
+                hasProjects={hasProjects}
+              />
             ))}
             {items.length < maxCompare && (
               <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">
@@ -141,6 +162,9 @@ interface CompareDrawerProps {
   onRemoveItem: (id: string) => void;
   onClearAll: () => void;
   maxCompare: number;
+  onSaveAsTemplate?: (item: CompareItem) => void;
+  onAddToProject?: (item: CompareItem) => void;
+  hasProjects?: boolean;
 }
 
 function exportCompareCsv(
@@ -185,6 +209,9 @@ export const CompareDrawer = memo(function CompareDrawer({
   onRemoveItem,
   onClearAll,
   maxCompare,
+  onSaveAsTemplate,
+  onAddToProject,
+  hasProjects = false,
 }: CompareDrawerProps) {
   const tBase = useTranslations();
   const t = useTranslations("compare");
@@ -309,7 +336,14 @@ export const CompareDrawer = memo(function CompareDrawer({
           />
         ) : items.length === 1 ? (
           <div className="space-y-3">
-            <CompareCard item={items[0]} reference={null} onRemove={onRemoveItem} />
+            <CompareCard
+              item={items[0]}
+              reference={null}
+              onRemove={onRemoveItem}
+              onSaveAsTemplate={onSaveAsTemplate}
+              onAddToProject={onAddToProject}
+              hasProjects={hasProjects}
+            />
             <div className="rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
               <p className="text-sm text-muted-faint">{t("needSecond")}</p>
               <p className="mt-1 text-xs text-muted-faint">{t("needSecondHint")}</p>
@@ -319,7 +353,15 @@ export const CompareDrawer = memo(function CompareDrawer({
           <div className="grid gap-3">
             <CompareChart items={items} />
             {items.map((item) => (
-              <CompareCard key={item.id} item={item} reference={reference} onRemove={onRemoveItem} />
+              <CompareCard
+                key={item.id}
+                item={item}
+                reference={reference}
+                onRemove={onRemoveItem}
+                onSaveAsTemplate={onSaveAsTemplate}
+                onAddToProject={onAddToProject}
+                hasProjects={hasProjects}
+              />
             ))}
             {items.length < maxCompare && (
               <div className="rounded-lg border-2 border-dashed border-border px-4 py-6 text-center">

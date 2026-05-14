@@ -159,7 +159,7 @@
     "whatsNew": "What's New"
   },
   "menu": {
-    "groupWorkspace": "Workspace",
+    "groupLibrary": "Library",
     "groupTools": "Tools",
     "groupHelp": "Help"
   },
@@ -646,6 +646,8 @@
     "copyChart": "Copy",
     "chartCopied": "Copied!",
     "remove": "Remove from comparison",
+    "saveAsTemplate": "Save as template",
+    "addToProject": "Add to project",
     "reference": "Reference",
     "totalCost": "Total cost",
     "unitWeight": "Unit wt:",

@@ -19,7 +19,7 @@ import { useSync } from "@/hooks/useSync";
 import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcuts";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useElementWidth } from "@/hooks/useElementWidth";
-import type { LengthUnit } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calculator/types";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
@@ -250,7 +250,7 @@ function MoreMenuButton({
               <p className="text-2xs text-muted-faint">v{APP_VERSION}</p>
             </div>
 
-            <p className={groupLabelClass}>{t("menu.groupWorkspace")}</p>
+            <p className={groupLabelClass}>{t("menu.groupLibrary")}</p>
             <button type="button" className={itemClass} onClick={() => run(() => onNavigate("saved"))} role="menuitem" aria-current={currentTab === "saved" ? "page" : undefined}>
               <span>{t("tabs.saved")}</span>
               {savedCount > 0 && <span className={badgeClass}>{savedCount}</span>}
@@ -259,8 +259,9 @@ function MoreMenuButton({
               <span>{t("tabs.projects")}</span>
               {projectCount > 0 && <span className={badgeClass}>{projectCount}</span>}
             </button>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("settings"))} role="menuitem" aria-current={currentTab === "settings" ? "page" : undefined}>
-              <span>{t("tabs.settings")}</span>
+            <button type="button" className={itemClass} onClick={() => run(onOpenCompare)} role="menuitem">
+              <span>{t("sidebar.compare")}</span>
+              {compareCount > 0 && <span className={badgeClass}>{compareCount}</span>}
             </button>
 
             <div className="border-t border-border-faint" />
@@ -269,9 +270,8 @@ function MoreMenuButton({
               <span>{t("quickCalc.sidebarLabel")}</span>
               <span className="text-2xs text-muted-faint">Ctrl K</span>
             </button>
-            <button type="button" className={itemClass} onClick={() => run(onOpenCompare)} role="menuitem">
-              <span>{t("sidebar.compare")}</span>
-              {compareCount > 0 && <span className={badgeClass}>{compareCount}</span>}
+            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("settings"))} role="menuitem" aria-current={currentTab === "settings" ? "page" : undefined}>
+              <span>{t("tabs.settings")}</span>
             </button>
             {canShowColumnsToggle && (
               <button type="button" className={itemClass} onClick={() => run(onToggleMultiColumn)} role="menuitem">
@@ -485,6 +485,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
   const [templateBuilderSession, setTemplateBuilderSession] = useState(0);
+  const [externalSource, setExternalSource] = useState<{ input: CalculationInput; result: CalculationResult } | null>(null);
   const [showContactDrawer, setShowContactDrawer] = useState(false);
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
 
@@ -503,6 +504,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     setPresetModalOpen(false);
     setShowContactDrawer(false);
     setShowChangelogDrawer(false);
+    setExternalSource(null);
     closeQuickCalc();
     closeCompare();
   }, [closeCompare, closeQuickCalc]);
@@ -571,10 +573,21 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const handleOpenSaveDialog = useCallback(() => {
     if (!result) return;
+    setExternalSource(null);
     setShowOverlay(false);
     setTemplateBuilderSession((session) => session + 1);
     setShowTemplateBuilder(true);
   }, [result]);
+
+  const handleSaveExternal = useCallback(
+    (source: { input: CalculationInput; result: CalculationResult }) => {
+      setExternalSource(source);
+      setShowOverlay(false);
+      setTemplateBuilderSession((session) => session + 1);
+      setShowTemplateBuilder(true);
+    },
+    [],
+  );
 
   const handleConfirmSave = useCallback(
     (
@@ -583,12 +596,14 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       tags?: string[],
       parts?: TemplatePartDraft[],
     ) => {
-      if (!result) return;
-      saveCalculation(input, result, name, notes, tags, parts);
+      const source = externalSource ?? (result ? { input, result } : null);
+      if (!source) return;
+      saveCalculation(source.input, source.result, name, notes, tags, parts);
       setShowTemplateBuilder(false);
+      setExternalSource(null);
       toast.success(t("toasts.calculationSaved"));
     },
-    [input, result, saveCalculation, t],
+    [externalSource, input, result, saveCalculation, t],
   );
 
   const currentIsInCompare = result ? isInCompare(result) : false;
@@ -599,6 +614,14 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     const grade = resolveGradeLabel(result.gradeLabel, t);
     return grade ? `${profileLabel} - ${grade}` : profileLabel;
   }, [normalizedCurrentProfile, result, t]);
+
+  const externalSourceDefaultName = useMemo(() => {
+    if (!externalSource) return "";
+    const profile = normalizeProfileSnapshot(externalSource.input);
+    const profileLabel = profile?.shortLabel ?? externalSource.result.profileLabel;
+    const grade = resolveGradeLabel(externalSource.result.gradeLabel, t);
+    return grade ? `${profileLabel} - ${grade}` : profileLabel;
+  }, [externalSource, t]);
 
   const handleCompare = useCallback(() => {
     if (!result) return;
@@ -612,9 +635,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const handleAddToProject = useCallback(() => {
     if (!result) return;
+    setExternalSource(null);
     setShowOverlay(false);
     setShowSaveModal(true);
   }, [result]);
+
+  const handleAddExternalToProject = useCallback(
+    (source: { input: CalculationInput; result: CalculationResult }) => {
+      setExternalSource(source);
+      setShowOverlay(false);
+      setShowSaveModal(true);
+    },
+    [],
+  );
 
   const handleLoad = useCallback(
     (loadedInput: typeof input) => {
@@ -1151,6 +1184,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onRemoveItem={removeCompareItem}
         onClearAll={clearCompare}
         maxCompare={maxCompare}
+        onSaveAsTemplate={handleSaveExternal}
+        onAddToProject={handleAddExternalToProject}
+        hasProjects={projectCount > 0}
       />
     ),
   }), [
@@ -1158,7 +1194,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
     reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog,
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
-    handleAddToProject, projectCount, normalizedCurrentProfile, weightAsMain,
+    handleAddToProject, handleSaveExternal, handleAddExternalToProject,
+    projectCount, normalizedCurrentProfile, weightAsMain,
     removeCompareItem, clearCompare,
     saved, handleLoad, handleApplyTemplate, handleTemplateAddToProject, handleRemoveTemplatePart, handleReorderTemplatePart, removeSaved, removeSavedMany, duplicateSaved, duplicateSavedMany, updateSaved,
     projects, activeProjectId, setActiveProjectId, createProject, renameProject,
@@ -1466,6 +1503,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           onRemoveItem={removeCompareItem}
           onClearAll={clearCompare}
           maxCompare={maxCompare}
+          onSaveAsTemplate={handleSaveExternal}
+          onAddToProject={handleAddExternalToProject}
+          hasProjects={projectCount > 0}
         />
 
         {!isMobile && !(isMultiColumn && columnLayout.hasPanel("projects")) && (
@@ -1491,15 +1531,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         )}
 
-        {result && (
+        {(externalSource || result) && (
           <SaveToProjectModal
             open={showSaveModal}
-            onClose={() => setShowSaveModal(false)}
+            onClose={() => {
+              setShowSaveModal(false);
+              setExternalSource(null);
+            }}
             projects={projects}
             onCreateProject={createProject}
             onAddCalculation={addCalculation}
-            currentInput={input}
-            currentResult={result}
+            currentInput={externalSource?.input ?? input}
+            currentResult={(externalSource?.result ?? result)!}
             onOpenDrawer={() => navigateToTab("projects")}
           />
         )}
@@ -1512,14 +1555,23 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       <TemplateBuilder
         key={templateBuilderSession}
         open={showTemplateBuilder}
-        onClose={() => setShowTemplateBuilder(false)}
+        onClose={() => {
+          setShowTemplateBuilder(false);
+          setExternalSource(null);
+        }}
         onSave={handleConfirmSave}
         onAppendToTemplate={handleAppendTemplateParts}
         savedTemplates={saved.map((entry) => ({ id: entry.id, name: entry.name, partCount: entry.parts.length }))}
-        savedTemplateCount={result ? getSavedCount(result) : 0}
-        defaultName={defaultSaveName}
-        seedInput={input}
-        seedResult={result}
+        savedTemplateCount={
+          externalSource
+            ? getSavedCount(externalSource.result)
+            : result
+              ? getSavedCount(result)
+              : 0
+        }
+        defaultName={externalSource ? externalSourceDefaultName : defaultSaveName}
+        seedInput={externalSource?.input ?? input}
+        seedResult={externalSource?.result ?? result}
       />
 
       <SavePresetModal

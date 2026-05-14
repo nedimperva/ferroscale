@@ -159,7 +159,7 @@
     "whatsNew": "Novosti"
   },
   "menu": {
-    "groupWorkspace": "Radni prostor",
+    "groupLibrary": "Biblioteka",
     "groupTools": "Alati",
     "groupHelp": "Pomoć"
   },
@@ -646,6 +646,8 @@
     "copyChart": "Kopiraj",
     "chartCopied": "Kopirano!",
     "remove": "Ukloni iz poredenja",
+    "saveAsTemplate": "Sacuvaj kao sablon",
+    "addToProject": "Dodaj u projekat",
     "reference": "Referenca",
     "totalCost": "Ukupna cijena",
     "unitWeight": "Masa/kom:",
