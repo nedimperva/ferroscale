@@ -44,7 +44,7 @@ import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
 import { MobileSavedHero, MobileProjectsHero } from "@/components/calculator/mobile-tab-hero";
 import { ResultPanel } from "@/components/calculator/result-panel";
-import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
+import { ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { SettingsSummary } from "@/components/calculator/settings-summary";
@@ -653,14 +653,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [activeProject, currentTab, t]);
 
   const mobileHeaderSubtitle = normalizedCurrentProfile ? headerContext : t("app.mobileHeaderSubtitle");
-  const hideResultBar = isMobile && currentTab === "calculator";
-  // No bottom tab bar on mobile anymore; the floating ResultBar (when
-  // shown on non-calc tabs) sits ~80px tall above the safe area.
-  const resultBarBottomPadding = hideResultBar
-    ? "calc(24px + env(safe-area-inset-bottom, 0px))"
-    : result
-      ? "calc(96px + env(safe-area-inset-bottom, 0px))"
-      : "calc(24px + env(safe-area-inset-bottom, 0px))";
+  // No bottom tab bar and no floating result bar on mobile anymore —
+  // the calc tab owns its own result card, other tabs are scroll-only.
+  const resultBarBottomPadding = "calc(24px + env(safe-area-inset-bottom, 0px))";
 
   // Edge-swipe tab navigation removed alongside the bottom tab bar — the
   // hamburger menu is the single mobile nav entry point now.
@@ -1158,25 +1153,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           </AnimatePresence>
         </div>
 
-        {!(isMobile && currentTab === "calculator") && (
-          <ResultBar
-            result={result}
-            isPending={isPending}
-            isSaved={isCurrentSaved}
-            onOpenSaveDialog={handleOpenSaveDialog}
-
-            onExpand={() => setShowOverlay(true)}
-            onCompare={handleCompare}
-            canCompare={canCompare}
-            isInCompare={currentIsInCompare}
-            compareCount={compareItems.length}
-            maxCompare={maxCompare}
-            onAddToProject={handleAddToProject}
-            hasProjects={projectCount > 0}
-            normalizedProfile={normalizedCurrentProfile}
-            weightAsMain={weightAsMain}
-          />
-        )}
+        {/* ResultBar removed on mobile entirely — the calculator route
+            has its own result card and other tabs don't need a
+            floating mini-result. Desktop continues to use the sticky
+            ResultPanel in the right column. */}
 
         {/* Bottom tab bar replaced by the mobile hamburger menu on small
             screens. Desktop keeps the sidebar; mobile relies on
