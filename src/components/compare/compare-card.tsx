@@ -12,6 +12,8 @@ interface CompareCardProps {
   /** The first item in the compare list — used as reference for diff percentages. */
   reference: CompareItem | null;
   onRemove: (id: string) => void;
+  onAddToProject?: (item: CompareItem) => void;
+  hasProjects?: boolean;
 }
 
 /** Format a percentage diff vs reference. Returns null when there is no reference or same item. */
@@ -27,6 +29,8 @@ export const CompareCard = memo(function CompareCard({
   item,
   reference,
   onRemove,
+  onAddToProject,
+  hasProjects = false,
 }: CompareCardProps) {
   const tBase = useTranslations();
   const t = useTranslations("compare");
@@ -146,6 +150,18 @@ export const CompareCard = memo(function CompareCard({
           </div>
         )}
       </div>
+
+      {onAddToProject && hasProjects && (
+        <div className="border-t border-border-faint px-3 py-2">
+          <button
+            type="button"
+            onClick={() => onAddToProject(item)}
+            className="w-full rounded-md border border-border-faint bg-surface-raised px-2 py-1.5 text-xs font-semibold text-foreground-secondary transition-colors hover:border-border hover:text-foreground"
+          >
+            {t("addToProject")}
+          </button>
+        </div>
+      )}
     </div>
   );
 });

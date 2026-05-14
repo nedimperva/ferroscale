@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -12,6 +12,9 @@ import { NumericInput } from "./numeric-input";
 import { SizeCombobox } from "./size-combobox";
 import { StandardsCombobox } from "./standards-combobox";
 import { triggerHaptic } from "@/lib/haptics";
+import { createBoolStore } from "@/lib/external-stores";
+
+const profilePickerPinnedStore = createBoolStore("ferroscale-profile-picker-pinned", false);
 
 /** Ordered list of categories for the top-level tabs. */
 const CATEGORY_ORDER: ProfileCategory[] = ["structural", "tubes", "plates_sheets", "bars"];
@@ -218,6 +221,32 @@ export const ProfileSection = memo(function ProfileSection({
       : issue.message;
   };
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
+  const pickerPinned = useSyncExternalStore(
+    profilePickerPinnedStore.subscribe,
+    profilePickerPinnedStore.getSnapshot,
+    profilePickerPinnedStore.getServerSnapshot,
+  );
+  const [pickerManualOpen, setPickerManualOpen] = useState(false);
+  const pickerOpen = pickerPinned || pickerManualOpen;
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!pickerOpen || pickerPinned) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!pickerRef.current) return;
+      if (event.target instanceof Node && pickerRef.current.contains(event.target)) return;
+      setPickerManualOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPickerManualOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [pickerOpen, pickerPinned]);
 
   const alignDimensionErrorRows = useMemo(() => {
     if (selectedProfile.mode !== "manual") return false;
@@ -253,55 +282,129 @@ export const ProfileSection = memo(function ProfileSection({
   return (
     <section className="grid gap-5 md:gap-6">
       {/* ── Profile selection group ── */}
-      <div className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+      <div ref={pickerRef} className="form-group lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <h3 className={groupHeadingClass}>{t("profileSection.groupProfile")}</h3>
-        {/* Category pills */}
-        <div className="grid gap-1.5">
-          <span className={sectionLabelClass}>{t("profileSection.category")}</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-            {CATEGORY_ORDER.map((cat) => {
-              const isActive = cat === activeCategory;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat)}
-                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
-                >
-                  {CATEGORY_ICONS[cat]}
-                  {t(`dataset.profileCategories.${cat}`)}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Divider */}
-        <div className="h-1.5 lg:hidden" />
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic("light");
+            if (pickerPinned) {
+              profilePickerPinnedStore.toggle();
+              setPickerManualOpen(false);
+              return;
+            }
+            setPickerManualOpen((value) => !value);
+          }}
+          aria-expanded={pickerOpen}
+          aria-haspopup="true"
+          aria-label={t("profileSection.changeProfile")}
+          className={`${controlClass} flex items-center justify-between gap-3 text-left`}
+        >
+          <span className="flex min-w-0 items-center gap-2.5 text-foreground">
+            <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent/12 text-accent ring-1 ring-accent/15">
+              {PROFILE_ICONS[input.profileId] ?? CATEGORY_ICONS[activeCategory]}
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-sm font-semibold">
+                {t(`dataset.profileShort.${input.profileId}`)}
+              </span>
+              <span className="truncate text-2xs text-muted">
+                {t(`dataset.profileCategories.${activeCategory}`)}
+              </span>
+            </span>
+          </span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className={`h-4 w-4 shrink-0 text-muted-faint transition-transform ${pickerOpen ? "rotate-180" : ""}`}
+          >
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+          </svg>
+        </button>
 
-        {/* Sub-type pills */}
-        <div className="grid gap-1.5">
-          <span className={sectionLabelClass}>{t("profileSection.type")}</span>
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-            {categoryProfiles.map((p) => {
-              const isActive = p.id === input.profileId;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    triggerHaptic("light");
-                    dispatch({ type: "SET_PROFILE", profileId: p.id });
-                  }}
-                  className={`${pillBaseClass} ${pillStateClass(isActive)}`}
-                >
-                  {PROFILE_ICONS[p.id]}
-                  {t(`dataset.profileShort.${p.id}`)}
-                </button>
-              );
-            })}
+        {pickerOpen && (
+          <div className="relative mt-2 grid gap-3 border border-border-faint bg-surface p-3">
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                profilePickerPinnedStore.toggle();
+              }}
+              aria-pressed={pickerPinned}
+              aria-label={pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+              title={pickerPinned ? t("profileSection.unpinPicker") : t("profileSection.pinPicker")}
+              className={`absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-md transition-colors ${
+                pickerPinned
+                  ? "text-accent"
+                  : "text-muted-faint hover:text-foreground-secondary"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill={pickerPinned ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
+              >
+                <path d="M12 17v5" />
+                <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+              </svg>
+            </button>
+
+            {/* Category pills */}
+            <div className="grid gap-1.5">
+              <span className={sectionLabelClass}>{t("profileSection.category")}</span>
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                {CATEGORY_ORDER.map((cat) => {
+                  const isActive = cat === activeCategory;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => handleCategoryChange(cat)}
+                      className={`${pillBaseClass} ${pillStateClass(isActive)}`}
+                    >
+                      {CATEGORY_ICONS[cat]}
+                      {t(`dataset.profileCategories.${cat}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sub-type pills */}
+            <div className="grid gap-1.5">
+              <span className={sectionLabelClass}>{t("profileSection.type")}</span>
+              <div className="flex flex-wrap gap-1.5 pb-0.5">
+                {categoryProfiles.map((p) => {
+                  const isActive = p.id === input.profileId;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic("light");
+                        dispatch({ type: "SET_PROFILE", profileId: p.id });
+                        if (!pickerPinned) {
+                          setPickerManualOpen(false);
+                        }
+                      }}
+                      className={`${pillBaseClass} ${pillStateClass(isActive)}`}
+                    >
+                      {PROFILE_ICONS[p.id]}
+                      {t(`dataset.profileShort.${p.id}`)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── Inline material selector (optional, off by default) ── */}

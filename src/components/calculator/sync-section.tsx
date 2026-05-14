@@ -2,7 +2,6 @@
 
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { toast } from "@/lib/toast";
 import type { SyncStatus } from "@/lib/sync/types";
 import { triggerHaptic } from "@/lib/haptics";
 
@@ -61,12 +60,9 @@ export const SyncSection = memo(function SyncSection({
     setBusyAction(action);
     try {
       await fn();
-      if (action === "import") toast.success(t("imported"));
-      if (action === "sync") toast.success(t("synced"));
-      if (action === "passphrase") toast.success(t("passphraseSaved"));
-      if (action === "reset-remote") toast.success(t("remoteReset"));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t("genericError"));
+    } catch {
+      // Swallow — sync errors will surface via status badges and the
+      // statusNeedsReconnect / statusError UI states.
     } finally {
       setBusyAction(null);
     }
