@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -23,17 +23,16 @@ interface Props {
   canPinToCompare: boolean;
 }
 
-function fmtKg(value: number): string {
+function fmtKg(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0.0";
-  if (value >= 10000) return Math.round(value).toLocaleString();
-  if (value >= 1000) return Math.round(value).toLocaleString();
+  if (value >= 1000) return Math.round(value).toLocaleString(locale);
   if (value >= 100) return value.toFixed(1);
   return value.toFixed(2);
 }
 
-function fmtPrice(value: number): string {
+function fmtPrice(value: number, locale: string): string {
   if (!Number.isFinite(value)) return "0.00";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -58,6 +57,7 @@ export const DesktopMiniResult = memo(function DesktopMiniResult({
   canPinToCompare,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const animatedWeight = useAnimatedNumber(result?.totalWeightKg ?? 0);
   const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
   const currency = result ? CURRENCY_SYMBOLS[result.currency] ?? result.currency : "€";
@@ -78,11 +78,11 @@ export const DesktopMiniResult = memo(function DesktopMiniResult({
           </span>
           <div className="mt-0.5 flex items-baseline gap-1.5">
             <span className="text-[1.875rem] font-bold leading-none tracking-[-0.04em] tabular-nums">
-              {fmtKg(animatedWeight)}
+              {fmtKg(animatedWeight, locale)}
             </span>
             <span className="text-sm font-semibold text-accent">kg</span>
             <span className="ml-2 text-sm font-semibold tabular-nums text-background/85">
-              {currency}&nbsp;{fmtPrice(animatedTotal)}
+              {currency}&nbsp;{fmtPrice(animatedTotal, locale)}
             </span>
           </div>
         </div>

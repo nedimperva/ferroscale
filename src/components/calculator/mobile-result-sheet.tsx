@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import { Drawer } from "vaul";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
@@ -33,20 +33,19 @@ interface Props {
   onOpenCompare?: () => void;
 }
 
-function fmt(value: number, decimals: number): string {
+function fmt(value: number, locale: string, decimals: number): string {
   if (!Number.isFinite(value)) return "0";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
 }
 
-function fmtWeight(value: number): string {
+function fmtWeight(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0.0";
-  if (value >= 10000) return fmt(value, 0);
-  if (value >= 1000) return fmt(value, 0);
-  if (value >= 100) return fmt(value, 1);
-  return fmt(value, 2);
+  if (value >= 1000) return fmt(value, locale, 0);
+  if (value >= 100) return fmt(value, locale, 1);
+  return fmt(value, locale, 2);
 }
 
 export const MobileResultSheet = memo(function MobileResultSheet({
@@ -70,6 +69,7 @@ export const MobileResultSheet = memo(function MobileResultSheet({
   onOpenCompare,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const currency = CURRENCY_SYMBOLS[result.currency] ?? result.currency;
   const animatedTotal = useAnimatedNumber(result.grandTotalAmount);
   const animatedWeight = useAnimatedNumber(result.totalWeightKg);
@@ -85,17 +85,17 @@ export const MobileResultSheet = memo(function MobileResultSheet({
   const breakdown = [
     {
       label: t("mobileResult.linearWeight"),
-      value: fmt(result.unitWeightKg * (1000 / Math.max(1, result.lengthMm)), 2),
+      value: fmt(result.unitWeightKg * (1000 / Math.max(1, result.lengthMm)), locale, 2),
       unit: "kg/m",
     },
     {
       label: t("mobileResult.lengthPerPiece"),
-      value: fmt(result.lengthMm / 1000, 3),
+      value: fmt(result.lengthMm / 1000, locale, 3),
       unit: "m",
     },
     {
       label: t("mobileResult.weightPerPiece"),
-      value: fmt(perPieceKg, 2),
+      value: fmt(perPieceKg, locale, 2),
       unit: "kg",
     },
     {
@@ -156,7 +156,7 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                 </span>
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-[4.25rem] font-bold leading-[0.9] tracking-[-0.045em] tabular-nums text-foreground">
-                    {fmtWeight(animatedWeight)}
+                    {fmtWeight(animatedWeight, locale)}
                   </span>
                   <span className="text-2xl font-semibold tracking-tight text-accent">
                     kg
@@ -164,10 +164,10 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5 text-sm">
                   <span className="font-semibold tabular-nums text-foreground-secondary">
-                    {currency} {fmt(animatedTotal, 2)}
+                    {currency} {fmt(animatedTotal, locale, 2)}
                   </span>
                   <span className="text-muted">
-                    · {fmt(result.unitPriceAmount, 2)} {currency}/kg
+                    · {fmt(result.unitPriceAmount, locale, 2)} {currency}/kg
                   </span>
                 </div>
               </div>
@@ -180,15 +180,15 @@ export const MobileResultSheet = memo(function MobileResultSheet({
             <div className="mt-4 grid grid-cols-3 gap-2">
               <QuickStat
                 label={t("mobileResult.perPiece")}
-                value={`${fmt(perPieceKg, perPieceKg >= 100 ? 1 : 2)} kg`}
+                value={`${fmt(perPieceKg, locale, perPieceKg >= 100 ? 1 : 2)} kg`}
               />
               <QuickStat
                 label={t("mobileResult.perMetre")}
-                value={`${fmt(result.unitWeightKg * (1000 / Math.max(1, result.lengthMm)), 1)} kg`}
+                value={`${fmt(result.unitWeightKg * (1000 / Math.max(1, result.lengthMm)), locale, 1)} kg`}
               />
               <QuickStat
                 label={t("mobileResult.length")}
-                value={`${fmt(totalLengthM, totalLengthM >= 100 ? 1 : 2)} m`}
+                value={`${fmt(totalLengthM, locale, totalLengthM >= 100 ? 1 : 2)} m`}
               />
             </div>
 
@@ -272,7 +272,7 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                   {t("mobileResult.totalWeight")}
                 </span>
                 <span className="text-base font-bold tabular-nums tracking-tight text-foreground">
-                  {fmt(result.totalWeightKg, 2)} kg
+                  {fmt(result.totalWeightKg, locale, 2)} kg
                 </span>
               </div>
             </div>

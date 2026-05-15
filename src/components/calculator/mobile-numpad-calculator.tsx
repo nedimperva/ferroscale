@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type {
   CalculationInput,
   CalculationResult,
@@ -37,26 +37,25 @@ interface Props {
   scrollPaddingBottom: string;
 }
 
-function fmtNumber(value: number, opts: { maxFrac: number; minFrac?: number }): string {
+function fmtNumber(value: number, locale: string, opts: { maxFrac: number; minFrac?: number }): string {
   if (!Number.isFinite(value)) return "0";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: opts.minFrac ?? 0,
     maximumFractionDigits: opts.maxFrac,
     useGrouping: false,
   });
 }
 
-function fmtWeight(value: number): string {
+function fmtWeight(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0.0";
-  if (value >= 10000) return fmtNumber(value, { maxFrac: 0 });
-  if (value >= 1000) return fmtNumber(value, { maxFrac: 0 });
-  if (value >= 100) return fmtNumber(value, { maxFrac: 1, minFrac: 1 });
-  return fmtNumber(value, { maxFrac: 2, minFrac: 1 });
+  if (value >= 1000) return fmtNumber(value, locale, { maxFrac: 0 });
+  if (value >= 100) return fmtNumber(value, locale, { maxFrac: 1, minFrac: 1 });
+  return fmtNumber(value, locale, { maxFrac: 2, minFrac: 1 });
 }
 
-function fmtPrice(value: number): string {
+function fmtPrice(value: number, locale: string): string {
   if (!Number.isFinite(value)) return "0.00";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -104,6 +103,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   scrollPaddingBottom,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const [activeField, setActiveField] = useState<ActiveField>("length");
   const [buffer, setBuffer] = useState<string>("");
 
@@ -186,8 +186,8 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const animatedWeight = useAnimatedNumber(totalWeightKg);
   const animatedTotal = useAnimatedNumber(grandTotal);
 
-  const weightDisplay = fmtWeight(animatedWeight);
-  const priceDisplay = fmtPrice(animatedTotal);
+  const weightDisplay = fmtWeight(animatedWeight, locale);
+  const priceDisplay = fmtPrice(animatedTotal, locale);
 
   const profileLabel =
     normalizedProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
@@ -205,15 +205,15 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const gradeLabel = result?.gradeLabel ?? input.materialGradeId;
 
   const summary = useMemo(() => {
-    const len = `${fmtNumber(input.length.value || 0, { maxFrac: 3 })} ${input.length.unit}`;
+    const len = `${fmtNumber(input.length.value || 0, locale, { maxFrac: 3 })} ${input.length.unit}`;
     const qty = `× ${input.quantity || 0}`;
     return `${len} ${qty} · ${gradeLabel}`;
-  }, [input.length.value, input.length.unit, input.quantity, gradeLabel]);
+  }, [input.length.value, input.length.unit, input.quantity, gradeLabel, locale]);
 
   // Buffer-aware display so the user can see in-progress input like "1." while typing.
-  const lengthDisplay = activeField === "length" ? buffer || "0" : fmtNumber(input.length.value || 0, { maxFrac: 3 });
+  const lengthDisplay = activeField === "length" ? buffer || "0" : fmtNumber(input.length.value || 0, locale, { maxFrac: 3 });
   const quantityDisplay = activeField === "quantity" ? buffer || "0" : String(input.quantity || 0);
-  const priceFieldDisplay = activeField === "price" ? buffer || "0" : fmtNumber(input.unitPrice ?? 0, { maxFrac: 2 });
+  const priceFieldDisplay = activeField === "price" ? buffer || "0" : fmtNumber(input.unitPrice ?? 0, locale, { maxFrac: 2 });
 
   return (
     <div className="flex flex-col gap-3 px-3 pt-2" style={{ paddingBottom: scrollPaddingBottom }}>

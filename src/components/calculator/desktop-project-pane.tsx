@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { Project, ProjectCalculation } from "@/hooks/useProjects";
 import { computeAggregates } from "@/hooks/useProjects";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -17,17 +17,16 @@ interface Props {
   onRemoveCalculation: (projectId: string, calcId: string) => void;
 }
 
-function fmtKg(value: number): string {
+function fmtKg(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0";
-  if (value >= 10000) return Math.round(value).toLocaleString();
-  if (value >= 1000) return Math.round(value).toLocaleString();
+  if (value >= 1000) return Math.round(value).toLocaleString(locale);
   if (value >= 100) return value.toFixed(1);
   return value.toFixed(2);
 }
 
-function fmtCost(value: number): string {
+function fmtCost(value: number, locale: string): string {
   if (!Number.isFinite(value)) return "0";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
@@ -46,6 +45,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
   onLoadCalculation,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
 
   const aggregates = useMemo(
     () => (project ? computeAggregates(project) : null),
@@ -67,9 +67,9 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
             <span className="truncate text-2xs text-muted">
               {t("desktopProject.headerSummary", {
                 count: aggregates?.count ?? 0,
-                weight: fmtKg(aggregates?.totalWeightKg ?? 0),
+                weight: fmtKg(aggregates?.totalWeightKg ?? 0, locale),
                 currency,
-                cost: fmtCost(aggregates?.totalCost ?? 0),
+                cost: fmtCost(aggregates?.totalCost ?? 0, locale),
               })}
             </span>
           </div>
@@ -125,7 +125,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
                 </span>
                 <span className="text-right">
                   <span className="block text-xs font-bold tabular-nums tracking-tight text-foreground">
-                    {fmtKg(result.totalWeightKg)}
+                    {fmtKg(result.totalWeightKg, locale)}
                   </span>
                   <span className="block text-2xs text-muted">kg</span>
                 </span>
@@ -210,7 +210,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
             </span>
             <div className="mt-1 flex items-baseline gap-1">
               <span className="text-2xl font-bold leading-none tracking-[-0.025em] tabular-nums text-foreground">
-                {fmtKg(aggregates.totalWeightKg)}
+                {fmtKg(aggregates.totalWeightKg, locale)}
               </span>
               <span className="text-sm font-semibold text-accent">kg</span>
             </div>
@@ -220,7 +220,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
               ≈ {t("desktopProject.cost")}
             </span>
             <span className="mt-1 block text-base font-bold tabular-nums tracking-tight text-foreground">
-              {currency} {fmtCost(aggregates.totalCost)}
+              {currency} {fmtCost(aggregates.totalCost, locale)}
             </span>
           </div>
         </div>

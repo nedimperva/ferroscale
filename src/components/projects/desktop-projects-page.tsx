@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type {
   Project,
   ProjectCalculation,
@@ -23,17 +23,16 @@ interface Props {
   onLoadCalculation: (input: CalculationInput) => void;
 }
 
-function fmtKg(value: number): string {
+function fmtKg(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0";
-  if (value >= 10000) return Math.round(value).toLocaleString();
-  if (value >= 1000) return Math.round(value).toLocaleString();
+  if (value >= 1000) return Math.round(value).toLocaleString(locale);
   if (value >= 100) return value.toFixed(1);
   return value.toFixed(2);
 }
 
-function fmtCost(value: number): string {
+function fmtCost(value: number, locale: string): string {
   if (!Number.isFinite(value)) return "0";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
@@ -58,6 +57,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
   onLoadCalculation,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState(false);
@@ -199,7 +199,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                       </span>
                       <span className="text-2xs text-muted">
                         {t("desktopProject.partsCount", { count: p.calculations.length })}
-                        {agg.totalWeightKg > 0 ? ` · ${fmtKg(agg.totalWeightKg)} kg` : ""}
+                        {agg.totalWeightKg > 0 ? ` · ${fmtKg(agg.totalWeightKg, locale)} kg` : ""}
                       </span>
                     </span>
                   </button>
@@ -294,11 +294,11 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                     </span>
                     <div className="mt-0.5 flex items-baseline gap-1.5">
                       <span className="text-[1.875rem] font-bold leading-none tracking-[-0.04em] tabular-nums">
-                        {fmtKg(aggregates.totalWeightKg)}
+                        {fmtKg(aggregates.totalWeightKg, locale)}
                       </span>
                       <span className="text-sm font-semibold text-accent">kg</span>
                       <span className="ml-2 text-sm font-semibold tabular-nums text-background/85">
-                        {currency}&nbsp;{fmtCost(aggregates.totalCost)}
+                        {currency}&nbsp;{fmtCost(aggregates.totalCost, locale)}
                       </span>
                     </div>
                   </div>
@@ -317,6 +317,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                         key={calc.id}
                         calc={calc}
                         currency={currency}
+                        locale={locale}
                         onLoad={() => onLoadCalculation(calc.input)}
                         onRemove={() => {
                           if (window.confirm(t("mobileProjects.confirmRemovePart"))) {
@@ -367,11 +368,12 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
 interface DesktopPartRowProps {
   calc: ProjectCalculation;
   currency: string;
+  locale: string;
   onLoad: () => void;
   onRemove: () => void;
 }
 
-function DesktopPartRow({ calc, currency, onLoad, onRemove }: DesktopPartRowProps) {
+function DesktopPartRow({ calc, currency, locale, onLoad, onRemove }: DesktopPartRowProps) {
   const profile = calc.normalizedProfile;
   const result = calc.result;
   const sub = `${(result.lengthMm / 1000).toFixed(result.lengthMm >= 10000 ? 1 : 2)} m × ${result.quantity}`;
@@ -395,10 +397,10 @@ function DesktopPartRow({ calc, currency, onLoad, onRemove }: DesktopPartRowProp
         </span>
         <span className="shrink-0 text-right">
           <span className="block text-sm font-bold tabular-nums tracking-tight text-foreground">
-            {fmtKg(result.totalWeightKg)} kg
+            {fmtKg(result.totalWeightKg, locale)} kg
           </span>
           <span className="block text-2xs tabular-nums text-muted">
-            {currency} {fmtCost(result.grandTotalAmount)}
+            {currency} {fmtCost(result.grandTotalAmount, locale)}
           </span>
         </span>
       </button>

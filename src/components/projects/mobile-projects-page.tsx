@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type {
   Project,
   ProjectCalculation,
@@ -22,17 +22,16 @@ interface Props {
   onLoadCalculation: (input: CalculationInput) => void;
 }
 
-function fmtKg(value: number): string {
+function fmtKg(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0";
-  if (value >= 10000) return Math.round(value).toLocaleString();
-  if (value >= 1000) return Math.round(value).toLocaleString();
+  if (value >= 1000) return Math.round(value).toLocaleString(locale);
   if (value >= 100) return value.toFixed(1);
   return value.toFixed(2);
 }
 
-function fmtCost(value: number): string {
+function fmtCost(value: number, locale: string): string {
   if (!Number.isFinite(value)) return "0";
-  return value.toLocaleString(undefined, {
+  return value.toLocaleString(locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
@@ -55,6 +54,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
   onLoadCalculation,
 }: Props) {
   const t = useTranslations();
+  const locale = useLocale();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState(false);
@@ -151,10 +151,10 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               <span className="inline-flex items-center rounded-md bg-accent-surface px-2 py-1 text-2xs font-bold tabular-nums text-accent-text">
-                {fmtKg(aggregates.totalWeightKg)} kg
+                {fmtKg(aggregates.totalWeightKg, locale)} kg
               </span>
               <span className="inline-flex items-center rounded-md bg-surface-raised px-2 py-1 text-2xs font-semibold tabular-nums text-foreground-secondary">
-                {currency} {fmtCost(aggregates.totalCost)}
+                {currency} {fmtCost(aggregates.totalCost, locale)}
               </span>
             </div>
           </>
@@ -215,6 +215,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
             <PartRow
               key={calc.id}
               calc={calc}
+              locale={locale}
               onLoad={() => onLoadCalculation(calc.input)}
               onRemove={() => {
                 if (window.confirm(t("mobileProjects.confirmRemovePart"))) {
@@ -254,7 +255,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
             </span>
             <div className="mt-0.5 flex items-baseline gap-1">
               <span className="text-2xl font-bold leading-none tracking-[-0.025em] tabular-nums text-foreground">
-                {fmtKg(aggregates.totalWeightKg)}
+                {fmtKg(aggregates.totalWeightKg, locale)}
               </span>
               <span className="text-sm font-semibold text-accent">kg</span>
             </div>
@@ -264,7 +265,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
               ≈ {t("desktopProject.cost")}
             </span>
             <span className="mt-0.5 block text-base font-bold tabular-nums tracking-tight text-foreground">
-              {currency} {fmtCost(aggregates.totalCost)}
+              {currency} {fmtCost(aggregates.totalCost, locale)}
             </span>
           </div>
         </div>
@@ -336,11 +337,12 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
 
 interface PartRowProps {
   calc: ProjectCalculation;
+  locale: string;
   onLoad: () => void;
   onRemove: () => void;
 }
 
-function PartRow({ calc, onLoad, onRemove }: PartRowProps) {
+function PartRow({ calc, locale, onLoad, onRemove }: PartRowProps) {
   const profile = calc.normalizedProfile;
   const result = calc.result;
   const sub = `${(result.lengthMm / 1000).toFixed(result.lengthMm >= 10000 ? 1 : 2)} m × ${result.quantity}`;
@@ -364,7 +366,7 @@ function PartRow({ calc, onLoad, onRemove }: PartRowProps) {
         </span>
         <span className="text-right">
           <span className="block text-sm font-bold tabular-nums tracking-tight text-foreground">
-            {fmtKg(result.totalWeightKg)}
+            {fmtKg(result.totalWeightKg, locale)}
           </span>
           <span className="block text-2xs text-muted">kg</span>
         </span>
