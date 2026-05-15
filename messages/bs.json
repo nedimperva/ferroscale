@@ -302,11 +302,6 @@
     "report": "Prijava",
     "whatsNew": "Novosti"
   },
-  "menu": {
-    "groupLibrary": "Biblioteka",
-    "groupTools": "Alati",
-    "groupHelp": "Pomoć"
-  },
   "columns": {
     "addColumn": "Dodaj kolonu",
     "addPanel": "Dodaj panel",

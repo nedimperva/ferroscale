@@ -302,11 +302,6 @@
     "report": "Report",
     "whatsNew": "What's New"
   },
-  "menu": {
-    "groupLibrary": "Library",
-    "groupTools": "Tools",
-    "groupHelp": "Help"
-  },
   "columns": {
     "addColumn": "Add Column",
     "addPanel": "Add panel",
