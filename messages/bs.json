@@ -151,6 +151,8 @@
     "dimensions": "Dimenzije",
     "grade": "Kvalitet",
     "family": "Porodica",
+    "clear": "Ocisti",
+    "next": "Dalje",
     "done": "Gotovo"
   },
   "workstation": {

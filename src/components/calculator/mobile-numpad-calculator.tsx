@@ -1,11 +1,10 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type {
   CalculationInput,
   CalculationResult,
-  LengthUnit,
 } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { MetalFamilyId } from "@/lib/datasets/types";
@@ -106,22 +105,39 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const locale = useLocale();
   const [activeField, setActiveField] = useState<ActiveField>("length");
   const [buffer, setBuffer] = useState<string>("");
+  const selfCommitRef = useRef<{ field: ActiveField; value: number; unit: string } | null>(null);
 
-  // When the active field changes, seed the buffer from the current input.
+  // Keep the displayed keypad buffer aligned with changes from settings,
+  // onboarding, or loaded entries without erasing in-progress input like "1.".
   useEffect(() => {
+    const currentValue =
+      activeField === "length"
+        ? input.length.value
+        : activeField === "quantity"
+          ? input.quantity
+          : input.unitPrice;
+    const selfCommit = selfCommitRef.current;
+    if (
+      selfCommit &&
+      selfCommit.field === activeField &&
+      selfCommit.unit === input.length.unit &&
+      Object.is(selfCommit.value, Number(currentValue ?? 0))
+    ) {
+      selfCommitRef.current = null;
+      return;
+    }
+
+    selfCommitRef.current = null;
     if (activeField === "length") setBuffer(inputAsString(input.length.value));
     else if (activeField === "quantity") setBuffer(inputAsString(input.quantity));
     else setBuffer(inputAsString(input.unitPrice));
-    // We only want to re-seed when the active field changes (not on every input
-    // tick), so the effect deliberately depends only on activeField + the
-    // initial values of the underlying inputs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeField]);
+  }, [activeField, input.length.value, input.length.unit, input.quantity, input.unitPrice]);
 
   const commitBuffer = useCallback(
     (nextBuffer: string) => {
       setBuffer(nextBuffer);
       const value = parseBuffer(nextBuffer);
+      selfCommitRef.current = { field: activeField, value, unit: input.length.unit };
       if (activeField === "length") {
         dispatch({ type: "SET_LENGTH_VALUE", value });
       } else if (activeField === "quantity") {
@@ -131,7 +147,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         dispatch({ type: "SET_UNIT_PRICE", value });
       }
     },
-    [activeField, dispatch],
+    [activeField, dispatch, input.length.unit],
   );
 
   const handleDigit = useCallback(
@@ -158,26 +174,27 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
     commitBuffer(backspace(buffer));
   }, [buffer, commitBuffer]);
 
-  const handleUnit = useCallback(
-    (unit: LengthUnit) => {
-      if (activeField !== "length") {
-        // For non-length fields, tap the unit key to jump to the length field
-        // and switch unit in one motion.
-        triggerHaptic("light");
-        setActiveField("length");
-        dispatch({ type: "SET_LENGTH_UNIT", unit });
-        return;
-      }
-      triggerHaptic("light");
-      dispatch({ type: "SET_LENGTH_UNIT", unit });
-    },
-    [activeField, dispatch],
-  );
-
   const handleField = useCallback((field: ActiveField) => {
     triggerHaptic("light");
     setActiveField(field);
   }, []);
+
+  const handleClear = useCallback(() => {
+    triggerHaptic("light");
+    commitBuffer("");
+  }, [commitBuffer]);
+
+  const handleNextField = useCallback(() => {
+    triggerHaptic("light");
+    setActiveField((field) =>
+      field === "length" ? "quantity" : field === "quantity" ? "price" : "length",
+    );
+  }, []);
+
+  const handleDone = useCallback(() => {
+    triggerHaptic(result ? "success" : "light");
+    if (result) onOpenResult();
+  }, [onOpenResult, result]);
 
   const totalWeightKg = result?.totalWeightKg ?? 0;
   const grandTotal = result?.grandTotalAmount ?? 0;
@@ -312,12 +329,12 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
 
       {/* Persistent numpad */}
       <Numpad
-        activeUnit={input.length.unit}
-        unitsEnabled={activeField === "length"}
         onDigit={handleDigit}
         onTripleZero={handleTripleZero}
         onBackspace={handleBackspace}
-        onUnit={handleUnit}
+        onClear={handleClear}
+        onNext={handleNextField}
+        onDone={handleDone}
       />
     </div>
   );
@@ -368,15 +385,17 @@ function FieldChip({ label, value, unit, active, onClick }: FieldChipProps) {
 }
 
 interface NumpadProps {
-  activeUnit: LengthUnit;
-  unitsEnabled: boolean;
   onDigit: (digit: string) => void;
   onTripleZero: () => void;
   onBackspace: () => void;
-  onUnit: (unit: LengthUnit) => void;
+  onClear: () => void;
+  onNext: () => void;
+  onDone: () => void;
 }
 
-function Numpad({ activeUnit, unitsEnabled, onDigit, onTripleZero, onBackspace, onUnit }: NumpadProps) {
+function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone }: NumpadProps) {
+  const t = useTranslations("mobileCalc");
+
   return (
     <div className="rounded-[1.25rem] border border-border bg-surface p-2 shadow-[var(--panel-shadow-soft)]">
       <div className="grid grid-cols-4 gap-1.5">
@@ -393,40 +412,36 @@ function Numpad({ activeUnit, unitsEnabled, onDigit, onTripleZero, onBackspace, 
         <PadKey kind="digit" label="4" onPress={() => onDigit("4")} />
         <PadKey kind="digit" label="5" onPress={() => onDigit("5")} />
         <PadKey kind="digit" label="6" onPress={() => onDigit("6")} />
-        <PadKey kind="unit" label="mm" active={activeUnit === "mm" && unitsEnabled} dim={!unitsEnabled} onPress={() => onUnit("mm")} />
+        <PadKey kind="action" label="C" ariaLabel={t("clear")} onPress={onClear} />
 
         <PadKey kind="digit" label="1" onPress={() => onDigit("1")} />
         <PadKey kind="digit" label="2" onPress={() => onDigit("2")} />
         <PadKey kind="digit" label="3" onPress={() => onDigit("3")} />
-        <PadKey kind="unit" label="cm" active={activeUnit === "cm" && unitsEnabled} dim={!unitsEnabled} onPress={() => onUnit("cm")} />
+        <PadKey kind="action" label={t("next")} small onPress={onNext} />
 
         <PadKey kind="digit" label="." onPress={() => onDigit(".")} />
         <PadKey kind="digit" label="0" onPress={() => onDigit("0")} />
         <PadKey kind="digit" label="000" small onPress={onTripleZero} />
-        <PadKey kind="unit" label="m" active={activeUnit === "m" && unitsEnabled} dim={!unitsEnabled} onPress={() => onUnit("m")} />
+        <PadKey kind="done" label={t("done")} small onPress={onDone} />
       </div>
     </div>
   );
 }
 
 interface PadKeyProps {
-  kind: "digit" | "action" | "unit";
+  kind: "digit" | "action" | "done";
   label: string;
   small?: boolean;
-  active?: boolean;
-  dim?: boolean;
   ariaLabel?: string;
   children?: React.ReactNode;
   onPress: () => void;
 }
 
-function PadKey({ kind, label, small, active, dim, ariaLabel, children, onPress }: PadKeyProps) {
+function PadKey({ kind, label, small, ariaLabel, children, onPress }: PadKeyProps) {
   const baseFontClasses = small ? "text-base font-semibold" : "text-2xl font-medium";
   const colorClasses =
-    kind === "unit"
-      ? active
-        ? "bg-accent text-white"
-        : `bg-surface-pad text-foreground ${dim ? "opacity-60" : ""}`
+    kind === "done"
+      ? "bg-accent text-white"
       : kind === "action"
         ? "bg-surface-pad text-muted"
         : "bg-surface-pad text-foreground";
@@ -439,12 +454,12 @@ function PadKey({ kind, label, small, active, dim, ariaLabel, children, onPress 
       className={`flex h-14 items-center justify-center rounded-2xl tracking-tight tabular-nums active:bg-surface-pad-press active:scale-[0.97] transition-transform ${baseFontClasses} ${colorClasses}`}
       style={{
         boxShadow:
-          kind === "unit" && active
+          kind === "done"
             ? "0 6px 12px -6px rgba(120,60,20,0.4)"
             : "inset 0 1px 0 rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.04)",
       }}
     >
-      {children ?? (kind === "unit" ? <span className="text-xs font-bold uppercase tracking-[0.1em]">{label}</span> : label)}
+      {children ?? label}
     </button>
   );
 }

@@ -46,17 +46,23 @@ Numpad-native redesign. The mobile calculator becomes an iOS-Calculator-style sc
 - Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
 - First-run onboarding flow: three short steps to pick a default material, starting profile, and length unit + currency. Skipped or completed only once per device; can be replayed from Settings → "Replay onboarding".
 - Mobile Settings rebuilt as a defaults dashboard with grouped rounded sections — Display (Appearance, Text size, Show price inline), Defaults (Material, Length unit, Currency, Waste allowance), and Power (Show weight as main, What's New). Each row is a single tappable card with an accent-tinted icon and either a toggle or a sub-sheet picker. Replay onboarding and Reset all moved into the footer.
-- Saved and Projects mobile tabs gain a hero card at the top of the screen — same warm rounded-surface treatment used by Settings. Saved shows the template count + total weight + total uses; Projects shows the active project's name + parts count + weight + cost (or a "no active project" prompt when none is selected).
+- Projects mobile tab gains a hero card at the top of the screen — same warm rounded-surface treatment used by Settings — showing the active project's name + parts count + weight + cost (or a "no active project" prompt when none is selected).
 - Desktop "Workstation" top bar above the main content (lg+ only): page title, optional calculation context chip (HEA 100 · S235 · 6 m × 4), ⌘K quick-calc search trigger, and a primary "New" reset button. Aligns with the D1 desktop mock from the numpad-native handoff.
 
 ### Changed
 
 - Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
-- Every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Saved, Projects, Compare and Settings tabs inherit the polished mobile shell automatically.
-- Mobile bottom tab bar replaced by a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Saved, Projects, Settings, plus Compare, What's New, Report an issue, and Replay onboarding.
+- Every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Projects and Settings inherit the polished mobile shell automatically.
+- Mobile bottom tab bar replaced by a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Projects, Settings, What's New, Report an issue, and Replay onboarding.
+- Templates / Saved is hidden during the redesign. The saved route redirects to the calculator, while stored templates stay preserved in localStorage for a future return.
+- Compare is no longer a primary navigation target. The result-attached compare tray and result sheet actions are now the entry points for opening the full Compare drawer.
 - Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is the single nav entry point.
 - Mobile calculator no longer renders the legacy inline profile/material/dimensions form below the new numpad — profile and material live in their own bottom sheets now. The reverse calculator and inline pricing toggles still appear on desktop; mobile homes for them ship in a follow-up.
-- Floating mobile result bar removed entirely. The calculator tab owns its own live result card; Saved, Projects and Settings are scroll-only with no floating result UI. Desktop continues to use the sticky right-column result panel.
+- Floating mobile result bar removed entirely. The calculator tab owns its own live result card; Projects and Settings are scroll-only with no floating result UI. Desktop continues to use the sticky right-column result panel.
+
+### Fixed
+
+- Mobile numpad now keeps length unit changes in Settings/onboarding only, replacing calculator unit keys with Clear, Next field, and Done actions while keeping the Length chip synced to external unit changes.
 
 ---
 
