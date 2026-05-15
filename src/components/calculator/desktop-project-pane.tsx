@@ -56,7 +56,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
     : "€";
 
   return (
-    <aside className="hidden w-[360px] shrink-0 flex-col border-l border-border bg-surface lg:flex">
+    <aside className="hidden h-full w-[300px] shrink-0 flex-col border-l border-border bg-surface lg:flex xl:w-[360px]">
       {/* Header */}
       <div className="flex h-14 items-center justify-between border-b border-border px-4">
         {project ? (

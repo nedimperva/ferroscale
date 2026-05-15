@@ -173,8 +173,10 @@ export const DesktopFormPane = memo(function DesktopFormPane({
         </div>
       </div>
 
-      {/* Body: scrollable */}
-      <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto px-5 py-5">
+      {/* Body — fits viewport without scrolling. The only scroll on the
+          desktop calculator route is inside the project pane's parts
+          list. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden px-5 py-3">
         {/* Live mini-result */}
         <DesktopMiniResult
           result={result}
@@ -188,8 +190,8 @@ export const DesktopFormPane = memo(function DesktopFormPane({
         />
 
         {/* Profile section */}
-        <section className="rounded-2xl border border-border bg-surface p-4">
-          <h3 className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted">
+        <section className="rounded-2xl border border-border bg-surface p-3">
+          <h3 className="mb-2 text-2xs font-bold uppercase tracking-[0.16em] text-muted">
             {t("desktopForm.profile")}
           </h3>
 
@@ -241,8 +243,8 @@ export const DesktopFormPane = memo(function DesktopFormPane({
         </section>
 
         {/* Geometry section */}
-        <section className="rounded-2xl border border-border bg-surface p-4">
-          <h3 className="mb-2.5 text-2xs font-bold uppercase tracking-[0.16em] text-muted">
+        <section className="rounded-2xl border border-border bg-surface p-3">
+          <h3 className="mb-2 text-2xs font-bold uppercase tracking-[0.16em] text-muted">
             {t("desktopForm.geometry")}
           </h3>
           <div className="grid grid-cols-3 gap-2.5">
@@ -290,8 +292,8 @@ export const DesktopFormPane = memo(function DesktopFormPane({
         </section>
 
         {/* Material section */}
-        <section className="rounded-2xl border border-border bg-surface p-4">
-          <div className="mb-2.5 flex items-center justify-between">
+        <section className="rounded-2xl border border-border bg-surface p-3">
+          <div className="mb-2 flex items-center justify-between">
             <h3 className="text-2xs font-bold uppercase tracking-[0.16em] text-muted">
               {t("desktopForm.material")}
             </h3>

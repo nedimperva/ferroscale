@@ -12,6 +12,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Desktop calculator route is now a **full from-scratch D3 "Bench" workshop rebuild** instead of wrapping the legacy `ProfileSection`. New `DesktopFormPane` owns: an in-pane top bar (Calculator title + active-project chip + ⌘K search + primary "New"), the dark live mini-result bar, and three pixel-accurate section cards from the design — Profile (category pill row + 4–6-col profile-type grid), Geometry (3 large rounded input chips for length / pieces / unit price with active accent caret), and Material (color-dot grade chips with density). Each control dispatches through `useCalculator` directly. Page-wide Workstation top bar is suppressed on this route since the form pane carries its own header.
 - Wrapper drops the legacy slate-era top padding and max-width on the calculator route so the 3-pane workshop runs edge-to-edge between sidebar and project pane.
 
+### Fixed
+
+- Desktop calculator was overflowing horizontally and pushing the project pane off-screen because the main wrapper was `w-full` plus `lg:ml-[sidebar]`, which made it 100% of viewport _starting after_ the sidebar. Wrapper now uses `lg:w-[calc(100%-sidebar)]` so the form pane + 300/360 px project pane fit inside the viewport.
+- Desktop calculator no longer scrolls the whole page. The wrapper is `lg:h-dvh lg:overflow-hidden`, the form pane body is `overflow-hidden`, and only the project pane's parts list scrolls (`overflow-y-auto` on the list container alone). Form section padding and mini-result heights tightened so the three section cards fit common laptop viewports without clipping.
+- Project pane width is now responsive: `300 px` on lg, `360 px` on xl, so on 1280–1439 px screens the form pane still gets enough room to render the 4-column profile grid.
+
 ---
 
 ## [3.0.0] - 2026-05-14

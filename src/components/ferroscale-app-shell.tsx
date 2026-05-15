@@ -990,13 +990,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
       <div
         ref={mainContentRef}
-        className={`flex min-h-dvh w-full flex-col px-0 pt-[calc(3rem+env(safe-area-inset-top,0px))] transition-[margin-left] duration-200 ease-in-out lg:pt-0 ${
+        className={`flex min-h-dvh w-full flex-col px-0 pt-[calc(3rem+env(safe-area-inset-top,0px))] transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
           isMultiColumn
             ? "overflow-hidden pb-0"
             : currentTab === "calculator"
-              ? "max-w-none pb-32 lg:pb-0"
+              ? "max-w-none overflow-x-hidden pb-32 lg:h-dvh lg:min-h-0 lg:overflow-hidden lg:pb-0"
               : "mx-auto max-w-[94rem] pb-8 md:px-6"
-        } ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}
+        } ${
+          sidebarCollapsed
+            ? "lg:ml-[56px] lg:w-[calc(100%-56px)]"
+            : "lg:ml-[220px] lg:w-[calc(100%-220px)]"
+        }`}
       >
         <header
           className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(20,18,15,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
