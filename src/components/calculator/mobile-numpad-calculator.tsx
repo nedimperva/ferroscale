@@ -13,7 +13,7 @@ import type { CalcAction } from "@/hooks/useCalculator";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { triggerHaptic } from "@/lib/haptics";
-import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 
 type ActiveField = "length" | "quantity" | "price";
 
@@ -191,7 +191,6 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
 
   const profileLabel =
     normalizedProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
-  const profileIconKey = normalizedProfile?.iconKey ?? "structural";
 
   const familyLabel = t(`dataset.families.${activeFamily}`);
   const gradeLabel = result?.gradeLabel ?? input.materialGradeId;
@@ -249,7 +248,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
           className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 py-2.5 text-left active:bg-surface-raised transition-colors"
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-raised text-foreground">
-            <ProfileIcon category={profileIconKey} className="h-4 w-4" />
+            <ProfileGlyph profileId={input.profileId} size="sm" />
           </span>
           <span className="flex min-w-0 flex-col">
             <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">

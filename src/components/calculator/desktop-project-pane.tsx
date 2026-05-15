@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { Project, ProjectCalculation } from "@/hooks/useProjects";
 import { computeAggregates } from "@/hooks/useProjects";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
-import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface Props {
@@ -98,6 +98,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
         <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto p-3">
           {project.calculations.map((calc) => {
             const profile = calc.normalizedProfile;
+            const profileId = calc.input.profileId;
             const result = calc.result;
             const sub = `${(result.lengthMm / 1000).toFixed(result.lengthMm >= 10000 ? 1 : 2)} m × ${result.quantity}`;
             return (
@@ -111,7 +112,7 @@ export const DesktopProjectPane = memo(function DesktopProjectPane({
                 className="flex items-center gap-2.5 rounded-xl border border-transparent px-3 py-2.5 text-left transition-colors hover:border-border-strong hover:bg-surface-raised"
               >
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-surface-inset text-foreground-secondary">
-                  <ProfileIcon category={profile.iconKey} className="h-3.5 w-3.5" />
+                  <ProfileGlyph profileId={profileId} size="xs" />
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-xs font-semibold tracking-tight text-foreground">

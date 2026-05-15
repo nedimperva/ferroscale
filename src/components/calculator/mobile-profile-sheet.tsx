@@ -12,6 +12,7 @@ import type {
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { DimensionInput } from "./dimension-input";
 import { SizeCombobox } from "./size-combobox";
 import { triggerHaptic } from "@/lib/haptics";
@@ -129,7 +130,7 @@ export const MobileProfileSheet = memo(function MobileProfileSheet({
                       : "border-border bg-surface text-foreground"
                   }`}
                 >
-                  <ProfileIcon category={p.category} className="h-4 w-4" />
+                  <ProfileGlyph profileId={p.id} size="sm" />
                   <span className="truncate font-semibold leading-tight">
                     {t(`dataset.profileShort.${p.id}`)}
                   </span>

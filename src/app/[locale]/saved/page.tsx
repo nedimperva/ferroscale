@@ -1,22 +1,14 @@
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 
 interface SavedPageProps {
   params: Promise<{ locale: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: SavedPageProps): Promise<Metadata> {
+// Templates / Saved is hidden in the v3 redesign. The route is kept
+// alive (so old deep links don't 404) but immediately redirects to
+// the calculator. The underlying useSaved hook keeps running so
+// localStorage data is preserved for when the tab returns.
+export default async function SavedPage({ params }: SavedPageProps) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "meta.saved" });
-
-  return {
-    title: t("title"),
-    description: t("description"),
-  };
-}
-
-export default function SavedPage() {
-  return null;
+  redirect({ href: "/", locale });
 }

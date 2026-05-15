@@ -161,6 +161,14 @@
     "title": "Meni",
     "more": "Vise"
   },
+  "compareTray": {
+    "label": "Uporedi",
+    "aria": "Zakacene stavke za poredjenje",
+    "remove": "Ukloni iz poredjenja",
+    "openCount": "Uporedi {count}",
+    "pin": "Zakaci za poredjenje",
+    "pinned": "Zakaceno"
+  },
   "desktopForm": {
     "search": "Pretrazi profil, preset ili kalkulaciju…",
     "new": "Novo",
@@ -176,6 +184,31 @@
     "piecesHint": "cijeli broj",
     "unitPrice": "Jedinicna cijena",
     "unitPriceHint": "opciono"
+  },
+  "mobileProjects": {
+    "heroHint": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+    "heroEmptyTitle": "Jos nema projekata",
+    "heroEmptyHint": "Kreiraj projekat da grupises kalkulacije.",
+    "heroPickTitle": "Odaberi aktivni projekat",
+    "heroPickHint": "Dodirni jedan od cipova ispod da vidis dijelove.",
+    "emptyTitle": "Projekat je prazan",
+    "emptyHint": "Dodaj kalkulaciju iz akcija rezultata da je vidis ovdje.",
+    "noProjectsTitle": "Jos nema projekata",
+    "noProjectsHint": "Dodirni + da kreiras prvi projekat.",
+    "create": "Novi projekat",
+    "createAria": "Kreiraj projekat",
+    "createPlaceholder": "Naziv projekta",
+    "cancelAria": "Otkazi",
+    "deleteAria": "Obrisi projekat",
+    "confirmDelete": "Obrisati projekat \"{name}\"? Dijelovi ce biti uklonjeni.",
+    "confirmRemovePart": "Ukloniti ovaj dio iz projekta?"
+  },
+  "desktopProjects": {
+    "railEmptyHint": "Kreiraj projekat dugmetom +.",
+    "detailEmptyHint": "Kreiraj svoj prvi projekat da pocnes.",
+    "detailPickHint": "Odaberi projekat lijevo da vidis dijelove.",
+    "duplicate": "Dupliraj",
+    "delete": "Obrisi"
   },
   "desktopProject": {
     "headerSummary": "{count, plural, one {# dio} few {# dijela} other {# dijelova}} · {weight} kg · {currency} {cost}",

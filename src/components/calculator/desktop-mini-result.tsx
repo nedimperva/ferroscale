@@ -4,20 +4,23 @@ import { memo } from "react";
 import { useTranslations } from "next-intl";
 import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
-import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
+import type { ProfileId } from "@/lib/datasets/types";
 
 interface Props {
   result: CalculationResult | null;
   isPending: boolean;
   isSaved: boolean;
-  normalizedProfile?: NormalizedProfileSnapshot | null;
+  profileId: ProfileId;
   onSave: () => void;
   onAddToProject: () => void;
+  onPinToCompare: () => void;
   hasProjects: boolean;
   canAddToProject: boolean;
+  isInCompare: boolean;
+  canPinToCompare: boolean;
 }
 
 function fmtKg(value: number): string {
@@ -45,17 +48,19 @@ export const DesktopMiniResult = memo(function DesktopMiniResult({
   result,
   isPending,
   isSaved,
-  normalizedProfile,
+  profileId,
   onSave,
   onAddToProject,
+  onPinToCompare,
   hasProjects,
   canAddToProject,
+  isInCompare,
+  canPinToCompare,
 }: Props) {
   const t = useTranslations();
   const animatedWeight = useAnimatedNumber(result?.totalWeightKg ?? 0);
   const animatedTotal = useAnimatedNumber(result?.grandTotalAmount ?? 0);
   const currency = result ? CURRENCY_SYMBOLS[result.currency] ?? result.currency : "€";
-  const iconKey = normalizedProfile?.iconKey ?? "structural";
 
   return (
     <div
@@ -65,7 +70,7 @@ export const DesktopMiniResult = memo(function DesktopMiniResult({
     >
       <div className="flex min-w-0 items-center gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-background">
-          <ProfileIcon category={iconKey} className="h-5 w-5" />
+          <ProfileGlyph profileId={profileId} size="md" />
         </span>
         <div className="flex min-w-0 flex-col">
           <span className="text-2xs font-bold uppercase tracking-[0.16em] text-background/60">
@@ -84,6 +89,26 @@ export const DesktopMiniResult = memo(function DesktopMiniResult({
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic("light");
+            onPinToCompare();
+          }}
+          disabled={!canPinToCompare}
+          aria-label={t("compareTray.pin")}
+          title={isInCompare ? t("compareTray.pinned") : t("compareTray.pin")}
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
+            isInCompare
+              ? "bg-accent text-white hover:bg-accent-hover"
+              : "bg-white/10 text-background hover:bg-white/15 active:bg-white/20"
+          }`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="18" rx="1" />
+            <rect x="14" y="3" width="7" height="18" rx="1" />
+          </svg>
+        </button>
         <button
           type="button"
           onClick={() => {

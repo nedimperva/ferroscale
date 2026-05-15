@@ -7,8 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Per-profile cross-section glyphs are back. New `<ProfileGlyph profileId=… size="xs|sm|md|lg">` ports the 20 hand-drawn SVGs from the legacy profile picker and is used everywhere a single profile is shown: desktop form pane profile-type grid, desktop mini-result hero, desktop project pane parts list, mobile numpad profile chip, mobile result sheet hero, mobile profile picker grid, mobile/desktop project parts lists, and the compare tray chips. CHS / SHS / RHS / HEA / HEB / IPE / IPN / HEM / UPN / UPE / angle / tee / chequered plate / expanded metal / corrugated sheet now all render distinctly. Category icons stay in place where a whole category is summarised (the category pill row).
+- New mobile Projects page (full redesign). Hero card with active project name + parts/weight/cost chips, horizontal project switcher chips, parts list with `ProfileGlyph` rows + length × qty + tabular weight + remove, sum strip footer (Project total kg + ≈ cost), and a floating "+ New project" FAB with inline create input.
+- New desktop Projects page (full redesign). 2-column workshop layout: 260/300 px left rail listing every project with parts count + weight, right side renders the active project detail — rename-in-place title, Duplicate / Delete actions, dark hero card with totals, scrollable parts list with `ProfileGlyph` + length × qty + per-row weight + cost + remove. Empty / no-active-project states are friendly.
+- Compare scratchpad attached to the live result. New `<CompareTray>` chip strip renders pinned items inline below the desktop mini-result and inside the mobile result sheet peek, with per-item remove (✕) and a trailing "Compare {n}" button that opens the existing `CompareDrawer`. A new icon-only Pin button on the desktop mini-result bar adds the current calculation to compare without leaving the calculator.
+
 ### Changed
 
+- Templates / Saved tab is hidden during the v3 redesign. The `saved` entry is removed from `APP_TABS`, the mobile hamburger menu row is gone, the desktop sidebar nav item is gone, the `/saved` route now redirects to `/` (deep links don't 404), and the old desktop `TemplatesDrawer` no longer renders. `useSaved` keeps running so localStorage data is preserved untouched — restoring the tab is just re-adding three pointers and one route.
+- Multi-column layout is hidden during the v3 redesign. `isMultiColumn` is hard-coded `false`, the sidebar toggle is removed, the Cmd+Shift+L shortcut is a no-op. `useColumnLayout` and its localStorage key stay untouched.
+- Compare is no longer a primary nav target. The sidebar and mobile hamburger menu rows are removed; the result-attached tray is the entry point. The full `CompareDrawer` still opens from the tray's Compare button.
+- The Compare button in the mobile result sheet peek view is relabelled "Pin to compare" / "Pinned" and the active state uses the accent surface, so it reads as a toggle on the current calculation rather than a navigation action.
 - Desktop calculator route is now a **full from-scratch D3 "Bench" workshop rebuild** instead of wrapping the legacy `ProfileSection`. New `DesktopFormPane` owns: an in-pane top bar (Calculator title + active-project chip + ⌘K search + primary "New"), the dark live mini-result bar, and three pixel-accurate section cards from the design — Profile (category pill row + 4–6-col profile-type grid), Geometry (3 large rounded input chips for length / pieces / unit price with active accent caret), and Material (color-dot grade chips with density). Each control dispatches through `useCalculator` directly. Page-wide Workstation top bar is suppressed on this route since the form pane carries its own header.
 - Wrapper drops the legacy slate-era top padding and max-width on the calculator route so the 3-pane workshop runs edge-to-edge between sidebar and project pane.
 

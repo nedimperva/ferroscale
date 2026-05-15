@@ -22,9 +22,11 @@ import type {
 } from "@/lib/datasets/types";
 // MetalFamilyId is used via FAMILY_TONES record below.
 import type { CalcAction } from "@/hooks/useCalculator";
-import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { DesktopMiniResult } from "./desktop-mini-result";
+import { CompareTray } from "./compare-tray";
+import type { CompareItem } from "@/hooks/useCompare";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface Props {
@@ -33,7 +35,6 @@ interface Props {
   result: CalculationResult | null;
   isPending: boolean;
   isSaved: boolean;
-  normalizedProfile: NormalizedProfileSnapshot | null;
   issues: ValidationIssue[];
   selectedProfile: ProfileDefinition;
   hasProjects: boolean;
@@ -42,6 +43,13 @@ interface Props {
   onAddToProject: () => void;
   onOpenQuickCalc: () => void;
   onReset: () => void;
+  /** Compare tray state — pinned items + actions. */
+  compareItems: CompareItem[];
+  onRemoveCompareItem: (id: string) => void;
+  onOpenCompare: () => void;
+  onPinToCompare: () => void;
+  canPinToCompare: boolean;
+  isInCompare: boolean;
 }
 
 const CATEGORY_ORDER: ProfileCategory[] = [
@@ -85,7 +93,6 @@ export const DesktopFormPane = memo(function DesktopFormPane({
   result,
   isPending,
   isSaved,
-  normalizedProfile,
   issues,
   selectedProfile,
   hasProjects,
@@ -94,6 +101,12 @@ export const DesktopFormPane = memo(function DesktopFormPane({
   onAddToProject,
   onOpenQuickCalc,
   onReset,
+  compareItems,
+  onRemoveCompareItem,
+  onOpenCompare,
+  onPinToCompare,
+  canPinToCompare,
+  isInCompare,
 }: Props) {
   const t = useTranslations();
 
@@ -194,11 +207,20 @@ export const DesktopFormPane = memo(function DesktopFormPane({
           result={result}
           isPending={isPending}
           isSaved={isSaved}
-          normalizedProfile={normalizedProfile}
+          profileId={input.profileId}
           onSave={onOpenSaveDialog}
           onAddToProject={onAddToProject}
+          onPinToCompare={onPinToCompare}
           hasProjects={hasProjects}
           canAddToProject={!!result}
+          isInCompare={isInCompare}
+          canPinToCompare={canPinToCompare}
+        />
+
+        <CompareTray
+          items={compareItems}
+          onRemove={onRemoveCompareItem}
+          onOpen={onOpenCompare}
         />
 
         {/* Profile section */}
@@ -244,7 +266,7 @@ export const DesktopFormPane = memo(function DesktopFormPane({
                       : "border-border bg-surface text-foreground hover:border-border-strong"
                   }`}
                 >
-                  <ProfileIcon category={p.category} className="h-5 w-5" />
+                  <ProfileGlyph profileId={p.id} size="md" />
                   <span className="truncate text-xs font-semibold tracking-tight">
                     {t(`dataset.profileShort.${p.id}`)}
                   </span>

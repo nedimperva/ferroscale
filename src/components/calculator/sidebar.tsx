@@ -9,52 +9,36 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface SidebarProps {
   onOpenContact: () => void;
-  onOpenCompare: () => void;
   onOpenProjects: () => void;
   onOpenSettings: () => void;
-  onOpenHistory: () => void;
   onOpenQuickCalc: () => void;
   onOpenChangelog: () => void;
-  compareCount: number;
   projectCount: number;
   isSettingsOpen: boolean;
-  isHistoryOpen: boolean;
   isProjectsOpen: boolean;
-  isCompareOpen: boolean;
   isContactOpen: boolean;
   isChangelogOpen: boolean;
   collapsed: boolean;
   onToggleCollapsed: () => void;
   theme: Theme;
   onToggleTheme: () => void;
-  canShowColumnsToggle?: boolean;
-  isMultiColumnEnabled?: boolean;
-  onToggleMultiColumn?: () => void;
 }
 
 export const Sidebar = memo(function Sidebar({
   onOpenContact,
-  onOpenCompare,
   onOpenProjects,
   onOpenSettings,
-  onOpenHistory,
   onOpenQuickCalc,
   onOpenChangelog,
-  compareCount,
   projectCount,
   isSettingsOpen,
-  isHistoryOpen,
   isProjectsOpen,
-  isCompareOpen,
   isContactOpen,
   isChangelogOpen,
   collapsed,
   onToggleCollapsed,
   theme,
   onToggleTheme,
-  canShowColumnsToggle,
-  isMultiColumnEnabled,
-  onToggleMultiColumn,
 }: SidebarProps) {
   const t = useTranslations();
 
@@ -141,19 +125,6 @@ export const Sidebar = memo(function Sidebar({
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-              <path d="M12 7v5l4 2" />
-            </svg>
-          }
-          label={t("sidebar.saved")}
-          active={isHistoryOpen}
-          collapsed={collapsed}
-          onClick={onOpenHistory}
-        />
-        <SidebarButton
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" />
             </svg>
           }
@@ -165,38 +136,10 @@ export const Sidebar = memo(function Sidebar({
           onClick={onOpenProjects}
         />
 
-        {compareCount > 0 && (
-          <SidebarButton
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <rect x="3" y="3" width="7" height="18" rx="1" />
-                <rect x="14" y="3" width="7" height="18" rx="1" />
-              </svg>
-            }
-            label={t("sidebar.compareCount", { count: compareCount })}
-            variant="blue"
-            active={isCompareOpen}
-            collapsed={collapsed}
-            onClick={onOpenCompare}
-          />
-        )}
-
-        {/* Columns toggle — only visible on wide desktops */}
-        {canShowColumnsToggle && onToggleMultiColumn && (
-          <SidebarButton
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <rect x="2" y="3" width="6" height="18" rx="1" />
-                <rect x="9" y="3" width="6" height="18" rx="1" />
-                <rect x="16" y="3" width="6" height="18" rx="1" />
-              </svg>
-            }
-            label={t("columns.columnsMode")}
-            active={isMultiColumnEnabled}
-            collapsed={collapsed}
-            onClick={onToggleMultiColumn}
-          />
-        )}
+        {/* Compare nav lives inside the calculator result tray now,
+            not in the sidebar. Columns toggle is hidden during the
+            v3 redesign — both can be restored by re-adding the
+            buttons here. */}
 
         {/* Spacer */}
         <div className="flex-1" />

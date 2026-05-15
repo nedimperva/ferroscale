@@ -7,7 +7,9 @@ import type { CalculationResult } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
-import { ProfileIcon } from "@/components/profiles/profile-icon";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
+import { CompareTray } from "./compare-tray";
+import type { CompareItem } from "@/hooks/useCompare";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface Props {
@@ -26,6 +28,9 @@ interface Props {
   onAddToProject?: () => void;
   hasProjects?: boolean;
   normalizedProfile?: NormalizedProfileSnapshot | null;
+  compareItems?: CompareItem[];
+  onRemoveCompareItem?: (id: string) => void;
+  onOpenCompare?: () => void;
 }
 
 function fmt(value: number, decimals: number): string {
@@ -60,6 +65,9 @@ export const MobileResultSheet = memo(function MobileResultSheet({
   onAddToProject,
   hasProjects = false,
   normalizedProfile = null,
+  compareItems = [],
+  onRemoveCompareItem,
+  onOpenCompare,
 }: Props) {
   const t = useTranslations();
   const currency = CURRENCY_SYMBOLS[result.currency] ?? result.currency;
@@ -67,7 +75,6 @@ export const MobileResultSheet = memo(function MobileResultSheet({
   const animatedWeight = useAnimatedNumber(result.totalWeightKg);
 
   const profileShort = normalizedProfile?.shortLabel ?? result.profileLabel;
-  const iconCategory = normalizedProfile?.iconKey ?? "structural";
 
   const perPieceKg = result.quantity > 0 ? result.totalWeightKg / result.quantity : 0;
   const totalLengthM =
@@ -165,7 +172,7 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                 </div>
               </div>
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-surface-raised text-foreground">
-                <ProfileIcon category={iconCategory} className="h-8 w-8" />
+                <ProfileGlyph profileId={result.profileId} size="lg" />
               </div>
             </div>
 
@@ -207,17 +214,29 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                   onCompare?.();
                 }}
                 disabled={!canCompare && !isInCompare}
-                className="flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface-raised text-sm font-semibold text-foreground active:bg-surface-inset disabled:opacity-50"
+                className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-colors disabled:opacity-50 ${
+                  isInCompare
+                    ? "border-accent-border bg-accent-surface text-accent-text"
+                    : "border-border bg-surface-raised text-foreground active:bg-surface-inset"
+                }`}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="7" height="18" rx="1" />
                   <rect x="14" y="3" width="7" height="18" rx="1" />
                 </svg>
-                {isInCompare
-                  ? t("mobileResult.inCompare", { count: compareCount, max: maxCompare })
-                  : t("mobileResult.compare")}
+                {isInCompare ? t("compareTray.pinned") : t("compareTray.pin")}
               </button>
             </div>
+
+            {compareItems.length > 0 && onRemoveCompareItem && onOpenCompare && (
+              <div className="mt-2">
+                <CompareTray
+                  items={compareItems}
+                  onRemove={onRemoveCompareItem}
+                  onOpen={onOpenCompare}
+                />
+              </div>
+            )}
 
             {/* Hint between peek and full */}
             <div className="mt-4 flex items-center gap-2">

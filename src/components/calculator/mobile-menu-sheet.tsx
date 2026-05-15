@@ -11,13 +11,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   currentTab: AppTabId;
   onNavigate: (tab: AppTabId) => void;
-  onOpenCompare: () => void;
   onOpenChangelog: () => void;
   onOpenContact: () => void;
   onReplayOnboarding: () => void;
-  savedCount: number;
   projectCount: number;
-  compareCount: number;
 }
 
 interface MenuRow {
@@ -41,13 +38,10 @@ export const MobileMenuSheet = memo(function MobileMenuSheet({
   onOpenChange,
   currentTab,
   onNavigate,
-  onOpenCompare,
   onOpenChangelog,
   onOpenContact,
   onReplayOnboarding,
-  savedCount,
   projectCount,
-  compareCount,
 }: Props) {
   const t = useTranslations();
 
@@ -73,18 +67,6 @@ export const MobileMenuSheet = memo(function MobileMenuSheet({
         </svg>
       ),
       onPress: go("calculator"),
-    },
-    {
-      id: "saved",
-      label: t("tabs.saved"),
-      badge: savedCount > 0 ? savedCount : undefined,
-      active: currentTab === "saved",
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17.6 3.3c1.1.1 1.9 1 1.9 2.2V21l-7.5-3.8L4.5 21V5.5c0-1.1.8-2.1 1.9-2.2 3.7-.4 7.5-.4 11.2 0z" />
-        </svg>
-      ),
-      onPress: go("saved"),
     },
     {
       id: "projects",
@@ -113,22 +95,6 @@ export const MobileMenuSheet = memo(function MobileMenuSheet({
   ];
 
   const secondary: MenuRow[] = [
-    {
-      id: "compare",
-      label: t("sidebar.compare"),
-      badge: compareCount > 0 ? compareCount : undefined,
-      icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="18" rx="1" />
-          <rect x="14" y="3" width="7" height="18" rx="1" />
-        </svg>
-      ),
-      onPress: () => {
-        triggerHaptic("light");
-        handleClose();
-        onOpenCompare();
-      },
-    },
     {
       id: "changelog",
       label: t("changelog.title"),

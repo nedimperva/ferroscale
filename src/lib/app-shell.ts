@@ -10,9 +10,12 @@ export interface AppTabDefinition {
   segment: "" | "saved" | "projects" | "settings";
 }
 
+// `saved` is intentionally excluded from APP_TABS while Templates is
+// hidden in the redesign. The AppTabId union keeps the value so that
+// existing code (useSaved, TemplatesPanel, deep links) compiles; bringing
+// the tab back is just re-adding the entry here + the menu/sidebar rows.
 export const APP_TABS: readonly AppTabDefinition[] = [
   { id: "calculator", href: "/", segment: "" },
-  { id: "saved", href: "/saved", segment: "saved" },
   { id: "projects", href: "/projects", segment: "projects" },
   { id: "settings", href: "/settings", segment: "settings" },
 ] as const;

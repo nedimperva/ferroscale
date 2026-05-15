@@ -27,11 +27,7 @@ import { APP_TABS, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/ap
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
 import type { ColumnPanelId } from "@/lib/column-layout";
-import {
-  DEFAULT_COLUMN_LAYOUT,
-  canRenderColumnLayout,
-  getMaxColumnsForWidth,
-} from "@/lib/column-layout";
+import { getMaxColumnsForWidth } from "@/lib/column-layout";
 import { ProfileSection } from "@/components/calculator/profile-section";
 import { MobileNumpadCalculator } from "@/components/calculator/mobile-numpad-calculator";
 import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet";
@@ -43,16 +39,16 @@ import { DesktopFormPane } from "@/components/calculator/desktop-form-pane";
 import { DesktopProjectPane } from "@/components/calculator/desktop-project-pane";
 import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
-import { MobileSavedHero, MobileProjectsHero } from "@/components/calculator/mobile-tab-hero";
+import { MobileProjectsPage } from "@/components/projects/mobile-projects-page";
+import { DesktopProjectsPage } from "@/components/projects/desktop-projects-page";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultOverlay } from "@/components/calculator/result-bar";
-import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
-import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
+import { ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 import { Sidebar } from "@/components/calculator/sidebar";
 import { PwaRegister } from "@/components/pwa-register";
@@ -128,21 +124,6 @@ function focusInputById(id: string): boolean {
   return true;
 }
 
-function MobilePageCard({
-  children,
-  className = "",
-  id,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  id?: string;
-}) {
-  return (
-    <section id={id} className={`overflow-hidden rounded-[1.35rem] ${className}`}>
-      {children}
-    </section>
-  );
-}
 
 
 export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
@@ -222,13 +203,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const columnLayout = useColumnLayout();
   const [mainContentRef, mainContentWidth] = useElementWidth<HTMLDivElement>();
   const maxColumnsAllowed = getMaxColumnsForWidth(mainContentWidth);
-  const canFitCurrentColumns = canRenderColumnLayout(columnLayout.columns.length, mainContentWidth);
-  const minColumnsForToggle = Math.min(
-    DEFAULT_COLUMN_LAYOUT.columns.length,
-    Math.max(2, columnLayout.columns.length),
-  );
-  const canShowColumnsToggle = columnLayout.enabled || maxColumnsAllowed >= minColumnsForToggle;
-  const isMultiColumn = columnLayout.enabled && canFitCurrentColumns;
+  // Columns feature hidden during the v3 redesign. Users who had
+  // `enabled: true` in localStorage silently fall back to the single-
+  // pane layout; state stays in storage so toggling the feature back
+  // on later restores their column setup.
+  const isMultiColumn = false;
 
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
@@ -491,20 +470,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const shortcutHandlers = useMemo(
     () => ({
       quickCalc: () => toggleQuickCalc(),
-      history: () => navigateToTab("saved"),
+      // history shortcut points at the hidden Saved tab in v3; reroute
+      // it to the calculator so the key combo doesn't dead-end.
+      history: () => navigateToTab("calculator"),
       settings: () => navigateToTab("settings"),
       projects: () => navigateToTab("projects"),
       resetForm: () => dispatch({ type: "RESET" }),
       showShortcuts: () => setShowShortcutsModal((prev) => !prev),
       undo: () => dispatch({ type: "UNDO" }),
       redo: () => dispatch({ type: "REDO" }),
-      toggleColumns: () => {
-        if (canShowColumnsToggle) {
-          columnLayout.toggleEnabled();
-        }
-      },
+      // Columns feature is hidden during v3; shortcut is a no-op.
+      toggleColumns: () => {},
     }),
-    [canShowColumnsToggle, columnLayout, dispatch, navigateToTab, toggleQuickCalc],
+    [dispatch, navigateToTab, toggleQuickCalc],
   );
   useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
 
@@ -697,7 +675,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         result={result}
         isPending={isPending}
         isSaved={isCurrentSaved}
-        normalizedProfile={normalizedCurrentProfile}
         issues={issues}
         selectedProfile={selectedProfile}
         hasProjects={projectCount > 0}
@@ -706,6 +683,12 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onAddToProject={handleAddToProject}
         onOpenQuickCalc={openQuickCalc}
         onReset={resetAll}
+        compareItems={compareItems}
+        onRemoveCompareItem={removeCompareItem}
+        onOpenCompare={openCompare}
+        onPinToCompare={handleCompare}
+        canPinToCompare={!!result && (canCompare || currentIsInCompare)}
+        isInCompare={currentIsInCompare}
       />
 
       <DesktopProjectPane
@@ -894,51 +877,25 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onOpenResult={() => setShowOverlay(true)}
         scrollPaddingBottom="0px"
       />
-    ) : currentTab === "saved" ? (
-      <MobilePageCard>
-        <div className="px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
-          <MobileSavedHero saved={saved} />
-          <TemplatesPanel
-            saved={saved}
-            projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
-            onLoad={handleApplyTemplate}
-            onRemove={removeSaved}
-            onRemoveMany={removeSavedMany}
-            onDuplicate={duplicateSaved}
-            onDuplicateMany={duplicateSavedMany}
-            onAddToProject={handleTemplateAddToProject}
-            onRemovePart={handleRemoveTemplatePart}
-            onReorderPart={handleReorderTemplatePart}
-            onUpdate={updateSaved}
-            layout="mobile"
-          />
-        </div>
-      </MobilePageCard>
     ) : currentTab === "projects" ? (
-      <MobilePageCard className="flex min-h-[60dvh] flex-col">
-        <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
-          <MobileProjectsHero projects={projects} activeProjectId={activeProjectId} />
-          <ProjectsWorkspaceContent
-            projects={projects}
-            activeProjectId={activeProjectId}
-            onSetActiveProject={setActiveProjectId}
-            onCreateProject={createProject}
-            onRenameProject={renameProject}
-            onDeleteProject={deleteProject}
-            onDuplicateProject={duplicateProject}
-            onRemoveCalculation={removeCalculation}
-            onUpdateCalculationNote={updateCalculationNote}
-            onUpdateProjectDescription={updateProjectDescription}
-            onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
-            onLoadCalculation={handleLoad}
-            currentResult={result}
-            currentInput={result ? input : null}
-            onAddCalculation={addCalculation}
-            layout="mobile"
-            weightAsMain={weightAsMain}
-          />
-        </div>
-      </MobilePageCard>
+      <div className="px-3 md:px-4">
+        <MobileProjectsPage
+          projects={projects}
+          activeProjectId={activeProjectId}
+          onSetActiveProject={setActiveProjectId}
+          onCreateProject={(name) => {
+            const created = createProject(name);
+            setActiveProjectId(created.id);
+          }}
+          onRenameProject={renameProject}
+          onDeleteProject={(id) => {
+            deleteProject(id);
+            if (activeProjectId === id) setActiveProjectId(null);
+          }}
+          onRemoveCalculation={removeCalculation}
+          onLoadCalculation={handleLoad}
+        />
+      </div>
     ) : (
       <MobileSettingsContent
         input={input}
@@ -965,27 +922,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     <>
       <Sidebar
         onOpenContact={() => setShowContactDrawer(true)}
-        onOpenCompare={openCompare}
         onOpenProjects={() => navigateToTab("projects")}
         onOpenSettings={() => navigateToTab("settings")}
-        onOpenHistory={() => navigateToTab("saved")}
         onOpenQuickCalc={openQuickCalc}
         onOpenChangelog={() => setShowChangelogDrawer(true)}
-        compareCount={compareItems.length}
         projectCount={projectCount}
         isSettingsOpen={currentTab === "settings"}
-        isHistoryOpen={currentTab === "saved"}
         isProjectsOpen={currentTab === "projects"}
-        isCompareOpen={showCompareDrawer}
         isContactOpen={showContactDrawer}
         isChangelogOpen={showChangelogDrawer}
         collapsed={sidebarCollapsed}
         onToggleCollapsed={toggleSidebarCollapsed}
         theme={resolvedTheme}
         onToggleTheme={cycleTheme}
-        canShowColumnsToggle={canShowColumnsToggle}
-        isMultiColumnEnabled={columnLayout.enabled}
-        onToggleMultiColumn={columnLayout.toggleEnabled}
       />
 
       <div
@@ -1074,7 +1023,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                 <path d="M3 6h18M3 12h18M3 18h18" />
               </svg>
-              {(compareItems.length > 0 || saved.length > 0 || projectCount > 0) && (
+              {(compareItems.length > 0 || projectCount > 0) && (
                 <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
               )}
             </button>
@@ -1091,10 +1040,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         ) : (
           <>
-            {/* The calculator route renders its own in-pane header
-                (D3 Bench layout). Other tabs keep the page-wide
-                Workstation top bar. */}
-            {currentTab !== "calculator" && (
+            {/* The calculator and projects routes render their own
+                in-pane headers; settings overlays its drawer over
+                the calculator workspace and uses the page-wide top
+                bar. */}
+            {currentTab === "settings" && (
               <DesktopWorkstationTopbar
                 currentTab={currentTab}
                 contextLabel={result ? headerContext : null}
@@ -1102,7 +1052,30 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
                 onReset={resetAll}
               />
             )}
-            {desktopMain}
+            {currentTab === "projects" ? (
+              <DesktopProjectsPage
+                projects={projects}
+                activeProjectId={activeProjectId}
+                onSetActiveProject={setActiveProjectId}
+                onCreateProject={(name) => {
+                  const created = createProject(name);
+                  setActiveProjectId(created.id);
+                }}
+                onRenameProject={renameProject}
+                onDeleteProject={(id) => {
+                  deleteProject(id);
+                  if (activeProjectId === id) setActiveProjectId(null);
+                }}
+                onDuplicateProject={(id) => {
+                  const dup = duplicateProject(id);
+                  if (dup) setActiveProjectId(dup.id);
+                }}
+                onRemoveCalculation={removeCalculation}
+                onLoadCalculation={handleLoad}
+              />
+            ) : (
+              desktopMain
+            )}
           </>
         )}
 
@@ -1167,6 +1140,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               onAddToProject={handleAddToProject}
               hasProjects={projectCount > 0}
               normalizedProfile={normalizedCurrentProfile}
+              compareItems={compareItems}
+              onRemoveCompareItem={removeCompareItem}
+              onOpenCompare={openCompare}
             />
           ) : (
             <ResultOverlay
@@ -1191,23 +1167,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           )
         )}
 
-        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("saved")) && (
-          <TemplatesDrawer
-            open={currentTab === "saved"}
-            onClose={navigateHome}
-            saved={saved}
-            projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
-            onLoad={handleApplyTemplate}
-            onRemove={removeSaved}
-            onRemoveMany={removeSavedMany}
-            onDuplicate={duplicateSaved}
-            onDuplicateMany={duplicateSavedMany}
-            onAddToProject={handleTemplateAddToProject}
-            onRemovePart={handleRemoveTemplatePart}
-            onReorderPart={handleReorderTemplatePart}
-            onUpdate={updateSaved}
-          />
-        )}
 
         {!isMobile && !(isMultiColumn && columnLayout.hasPanel("settings")) && (
           <SettingsDrawer
@@ -1277,13 +1236,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               onOpenChange={setShowMobileMenu}
               currentTab={currentTab}
               onNavigate={navigateToTab}
-              onOpenCompare={openCompare}
               onOpenChangelog={() => setShowChangelogDrawer(true)}
               onOpenContact={() => setShowContactDrawer(true)}
               onReplayOnboarding={() => onboardedStore.set(false)}
-              savedCount={saved.length}
               projectCount={projectCount}
-              compareCount={compareItems.length}
             />
           </>
         )}
@@ -1299,28 +1255,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           hasProjects={projectCount > 0}
         />
 
-        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("projects")) && (
-          <ProjectDrawer
-            open={currentTab === "projects"}
-            onClose={navigateHome}
-            projects={projects}
-            activeProjectId={activeProjectId}
-            onSetActiveProject={setActiveProjectId}
-            onCreateProject={createProject}
-            onRenameProject={renameProject}
-            onDeleteProject={deleteProject}
-            onDuplicateProject={duplicateProject}
-            onRemoveCalculation={removeCalculation}
-            onUpdateCalculationNote={updateCalculationNote}
-            onUpdateProjectDescription={updateProjectDescription}
-            onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
-            onLoadCalculation={handleLoad}
-            currentResult={result}
-            currentInput={result ? input : null}
-            onAddCalculation={addCalculation}
-            weightAsMain={weightAsMain}
-          />
-        )}
+        {/* ProjectDrawer is no longer rendered on desktop — the
+            /projects route renders the new full-page
+            DesktopProjectsPage inline. The drawer component itself
+            stays in the codebase for future use. */}
 
         {(externalSource || result) && (
           <SaveToProjectModal

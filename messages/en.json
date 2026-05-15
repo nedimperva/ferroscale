@@ -161,6 +161,14 @@
     "title": "Menu",
     "more": "More"
   },
+  "compareTray": {
+    "label": "Compare",
+    "aria": "Pinned comparison items",
+    "remove": "Remove from compare",
+    "openCount": "Compare {count}",
+    "pin": "Pin to compare",
+    "pinned": "Pinned"
+  },
   "desktopForm": {
     "search": "Find profile, preset, or calc…",
     "new": "New",
@@ -176,6 +184,31 @@
     "piecesHint": "integer",
     "unitPrice": "Unit price",
     "unitPriceHint": "optional"
+  },
+  "mobileProjects": {
+    "heroHint": "{count, plural, one {# part} other {# parts}}",
+    "heroEmptyTitle": "No projects yet",
+    "heroEmptyHint": "Create one to group your calculations.",
+    "heroPickTitle": "Pick an active project",
+    "heroPickHint": "Tap a chip below to see its parts.",
+    "emptyTitle": "Project is empty",
+    "emptyHint": "Add a calculation from the result actions to see it here.",
+    "noProjectsTitle": "No projects yet",
+    "noProjectsHint": "Tap + to create your first project.",
+    "create": "New project",
+    "createAria": "Create project",
+    "createPlaceholder": "Project name",
+    "cancelAria": "Cancel",
+    "deleteAria": "Delete project",
+    "confirmDelete": "Delete project \"{name}\"? Its parts will be removed too.",
+    "confirmRemovePart": "Remove this part from the project?"
+  },
+  "desktopProjects": {
+    "railEmptyHint": "Create one with +.",
+    "detailEmptyHint": "Create your first project to get started.",
+    "detailPickHint": "Pick a project on the left to see its parts.",
+    "duplicate": "Duplicate",
+    "delete": "Delete"
   },
   "desktopProject": {
     "headerSummary": "{count, plural, one {# part} other {# parts}} · {weight} kg · {currency} {cost}",
