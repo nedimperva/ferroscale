@@ -10,10 +10,12 @@ import {
 import type {
   CalculationInput,
   CalculationResult,
+  LengthUnit,
   ValidationIssue,
 } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import type {
+  DimensionKey,
   MetalFamilyId,
   ProfileCategory,
   ProfileDefinition,
@@ -218,7 +220,7 @@ export const DesktopFormPane = memo(function DesktopFormPane({
           </div>
 
           {/* Profile grid */}
-          <div className="mt-3 grid grid-cols-4 gap-1.5 xl:grid-cols-6">
+          <div className="mt-2.5 grid grid-cols-4 gap-1.5 xl:grid-cols-6">
             {categoryProfiles.map((p) => {
               const isActive = p.id === input.profileId;
               return (
@@ -226,7 +228,7 @@ export const DesktopFormPane = memo(function DesktopFormPane({
                   key={p.id}
                   type="button"
                   onClick={() => handleProfileChange(p.id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-colors ${
+                  className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2 text-center transition-colors ${
                     isActive
                       ? "border-accent-border bg-accent-surface text-accent-text"
                       : "border-border bg-surface text-foreground hover:border-border-strong"
@@ -240,6 +242,71 @@ export const DesktopFormPane = memo(function DesktopFormPane({
               );
             })}
           </div>
+
+          {/* Size picker (standard profiles) or dimension inputs (manual). */}
+          {selectedProfile.mode === "standard" ? (
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
+                {t("desktopForm.size")}
+              </span>
+              <div className="flex max-h-[8.5rem] flex-wrap gap-1 overflow-y-auto pr-1">
+                {selectedProfile.sizes.map((s) => {
+                  const isActive = s.id === input.selectedSizeId;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => {
+                        if (s.id === input.selectedSizeId) return;
+                        triggerHaptic("light");
+                        dispatch({ type: "SET_SIZE", sizeId: s.id });
+                      }}
+                      className={`inline-flex h-7 items-center rounded-md border px-2 text-2xs font-semibold tabular-nums transition-colors ${
+                        isActive
+                          ? "border-accent-border bg-accent-surface text-accent-text"
+                          : "border-border bg-surface text-foreground-secondary hover:border-border-strong"
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
+                {t("desktopForm.dimensions")}
+              </span>
+              <div className="grid grid-cols-3 gap-1.5 xl:grid-cols-4">
+                {selectedProfile.dimensions.map((dim) => {
+                  const stored = input.manualDimensions[dim.key];
+                  const value = stored?.value ?? 0;
+                  const unit = stored?.unit ?? input.length.unit;
+                  const issue = issues.find(
+                    (i) => i.field === `manualDimensions.${dim.key}`,
+                  );
+                  return (
+                    <DimensionCell
+                      key={dim.key}
+                      label={t(`dataset.dimensions.${dim.key}`)}
+                      range={`${dim.minMm}–${dim.maxMm} mm`}
+                      value={value}
+                      unit={unit}
+                      hasIssue={!!issue}
+                      onChange={(v) =>
+                        dispatch({
+                          type: "SET_DIMENSION_VALUE",
+                          key: dim.key as DimensionKey,
+                          value: v,
+                        })
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Geometry section */}
@@ -259,6 +326,10 @@ export const DesktopFormPane = memo(function DesktopFormPane({
               onFocus={() => setActiveField("length")}
               onChange={(v) =>
                 dispatch({ type: "SET_LENGTH_VALUE", value: v })
+              }
+              lengthUnit={input.length.unit}
+              onLengthUnitChange={(u) =>
+                dispatch({ type: "SET_LENGTH_UNIT", unit: u })
               }
             />
             <GeometryField
@@ -344,6 +415,8 @@ export const DesktopFormPane = memo(function DesktopFormPane({
   );
 });
 
+const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
+
 interface GeometryFieldProps {
   label: string;
   hint: string;
@@ -354,6 +427,9 @@ interface GeometryFieldProps {
   hasIssue: boolean;
   onFocus: () => void;
   onChange: (next: number) => void;
+  /** When provided, render an inline unit toggle below the value. */
+  lengthUnit?: LengthUnit;
+  onLengthUnitChange?: (next: LengthUnit) => void;
 }
 
 function GeometryField({
@@ -366,6 +442,8 @@ function GeometryField({
   hasIssue,
   onFocus,
   onChange,
+  lengthUnit,
+  onLengthUnitChange,
 }: GeometryFieldProps) {
   const display = Number.isFinite(value)
     ? decimals === 0
@@ -399,7 +477,7 @@ function GeometryField({
           {hint}
         </span>
       </div>
-      <div className="mt-1.5 flex items-baseline gap-1">
+      <div className="mt-1 flex items-baseline gap-1">
         <input
           type="number"
           step={decimals === 0 ? 1 : decimals === 2 ? 0.01 : 0.001}
@@ -412,12 +490,82 @@ function GeometryField({
             const parsed = Number.parseFloat(raw);
             onChange(Number.isFinite(parsed) ? parsed : 0);
           }}
-          className="w-full bg-transparent text-3xl font-bold tracking-[-0.04em] tabular-nums text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+          className="w-full bg-transparent text-2xl font-bold tracking-[-0.04em] tabular-nums text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
           aria-label={label}
         />
-        <span className="shrink-0 text-sm font-semibold text-muted">{unit}</span>
+        {!lengthUnit && (
+          <span className="shrink-0 text-sm font-semibold text-muted">{unit}</span>
+        )}
       </div>
+
+      {lengthUnit && onLengthUnitChange && (
+        <div className="mt-1.5 flex gap-1">
+          {LENGTH_UNITS.map((u) => {
+            const uActive = u === lengthUnit;
+            return (
+              <button
+                key={u}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (u === lengthUnit) return;
+                  triggerHaptic("light");
+                  onLengthUnitChange(u);
+                }}
+                className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-md border px-1.5 text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${
+                  uActive
+                    ? "border-accent bg-accent text-white"
+                    : "border-border bg-surface text-muted hover:border-border-strong"
+                }`}
+              >
+                {u}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <span className="sr-only">{display}</span>
+    </label>
+  );
+}
+
+interface DimensionCellProps {
+  label: string;
+  range: string;
+  value: number;
+  unit: string;
+  hasIssue: boolean;
+  onChange: (next: number) => void;
+}
+
+function DimensionCell({ label, range, value, unit, hasIssue, onChange }: DimensionCellProps) {
+  return (
+    <label
+      className={`flex flex-col rounded-xl border bg-surface px-2.5 py-2 transition-colors ${
+        hasIssue ? "border-red-border bg-red-surface" : "border-border hover:border-border-strong"
+      }`}
+    >
+      <div className="flex items-baseline justify-between">
+        <span className="truncate text-2xs font-semibold text-foreground-secondary">{label}</span>
+        <span className="text-2xs text-muted-faint">{range}</span>
+      </div>
+      <div className="mt-1 flex items-baseline gap-1">
+        <input
+          type="number"
+          step={0.1}
+          min={0}
+          inputMode="decimal"
+          value={Number.isFinite(value) ? value : 0}
+          onChange={(e) => {
+            const parsed = Number.parseFloat(e.target.value);
+            onChange(Number.isFinite(parsed) ? parsed : 0);
+          }}
+          className="w-full bg-transparent text-base font-bold tabular-nums text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
+        />
+        <span className="text-[0.65rem] font-semibold text-muted">{unit}</span>
+      </div>
     </label>
   );
 }

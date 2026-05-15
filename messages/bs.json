@@ -168,6 +168,8 @@
     "profile": "Profil",
     "geometry": "Geometrija",
     "material": "Materijal",
+    "size": "Velicina",
+    "dimensions": "Dimenzije",
     "length": "Duzina",
     "lengthHint": "u {unit}",
     "pieces": "Komada",

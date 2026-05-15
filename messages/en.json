@@ -168,6 +168,8 @@
     "profile": "Profile",
     "geometry": "Geometry",
     "material": "Material",
+    "size": "Size",
+    "dimensions": "Dimensions",
     "length": "Length",
     "lengthHint": "in {unit}",
     "pieces": "Pieces",
