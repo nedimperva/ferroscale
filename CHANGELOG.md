@@ -9,7 +9,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Desktop calculator route switches from the D1 "Workstation" layout to the **D3 "Bench" (3-pane workshop)** layout that's actually called for in the design bundle. Sidebar stays on the left; the form pane on the right gains a dark "live mini-result" bar at the top (big tabular weight + price, Save + Add-to-project) above the existing form sections; and a new always-visible 360 px **project pane** lives on the far right showing the active project's parts list with a "Project total" sum strip at the bottom (kg + ≈ cost). When no project is active the pane surfaces a picker (or a friendly empty state if there are no projects yet).
+- Desktop calculator route is now a **full from-scratch D3 "Bench" workshop rebuild** instead of wrapping the legacy `ProfileSection`. New `DesktopFormPane` owns: an in-pane top bar (Calculator title + active-project chip + ⌘K search + primary "New"), the dark live mini-result bar, and three pixel-accurate section cards from the design — Profile (category pill row + 4–6-col profile-type grid), Geometry (3 large rounded input chips for length / pieces / unit price with active accent caret), and Material (color-dot grade chips with density). Each control dispatches through `useCalculator` directly. Page-wide Workstation top bar is suppressed on this route since the form pane carries its own header.
+- Wrapper drops the legacy slate-era top padding and max-width on the calculator route so the 3-pane workshop runs edge-to-edge between sidebar and project pane.
 
 ---
 

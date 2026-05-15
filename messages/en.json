@@ -161,6 +161,20 @@
     "title": "Menu",
     "more": "More"
   },
+  "desktopForm": {
+    "search": "Find profile, preset, or calc…",
+    "new": "New",
+    "projectChip": "Project · {name}",
+    "profile": "Profile",
+    "geometry": "Geometry",
+    "material": "Material",
+    "length": "Length",
+    "lengthHint": "in {unit}",
+    "pieces": "Pieces",
+    "piecesHint": "integer",
+    "unitPrice": "Unit price",
+    "unitPriceHint": "optional"
+  },
   "desktopProject": {
     "headerSummary": "{count, plural, one {# part} other {# parts}} · {weight} kg · {currency} {cost}",
     "noActiveTitle": "No active project",

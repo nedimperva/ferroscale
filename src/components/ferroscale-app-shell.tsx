@@ -39,7 +39,7 @@ import { MobileMaterialSheet } from "@/components/calculator/mobile-material-she
 import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
 import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
-import { DesktopMiniResult } from "@/components/calculator/desktop-mini-result";
+import { DesktopFormPane } from "@/components/calculator/desktop-form-pane";
 import { DesktopProjectPane } from "@/components/calculator/desktop-project-pane";
 import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
@@ -48,7 +48,6 @@ import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultOverlay } from "@/components/calculator/result-bar";
 import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
 import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
-import { SettingsSummary } from "@/components/calculator/settings-summary";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
@@ -687,57 +686,28 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return () => window.clearTimeout(timeoutId);
   }, [currentTab, lastAnimatedTab]);
 
-  // D3 Bench layout: left form column with a dark mini-live-result bar
-  // on top, plus an always-visible 360 px right project pane.
+  // D3 Bench 3-pane workshop: in-pane form (own header + mini result +
+  // section cards) on the left, always-visible 360 px project pane on
+  // the right.
   const desktopMain = (
-    <div className="hidden lg:flex">
-      {/* Left — form column */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 py-4">
-        <DesktopMiniResult
-          result={result}
-          isPending={isPending}
-          isSaved={isCurrentSaved}
-          normalizedProfile={normalizedCurrentProfile}
-          onSave={handleOpenSaveDialog}
-          onAddToProject={handleAddToProject}
-          hasProjects={projectCount > 0}
-          canAddToProject={!!result}
-        />
+    <div className="hidden h-[calc(100dvh-env(safe-area-inset-top,0px))] min-h-0 lg:flex">
+      <DesktopFormPane
+        input={input}
+        dispatch={dispatch}
+        result={result}
+        isPending={isPending}
+        isSaved={isCurrentSaved}
+        normalizedProfile={normalizedCurrentProfile}
+        issues={issues}
+        selectedProfile={selectedProfile}
+        hasProjects={projectCount > 0}
+        activeProjectName={activeProject?.name ?? null}
+        onOpenSaveDialog={handleOpenSaveDialog}
+        onAddToProject={handleAddToProject}
+        onOpenQuickCalc={openQuickCalc}
+        onReset={resetAll}
+      />
 
-        <div className="panel-base flex w-full min-w-0 flex-col rounded-[1.35rem]">
-          {showSettingsPreview && (
-            <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
-              <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
-            </div>
-          )}
-
-          <div className="px-3 py-2 md:p-4">
-            <ProfileSection
-              input={input}
-              dispatch={dispatch}
-              selectedProfile={selectedProfile}
-              issues={issues}
-              activeFamily={activeFamily}
-              showInlineMaterial={showInlineMaterial}
-              showInlinePrice={showInlinePrice}
-              defaultUnit={defaultUnit}
-              onSavePreset={handleSavePreset}
-              profilePresets={presetsForProfile(input.profileId)}
-              onRemovePreset={removePreset}
-            />
-          </div>
-
-          <div className="border-t border-border-faint px-4 pb-4 pt-3">
-            <ReversePanel
-              reverse={reverse}
-              isManualProfile={selectedProfile.mode === "manual"}
-              input={input}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Right — always-visible project pane */}
       <DesktopProjectPane
         project={activeProject}
         projects={projects}
@@ -1020,12 +990,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
       <div
         ref={mainContentRef}
-        className={`flex min-h-dvh w-full flex-col px-0 transition-[margin-left] duration-200 ease-in-out md:px-6 ${
+        className={`flex min-h-dvh w-full flex-col px-0 pt-[calc(3rem+env(safe-area-inset-top,0px))] transition-[margin-left] duration-200 ease-in-out lg:pt-0 ${
           isMultiColumn
             ? "overflow-hidden pb-0"
-            : "mx-auto max-w-[94rem] pb-8"
+            : currentTab === "calculator"
+              ? "max-w-none pb-32 lg:pb-0"
+              : "mx-auto max-w-[94rem] pb-8 md:px-6"
         } ${sidebarCollapsed ? "lg:ml-[56px]" : "lg:ml-[220px]"}`}
-        style={{ paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
         <header
           className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(20,18,15,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
@@ -1116,12 +1087,17 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         ) : (
           <>
-            <DesktopWorkstationTopbar
-              currentTab={currentTab}
-              contextLabel={result ? headerContext : null}
-              onOpenQuickCalc={openQuickCalc}
-              onReset={resetAll}
-            />
+            {/* The calculator route renders its own in-pane header
+                (D3 Bench layout). Other tabs keep the page-wide
+                Workstation top bar. */}
+            {currentTab !== "calculator" && (
+              <DesktopWorkstationTopbar
+                currentTab={currentTab}
+                contextLabel={result ? headerContext : null}
+                onOpenQuickCalc={openQuickCalc}
+                onReset={resetAll}
+              />
+            )}
             {desktopMain}
           </>
         )}
