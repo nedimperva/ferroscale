@@ -161,6 +161,20 @@
     "title": "Menu",
     "more": "More"
   },
+  "desktopProject": {
+    "headerSummary": "{count, plural, one {# part} other {# parts}} · {weight} kg · {currency} {cost}",
+    "noActiveTitle": "No active project",
+    "manageAria": "Manage projects",
+    "emptyTitle": "Project is empty",
+    "emptyHint": "Add a calculation from the result actions to see it here.",
+    "pickActive": "Pick active project",
+    "partsCount": "{count, plural, one {# part} other {# parts}}",
+    "noProjectsTitle": "No projects yet",
+    "noProjectsHint": "Create one to group related calculations.",
+    "openProjectsTab": "Open Projects",
+    "projectTotal": "Project total",
+    "cost": "Cost"
+  },
   "mobileTabHero": {
     "savedCount": "{count, plural, one {# template saved} other {# templates saved}}",
     "savedEmpty": "No templates yet",

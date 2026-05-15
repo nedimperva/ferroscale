@@ -161,6 +161,20 @@
     "title": "Meni",
     "more": "Vise"
   },
+  "desktopProject": {
+    "headerSummary": "{count, plural, one {# dio} few {# dijela} other {# dijelova}} · {weight} kg · {currency} {cost}",
+    "noActiveTitle": "Nema aktivnog projekta",
+    "manageAria": "Upravljaj projektima",
+    "emptyTitle": "Projekat je prazan",
+    "emptyHint": "Dodaj kalkulaciju iz akcija rezultata da je vidis ovdje.",
+    "pickActive": "Odaberi aktivni projekat",
+    "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+    "noProjectsTitle": "Jos nema projekata",
+    "noProjectsHint": "Kreiraj projekat da grupises povezane kalkulacije.",
+    "openProjectsTab": "Otvori Projekte",
+    "projectTotal": "Ukupno projekat",
+    "cost": "Cijena"
+  },
   "mobileTabHero": {
     "savedCount": "{count, plural, one {# sablon sacuvan} few {# sablona sacuvana} other {# sablona sacuvano}}",
     "savedEmpty": "Jos nema sablona",

@@ -7,9 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Fixed
+### Changed
 
-- Desktop calculator route now renders the D1 Workstation layout it was supposed to: form column on the left and a sticky `ResultPanel` on the right (lg: 360 px column, xl: 420 px). Master's parallel 2.6.0 overhaul had collapsed desktop to a single column with a floating result chip; the merge silently kept that single-column structure even though the chip was no longer rendered, which left desktop with no live result UI at all.
+- Desktop calculator route switches from the D1 "Workstation" layout to the **D3 "Bench" (3-pane workshop)** layout that's actually called for in the design bundle. Sidebar stays on the left; the form pane on the right gains a dark "live mini-result" bar at the top (big tabular weight + price, Save + Add-to-project) above the existing form sections; and a new always-visible 360 px **project pane** lives on the far right showing the active project's parts list with a "Project total" sum strip at the bottom (kg + ≈ cost). When no project is active the pane surfaces a picker (or a friendly empty state if there are no projects yet).
 
 ---
 

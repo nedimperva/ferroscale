@@ -39,6 +39,8 @@ import { MobileMaterialSheet } from "@/components/calculator/mobile-material-she
 import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
 import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
+import { DesktopMiniResult } from "@/components/calculator/desktop-mini-result";
+import { DesktopProjectPane } from "@/components/calculator/desktop-project-pane";
 import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
 import { MobileSavedHero, MobileProjectsHero } from "@/components/calculator/mobile-tab-hero";
@@ -685,63 +687,65 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return () => window.clearTimeout(timeoutId);
   }, [currentTab, lastAnimatedTab]);
 
+  // D3 Bench layout: left form column with a dark mini-live-result bar
+  // on top, plus an always-visible 360 px right project pane.
   const desktopMain = (
-    <div className="hidden gap-4 px-4 lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_420px]">
-      {/* Left column — form */}
-      <div className="panel-base flex w-full min-w-0 flex-col self-start rounded-[1.35rem]">
-        {showSettingsPreview && (
-          <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
-            <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
-          </div>
-        )}
-
-        <div className="px-3 py-2 md:p-4">
-          <ProfileSection
-            input={input}
-            dispatch={dispatch}
-            selectedProfile={selectedProfile}
-            issues={issues}
-            activeFamily={activeFamily}
-            showInlineMaterial={showInlineMaterial}
-            showInlinePrice={showInlinePrice}
-            defaultUnit={defaultUnit}
-            onSavePreset={handleSavePreset}
-            profilePresets={presetsForProfile(input.profileId)}
-            onRemovePreset={removePreset}
-          />
-        </div>
-
-        <div className="border-t border-border-faint px-4 pb-4 pt-3">
-          <ReversePanel
-            reverse={reverse}
-            isManualProfile={selectedProfile.mode === "manual"}
-            input={input}
-          />
-        </div>
-      </div>
-
-      {/* Right column — sticky result panel (D1 Workstation) */}
-      <aside className="hidden self-start lg:sticky lg:top-[5rem] lg:block">
-        <ResultPanel
+    <div className="hidden lg:flex">
+      {/* Left — form column */}
+      <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 py-4">
+        <DesktopMiniResult
           result={result}
           isPending={isPending}
           isSaved={isCurrentSaved}
-          onOpenSaveDialog={handleOpenSaveDialog}
-          includeVat={input.includeVat}
-          wastePercent={input.wastePercent}
-          vatPercent={input.vatPercent}
-          onCompare={handleCompare}
-          canCompare={canCompare}
-          isInCompare={currentIsInCompare}
-          compareCount={compareItems.length}
-          maxCompare={maxCompare}
+          normalizedProfile={normalizedCurrentProfile}
+          onSave={handleOpenSaveDialog}
           onAddToProject={handleAddToProject}
           hasProjects={projectCount > 0}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-          layout="standalone"
+          canAddToProject={!!result}
         />
-      </aside>
+
+        <div className="panel-base flex w-full min-w-0 flex-col rounded-[1.35rem]">
+          {showSettingsPreview && (
+            <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
+              <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
+            </div>
+          )}
+
+          <div className="px-3 py-2 md:p-4">
+            <ProfileSection
+              input={input}
+              dispatch={dispatch}
+              selectedProfile={selectedProfile}
+              issues={issues}
+              activeFamily={activeFamily}
+              showInlineMaterial={showInlineMaterial}
+              showInlinePrice={showInlinePrice}
+              defaultUnit={defaultUnit}
+              onSavePreset={handleSavePreset}
+              profilePresets={presetsForProfile(input.profileId)}
+              onRemovePreset={removePreset}
+            />
+          </div>
+
+          <div className="border-t border-border-faint px-4 pb-4 pt-3">
+            <ReversePanel
+              reverse={reverse}
+              isManualProfile={selectedProfile.mode === "manual"}
+              input={input}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Right — always-visible project pane */}
+      <DesktopProjectPane
+        project={activeProject}
+        projects={projects}
+        onSetActiveProject={setActiveProjectId}
+        onOpenProjectsTab={() => navigateToTab("projects")}
+        onLoadCalculation={(calc) => handleLoad(calc.input)}
+        onRemoveCalculation={removeCalculation}
+      />
     </div>
   );
 
