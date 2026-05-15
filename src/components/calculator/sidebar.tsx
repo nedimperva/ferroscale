@@ -9,11 +9,13 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface SidebarProps {
   onOpenContact: () => void;
+  onOpenCalculator: () => void;
   onOpenProjects: () => void;
   onOpenSettings: () => void;
   onOpenQuickCalc: () => void;
   onOpenChangelog: () => void;
   projectCount: number;
+  isCalculatorOpen: boolean;
   isSettingsOpen: boolean;
   isProjectsOpen: boolean;
   isContactOpen: boolean;
@@ -26,11 +28,13 @@ interface SidebarProps {
 
 export const Sidebar = memo(function Sidebar({
   onOpenContact,
+  onOpenCalculator,
   onOpenProjects,
   onOpenSettings,
   onOpenQuickCalc,
   onOpenChangelog,
   projectCount,
+  isCalculatorOpen,
   isSettingsOpen,
   isProjectsOpen,
   isContactOpen,
@@ -109,6 +113,24 @@ export const Sidebar = memo(function Sidebar({
           label={collapsed ? t("quickCalc.sidebarLabel") : `${t("quickCalc.sidebarLabel")}  ${quickCalcShortcut}`}
           collapsed={collapsed}
           onClick={onOpenQuickCalc}
+        />
+        <SidebarButton
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <rect x="4" y="3" width="16" height="18" rx="2" />
+              <path d="M8 7h8" />
+              <path d="M8 12h2" />
+              <path d="M12 12h2" />
+              <path d="M16 12h.01" />
+              <path d="M8 16h2" />
+              <path d="M12 16h2" />
+              <path d="M16 16h.01" />
+            </svg>
+          }
+          label={t("sidebar.calculator")}
+          active={isCalculatorOpen}
+          collapsed={collapsed}
+          onClick={onOpenCalculator}
         />
         <SidebarButton
           icon={

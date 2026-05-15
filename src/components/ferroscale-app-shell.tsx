@@ -23,7 +23,7 @@ import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calc
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
-import { APP_TABS, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
+import { APP_TABS, getAppTabHref, type AppTabId } from "@/lib/app-shell";
 import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
 import type { ColumnPanelId } from "@/lib/column-layout";
@@ -34,16 +34,16 @@ import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet
 import { MobileMaterialSheet } from "@/components/calculator/mobile-material-sheet";
 import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
 import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
-import { DesktopWorkstationTopbar } from "@/components/calculator/desktop-workstation-topbar";
 import { DesktopFormPane } from "@/components/calculator/desktop-form-pane";
 import { DesktopProjectPane } from "@/components/calculator/desktop-project-pane";
 import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
 import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
 import { MobileProjectsPage } from "@/components/projects/mobile-projects-page";
 import { DesktopProjectsPage } from "@/components/projects/desktop-projects-page";
+import { DesktopSettingsPage } from "@/components/calculator/desktop-settings-page";
 import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultOverlay } from "@/components/calculator/result-bar";
-import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
+import { SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
 import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
@@ -644,26 +644,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   // Edge-swipe tab navigation removed alongside the bottom tab bar — the
   // hamburger menu is the single mobile nav entry point now.
 
-  const [lastAnimatedTab, setLastAnimatedTab] = useState(currentTab);
-  const pageDirection =
-    lastAnimatedTab === currentTab
-      ? 0
-      : getAppTabIndex(currentTab) > getAppTabIndex(lastAnimatedTab)
-        ? 1
-        : -1;
-
-  useEffect(() => {
-    if (lastAnimatedTab === currentTab) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setLastAnimatedTab(currentTab);
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [currentTab, lastAnimatedTab]);
-
   // D3 Bench 3-pane workshop: in-pane form (own header + mini result +
   // section cards) on the left, always-visible 360 px project pane on
   // the right.
@@ -922,11 +902,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     <>
       <Sidebar
         onOpenContact={() => setShowContactDrawer(true)}
+        onOpenCalculator={() => navigateToTab("calculator")}
         onOpenProjects={() => navigateToTab("projects")}
         onOpenSettings={() => navigateToTab("settings")}
         onOpenQuickCalc={openQuickCalc}
         onOpenChangelog={() => setShowChangelogDrawer(true)}
         projectCount={projectCount}
+        isCalculatorOpen={currentTab === "calculator"}
         isSettingsOpen={currentTab === "settings"}
         isProjectsOpen={currentTab === "projects"}
         isContactOpen={showContactDrawer}
@@ -1014,19 +996,38 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
                 </svg>
               )}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowMobileMenu(true)}
-              className="premium-icon-button relative h-9 w-9"
-              aria-label={t("menu.title")}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <path d="M3 6h18M3 12h18M3 18h18" />
-              </svg>
-              {(compareItems.length > 0 || projectCount > 0) && (
-                <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
-              )}
-            </button>
+            {currentTab === "projects" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeProjectId) {
+                    setActiveProjectId(null);
+                  } else {
+                    navigateToTab("calculator");
+                  }
+                }}
+                className="premium-icon-button relative h-9 w-9"
+                aria-label={activeProjectId ? t("mobileProjects.backToSelector") : t("mobileProjects.backToCalculator")}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowMobileMenu(true)}
+                className="premium-icon-button relative h-9 w-9"
+                aria-label={t("menu.title")}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M3 6h18M3 12h18M3 18h18" />
+                </svg>
+                {(compareItems.length > 0 || projectCount > 0) && (
+                  <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
+                )}
+              </button>
+            )}
           </div>
         </header>
 
@@ -1038,45 +1039,66 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             contentMap={columnContentMap}
             maxColumnsAllowed={maxColumnsAllowed}
           />
+        ) : currentTab === "projects" ? (
+          <DesktopProjectsPage
+            projects={projects}
+            activeProjectId={activeProjectId}
+            onSetActiveProject={setActiveProjectId}
+            onCreateProject={(name) => {
+              const created = createProject(name);
+              setActiveProjectId(created.id);
+            }}
+            onRenameProject={renameProject}
+            onDeleteProject={(id) => {
+              deleteProject(id);
+              if (activeProjectId === id) setActiveProjectId(null);
+            }}
+            onDuplicateProject={(id) => {
+              const dup = duplicateProject(id);
+              if (dup) setActiveProjectId(dup.id);
+            }}
+            onRemoveCalculation={removeCalculation}
+            onLoadCalculation={handleLoad}
+          />
+        ) : currentTab === "settings" ? (
+          <DesktopSettingsPage
+            input={input}
+            dispatch={dispatch}
+            activeFamily={activeFamily}
+            issues={issues}
+            onResetAll={resetAll}
+            onOpenChangelog={() => setShowChangelogDrawer(true)}
+            compareLimit={compareLimit}
+            onCompareLimitChange={setCompareLimit}
+            maxCompare={maxCompare}
+            isCompareMobileCapped={isCompareMobileCapped}
+            showInlineMaterial={showInlineMaterial}
+            onToggleInlineMaterial={inlineMaterialStore.toggle}
+            showInlinePrice={showInlinePrice}
+            onToggleInlinePrice={inlinePriceStore.toggle}
+            showSettingsPreview={showSettingsPreview}
+            onToggleSettingsPreview={settingsPreviewStore.toggle}
+            weightAsMain={weightAsMain}
+            onToggleWeightAsMain={weightAsMainStore.toggle}
+            defaultUnit={defaultUnit}
+            onDefaultUnitChange={handleDefaultUnitChange}
+            unitOptions={UNIT_OPTIONS}
+            textSize={textSize}
+            onTextSizeChange={setTextSize}
+            theme={theme}
+            onThemeChange={setTheme}
+            syncStatus={sync.status}
+            onConnectSync={sync.connectProvider}
+            onReconnectSync={sync.reconnectProvider}
+            onChangeSyncPassphrase={sync.changePassphrase}
+            onSyncNow={() => sync.syncNow()}
+            onDisconnectSync={sync.disconnectProvider}
+            onResetRemoteSync={sync.resetRemoteCopy}
+            onExportSync={sync.exportSnapshot}
+            onImportSync={sync.importSnapshot}
+          />
         ) : (
-          <>
-            {/* The calculator and projects routes render their own
-                in-pane headers; settings overlays its drawer over
-                the calculator workspace and uses the page-wide top
-                bar. */}
-            {currentTab === "settings" && (
-              <DesktopWorkstationTopbar
-                currentTab={currentTab}
-                contextLabel={result ? headerContext : null}
-                onOpenQuickCalc={openQuickCalc}
-                onReset={resetAll}
-              />
-            )}
-            {currentTab === "projects" ? (
-              <DesktopProjectsPage
-                projects={projects}
-                activeProjectId={activeProjectId}
-                onSetActiveProject={setActiveProjectId}
-                onCreateProject={(name) => {
-                  const created = createProject(name);
-                  setActiveProjectId(created.id);
-                }}
-                onRenameProject={renameProject}
-                onDeleteProject={(id) => {
-                  deleteProject(id);
-                  if (activeProjectId === id) setActiveProjectId(null);
-                }}
-                onDuplicateProject={(id) => {
-                  const dup = duplicateProject(id);
-                  if (dup) setActiveProjectId(dup.id);
-                }}
-                onRemoveCalculation={removeCalculation}
-                onLoadCalculation={handleLoad}
-              />
-            ) : (
-              desktopMain
-            )}
-          </>
+          desktopMain
         )}
 
         <div
@@ -1090,23 +1112,11 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           <AnimatePresence initial={false} mode="wait">
             <motion.div
               key={currentTab}
-              initial={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, x: pageDirection >= 0 ? 24 : -24, scale: 0.992 }
-              }
-              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0, scale: 1 }}
-              exit={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, x: pageDirection >= 0 ? -18 : 18, scale: 0.988 }
-              }
-              transition={
-                shouldReduceMotion
-                  ? { duration: 0.12, ease: "linear" }
-                  : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
-              }
-              className="grid gap-4 will-change-transform"
+              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0.1 : 0.14, ease: "linear" }}
+              className="grid gap-4"
             >
               {mobileScreen}
             </motion.div>
@@ -1168,47 +1178,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
 
 
-        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("settings")) && (
-          <SettingsDrawer
-            open={currentTab === "settings"}
-            onClose={navigateHome}
-            input={input}
-            dispatch={dispatch}
-            activeFamily={activeFamily}
-            issues={issues}
-            onResetAll={resetAll}
-            onOpenChangelog={() => {
-              navigateHome();
-              setShowChangelogDrawer(true);
-            }}
-            compareLimit={compareLimit}
-            onCompareLimitChange={setCompareLimit}
-            maxCompare={maxCompare}
-            isCompareMobileCapped={isCompareMobileCapped}
-            showInlineMaterial={showInlineMaterial}
-            onToggleInlineMaterial={inlineMaterialStore.toggle}
-            showInlinePrice={showInlinePrice}
-            onToggleInlinePrice={inlinePriceStore.toggle}
-            showSettingsPreview={showSettingsPreview}
-            onToggleSettingsPreview={settingsPreviewStore.toggle}
-            weightAsMain={weightAsMain}
-            onToggleWeightAsMain={weightAsMainStore.toggle}
-            defaultUnit={defaultUnit}
-            onDefaultUnitChange={handleDefaultUnitChange}
-            unitOptions={UNIT_OPTIONS}
-            textSize={textSize}
-            onTextSizeChange={setTextSize}
-            syncStatus={sync.status}
-            onConnectSync={sync.connectProvider}
-            onReconnectSync={sync.reconnectProvider}
-            onChangeSyncPassphrase={sync.changePassphrase}
-            onSyncNow={() => sync.syncNow()}
-            onDisconnectSync={sync.disconnectProvider}
-            onResetRemoteSync={sync.resetRemoteCopy}
-            onExportSync={sync.exportSnapshot}
-            onImportSync={sync.importSnapshot}
-          />
-        )}
+        {/* Desktop settings has its own full-page workshop above; the
+            mobile settings tab renders MobileSettingsContent. The
+            legacy SettingsDrawer is no longer used. */}
 
         <ContactDrawer open={showContactDrawer} onClose={() => setShowContactDrawer(false)} />
 

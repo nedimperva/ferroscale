@@ -192,6 +192,15 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const profileLabel =
     normalizedProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
 
+  // Spec-only profile label — strip the trailing " x L <n> mm" or
+  // " · L <n> mm" suffix so the chip just shows e.g. "HEA 120",
+  // "L 60x60x6", "SHS 40x40x3". Sheet/plate profiles keep their full
+  // label because length is one of the dims (e.g. "SHT 1500x3000x10 mm").
+  const profileSpec = useMemo(() => {
+    const base = normalizedProfile?.shortLabel ?? profileLabel;
+    return base.replace(/\s+[x·]\s*L\s+[\d.]+\s+mm\s*$/i, "").trim();
+  }, [normalizedProfile, profileLabel]);
+
   const familyLabel = t(`dataset.families.${activeFamily}`);
   const gradeLabel = result?.gradeLabel ?? input.materialGradeId;
 
@@ -240,31 +249,29 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         </div>
       </button>
 
-      {/* Profile + Material chip cards */}
+      {/* Profile + Material chip cards — fixed height so the grid
+          doesn't reflow when labels change length. */}
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
           onClick={onOpenProfilePicker}
-          className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 py-2.5 text-left active:bg-surface-raised transition-colors"
+          className="flex h-14 items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-raised text-foreground">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-raised text-foreground">
             <ProfileGlyph profileId={input.profileId} size="sm" />
           </span>
-          <span className="flex min-w-0 flex-col">
-            <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">
-              {t("mobileCalc.profile")}
-            </span>
-            <span className="truncate text-sm font-semibold tracking-tight text-foreground">
-              {profileLabel}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-base font-bold tracking-tight tabular-nums text-foreground">
+              {profileSpec}
             </span>
           </span>
         </button>
         <button
           type="button"
           onClick={onOpenMaterialPicker}
-          className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 py-2.5 text-left active:bg-surface-raised transition-colors"
+          className="flex h-14 items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-emphasis">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-emphasis">
             <span className="h-3.5 w-3.5 rounded-[0.3rem] bg-accent" />
           </span>
           <span className="flex min-w-0 flex-col">
@@ -329,7 +336,7 @@ function FieldChip({ label, value, unit, active, onClick }: FieldChipProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`relative overflow-hidden rounded-[0.85rem] border px-2.5 py-2 text-left transition-colors ${
+      className={`relative h-[3.75rem] overflow-hidden rounded-[0.85rem] border px-2.5 py-2 text-left transition-colors ${
         active
           ? "border-accent-border bg-accent-surface"
           : "border-border bg-surface"
@@ -347,13 +354,15 @@ function FieldChip({ label, value, unit, active, onClick }: FieldChipProps) {
           {value}
         </span>
         <span className="text-[0.7rem] font-semibold text-muted">{unit}</span>
-        {active && (
-          <span
-            aria-hidden="true"
-            className="ml-0.5 inline-block h-4 w-[2px] animate-[aCaret_1s_infinite] self-center bg-accent"
-          />
-        )}
       </span>
+      {/* Caret rendered as overlay so it never reflows the value+unit
+          baseline when the chip becomes active. */}
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute bottom-2 right-2 inline-block h-4 w-[2px] bg-accent transition-opacity ${
+          active ? "animate-[aCaret_1s_infinite] opacity-100" : "opacity-0"
+        }`}
+      />
     </button>
   );
 }

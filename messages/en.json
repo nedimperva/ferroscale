@@ -201,7 +201,9 @@
     "cancelAria": "Cancel",
     "deleteAria": "Delete project",
     "confirmDelete": "Delete project \"{name}\"? Its parts will be removed too.",
-    "confirmRemovePart": "Remove this part from the project?"
+    "confirmRemovePart": "Remove this part from the project?",
+    "backToSelector": "Back to project list",
+    "backToCalculator": "Back to calculator"
   },
   "desktopProjects": {
     "railEmptyHint": "Create one with +.",
@@ -292,6 +294,7 @@
   },
   "sidebar": {
     "title": "FerroScale",
+    "calculator": "Calculator",
     "settings": "Settings",
     "saved": "Templates",
     "projects": "Projects",
@@ -496,6 +499,7 @@
     "close": "Close settings",
     "reset": "Reset all to defaults",
     "whatsNew": "What's New",
+    "sectionDefaults": "Defaults",
     "sectionMaterial": "Material & Density",
     "sectionPricing": "Pricing",
     "sectionPrecision": "Precision & Rounding",
