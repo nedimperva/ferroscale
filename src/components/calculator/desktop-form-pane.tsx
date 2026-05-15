@@ -10,7 +10,6 @@ import {
 import type {
   CalculationInput,
   CalculationResult,
-  LengthUnit,
   ValidationIssue,
 } from "@/lib/calculator/types";
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
@@ -104,6 +103,17 @@ export const DesktopFormPane = memo(function DesktopFormPane({
     () => grouped.get(activeCategory) ?? [],
     [grouped, activeCategory],
   );
+
+  // Group material grades by family for the section UI.
+  const materialFamilies = useMemo(() => {
+    const order: MetalFamilyId[] = ["steel", "stainless_steel", "aluminum"];
+    return order
+      .map((family) => ({
+        family,
+        grades: MATERIAL_GRADES.filter((g) => g.familyId === family),
+      }))
+      .filter((entry) => entry.grades.length > 0);
+  }, []);
 
   const handleCategoryChange = (cat: ProfileCategory) => {
     if (cat === activeCategory) return;
@@ -327,10 +337,6 @@ export const DesktopFormPane = memo(function DesktopFormPane({
               onChange={(v) =>
                 dispatch({ type: "SET_LENGTH_VALUE", value: v })
               }
-              lengthUnit={input.length.unit}
-              onLengthUnitChange={(u) =>
-                dispatch({ type: "SET_LENGTH_UNIT", unit: u })
-              }
             />
             <GeometryField
               label={t("desktopForm.pieces")}
@@ -372,50 +378,51 @@ export const DesktopFormPane = memo(function DesktopFormPane({
               {grade ? `${grade.densityKgPerM3} kg/m³` : ""}
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {MATERIAL_GRADES.map((g) => {
-              const isActive = g.id === input.materialGradeId;
-              return (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => {
-                    if (g.id === input.materialGradeId) return;
-                    triggerHaptic("light");
-                    dispatch({ type: "SET_GRADE", gradeId: g.id });
-                  }}
-                  className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 transition-colors ${
-                    isActive
-                      ? "border-accent-border bg-accent-surface"
-                      : "border-border bg-surface hover:border-border-strong"
-                  }`}
-                >
+          <div className="flex flex-col gap-1.5">
+            {materialFamilies.map(({ family, grades }) => (
+              <div
+                key={family}
+                className="flex items-center gap-2"
+              >
+                <span className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg bg-surface-raised px-2 text-2xs font-bold uppercase tracking-[0.12em] text-foreground-secondary">
                   <span
                     aria-hidden="true"
-                    className="inline-block h-3 w-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: FAMILY_TONES[g.familyId] }}
+                    className="inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: FAMILY_TONES[family] }}
                   />
-                  <span
-                    className={`text-xs font-semibold tracking-tight ${
-                      isActive ? "text-accent-text" : "text-foreground"
-                    }`}
-                  >
-                    {g.label}
-                  </span>
-                  <span className="text-2xs tabular-nums text-muted">
-                    · {g.densityKgPerM3}
-                  </span>
-                </button>
-              );
-            })}
+                  {t(`dataset.families.${family}`)}
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {grades.map((g) => {
+                    const isActive = g.id === input.materialGradeId;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => {
+                          if (g.id === input.materialGradeId) return;
+                          triggerHaptic("light");
+                          dispatch({ type: "SET_GRADE", gradeId: g.id });
+                        }}
+                        className={`inline-flex h-7 items-center rounded-md border px-2.5 text-xs font-semibold tracking-tight transition-colors ${
+                          isActive
+                            ? "border-accent-border bg-accent-surface text-accent-text"
+                            : "border-border bg-surface text-foreground hover:border-border-strong"
+                        }`}
+                      >
+                        {g.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       </div>
     </div>
   );
 });
-
-const LENGTH_UNITS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 
 interface GeometryFieldProps {
   label: string;
@@ -427,9 +434,6 @@ interface GeometryFieldProps {
   hasIssue: boolean;
   onFocus: () => void;
   onChange: (next: number) => void;
-  /** When provided, render an inline unit toggle below the value. */
-  lengthUnit?: LengthUnit;
-  onLengthUnitChange?: (next: LengthUnit) => void;
 }
 
 function GeometryField({
@@ -442,8 +446,6 @@ function GeometryField({
   hasIssue,
   onFocus,
   onChange,
-  lengthUnit,
-  onLengthUnitChange,
 }: GeometryFieldProps) {
   const display = Number.isFinite(value)
     ? decimals === 0
@@ -493,38 +495,8 @@ function GeometryField({
           className="w-full bg-transparent text-2xl font-bold tracking-[-0.04em] tabular-nums text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:hidden [&::-webkit-outer-spin-button]:hidden"
           aria-label={label}
         />
-        {!lengthUnit && (
-          <span className="shrink-0 text-sm font-semibold text-muted">{unit}</span>
-        )}
+        <span className="shrink-0 text-sm font-semibold text-muted">{unit}</span>
       </div>
-
-      {lengthUnit && onLengthUnitChange && (
-        <div className="mt-1.5 flex gap-1">
-          {LENGTH_UNITS.map((u) => {
-            const uActive = u === lengthUnit;
-            return (
-              <button
-                key={u}
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (u === lengthUnit) return;
-                  triggerHaptic("light");
-                  onLengthUnitChange(u);
-                }}
-                className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-md border px-1.5 text-[0.65rem] font-bold uppercase tracking-wider transition-colors ${
-                  uActive
-                    ? "border-accent bg-accent text-white"
-                    : "border-border bg-surface text-muted hover:border-border-strong"
-                }`}
-              >
-                {u}
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       <span className="sr-only">{display}</span>
     </label>
