@@ -686,8 +686,9 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }, [currentTab, lastAnimatedTab]);
 
   const desktopMain = (
-    <div className="hidden gap-4 lg:mt-4 lg:grid lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_400px]">
-      <div className="panel-base flex w-full flex-1 flex-col self-start rounded-[1.35rem]">
+    <div className="hidden gap-4 px-4 lg:mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_420px]">
+      {/* Left column — form */}
+      <div className="panel-base flex w-full min-w-0 flex-col self-start rounded-[1.35rem]">
         {showSettingsPreview && (
           <div className="px-3 pb-1 pt-3 md:px-4 md:pb-2 md:pt-4">
             <SettingsSummary input={input} onOpen={() => navigateToTab("settings")} />
@@ -718,6 +719,29 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           />
         </div>
       </div>
+
+      {/* Right column — sticky result panel (D1 Workstation) */}
+      <aside className="hidden self-start lg:sticky lg:top-[5rem] lg:block">
+        <ResultPanel
+          result={result}
+          isPending={isPending}
+          isSaved={isCurrentSaved}
+          onOpenSaveDialog={handleOpenSaveDialog}
+          includeVat={input.includeVat}
+          wastePercent={input.wastePercent}
+          vatPercent={input.vatPercent}
+          onCompare={handleCompare}
+          canCompare={canCompare}
+          isInCompare={currentIsInCompare}
+          compareCount={compareItems.length}
+          maxCompare={maxCompare}
+          onAddToProject={handleAddToProject}
+          hasProjects={projectCount > 0}
+          normalizedProfile={normalizedCurrentProfile}
+          weightAsMain={weightAsMain}
+          layout="standalone"
+        />
+      </aside>
     </div>
   );
 

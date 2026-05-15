@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Desktop calculator route now renders the D1 Workstation layout it was supposed to: form column on the left and a sticky `ResultPanel` on the right (lg: 360 px column, xl: 420 px). Master's parallel 2.6.0 overhaul had collapsed desktop to a single column with a floating result chip; the merge silently kept that single-column structure even though the chip was no longer rendered, which left desktop with no live result UI at all.
+
+---
+
 ## [3.0.0] - 2026-05-14
 
 Numpad-native redesign. The mobile calculator becomes an iOS-Calculator-style screen with a live result card, profile + material chip cards, a length/pieces/price input strip, and a persistent 4×4 numpad. Desktop gains a Workstation top bar above the existing two-column layout. The cream/orange palette and warm-ink shadows apply across every screen. Supersedes the floating result chip and centered modal introduced in 2.6.0.
