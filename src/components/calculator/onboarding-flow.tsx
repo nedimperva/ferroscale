@@ -145,14 +145,20 @@ export const OnboardingFlow = memo(function OnboardingFlow({
           }}
         />
 
-        {/* Top: skip + step dots */}
-        <div className="relative flex items-center justify-between px-5 pt-4">
-          <div className="flex gap-1">
+        {/* Skip + full-width step bar (design OnboardingA: 4 equal-flex
+            rounded bars; current ones fill with accent, future ones use the
+            cream-tinted border-strong tone). */}
+        <div className="relative flex items-center justify-between gap-4 px-5 pt-4">
+          <div className="flex flex-1 items-center gap-1">
             {Array.from({ length: STEP_COUNT }).map((_, i) => (
               <span
                 key={i}
-                className={`h-[3px] w-10 rounded-full transition-colors ${
-                  i <= step ? "bg-accent" : "bg-border-strong/40"
+                className={`h-[3px] flex-1 rounded-full transition-colors ${
+                  i < step
+                    ? "bg-accent"
+                    : i === step
+                      ? "bg-accent/85"
+                      : "bg-border-strong/40"
                 }`}
               />
             ))}
@@ -160,7 +166,7 @@ export const OnboardingFlow = memo(function OnboardingFlow({
           <button
             type="button"
             onClick={onSkip}
-            className="text-xs font-semibold text-muted hover:text-foreground-secondary"
+            className="shrink-0 text-xs font-semibold text-muted hover:text-foreground-secondary"
           >
             {t("onboarding.skip")}
           </button>
