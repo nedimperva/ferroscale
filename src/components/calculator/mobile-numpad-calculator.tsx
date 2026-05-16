@@ -277,8 +277,11 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-raised text-foreground">
             <ProfileGlyph profileId={input.profileId} size="sm" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-base font-bold tracking-tight tabular-nums text-foreground">
+          <span className="flex min-w-0 flex-col">
+            <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">
+              {t("mobileCalc.profile")}
+            </span>
+            <span className="truncate text-sm font-semibold tracking-tight tabular-nums text-foreground">
               {profileSpec}
             </span>
           </span>
