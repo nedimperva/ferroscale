@@ -134,8 +134,19 @@ export const OnboardingFlow = memo(function OnboardingFlow({
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
+        {/* Cream/orange glow behind the hero region — design's OnboardingA
+            radial accent. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 right-0 top-12 h-56"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 0%, var(--color-accent-surface, #f5e7da), transparent 70%)",
+          }}
+        />
+
         {/* Top: skip + step dots */}
-        <div className="flex items-center justify-between px-5 pt-4">
+        <div className="relative flex items-center justify-between px-5 pt-4">
           <div className="flex gap-1">
             {Array.from({ length: STEP_COUNT }).map((_, i) => (
               <span
