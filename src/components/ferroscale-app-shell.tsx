@@ -1269,7 +1269,33 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
       </div>
 
-      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleQuickCalcLoad} presets={presets} />
+      <QuickCalcPalette
+        quickCalc={quickCalc}
+        onLoadEntry={handleQuickCalcLoad}
+        presets={presets}
+        saved={saved}
+        onLoadSaved={(entry) => {
+          markSavedUsed(entry.id);
+          const firstInput = entry.parts[0]?.input ?? entry.input;
+          handleLoad(firstInput);
+        }}
+        onSelectProfile={(profileId) => {
+          dispatch({ type: "SET_PROFILE", profileId });
+          navigateToTab("calculator");
+        }}
+        onAction={(action) => {
+          if (action === "new-calc") {
+            resetAll();
+            navigateToTab("calculator");
+          } else if (action === "new-project") {
+            navigateToTab("projects");
+          } else if (action === "settings") {
+            navigateToTab("settings");
+          } else if (action === "compare") {
+            navigateToTab("compare");
+          }
+        }}
+      />
 
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
 

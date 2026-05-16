@@ -1135,6 +1135,24 @@
     "noPresets": "Nema odgovarajucih favorita",
     "atTriggerHint": "Ukucajte @ za umetanje sacuvanog favorita"
   },
+  "palette": {
+    "profilesSection": "Profili · {count} rezultata",
+    "savedSection": "Sacuvano · {count} rezultata",
+    "actionsSection": "Akcije",
+    "parserSection": "Parser · trenutna tezina",
+    "escClose": "esc za zatvaranje",
+    "action": {
+      "newCalc": "Novi izracun",
+      "newProject": "Novi projekat",
+      "openSettings": "Otvori Postavke",
+      "openCompare": "Prikazi poredenje"
+    },
+    "footer": {
+      "navigate": "navigacija",
+      "select": "odabir",
+      "loadClose": "ucitaj + zatvori"
+    }
+  },
   "shortcuts": {
     "title": "Precice na tastaturi",
     "quickCalc": "Brzi kalkulator",
