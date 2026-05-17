@@ -1138,9 +1138,12 @@
   "palette": {
     "profilesSection": "Profiles · {count} matches",
     "savedSection": "Saved · {count} matches",
+    "sizesSection": "Sizes · {count} matches",
     "actionsSection": "Actions",
     "parserSection": "Parser · live weight",
     "escClose": "esc to close",
+    "standardSize": "Standard",
+    "customPreset": "Saved preset",
     "action": {
       "newCalc": "New calculation",
       "newProject": "New project",

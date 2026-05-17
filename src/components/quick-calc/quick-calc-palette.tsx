@@ -136,6 +136,7 @@ interface QuickCalcPaletteProps {
 type NavRow =
   | { kind: "parser"; id: string; result: QuickWeightResult }
   | { kind: "parser-error"; id: string; line: string; message?: string }
+  | { kind: "size"; id: string; item: PickerItem }
   | { kind: "profile"; id: string; profileId: ProfileId; label: string; sub: string }
   | { kind: "saved"; id: string; entry: SavedEntry }
   | { kind: "action"; id: string; action: ActionDef };
@@ -175,6 +176,44 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const successfulParseCount = parserRows.filter((r) => r.kind === "parser").length;
   const hasSuccessfulParse = successfulParseCount > 0;
 
+  // Standard sizes + user presets, only surfaced when the query actually
+  // narrows the list. Keeps the palette quiet on empty / unrelated queries.
+  const sizeRows: NavRow[] = useMemo(() => {
+    if (!queryTrim) return [];
+    const needle = queryLower.replace(/×/g, "x");
+    const matches = allPickerItems.filter((item) => {
+      const haystack = `${item.label} ${PROFILE_ALIAS[item.profileId] ?? ""}`
+        .toLowerCase()
+        .replace(/×/g, "x");
+      return haystack.includes(needle);
+    });
+    return matches.slice(0, 4).map((item) => ({
+      kind: "size" as const,
+      id: `size_${item.kind}_${item.id}`,
+      item,
+    }));
+  }, [allPickerItems, queryTrim, queryLower]);
+
+  const handleActivateSize = useCallback(
+    (item: PickerItem) => {
+      const trailingX = item.query.endsWith("x");
+      setQuery(item.query);
+      requestAnimationFrame(() => {
+        const el = inputRef.current;
+        if (!el) return;
+        const pos = item.query.length;
+        el.setSelectionRange(pos, pos);
+        el.focus();
+      });
+      // If the preset already includes a length, the parser will return a
+      // result on the next tick — let user press ↵ again to load it. If it
+      // ends with a trailing `x`, the caret sits where the user types the
+      // length value.
+      void trailingX;
+    },
+    [setQuery],
+  );
+
   const profileRows: NavRow[] = useMemo(() => {
     const base = queryTrim
       ? PROFILE_DEFINITIONS.filter((p) => {
@@ -210,8 +249,8 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   }, [queryTrim, queryLower, tp]);
 
   const navRows: NavRow[] = useMemo(
-    () => [...parserRows, ...profileRows, ...savedRows, ...actionRows],
-    [parserRows, profileRows, savedRows, actionRows],
+    () => [...parserRows, ...sizeRows, ...profileRows, ...savedRows, ...actionRows],
+    [parserRows, sizeRows, profileRows, savedRows, actionRows],
   );
 
   useEffect(() => {
@@ -310,11 +349,12 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
   const handleActivateNavRow = useCallback(
     (row: NavRow) => {
       if (row.kind === "parser") handleLoadResult(row.result);
+      else if (row.kind === "size") handleActivateSize(row.item);
       else if (row.kind === "profile") { onSelectProfile(row.profileId); close(); }
       else if (row.kind === "saved") { onLoadSaved(row.entry); close(); }
       else if (row.kind === "action") { onAction(row.action.id); close(); }
     },
-    [handleLoadResult, onSelectProfile, onLoadSaved, onAction, close],
+    [handleLoadResult, handleActivateSize, onSelectProfile, onLoadSaved, onAction, close],
   );
 
   const handleInputKeyDown = useCallback(
@@ -475,6 +515,35 @@ export const QuickCalcPalette = memo(function QuickCalcPalette({
                         {totalWeightKg} kg
                       </span>
                     </div>
+                  )}
+
+                  {sizeRows.length > 0 && (
+                    <NavSection title={tp("sizesSection", { count: sizeRows.length })}>
+                      {sizeRows.map((row) => {
+                        if (row.kind !== "size") return null;
+                        const globalIdx = navRowIndex(row);
+                        const highlighted = globalIdx === highlightIdx;
+                        const isPreset = row.item.kind === "preset";
+                        const subParts = [
+                          td(`profileShort.${row.item.profileId}`) ||
+                            getProfileById(row.item.profileId)?.label ||
+                            "",
+                          isPreset ? tp("customPreset") : tp("standardSize"),
+                        ].filter(Boolean);
+                        return (
+                          <NavRowItem
+                            key={row.id}
+                            highlighted={highlighted}
+                            icon={<ProfileGlyph profileId={row.item.profileId} size="sm" />}
+                            label={row.item.label}
+                            sub={subParts.join(" · ")}
+                            hot={highlighted ? "↵" : undefined}
+                            onActivate={() => handleActivateSize(row.item)}
+                            onHover={() => setHighlightIdx(globalIdx)}
+                          />
+                        );
+                      })}
+                    </NavSection>
                   )}
 
                   {profileRows.length > 0 && (

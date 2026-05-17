@@ -1138,9 +1138,12 @@
   "palette": {
     "profilesSection": "Profili · {count} rezultata",
     "savedSection": "Sacuvano · {count} rezultata",
+    "sizesSection": "Velicine · {count} rezultata",
     "actionsSection": "Akcije",
     "parserSection": "Parser · trenutna tezina",
     "escClose": "esc za zatvaranje",
+    "standardSize": "Standard",
+    "customPreset": "Sacuvani preset",
     "action": {
       "newCalc": "Novi izracun",
       "newProject": "Novi projekat",
