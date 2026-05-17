@@ -234,15 +234,19 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
 
   return (
     <div
-      className="flex h-full min-h-0 flex-1 flex-col justify-between gap-2.5 overflow-hidden px-3 pt-2"
-      style={{ paddingBottom: scrollPaddingBottom }}
+      className="flex h-full min-h-0 flex-1 flex-col justify-end gap-2 overflow-hidden px-3 pt-2"
+      style={{
+        paddingBottom: `max(${scrollPaddingBottom}, env(safe-area-inset-bottom, 0px))`,
+      }}
     >
-      {/* Result card — pinned to top of the screen, just below the
-          fixed mobile header. */}
+      {/* Bottom-anchored stack — result + controls + numpad. The whole
+          group hugs the bottom of the viewport so the thumb can reach
+          every key; any leftover height becomes a quiet breathing room
+          between the header and the result card. */}
       <button
         type="button"
         onClick={onOpenResult}
-        className="panel-base shrink-0 rounded-[1.4rem] bg-surface px-4 pb-3 pt-3 text-left shadow-[var(--panel-shadow-soft)] [touch-action:manipulation] active:scale-[0.995] transition-transform [will-change:transform]"
+        className="panel-base shrink-0 rounded-[1.4rem] bg-surface px-4 pb-2.5 pt-2.5 text-left shadow-[var(--panel-shadow-soft)] [touch-action:manipulation] active:scale-[0.995] transition-transform [will-change:transform]"
       >
         <div className="flex items-center justify-between">
           <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
@@ -269,12 +273,6 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
           </span>
         </div>
       </button>
-
-      {/* Controls + numpad — anchored to the bottom of the viewport.
-          Any leftover vertical space sits as one gap between the
-          result card up top and this control group below, like the
-          iOS Calculator's display vs keypad split. */}
-      <div className="flex shrink-0 flex-col gap-2.5">
 
       {/* Profile + Material chip cards — fixed height so the grid
           doesn't reflow when labels change length. */}
@@ -349,7 +347,6 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         onNext={handleNextField}
         onDone={handleDone}
       />
-      </div>
     </div>
   );
 });
@@ -411,7 +408,7 @@ function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone }:
   const t = useTranslations("mobileCalc");
 
   return (
-    <div className="shrink-0 rounded-[1.25rem] border border-border bg-surface p-2 shadow-[var(--panel-shadow-soft)]">
+    <div className="shrink-0 rounded-[1.25rem] border border-border bg-surface p-1.5 shadow-[var(--panel-shadow-soft)]">
       <div className="grid grid-cols-4 gap-1.5">
         <PadKey kind="digit" label="7" onPress={() => onDigit("7")} />
         <PadKey kind="digit" label="8" onPress={() => onDigit("8")} />
@@ -465,7 +462,7 @@ function PadKey({ kind, label, small, ariaLabel, children, onPress }: PadKeyProp
       type="button"
       onClick={onPress}
       aria-label={ariaLabel}
-      className={`flex h-14 select-none items-center justify-center rounded-2xl tracking-tight tabular-nums [-webkit-tap-highlight-color:transparent] [touch-action:manipulation] [will-change:transform] active:bg-surface-pad-press active:scale-[0.96] transition-transform duration-75 ${baseFontClasses} ${colorClasses}`}
+      className={`flex h-[3.25rem] select-none items-center justify-center rounded-2xl tracking-tight tabular-nums [-webkit-tap-highlight-color:transparent] [touch-action:manipulation] [will-change:transform] active:bg-surface-pad-press active:scale-[0.96] transition-transform duration-75 sm:h-14 ${baseFontClasses} ${colorClasses}`}
       style={{
         boxShadow:
           kind === "done"
