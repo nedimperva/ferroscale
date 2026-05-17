@@ -234,7 +234,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
 
   return (
     <div
-      className="flex h-full min-h-0 flex-1 flex-col gap-3 overflow-hidden px-3 pt-2"
+      className="flex h-full min-h-0 flex-1 flex-col justify-end gap-3 overflow-hidden px-3 pt-2"
       style={{ paddingBottom: scrollPaddingBottom }}
     >
       {/* Result card */}
@@ -403,7 +403,7 @@ function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone }:
   const t = useTranslations("mobileCalc");
 
   return (
-    <div className="mt-auto shrink-0 rounded-[1.25rem] border border-border bg-surface p-2 shadow-[var(--panel-shadow-soft)]">
+    <div className="shrink-0 rounded-[1.25rem] border border-border bg-surface p-2 shadow-[var(--panel-shadow-soft)]">
       <div className="grid grid-cols-4 gap-1.5">
         <PadKey kind="digit" label="7" onPress={() => onDigit("7")} />
         <PadKey kind="digit" label="8" onPress={() => onDigit("8")} />
