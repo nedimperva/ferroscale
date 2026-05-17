@@ -1135,6 +1135,11 @@
     "noPresets": "No matching favourites",
     "atTriggerHint": "Type @ to insert a saved favourite"
   },
+  "standardSizes": {
+    "title": "Standards",
+    "standardHint": "Built-in standard size",
+    "savedHint": "Your saved preset"
+  },
   "palette": {
     "profilesSection": "Profiles · {count} matches",
     "savedSection": "Saved · {count} matches",

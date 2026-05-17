@@ -22,9 +22,11 @@ import type {
 } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import type { DimensionPreset } from "@/hooks/usePresets";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { ResultPanel } from "./result-panel";
+import { StandardSizePicker } from "./standard-size-picker";
 import { triggerHaptic } from "@/lib/haptics";
 
 interface Props {
@@ -37,6 +39,9 @@ interface Props {
   selectedProfile: ProfileDefinition;
   activeFamily: MetalFamilyId;
   normalizedProfile: NormalizedProfileSnapshot | null;
+  /** User's custom dimension presets, used by the Standards strip on manual
+   *  profiles. */
+  customPresets: DimensionPreset[];
   onOpenSaveDialog: () => void;
   onAddToProject: () => void;
   onOpenQuickCalc: () => void;
@@ -97,6 +102,7 @@ export const DesktopWorkstationPane = memo(function DesktopWorkstationPane({
   isSaved,
   issues,
   selectedProfile,
+  customPresets,
   normalizedProfile,
   onOpenSaveDialog,
   onAddToProject,
@@ -331,7 +337,17 @@ export const DesktopWorkstationPane = memo(function DesktopWorkstationPane({
                 </div>
               </div>
             ) : (
-              <div className="mt-3 flex flex-col gap-1.5">
+              <div className="mt-3 flex flex-col gap-2">
+                <StandardSizePicker
+                  profileId={input.profileId}
+                  customPresets={customPresets}
+                  activeDimensions={Object.fromEntries(
+                    Object.entries(input.manualDimensions).map(([k, v]) => [k, v?.value]),
+                  ) as Partial<Record<DimensionKey, number>>}
+                  onApply={(dims) =>
+                    dispatch({ type: "SET_DIMENSIONS_MM", dimensions: dims })
+                  }
+                />
                 <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
                   {t("desktopForm.dimensions")}
                 </span>

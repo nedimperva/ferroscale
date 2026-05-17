@@ -578,6 +578,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         selectedProfile={selectedProfile}
         activeFamily={activeFamily}
         normalizedProfile={normalizedCurrentProfile}
+        customPresets={presets}
         onOpenSaveDialog={handleSaveCurrent}
         onAddToProject={handleAddToProject}
         onOpenQuickCalc={openQuickCalc}
@@ -1213,6 +1214,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               dispatch={dispatch}
               selectedProfile={selectedProfile}
               issues={issues}
+              customPresets={presets}
             />
             <MobileMaterialSheet
               open={showMobileMaterialSheet}

@@ -11,10 +11,13 @@ import type {
 } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { CalculationInput, ValidationIssue } from "@/lib/calculator/types";
+import type { DimensionPreset } from "@/hooks/usePresets";
+import type { DimensionKey } from "@/lib/datasets/types";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { DimensionInput } from "./dimension-input";
 import { SizeCombobox } from "./size-combobox";
+import { StandardSizePicker } from "./standard-size-picker";
 import { triggerHaptic } from "@/lib/haptics";
 
 const CATEGORY_ORDER: ProfileCategory[] = [
@@ -43,6 +46,7 @@ interface Props {
   dispatch: React.Dispatch<CalcAction>;
   selectedProfile: ProfileDefinition;
   issues: ValidationIssue[];
+  customPresets: DimensionPreset[];
 }
 
 export const MobileProfileSheet = memo(function MobileProfileSheet({
@@ -52,6 +56,7 @@ export const MobileProfileSheet = memo(function MobileProfileSheet({
   dispatch,
   selectedProfile,
   issues,
+  customPresets,
 }: Props) {
   const t = useTranslations();
   const grouped = useMemo(() => groupByCategory(PROFILE_DEFINITIONS), []);
@@ -144,6 +149,16 @@ export const MobileProfileSheet = memo(function MobileProfileSheet({
         <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface-raised p-3">
           {isManual && selectedProfile.mode === "manual" ? (
             <>
+              <StandardSizePicker
+                profileId={input.profileId}
+                customPresets={customPresets}
+                activeDimensions={Object.fromEntries(
+                  Object.entries(input.manualDimensions).map(([k, v]) => [k, v?.value]),
+                ) as Partial<Record<DimensionKey, number>>}
+                onApply={(dims) =>
+                  dispatch({ type: "SET_DIMENSIONS_MM", dimensions: dims })
+                }
+              />
               <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
                 {t("mobileCalc.dimensions")}
               </span>

@@ -1135,6 +1135,11 @@
     "noPresets": "Nema odgovarajucih favorita",
     "atTriggerHint": "Ukucajte @ za umetanje sacuvanog favorita"
   },
+  "standardSizes": {
+    "title": "Standardi",
+    "standardHint": "Ugradjena standardna velicina",
+    "savedHint": "Vas sacuvani preset"
+  },
   "palette": {
     "profilesSection": "Profili · {count} rezultata",
     "savedSection": "Sacuvano · {count} rezultata",
