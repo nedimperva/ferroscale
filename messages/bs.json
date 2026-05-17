@@ -1137,6 +1137,10 @@
   },
   "standardSizes": {
     "title": "Standardi",
+    "placeholder": "Pretrazi standarde ili sacuvane presete…",
+    "noResults": "Nema rezultata",
+    "open": "Otvori listu standarda",
+    "close": "Zatvori listu standarda",
     "standardHint": "Ugradjena standardna velicina",
     "savedHint": "Vas sacuvani preset"
   },

@@ -1137,6 +1137,10 @@
   },
   "standardSizes": {
     "title": "Standards",
+    "placeholder": "Search standards or saved presets…",
+    "noResults": "No matches",
+    "open": "Open standards list",
+    "close": "Close standards list",
     "standardHint": "Built-in standard size",
     "savedHint": "Your saved preset"
   },
