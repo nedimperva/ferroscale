@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+// framer-motion not currently consumed by the shell — the tab transitions
+// were removed to eliminate cross-fade dead frames.
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCalculator } from "@/hooks/useCalculator";
@@ -134,7 +135,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const t = useTranslations();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const shouldReduceMotion = useReducedMotion();
   const [isRouteNavigationPending, startRouteNavigation] = useTransition();
 
   const {
@@ -909,7 +909,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           isMultiColumn
             ? "overflow-hidden pb-0"
             : currentTab === "calculator"
-              ? "max-w-none overflow-x-hidden pb-32 lg:h-dvh lg:min-h-0 lg:overflow-hidden lg:pb-0"
+              ? "h-dvh max-w-none overflow-hidden pb-0 lg:min-h-0"
               : "mx-auto max-w-[94rem] pb-8 md:px-6"
         } ${
           sidebarCollapsed
@@ -1121,25 +1121,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
 
         <div
-          className="px-3 lg:hidden"
           aria-busy={isRouteNavigationPending || undefined}
-          style={{
-            paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)",
-            paddingBottom: resultBarBottomPadding,
-          }}
+          className={`lg:hidden ${
+            currentTab === "calculator"
+              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+              : "flex flex-col pb-8"
+          }`}
+          style={
+            currentTab === "calculator"
+              ? undefined
+              : { paddingBottom: resultBarBottomPadding }
+          }
         >
-          <AnimatePresence initial={false} mode="wait">
-            <motion.div
-              key={currentTab}
-              initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0.1 : 0.14, ease: "linear" }}
-              className="grid gap-4"
-            >
-              {mobileScreen}
-            </motion.div>
-          </AnimatePresence>
+          {mobileScreen}
         </div>
 
         {/* ResultBar removed on mobile entirely — the calculator route

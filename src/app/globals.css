@@ -420,6 +420,16 @@ details[open] .chevron-icon {
 .scroll-native {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Lock-down screen — viewport height, no scroll, no rubber-band. Use for
+   surfaces that should feel like a fixed app frame (e.g. the mobile
+   calculator). */
+.app-screen {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .boot-splash {
