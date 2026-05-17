@@ -234,10 +234,11 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
 
   return (
     <div
-      className="flex h-full min-h-0 flex-1 flex-col justify-end gap-3 overflow-hidden px-3 pt-2"
+      className="flex h-full min-h-0 flex-1 flex-col justify-between gap-2.5 overflow-hidden px-3 pt-2"
       style={{ paddingBottom: scrollPaddingBottom }}
     >
-      {/* Result card */}
+      {/* Result card — pinned to top of the screen, just below the
+          fixed mobile header. */}
       <button
         type="button"
         onClick={onOpenResult}
@@ -268,6 +269,12 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
           </span>
         </div>
       </button>
+
+      {/* Controls + numpad — anchored to the bottom of the viewport.
+          Any leftover vertical space sits as one gap between the
+          result card up top and this control group below, like the
+          iOS Calculator's display vs keypad split. */}
+      <div className="flex shrink-0 flex-col gap-2.5">
 
       {/* Profile + Material chip cards — fixed height so the grid
           doesn't reflow when labels change length. */}
@@ -342,6 +349,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         onNext={handleNextField}
         onDone={handleDone}
       />
+      </div>
     </div>
   );
 });

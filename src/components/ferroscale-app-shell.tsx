@@ -297,6 +297,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return () => window.clearTimeout(timeoutId);
   }, [currentTab, closeTransientOverlays]);
 
+  // Lock html/body scroll on the calculator route so the screen feels
+  // like a fixed app frame (no iOS rubber-band, no stray vertical scroll
+  // when dvh fluctuates with the browser chrome).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const isLocked = currentTab === "calculator" && isMobile;
+    document.documentElement.classList.toggle("app-locked", isLocked);
+    return () => {
+      document.documentElement.classList.remove("app-locked");
+    };
+  }, [currentTab, isMobile]);
+
   const openCompare = useCallback(() => {
     setShowOverlay(false);
     openCompareDrawer();
@@ -905,12 +917,12 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
       <div
         ref={mainContentRef}
-        className={`flex min-h-dvh w-full flex-col px-0 pt-[calc(3rem+env(safe-area-inset-top,0px))] transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
+        className={`flex w-full flex-col px-0 pt-[calc(3rem+env(safe-area-inset-top,0px))] transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
           isMultiColumn
-            ? "overflow-hidden pb-0"
+            ? "min-h-dvh overflow-hidden pb-0"
             : currentTab === "calculator"
-              ? "h-dvh max-w-none overflow-hidden pb-0 lg:min-h-0"
-              : "mx-auto max-w-[94rem] pb-8 md:px-6"
+              ? "h-[100dvh] max-w-none overflow-hidden pb-0 lg:h-dvh lg:min-h-0"
+              : "mx-auto min-h-dvh max-w-[94rem] pb-8 md:px-6"
         } ${
           sidebarCollapsed
             ? "lg:ml-[56px] lg:w-[calc(100%-56px)]"

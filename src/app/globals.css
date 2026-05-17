@@ -432,6 +432,16 @@ details[open] .chevron-icon {
   overscroll-behavior: none;
 }
 
+/* Toggled on the <html> root when the active route should never scroll
+   (mobile calculator). Killing body scroll here prevents iOS rubber-band
+   even when the inner wrappers report fixed heights. */
+html.app-locked,
+html.app-locked body {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .boot-splash {
   position: fixed;
   inset: 0;
