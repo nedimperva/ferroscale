@@ -325,7 +325,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         <button
           type="button"
           onClick={onOpenProfilePicker}
-          className="flex h-14 items-center gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
+          className="flex min-h-14 items-center gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface px-3 py-2 text-left active:bg-surface-raised transition-colors"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-pad)] bg-surface-raised text-foreground">
             <ProfileGlyph profileId={input.profileId} size="sm" />
@@ -334,7 +334,9 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
             <span className="text-[0.6rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted">
               {t("mobileCalc.profile")}
             </span>
-            <span className="truncate text-sm font-semibold tracking-tight tabular-nums text-foreground">
+            {/* line-clamp-2 lets plate/sheet specs like "Plate 1500×3000×10"
+                wrap to a second row instead of being silently truncated. */}
+            <span className="line-clamp-2 break-words text-sm font-semibold leading-tight tracking-tight tabular-nums text-foreground">
               {profileSpec}
             </span>
           </span>
@@ -342,7 +344,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         <button
           type="button"
           onClick={onOpenMaterialPicker}
-          className="flex h-14 items-center gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
+          className="flex min-h-14 items-center gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface px-3 py-2 text-left active:bg-surface-raised transition-colors"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-pad)] bg-surface-emphasis">
             <span className="h-3.5 w-3.5 rounded-[0.3rem] bg-accent" />
@@ -351,7 +353,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
             <span className="text-[0.6rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted">
               {t("mobileCalc.material")}
             </span>
-            <span className="truncate text-sm font-semibold tracking-tight text-foreground">
+            <span className="line-clamp-2 break-words text-sm font-semibold leading-tight tracking-tight text-foreground">
               {familyLabel} {gradeLabel ? `· ${gradeLabel}` : ""}
             </span>
           </span>

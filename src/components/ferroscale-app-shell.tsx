@@ -808,6 +808,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     }
   }, [projectDetailId, activeProjectId, setActiveProjectId]);
 
+  // Mobile shell header is rendered globally for routes that don't own
+  // their own top bar. Saved / Compare / Projects (list + detail) each
+  // render a page-level header inline (title, search, primary action) so
+  // they suppress the shell header to avoid stacked top bars.
+  const shellHeaderHidden =
+    currentTab === "saved" ||
+    currentTab === "compare" ||
+    currentTab === "projects";
+
   const mobileScreen =
     currentTab === "calculator" ? (
       <MobileNumpadCalculator
@@ -823,7 +832,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         scrollPaddingBottom="0px"
       />
     ) : currentTab === "saved" ? (
-      <div className="px-3 md:px-4">
+      <div className="px-3 pt-3 md:px-4">
         <MobileSavedPage
           saved={saved}
           onLoad={handleLoad}
@@ -834,7 +843,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         />
       </div>
     ) : currentTab === "compare" ? (
-      <div className="px-3 md:px-4">
+      <div className="px-3 pt-3 md:px-4">
         <MobileComparePage
           items={compareItems}
           onRemove={removeCompareItem}
@@ -858,7 +867,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         }}
       />
     ) : currentTab === "projects" ? (
-      <div className="px-3 md:px-4">
+      <div className="px-3 pt-3 md:px-4">
         <MobileProjectsPage
           projects={projects}
           activeProjectId={activeProjectId}
@@ -925,15 +934,25 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onToggleTheme={cycleTheme}
       />
 
-      {/* On the mobile project-detail route the page owns its own NavBar
-          (back + title + more menu), so we skip the global shell header
-          here — otherwise two headers stack and the page feels cramped. */}
+      {/* Pages that own their top bar (Saved, Compare, Projects list +
+          detail) suppress the global shell header so headers don't stack
+          and obstruct each other. Calculator and Settings have no inline
+          page header so the shell header stays.
+          Top-padding logic:
+          - Project detail manages its own safe-area-top inside the page
+            NavBar → wrapper pt-0.
+          - Other shell-header-hidden routes (Saved/Compare/Projects list)
+            need the safe-area-top here since they don't manage it.
+          - Default (Calculator/Settings) clears the fixed 3rem shell header
+            and the device safe-area. */}
       <div
         ref={mainContentRef}
         className={`flex w-full flex-col px-0 transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
           currentTab === "projects" && projectDetailEntry
             ? "pt-0"
-            : "pt-[calc(3rem+env(safe-area-inset-top,0px))]"
+            : shellHeaderHidden
+              ? "pt-[env(safe-area-inset-top,0px)]"
+              : "pt-[calc(3rem+env(safe-area-inset-top,0px))]"
         } ${
           isMultiColumn
             ? "min-h-dvh overflow-hidden pb-0"
@@ -946,7 +965,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             : "lg:ml-[220px] lg:w-[calc(100%-220px)]"
         }`}
       >
-        {!(currentTab === "projects" && projectDetailEntry) && (
+        {!shellHeaderHidden && (
         <header
           className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(20,18,15,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
@@ -1011,38 +1030,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
                 </svg>
               )}
             </button>
-            {currentTab === "projects" ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeProjectId) {
-                    setActiveProjectId(null);
-                  } else {
-                    navigateToTab("calculator");
-                  }
-                }}
-                className="premium-icon-button relative h-9 w-9"
-                aria-label={activeProjectId ? t("mobileProjects.backToSelector") : t("mobileProjects.backToCalculator")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowMobileMenu(true)}
-                className="premium-icon-button relative h-9 w-9"
-                aria-label={t("menu.title")}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <path d="M3 6h18M3 12h18M3 18h18" />
-                </svg>
-                {(compareItems.length > 0 || projectCount > 0) && (
-                  <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
-                )}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(true)}
+              className="premium-icon-button relative h-9 w-9"
+              aria-label={t("menu.title")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+              {(compareItems.length > 0 || projectCount > 0) && (
+                <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
+              )}
+            </button>
           </div>
         </header>
         )}
