@@ -224,7 +224,18 @@
     "confirmDelete": "Obrisati projekat \"{name}\"? Dijelovi ce biti uklonjeni.",
     "confirmRemovePart": "Ukloniti ovaj dio iz projekta?",
     "backToSelector": "Nazad na listu projekata",
-    "backToCalculator": "Nazad na kalkulator"
+    "backToCalculator": "Nazad na kalkulator",
+    "title": "Projekti",
+    "summary": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}} · {weight} kg · {currency} {cost}",
+    "summaryEmpty": "Nista jos",
+    "activeLabel": "Aktivni projekat",
+    "activePinned": "Zakacen",
+    "partsLabel": "Dijelovi",
+    "weightLabel": "Masa",
+    "costLabel": "Cijena",
+    "updatedRecent": "prije {value} {unit}",
+    "updatedJustNow": "upravo sada",
+    "newProjectRow": "Novi projekat"
   },
   "desktopProjects": {
     "railEmptyHint": "Kreiraj projekat dugmetom +.",

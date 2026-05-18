@@ -224,7 +224,18 @@
     "confirmDelete": "Delete project \"{name}\"? Its parts will be removed too.",
     "confirmRemovePart": "Remove this part from the project?",
     "backToSelector": "Back to project list",
-    "backToCalculator": "Back to calculator"
+    "backToCalculator": "Back to calculator",
+    "title": "Projects",
+    "summary": "{count, plural, one {# active} other {# active}} · {weight} kg · {currency} {cost}",
+    "summaryEmpty": "Nothing yet",
+    "activeLabel": "Active project",
+    "activePinned": "Pinned",
+    "partsLabel": "Parts",
+    "weightLabel": "Weight",
+    "costLabel": "Cost",
+    "updatedRecent": "{value} {unit} ago",
+    "updatedJustNow": "just now",
+    "newProjectRow": "New project"
   },
   "desktopProjects": {
     "railEmptyHint": "Create one with +.",

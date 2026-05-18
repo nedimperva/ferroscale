@@ -52,7 +52,7 @@ import { ResultPanel } from "@/components/calculator/result-panel";
 import { ResultOverlay } from "@/components/calculator/result-bar";
 import { SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
-import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
+import { CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
 import { ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
@@ -160,9 +160,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const {
     items: compareItems,
-    isOpen: showCompareDrawer,
     canAdd: canCompare,
-    open: openCompareDrawer,
     close: closeCompare,
     addItem: addCompareItem,
     removeItem: removeCompareItem,
@@ -314,8 +312,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
 
   const openCompare = useCallback(() => {
     setShowOverlay(false);
-    openCompareDrawer();
-  }, [openCompareDrawer]);
+    navigateToTab("compare");
+  }, [navigateToTab]);
 
   const normalizedCurrentProfile = useMemo(
     () => (result ? normalizeProfileSnapshot(input) : null),
@@ -1259,16 +1257,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           </>
         )}
 
-        <CompareDrawer
-          open={showCompareDrawer && !(isMultiColumn && columnLayout.hasPanel("compare"))}
-          onClose={closeCompare}
-          items={compareItems}
-          onRemoveItem={removeCompareItem}
-          onClearAll={clearCompare}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddExternalToProject}
-          hasProjects={projectCount > 0}
-        />
+        {/* CompareDrawer was the old bottom-sheet view; comparison now lives
+            entirely on the /compare tab on every breakpoint. */}
 
         {/* ProjectDrawer is no longer rendered on desktop — the
             /projects route renders the new full-page

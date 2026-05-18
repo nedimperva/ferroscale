@@ -2,13 +2,9 @@
 
 import { memo, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import type {
-  Project,
-  ProjectCalculation,
-} from "@/hooks/useProjects";
+import type { Project } from "@/hooks/useProjects";
 import { computeAggregates } from "@/hooks/useProjects";
-import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
-import { ProfileGlyph } from "@/components/profiles/profile-glyph";
+import { CURRENCY_SYMBOLS, type CalculationInput, type CurrencyCode } from "@/lib/calculator/types";
 import { triggerHaptic } from "@/lib/haptics";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -26,52 +22,71 @@ interface Props {
 function fmtKg(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0";
   if (value >= 1000) return Math.round(value).toLocaleString(locale);
-  if (value >= 100) return value.toFixed(1);
-  return value.toFixed(2);
+  if (value >= 100) return value.toFixed(0);
+  return value.toFixed(1);
 }
 
 function fmtCost(value: number, locale: string): string {
   if (!Number.isFinite(value)) return "0";
   return value.toLocaleString(locale, {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   });
 }
 
+function formatRelative(iso: string | undefined): { value: number; unit: "min" | "h" | "d"; recent: boolean } | "now" | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return null;
+  const diff = Date.now() - then;
+  const minutes = Math.round(diff / 60_000);
+  if (minutes < 1) return "now";
+  if (minutes < 60) return { value: minutes, unit: "min", recent: true };
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return { value: hours, unit: "h", recent: false };
+  const days = Math.round(hours / 24);
+  return { value: days, unit: "d", recent: false };
+}
+
 /**
- * Mobile Projects tab — full redesign. Hero card with the active
- * project's stats, horizontal project switcher chips below, parts
- * list with per-row ProfileGlyph + length + weight, sum strip at
- * the bottom, and a floating + FAB to create a project.
+ * Mobile Projects tab — flat list (review design "simplified" §11).
+ * Header with title + actions, totals subtitle, pinned active card on
+ * top, then a row for every project. Tap a project → detail screen.
  */
 export const MobileProjectsPage = memo(function MobileProjectsPage({
   projects,
   activeProjectId,
   onSetActiveProject,
   onCreateProject,
-  onRenameProject,
   onDeleteProject,
-  onRemoveCalculation,
-  onLoadCalculation,
+  onLoadCalculation: _onLoadCalculation,
+  onRenameProject: _onRenameProject,
+  onRemoveCalculation: _onRemoveCalculation,
 }: Props) {
   const t = useTranslations();
   const locale = useLocale();
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [renaming, setRenaming] = useState(false);
-  const [renameDraft, setRenameDraft] = useState("");
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
-  const [removingCalc, setRemovingCalc] = useState<{ projectId: string; calcId: string } | null>(null);
+
+  const aggregatesAll = useMemo(() => {
+    let totalWeight = 0;
+    let totalCost = 0;
+    let currency: CurrencyCode = "EUR";
+    for (const project of projects) {
+      const agg = computeAggregates(project);
+      totalWeight += agg.totalWeightKg;
+      totalCost += agg.totalCost;
+      if (agg.count > 0) currency = agg.currency;
+    }
+    return { count: projects.length, totalWeight, totalCost, currency };
+  }, [projects]);
 
   const active = useMemo(
     () => (activeProjectId ? projects.find((p) => p.id === activeProjectId) ?? null : null),
     [activeProjectId, projects],
   );
-
-  const aggregates = useMemo(() => (active ? computeAggregates(active) : null), [active]);
-  const currency = aggregates
-    ? CURRENCY_SYMBOLS[aggregates.currency] ?? aggregates.currency
-    : "€";
+  const activeAggregates = useMemo(() => (active ? computeAggregates(active) : null), [active]);
 
   const handleCreate = () => {
     const name = newName.trim();
@@ -82,210 +97,58 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
     setCreating(false);
   };
 
-  const handleRename = () => {
-    if (!active) return;
-    const name = renameDraft.trim();
-    if (!name) {
-      setRenaming(false);
-      return;
-    }
-    triggerHaptic("light");
-    onRenameProject(active.id, name);
-    setRenaming(false);
-  };
+  const currencySymbol = CURRENCY_SYMBOLS[aggregatesAll.currency] ?? String(aggregatesAll.currency);
 
   return (
-    <div className="relative flex min-h-[80dvh] flex-col gap-3 pb-24">
-      {/* Hero */}
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-[var(--panel-shadow-soft)]">
-        {active && aggregates ? (
-          <>
-            <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-surface text-accent-text">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 20a2 2 0 002-2V8a2 2 0 00-2-2h-7.9a2 2 0 01-1.69-.9L9.6 3.9A2 2 0 008 3H4a2 2 0 00-2 2v13a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                {renaming ? (
-                  <input
-                    type="text"
-                    autoFocus
-                    value={renameDraft}
-                    onChange={(e) => setRenameDraft(e.target.value)}
-                    onBlur={handleRename}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleRename();
-                      if (e.key === "Escape") setRenaming(false);
-                    }}
-                    className="w-full border-b border-accent-border bg-transparent text-base font-bold tracking-tight text-foreground outline-none"
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRenameDraft(active.name);
-                      setRenaming(true);
-                    }}
-                    className="truncate text-left text-base font-bold tracking-tight text-foreground"
-                  >
-                    {active.name}
-                  </button>
-                )}
-                <span className="text-2xs text-muted">
-                  {t("mobileProjects.heroHint", { count: aggregates.count })}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDeletingProject(active)}
-                aria-label={t("mobileProjects.deleteAria")}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-muted hover:bg-red-surface hover:text-red-interactive"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
-                </svg>
-              </button>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center rounded-md bg-accent-surface px-2 py-1 text-2xs font-bold tabular-nums text-accent-text">
-                {fmtKg(aggregates.totalWeightKg, locale)} kg
-              </span>
-              <span className="inline-flex items-center rounded-md bg-surface-raised px-2 py-1 text-2xs font-semibold tabular-nums text-foreground-secondary">
-                {currency} {fmtCost(aggregates.totalCost, locale)}
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-bold tracking-tight text-foreground">
-              {projects.length === 0
-                ? t("mobileProjects.heroEmptyTitle")
-                : t("mobileProjects.heroPickTitle")}
-            </span>
-            <span className="text-2xs text-muted">
-              {projects.length === 0
-                ? t("mobileProjects.heroEmptyHint")
-                : t("mobileProjects.heroPickHint")}
-            </span>
-          </div>
-        )}
+    <div className="relative flex min-h-[80dvh] flex-col gap-3 pb-8">
+      {/* Header (review design): title + Search + New */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-[-0.04em] text-foreground">
+            {t("mobileProjects.title")}
+          </h1>
+          <span className="mt-1 block text-sm text-foreground-secondary tabular-nums">
+            {projects.length === 0
+              ? t("mobileProjects.summaryEmpty")
+              : t("mobileProjects.summary", {
+                  count: aggregatesAll.count,
+                  weight: fmtKg(aggregatesAll.totalWeight, locale),
+                  currency: currencySymbol,
+                  cost: fmtCost(aggregatesAll.totalCost, locale),
+                })}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button
+            type="button"
+            aria-label={t("mobileSaved.searchAria")}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground-secondary active:bg-surface-raised"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setCreating(true);
+            }}
+            aria-label={t("mobileProjects.createAria")}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-surface-inverted px-3 text-xs font-bold text-background shadow-[var(--panel-shadow-soft)] active:opacity-90"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {t("mobileProjects.create")}
+          </button>
+        </div>
       </div>
 
-      {/* Project switcher chips */}
-      {projects.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-          {projects.map((p) => {
-            const isActive = p.id === activeProjectId;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => {
-                  if (p.id === activeProjectId) return;
-                  triggerHaptic("light");
-                  onSetActiveProject(p.id);
-                }}
-                className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors ${
-                  isActive
-                    ? "border-accent-border bg-accent-surface text-accent-text"
-                    : "border-border bg-surface text-foreground-secondary"
-                }`}
-              >
-                {p.name}
-                <span
-                  className={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-2xs font-bold tabular-nums ${
-                    isActive ? "bg-accent text-white" : "bg-surface-raised text-muted"
-                  }`}
-                >
-                  {p.calculations.length}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Parts list */}
-      {active && active.calculations.length > 0 ? (
-        <div className="flex flex-col gap-1.5">
-          {active.calculations.map((calc) => (
-            <PartRow
-              key={calc.id}
-              calc={calc}
-              locale={locale}
-              onLoad={() => onLoadCalculation(calc.input)}
-              onRemove={() => setRemovingCalc({ projectId: active.id, calcId: calc.id })}
-            />
-          ))}
-        </div>
-      ) : active ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center">
-          <span className="block text-sm font-medium text-foreground-secondary">
-            {t("mobileProjects.emptyTitle")}
-          </span>
-          <span className="mt-1 block text-2xs text-muted">
-            {t("mobileProjects.emptyHint")}
-          </span>
-        </div>
-      ) : projects.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-10 text-center">
-          <span className="block text-sm font-medium text-foreground-secondary">
-            {t("mobileProjects.noProjectsTitle")}
-          </span>
-          <span className="mt-1 block text-2xs text-muted">
-            {t("mobileProjects.noProjectsHint")}
-          </span>
-        </div>
-      ) : null}
-
-      {/* Sum strip */}
-      {active && aggregates && aggregates.count > 0 && (
-        <div className="flex items-center justify-between rounded-2xl border border-border bg-surface-raised px-4 py-3">
-          <div>
-            <span className="block text-2xs font-bold uppercase tracking-[0.16em] text-muted">
-              {t("desktopProject.projectTotal")}
-            </span>
-            <div className="mt-0.5 flex items-baseline gap-1">
-              <span className="text-2xl font-bold leading-none tracking-[-0.025em] tabular-nums text-foreground">
-                {fmtKg(aggregates.totalWeightKg, locale)}
-              </span>
-              <span className="text-sm font-semibold text-accent">kg</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="block text-2xs font-bold uppercase tracking-[0.16em] text-muted">
-              ≈ {t("desktopProject.cost")}
-            </span>
-            <span className="mt-0.5 block text-base font-bold tabular-nums tracking-tight text-foreground">
-              {currency} {fmtCost(aggregates.totalCost, locale)}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* FAB */}
-      {!creating ? (
-        <button
-          type="button"
-          onClick={() => {
-            triggerHaptic("light");
-            setCreating(true);
-          }}
-          aria-label={t("mobileProjects.createAria")}
-          className="fixed bottom-6 right-4 z-30 inline-flex h-12 items-center gap-1.5 rounded-full bg-surface-inverted px-4 text-sm font-bold text-background shadow-[var(--panel-shadow-strong)] active:opacity-90"
-          style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          {t("mobileProjects.create")}
-        </button>
-      ) : (
-        <div
-          className="fixed inset-x-3 z-30 flex items-center gap-2 rounded-2xl border border-border bg-surface p-2 shadow-[var(--panel-shadow-strong)]"
-          style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
-        >
+      {/* Inline create row appears just under the header. */}
+      {creating && (
+        <div className="flex items-center gap-2 rounded-[var(--radius-card)] border border-border bg-surface p-2 shadow-[var(--panel-shadow-soft)]">
           <input
             type="text"
             autoFocus
@@ -299,7 +162,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
               }
             }}
             placeholder={t("mobileProjects.createPlaceholder")}
-            className="h-10 w-full rounded-lg border border-border bg-surface-raised px-3 text-sm text-foreground outline-none placeholder:text-muted-faint focus:border-accent-border"
+            className="h-10 flex-1 rounded-lg border border-border bg-surface-raised px-3 text-sm text-foreground outline-none placeholder:text-muted-faint focus:border-accent-border"
           />
           <button
             type="button"
@@ -325,6 +188,128 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
         </div>
       )}
 
+      {/* Pinned active card — surface-inverted hero showing the active
+          project's stats. Tap to open detail. */}
+      {active && activeAggregates && (
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic("light");
+            onSetActiveProject(active.id);
+          }}
+          className="rounded-[var(--radius-card)] bg-surface-inverted p-4 text-left text-background shadow-[0_14px_30px_-18px_rgba(0,0,0,0.4)] active:opacity-95"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-2xs font-bold uppercase tracking-[var(--label-tracking)] text-background/65">
+              {t("mobileProjects.activeLabel")}
+            </span>
+            <span className="text-2xs text-background/55">{t("mobileProjects.activePinned")}</span>
+          </div>
+          <div className="mt-1 truncate text-xl font-bold tracking-[-0.025em]">{active.name}</div>
+          <div className="mt-3 grid grid-cols-3 gap-3">
+            <HeroStat
+              label={t("mobileProjects.partsLabel")}
+              value={String(activeAggregates.count)}
+            />
+            <HeroStat
+              label={t("mobileProjects.weightLabel")}
+              value={fmtKg(activeAggregates.totalWeightKg, locale)}
+              unit="kg"
+            />
+            <HeroStat
+              label={t("mobileProjects.costLabel")}
+              value={`${CURRENCY_SYMBOLS[activeAggregates.currency] ?? activeAggregates.currency} ${fmtCost(activeAggregates.totalCost, locale)}`}
+            />
+          </div>
+        </button>
+      )}
+
+      {/* Flat project list */}
+      <div className="flex flex-col gap-2">
+        {projects.length === 0 && !creating && (
+          <div className="rounded-[var(--radius-card)] border border-dashed border-border bg-surface px-4 py-10 text-center">
+            <span className="block text-sm font-medium text-foreground-secondary">
+              {t("mobileProjects.noProjectsTitle")}
+            </span>
+            <span className="mt-1 block text-2xs text-muted">
+              {t("mobileProjects.noProjectsHint")}
+            </span>
+          </div>
+        )}
+
+        {projects.map((project, index) => {
+          const isActive = project.id === activeProjectId;
+          const agg = computeAggregates(project);
+          const projectCurrency = CURRENCY_SYMBOLS[agg.currency] ?? agg.currency;
+          const tone = PROJECT_TONES[index % PROJECT_TONES.length];
+          const rel = formatRelative(project.updatedAt);
+          const updatedLabel =
+            rel === null
+              ? null
+              : rel === "now"
+                ? t("mobileProjects.updatedJustNow")
+                : t("mobileProjects.updatedRecent", { value: rel.value, unit: rel.unit });
+          return (
+            <button
+              key={project.id}
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                onSetActiveProject(project.id);
+              }}
+              className={`flex w-full items-center gap-3 rounded-[var(--radius-card)] border bg-surface px-3.5 py-3 text-left transition-colors active:bg-surface-raised ${
+                isActive ? "border-accent-border" : "border-border"
+              }`}
+            >
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-control)] text-white"
+                style={{ background: tone, opacity: 0.85 }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 20a2 2 0 002-2V8a2 2 0 00-2-2h-7.9a2 2 0 01-1.69-.9L9.6 3.9A2 2 0 008 3H4a2 2 0 00-2 2v13a2 2 0 002 2z" />
+                </svg>
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate text-sm font-bold tracking-[-0.01em] text-foreground">
+                  {project.name}
+                </span>
+                <span className="truncate text-2xs text-muted">
+                  {t("mobileProjects.heroHint", { count: agg.count })}
+                  {updatedLabel ? ` · ${updatedLabel}` : ""}
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="flex items-baseline justify-end gap-1">
+                  <span className="text-base font-bold leading-none tabular-nums tracking-[-0.02em] text-foreground">
+                    {fmtKg(agg.totalWeightKg, locale)}
+                  </span>
+                  <span className="text-2xs text-muted">kg</span>
+                </span>
+                <span className="mt-1 block text-2xs tabular-nums text-muted">
+                  {projectCurrency} {fmtCost(agg.totalCost, locale)}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+
+        {!creating && projects.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setCreating(true);
+            }}
+            className="flex h-14 items-center justify-center gap-2 rounded-[var(--radius-card)] border border-dashed border-border-strong bg-transparent text-sm font-semibold text-foreground-secondary active:bg-surface"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            {t("mobileProjects.newProjectRow")}
+          </button>
+        )}
+      </div>
+
       <ConfirmDialog
         open={deletingProject != null}
         title={t("confirmDialog.deleteTitle")}
@@ -345,72 +330,31 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
         }}
         onCancel={() => setDeletingProject(null)}
       />
-      <ConfirmDialog
-        open={removingCalc != null}
-        title={t("confirmDialog.removePartTitle")}
-        message={t("mobileProjects.confirmRemovePart")}
-        confirmLabel={t("confirmDialog.remove")}
-        cancelLabel={t("confirmDialog.cancel")}
-        destructive
-        onConfirm={() => {
-          if (removingCalc) {
-            triggerHaptic("light");
-            onRemoveCalculation(removingCalc.projectId, removingCalc.calcId);
-          }
-          setRemovingCalc(null);
-        }}
-        onCancel={() => setRemovingCalc(null)}
-      />
     </div>
   );
 });
 
-interface PartRowProps {
-  calc: ProjectCalculation;
-  locale: string;
-  onLoad: () => void;
-  onRemove: () => void;
-}
+const PROJECT_TONES = [
+  "#a08373",
+  "#7a6557",
+  "#bcc0c7",
+  "#aab4be",
+  "#bf8f5e",
+  "#967e6c",
+];
 
-function PartRow({ calc, locale, onLoad, onRemove }: PartRowProps) {
-  const profile = calc.normalizedProfile;
-  const result = calc.result;
-  const sub = `${(result.lengthMm / 1000).toFixed(result.lengthMm >= 10000 ? 1 : 2)} m × ${result.quantity}`;
-
+function HeroStat({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
-    <div className="flex items-center gap-2.5 rounded-xl border border-border bg-surface px-3 py-2.5">
-      <button
-        type="button"
-        onClick={onLoad}
-        className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-raised text-foreground-secondary">
-          <ProfileGlyph profileId={calc.input.profileId} size="sm" />
+    <div>
+      <span className="block text-[0.55rem] font-bold uppercase tracking-[var(--label-tracking)] text-background/55">
+        {label}
+      </span>
+      <div className="mt-0.5 flex items-baseline gap-1">
+        <span className="text-base font-bold leading-none tabular-nums tracking-[-0.02em] text-background">
+          {value}
         </span>
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-semibold tracking-tight text-foreground">
-            {profile.shortLabel}
-            <span className="ml-1 font-medium text-muted">· {result.gradeLabel}</span>
-          </span>
-          <span className="truncate text-2xs text-muted">{sub}</span>
-        </span>
-        <span className="text-right">
-          <span className="block text-sm font-bold tabular-nums tracking-tight text-foreground">
-            {fmtKg(result.totalWeightKg, locale)}
-          </span>
-          <span className="block text-2xs text-muted">kg</span>
-        </span>
-      </button>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label="Remove part"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-red-surface hover:text-red-interactive"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
-        </svg>
-      </button>
+        {unit && <span className="text-2xs text-background/70">{unit}</span>}
+      </div>
     </div>
   );
 }
