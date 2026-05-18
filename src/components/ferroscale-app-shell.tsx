@@ -831,20 +831,20 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         />
       </div>
     ) : currentTab === "projects" && projectDetailEntry ? (
-      <div className="px-3 md:px-4">
-        <MobileProjectDetailPage
-          project={projectDetailEntry}
-          onBack={navigateBackFromProject}
-          onAddPart={() => navigateToTab("calculator")}
-          onLoadCalculation={(input) => handleLoad(input)}
-          onRemoveCalculation={(calcId) => removeCalculation(projectDetailEntry.id, calcId)}
-          onRenameProject={(name) => renameProject(projectDetailEntry.id, name)}
-          onDeleteProject={() => {
-            deleteProject(projectDetailEntry.id);
-            navigateBackFromProject();
-          }}
-        />
-      </div>
+      // No outer padding — the detail page owns its NavBar + safe-area top
+      // and applies its own horizontal margins.
+      <MobileProjectDetailPage
+        project={projectDetailEntry}
+        onBack={navigateBackFromProject}
+        onAddPart={() => navigateToTab("calculator")}
+        onLoadCalculation={(input) => handleLoad(input)}
+        onRemoveCalculation={(calcId) => removeCalculation(projectDetailEntry.id, calcId)}
+        onRenameProject={(name) => renameProject(projectDetailEntry.id, name)}
+        onDeleteProject={() => {
+          deleteProject(projectDetailEntry.id);
+          navigateBackFromProject();
+        }}
+      />
     ) : currentTab === "projects" ? (
       <div className="px-3 md:px-4">
         <MobileProjectsPage
@@ -916,9 +916,16 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onToggleTheme={cycleTheme}
       />
 
+      {/* On the mobile project-detail route the page owns its own NavBar
+          (back + title + more menu), so we skip the global shell header
+          here — otherwise two headers stack and the page feels cramped. */}
       <div
         ref={mainContentRef}
-        className={`flex w-full flex-col px-0 pt-[calc(3rem+env(safe-area-inset-top,0px))] transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
+        className={`flex w-full flex-col px-0 transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
+          currentTab === "projects" && projectDetailEntry
+            ? "pt-0"
+            : "pt-[calc(3rem+env(safe-area-inset-top,0px))]"
+        } ${
           isMultiColumn
             ? "min-h-dvh overflow-hidden pb-0"
             : currentTab === "calculator"
@@ -930,6 +937,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             : "lg:ml-[220px] lg:w-[calc(100%-220px)]"
         }`}
       >
+        {!(currentTab === "projects" && projectDetailEntry) && (
         <header
           className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(20,18,15,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
           style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
@@ -1028,6 +1036,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             )}
           </div>
         </header>
+        )}
 
         <PwaRegister onOpenChangelog={() => setShowChangelogDrawer(true)} />
 
