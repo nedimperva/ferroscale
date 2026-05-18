@@ -43,7 +43,7 @@ export const DesktopWorkstationTopbar = memo(function DesktopWorkstationTopbar({
         <button
           type="button"
           onClick={onOpenQuickCalc}
-          className="flex h-9 w-[240px] items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs text-muted-faint transition-colors hover:border-accent-border hover:text-foreground-secondary"
+          className="flex h-9 w-[180px] items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs text-muted-faint transition-colors hover:border-accent-border hover:text-foreground-secondary"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" />

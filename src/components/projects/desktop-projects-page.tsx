@@ -101,7 +101,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
     <div className="hidden h-[calc(100dvh-env(safe-area-inset-top,0px))] min-h-0 lg:flex">
       {/* Left rail */}
       <aside className="flex w-[260px] shrink-0 flex-col border-r border-border bg-background xl:w-[300px]">
-        <div className="flex h-14 items-center justify-between border-b border-border px-4">
+        <div className="flex h-12 items-center justify-between border-b border-border px-4">
           <h2 className="text-base font-bold tracking-tight text-foreground">
             {t("tabs.projects")}
           </h2>
@@ -218,7 +218,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
         {active && aggregates ? (
           <>
             {/* Header */}
-            <div className="flex h-14 items-center justify-between gap-3 border-b border-border px-5">
+            <div className="flex h-12 items-center justify-between gap-3 border-b border-border px-5">
               <div className="flex min-w-0 items-center gap-3">
                 {renaming ? (
                   <input

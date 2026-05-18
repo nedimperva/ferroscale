@@ -159,10 +159,12 @@
     "clear": "Clear",
     "next": "Next",
     "done": "Done",
-    "save": "Save →"
+    "save": "Save →",
+    "totalCost": "Total cost",
+    "perPiece": "Per piece"
   },
   "workstation": {
-    "searchHint": "Find profile, preset, or calc…",
+    "searchHint": "Quick calculate",
     "new": "New"
   },
   "workstationPane": {
@@ -735,6 +737,7 @@
     "title": "Result",
     "empty": "Enter dimensions to see live results.",
     "moreActions": "More actions",
+    "vsLastCalc": "vs last calc",
     "totalCost": "Total cost",
     "unitWeight": "Unit weight",
     "totalWeight": "Total weight",

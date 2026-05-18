@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
@@ -85,6 +85,19 @@ export const ResultContent = memo(function ResultContent({
   const animatedUnitWeight = useAnimatedNumber(result.unitWeightKg);
   const animatedTotalWeight = useAnimatedNumber(result.totalWeightKg);
 
+  // Track the previous total weight so we can surface a "↑ +N% from last
+  // calc" delta pill (review §06). useRef holds the value across renders
+  // without triggering a recompute when it updates.
+  const prevWeightRef = useRef<number | null>(null);
+  const [weightDelta, setWeightDelta] = useState<number | null>(null);
+  useEffect(() => {
+    const prev = prevWeightRef.current;
+    if (prev != null && prev > 0 && result.totalWeightKg > 0 && Math.abs(prev - result.totalWeightKg) > 0.01) {
+      setWeightDelta(((result.totalWeightKg - prev) / prev) * 100);
+    }
+    prevWeightRef.current = result.totalWeightKg;
+  }, [result.totalWeightKg]);
+
   const profileLabel = normalizedProfile?.shortLabel ?? result.profileLabel;
   const gradeLabel = resolveGradeLabel(result.gradeLabel, tBase);
   const currency = CURRENCY_SYMBOLS[result.currency];
@@ -165,6 +178,23 @@ export const ResultContent = memo(function ResultContent({
             {secondaryUnit}
           </span>
         </p>
+
+        {/* Delta pill — appears after the second calc and signals direction. */}
+        {weightDelta != null && Math.abs(weightDelta) >= 0.5 && (
+          <div className="mt-2 flex items-center gap-2 text-xs">
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold tabular-nums ${
+                weightDelta > 0
+                  ? "border-amber-border bg-amber-surface text-amber-text"
+                  : "border-green-border bg-green-surface text-green-text"
+              }`}
+            >
+              {weightDelta > 0 ? "↑" : "↓"} {weightDelta > 0 ? "+" : ""}
+              {weightDelta.toFixed(0)}%
+            </span>
+            <span className="text-muted">{t("vsLastCalc")}</span>
+          </div>
+        )}
 
         {contextSegments.length > 0 && (
           <p className="mt-3 text-xs text-muted">

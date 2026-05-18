@@ -213,6 +213,10 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const priceDisplay = fmtPrice(animatedTotal, locale);
   const hasResult = result != null && totalWeightKg > 0;
 
+  const perPieceKg = result && result.quantity > 0 ? totalWeightKg / result.quantity : 0;
+  const perPieceUnit = selectWeightUnit(perPieceKg);
+  const perPieceDisplay = fmtWeight(perPieceKg, locale);
+
   const profileLabel =
     normalizedProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
 
@@ -279,11 +283,34 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
           </span>
           <span className="text-xl font-semibold tracking-tight text-accent">{weightUnit}</span>
         </div>
+
+        {/* Polished mock from review §03: 2-col secondary grid below the
+            big weight. Total cost on the left, per-piece weight on the
+            right — earns the card's real estate without bumping the
+            primary number. The bottom summary stays as a quiet sub-line. */}
+        {hasResult && (
+          <div className="mt-2.5 grid grid-cols-2 gap-0 border-t border-border-faint pt-2">
+            <div className="flex flex-col">
+              <span className="text-[0.55rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted">
+                {t("mobileCalc.totalCost")}
+              </span>
+              <span className="select-text mt-0.5 text-[15px] font-semibold tabular-nums tracking-tight text-foreground">
+                {currencySymbol} {priceDisplay}
+              </span>
+            </div>
+            <div className="flex flex-col border-l border-border-faint pl-3">
+              <span className="text-[0.55rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted">
+                {t("mobileCalc.perPiece")}
+              </span>
+              <span className="mt-0.5 text-[13px] font-semibold tabular-nums text-foreground-secondary">
+                {perPieceDisplay} {perPieceUnit}
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="mt-2 flex items-center justify-between">
-          <span className="truncate text-xs text-foreground-secondary">{summary}</span>
-          <span className="select-text shrink-0 font-semibold tabular-nums text-sm text-foreground-secondary">
-            {currencySymbol} {priceDisplay}
-          </span>
+          <span className="truncate text-2xs text-muted">{summary}</span>
         </div>
       </button>
 

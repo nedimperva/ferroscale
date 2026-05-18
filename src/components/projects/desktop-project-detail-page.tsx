@@ -186,7 +186,7 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-background text-foreground">
       {/* Breadcrumb topbar */}
-      <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border px-6">
+      <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-6">
         <div className="flex min-w-0 items-center gap-2 text-xs">
           <button
             type="button"
@@ -344,9 +344,10 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
             </div>
           </div>
 
-          {/* Parts table */}
-          <div className="overflow-hidden rounded-[18px] border border-border bg-surface">
-            <div className="flex items-center justify-between border-b border-border px-[18px] py-3.5">
+          {/* Parts table — overflow-visible so the row kebab menus can render
+              above the surface without getting clipped. */}
+          <div className="rounded-[18px] border border-border bg-surface">
+            <div className="flex items-center justify-between rounded-t-[18px] border-b border-border px-[18px] py-3.5">
               <span className="text-2xs font-bold uppercase tracking-[0.16em] text-muted">
                 {t("desktopProjectDetail.partsCount", { count: aggregates.count })}
               </span>

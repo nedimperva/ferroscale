@@ -159,10 +159,12 @@
     "clear": "Ocisti",
     "next": "Dalje",
     "done": "Gotovo",
-    "save": "Sacuvaj →"
+    "save": "Sacuvaj →",
+    "totalCost": "Ukupna cijena",
+    "perPiece": "Po komadu"
   },
   "workstation": {
-    "searchHint": "Pretrazi profil, preset ili kalkulaciju…",
+    "searchHint": "Brza kalkulacija",
     "new": "Novo"
   },
   "workstationPane": {
@@ -735,6 +737,7 @@
     "title": "Rezultat",
     "empty": "Unesite dimenzije za prikaz rezultata uzivo.",
     "moreActions": "Vise opcija",
+    "vsLastCalc": "vs zadnja kalkulacija",
     "totalCost": "Ukupna cijena",
     "unitWeight": "Masa po komadu",
     "totalWeight": "Ukupna masa",

@@ -181,8 +181,9 @@ export const DesktopWorkstationPane = memo(function DesktopWorkstationPane({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-background">
-      {/* Top bar */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border px-6">
+      {/* Top bar — locked to 48px per review §06 to match all workstation
+          topbars (Saved, Projects, Settings). */}
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-border px-6">
         <div className="flex min-w-0 items-center gap-3.5">
           <h2 className="truncate text-lg font-bold tracking-tight text-foreground">
             {t("tabs.calculator")}
@@ -198,7 +199,7 @@ export const DesktopWorkstationPane = memo(function DesktopWorkstationPane({
               triggerHaptic("light");
               onOpenQuickCalc();
             }}
-            className="flex h-8 w-[280px] items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs text-muted transition-colors hover:border-accent-border hover:text-foreground-secondary"
+            className="flex h-8 w-[200px] items-center gap-2 rounded-xl border border-border bg-surface px-3 text-xs text-muted transition-colors hover:border-accent-border hover:text-foreground-secondary"
           >
             <svg
               width="13"

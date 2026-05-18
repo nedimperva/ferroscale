@@ -137,8 +137,8 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
 
   return (
     <div className="hidden h-[calc(100dvh-env(safe-area-inset-top,0px))] min-h-0 flex-1 flex-col bg-background lg:flex">
-      {/* Topbar */}
-      <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border px-6">
+      {/* Topbar — locked to 48px per review §06. */}
+      <div className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-border px-6">
         <div className="flex min-w-0 items-baseline gap-3">
           <h1 className="text-lg font-bold tracking-[-0.02em] text-foreground">
             {t("mobileSaved.title")}
@@ -224,9 +224,9 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
               )}
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+            <div className="rounded-2xl border border-border bg-surface">
               <div
-                className="grid items-center gap-3 border-b border-border bg-surface-raised px-4 py-3"
+                className="grid items-center gap-3 rounded-t-2xl border-b border-border bg-surface-raised px-4 py-3"
                 style={{ gridTemplateColumns: GRID_COLS }}
               >
                 <span aria-hidden />
@@ -390,7 +390,7 @@ function DesktopRow({
   return (
     <div
       className={`relative grid items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-emphasis hover:[box-shadow:inset_0_0_0_1px_var(--border-strong)] ${
-        isLast ? "" : "border-b border-border"
+        isLast ? "rounded-b-2xl" : "border-b border-border"
       }`}
       style={{ gridTemplateColumns: GRID_COLS }}
     >
