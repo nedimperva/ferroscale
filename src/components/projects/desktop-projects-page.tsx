@@ -21,6 +21,8 @@ interface Props {
   onDeleteProject: (id: string) => void;
   onDuplicateProject: (id: string) => void;
   onRemoveCalculation: (projectId: string, calcId: string) => void;
+  /** Move a calc from one project to another. Returns true on success. */
+  onMoveCalculation?: (fromProjectId: string, calcId: string, toProjectId: string) => boolean;
   onLoadCalculation: (input: CalculationInput) => void;
 }
 
@@ -55,6 +57,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
   onDeleteProject,
   onDuplicateProject,
   onRemoveCalculation,
+  onMoveCalculation,
   onLoadCalculation,
 }: Props) {
   const t = useTranslations();
@@ -65,6 +68,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
   const [renameDraft, setRenameDraft] = useState("");
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [removingCalc, setRemovingCalc] = useState<{ projectId: string; calcId: string } | null>(null);
+  const [dragTargetId, setDragTargetId] = useState<string | null>(null);
 
   const active = useMemo(
     () => (activeProjectId ? projects.find((p) => p.id === activeProjectId) ?? null : null),
@@ -177,6 +181,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
             <div className="flex flex-col gap-1">
               {projects.map((p) => {
                 const isActive = p.id === activeProjectId;
+                const isDropTarget = dragTargetId === p.id;
                 const agg = computeAggregates(p);
                 return (
                   <button
@@ -186,11 +191,37 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                       triggerHaptic("light");
                       onSetActiveProject(p.id);
                     }}
+                    onDragOver={(e) => {
+                      // Drop calcs onto this rail row from the active project's
+                      // parts list. dataTransfer carries the calcId; the source
+                      // project is whatever activeProjectId currently is.
+                      if (
+                        onMoveCalculation &&
+                        activeProjectId &&
+                        activeProjectId !== p.id &&
+                        e.dataTransfer.types.includes("application/x-ferroscale-calc")
+                      ) {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        if (dragTargetId !== p.id) setDragTargetId(p.id);
+                      }
+                    }}
+                    onDragLeave={() => {
+                      if (dragTargetId === p.id) setDragTargetId(null);
+                    }}
+                    onDrop={(e) => {
+                      const calcId = e.dataTransfer.getData("application/x-ferroscale-calc");
+                      setDragTargetId(null);
+                      if (!calcId || !activeProjectId || !onMoveCalculation) return;
+                      if (activeProjectId === p.id) return;
+                      const ok = onMoveCalculation(activeProjectId, calcId, p.id);
+                      if (ok) triggerHaptic("success");
+                    }}
                     className={`relative flex items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors ${
                       isActive
                         ? "bg-surface-raised before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r before:bg-accent"
                         : "bg-transparent hover:bg-surface"
-                    }`}
+                    } ${isDropTarget ? "ring-2 ring-accent ring-offset-1 ring-offset-background" : ""}`}
                   >
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span
@@ -316,6 +347,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                         calc={calc}
                         currency={currency}
                         locale={locale}
+                        draggable={Boolean(onMoveCalculation) && projects.length > 1}
                         onLoad={() => onLoadCalculation(calc.input)}
                         onRemove={() => setRemovingCalc({ projectId: active.id, calcId: calc.id })}
                       />
@@ -399,17 +431,28 @@ interface DesktopPartRowProps {
   calc: ProjectCalculation;
   currency: string;
   locale: string;
+  draggable?: boolean;
   onLoad: () => void;
   onRemove: () => void;
 }
 
-function DesktopPartRow({ calc, currency, locale, onLoad, onRemove }: DesktopPartRowProps) {
+function DesktopPartRow({ calc, currency, locale, draggable = false, onLoad, onRemove }: DesktopPartRowProps) {
   const profile = calc.normalizedProfile;
   const result = calc.result;
   const sub = `${(result.lengthMm / 1000).toFixed(result.lengthMm >= 10000 ? 1 : 2)} m × ${result.quantity}`;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-raised">
+    <div
+      draggable={draggable}
+      onDragStart={(e) => {
+        if (!draggable) return;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("application/x-ferroscale-calc", calc.id);
+      }}
+      className={`flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-raised ${
+        draggable ? "cursor-grab active:cursor-grabbing" : ""
+      }`}
+    >
       <button
         type="button"
         onClick={onLoad}

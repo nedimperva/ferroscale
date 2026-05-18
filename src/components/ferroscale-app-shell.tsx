@@ -61,6 +61,7 @@ import { Sidebar } from "@/components/calculator/sidebar";
 import { PwaRegister } from "@/components/pwa-register";
 import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
+import { QuickCalcFab } from "@/components/quick-calc/quick-calc-fab";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
@@ -185,6 +186,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     deleteProject,
     addCalculation,
     removeCalculation,
+    moveCalculation,
     duplicateProject,
     updateCalculationNote,
     updateProjectDescription,
@@ -1091,6 +1093,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               if (dup) setActiveProjectId(dup.id);
             }}
             onRemoveCalculation={removeCalculation}
+            onMoveCalculation={moveCalculation}
             onLoadCalculation={handleLoad}
           />
         ) : currentTab === "settings" ? (
@@ -1208,6 +1211,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         {/* Desktop settings has its own full-page workshop above; the
             mobile settings tab renders MobileSettingsContent. The
             legacy SettingsDrawer is no longer used. */}
+
+        {/* Mobile Quick Calc FAB (review §04) — only on tabs without their
+            own bottom-right FAB. Calculator owns its numpad Save key;
+            Projects owns the + Create FAB. */}
+        {isMobile && (currentTab === "saved" || currentTab === "compare" || currentTab === "settings") && (
+          <QuickCalcFab onOpen={openQuickCalc} />
+        )}
 
         <ContactDrawer open={showContactDrawer} onClose={() => setShowContactDrawer(false)} />
 

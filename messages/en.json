@@ -310,7 +310,12 @@
     "colWeight": "Weight",
     "colPrice": "Price",
     "colUpdated": "Updated",
-    "loadAria": "Load \"{name}\" into calculator"
+    "loadAria": "Load \"{name}\" into calculator",
+    "selectAria": "Select \"{name}\"",
+    "deselectAria": "Deselect \"{name}\"",
+    "selectedCount": "{count, plural, one {# selected} other {# selected}}",
+    "clearSelection": "Clear selection",
+    "confirmBulkRemove": "Remove {count, plural, one {# saved calculation} other {# saved calculations}}?"
   },
   "desktopProject": {
     "headerSummary": "{count, plural, one {# part} other {# parts}} · {weight} kg · {currency} {cost}",

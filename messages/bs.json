@@ -310,7 +310,12 @@
     "colWeight": "Tezina",
     "colPrice": "Cijena",
     "colUpdated": "Azurirano",
-    "loadAria": "Ucitaj \"{name}\" u kalkulator"
+    "loadAria": "Ucitaj \"{name}\" u kalkulator",
+    "selectAria": "Oznaci \"{name}\"",
+    "deselectAria": "Ukloni oznaku \"{name}\"",
+    "selectedCount": "{count, plural, one {# oznacena} few {# oznacene} other {# oznacenih}}",
+    "clearSelection": "Ocisti oznake",
+    "confirmBulkRemove": "Ukloniti {count, plural, one {# sacuvanu kalkulaciju} few {# sacuvane kalkulacije} other {# sacuvanih kalkulacija}}?"
   },
   "desktopProject": {
     "headerSummary": "{count, plural, one {# dio} few {# dijela} other {# dijelova}} · {weight} kg · {currency} {cost}",

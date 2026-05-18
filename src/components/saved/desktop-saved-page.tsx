@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
@@ -79,6 +79,9 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [removeTarget, setRemoveTarget] = useState<SavedEntry | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -134,6 +137,45 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
     if (name && name !== entry.name) onRename(entry.id, name);
     setRenamingId(null);
   };
+
+  /**
+   * Toggle row selection. Plain click adds/removes a single row; shift-
+   * click selects every row from the last-selected anchor through the
+   * current target, inclusive. Cmd/Ctrl-click is equivalent to plain
+   * click (multi-add without anchor change).
+   */
+  const handleRowSelect = useCallback(
+    (entry: SavedEntry, index: number, e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (e.shiftKey && lastSelectedIndex != null) {
+          const [from, to] = lastSelectedIndex < index
+            ? [lastSelectedIndex, index]
+            : [index, lastSelectedIndex];
+          for (let i = from; i <= to; i += 1) {
+            const id = filtered[i]?.id;
+            if (id) next.add(id);
+          }
+        } else if (next.has(entry.id)) {
+          next.delete(entry.id);
+        } else {
+          next.add(entry.id);
+        }
+        return next;
+      });
+      if (!e.shiftKey) setLastSelectedIndex(index);
+    },
+    [filtered, lastSelectedIndex],
+  );
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+    setLastSelectedIndex(null);
+  }, []);
+
+  const selectedCount = selectedIds.size;
 
   return (
     <div className="hidden h-[calc(100dvh-env(safe-area-inset-top,0px))] min-h-0 flex-1 flex-col bg-background lg:flex">
@@ -246,6 +288,9 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
                     entry={entry}
                     locale={locale}
                     isLast={index === filtered.length - 1}
+                    selected={selectedIds.has(entry.id)}
+                    hasSelection={selectedCount > 0}
+                    onToggleSelect={(e) => handleRowSelect(entry, index, e)}
                     menuOpen={openMenuId === entry.id}
                     renaming={renamingId === entry.id}
                     renameDraft={renameDraft}
@@ -303,6 +348,67 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
         }}
         onCancel={() => setRemoveTarget(null)}
       />
+
+      <ConfirmDialog
+        open={confirmBulkDelete}
+        title={t("confirmDialog.removeTitle")}
+        message={t("desktopSaved.confirmBulkRemove", { count: selectedCount })}
+        confirmLabel={t("confirmDialog.remove")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          selectedIds.forEach((id) => onRemove(id));
+          clearSelection();
+          setConfirmBulkDelete(false);
+        }}
+        onCancel={() => setConfirmBulkDelete(false)}
+      />
+
+      {/* Bulk action bar — slides up from the bottom while rows are
+          selected (review §07 multi-select). */}
+      {selectedCount > 0 && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-6 pb-6">
+          <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-border bg-surface-raised px-3 py-2 shadow-[var(--panel-shadow-strong)]">
+            <span className="ml-1 text-xs font-semibold tabular-nums text-foreground">
+              {t("desktopSaved.selectedCount", { count: selectedCount })}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                selectedIds.forEach((id) => onDuplicate(id));
+                clearSelection();
+              }}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-foreground-secondary hover:bg-surface-raised"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+              {t("mobileSaved.duplicate")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmBulkDelete(true)}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-border bg-red-surface px-3 text-xs font-semibold text-red-text hover:bg-red-surface/80"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z" />
+              </svg>
+              {t("mobileSaved.remove")}
+            </button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              aria-label={t("desktopSaved.clearSelection")}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted hover:bg-surface"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 });
@@ -347,6 +453,10 @@ interface DesktopRowProps {
   entry: SavedEntry;
   locale: string;
   isLast: boolean;
+  selected: boolean;
+  /** True when ANY row in the table is selected — flips glyph into checkbox mode. */
+  hasSelection: boolean;
+  onToggleSelect: (e: React.MouseEvent) => void;
   menuOpen: boolean;
   renaming: boolean;
   renameDraft: string;
@@ -365,6 +475,9 @@ function DesktopRow({
   entry,
   locale,
   isLast,
+  selected,
+  hasSelection,
+  onToggleSelect,
   menuOpen,
   renaming,
   renameDraft,
@@ -389,18 +502,57 @@ function DesktopRow({
 
   return (
     <div
-      className={`relative grid items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-emphasis hover:[box-shadow:inset_0_0_0_1px_var(--border-strong)] ${
-        isLast ? "rounded-b-2xl" : "border-b border-border"
-      }`}
+      className={`group/row relative grid items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-emphasis hover:[box-shadow:inset_0_0_0_1px_var(--border-strong)] ${
+        selected ? "bg-accent-surface/60 [box-shadow:inset_3px_0_0_var(--accent)]" : ""
+      } ${isLast ? "rounded-b-2xl" : "border-b border-border"}`}
       style={{ gridTemplateColumns: GRID_COLS }}
+      onClick={(e) => {
+        // Shift-click anywhere on the row triggers selection. Plain clicks
+        // ignored so the row stays clickable for load.
+        if (e.shiftKey) onToggleSelect(e);
+      }}
     >
+      {/* Glyph/checkbox column — switches to a checkbox when any row is
+          selected or this row is hovered. Click toggles selection. */}
       <button
         type="button"
-        onClick={onLoad}
-        aria-label={t("desktopSaved.loadAria", { name: entry.name })}
-        className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised text-foreground-secondary"
+        onClick={(e) => {
+          if (hasSelection || selected) {
+            onToggleSelect(e);
+          } else {
+            onLoad();
+          }
+        }}
+        onMouseDown={(e) => {
+          // Shift-click first row: prevent native text-selection drift.
+          if (e.shiftKey) e.preventDefault();
+        }}
+        aria-label={
+          hasSelection || selected
+            ? t(selected ? "desktopSaved.deselectAria" : "desktopSaved.selectAria", {
+                name: entry.name,
+              })
+            : t("desktopSaved.loadAria", { name: entry.name })
+        }
+        className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+          selected
+            ? "bg-accent text-white"
+            : hasSelection
+              ? "border border-border bg-surface text-muted hover:border-accent-border hover:text-foreground"
+              : "bg-surface-raised text-foreground-secondary group-hover/row:bg-surface group-hover/row:[box-shadow:inset_0_0_0_1px_var(--border-strong)]"
+        }`}
       >
-        <ProfileGlyph profileId={input.profileId} size="sm" />
+        {selected ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12l5 5L20 7" />
+          </svg>
+        ) : hasSelection ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="3" />
+          </svg>
+        ) : (
+          <ProfileGlyph profileId={input.profileId} size="sm" />
+        )}
       </button>
 
       <div className="flex min-w-0 items-center gap-2">
