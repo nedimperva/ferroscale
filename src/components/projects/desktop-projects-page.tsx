@@ -10,6 +10,7 @@ import { computeAggregates } from "@/hooks/useProjects";
 import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   projects: Project[];
@@ -62,6 +63,8 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState("");
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [removingCalc, setRemovingCalc] = useState<{ projectId: string; calcId: string } | null>(null);
 
   const active = useMemo(
     () => (activeProjectId ? projects.find((p) => p.id === activeProjectId) ?? null : null),
@@ -110,7 +113,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                 setCreating(true);
               }}
               aria-label={t("mobileProjects.createAria")}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white shadow-[0_8px_18px_-10px_rgba(20,18,15,0.4)] hover:bg-accent-hover"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-surface-inverted text-background shadow-[0_8px_18px_-10px_rgba(20,18,15,0.4)] hover:opacity-90"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
@@ -140,7 +143,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
               type="button"
               onClick={handleCreate}
               disabled={!newName.trim()}
-              className="inline-flex h-9 items-center rounded-lg bg-accent px-2.5 text-xs font-bold text-white disabled:opacity-50"
+              className="inline-flex h-9 items-center rounded-lg bg-surface-inverted px-2.5 text-xs font-bold text-background disabled:opacity-50"
             >
               {t("mobileCalc.done")}
             </button>
@@ -183,16 +186,16 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                       triggerHaptic("light");
                       onSetActiveProject(p.id);
                     }}
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition-colors ${
+                    className={`relative flex items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors ${
                       isActive
-                        ? "border-accent-border bg-accent-surface"
-                        : "border-transparent bg-transparent hover:border-border hover:bg-surface"
+                        ? "bg-surface-raised before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-r before:bg-accent"
+                        : "bg-transparent hover:bg-surface"
                     }`}
                   >
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span
                         className={`truncate text-sm font-semibold tracking-tight ${
-                          isActive ? "text-accent-text" : "text-foreground"
+                          isActive ? "text-foreground" : "text-foreground"
                         }`}
                       >
                         {p.name}
@@ -261,12 +264,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (window.confirm(t("mobileProjects.confirmDelete", { name: active.name }))) {
-                      triggerHaptic("medium");
-                      onDeleteProject(active.id);
-                    }
-                  }}
+                  onClick={() => setDeletingProject(active)}
                   aria-label={t("mobileProjects.deleteAria")}
                   className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-medium text-foreground-secondary hover:border-red-border hover:bg-red-surface hover:text-red-interactive"
                 >
@@ -319,12 +317,7 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
                         currency={currency}
                         locale={locale}
                         onLoad={() => onLoadCalculation(calc.input)}
-                        onRemove={() => {
-                          if (window.confirm(t("mobileProjects.confirmRemovePart"))) {
-                            triggerHaptic("light");
-                            onRemoveCalculation(active.id, calc.id);
-                          }
-                        }}
+                        onRemove={() => setRemovingCalc({ projectId: active.id, calcId: calc.id })}
                       />
                     ))}
                   </div>
@@ -361,6 +354,43 @@ export const DesktopProjectsPage = memo(function DesktopProjectsPage({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingProject != null}
+        title={t("confirmDialog.deleteTitle")}
+        message={
+          deletingProject
+            ? t("mobileProjects.confirmDelete", { name: deletingProject.name })
+            : ""
+        }
+        confirmLabel={t("confirmDialog.delete")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (deletingProject) {
+            triggerHaptic("medium");
+            onDeleteProject(deletingProject.id);
+          }
+          setDeletingProject(null);
+        }}
+        onCancel={() => setDeletingProject(null)}
+      />
+      <ConfirmDialog
+        open={removingCalc != null}
+        title={t("confirmDialog.removePartTitle")}
+        message={t("mobileProjects.confirmRemovePart")}
+        confirmLabel={t("confirmDialog.remove")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (removingCalc) {
+            triggerHaptic("light");
+            onRemoveCalculation(removingCalc.projectId, removingCalc.calcId);
+          }
+          setRemovingCalc(null);
+        }}
+        onCancel={() => setRemovingCalc(null)}
+      />
     </div>
   );
 });

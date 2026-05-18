@@ -1,11 +1,12 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   saved: SavedEntry[];
@@ -36,19 +37,22 @@ function fmtCost(value: number, locale: string): string {
   });
 }
 
-function formatRelative(iso: string | undefined, locale: string): string {
-  if (!iso) return "—";
+function formatRelative(iso: string | undefined, locale: string): { label: string; recent: boolean } {
+  if (!iso) return { label: "—", recent: false };
   const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return "—";
+  if (!Number.isFinite(then)) return { label: "—", recent: false };
   const diff = Date.now() - then;
   const minutes = Math.round(diff / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return { label: "just now", recent: true };
+  if (minutes < 60) return { label: `${minutes} min ago`, recent: true };
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
+  if (hours < 24) return { label: `${hours} h ago`, recent: false };
   const days = Math.round(hours / 24);
-  if (days < 7) return `${days} d ago`;
-  return new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
+  if (days < 7) return { label: `${days} d ago`, recent: false };
+  return {
+    label: new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" }),
+    recent: false,
+  };
 }
 
 /**
@@ -72,6 +76,26 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [removeTarget, setRemoveTarget] = useState<SavedEntry | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 80);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -85,10 +109,25 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
   }, [saved]);
 
   const filtered = useMemo(() => {
-    if (activeChip === ALL_KEY) return saved;
-    if (activeChip === UNFILED_KEY) return saved.filter((e) => !e.tags || e.tags.length === 0);
-    return saved.filter((e) => e.tags?.includes(activeChip));
-  }, [saved, activeChip]);
+    let pool = saved;
+    if (activeChip === UNFILED_KEY) pool = saved.filter((e) => !e.tags || e.tags.length === 0);
+    else if (activeChip !== ALL_KEY) pool = saved.filter((e) => e.tags?.includes(activeChip));
+
+    if (!debouncedQuery) return pool;
+    return pool.filter((entry) => {
+      const part = entry.parts[0];
+      const profileLabel = (part?.normalizedProfile ?? entry.normalizedProfile).shortLabel.toLowerCase();
+      const grade = (part?.result ?? entry.result).gradeLabel?.toLowerCase() ?? "";
+      const name = entry.name.toLowerCase();
+      const tags = (entry.tags ?? []).join(" ").toLowerCase();
+      return (
+        name.includes(debouncedQuery) ||
+        profileLabel.includes(debouncedQuery) ||
+        grade.includes(debouncedQuery) ||
+        tags.includes(debouncedQuery)
+      );
+    });
+  }, [saved, activeChip, debouncedQuery]);
 
   const commitRename = (entry: SavedEntry) => {
     const name = renameDraft.trim();
@@ -109,16 +148,24 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <div className="flex h-8 w-60 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs text-muted">
+          <label className="flex h-8 w-60 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs text-muted focus-within:border-accent-border">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-            {t("mobileSaved.searchPlaceholder")}
-            <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-border bg-surface-raised px-1 text-[0.65rem] font-semibold text-foreground-secondary">
+            <input
+              ref={searchInputRef}
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("mobileSaved.searchPlaceholder")}
+              aria-label={t("mobileSaved.searchAria")}
+              className="min-w-0 flex-1 bg-transparent text-xs text-foreground placeholder:text-muted outline-none"
+            />
+            <span className="ml-auto inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-md border border-border bg-surface-raised px-1 text-[0.65rem] font-semibold text-foreground-secondary">
               ⌘K
             </span>
-          </div>
+          </label>
           <button
             type="button"
             className="inline-flex h-9 items-center gap-1.5 rounded-xl px-3 text-xs font-semibold text-foreground-secondary hover:bg-surface"
@@ -216,10 +263,8 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
                       onLoad(entry.parts[0]?.input ?? entry.input);
                     }}
                     onRemove={() => {
-                      if (window.confirm(t("mobileSaved.confirmRemove", { name: entry.name }))) {
-                        onRemove(entry.id);
-                      }
                       setOpenMenuId(null);
+                      setRemoveTarget(entry);
                     }}
                     onDuplicate={() => {
                       onDuplicate(entry.id);
@@ -242,6 +287,22 @@ export const DesktopSavedPage = memo(function DesktopSavedPage({
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        open={removeTarget != null}
+        title={t("confirmDialog.removeTitle")}
+        message={
+          removeTarget ? t("mobileSaved.confirmRemove", { name: removeTarget.name }) : ""
+        }
+        confirmLabel={t("confirmDialog.remove")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (removeTarget) onRemove(removeTarget.id);
+          setRemoveTarget(null);
+        }}
+        onCancel={() => setRemoveTarget(null)}
+      />
     </div>
   );
 });
@@ -328,7 +389,7 @@ function DesktopRow({
 
   return (
     <div
-      className={`relative grid items-center gap-3 px-4 py-3 hover:bg-surface-raised ${
+      className={`relative grid items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-emphasis hover:[box-shadow:inset_0_0_0_1px_var(--border-strong)] ${
         isLast ? "" : "border-b border-border"
       }`}
       style={{ gridTemplateColumns: GRID_COLS }}
@@ -387,7 +448,18 @@ function DesktopRow({
         {currency} {fmtCost(result.grandTotalAmount, locale)}
       </span>
 
-      <span className="text-xs text-muted">{formatRelative(entry.updatedAt, locale)}</span>
+      {(() => {
+        const rel = formatRelative(entry.updatedAt, locale);
+        return (
+          <span
+            className={`text-xs ${
+              rel.recent ? "font-semibold text-foreground-secondary" : "text-muted"
+            }`}
+          >
+            {rel.label}
+          </span>
+        );
+      })()}
 
       <button
         type="button"

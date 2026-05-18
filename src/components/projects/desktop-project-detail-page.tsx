@@ -10,6 +10,7 @@ import { computeAggregates } from "@/hooks/useProjects";
 import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   project: Project;
@@ -133,6 +134,8 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
   const [renameDraft, setRenameDraft] = useState("");
   const [notesDraft, setNotesDraft] = useState(project.description ?? "");
   const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+  const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
+  const [removingCalcId, setRemovingCalcId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -165,9 +168,7 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
   };
 
   const handleDelete = () => {
-    if (window.confirm(t("desktopProjectDetail.confirmDelete", { name: project.name }))) {
-      onDeleteProject();
-    }
+    setConfirmDeleteProject(true);
   };
 
   const handleNotesBlur = () => {
@@ -472,9 +473,7 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
                             type="button"
                             onClick={() => {
                               setMenuOpenFor(null);
-                              if (window.confirm(t("desktopProjectDetail.confirmRemovePart"))) {
-                                onRemoveCalculation(calc.id);
-                              }
+                              setRemovingCalcId(calc.id);
                             }}
                             className="flex w-full items-center gap-2 border-t border-border px-3 py-2 text-left text-xs font-medium text-red-interactive hover:bg-red-surface"
                           >
@@ -582,6 +581,36 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteProject}
+        title={t("confirmDialog.deleteTitle")}
+        message={t("desktopProjectDetail.confirmDelete", { name: project.name })}
+        confirmLabel={t("confirmDialog.delete")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          onDeleteProject();
+          setConfirmDeleteProject(false);
+        }}
+        onCancel={() => setConfirmDeleteProject(false)}
+      />
+      <ConfirmDialog
+        open={removingCalcId != null}
+        title={t("confirmDialog.removePartTitle")}
+        message={t("desktopProjectDetail.confirmRemovePart")}
+        confirmLabel={t("confirmDialog.remove")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (removingCalcId) {
+            triggerHaptic("light");
+            onRemoveCalculation(removingCalcId);
+          }
+          setRemovingCalcId(null);
+        }}
+        onCancel={() => setRemovingCalcId(null)}
+      />
     </div>
   );
 });

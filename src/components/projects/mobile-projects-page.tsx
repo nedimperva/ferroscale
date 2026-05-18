@@ -10,6 +10,7 @@ import { computeAggregates } from "@/hooks/useProjects";
 import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   projects: Project[];
@@ -59,6 +60,8 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
   const [newName, setNewName] = useState("");
   const [renaming, setRenaming] = useState(false);
   const [renameDraft, setRenameDraft] = useState("");
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null);
+  const [removingCalc, setRemovingCalc] = useState<{ projectId: string; calcId: string } | null>(null);
 
   const active = useMemo(
     () => (activeProjectId ? projects.find((p) => p.id === activeProjectId) ?? null : null),
@@ -135,12 +138,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (window.confirm(t("mobileProjects.confirmDelete", { name: active.name }))) {
-                    triggerHaptic("medium");
-                    onDeleteProject(active.id);
-                  }
-                }}
+                onClick={() => setDeletingProject(active)}
                 aria-label={t("mobileProjects.deleteAria")}
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-muted hover:bg-red-surface hover:text-red-interactive"
               >
@@ -217,12 +215,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
               calc={calc}
               locale={locale}
               onLoad={() => onLoadCalculation(calc.input)}
-              onRemove={() => {
-                if (window.confirm(t("mobileProjects.confirmRemovePart"))) {
-                  triggerHaptic("light");
-                  onRemoveCalculation(active.id, calc.id);
-                }
-              }}
+              onRemove={() => setRemovingCalc({ projectId: active.id, calcId: calc.id })}
             />
           ))}
         </div>
@@ -280,7 +273,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
             setCreating(true);
           }}
           aria-label={t("mobileProjects.createAria")}
-          className="fixed bottom-6 right-4 z-30 inline-flex h-12 items-center gap-1.5 rounded-full bg-accent px-4 text-sm font-bold text-white shadow-[var(--panel-shadow-strong)] active:bg-accent-hover"
+          className="fixed bottom-6 right-4 z-30 inline-flex h-12 items-center gap-1.5 rounded-full bg-surface-inverted px-4 text-sm font-bold text-background shadow-[var(--panel-shadow-strong)] active:opacity-90"
           style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom, 0px))" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -312,7 +305,7 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
             type="button"
             onClick={handleCreate}
             disabled={!newName.trim()}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-accent px-3 text-xs font-bold text-white disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-surface-inverted px-3 text-xs font-bold text-background disabled:opacity-50"
           >
             {t("mobileCalc.done")}
           </button>
@@ -331,6 +324,43 @@ export const MobileProjectsPage = memo(function MobileProjectsPage({
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deletingProject != null}
+        title={t("confirmDialog.deleteTitle")}
+        message={
+          deletingProject
+            ? t("mobileProjects.confirmDelete", { name: deletingProject.name })
+            : ""
+        }
+        confirmLabel={t("confirmDialog.delete")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (deletingProject) {
+            triggerHaptic("medium");
+            onDeleteProject(deletingProject.id);
+          }
+          setDeletingProject(null);
+        }}
+        onCancel={() => setDeletingProject(null)}
+      />
+      <ConfirmDialog
+        open={removingCalc != null}
+        title={t("confirmDialog.removePartTitle")}
+        message={t("mobileProjects.confirmRemovePart")}
+        confirmLabel={t("confirmDialog.remove")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (removingCalc) {
+            triggerHaptic("light");
+            onRemoveCalculation(removingCalc.projectId, removingCalc.calcId);
+          }
+          setRemovingCalc(null);
+        }}
+        onCancel={() => setRemovingCalc(null)}
+      />
     </div>
   );
 });

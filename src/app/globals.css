@@ -68,12 +68,21 @@
   --disabled-bg: #ddd5c4;
   --disabled-text: #a39c8b;
   --radius-panel: 1.25rem;
-  --radius-control: 0.9rem;
+  /* ── Corner ladder (review §03) ── lock to four tokens used across the app */
+  --radius-pad: 0.5rem;     /* inner icon glyphs */
+  --radius-control: 0.875rem; /* fields, chips, single-line controls (~14px) */
+  --radius-card: 1.25rem;   /* result, numpad, chip cards (~20px) */
+  --radius-screen: 1.75rem; /* outer modal, full-bleed sheet (~28px) */
+  /* ── Uppercase label tracking — one value across the app (review §02) ── */
+  --label-tracking: 0.10em;
+  --label-tracking-chip: 0.06em;
   --motion-fast: 140ms;
   --motion-medium: 220ms;
   --panel-shadow-soft: 0 1px 2px rgba(20, 18, 15, 0.04), 0 12px 24px -16px rgba(20, 18, 15, 0.18);
   --panel-shadow-strong: 0 1px 2px rgba(20, 18, 15, 0.08), 0 24px 60px -30px rgba(20, 18, 15, 0.32);
   --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  /* Soft focus-ring token (review §02): replaces the harsh global 3px outline. */
+  --ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .dark {
@@ -313,8 +322,18 @@ button:not(:disabled):active,
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus-ring);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--ring-soft);
+  border-radius: inherit;
+}
+
+/* Inputs already render their own focus border via component styles —
+   ensure the soft ring doesn't fight the existing accent border. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  box-shadow: var(--ring-soft);
+  outline: none;
 }
 
 /* Details chevron rotation */

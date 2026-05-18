@@ -6,6 +6,7 @@ import type { SavedEntry } from "@/hooks/useSaved";
 import { CURRENCY_SYMBOLS, type CalculationInput } from "@/lib/calculator/types";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 import { triggerHaptic } from "@/lib/haptics";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   saved: SavedEntry[];
@@ -53,6 +54,9 @@ export const MobileSavedPage = memo(function MobileSavedPage({
   const locale = useLocale();
   const [activeChip, setActiveChip] = useState<string>(ALL_KEY);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<SavedEntry | null>(null);
 
   const tagCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -68,10 +72,26 @@ export const MobileSavedPage = memo(function MobileSavedPage({
   }, [saved]);
 
   const filtered = useMemo(() => {
-    if (activeChip === ALL_KEY) return saved;
-    if (activeChip === UNFILED_KEY) return saved.filter((e) => !e.tags || e.tags.length === 0);
-    return saved.filter((e) => e.tags?.includes(activeChip));
-  }, [saved, activeChip]);
+    let pool = saved;
+    if (activeChip === UNFILED_KEY) pool = saved.filter((e) => !e.tags || e.tags.length === 0);
+    else if (activeChip !== ALL_KEY) pool = saved.filter((e) => e.tags?.includes(activeChip));
+
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return pool;
+    return pool.filter((entry) => {
+      const part = entry.parts[0];
+      const profileLabel = (part?.normalizedProfile ?? entry.normalizedProfile).shortLabel.toLowerCase();
+      const grade = (part?.result ?? entry.result).gradeLabel?.toLowerCase() ?? "";
+      const name = entry.name.toLowerCase();
+      const tags = (entry.tags ?? []).join(" ").toLowerCase();
+      return (
+        name.includes(query) ||
+        profileLabel.includes(query) ||
+        grade.includes(query) ||
+        tags.includes(query)
+      );
+    });
+  }, [saved, activeChip, searchQuery]);
 
   if (saved.length === 0) {
     return <MobileSavedEmpty t={t} onOpenCalculator={onOpenCalculator} />;
@@ -92,7 +112,19 @@ export const MobileSavedPage = memo(function MobileSavedPage({
           <button
             type="button"
             aria-label={t("mobileSaved.searchAria")}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-foreground-secondary active:bg-surface-raised"
+            onClick={() => {
+              triggerHaptic("light");
+              setSearchOpen((prev) => {
+                const next = !prev;
+                if (!next) setSearchQuery("");
+                return next;
+              });
+            }}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
+              searchOpen
+                ? "border-accent-border bg-accent-surface text-accent-text"
+                : "border-border bg-surface text-foreground-secondary active:bg-surface-raised"
+            }`}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" />
@@ -112,6 +144,18 @@ export const MobileSavedPage = memo(function MobileSavedPage({
           </button>
         </div>
       </div>
+
+      {searchOpen && (
+        <input
+          type="search"
+          autoFocus
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={t("mobileSaved.searchPlaceholder")}
+          aria-label={t("mobileSaved.searchAria")}
+          className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted-faint outline-none transition-colors focus:border-accent-border"
+        />
+      )}
 
       <div className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-1" style={{ scrollbarWidth: "none" }}>
         <FilterChip
@@ -165,11 +209,8 @@ export const MobileSavedPage = memo(function MobileSavedPage({
                 onLoad(entry.parts[0]?.input ?? entry.input);
               }}
               onRemove={() => {
-                if (window.confirm(t("mobileSaved.confirmRemove", { name: entry.name }))) {
-                  triggerHaptic("medium");
-                  onRemove(entry.id);
-                }
                 setOpenMenuId(null);
+                setRemoveTarget(entry);
               }}
               onDuplicate={() => {
                 triggerHaptic("light");
@@ -190,6 +231,27 @@ export const MobileSavedPage = memo(function MobileSavedPage({
           </span>
         </div>
       )}
+
+      <ConfirmDialog
+        open={removeTarget != null}
+        title={t("confirmDialog.removeTitle")}
+        message={
+          removeTarget
+            ? t("mobileSaved.confirmRemove", { name: removeTarget.name })
+            : ""
+        }
+        confirmLabel={t("confirmDialog.remove")}
+        cancelLabel={t("confirmDialog.cancel")}
+        destructive
+        onConfirm={() => {
+          if (removeTarget) {
+            triggerHaptic("medium");
+            onRemove(removeTarget.id);
+          }
+          setRemoveTarget(null);
+        }}
+        onCancel={() => setRemoveTarget(null)}
+      />
     </div>
   );
 });
