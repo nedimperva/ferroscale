@@ -194,6 +194,8 @@ export const SaveToProjectModal = memo(function SaveToProjectModal({
   );
 
   /* ── Mobile: Vaul BottomSheet ── */
+  if (!open) return null;
+
   if (isMobile) {
     return (
       <BottomSheet

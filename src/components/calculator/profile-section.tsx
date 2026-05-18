@@ -4,7 +4,7 @@ import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calcul
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
-import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
+import type { ProfileCategory, ProfileDefinition, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { DimensionPreset } from "@/hooks/usePresets";
 import { DimensionInput } from "./dimension-input";

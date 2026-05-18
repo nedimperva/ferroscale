@@ -1,15 +1,53 @@
 "use client";
 
 import { Drawer } from "vaul";
+import type { ReactNode } from "react";
 import { useNumpad } from "./numpad-context";
 import { triggerHaptic } from "@/lib/haptics";
+
+type NumpadButtonVariant = "default" | "action" | "primary";
+
+interface NumpadButtonProps {
+  children: ReactNode;
+  onClick: () => void;
+  variant?: NumpadButtonVariant;
+  className?: string;
+}
+
+function NumpadButton({
+  children,
+  onClick,
+  variant = "default",
+  className = "",
+}: NumpadButtonProps) {
+  const baseClass = "flex h-14 items-center justify-center rounded-xl text-xl font-medium active:scale-95 transition-transform";
+  const variants: Record<NumpadButtonVariant, string> = {
+    default: "bg-surface-elevated text-foreground hover:bg-surface-elevated-hover active:bg-surface-elevated-active",
+    action: "bg-border text-foreground hover:bg-border-strong active:bg-border-strong",
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onClick();
+      }}
+      className={`${baseClass} ${variants[variant]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function CustomNumpad() {
   const numpad = useNumpad();
 
   if (!numpad) return null;
 
-  const { isOpen, closeNumpad, updateValue, config } = numpad;
+  const { isOpen, closeNumpad, updateValue } = numpad;
 
   
   // Actually, we probably just want a numeric pad.
@@ -36,30 +74,6 @@ export function CustomNumpad() {
   const handleDone = () => {
     triggerHaptic("success");
     closeNumpad();
-  };
-
-  // We want nice big buttons that look like iOS calculator
-  const Button = ({ children, onClick, variant = "default", className = "" }: any) => {
-    const baseClass = "flex h-14 items-center justify-center rounded-xl text-xl font-medium active:scale-95 transition-transform";
-    const variants = {
-      default: "bg-surface-elevated text-foreground hover:bg-surface-elevated-hover active:bg-surface-elevated-active",
-      action: "bg-border text-foreground hover:bg-border-strong active:bg-border-strong",
-      primary: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
-    };
-    
-    return (
-      <button 
-        type="button" 
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onClick();
-        }}
-        className={`${baseClass} ${(variants as any)[variant]} ${className}`}
-      >
-        {children}
-      </button>
-    );
   };
 
   return (
@@ -91,28 +105,28 @@ export function CustomNumpad() {
                 But it's nice to show it maybe? We'll skip for now and just show grid. */}
             
             <div className="grid grid-cols-4 gap-2">
-               <Button onClick={() => handleKey("7")}>7</Button>
-               <Button onClick={() => handleKey("8")}>8</Button>
-               <Button onClick={() => handleKey("9")}>9</Button>
-               <Button variant="action" onClick={handleBackspace}>
+               <NumpadButton onClick={() => handleKey("7")}>7</NumpadButton>
+               <NumpadButton onClick={() => handleKey("8")}>8</NumpadButton>
+               <NumpadButton onClick={() => handleKey("9")}>9</NumpadButton>
+               <NumpadButton variant="action" onClick={handleBackspace}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><path d="m18 9-6 6"/><path d="m12 9 6 6"/></svg>
-               </Button>
+               </NumpadButton>
                
-               <Button onClick={() => handleKey("4")}>4</Button>
-               <Button onClick={() => handleKey("5")}>5</Button>
-               <Button onClick={() => handleKey("6")}>6</Button>
-               <Button variant="action" onClick={handleClear}>C</Button>
+               <NumpadButton onClick={() => handleKey("4")}>4</NumpadButton>
+               <NumpadButton onClick={() => handleKey("5")}>5</NumpadButton>
+               <NumpadButton onClick={() => handleKey("6")}>6</NumpadButton>
+               <NumpadButton variant="action" onClick={handleClear}>C</NumpadButton>
 
-               <Button onClick={() => handleKey("1")}>1</Button>
-               <Button onClick={() => handleKey("2")}>2</Button>
-               <Button onClick={() => handleKey("3")}>3</Button>
-               <Button variant="primary" className="row-span-2" onClick={handleDone}>
+               <NumpadButton onClick={() => handleKey("1")}>1</NumpadButton>
+               <NumpadButton onClick={() => handleKey("2")}>2</NumpadButton>
+               <NumpadButton onClick={() => handleKey("3")}>3</NumpadButton>
+               <NumpadButton variant="primary" className="row-span-2" onClick={handleDone}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5L20 7"/></svg>
-               </Button>
+               </NumpadButton>
 
-               <Button className="col-span-2" onClick={() => handleKey("0")}>0</Button>
+               <NumpadButton className="col-span-2" onClick={() => handleKey("0")}>0</NumpadButton>
                {/* Locale decimal point - we should use the actual system one or provide both? Let's just use '.' and parse it in NumericInput */}
-               <Button onClick={() => handleKey(".")}>.</Button>
+               <NumpadButton onClick={() => handleKey(".")}>.</NumpadButton>
             </div>
           </div>
         </Drawer.Content>

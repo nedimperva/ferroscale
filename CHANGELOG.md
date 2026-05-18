@@ -16,9 +16,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Templates / Saved tab is hidden during the v3 redesign. The `saved` entry is removed from `APP_TABS`, the mobile hamburger menu row is gone, the desktop sidebar nav item is gone, the `/saved` route now redirects to `/` (deep links don't 404), and the old desktop `TemplatesDrawer` no longer renders. `useSaved` keeps running so localStorage data is preserved untouched — restoring the tab is just re-adding three pointers and one route.
+- Saved stays as the place to reopen saved calculations, but the Template product language is removed from the current UI. The old multi-part Template Builder remains out of the shell while existing saved data stays preserved in localStorage.
 - Multi-column layout is hidden during the v3 redesign. `isMultiColumn` is hard-coded `false`, the sidebar toggle is removed, the Cmd+Shift+L shortcut is a no-op. `useColumnLayout` and its localStorage key stay untouched.
-- Compare is no longer a primary nav target. The sidebar and mobile hamburger menu rows are removed; the result-attached tray is the entry point. The full `CompareDrawer` still opens from the tray's Compare button.
+- Compare remains available from sidebar and mobile menu, and the result-attached tray adds a faster pin-and-open entry point.
 - The Compare button in the mobile result sheet peek view is relabelled "Pin to compare" / "Pinned" and the active state uses the accent surface, so it reads as a toggle on the current calculation rather than a navigation action.
 - Desktop calculator route is now a **full from-scratch D3 "Bench" workshop rebuild** instead of wrapping the legacy `ProfileSection`. New `DesktopFormPane` owns: an in-pane top bar (Calculator title + active-project chip + ⌘K search + primary "New"), the dark live mini-result bar, and three pixel-accurate section cards from the design — Profile (category pill row + 4–6-col profile-type grid), Geometry (3 large rounded input chips for length / pieces / unit price with active accent caret), and Material (color-dot grade chips with density). Each control dispatches through `useCalculator` directly. Page-wide Workstation top bar is suppressed on this route since the form pane carries its own header.
 - Wrapper drops the legacy slate-era top padding and max-width on the calculator route so the 3-pane workshop runs edge-to-edge between sidebar and project pane.
@@ -54,8 +54,8 @@ Numpad-native redesign. The mobile calculator becomes an iOS-Calculator-style sc
 - Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
 - Every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Projects and Settings inherit the polished mobile shell automatically.
 - Mobile bottom tab bar replaced by a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Projects, Settings, What's New, Report an issue, and Replay onboarding.
-- Templates / Saved is hidden during the redesign. The saved route redirects to the calculator, while stored templates stay preserved in localStorage for a future return.
-- Compare is no longer a primary navigation target. The result-attached compare tray and result sheet actions are now the entry points for opening the full Compare drawer.
+- Saved remains available as saved calculations, with Template wording removed from the active save/reopen flows.
+- Compare remains available in navigation, with the result-attached compare tray and result sheet actions adding faster entry points.
 - Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is the single nav entry point.
 - Mobile calculator no longer renders the legacy inline profile/material/dimensions form below the new numpad — profile and material live in their own bottom sheets now. The reverse calculator and inline pricing toggles still appear on desktop; mobile homes for them ship in a follow-up.
 - Floating mobile result bar removed entirely. The calculator tab owns its own live result card; Projects and Settings are scroll-only with no floating result UI. Desktop continues to use the sticky right-column result panel.

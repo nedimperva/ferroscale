@@ -7,7 +7,18 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "WebFetch(domain:developers.raycast.com)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(mkdir -p .design-fetch)",
+      "Bash(cp \"/c/Users/DT User4/.claude/projects/D--GitHub-ferroscale/ccd0cf70-9bb2-40c3-a90a-af10bef6158d/tool-results/webfetch-1779086036041-6y537o.bin\" .design-fetch/design.tgz)",
+      "Bash(tar -tzf design.tgz)",
+      "Bash(tar -xzf design.tgz)",
+      "Bash(grep -n \"\\\\\"cancel\\\\\"\\\\\\\\|\\\\\"delete\\\\\"\\\\\\\\|\\\\\"remove\\\\\"\" messages/en.json)",
+      "Bash(grep *)",
+      "Bash(cp \"/c/Users/DT User4/.claude/projects/D--GitHub-ferroscale/ccd0cf70-9bb2-40c3-a90a-af10bef6158d/tool-results/webfetch-1779100489373-34o1zs.bin\" .design-fetch/design2.tgz)",
+      "Bash(tar -tzf .design-fetch/design2.tgz)",
+      "Bash(tar -xzf design2.tgz)",
+      "Bash(npx tsc *)"
     ]
   }
 }
