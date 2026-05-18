@@ -184,7 +184,7 @@ export const DesktopProjectDetailPage = memo(function DesktopProjectDetailPage({
   };
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col bg-background text-foreground">
+    <div className="hidden h-full min-h-0 w-full flex-col bg-background text-foreground lg:flex">
       {/* Breadcrumb topbar */}
       <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border px-6">
         <div className="flex min-w-0 items-center gap-2 text-xs">

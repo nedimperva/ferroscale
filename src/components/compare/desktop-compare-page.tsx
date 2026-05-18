@@ -121,7 +121,7 @@ export const DesktopComparePage = memo(function DesktopComparePage({
 
   if (items.length === 0) {
     return (
-      <div className="flex h-full min-w-0 flex-1 flex-col bg-background">
+      <div className="hidden h-full min-w-0 flex-1 flex-col bg-background lg:flex">
         <Topbar
           title={t("title")}
           subtitle={t("emptySubtitle")}
@@ -158,7 +158,7 @@ export const DesktopComparePage = memo(function DesktopComparePage({
   }
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col bg-background">
+    <div className="hidden h-full min-w-0 flex-1 flex-col bg-background lg:flex">
       <Topbar
         title={t("title")}
         subtitle={subtitle}

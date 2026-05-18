@@ -126,11 +126,12 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
       : activeField === "quantity"
         ? input.quantity
         : input.unitPrice;
-  const draftValue = draft?.field === activeField ? draft.value : null;
+  // The draft is authoritative while the user is editing the active field.
+  // SET_QUANTITY clamps to >= 1 so we can't rely on Object.is round-trip
+  // matching like before — that's what made backspace look stuck on
+  // pieces (buffer kept snapping back to "1" after every keystroke).
   const buffer =
-    draftValue != null && Object.is(parseBuffer(draftValue), Number(currentFieldValue ?? 0))
-      ? draftValue
-      : inputAsString(currentFieldValue);
+    draft?.field === activeField ? draft.value : inputAsString(currentFieldValue);
 
   const commitBuffer = useCallback(
     (nextBuffer: string) => {
@@ -175,6 +176,9 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const handleField = useCallback((field: ActiveField) => {
     triggerHaptic("light");
     setActiveField(field);
+    // Drop any in-flight draft so the new chip shows its committed value
+    // immediately and the next keystroke replaces rather than appends.
+    setDraft(null);
   }, []);
 
   const handleClear = useCallback(() => {
@@ -187,6 +191,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
     setActiveField((field) =>
       field === "length" ? "quantity" : field === "quantity" ? "price" : "length",
     );
+    setDraft(null);
   }, []);
 
   const handleDone = useCallback(() => {
