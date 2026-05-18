@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useEffect } from "react";
+import { memo, useState, useRef } from "react";
 import { formatInputNumber, parseLocaleNumber } from "@/lib/calculator/number-input";
 import { triggerHaptic } from "@/lib/haptics";
 import { useNumpad } from "./numpad-context";
@@ -32,13 +32,6 @@ export const NumericInput = memo(function NumericInput({
   const shouldUseNumpad = isMobile && numpad !== null;
 
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Sync draft to external changes when not focused
-  useEffect(() => {
-    if (!focused) {
-      setDraft(formatInputNumber(value));
-    }
-  }, [value, focused]);
 
   const commitValue = (val: string) => {
     const trimmed = val.trim();

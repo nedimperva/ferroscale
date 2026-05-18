@@ -79,7 +79,7 @@ export const SizeCombobox = memo(function SizeCombobox({
       setHighlightIdx(-1);
       inputRef.current?.blur();
     },
-    [onChange],
+    [onChange, setHighlightIdx, setOpen, setQuery],
   );
 
   const handleKeyDown = useCallback(
@@ -120,7 +120,7 @@ export const SizeCombobox = memo(function SizeCombobox({
           break;
       }
     },
-    [open, filtered, highlightIdx, handleSelect],
+    [open, filtered, highlightIdx, handleSelect, setHighlightIdx, setOpen, setQuery],
   );
 
   useEffect(() => {

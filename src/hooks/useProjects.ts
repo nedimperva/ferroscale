@@ -487,6 +487,8 @@ export interface UseProjectsReturn {
   addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
   addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
   removeCalculation: (projectId: string, calcId: string) => void;
+  /** Move a calculation between projects. Returns true on success. */
+  moveCalculation: (fromProjectId: string, calcId: string, toProjectId: string) => boolean;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   updateProjectDescription: (id: string, description: string) => void;
   updateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => void;
@@ -727,6 +729,44 @@ export function useProjects(): UseProjectsReturn {
     );
   }, [setProjects]);
 
+  const moveCalculation = useCallback(
+    (fromProjectId: string, calcId: string, toProjectId: string): boolean => {
+      if (fromProjectId === toProjectId) return false;
+      let moved = false;
+      setProjects((prev) => {
+        const source = prev.find((p) => p.id === fromProjectId && !p.deletedAt);
+        const target = prev.find((p) => p.id === toProjectId && !p.deletedAt);
+        if (!source || !target) return prev;
+        const calc = source.calculations.find((c) => c.id === calcId);
+        if (!calc) return prev;
+        if (target.calculations.length >= MAX_CALCS_PER_PROJECT) return prev;
+        const fp = fingerprint(calc.result);
+        if (target.calculations.some((c) => fingerprint(c.result) === fp)) return prev;
+        moved = true;
+        const now = new Date().toISOString();
+        return prev.map((p) => {
+          if (p.id === fromProjectId) {
+            return {
+              ...p,
+              updatedAt: now,
+              calculations: p.calculations.filter((c) => c.id !== calcId),
+            };
+          }
+          if (p.id === toProjectId) {
+            return {
+              ...p,
+              updatedAt: now,
+              calculations: [...p.calculations, { ...calc, id: crypto.randomUUID(), timestamp: now }],
+            };
+          }
+          return p;
+        });
+      });
+      return moved;
+    },
+    [setProjects],
+  );
+
   const updateCalculationNote = useCallback((projectId: string, calcId: string, note: string) => {
     setProjects((prev) =>
       prev.map((p) => {
@@ -762,6 +802,7 @@ export function useProjects(): UseProjectsReturn {
     addCalculation,
     addTemplateCalculation,
     removeCalculation,
+    moveCalculation,
     updateCalculationNote,
     updateProjectDescription,
     updateProjectPaintingSettings,

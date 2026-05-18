@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback, useRef } from "react";
 
 interface NumpadConfig {
   value: string;

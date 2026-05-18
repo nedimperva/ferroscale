@@ -55,7 +55,7 @@ export function getWorkspacePanelSpacing(layout: WorkspacePanelLayout) {
     headerPadding: compact ? "px-4 py-3" : "px-5 py-4",
     stickyTopClass:
       layout === "column"
-        ? "sticky top-0 z-10 border-b border-border-faint bg-surface/92 shadow-[0_12px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl"
+        ? "sticky top-0 z-10 border-b border-border-faint bg-surface/92 shadow-[0_12px_30px_rgba(20,18,15,0.06)] backdrop-blur-xl"
         : "",
   };
 }

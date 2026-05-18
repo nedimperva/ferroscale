@@ -7,17 +7,10 @@ interface BottomSheetProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     children: React.ReactNode;
-    /** Optional title shown at the top of the sheet */
     title?: string;
-    /** Whether to show the drag handle indicator, defaults to true */
     showHandle?: boolean;
 }
 
-/**
- * Mobile-native bottom sheet using Vaul.
- * On mobile this slides up from the bottom with a drag handle.
- * Wraps content in a fixed-height container with safe area padding.
- */
 export function BottomSheet({
     open,
     onOpenChange,
@@ -30,31 +23,30 @@ export function BottomSheet({
             open={open}
             onOpenChange={onOpenChange}
             onClose={() => triggerHaptic("light")}
+            shouldScaleBackground={false}
+            disablePreventScroll={false}
         >
             <Drawer.Portal>
-                <Drawer.Overlay className="fixed inset-0 z-40 bg-overlay" />
+                <Drawer.Overlay className="fixed inset-0 z-40 bg-overlay backdrop-blur-[2px] transition-opacity" />
                 <Drawer.Content
                     aria-modal="true"
                     role="dialog"
-                    className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col rounded-t-2xl bg-surface shadow-xl outline-none"
-                    style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+                    className="fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col rounded-t-[1.75rem] border-t border-border-faint bg-surface shadow-[var(--panel-shadow-strong)] outline-none [will-change:transform]"
+                    style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
                 >
-                    {/* Drag handle */}
                     {showHandle && (
-                        <div className="flex justify-center pt-3 pb-1">
-                            <div className="h-1.5 w-10 rounded-full bg-border-strong" />
+                        <div className="flex shrink-0 justify-center pt-2.5 pb-1">
+                            <div className="h-1 w-9 rounded-full bg-border-strong/70" />
                         </div>
                     )}
 
-                    {/* Title */}
                     {title && (
-                        <Drawer.Title className="px-4 pb-2 pt-1 text-sm font-semibold text-foreground">
+                        <Drawer.Title className="shrink-0 px-4 pb-2 pt-1 text-sm font-bold tracking-tight text-foreground">
                             {title}
                         </Drawer.Title>
                     )}
 
-                    {/* Scrollable content */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
+                    <div className="scroll-native flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
                         {children}
                     </div>
                 </Drawer.Content>

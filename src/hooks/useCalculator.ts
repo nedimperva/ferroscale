@@ -163,7 +163,6 @@ function inputReducer(state: CalculationInput, action: CalcAction): CalculationI
     case "SET_PROFILE": {
       const profile = getProfileById(action.profileId);
       if (!profile) return state;
-      const prev = getProfileById(state.profileId);
       const defaults = profileDefaults(profile);
       const manualDimensions =
         profile.mode === "manual"

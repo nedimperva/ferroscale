@@ -9,16 +9,19 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface SidebarProps {
   onOpenContact: () => void;
-  onOpenCompare: () => void;
+  onOpenCalculator: () => void;
+  onOpenSaved: () => void;
   onOpenProjects: () => void;
+  onOpenCompare: () => void;
   onOpenSettings: () => void;
-  onOpenHistory: () => void;
   onOpenQuickCalc: () => void;
   onOpenChangelog: () => void;
-  compareCount: number;
   projectCount: number;
+  savedCount: number;
+  compareCount: number;
+  isCalculatorOpen: boolean;
+  isSavedOpen: boolean;
   isSettingsOpen: boolean;
-  isHistoryOpen: boolean;
   isProjectsOpen: boolean;
   isCompareOpen: boolean;
   isContactOpen: boolean;
@@ -27,23 +30,23 @@ interface SidebarProps {
   onToggleCollapsed: () => void;
   theme: Theme;
   onToggleTheme: () => void;
-  canShowColumnsToggle?: boolean;
-  isMultiColumnEnabled?: boolean;
-  onToggleMultiColumn?: () => void;
 }
 
 export const Sidebar = memo(function Sidebar({
   onOpenContact,
-  onOpenCompare,
+  onOpenCalculator,
+  onOpenSaved,
   onOpenProjects,
+  onOpenCompare,
   onOpenSettings,
-  onOpenHistory,
   onOpenQuickCalc,
   onOpenChangelog,
-  compareCount,
   projectCount,
+  savedCount,
+  compareCount,
+  isCalculatorOpen,
+  isSavedOpen,
   isSettingsOpen,
-  isHistoryOpen,
   isProjectsOpen,
   isCompareOpen,
   isContactOpen,
@@ -52,9 +55,6 @@ export const Sidebar = memo(function Sidebar({
   onToggleCollapsed,
   theme,
   onToggleTheme,
-  canShowColumnsToggle,
-  isMultiColumnEnabled,
-  onToggleMultiColumn,
 }: SidebarProps) {
   const t = useTranslations();
 
@@ -70,7 +70,7 @@ export const Sidebar = memo(function Sidebar({
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border-faint bg-linear-to-b from-surface via-surface to-surface-raised/60 shadow-[10px_0_30px_rgba(15,23,42,0.06)] transition-[width] duration-200 ease-in-out lg:flex ${width}`}
+      className={`fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-border-faint bg-linear-to-b from-surface via-surface to-surface-raised/60 shadow-[10px_0_30px_rgba(20,18,15,0.06)] transition-[width] duration-200 ease-in-out lg:flex ${width}`}
       style={{
         paddingTop: "env(safe-area-inset-top, 0px)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -79,7 +79,7 @@ export const Sidebar = memo(function Sidebar({
       {/* ---- Branding ---- */}
       <div className={`flex items-center gap-3 pt-5 pb-4 ${collapsed ? "justify-center px-2" : "px-4"}`}>
         {/* Logo */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_10px_24px_rgba(15,23,42,0.16)]">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_10px_24px_rgba(20,18,15,0.16)]">
           <Image
             src="/icon-192.png"
             alt=""
@@ -114,7 +114,12 @@ export const Sidebar = memo(function Sidebar({
 
       {/* ---- Navigation ---- */}
       <nav className={`flex flex-1 flex-col gap-1 pt-4 ${collapsed ? "px-2" : "px-3.5"}`}>
-        {/* Quick Calculate */}
+        {/* Workspace — tools */}
+        {!collapsed && (
+          <span className="px-3 pb-1 pt-1 text-[0.625rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted-faint">
+            {t("sidebar.workspaceGroup")}
+          </span>
+        )}
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -129,27 +134,39 @@ export const Sidebar = memo(function Sidebar({
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-              <circle cx="12" cy="12" r="3" />
+              <rect x="4" y="3" width="16" height="18" rx="2" />
+              <path d="M8 7h8" />
+              <path d="M8 12h2" />
+              <path d="M12 12h2" />
+              <path d="M16 12h.01" />
+              <path d="M8 16h2" />
+              <path d="M12 16h2" />
+              <path d="M16 16h.01" />
             </svg>
           }
-          label={t("sidebar.settings")}
-          active={isSettingsOpen}
+          label={t("sidebar.calculator")}
+          active={isCalculatorOpen}
           collapsed={collapsed}
-          onClick={onOpenSettings}
+          onClick={onOpenCalculator}
         />
+
+        {/* Library — storage */}
+        {!collapsed && (
+          <span className="px-3 pb-1 pt-3 text-[0.625rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted-faint">
+            {t("sidebar.libraryGroup")}
+          </span>
+        )}
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-              <path d="M12 7v5l4 2" />
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
             </svg>
           }
           label={t("sidebar.saved")}
-          active={isHistoryOpen}
+          badge={savedCount > 0 ? savedCount : undefined}
+          active={isSavedOpen}
           collapsed={collapsed}
-          onClick={onOpenHistory}
+          onClick={onOpenSaved}
         />
         <SidebarButton
           icon={
@@ -159,50 +176,43 @@ export const Sidebar = memo(function Sidebar({
           }
           label={t("sidebar.projects")}
           badge={projectCount > 0 ? projectCount : undefined}
-          variant={projectCount > 0 ? "purple" : "default"}
+          badgeTone="purple"
           active={isProjectsOpen}
           collapsed={collapsed}
           onClick={onOpenProjects}
         />
-
-        {compareCount > 0 && (
-          <SidebarButton
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <rect x="3" y="3" width="7" height="18" rx="1" />
-                <rect x="14" y="3" width="7" height="18" rx="1" />
-              </svg>
-            }
-            label={t("sidebar.compareCount", { count: compareCount })}
-            variant="blue"
-            active={isCompareOpen}
-            collapsed={collapsed}
-            onClick={onOpenCompare}
-          />
-        )}
-
-        {/* Columns toggle — only visible on wide desktops */}
-        {canShowColumnsToggle && onToggleMultiColumn && (
-          <SidebarButton
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                <rect x="2" y="3" width="6" height="18" rx="1" />
-                <rect x="9" y="3" width="6" height="18" rx="1" />
-                <rect x="16" y="3" width="6" height="18" rx="1" />
-              </svg>
-            }
-            label={t("columns.columnsMode")}
-            active={isMultiColumnEnabled}
-            collapsed={collapsed}
-            onClick={onToggleMultiColumn}
-          />
-        )}
+        <SidebarButton
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+          }
+          label={t("sidebar.compare")}
+          badge={compareCount > 0 ? compareCount : undefined}
+          active={isCompareOpen}
+          collapsed={collapsed}
+          onClick={onOpenCompare}
+        />
 
         {/* Spacer */}
         <div className="flex-1" />
 
         <div className={`mt-2 border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"}`} />
 
+        {/* Footer — Settings + low-frequency actions live here (review §05) */}
+        <SidebarButton
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+          label={t("sidebar.settings")}
+          active={isSettingsOpen}
+          collapsed={collapsed}
+          onClick={onOpenSettings}
+        />
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -284,14 +294,16 @@ export const Sidebar = memo(function Sidebar({
           )}
         </button>
 
-        {/* Collapse toggle */}
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
-          aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
-          title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
-        >
+        {/* Collapse toggle — wrapped in a tooltip-capable group so collapsed
+            users see "Expand sidebar" hover hint the same way nav items do. */}
+        <div className="group relative">
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+            aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
+            title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
+          >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -305,7 +317,17 @@ export const Sidebar = memo(function Sidebar({
             <path d="m11 17-5-5 5-5" />
             <path d="m18 17-5-5 5-5" />
           </svg>
-        </button>
+          </button>
+          {collapsed && (
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(20,18,15,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
+            >
+              <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 border-l border-b border-border bg-surface" />
+              {t("theme.expandSidebar")}
+            </span>
+          )}
+        </div>
 
         <div className="h-3" />
       </nav>
@@ -319,6 +341,8 @@ interface SidebarButtonProps {
   icon: React.ReactNode;
   label: string;
   badge?: number;
+  /** Color of the count badge — does NOT change the button chrome. */
+  badgeTone?: "default" | "purple";
   variant?: "default" | "blue" | "purple";
   active?: boolean;
   collapsed?: boolean;
@@ -329,6 +353,7 @@ function SidebarButton({
   icon,
   label,
   badge,
+  badgeTone = "default",
   variant = "default",
   active = false,
   collapsed = false,
@@ -362,7 +387,13 @@ function SidebarButton({
         <span className="shrink-0">{icon}</span>
         {!collapsed && <span className="truncate">{label}</span>}
         {!collapsed && badge !== undefined && (
-          <span className="ml-auto shrink-0 rounded-full bg-surface px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary shadow-[var(--panel-highlight)]">
+          <span
+            className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-2xs font-semibold shadow-[var(--panel-highlight)] ${
+              badgeTone === "purple"
+                ? "border border-purple-border bg-purple-surface text-purple-text"
+                : "bg-surface text-foreground-secondary"
+            }`}
+          >
             {badge}
           </span>
         )}
@@ -372,7 +403,7 @@ function SidebarButton({
       {collapsed && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(15,23,42,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
+          className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(20,18,15,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
         >
           {/* Arrow */}
           <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 border-l border-b border-border bg-surface" />

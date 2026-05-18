@@ -18,5 +18,7 @@ export async function generateMetadata({
 }
 
 export default function SavedPage() {
+  // Content is rendered by RouteAwareAppShell → FerroScaleAppShell based on
+  // pathname. Page returns null so the layout's shell takes over.
   return null;
 }

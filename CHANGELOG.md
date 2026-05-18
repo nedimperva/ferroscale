@@ -5,7 +5,70 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Per-profile cross-section glyphs are back. New `<ProfileGlyph profileId=… size="xs|sm|md|lg">` ports the 20 hand-drawn SVGs from the legacy profile picker and is used everywhere a single profile is shown: desktop form pane profile-type grid, desktop mini-result hero, desktop project pane parts list, mobile numpad profile chip, mobile result sheet hero, mobile profile picker grid, mobile/desktop project parts lists, and the compare tray chips. CHS / SHS / RHS / HEA / HEB / IPE / IPN / HEM / UPN / UPE / angle / tee / chequered plate / expanded metal / corrugated sheet now all render distinctly. Category icons stay in place where a whole category is summarised (the category pill row).
+- New mobile Projects page (full redesign). Hero card with active project name + parts/weight/cost chips, horizontal project switcher chips, parts list with `ProfileGlyph` rows + length × qty + tabular weight + remove, sum strip footer (Project total kg + ≈ cost), and a floating "+ New project" FAB with inline create input.
+- New desktop Projects page (full redesign). 2-column workshop layout: 260/300 px left rail listing every project with parts count + weight, right side renders the active project detail — rename-in-place title, Duplicate / Delete actions, dark hero card with totals, scrollable parts list with `ProfileGlyph` + length × qty + per-row weight + cost + remove. Empty / no-active-project states are friendly.
+- Compare scratchpad attached to the live result. New `<CompareTray>` chip strip renders pinned items inline below the desktop mini-result and inside the mobile result sheet peek, with per-item remove (✕) and a trailing "Compare {n}" button that opens the existing `CompareDrawer`. A new icon-only Pin button on the desktop mini-result bar adds the current calculation to compare without leaving the calculator.
+
+### Changed
+
+- Saved stays as the place to reopen saved calculations, but the Template product language is removed from the current UI. The old multi-part Template Builder remains out of the shell while existing saved data stays preserved in localStorage.
+- Multi-column layout is hidden during the v3 redesign. `isMultiColumn` is hard-coded `false`, the sidebar toggle is removed, the Cmd+Shift+L shortcut is a no-op. `useColumnLayout` and its localStorage key stay untouched.
+- Compare remains available from sidebar and mobile menu, and the result-attached tray adds a faster pin-and-open entry point.
+- The Compare button in the mobile result sheet peek view is relabelled "Pin to compare" / "Pinned" and the active state uses the accent surface, so it reads as a toggle on the current calculation rather than a navigation action.
+- Desktop calculator route is now a **full from-scratch D3 "Bench" workshop rebuild** instead of wrapping the legacy `ProfileSection`. New `DesktopFormPane` owns: an in-pane top bar (Calculator title + active-project chip + ⌘K search + primary "New"), the dark live mini-result bar, and three pixel-accurate section cards from the design — Profile (category pill row + 4–6-col profile-type grid), Geometry (3 large rounded input chips for length / pieces / unit price with active accent caret), and Material (color-dot grade chips with density). Each control dispatches through `useCalculator` directly. Page-wide Workstation top bar is suppressed on this route since the form pane carries its own header.
+- Wrapper drops the legacy slate-era top padding and max-width on the calculator route so the 3-pane workshop runs edge-to-edge between sidebar and project pane.
+
+### Fixed
+
+- Desktop calculator was overflowing horizontally and pushing the project pane off-screen because the main wrapper was `w-full` plus `lg:ml-[sidebar]`, which made it 100% of viewport _starting after_ the sidebar. Wrapper now uses `lg:w-[calc(100%-sidebar)]` so the form pane + 300/360 px project pane fit inside the viewport.
+- Desktop calculator no longer scrolls the whole page. The wrapper is `lg:h-dvh lg:overflow-hidden`, the form pane body is `overflow-hidden`, and only the project pane's parts list scrolls (`overflow-y-auto` on the list container alone). Form section padding and mini-result heights tightened so the three section cards fit common laptop viewports without clipping.
+- Project pane width is now responsive: `300 px` on lg, `360 px` on xl, so on 1280–1439 px screens the form pane still gets enough room to render the 4-column profile grid.
+- Desktop calculator was missing the size picker and the manual-profile dimension inputs. Restored: **standard profiles** show every `StandardSizeOption` as a compact pill row right under the profile-type grid (the only inner scroll in the form pane — capped at ~8.5 rem). **Manual profiles** show a 3- to 4-column grid of dimension cells (e.g. round bar diameter, plate width/height/thickness), each with the EN range hint.
+- Desktop material section regrouped by family: a small uppercase family chip ("Steel" with steel-tone dot) on the left, then that family's grade chips inline next to it. Three rows — Steel · S235JR / S355JR / S420M, Stainless · 304 / 316 / 316L, Aluminum · 6060 / 6082 / 7075. Density display moved to the section header (shows current grade density).
+- Length unit no longer toggles per calculation on the desktop Length chip — that's a workspace default, set once in Settings. The Length geometry chip is back to a clean value + unit suffix.
+
+---
+
 ## [3.0.0] - 2026-05-14
+
+Numpad-native redesign. The mobile calculator becomes an iOS-Calculator-style screen with a live result card, profile + material chip cards, a length/pieces/price input strip, and a persistent 4×4 numpad. Desktop gains a Workstation top bar above the existing two-column layout. The cream/orange palette and warm-ink shadows apply across every screen. Supersedes the floating result chip and centered modal introduced in 2.6.0.
+
+### Added
+
+- Mobile calculator gains a numpad-native top section: live total weight headline, profile + material chip cards, length/pieces/price input strip, and a persistent 4×4 numpad that drives the active field. Tap the result card to expand details.
+- Dedicated profile and material picker bottom sheets on mobile, opened from the chip cards. Profile sheet: category row, profile-type grid, and size/dimension inputs in one place. Material sheet: family chips + grade list with EN reference + density.
+- Mobile result sheet redesigned to match the numpad-native concept: big tabular weight headline with profile glyph, price + €/kg subtitle, three quick-stat cards (per piece / per metre / length), peek-vs-full breakdown table with total weight rule, and terracotta "Add to project" action at the full snap.
+- Settings now opens with a "Defaults applied" hero card summarising the material, length unit, currency, waste and VAT that every new calculation will use. Reframes Settings from a wall of toggles into a defaults dashboard.
+- First-run onboarding flow: three short steps to pick a default material, starting profile, and length unit + currency. Skipped or completed only once per device; can be replayed from Settings → "Replay onboarding".
+- Mobile Settings rebuilt as a defaults dashboard with grouped rounded sections — Display (Appearance, Text size, Show price inline), Defaults (Material, Length unit, Currency, Waste allowance), and Power (Show weight as main, What's New). Each row is a single tappable card with an accent-tinted icon and either a toggle or a sub-sheet picker. Replay onboarding and Reset all moved into the footer.
+- Projects mobile tab gains a hero card at the top of the screen — same warm rounded-surface treatment used by Settings — showing the active project's name + parts count + weight + cost (or a "no active project" prompt when none is selected).
+- Desktop "Workstation" top bar above the main content (lg+ only): page title, optional calculation context chip (HEA 100 · S235 · 6 m × 4), ⌘K quick-calc search trigger, and a primary "New" reset button. Aligns with the D1 desktop mock from the numpad-native handoff.
+
+### Changed
+
+- Visual refresh foundation: cream/orange "numpad-native" palette applied globally — warmer background, softer surfaces, terracotta accent, refined borders and shadows. Dark mode tuned to a coherent warm-dark variant. Affects every screen.
+- Every shell-level shadow (sidebar, mobile header, bottom tab bar, result bar, result sheet, sticky sub-headers, hover tooltips) now uses the warm-ink palette instead of the old slate base. Projects and Settings inherit the polished mobile shell automatically.
+- Mobile bottom tab bar replaced by a hamburger button in the top header. Tap it to open a bottom-sheet menu listing Calculator, Projects, Settings, What's New, Report an issue, and Replay onboarding.
+- Saved remains available as saved calculations, with Template wording removed from the active save/reopen flows.
+- Compare remains available in navigation, with the result-attached compare tray and result sheet actions adding faster entry points.
+- Edge-swipe tab navigation removed alongside the bottom bar. The mobile header (logo + title + theme toggle + hamburger) is the single nav entry point.
+- Mobile calculator no longer renders the legacy inline profile/material/dimensions form below the new numpad — profile and material live in their own bottom sheets now. The reverse calculator and inline pricing toggles still appear on desktop; mobile homes for them ship in a follow-up.
+- Floating mobile result bar removed entirely. The calculator tab owns its own live result card; Projects and Settings are scroll-only with no floating result UI. Desktop continues to use the sticky right-column result panel.
+
+### Fixed
+
+- Mobile numpad now keeps length unit changes in Settings/onboarding only, replacing calculator unit keys with Clear, Next field, and Done actions while keeping the Length chip synced to external unit changes.
+
+---
+
+## [2.6.0] - 2026-05-14
+
+First calculator-first overhaul that landed in parallel with the numpad-native redesign. Most of this is superseded by 3.0.0 on mobile (floating result chip and centered modal are replaced by the numpad-native screen and snap-sheet), but the shared cleanups — toast removal, profile picker collapse, Compare → Library actions, and result-modal minimal style — remain in 3.0.0.
 
 ### Changed
 
@@ -17,7 +80,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Collapsed the calculator profile picker into a single button that expands the category and sub-type pills on demand — saves vertical space on every layout
 - Regrouped the overflow menu around a Library section (Saved, Projects, Compare) so the three stashes feel like one concept
 - Added "Save as template" and "Add to project" actions on Compare items, so a comparison can land in the persistent library without re-entering it in the calculator
-- Wide desktops (≥ 1280 px) now show the calculator form and result side-by-side, with the result column sticky and scroll-contained so the page itself does not scroll when the result is visible. Laptops (1024–1279 px) keep the single-column layout from the previous round
+- Wide desktops (≥ 1280 px) show the calculator form and result side-by-side, with the result column sticky and scroll-contained so the page itself does not scroll when the result is visible. Laptops (1024–1279 px) keep the single-column layout
 - Replaced the inline desktop result panel with a floating result chip in the bottom-right corner of the viewport (consistent across mobile and desktop). Click the chip to expand: bottom sheet on mobile, centered modal on desktop
 - Compare cards now show only "Add to project" — the save-as-template button on Compare has been removed (the calculator's own save flow still applies)
 - Removed the unused `ResultActionsSheet` component; result actions live inside the expanded result overlay

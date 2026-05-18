@@ -55,7 +55,7 @@ export const BottomTabBar = memo(function BottomTabBar({
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-faint bg-background/88 shadow-[0_-10px_26px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-faint bg-background/88 shadow-[0_-10px_26px_rgba(20,18,15,0.08)] backdrop-blur-xl lg:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="mx-auto flex max-w-lg items-stretch" role="tablist">

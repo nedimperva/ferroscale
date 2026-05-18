@@ -11,6 +11,8 @@ import { MaterialSection } from "./material-section";
 import { PricingSection } from "./pricing-section";
 import { PrecisionSection } from "./precision-section";
 import { WorkspaceSection } from "./workspace-section";
+import { SettingsDefaultsCard } from "./settings-defaults-card";
+import { ferroscaleOnboardedStore } from "@/components/ferroscale-app-shell";
 import type { TextSize } from "@/hooks/useTextSize";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AnimatedDrawer } from "@/components/ui/animated-drawer";
@@ -93,6 +95,8 @@ export function SettingsWorkspaceContent({
   return (
     <>
       <div className="flex-1 overflow-y-auto scroll-native safe-area-bottom">
+        <SettingsDefaultsCard input={input} defaultUnit={defaultUnit} />
+
         <div className="px-4 pt-3 pb-1">
           <LanguageSwitcher className="w-full justify-between" />
         </div>
@@ -166,8 +170,16 @@ export function SettingsWorkspaceContent({
         </CollapsibleSection>
       </div>
 
-      {/* Footer with reset */}
-      <div className="border-t border-border px-4 py-3">
+      {/* Footer with reset + replay onboarding */}
+      <div className="flex flex-col gap-2 border-t border-border px-4 py-3">
+        <button
+          type="button"
+          onClick={() => ferroscaleOnboardedStore.set(false)}
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-foreground-secondary transition-colors hover:bg-accent-surface hover:text-accent-text"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <ReplayLabel />
+        </button>
         <button
           type="button"
           onClick={onResetAll}
@@ -179,6 +191,11 @@ export function SettingsWorkspaceContent({
       </div>
     </>
   );
+}
+
+function ReplayLabel() {
+  const t = useTranslations("onboarding");
+  return <>{t("replay")}</>;
 }
 
 export const SettingsDrawer = memo(function SettingsDrawer({

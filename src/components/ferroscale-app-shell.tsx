@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+// framer-motion not currently consumed by the shell — the tab transitions
+// were removed to eliminate cross-fade dead frames.
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useCalculator } from "@/hooks/useCalculator";
-import { useSaved, type SavedEntry, type TemplatePartDraft } from "@/hooks/useSaved";
+import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useReverseCalculator } from "@/hooks/useReverseCalculator";
 import { useProjects } from "@/hooks/useProjects";
@@ -20,45 +21,59 @@ import { useKeyboardShortcuts, APP_SHORTCUTS } from "@/hooks/useKeyboardShortcut
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useElementWidth } from "@/hooks/useElementWidth";
 import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calculator/types";
+import { usePathname } from "@/i18n/navigation";
 import { resolveGradeLabel } from "@/lib/calculator/grade-label";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { getProfileById } from "@/lib/datasets/profiles";
-import { APP_TABS, getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
-import { triggerHaptic } from "@/lib/haptics";
-import { APP_VERSION } from "@/lib/changelog";
-import { createBoolStore, createStringStore } from "@/lib/external-stores";
+import { APP_TABS, getAppTabHref, type AppTabId } from "@/lib/app-shell";
+import { createBoolStore, createStringStore, createSidebarStore } from "@/lib/external-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
 import type { ColumnPanelId } from "@/lib/column-layout";
-import {
-  DEFAULT_COLUMN_LAYOUT,
-  canRenderColumnLayout,
-  getMaxColumnsForWidth,
-} from "@/lib/column-layout";
+import { getMaxColumnsForWidth } from "@/lib/column-layout";
 import { ProfileSection } from "@/components/calculator/profile-section";
+import { MobileNumpadCalculator } from "@/components/calculator/mobile-numpad-calculator";
+import { MobileProfileSheet } from "@/components/calculator/mobile-profile-sheet";
+import { MobileMaterialSheet } from "@/components/calculator/mobile-material-sheet";
+import { MobileResultSheet } from "@/components/calculator/mobile-result-sheet";
+import { OnboardingFlow } from "@/components/calculator/onboarding-flow";
+import { DesktopWorkstationPane } from "@/components/calculator/desktop-workstation-pane";
+import { MobileMenuSheet } from "@/components/calculator/mobile-menu-sheet";
+import { MobileSettingsContent } from "@/components/calculator/mobile-settings-content";
+import { MobileProjectsPage } from "@/components/projects/mobile-projects-page";
+import { DesktopProjectsPage } from "@/components/projects/desktop-projects-page";
+import { MobileProjectDetailPage } from "@/components/projects/mobile-project-detail-page";
+import { DesktopProjectDetailPage } from "@/components/projects/desktop-project-detail-page";
+import { MobileSavedPage } from "@/components/saved/mobile-saved-page";
+import { DesktopSavedPage } from "@/components/saved/desktop-saved-page";
+import { MobileComparePage } from "@/components/compare/mobile-compare-page";
+import { DesktopComparePage } from "@/components/compare/desktop-compare-page";
+import { DesktopSettingsPage } from "@/components/calculator/desktop-settings-page";
 import { ResultPanel } from "@/components/calculator/result-panel";
-import { ResultBar, ResultOverlay } from "@/components/calculator/result-bar";
-import { TemplatesDrawer } from "@/components/calculator/templates-drawer";
-import { SettingsDrawer, SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
+import { ResultOverlay } from "@/components/calculator/result-bar";
+import { SettingsWorkspaceContent } from "@/components/calculator/settings-drawer";
 import { ContactDrawer } from "@/components/calculator/contact-drawer";
-import { CompareDrawer, CompareWorkspaceContent } from "@/components/compare/compare-drawer";
+import { CompareWorkspaceContent } from "@/components/compare/compare-drawer";
 import { ReversePanel } from "@/components/calculator/reverse-panel";
 import { ProfileSpecsPanel } from "@/components/calculator/profile-specs-panel";
-import { ProjectDrawer, ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
+import { ProjectsWorkspaceContent } from "@/components/projects/project-drawer";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
+import { Sidebar } from "@/components/calculator/sidebar";
 import { PwaRegister } from "@/components/pwa-register";
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { ProfileIcon } from "@/components/profiles/profile-icon";
 import { QuickCalcPalette } from "@/components/quick-calc/quick-calc-palette";
+import { QuickCalcFab } from "@/components/quick-calc/quick-calc-fab";
 import { ShortcutsModal } from "@/components/ui/shortcuts-modal";
 import { SavePresetModal } from "@/components/calculator/save-preset-modal";
-import { TemplateBuilder } from "@/components/calculator/template-builder";
 import { ChangelogDrawer } from "@/components/calculator/changelog-drawer";
-import { TemplatesPanel } from "@/components/calculator/templates-panel";
 import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
 
+const sidebarStore = createSidebarStore();
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", true);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
 const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
+const onboardedStore = createBoolStore("ferroscale-onboarded", false);
+export { onboardedStore as ferroscaleOnboardedStore };
 
 const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
 const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
@@ -73,10 +88,6 @@ const SETTINGS_ISSUE_FIELDS = new Set([
   "wastePercent",
   "vatPercent",
 ]);
-
-const EDGE_SWIPE_PX = 28;
-const EDGE_SWIPE_MIN_DISTANCE = 70;
-const EDGE_SWIPE_MAX_VERTICAL = 56;
 
 function issueFieldToInputId(field: string): string | null {
   if (field.startsWith("manualDimensions.")) {
@@ -119,282 +130,12 @@ function focusInputById(id: string): boolean {
   return true;
 }
 
-function isSwipeEligibleTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  if (target.closest("[data-app-swipe-lock='true']")) return false;
-  if (
-    target.closest(
-      "button, a, input, textarea, select, label, summary, [role='button'], [role='tab'], [role='dialog'], [contenteditable='true']",
-    )
-  ) {
-    return false;
-  }
-  return true;
-}
 
-function MobilePageCard({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={`overflow-hidden ${className}`}>
-      {children}
-    </section>
-  );
-}
-
-function ThemeIcon({ theme }: { theme: Theme }) {
-  if (theme === "light") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-      </svg>
-    );
-  }
-
-  if (theme === "dark") {
-    return (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2" />
-        <path d="M12 20v2" />
-        <path d="M2 12h2" />
-        <path d="M20 12h2" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-      <rect width="20" height="14" x="2" y="3" rx="2" />
-      <path d="M8 21h8" />
-      <path d="M12 17v4" />
-    </svg>
-  );
-}
-
-function MoreMenuButton({
-  currentTab,
-  compareCount,
-  projectCount,
-  savedCount,
-  canShowColumnsToggle,
-  isMultiColumnEnabled,
-  onNavigate,
-  onOpenCompare,
-  onOpenQuickCalc,
-  onOpenContact,
-  onOpenChangelog,
-  onToggleMultiColumn,
-}: {
-  currentTab: AppTabId;
-  compareCount: number;
-  projectCount: number;
-  savedCount: number;
-  canShowColumnsToggle: boolean;
-  isMultiColumnEnabled: boolean;
-  onNavigate: (tab: AppTabId) => void;
-  onOpenCompare: () => void;
-  onOpenQuickCalc: () => void;
-  onOpenContact: () => void;
-  onOpenChangelog: () => void;
-  onToggleMultiColumn: () => void;
-}) {
-  const t = useTranslations();
-  const [open, setOpen] = useState(false);
-  const itemClass = "flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-foreground-secondary transition-colors hover:bg-surface-raised hover:text-foreground";
-  const badgeClass = "rounded-full bg-surface-inset px-1.5 py-0.5 text-2xs font-semibold text-muted";
-  const groupLabelClass = "px-3 pt-2 pb-1 text-2xs font-semibold uppercase tracking-wide text-muted-faint";
-
-  const run = (action: () => void) => {
-    triggerHaptic("light");
-    action();
-    setOpen(false);
-  };
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="premium-icon-button h-9 w-9 rounded-md border-border-faint"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={t("result.moreActions")}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-          <circle cx="12" cy="12" r="1" />
-          <circle cx="19" cy="12" r="1" />
-          <circle cx="5" cy="12" r="1" />
-        </svg>
-      </button>
-
-      {open && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[75] cursor-default"
-            aria-label={t("settingsDrawer.close")}
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="menu"
-            className="absolute right-0 top-11 z-[80] w-64 overflow-hidden rounded-lg border border-border bg-surface shadow-[0_18px_40px_rgba(15,23,42,0.14)]"
-          >
-            <div className="border-b border-border-faint px-3 py-2">
-              <p className="text-xs font-semibold uppercase text-muted-faint">FerroScale</p>
-              <p className="text-2xs text-muted-faint">v{APP_VERSION}</p>
-            </div>
-
-            <p className={groupLabelClass}>{t("menu.groupLibrary")}</p>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("saved"))} role="menuitem" aria-current={currentTab === "saved" ? "page" : undefined}>
-              <span>{t("tabs.saved")}</span>
-              {savedCount > 0 && <span className={badgeClass}>{savedCount}</span>}
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("projects"))} role="menuitem" aria-current={currentTab === "projects" ? "page" : undefined}>
-              <span>{t("tabs.projects")}</span>
-              {projectCount > 0 && <span className={badgeClass}>{projectCount}</span>}
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(onOpenCompare)} role="menuitem">
-              <span>{t("sidebar.compare")}</span>
-              {compareCount > 0 && <span className={badgeClass}>{compareCount}</span>}
-            </button>
-
-            <div className="border-t border-border-faint" />
-            <p className={groupLabelClass}>{t("menu.groupTools")}</p>
-            <button type="button" className={itemClass} onClick={() => run(onOpenQuickCalc)} role="menuitem">
-              <span>{t("quickCalc.sidebarLabel")}</span>
-              <span className="text-2xs text-muted-faint">Ctrl K</span>
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(() => onNavigate("settings"))} role="menuitem" aria-current={currentTab === "settings" ? "page" : undefined}>
-              <span>{t("tabs.settings")}</span>
-            </button>
-            {canShowColumnsToggle && (
-              <button type="button" className={itemClass} onClick={() => run(onToggleMultiColumn)} role="menuitem">
-                <span>{t("columns.columnsMode")}</span>
-                {isMultiColumnEnabled && <span className={badgeClass}>On</span>}
-              </button>
-            )}
-
-            <div className="border-t border-border-faint" />
-            <p className={groupLabelClass}>{t("menu.groupHelp")}</p>
-            <button type="button" className={itemClass} onClick={() => run(onOpenChangelog)} role="menuitem">
-              <span>{t("changelog.title")}</span>
-            </button>
-            <button type="button" className={itemClass} onClick={() => run(onOpenContact)} role="menuitem">
-              <span>{t("sidebar.reportIssue")}</span>
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function BareTopBar({
-  currentTab,
-  subtitle,
-  hasResult,
-  compareCount,
-  projectCount,
-  savedCount,
-  theme,
-  onToggleTheme,
-  onHome,
-  onNavigate,
-  onOpenCompare,
-  onOpenQuickCalc,
-  onOpenContact,
-  onOpenChangelog,
-  canShowColumnsToggle,
-  isMultiColumnEnabled,
-  onToggleMultiColumn,
-}: {
-  currentTab: AppTabId;
-  subtitle: string;
-  hasResult: boolean;
-  compareCount: number;
-  projectCount: number;
-  savedCount: number;
-  theme: Theme;
-  onToggleTheme: () => void;
-  onHome: () => void;
-  onNavigate: (tab: AppTabId) => void;
-  onOpenCompare: () => void;
-  onOpenQuickCalc: () => void;
-  onOpenContact: () => void;
-  onOpenChangelog: () => void;
-  canShowColumnsToggle: boolean;
-  isMultiColumnEnabled: boolean;
-  onToggleMultiColumn: () => void;
-}) {
-  const t = useTranslations();
-
-  return (
-    <header
-      className="fixed inset-x-0 top-0 z-[70] border-b border-border-faint bg-background/94 backdrop-blur-xl"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-    >
-      <div className="mx-auto flex h-14 max-w-[86rem] items-center gap-3 px-3 md:px-6">
-        <button type="button" onClick={onHome} className="flex min-w-0 items-center gap-2 text-left" aria-label={t("tabs.calculator")}>
-          <Image src="/icon-192.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md" />
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold leading-tight text-foreground">FerroScale</span>
-            <span
-              className={`max-w-[38vw] truncate text-2xs leading-tight text-muted md:block md:max-w-none ${hasResult ? "hidden" : "block"}`}
-            >
-              {subtitle}
-            </span>
-          </span>
-        </button>
-
-        <div className="ml-auto hidden items-center gap-2 md:flex">
-          <LanguageSwitcher />
-        </div>
-
-        <div className="ml-auto flex items-center gap-1.5 md:ml-0">
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className="premium-icon-button h-9 w-9 rounded-md border-border-faint"
-            aria-label={
-              theme === "light"
-                ? t("theme.switchToDark")
-                : theme === "dark"
-                  ? t("theme.switchToSystem")
-                  : t("theme.switchToLight")
-            }
-          >
-            <ThemeIcon theme={theme} />
-          </button>
-          <MoreMenuButton
-            currentTab={currentTab}
-            compareCount={compareCount}
-            projectCount={projectCount}
-            savedCount={savedCount}
-            canShowColumnsToggle={canShowColumnsToggle}
-            isMultiColumnEnabled={isMultiColumnEnabled}
-            onNavigate={onNavigate}
-            onOpenCompare={onOpenCompare}
-            onOpenQuickCalc={onOpenQuickCalc}
-            onOpenContact={onOpenContact}
-            onOpenChangelog={onOpenChangelog}
-            onToggleMultiColumn={onToggleMultiColumn}
-          />
-        </div>
-      </div>
-    </header>
-  );
-}
 
 export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const t = useTranslations();
   const router = useRouter();
   const isMobile = useIsMobile();
-  const shouldReduceMotion = useReducedMotion();
   const [isRouteNavigationPending, startRouteNavigation] = useTransition();
 
   const {
@@ -411,23 +152,15 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     saved,
     saveCalculation,
     removeSaved,
-    removeSavedMany,
     duplicateSaved,
-    duplicateSavedMany,
-    appendPartsToSaved,
-    removePartFromSaved,
-    reorderPartInSaved,
     updateSaved,
     markSavedUsed,
     isSaved: isSavedEntry,
-    getSavedCount,
   } = useSaved();
 
   const {
     items: compareItems,
-    isOpen: showCompareDrawer,
     canAdd: canCompare,
-    open: openCompareDrawer,
     close: closeCompare,
     addItem: addCompareItem,
     removeItem: removeCompareItem,
@@ -450,8 +183,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     renameProject,
     deleteProject,
     addCalculation,
-    addTemplateCalculation,
     removeCalculation,
+    moveCalculation,
     duplicateProject,
     updateCalculationNote,
     updateProjectDescription,
@@ -462,19 +195,16 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const closeQuickCalc = quickCalc.close;
   const openQuickCalc = quickCalc.open;
   const toggleQuickCalc = quickCalc.toggle;
-  const quickCalcOpen = quickCalc.isOpen;
   const { presets, presetsForProfile, addPreset, removePreset } = usePresets();
   const sync = useSync();
   const columnLayout = useColumnLayout();
   const [mainContentRef, mainContentWidth] = useElementWidth<HTMLDivElement>();
   const maxColumnsAllowed = getMaxColumnsForWidth(mainContentWidth);
-  const canFitCurrentColumns = canRenderColumnLayout(columnLayout.columns.length, mainContentWidth);
-  const minColumnsForToggle = Math.min(
-    DEFAULT_COLUMN_LAYOUT.columns.length,
-    Math.max(2, columnLayout.columns.length),
-  );
-  const canShowColumnsToggle = columnLayout.enabled || maxColumnsAllowed >= minColumnsForToggle;
-  const isMultiColumn = columnLayout.enabled && canFitCurrentColumns;
+  // Columns feature hidden during the v3 redesign. Users who had
+  // `enabled: true` in localStorage silently fall back to the single-
+  // pane layout; state stays in storage so toggling the feature back
+  // on later restores their column setup.
+  const isMultiColumn = false;
 
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [presetModalOpen, setPresetModalOpen] = useState(false);
@@ -482,11 +212,19 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [presetProfileName, setPresetProfileName] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
-  const [templateBuilderSession, setTemplateBuilderSession] = useState(0);
   const [externalSource, setExternalSource] = useState<{ input: CalculationInput; result: CalculationResult } | null>(null);
   const [showContactDrawer, setShowContactDrawer] = useState(false);
   const [showChangelogDrawer, setShowChangelogDrawer] = useState(false);
+  const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
+  const [showMobileMaterialSheet, setShowMobileMaterialSheet] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [onboardingSession, setOnboardingSession] = useState(0);
+  const pathname = usePathname();
+  const onboarded = useSyncExternalStore(
+    onboardedStore.subscribe,
+    onboardedStore.getSnapshot,
+    onboardedStore.getServerSnapshot,
+  );
 
   const cycleTheme = useCallback(() => {
     const order: Theme[] = ["light", "dark", "system"];
@@ -498,12 +236,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const closeTransientOverlays = useCallback(() => {
     setShowOverlay(false);
     setShowSaveModal(false);
-    setShowTemplateBuilder(false);
     setShowShortcutsModal(false);
     setPresetModalOpen(false);
     setShowContactDrawer(false);
     setShowChangelogDrawer(false);
-    setExternalSource(null);
+    setShowMobileProfileSheet(false);
+    setShowMobileMaterialSheet(false);
+    setShowMobileMenu(false);
     closeQuickCalc();
     closeCompare();
   }, [closeCompare, closeQuickCalc]);
@@ -559,10 +298,22 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return () => window.clearTimeout(timeoutId);
   }, [currentTab, closeTransientOverlays]);
 
+  // Lock html/body scroll on the calculator route so the screen feels
+  // like a fixed app frame (no iOS rubber-band, no stray vertical scroll
+  // when dvh fluctuates with the browser chrome).
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const isLocked = currentTab === "calculator" && isMobile;
+    document.documentElement.classList.toggle("app-locked", isLocked);
+    return () => {
+      document.documentElement.classList.remove("app-locked");
+    };
+  }, [currentTab, isMobile]);
+
   const openCompare = useCallback(() => {
     setShowOverlay(false);
-    openCompareDrawer();
-  }, [openCompareDrawer]);
+    navigateToTab("compare");
+  }, [navigateToTab]);
 
   const normalizedCurrentProfile = useMemo(
     () => (result ? normalizeProfileSnapshot(input) : null),
@@ -570,46 +321,21 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   );
   const isCurrentSaved = result ? isSavedEntry(result) : false;
 
-  const handleOpenSaveDialog = useCallback(() => {
+  // Save flow simplified for v3: tap "Save" on the calculator / result sheet
+  // directly persists the current calc with an auto-generated name. The
+  // button itself flips to a "saved" state (handled by callers via the
+  // isCurrentSaved boolean) — no toast, no modal.
+  const handleSaveCurrent = useCallback(() => {
     if (!result) return;
-    setExternalSource(null);
-    setShowOverlay(false);
-    setTemplateBuilderSession((session) => session + 1);
-    setShowTemplateBuilder(true);
-  }, [result]);
-
-  const handleConfirmSave = useCallback(
-    (
-      name: string,
-      notes?: string,
-      tags?: string[],
-      parts?: TemplatePartDraft[],
-    ) => {
-      const source = externalSource ?? (result ? { input, result } : null);
-      if (!source) return;
-      saveCalculation(source.input, source.result, name, notes, tags, parts);
-      setShowTemplateBuilder(false);
-      setExternalSource(null);
-    },
-    [externalSource, input, result, saveCalculation],
-  );
+    if (isSavedEntry(result)) return;
+    const profile = normalizeProfileSnapshot(input);
+    const profileLabel = profile?.shortLabel ?? result.profileLabel;
+    const grade = resolveGradeLabel(result.gradeLabel, t);
+    const autoName = grade ? `${profileLabel} - ${grade}` : profileLabel;
+    saveCalculation(input, result, autoName);
+  }, [input, isSavedEntry, result, saveCalculation, t]);
 
   const currentIsInCompare = result ? isInCompare(result) : false;
-
-  const defaultSaveName = useMemo(() => {
-    if (!result) return "";
-    const profileLabel = normalizedCurrentProfile?.shortLabel ?? result.profileLabel;
-    const grade = resolveGradeLabel(result.gradeLabel, t);
-    return grade ? `${profileLabel} - ${grade}` : profileLabel;
-  }, [normalizedCurrentProfile, result, t]);
-
-  const externalSourceDefaultName = useMemo(() => {
-    if (!externalSource) return "";
-    const profile = normalizeProfileSnapshot(externalSource.input);
-    const profileLabel = profile?.shortLabel ?? externalSource.result.profileLabel;
-    const grade = resolveGradeLabel(externalSource.result.gradeLabel, t);
-    return grade ? `${profileLabel} - ${grade}` : profileLabel;
-  }, [externalSource, t]);
 
   const handleCompare = useCallback(() => {
     if (!result) return;
@@ -642,54 +368,6 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       navigateHome();
     },
     [dispatch, navigateHome],
-  );
-
-  const handleApplyTemplate = useCallback(
-    (entry: SavedEntry) => {
-      markSavedUsed(entry.id);
-      dispatch({ type: "LOAD_ENTRY", input: entry.input });
-      navigateHome();
-    },
-    [dispatch, markSavedUsed, navigateHome],
-  );
-
-  const handleAppendTemplateParts = useCallback(
-    (templateId: string, parts: TemplatePartDraft[]) => {
-      const appended = appendPartsToSaved(templateId, parts);
-      if (!appended) return;
-      markSavedUsed(templateId);
-      setShowTemplateBuilder(false);
-    },
-    [appendPartsToSaved, markSavedUsed],
-  );
-
-  const handleTemplateAddToProject = useCallback(
-    (entry: SavedEntry, overrides: { quantityMultiplier: number; projectId?: string }) => {
-      const fallbackProject = projects[0] ?? createProject("Common Parts");
-      const targetProjectId = overrides.projectId ?? activeProjectId ?? fallbackProject.id;
-
-      const multiplier = Math.max(1, Math.floor(overrides.quantityMultiplier || 1));
-      const added = addTemplateCalculation(targetProjectId, entry.name, entry.parts, multiplier);
-      if (!added) return;
-
-      markSavedUsed(entry.id);
-      setActiveProjectId(targetProjectId);
-    },
-    [activeProjectId, addTemplateCalculation, createProject, markSavedUsed, projects, setActiveProjectId],
-  );
-
-  const handleRemoveTemplatePart = useCallback(
-    (entry: SavedEntry, partId: string) => {
-      removePartFromSaved(entry.id, partId);
-    },
-    [removePartFromSaved],
-  );
-
-  const handleReorderTemplatePart = useCallback(
-    (entry: SavedEntry, partId: string, direction: -1 | 1) => {
-      reorderPartInSaved(entry.id, partId, direction);
-    },
-    [reorderPartInSaved],
   );
 
   const handleQuickCalcLoad = useCallback(
@@ -734,13 +412,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       showShortcuts: () => setShowShortcutsModal((prev) => !prev),
       undo: () => dispatch({ type: "UNDO" }),
       redo: () => dispatch({ type: "REDO" }),
-      toggleColumns: () => {
-        if (canShowColumnsToggle) {
-          columnLayout.toggleEnabled();
-        }
-      },
+      // Columns feature is hidden during v3; shortcut is a no-op.
+      toggleColumns: () => {},
     }),
-    [canShowColumnsToggle, columnLayout, dispatch, navigateToTab, toggleQuickCalc],
+    [dispatch, navigateToTab, toggleQuickCalc],
   );
   useKeyboardShortcuts(APP_SHORTCUTS, shortcutHandlers);
 
@@ -795,6 +470,14 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     weightAsMainStore.getSnapshot,
     weightAsMainStore.getServerSnapshot,
   );
+  const sidebarCollapsed = useSyncExternalStore(
+    sidebarStore.subscribe,
+    sidebarStore.getSnapshot,
+    sidebarStore.getServerSnapshot,
+  );
+  const toggleSidebarCollapsed = useCallback(() => {
+    sidebarStore.toggle();
+  }, []);
   const defaultUnit = useSyncExternalStore(
     defaultUnitStore.subscribe,
     defaultUnitStore.getSnapshot,
@@ -875,126 +558,55 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     return profileShort;
   }, [input.profileId, normalizedCurrentProfile, result, t]);
 
-  const mobileResultOffset = "0px";
-  const resultBarBottomPadding = result
-    ? "calc(5rem + env(safe-area-inset-bottom, 0px))"
-    : "calc(1rem + env(safe-area-inset-bottom, 0px))";
-
-  const swipeStateRef = useRef<{ edge: "left" | "right"; x: number; y: number } | null>(null);
-  const isSwipeBlocked =
-    !isMobile ||
-    showOverlay ||
-    showSaveModal ||
-    showTemplateBuilder ||
-    showShortcutsModal ||
-    presetModalOpen ||
-    showContactDrawer ||
-    showChangelogDrawer ||
-    showCompareDrawer ||
-    quickCalcOpen;
-
-  const handleMobileTouchStart = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      if (isSwipeBlocked || !isSwipeEligibleTarget(event.target)) {
-        swipeStateRef.current = null;
-        return;
-      }
-
-      const touch = event.touches[0];
-      const width = window.innerWidth;
-      const isLeftEdge = touch.clientX <= EDGE_SWIPE_PX;
-      const isRightEdge = touch.clientX >= width - EDGE_SWIPE_PX;
-      if (!isLeftEdge && !isRightEdge) {
-        swipeStateRef.current = null;
-        return;
-      }
-
-      swipeStateRef.current = {
-        edge: isLeftEdge ? "left" : "right",
-        x: touch.clientX,
-        y: touch.clientY,
-      };
-    },
-    [isSwipeBlocked],
+  const activeProject = useMemo(
+    () => (activeProjectId ? projects.find((project) => project.id === activeProjectId) ?? null : null),
+    [activeProjectId, projects],
   );
 
-  const handleMobileTouchEnd = useCallback(
-    (event: React.TouchEvent<HTMLDivElement>) => {
-      const swipe = swipeStateRef.current;
-      swipeStateRef.current = null;
-      if (!swipe) return;
+  const mobileHeaderTitle = useMemo(() => {
+    if (currentTab === "calculator") return t("app.mobileHeaderTitle");
+    if (currentTab === "projects" && activeProject) return activeProject.name;
+    return t(`tabs.${currentTab}`);
+  }, [activeProject, currentTab, t]);
 
-      const touch = event.changedTouches[0];
-      const deltaX = touch.clientX - swipe.x;
-      const deltaY = touch.clientY - swipe.y;
-      if (Math.abs(deltaY) > EDGE_SWIPE_MAX_VERTICAL) return;
+  const mobileHeaderSubtitle = normalizedCurrentProfile ? headerContext : t("app.mobileHeaderSubtitle");
+  // No bottom tab bar and no floating result bar on mobile anymore —
+  // the calc tab owns its own result card, other tabs are scroll-only.
+  const resultBarBottomPadding = "calc(24px + env(safe-area-inset-bottom, 0px))";
 
-      if (swipe.edge === "left" && deltaX > EDGE_SWIPE_MIN_DISTANCE) {
-        const previousTab = getAdjacentAppTab(currentTab, -1);
-        if (previousTab) {
-          triggerHaptic("light");
-          navigateToTab(previousTab);
-        }
-      }
+  // Edge-swipe tab navigation removed alongside the bottom tab bar — the
+  // hamburger menu is the single mobile nav entry point now.
 
-      if (swipe.edge === "right" && deltaX < -EDGE_SWIPE_MIN_DISTANCE) {
-        const nextTab = getAdjacentAppTab(currentTab, 1);
-        if (nextTab) {
-          triggerHaptic("light");
-          navigateToTab(nextTab);
-        }
-      }
-    },
-    [currentTab, navigateToTab],
-  );
-
-  const [lastAnimatedTab, setLastAnimatedTab] = useState(currentTab);
-  const pageDirection =
-    lastAnimatedTab === currentTab
-      ? 0
-      : getAppTabIndex(currentTab) > getAppTabIndex(lastAnimatedTab)
-        ? 1
-        : -1;
-
-  useEffect(() => {
-    if (lastAnimatedTab === currentTab) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setLastAnimatedTab(currentTab);
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [currentTab, lastAnimatedTab]);
-
+  // D1 Workstation: sidebar (rendered above) + form column + sticky result
+  // panel column.
   const desktopMain = (
-    <div className="mx-auto hidden w-full max-w-[64rem] flex-col gap-5 px-6 py-5 lg:flex">
-      <div className="flex w-full flex-col border border-border bg-surface">
-        <div className="px-4 py-4">
-          <ProfileSection
-            input={input}
-            dispatch={dispatch}
-            selectedProfile={selectedProfile}
-            issues={issues}
-            activeFamily={activeFamily}
-            showInlineMaterial={showInlineMaterial}
-            showInlinePrice={showInlinePrice}
-            defaultUnit={defaultUnit}
-            onSavePreset={handleSavePreset}
-            profilePresets={presetsForProfile(input.profileId)}
-            onRemovePreset={removePreset}
-          />
-        </div>
-
-        <div className="border-t border-border-faint px-4 pb-4 pt-3">
-          <ReversePanel
-            reverse={reverse}
-            isManualProfile={selectedProfile.mode === "manual"}
-            input={input}
-          />
-        </div>
-      </div>
+    <div className="hidden h-[calc(100dvh-env(safe-area-inset-top,0px))] min-h-0 lg:flex">
+      <DesktopWorkstationPane
+        input={input}
+        dispatch={dispatch}
+        result={result}
+        isPending={isPending}
+        isSaved={isCurrentSaved}
+        issues={issues}
+        selectedProfile={selectedProfile}
+        activeFamily={activeFamily}
+        normalizedProfile={normalizedCurrentProfile}
+        customPresets={presets}
+        onOpenSaveDialog={handleSaveCurrent}
+        onAddToProject={handleAddToProject}
+        onOpenQuickCalc={openQuickCalc}
+        onReset={resetAll}
+        includeVat={input.includeVat}
+        wastePercent={input.wastePercent}
+        vatPercent={input.vatPercent}
+        onCompare={handleCompare}
+        canCompare={canCompare}
+        isInCompare={currentIsInCompare}
+        compareCount={compareItems.length}
+        maxCompare={maxCompare}
+        hasProjects={projectCount > 0}
+        weightAsMain={weightAsMain}
+      />
     </div>
   );
 
@@ -1030,7 +642,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         result={result}
         isPending={isPending}
         isSaved={isCurrentSaved}
-        onOpenSaveDialog={handleOpenSaveDialog}
+        onOpenSaveDialog={handleSaveCurrent}
         includeVat={input.includeVat}
         wastePercent={input.wastePercent}
         vatPercent={input.vatPercent}
@@ -1056,19 +668,13 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     ),
     saved: (
       <div className="p-4">
-        <TemplatesPanel
+        <MobileSavedPage
           saved={saved}
-          projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
-          onLoad={handleApplyTemplate}
+          onLoad={handleLoad}
+          onMarkUsed={markSavedUsed}
           onRemove={removeSaved}
-          onRemoveMany={removeSavedMany}
           onDuplicate={duplicateSaved}
-          onDuplicateMany={duplicateSavedMany}
-          onAddToProject={handleTemplateAddToProject}
-          onRemovePart={handleRemoveTemplatePart}
-          onReorderPart={handleReorderTemplatePart}
-          onUpdate={updateSaved}
-          layout="column"
+          onOpenCalculator={() => navigateToTab("calculator")}
         />
       </div>
     ),
@@ -1146,12 +752,12 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   }), [
     issues, showSettingsPreview, input, dispatch, selectedProfile, activeFamily,
     showInlineMaterial, showInlinePrice, defaultUnit, presetsForProfile, removePreset,
-    reverse, result, isPending, isCurrentSaved, handleOpenSaveDialog,
+    reverse, result, isPending, isCurrentSaved, handleSaveCurrent,
     handleCompare, canCompare, currentIsInCompare, compareItems, maxCompare,
     handleAddToProject, handleAddExternalToProject,
     projectCount, normalizedCurrentProfile, weightAsMain,
     removeCompareItem, clearCompare,
-    saved, handleLoad, handleApplyTemplate, handleTemplateAddToProject, handleRemoveTemplatePart, handleReorderTemplatePart, removeSaved, removeSavedMany, duplicateSaved, duplicateSavedMany, updateSaved,
+    saved, handleLoad, markSavedUsed, removeSaved, duplicateSaved,
     projects, activeProjectId, setActiveProjectId, createProject, renameProject,
     deleteProject, duplicateProject, removeCalculation, updateCalculationNote,
     updateProjectDescription, updateProjectPaintingSettings, addCalculation,
@@ -1159,145 +765,287 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
     navigateToTab, handleSavePreset, textSize, setTextSize, sync, handleDefaultUnitChange,
   ]);
 
+  // Detect /projects/<id> sub-route so the project-detail screen can take
+  // over the projects tab without leaving the AppShell.
+  const projectDetailId = useMemo(() => {
+    const stripped = pathname.split("?")[0]?.split("#")[0] ?? "";
+    const match = stripped.match(/\/projects\/([^/]+)$/);
+    return match?.[1] ?? null;
+  }, [pathname]);
+
+  const projectDetailEntry = useMemo(
+    () => (projectDetailId ? projects.find((p) => p.id === projectDetailId) ?? null : null),
+    [projectDetailId, projects],
+  );
+
+  const navigateToProject = useCallback(
+    (id: string) => {
+      closeTransientOverlays();
+      // activeProjectId is synced from the URL via the effect below.
+      // Setting it here would re-render the list page with the just-tapped
+      // project as the "pinned active" hero before the route changes —
+      // user saw that as a dark card flashing in.
+      startRouteNavigation(() => {
+        router.push(`/projects/${id}`);
+      });
+    },
+    [closeTransientOverlays, router],
+  );
+
+  const navigateBackFromProject = useCallback(() => {
+    startRouteNavigation(() => {
+      router.push("/projects");
+    });
+  }, [router]);
+
+  // Keep activeProjectId in lock-step with the URL. When the route changes
+  // to /projects/<id>, activeProjectId follows; clearing the param clears
+  // active. Doing this here means the list page never re-renders with a
+  // newly-tapped project as the hero before navigation.
+  useEffect(() => {
+    if (projectDetailId && projectDetailId !== activeProjectId) {
+      setActiveProjectId(projectDetailId);
+    }
+  }, [projectDetailId, activeProjectId, setActiveProjectId]);
+
+  // Mobile shell header is rendered globally for routes that don't own
+  // their own top bar. Saved / Compare / Projects (list + detail) each
+  // render a page-level header inline (title, search, primary action) so
+  // they suppress the shell header to avoid stacked top bars.
+  const shellHeaderHidden =
+    currentTab === "saved" ||
+    currentTab === "compare" ||
+    currentTab === "projects";
+
   const mobileScreen =
     currentTab === "calculator" ? (
-      <MobilePageCard>
-        <div className="px-3 py-4">
-          <ProfileSection
-            input={input}
-            dispatch={dispatch}
-            selectedProfile={selectedProfile}
-            issues={issues}
-            activeFamily={activeFamily}
-            showInlineMaterial={showInlineMaterial}
-            showInlinePrice={showInlinePrice}
-            defaultUnit={defaultUnit}
-            onSavePreset={handleSavePreset}
-            profilePresets={presetsForProfile(input.profileId)}
-            onRemovePreset={removePreset}
-          />
-        </div>
-
-        <div className="pb-5">
-          <ReversePanel
-            reverse={reverse}
-            isManualProfile={selectedProfile.mode === "manual"}
-            input={input}
-          />
-        </div>
-      </MobilePageCard>
+      <MobileNumpadCalculator
+        input={input}
+        dispatch={dispatch}
+        result={result}
+        isPending={isPending}
+        activeFamily={activeFamily}
+        normalizedProfile={normalizedCurrentProfile}
+        onOpenProfilePicker={() => setShowMobileProfileSheet(true)}
+        onOpenMaterialPicker={() => setShowMobileMaterialSheet(true)}
+        onOpenResult={() => setShowOverlay(true)}
+        scrollPaddingBottom="0px"
+      />
     ) : currentTab === "saved" ? (
-      <MobilePageCard>
-        <div className="px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
-          <TemplatesPanel
-            saved={saved}
-            projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
-            onLoad={handleApplyTemplate}
-            onRemove={removeSaved}
-            onRemoveMany={removeSavedMany}
-            onDuplicate={duplicateSaved}
-            onDuplicateMany={duplicateSavedMany}
-            onAddToProject={handleTemplateAddToProject}
-            onRemovePart={handleRemoveTemplatePart}
-            onReorderPart={handleReorderTemplatePart}
-            onUpdate={updateSaved}
-            layout="mobile"
-          />
-        </div>
-      </MobilePageCard>
-    ) : currentTab === "projects" ? (
-      <MobilePageCard className="flex min-h-[60dvh] flex-col">
-        <div className="flex min-h-0 flex-1 flex-col px-3 pb-4 pt-3 md:px-4 md:pb-4 md:pt-4">
-          <ProjectsWorkspaceContent
-            projects={projects}
-            activeProjectId={activeProjectId}
-            onSetActiveProject={setActiveProjectId}
-            onCreateProject={createProject}
-            onRenameProject={renameProject}
-            onDeleteProject={deleteProject}
-            onDuplicateProject={duplicateProject}
-            onRemoveCalculation={removeCalculation}
-            onUpdateCalculationNote={updateCalculationNote}
-            onUpdateProjectDescription={updateProjectDescription}
-            onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
-            onLoadCalculation={handleLoad}
-            currentResult={result}
-            currentInput={result ? input : null}
-            onAddCalculation={addCalculation}
-            layout="mobile"
-            weightAsMain={weightAsMain}
-          />
-        </div>
-      </MobilePageCard>
-    ) : (
-      <MobilePageCard className="flex min-h-[60dvh] flex-col">
-        <SettingsWorkspaceContent
-          input={input}
-          dispatch={dispatch}
-          activeFamily={activeFamily}
-          issues={issues}
-          onResetAll={resetAll}
-          onOpenChangelog={() => setShowChangelogDrawer(true)}
-          compareLimit={compareLimit}
-          onCompareLimitChange={setCompareLimit}
-          maxCompare={maxCompare}
-          isCompareMobileCapped={isCompareMobileCapped}
-          showInlineMaterial={showInlineMaterial}
-          onToggleInlineMaterial={inlineMaterialStore.toggle}
-          showInlinePrice={showInlinePrice}
-          onToggleInlinePrice={inlinePriceStore.toggle}
-          showSettingsPreview={showSettingsPreview}
-          onToggleSettingsPreview={settingsPreviewStore.toggle}
-          weightAsMain={weightAsMain}
-          onToggleWeightAsMain={weightAsMainStore.toggle}
-          defaultUnit={defaultUnit}
-          onDefaultUnitChange={handleDefaultUnitChange}
-          unitOptions={UNIT_OPTIONS}
-          textSize={textSize}
-          onTextSizeChange={setTextSize}
-          syncStatus={sync.status}
-          onConnectSync={sync.connectProvider}
-          onReconnectSync={sync.reconnectProvider}
-          onChangeSyncPassphrase={sync.changePassphrase}
-          onSyncNow={() => sync.syncNow()}
-          onDisconnectSync={sync.disconnectProvider}
-          onResetRemoteSync={sync.resetRemoteCopy}
-          onExportSync={sync.exportSnapshot}
-          onImportSync={sync.importSnapshot}
+      <div className="px-3 pt-3 md:px-4">
+        <MobileSavedPage
+          saved={saved}
+          onLoad={handleLoad}
+          onMarkUsed={markSavedUsed}
+          onRemove={removeSaved}
+          onDuplicate={duplicateSaved}
+          onOpenCalculator={() => navigateToTab("calculator")}
         />
-      </MobilePageCard>
+      </div>
+    ) : currentTab === "compare" ? (
+      <div className="px-3 pt-3 md:px-4">
+        <MobileComparePage
+          items={compareItems}
+          onRemove={removeCompareItem}
+          onClearAll={clearCompare}
+          onOpenCalculator={() => navigateToTab("calculator")}
+        />
+      </div>
+    ) : currentTab === "projects" && projectDetailEntry ? (
+      // No outer padding — the detail page owns its NavBar + safe-area top
+      // and applies its own horizontal margins.
+      <MobileProjectDetailPage
+        project={projectDetailEntry}
+        onBack={navigateBackFromProject}
+        onAddPart={() => navigateToTab("calculator")}
+        onLoadCalculation={(input) => handleLoad(input)}
+        onRemoveCalculation={(calcId) => removeCalculation(projectDetailEntry.id, calcId)}
+        onRenameProject={(name) => renameProject(projectDetailEntry.id, name)}
+        onDeleteProject={() => {
+          deleteProject(projectDetailEntry.id);
+          navigateBackFromProject();
+        }}
+      />
+    ) : currentTab === "projects" ? (
+      <div className="px-3 pt-3 md:px-4">
+        <MobileProjectsPage
+          projects={projects}
+          activeProjectId={activeProjectId}
+          onSetActiveProject={navigateToProject}
+          onCreateProject={(name) => {
+            const created = createProject(name);
+            navigateToProject(created.id);
+          }}
+          onRenameProject={renameProject}
+          onDeleteProject={(id) => {
+            deleteProject(id);
+            if (activeProjectId === id) setActiveProjectId(null);
+          }}
+          onRemoveCalculation={removeCalculation}
+          onLoadCalculation={handleLoad}
+        />
+      </div>
+    ) : (
+      <MobileSettingsContent
+        input={input}
+        dispatch={dispatch}
+        activeFamily={activeFamily}
+        defaultUnit={defaultUnit}
+        unitOptions={UNIT_OPTIONS}
+        onDefaultUnitChange={handleDefaultUnitChange}
+        textSize={textSize}
+        onTextSizeChange={setTextSize}
+        theme={theme}
+        resolvedTheme={resolvedTheme}
+        onThemeChange={setTheme}
+        showInlinePrice={showInlinePrice}
+        onToggleInlinePrice={inlinePriceStore.toggle}
+        weightAsMain={weightAsMain}
+        onToggleWeightAsMain={weightAsMainStore.toggle}
+        onResetAll={resetAll}
+        onOpenChangelog={() => setShowChangelogDrawer(true)}
+      />
     );
 
   return (
     <>
+      <Sidebar
+        onOpenContact={() => setShowContactDrawer(true)}
+        onOpenCalculator={() => navigateToTab("calculator")}
+        onOpenSaved={() => navigateToTab("saved")}
+        onOpenProjects={() => navigateToTab("projects")}
+        onOpenCompare={() => navigateToTab("compare")}
+        onOpenSettings={() => navigateToTab("settings")}
+        onOpenQuickCalc={openQuickCalc}
+        onOpenChangelog={() => setShowChangelogDrawer(true)}
+        projectCount={projectCount}
+        savedCount={saved.length}
+        compareCount={compareItems.length}
+        isCalculatorOpen={currentTab === "calculator"}
+        isSavedOpen={currentTab === "saved"}
+        isSettingsOpen={currentTab === "settings"}
+        isProjectsOpen={currentTab === "projects"}
+        isCompareOpen={currentTab === "compare"}
+        isContactOpen={showContactDrawer}
+        isChangelogOpen={showChangelogDrawer}
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={toggleSidebarCollapsed}
+        theme={resolvedTheme}
+        onToggleTheme={cycleTheme}
+      />
+
+      {/* Pages that own their top bar (Saved, Compare, Projects list +
+          detail) suppress the global shell header so headers don't stack
+          and obstruct each other. Calculator and Settings have no inline
+          page header so the shell header stays.
+          Top-padding logic:
+          - Project detail manages its own safe-area-top inside the page
+            NavBar → wrapper pt-0.
+          - Other shell-header-hidden routes (Saved/Compare/Projects list)
+            need the safe-area-top here since they don't manage it.
+          - Default (Calculator/Settings) clears the fixed 3rem shell header
+            and the device safe-area. */}
       <div
         ref={mainContentRef}
-        className={`mx-auto flex min-h-dvh w-full max-w-[94rem] flex-col px-0 ${
+        className={`flex w-full flex-col px-0 transition-[margin-left,width] duration-200 ease-in-out lg:pt-0 ${
+          currentTab === "projects" && projectDetailEntry
+            ? "pt-0"
+            : shellHeaderHidden
+              ? "pt-[env(safe-area-inset-top,0px)]"
+              : "pt-[calc(3rem+env(safe-area-inset-top,0px))]"
+        } ${
           isMultiColumn
-            ? "overflow-hidden pb-0"
-            : "pb-8"
+            ? "min-h-dvh overflow-hidden pb-0"
+            : currentTab === "calculator"
+              ? "h-[100dvh] max-w-none overflow-hidden pb-0 lg:h-dvh lg:min-h-0"
+              : "mx-auto min-h-dvh max-w-[94rem] pb-8 md:px-6"
+        } ${
+          sidebarCollapsed
+            ? "lg:ml-[56px] lg:w-[calc(100%-56px)]"
+            : "lg:ml-[220px] lg:w-[calc(100%-220px)]"
         }`}
-        style={{ paddingTop: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
       >
-        <BareTopBar
-          currentTab={currentTab}
-          subtitle={headerContext}
-          hasResult={Boolean(result)}
-          compareCount={compareItems.length}
-          projectCount={projectCount}
-          savedCount={saved.length}
-          theme={resolvedTheme}
-          onToggleTheme={cycleTheme}
-          onHome={navigateHome}
-          onNavigate={navigateToTab}
-          onOpenCompare={openCompare}
-          onOpenQuickCalc={openQuickCalc}
-          onOpenContact={() => setShowContactDrawer(true)}
-          onOpenChangelog={() => setShowChangelogDrawer(true)}
-          canShowColumnsToggle={canShowColumnsToggle}
-          isMultiColumnEnabled={columnLayout.enabled}
-          onToggleMultiColumn={columnLayout.toggleEnabled}
-        />
+        {!shellHeaderHidden && (
+        <header
+          className="fixed inset-x-0 top-0 z-[70] flex items-center gap-3 border-b border-border-faint bg-background/96 px-3 py-2 shadow-[0_10px_28px_rgba(20,18,15,0.08)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/92 lg:hidden"
+          style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top, 0px))" }}
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-inverted shadow-[0_8px_20px_rgba(20,18,15,0.18)]">
+            <Image
+              src="/icon-192.png"
+              alt=""
+              width={32}
+              height={32}
+              className="h-full w-full rounded-xl"
+            />
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">{mobileHeaderTitle}</h1>
+            <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
+              {normalizedCurrentProfile && (
+                <ProfileIcon
+                  category={normalizedCurrentProfile.iconKey}
+                  className="h-3 w-3 shrink-0 text-muted-faint"
+                />
+              )}
+              <span className="truncate">{mobileHeaderSubtitle}</span>
+            </p>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={cycleTheme}
+              className="premium-icon-button h-9 w-9"
+              aria-label={
+                resolvedTheme === "light"
+                  ? t("theme.switchToDark")
+                  : resolvedTheme === "dark"
+                    ? t("theme.switchToSystem")
+                    : t("theme.switchToLight")
+              }
+            >
+              {resolvedTheme === "light" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              ) : resolvedTheme === "dark" ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="m4.93 4.93 1.41 1.41" />
+                  <path d="m17.66 17.66 1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="m6.34 17.66-1.41 1.41" />
+                  <path d="m19.07 4.93-1.41 1.41" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <rect width="20" height="14" x="2" y="3" rx="2" />
+                  <path d="M8 21h8" />
+                  <path d="M12 17v4" />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobileMenu(true)}
+              className="premium-icon-button relative h-9 w-9"
+              aria-label={t("menu.title")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+              {(compareItems.length > 0 || projectCount > 0) && (
+                <span className="absolute right-1 top-1 inline-block h-2 w-2 rounded-full bg-accent" />
+              )}
+            </button>
+          </div>
+        </header>
+        )}
 
         <PwaRegister onOpenChangelog={() => setShowChangelogDrawer(true)} />
 
@@ -1307,137 +1055,68 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             contentMap={columnContentMap}
             maxColumnsAllowed={maxColumnsAllowed}
           />
-        ) : (
-          desktopMain
-        )}
-
-        <div
-          className="px-3 lg:hidden"
-          onTouchStart={handleMobileTouchStart}
-          onTouchEnd={handleMobileTouchEnd}
-          aria-busy={isRouteNavigationPending || undefined}
-          style={{
-            paddingTop: mobileResultOffset,
-            paddingBottom: resultBarBottomPadding,
-          }}
-        >
-          <AnimatePresence initial={false} mode="wait">
-            <motion.div
-              key={currentTab}
-              initial={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, x: pageDirection >= 0 ? 24 : -24, scale: 0.992 }
-              }
-              animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0, scale: 1 }}
-              exit={
-                shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, x: pageDirection >= 0 ? -18 : 18, scale: 0.988 }
-              }
-              transition={
-                shouldReduceMotion
-                  ? { duration: 0.12, ease: "linear" }
-                  : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }
-              }
-              className="grid gap-4 will-change-transform"
-            >
-              {mobileScreen}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        <ResultBar
-          result={result}
-          isPending={isPending}
-          onExpand={() => setShowOverlay(true)}
-          normalizedProfile={normalizedCurrentProfile}
-          weightAsMain={weightAsMain}
-        />
-
-        {compareItems.length > 0 && (
-          <button
-            type="button"
-            onClick={openCompare}
-            aria-label={t("sidebar.compare")}
-            className="fixed z-40 inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/96 px-2.5 py-2 shadow-[0_18px_36px_rgba(15,23,42,0.18)] backdrop-blur-xl transition-shadow hover:shadow-[0_22px_44px_rgba(15,23,42,0.22)]"
-            style={{
-              bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
-              left: "calc(1rem + env(safe-area-inset-left, 0px))",
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4 text-foreground-secondary"
-            >
-              <rect x="3" y="3" width="7" height="18" rx="1" />
-              <rect x="14" y="3" width="7" height="18" rx="1" />
-            </svg>
-            <span className="text-xs font-semibold tabular-nums text-foreground">
-              {compareItems.length}
-            </span>
-          </button>
-        )}
-
-        {showOverlay && !showTemplateBuilder && result && (
-          <ResultOverlay
-            result={result}
-            includeVat={input.includeVat}
-            wastePercent={input.wastePercent}
-            vatPercent={input.vatPercent}
-            isSaved={isCurrentSaved}
-            onOpenSaveDialog={handleOpenSaveDialog}
-  
-            onClose={() => setShowOverlay(false)}
-            onCompare={handleCompare}
-            canCompare={canCompare}
-            isInCompare={currentIsInCompare}
-            compareCount={compareItems.length}
-            maxCompare={maxCompare}
-            onAddToProject={handleAddToProject}
-            hasProjects={projectCount > 0}
-            normalizedProfile={normalizedCurrentProfile}
-            weightAsMain={weightAsMain}
-          />
-        )}
-
-        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("saved")) && (
-          <TemplatesDrawer
-            open={currentTab === "saved"}
-            onClose={navigateHome}
+        ) : currentTab === "saved" ? (
+          <DesktopSavedPage
             saved={saved}
-            projectOptions={projects.map((project) => ({ id: project.id, name: project.name }))}
-            onLoad={handleApplyTemplate}
+            onLoad={handleLoad}
+            onMarkUsed={markSavedUsed}
             onRemove={removeSaved}
-            onRemoveMany={removeSavedMany}
             onDuplicate={duplicateSaved}
-            onDuplicateMany={duplicateSavedMany}
-            onAddToProject={handleTemplateAddToProject}
-            onRemovePart={handleRemoveTemplatePart}
-            onReorderPart={handleReorderTemplatePart}
-            onUpdate={updateSaved}
+            onRename={(id, name) => updateSaved(id, { name })}
+            onCreatePreset={() => navigateToTab("calculator")}
           />
-        )}
-
-        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("settings")) && (
-          <SettingsDrawer
-            open={currentTab === "settings"}
-            onClose={navigateHome}
+        ) : currentTab === "compare" ? (
+          <DesktopComparePage
+            items={compareItems}
+            onRemove={removeCompareItem}
+            onClearAll={clearCompare}
+            onOpenCalculator={() => navigateToTab("calculator")}
+            maxCompare={maxCompare}
+          />
+        ) : currentTab === "projects" && projectDetailEntry ? (
+          <DesktopProjectDetailPage
+            project={projectDetailEntry}
+            onBackToList={navigateBackFromProject}
+            onAddPart={() => navigateToTab("calculator")}
+            onLoadCalculation={(input) => handleLoad(input)}
+            onRemoveCalculation={(calcId) => removeCalculation(projectDetailEntry.id, calcId)}
+            onRenameProject={(name) => renameProject(projectDetailEntry.id, name)}
+            onDeleteProject={() => {
+              deleteProject(projectDetailEntry.id);
+              navigateBackFromProject();
+            }}
+            onUpdateNotes={(notes) => updateProjectDescription(projectDetailEntry.id, notes)}
+          />
+        ) : currentTab === "projects" ? (
+          <DesktopProjectsPage
+            projects={projects}
+            activeProjectId={activeProjectId}
+            onSetActiveProject={navigateToProject}
+            onCreateProject={(name) => {
+              const created = createProject(name);
+              navigateToProject(created.id);
+            }}
+            onRenameProject={renameProject}
+            onDeleteProject={(id) => {
+              deleteProject(id);
+              if (activeProjectId === id) setActiveProjectId(null);
+            }}
+            onDuplicateProject={(id) => {
+              const dup = duplicateProject(id);
+              if (dup) setActiveProjectId(dup.id);
+            }}
+            onRemoveCalculation={removeCalculation}
+            onMoveCalculation={moveCalculation}
+            onLoadCalculation={handleLoad}
+          />
+        ) : currentTab === "settings" ? (
+          <DesktopSettingsPage
             input={input}
             dispatch={dispatch}
             activeFamily={activeFamily}
             issues={issues}
             onResetAll={resetAll}
-            onOpenChangelog={() => {
-              navigateHome();
-              setShowChangelogDrawer(true);
-            }}
+            onOpenChangelog={() => setShowChangelogDrawer(true)}
             compareLimit={compareLimit}
             onCompareLimitChange={setCompareLimit}
             maxCompare={maxCompare}
@@ -1455,6 +1134,8 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             unitOptions={UNIT_OPTIONS}
             textSize={textSize}
             onTextSizeChange={setTextSize}
+            theme={theme}
+            onThemeChange={setTheme}
             syncStatus={sync.status}
             onConnectSync={sync.connectProvider}
             onReconnectSync={sync.reconnectProvider}
@@ -1465,45 +1146,139 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             onExportSync={sync.exportSnapshot}
             onImportSync={sync.importSnapshot}
           />
+        ) : (
+          desktopMain
+        )}
+
+        <div
+          aria-busy={isRouteNavigationPending || undefined}
+          className={`lg:hidden ${
+            currentTab === "calculator"
+              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+              : "flex flex-col pb-8"
+          }`}
+          style={
+            currentTab === "calculator"
+              ? undefined
+              : { paddingBottom: resultBarBottomPadding }
+          }
+        >
+          {mobileScreen}
+        </div>
+
+        {/* ResultBar removed on mobile entirely — the calculator route
+            has its own result card and other tabs don't need a
+            floating mini-result. Desktop continues to use the sticky
+            ResultPanel in the right column. */}
+
+        {/* Bottom tab bar replaced by the mobile hamburger menu on small
+            screens. Desktop keeps the sidebar; mobile relies on
+            MobileMenuSheet (rendered below). */}
+
+        {showOverlay && result && (
+          isMobile ? (
+            <MobileResultSheet
+              result={result}
+              includeVat={input.includeVat}
+              wastePercent={input.wastePercent}
+              vatPercent={input.vatPercent}
+              isSaved={isCurrentSaved}
+              onOpenSaveDialog={handleSaveCurrent}
+              onClose={() => setShowOverlay(false)}
+              onCompare={handleCompare}
+              canCompare={canCompare}
+              isInCompare={currentIsInCompare}
+              compareCount={compareItems.length}
+              maxCompare={maxCompare}
+              onAddToProject={handleAddToProject}
+              hasProjects={projectCount > 0}
+              normalizedProfile={normalizedCurrentProfile}
+              compareItems={compareItems}
+              onRemoveCompareItem={removeCompareItem}
+              onOpenCompare={openCompare}
+            />
+          ) : (
+            <ResultOverlay
+              result={result}
+              includeVat={input.includeVat}
+              wastePercent={input.wastePercent}
+              vatPercent={input.vatPercent}
+              isSaved={isCurrentSaved}
+              onOpenSaveDialog={handleSaveCurrent}
+
+              onClose={() => setShowOverlay(false)}
+              onCompare={handleCompare}
+              canCompare={canCompare}
+              isInCompare={currentIsInCompare}
+              compareCount={compareItems.length}
+              maxCompare={maxCompare}
+              onAddToProject={handleAddToProject}
+              hasProjects={projectCount > 0}
+              normalizedProfile={normalizedCurrentProfile}
+              weightAsMain={weightAsMain}
+            />
+          )
+        )}
+
+
+        {/* Desktop settings has its own full-page workshop above; the
+            mobile settings tab renders MobileSettingsContent. The
+            legacy SettingsDrawer is no longer used. */}
+
+        {/* Mobile Quick Calc FAB (review §04) — only on tabs without their
+            own bottom-right FAB. Calculator owns its numpad Save key;
+            Projects owns the + Create FAB. */}
+        {isMobile && (currentTab === "saved" || currentTab === "compare" || currentTab === "settings") && (
+          <QuickCalcFab onOpen={openQuickCalc} />
         )}
 
         <ContactDrawer open={showContactDrawer} onClose={() => setShowContactDrawer(false)} />
 
         <ChangelogDrawer open={showChangelogDrawer} onClose={() => setShowChangelogDrawer(false)} />
 
-        <CompareDrawer
-          open={showCompareDrawer && !(isMultiColumn && columnLayout.hasPanel("compare"))}
-          onClose={closeCompare}
-          items={compareItems}
-          onRemoveItem={removeCompareItem}
-          onClearAll={clearCompare}
-          maxCompare={maxCompare}
-          onAddToProject={handleAddExternalToProject}
-          hasProjects={projectCount > 0}
-        />
-
-        {!isMobile && !(isMultiColumn && columnLayout.hasPanel("projects")) && (
-          <ProjectDrawer
-            open={currentTab === "projects"}
-            onClose={navigateHome}
-            projects={projects}
-            activeProjectId={activeProjectId}
-            onSetActiveProject={setActiveProjectId}
-            onCreateProject={createProject}
-            onRenameProject={renameProject}
-            onDeleteProject={deleteProject}
-            onDuplicateProject={duplicateProject}
-            onRemoveCalculation={removeCalculation}
-            onUpdateCalculationNote={updateCalculationNote}
-            onUpdateProjectDescription={updateProjectDescription}
-            onUpdateProjectPaintingSettings={updateProjectPaintingSettings}
-            onLoadCalculation={handleLoad}
-            currentResult={result}
-            currentInput={result ? input : null}
-            onAddCalculation={addCalculation}
-            weightAsMain={weightAsMain}
-          />
+        {isMobile && (
+          <>
+            <MobileProfileSheet
+              open={showMobileProfileSheet}
+              onOpenChange={setShowMobileProfileSheet}
+              input={input}
+              dispatch={dispatch}
+              selectedProfile={selectedProfile}
+              issues={issues}
+              customPresets={presets}
+            />
+            <MobileMaterialSheet
+              open={showMobileMaterialSheet}
+              onOpenChange={setShowMobileMaterialSheet}
+              input={input}
+              dispatch={dispatch}
+              activeFamily={activeFamily}
+            />
+            <MobileMenuSheet
+              open={showMobileMenu}
+              onOpenChange={setShowMobileMenu}
+              currentTab={currentTab}
+              onNavigate={navigateToTab}
+              onOpenChangelog={() => setShowChangelogDrawer(true)}
+              onOpenContact={() => setShowContactDrawer(true)}
+              onReplayOnboarding={() => {
+                setOnboardingSession((session) => session + 1);
+                onboardedStore.set(false);
+              }}
+              projectCount={projectCount}
+              savedCount={saved.length}
+              compareCount={compareItems.length}
+            />
+          </>
         )}
+
+        {/* CompareDrawer was the old bottom-sheet view; comparison now lives
+            entirely on the /compare tab on every breakpoint. */}
+
+        {/* ProjectDrawer is no longer rendered on desktop — the
+            /projects route renders the new full-page
+            DesktopProjectsPage inline. The drawer component itself
+            stays in the codebase for future use. */}
 
         {(externalSource || result) && (
           <SaveToProjectModal
@@ -1522,31 +1297,35 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         )}
       </div>
 
-      <QuickCalcPalette quickCalc={quickCalc} onLoadEntry={handleQuickCalcLoad} presets={presets} />
+      <QuickCalcPalette
+        quickCalc={quickCalc}
+        onLoadEntry={handleQuickCalcLoad}
+        presets={presets}
+        saved={saved}
+        onLoadSaved={(entry) => {
+          markSavedUsed(entry.id);
+          const firstInput = entry.parts[0]?.input ?? entry.input;
+          handleLoad(firstInput);
+        }}
+        onSelectProfile={(profileId) => {
+          dispatch({ type: "SET_PROFILE", profileId });
+          navigateToTab("calculator");
+        }}
+        onAction={(action) => {
+          if (action === "new-calc") {
+            resetAll();
+            navigateToTab("calculator");
+          } else if (action === "new-project") {
+            navigateToTab("projects");
+          } else if (action === "settings") {
+            navigateToTab("settings");
+          } else if (action === "compare") {
+            navigateToTab("compare");
+          }
+        }}
+      />
 
       <ShortcutsModal open={showShortcutsModal} onClose={() => setShowShortcutsModal(false)} />
-
-      <TemplateBuilder
-        key={templateBuilderSession}
-        open={showTemplateBuilder}
-        onClose={() => {
-          setShowTemplateBuilder(false);
-          setExternalSource(null);
-        }}
-        onSave={handleConfirmSave}
-        onAppendToTemplate={handleAppendTemplateParts}
-        savedTemplates={saved.map((entry) => ({ id: entry.id, name: entry.name, partCount: entry.parts.length }))}
-        savedTemplateCount={
-          externalSource
-            ? getSavedCount(externalSource.result)
-            : result
-              ? getSavedCount(result)
-              : 0
-        }
-        defaultName={externalSource ? externalSourceDefaultName : defaultSaveName}
-        seedInput={externalSource?.input ?? input}
-        seedResult={externalSource?.result ?? result}
-      />
 
       <SavePresetModal
         open={presetModalOpen}
@@ -1554,6 +1333,18 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         onSave={handleConfirmSavePreset}
         defaultLabel={presetDefaultLabel}
         profileName={presetProfileName}
+      />
+
+      <OnboardingFlow
+        key={onboardingSession}
+        open={!onboarded}
+        initialGradeId={input.materialGradeId}
+        initialProfileId={input.profileId}
+        initialUnit={input.length.unit}
+        initialCurrency={input.currency}
+        dispatch={dispatch}
+        onComplete={() => onboardedStore.set(true)}
+        onSkip={() => onboardedStore.set(true)}
       />
     </>
   );

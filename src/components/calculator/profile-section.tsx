@@ -4,7 +4,7 @@ import type { CalculationInput, LengthUnit, ValidationIssue } from "@/lib/calcul
 import { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 import { METAL_FAMILIES, getMaterialGradesByFamily } from "@/lib/datasets/materials";
-import type { ProfileCategory, ProfileDefinition, ProfileId, MetalFamilyId } from "@/lib/datasets/types";
+import type { ProfileCategory, ProfileDefinition, MetalFamilyId } from "@/lib/datasets/types";
 import type { CalcAction } from "@/hooks/useCalculator";
 import type { DimensionPreset } from "@/hooks/usePresets";
 import { DimensionInput } from "./dimension-input";
@@ -13,6 +13,7 @@ import { SizeCombobox } from "./size-combobox";
 import { StandardsCombobox } from "./standards-combobox";
 import { triggerHaptic } from "@/lib/haptics";
 import { createBoolStore } from "@/lib/external-stores";
+import { ProfileGlyph } from "@/components/profiles/profile-glyph";
 
 const profilePickerPinnedStore = createBoolStore("ferroscale-profile-picker-pinned", false);
 
@@ -43,126 +44,6 @@ const CATEGORY_ICONS: Record<ProfileCategory, React.ReactNode> = {
   ),
 };
 
-/** SVG icon per profile — represents the cross-section shape. */
-const PROFILE_ICONS: Partial<Record<ProfileId, React.ReactNode>> = {
-  /* ── Bars (solid cross-sections) ── */
-  round_bar: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" stroke="none">
-      <circle cx="12" cy="12" r="9" />
-    </svg>
-  ),
-  square_bar: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" stroke="none">
-      <rect x="3" y="3" width="18" height="18" rx="1" />
-    </svg>
-  ),
-  flat_bar: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" stroke="none">
-      <rect x="2" y="7" width="20" height="10" rx="1" />
-    </svg>
-  ),
-
-  /* ── Tubes (hollow cross-sections) ── */
-  pipe: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" />
-    </svg>
-  ),
-  rectangular_tube: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="5" width="20" height="14" rx="1" /><rect x="6" y="8" width="12" height="8" rx="0.5" />
-    </svg>
-  ),
-  square_hollow: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="18" height="18" rx="1" /><rect x="7" y="7" width="10" height="10" rx="0.5" />
-    </svg>
-  ),
-
-  /* ── Plates & Sheets ── */
-  sheet: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="9" width="20" height="6" rx="0.5" />
-    </svg>
-  ),
-  plate: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="7" width="20" height="10" rx="1" />
-    </svg>
-  ),
-  chequered_plate: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="7" width="20" height="10" rx="1" />
-      <line x1="7" y1="7" x2="7" y2="17" strokeWidth="1" opacity="0.4" />
-      <line x1="12" y1="7" x2="12" y2="17" strokeWidth="1" opacity="0.4" />
-      <line x1="17" y1="7" x2="17" y2="17" strokeWidth="1" opacity="0.4" />
-    </svg>
-  ),
-  expanded_metal: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="7" width="20" height="10" rx="1" strokeWidth="2" />
-      <path d="M5 9l3 2-3 2M9 9l3 2-3 2M13 9l3 2-3 2M17 9l3 2-3 2" strokeWidth="1" opacity="0.5" />
-    </svg>
-  ),
-  corrugated_sheet: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M2 12c1.5-4 3-4 4.5 0s3 4 4.5 0 3-4 4.5 0 3 4 4.5 0" />
-    </svg>
-  ),
-
-  /* ── Structural — Beams ── */
-  beam_ipe_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 3h12M6 21h12M12 3v18" />
-    </svg>
-  ),
-  beam_ipn_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 3h12M6 21h12M12 3v18" strokeWidth="2.5" />
-    </svg>
-  ),
-  beam_hea_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 3h16M4 21h16M12 3v18" />
-    </svg>
-  ),
-  beam_heb_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <path d="M4 3h16M4 21h16M12 3v18" />
-    </svg>
-  ),
-  beam_hem_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3">
-      <path d="M4 3h16M4 21h16M12 3v18" />
-    </svg>
-  ),
-
-  /* ── Structural — Channels ── */
-  channel_upn_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 3h12M6 3v18M6 21h12" />
-    </svg>
-  ),
-  channel_upe_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 3h10M6 3v18M6 21h10" />
-    </svg>
-  ),
-
-  /* ── Structural — Angle ── */
-  angle: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <path d="M4 4v16h16" />
-    </svg>
-  ),
-
-  /* ── Structural — Tee ── */
-  tee_en: (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 4h16M12 4v17" />
-    </svg>
-  ),
-};
 
 /** Group profiles by category, preserving order of first occurrence. */
 function groupByCategory(profiles: ProfileDefinition[]) {
@@ -303,7 +184,7 @@ export const ProfileSection = memo(function ProfileSection({
         >
           <span className="flex min-w-0 items-center gap-2.5 text-foreground">
             <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent/12 text-accent ring-1 ring-accent/15">
-              {PROFILE_ICONS[input.profileId] ?? CATEGORY_ICONS[activeCategory]}
+              <ProfileGlyph profileId={input.profileId} size="sm" />
             </span>
             <span className="flex min-w-0 flex-col leading-tight">
               <span className="truncate text-sm font-semibold">
@@ -396,7 +277,7 @@ export const ProfileSection = memo(function ProfileSection({
                       }}
                       className={`${pillBaseClass} ${pillStateClass(isActive)}`}
                     >
-                      {PROFILE_ICONS[p.id]}
+                      <ProfileGlyph profileId={p.id} size="sm" />
                       {t(`dataset.profileShort.${p.id}`)}
                     </button>
                   );
