@@ -49,7 +49,7 @@ export const DesktopWorkstationTopbar = memo(function DesktopWorkstationTopbar({
             <circle cx="11" cy="11" r="8" />
             <path d="M21 21l-4.35-4.35" />
           </svg>
-          <span className="flex-1 text-left">{t("workstation.searchHint")}</span>
+          <span className="flex-1 truncate whitespace-nowrap text-left">{t("workstation.searchHint")}</span>
           <kbd className="inline-flex h-5 items-center rounded-md border border-border bg-surface-raised px-1.5 text-2xs font-semibold text-muted-faint">
             ⌘K
           </kbd>
