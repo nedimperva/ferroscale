@@ -2,21 +2,24 @@
 
 import { routing, type AppLocale } from "@/i18n/routing";
 
-export type AppTabId = "calculator" | "saved" | "projects" | "settings";
+export type AppTabId =
+  | "calculator"
+  | "saved"
+  | "projects"
+  | "compare"
+  | "settings";
 
 export interface AppTabDefinition {
   id: AppTabId;
   href: string;
-  segment: "" | "saved" | "projects" | "settings";
+  segment: "" | "saved" | "projects" | "compare" | "settings";
 }
 
-// `saved` is intentionally excluded from APP_TABS while Templates is
-// hidden in the redesign. The AppTabId union keeps the value so that
-// existing code (useSaved, TemplatesPanel, deep links) compiles; bringing
-// the tab back is just re-adding the entry here + the menu/sidebar rows.
 export const APP_TABS: readonly AppTabDefinition[] = [
   { id: "calculator", href: "/", segment: "" },
+  { id: "saved", href: "/saved", segment: "saved" },
   { id: "projects", href: "/projects", segment: "projects" },
+  { id: "compare", href: "/compare", segment: "compare" },
   { id: "settings", href: "/settings", segment: "settings" },
 ] as const;
 
@@ -43,9 +46,15 @@ export function getAppTabFromPathname(pathname: string): AppTabId | null {
       return "saved";
     case "/projects":
       return "projects";
+    case "/compare":
+      return "compare";
     case "/settings":
       return "settings";
     default:
+      // Sub-routes like /projects/<id> still belong to the projects tab so
+      // the sidebar / hamburger highlight the right entry while the user is
+      // drilled in.
+      if (path.startsWith("/projects/")) return "projects";
       return null;
   }
 }

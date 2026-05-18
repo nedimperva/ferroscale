@@ -233,12 +233,20 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const priceFieldDisplay = activeField === "price" ? buffer || "0" : fmtNumber(input.unitPrice ?? 0, locale, { maxFrac: 2 });
 
   return (
-    <div className="flex flex-col gap-3 px-3 pt-2" style={{ paddingBottom: scrollPaddingBottom }}>
-      {/* Result card */}
+    <div
+      className="flex h-full min-h-0 flex-1 flex-col justify-end gap-2 overflow-hidden px-3 pt-2"
+      style={{
+        paddingBottom: `max(${scrollPaddingBottom}, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))`,
+      }}
+    >
+      {/* Bottom-anchored stack — result + controls + numpad. The whole
+          group hugs the bottom of the viewport so the thumb can reach
+          every key; any leftover height becomes a quiet breathing room
+          between the header and the result card. */}
       <button
         type="button"
         onClick={onOpenResult}
-        className="panel-base rounded-[1.4rem] bg-surface px-4 pb-3 pt-3 text-left shadow-[var(--panel-shadow-soft)] active:scale-[0.995] transition-transform"
+        className="panel-base shrink-0 rounded-[1.4rem] bg-surface px-4 pb-2.5 pt-2.5 text-left shadow-[var(--panel-shadow-soft)] [touch-action:manipulation] active:scale-[0.995] transition-transform [will-change:transform]"
       >
         <div className="flex items-center justify-between">
           <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
@@ -268,7 +276,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
 
       {/* Profile + Material chip cards — fixed height so the grid
           doesn't reflow when labels change length. */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid shrink-0 grid-cols-2 gap-2">
         <button
           type="button"
           onClick={onOpenProfilePicker}
@@ -277,8 +285,11 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-raised text-foreground">
             <ProfileGlyph profileId={input.profileId} size="sm" />
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-base font-bold tracking-tight tabular-nums text-foreground">
+          <span className="flex min-w-0 flex-col">
+            <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">
+              {t("mobileCalc.profile")}
+            </span>
+            <span className="truncate text-sm font-semibold tracking-tight tabular-nums text-foreground">
               {profileSpec}
             </span>
           </span>
@@ -303,7 +314,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
       </div>
 
       {/* Length / Pieces / Price strip */}
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="grid shrink-0 grid-cols-3 gap-1.5">
         <FieldChip
           label={t("mobileCalc.length")}
           value={lengthDisplay}
@@ -397,7 +408,7 @@ function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone }:
   const t = useTranslations("mobileCalc");
 
   return (
-    <div className="rounded-[1.25rem] border border-border bg-surface p-2 shadow-[var(--panel-shadow-soft)]">
+    <div className="shrink-0 rounded-[1.25rem] border border-border bg-surface p-1.5 shadow-[var(--panel-shadow-soft)]">
       <div className="grid grid-cols-4 gap-1.5">
         <PadKey kind="digit" label="7" onPress={() => onDigit("7")} />
         <PadKey kind="digit" label="8" onPress={() => onDigit("8")} />
@@ -451,7 +462,7 @@ function PadKey({ kind, label, small, ariaLabel, children, onPress }: PadKeyProp
       type="button"
       onClick={onPress}
       aria-label={ariaLabel}
-      className={`flex h-14 items-center justify-center rounded-2xl tracking-tight tabular-nums active:bg-surface-pad-press active:scale-[0.97] transition-transform ${baseFontClasses} ${colorClasses}`}
+      className={`flex h-[3.25rem] select-none items-center justify-center rounded-2xl tracking-tight tabular-nums [-webkit-tap-highlight-color:transparent] [touch-action:manipulation] [will-change:transform] active:bg-surface-pad-press active:scale-[0.96] transition-transform duration-75 sm:h-14 ${baseFontClasses} ${colorClasses}`}
       style={{
         boxShadow:
           kind === "done"

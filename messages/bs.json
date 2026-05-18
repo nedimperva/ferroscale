@@ -11,12 +11,16 @@
       "description": "Posaljite prijavu ili nas kontaktirajte u vezi FerroScale aplikacije."
     },
     "saved": {
-      "title": "Sabloni - FerroScale",
-      "description": "Pregledajte i primijenite ponovo upotrebljive sablone izracuna u FerroScale aplikaciji."
+      "title": "Sacuvano - FerroScale",
+      "description": "Pregledajte i ponovo otvorite sacuvane profile, duzine i materijale u FerroScale aplikaciji."
     },
     "projects": {
       "title": "Projekti - FerroScale",
       "description": "Upravljajte projektnim kolekcijama i izvozima u FerroScale aplikaciji."
+    },
+    "compare": {
+      "title": "Uporedi - FerroScale",
+      "description": "Uporedo poredjenje profila, materijala i mase u FerroScale aplikaciji."
     },
     "settings": {
       "title": "Postavke - FerroScale",
@@ -51,8 +55,9 @@
   },
   "tabs": {
     "calculator": "Kalkulator",
-    "saved": "Sabloni",
+    "saved": "Sacuvano",
     "projects": "Projekti",
+    "compare": "Uporedi",
     "settings": "Postavke"
   },
   "theme": {
@@ -159,6 +164,17 @@
     "searchHint": "Pretrazi profil, preset ili kalkulaciju…",
     "new": "Novo"
   },
+  "workstationPane": {
+    "profileHint": "Kategorija → Velicina",
+    "materialHint": "Dugi pritisak za prilagodjenu gustinu",
+    "advancedTitle": "Napredno",
+    "advancedHint": "PDV, otpad %, valuta, zaokruzivanje",
+    "vat": "PDV",
+    "waste": "Otpad",
+    "currency": "Valuta",
+    "rounding": "Zaokruzivanje",
+    "roundingDefault": "Zadano"
+  },
   "menu": {
     "title": "Meni",
     "more": "Vise"
@@ -214,6 +230,81 @@
     "duplicate": "Dupliraj",
     "delete": "Obrisi"
   },
+  "mobileCompare": {
+    "title": "Uporedi",
+    "backAria": "Nazad na kalkulator",
+    "swapAria": "Zamijeni stavke",
+    "removeAria": "Ukloni iz poredjenja",
+    "heavier": "Teze",
+    "deltaSummary": "Δ {delta} kg · {percent}%",
+    "base": "Baza",
+    "specTitle": "Jedno do drugog",
+    "perMetre": "Po metru",
+    "perPiece": "Po komadu",
+    "length": "Duzina",
+    "price": "Cijena",
+    "pricePerKg": "€ / kg",
+    "kg": "kg",
+    "addAnother": "Dodaj jos",
+    "addAnotherHint": "Dodirni da otvoris kalkulator",
+    "saveBoth": "Sacuvaj oboje",
+    "clearAll": "Ocisti",
+    "openCalculator": "Otvori Kalkulator →",
+    "emptyTitle": "Zakaci dvije kalkulacije za poredjenje",
+    "emptyHint": "Pokreni kalkulaciju, zatim dodirni Uporedi da je dodas ovdje."
+  },
+  "desktopCompare": {
+    "title": "Uporedi",
+    "subtitle": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
+    "subtitleWithGeometry": "{count, plural, one {# stavka} few {# stavke} other {# stavki}} · {lengthQty} · {grade}",
+    "emptySubtitle": "Jos nista zakaceno",
+    "reset": "Resetuj",
+    "addColumn": "Dodaj kolonu",
+    "removeAria": "Ukloni iz poredjenja",
+    "base": "BAZA",
+    "specTitle": "Jedno do drugog",
+    "linearWeight": "Linearna tezina",
+    "lengthPieces": "Duzina × komadi",
+    "weightPerPiece": "Tezina po komadu",
+    "totalWeight": "Ukupna tezina",
+    "totalLength": "Ukupna duzina",
+    "unitPrice": "Jedinicna cijena",
+    "totalCost": "Ukupna cijena",
+    "openCalculator": "Otvori Kalkulator →",
+    "emptyTitle": "Zakaci kalkulacije za poredjenje",
+    "emptyHint": "Pokreni kalkulaciju, zatim dodirni Uporedi da je dodas kao kolonu."
+  },
+  "mobileSaved": {
+    "title": "Sacuvano",
+    "countSubtitle": "{count, plural, one {# preset · sortirano po skorasnjem} few {# preseta · sortirano po skorasnjem} other {# preseta · sortirano po skorasnjem}}",
+    "emptySubtitle": "Jos nista ovdje",
+    "emptyTitle": "Sacuvaj kalkulaciju",
+    "emptyBody": "Pokreni kalkulaciju, zatim dodirni Sacuvaj da zadrzis profil, duzinu i materijal za sljedeci put.",
+    "emptyCta": "Otvori Kalkulator",
+    "filterAll": "Sve",
+    "filterUnfiled": "Bez taga",
+    "filteredEmptyTitle": "Nista ne odgovara filteru",
+    "filteredEmptyHint": "Odaberi drugi tag ili ukloni filter.",
+    "searchAria": "Pretrazi sacuvane presete",
+    "searchPlaceholder": "Pretraga…",
+    "moreAria": "Vise opcija",
+    "rowMenuAria": "Akcije reda",
+    "duplicate": "Dupliraj",
+    "remove": "Ukloni",
+    "confirmRemove": "Ukloniti \"{name}\" iz sacuvanih preseta?"
+  },
+  "desktopSaved": {
+    "filter": "Filter",
+    "newPreset": "Novi preset",
+    "rename": "Preimenuj",
+    "colProfile": "Profil",
+    "colMaterial": "Materijal",
+    "colGeometry": "Geometrija",
+    "colWeight": "Tezina",
+    "colPrice": "Cijena",
+    "colUpdated": "Azurirano",
+    "loadAria": "Ucitaj \"{name}\" u kalkulator"
+  },
   "desktopProject": {
     "headerSummary": "{count, plural, one {# dio} few {# dijela} other {# dijelova}} · {weight} kg · {currency} {cost}",
     "noActiveTitle": "Nema aktivnog projekta",
@@ -227,6 +318,76 @@
     "openProjectsTab": "Otvori Projekte",
     "projectTotal": "Ukupno projekat",
     "cost": "Cijena"
+  },
+  "mobileProjectDetail": {
+    "backAria": "Nazad na projekte",
+    "moreAria": "Vise akcija",
+    "rename": "Preimenuj",
+    "delete": "Obrisi",
+    "confirmDelete": "Obrisati projekat \"{name}\"? Dijelovi ce biti uklonjeni.",
+    "confirmRemovePart": "Ukloniti ovaj dio iz projekta?",
+    "removePartAria": "Ukloni dio",
+    "heroLabel": "Ukupno projekat · uzivo",
+    "heroSub": "{count, plural, one {# dio} few {# dijela} other {# dijelova}} · {material}",
+    "mixed": "mjesano",
+    "parts": "Dijelovi",
+    "sortHint": "Sortiraj · dodano",
+    "emptyTitle": "Jos nema dijelova",
+    "emptyHint": "Dodaj kalkulaciju iz kalkulatora da je vidis ovdje.",
+    "addFirstPart": "Dodaj prvi dio",
+    "addToProject": "Dodaj u projekat",
+    "addToProjectHint": "Otvori Kalkulator → dodirni Dodaj",
+    "addPart": "Dodaj dio"
+  },
+  "desktopProjectDetail": {
+    "breadcrumbProjects": "Projekti",
+    "editingPill": "Uredjivanje",
+    "exportCsv": "Izvoz CSV",
+    "share": "Podijeli",
+    "addPart": "Dodaj dio",
+    "delete": "Obrisi",
+    "confirmDelete": "Obrisati projekat \"{name}\"? Dijelovi ce biti uklonjeni.",
+    "confirmRemovePart": "Ukloniti ovaj dio iz projekta?",
+    "heroLabel": "Projekat · uzivo ukupno",
+    "composition": "Sastav po tezini",
+    "avgPerKg": "prosjek {value} {currency}/kg",
+    "partsCount": "Dijelovi · {count}",
+    "sortAdded": "Sortiraj · dodano",
+    "groupByProfile": "Grupisi · po profilu",
+    "colProfile": "Profil",
+    "colMaterial": "Materijal",
+    "colGeometry": "Geometrija",
+    "colKgPerM": "kg/m",
+    "colWeight": "Tezina",
+    "colPrice": "Cijena",
+    "loadAria": "Ucitaj u kalkulator",
+    "rowMenuAria": "Akcije reda",
+    "loadIntoCalc": "Ucitaj u kalkulator",
+    "removePart": "Ukloni dio",
+    "emptyTableHint": "Jos nema dijelova — dodaj prvi ispod.",
+    "addRowHint": "Dodaj dio — otvara kalkulator zakacen na ovaj projekat",
+    "detailsTitle": "Detalji projekta",
+    "statusLabel": "Status",
+    "statusValue": "U toku",
+    "ownerLabel": "Vlasnik",
+    "ownerValue": "Vi",
+    "createdLabel": "Kreiran",
+    "updatedLabel": "Azuriran",
+    "defaultMaterialLabel": "Podrazumijevani materijal",
+    "defaultMaterialValue": "Celik S235",
+    "wasteLabel": "Dozvoljeni otpad",
+    "wasteValue": "+5%",
+    "notesTitle": "Biljeske",
+    "notesMarkdown": "Markdown",
+    "notesPlaceholder": "Dodaj biljeske za projekat…",
+    "historyTitle": "Istorija",
+    "historyAdded": "Dodan {part}",
+    "historyUpdated": "Projekat azuriran",
+    "historyCreated": "Kreiran",
+    "justNow": "Upravo",
+    "minutesAgo": "{count, plural, one {prije # min} few {prije # min} other {prije # min}}",
+    "hoursAgo": "{count, plural, one {prije # h} few {prije # h} other {prije # h}}",
+    "daysAgo": "{count, plural, one {prije # dan} few {prije # dana} other {prije # dana}}"
   },
   "mobileTabHero": {
     "savedCount": "{count, plural, one {# sablon sacuvan} few {# sablona sacuvana} other {# sablona sacuvano}}",
@@ -298,11 +459,11 @@
     "title": "FerroScale",
     "calculator": "Kalkulator",
     "settings": "Postavke",
-    "saved": "Sabloni",
+    "saved": "Sacuvano",
     "projects": "Projekti",
     "projectsCount": "Projekti ({count})",
-    "compare": "Poredi",
-    "compareCount": "Poredi ({count})",
+    "compare": "Uporedi",
+    "compareCount": "Uporedi ({count})",
     "reportIssue": "Prijavi problem",
     "report": "Prijava",
     "whatsNew": "Novosti"
@@ -973,6 +1134,36 @@
     "presetPickerHint": "↑↓ za navigaciju · Enter za odabir · Esc za zatvaranje",
     "noPresets": "Nema odgovarajucih favorita",
     "atTriggerHint": "Ukucajte @ za umetanje sacuvanog favorita"
+  },
+  "standardSizes": {
+    "title": "Standardi",
+    "placeholder": "Pretrazi standarde ili sacuvane presete…",
+    "noResults": "Nema rezultata",
+    "open": "Otvori listu standarda",
+    "close": "Zatvori listu standarda",
+    "standardHint": "Ugradjena standardna velicina",
+    "savedHint": "Vas sacuvani preset"
+  },
+  "palette": {
+    "profilesSection": "Profili · {count} rezultata",
+    "savedSection": "Sacuvano · {count} rezultata",
+    "sizesSection": "Velicine · {count} rezultata",
+    "actionsSection": "Akcije",
+    "parserSection": "Parser · trenutna tezina",
+    "escClose": "esc za zatvaranje",
+    "standardSize": "Standard",
+    "customPreset": "Sacuvani preset",
+    "action": {
+      "newCalc": "Novi izracun",
+      "newProject": "Novi projekat",
+      "openSettings": "Otvori Postavke",
+      "openCompare": "Prikazi poredenje"
+    },
+    "footer": {
+      "navigate": "navigacija",
+      "select": "odabir",
+      "loadClose": "ucitaj + zatvori"
+    }
   },
   "shortcuts": {
     "title": "Precice na tastaturi",
