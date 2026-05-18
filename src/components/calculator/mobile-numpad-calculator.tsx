@@ -236,7 +236,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
     <div
       className="flex h-full min-h-0 flex-1 flex-col justify-end gap-2 overflow-hidden px-3 pt-2"
       style={{
-        paddingBottom: `max(${scrollPaddingBottom}, env(safe-area-inset-bottom, 0px))`,
+        paddingBottom: `max(${scrollPaddingBottom}, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))`,
       }}
     >
       {/* Bottom-anchored stack — result + controls + numpad. The whole
