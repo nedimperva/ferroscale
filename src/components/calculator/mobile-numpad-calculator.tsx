@@ -13,6 +13,7 @@ import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { triggerHaptic } from "@/lib/haptics";
 import { ProfileGlyph } from "@/components/profiles/profile-glyph";
+import { SampleBanner } from "@/components/calculator/sample-banner";
 
 type ActiveField = "length" | "quantity" | "price";
 
@@ -193,6 +194,13 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
     if (result) onOpenResult();
   }, [onOpenResult, result]);
 
+  const handleTrySample = useCallback(() => {
+    dispatch({ type: "SET_PROFILE_AND_SIZE", profileId: "beam_hea_en", sizeId: "hea120" });
+    dispatch({ type: "SET_LENGTH_UNIT", unit: "m" });
+    dispatch({ type: "SET_LENGTH_VALUE", value: 6 });
+    dispatch({ type: "SET_QUANTITY", value: 2 });
+  }, [dispatch]);
+
   const totalWeightKg = result?.totalWeightKg ?? 0;
   const grandTotal = result?.grandTotalAmount ?? 0;
   const currencySymbol = CURRENCY_SYMBOLS[input.currency] ?? input.currency;
@@ -238,6 +246,10 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         paddingBottom: `max(${scrollPaddingBottom}, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))`,
       }}
     >
+      {/* First-run sample banner — sits above the bottom-anchored stack
+          (review §11). Hides once a result exists or the user dismisses. */}
+      <SampleBanner hasResult={hasResult} onTrySample={handleTrySample} />
+
       {/* Bottom-anchored stack — result + controls + numpad. The whole
           group hugs the bottom of the viewport so the thumb can reach
           every key; any leftover height becomes a quiet breathing room

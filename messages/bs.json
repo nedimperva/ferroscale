@@ -1199,5 +1199,11 @@
     "removeTitle": "Ukloniti ovu stavku?",
     "deleteTitle": "Obrisati ovaj projekat?",
     "removePartTitle": "Ukloniti ovaj dio?"
+  },
+  "sampleBanner": {
+    "title": "Probaj uzorak kalkulacije",
+    "hint": "HEA 120 × 6 m, S235JR — jedan dodir za ucitati",
+    "cta": "Probaj",
+    "dismiss": "Zatvori"
   }
 }

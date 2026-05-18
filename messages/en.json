@@ -1199,5 +1199,11 @@
     "removeTitle": "Remove this item?",
     "deleteTitle": "Delete this project?",
     "removePartTitle": "Remove this part?"
+  },
+  "sampleBanner": {
+    "title": "Try a sample calculation",
+    "hint": "HEA 120 × 6 m, S235JR — one tap to load",
+    "cta": "Try it",
+    "dismiss": "Dismiss"
   }
 }
