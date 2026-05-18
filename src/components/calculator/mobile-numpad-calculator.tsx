@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type {
   CalculationInput,
@@ -45,11 +45,24 @@ function fmtNumber(value: number, locale: string, opts: { maxFrac: number; minFr
   });
 }
 
+/**
+ * Weight display formatter. ≥1000 kg auto-switches to tonnes (review §03)
+ * so the number stays within the result card on small phones. Caller
+ * decides which unit suffix to render via {@link selectWeightUnit}.
+ */
 function fmtWeight(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0.0";
-  if (value >= 1000) return fmtNumber(value, locale, { maxFrac: 0 });
+  if (value >= 1000) {
+    const tonnes = value / 1000;
+    if (tonnes >= 100) return fmtNumber(tonnes, locale, { maxFrac: 1, minFrac: 1 });
+    return fmtNumber(tonnes, locale, { maxFrac: 2, minFrac: 2 });
+  }
   if (value >= 100) return fmtNumber(value, locale, { maxFrac: 1, minFrac: 1 });
   return fmtNumber(value, locale, { maxFrac: 2, minFrac: 1 });
+}
+
+function selectWeightUnit(value: number): "kg" | "t" {
+  return Number.isFinite(value) && value >= 1000 ? "t" : "kg";
 }
 
 function fmtPrice(value: number, locale: string): string {
@@ -104,40 +117,24 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const t = useTranslations();
   const locale = useLocale();
   const [activeField, setActiveField] = useState<ActiveField>("length");
-  const [buffer, setBuffer] = useState<string>("");
-  const selfCommitRef = useRef<{ field: ActiveField; value: number; unit: string } | null>(null);
+  const [draft, setDraft] = useState<{ field: ActiveField; value: string } | null>(null);
 
-  // Keep the displayed keypad buffer aligned with changes from settings,
-  // onboarding, or loaded entries without erasing in-progress input like "1.".
-  useEffect(() => {
-    const currentValue =
-      activeField === "length"
-        ? input.length.value
-        : activeField === "quantity"
-          ? input.quantity
-          : input.unitPrice;
-    const selfCommit = selfCommitRef.current;
-    if (
-      selfCommit &&
-      selfCommit.field === activeField &&
-      selfCommit.unit === input.length.unit &&
-      Object.is(selfCommit.value, Number(currentValue ?? 0))
-    ) {
-      selfCommitRef.current = null;
-      return;
-    }
-
-    selfCommitRef.current = null;
-    if (activeField === "length") setBuffer(inputAsString(input.length.value));
-    else if (activeField === "quantity") setBuffer(inputAsString(input.quantity));
-    else setBuffer(inputAsString(input.unitPrice));
-  }, [activeField, input.length.value, input.length.unit, input.quantity, input.unitPrice]);
+  const currentFieldValue =
+    activeField === "length"
+      ? input.length.value
+      : activeField === "quantity"
+        ? input.quantity
+        : input.unitPrice;
+  const draftValue = draft?.field === activeField ? draft.value : null;
+  const buffer =
+    draftValue != null && Object.is(parseBuffer(draftValue), Number(currentFieldValue ?? 0))
+      ? draftValue
+      : inputAsString(currentFieldValue);
 
   const commitBuffer = useCallback(
     (nextBuffer: string) => {
-      setBuffer(nextBuffer);
+      setDraft({ field: activeField, value: nextBuffer });
       const value = parseBuffer(nextBuffer);
-      selfCommitRef.current = { field: activeField, value, unit: input.length.unit };
       if (activeField === "length") {
         dispatch({ type: "SET_LENGTH_VALUE", value });
       } else if (activeField === "quantity") {
@@ -147,7 +144,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         dispatch({ type: "SET_UNIT_PRICE", value });
       }
     },
-    [activeField, dispatch, input.length.unit],
+    [activeField, dispatch],
   );
 
   const handleDigit = useCallback(
@@ -204,7 +201,9 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
   const animatedTotal = useAnimatedNumber(grandTotal);
 
   const weightDisplay = fmtWeight(animatedWeight, locale);
+  const weightUnit = selectWeightUnit(animatedWeight);
   const priceDisplay = fmtPrice(animatedTotal, locale);
+  const hasResult = result != null && totalWeightKg > 0;
 
   const profileLabel =
     normalizedProfile?.shortLabel ?? t(`dataset.profileShort.${input.profileId}`);
@@ -246,29 +245,31 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
       <button
         type="button"
         onClick={onOpenResult}
-        className="panel-base shrink-0 rounded-[1.4rem] bg-surface px-4 pb-2.5 pt-2.5 text-left shadow-[var(--panel-shadow-soft)] [touch-action:manipulation] active:scale-[0.995] transition-transform [will-change:transform]"
+        className="panel-base shrink-0 rounded-[var(--radius-card)] bg-surface px-4 pb-2.5 pt-2.5 text-left shadow-[var(--panel-shadow-soft)] [touch-action:manipulation] active:scale-[0.995] transition-transform [will-change:transform]"
       >
         <div className="flex items-center justify-between">
-          <span className="text-2xs font-bold uppercase tracking-[0.14em] text-muted">
+          <span className="text-2xs font-bold uppercase tracking-[var(--label-tracking)] text-muted">
             {t("result.totalWeight")}
           </span>
-          <span className="inline-flex items-center gap-1.5 text-2xs font-semibold text-green-text">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-text" />
-            {isPending ? t("mobileCalc.calculating") : t("mobileCalc.live")}
-          </span>
+          {hasResult && (
+            <span className="inline-flex items-center gap-1.5 text-2xs font-semibold text-green-text">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-text" />
+              {isPending ? t("mobileCalc.calculating") : t("mobileCalc.live")}
+            </span>
+          )}
         </div>
         <div className="mt-1 flex items-baseline gap-1.5">
           <span
-            className="text-[3.75rem] font-bold leading-[0.95] tracking-[-0.04em] tabular-nums text-foreground"
+            className="select-text text-[clamp(2.25rem,12vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.04em] tabular-nums text-foreground"
             data-testid="mobile-numpad-weight"
           >
             {weightDisplay}
           </span>
-          <span className="text-xl font-semibold tracking-tight text-accent">kg</span>
+          <span className="text-xl font-semibold tracking-tight text-accent">{weightUnit}</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
           <span className="truncate text-xs text-foreground-secondary">{summary}</span>
-          <span className="shrink-0 font-semibold tabular-nums text-sm text-foreground-secondary">
+          <span className="select-text shrink-0 font-semibold tabular-nums text-sm text-foreground-secondary">
             {currencySymbol} {priceDisplay}
           </span>
         </div>
@@ -280,13 +281,13 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         <button
           type="button"
           onClick={onOpenProfilePicker}
-          className="flex h-14 items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
+          className="flex h-14 items-center gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-raised text-foreground">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-pad)] bg-surface-raised text-foreground">
             <ProfileGlyph profileId={input.profileId} size="sm" />
           </span>
           <span className="flex min-w-0 flex-col">
-            <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">
+            <span className="text-[0.6rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted">
               {t("mobileCalc.profile")}
             </span>
             <span className="truncate text-sm font-semibold tracking-tight tabular-nums text-foreground">
@@ -297,13 +298,13 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         <button
           type="button"
           onClick={onOpenMaterialPicker}
-          className="flex h-14 items-center gap-2.5 rounded-2xl border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
+          className="flex h-14 items-center gap-2.5 rounded-[var(--radius-card)] border border-border bg-surface px-3 text-left active:bg-surface-raised transition-colors"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.65rem] bg-surface-emphasis">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-pad)] bg-surface-emphasis">
             <span className="h-3.5 w-3.5 rounded-[0.3rem] bg-accent" />
           </span>
           <span className="flex min-w-0 flex-col">
-            <span className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">
+            <span className="text-[0.6rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted">
               {t("mobileCalc.material")}
             </span>
             <span className="truncate text-sm font-semibold tracking-tight text-foreground">
@@ -346,6 +347,7 @@ export const MobileNumpadCalculator = memo(function MobileNumpadCalculator({
         onClear={handleClear}
         onNext={handleNextField}
         onDone={handleDone}
+        hasUnsavedResult={hasResult}
       />
     </div>
   );
@@ -364,14 +366,14 @@ function FieldChip({ label, value, unit, active, onClick }: FieldChipProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`relative h-[3.75rem] overflow-hidden rounded-[0.85rem] border px-2.5 py-2 text-left transition-colors ${
+      className={`relative h-[3.75rem] overflow-hidden rounded-[var(--radius-control)] border px-2.5 py-2 text-left transition-colors ${
         active
           ? "border-accent-border bg-accent-surface"
           : "border-border bg-surface"
       }`}
     >
       <span
-        className={`block text-[0.6rem] font-bold uppercase tracking-[0.08em] ${
+        className={`block text-[0.6rem] font-bold uppercase tracking-[var(--label-tracking-chip)] ${
           active ? "text-accent-text" : "text-muted"
         }`}
       >
@@ -402,13 +404,14 @@ interface NumpadProps {
   onClear: () => void;
   onNext: () => void;
   onDone: () => void;
+  hasUnsavedResult: boolean;
 }
 
-function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone }: NumpadProps) {
+function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone, hasUnsavedResult }: NumpadProps) {
   const t = useTranslations("mobileCalc");
 
   return (
-    <div className="shrink-0 rounded-[1.25rem] border border-border bg-surface p-1.5 shadow-[var(--panel-shadow-soft)]">
+    <div className="shrink-0 rounded-[var(--radius-card)] border border-border bg-surface p-1.5 shadow-[var(--panel-shadow-soft)]">
       <div className="grid grid-cols-4 gap-1.5">
         <PadKey kind="digit" label="7" onPress={() => onDigit("7")} />
         <PadKey kind="digit" label="8" onPress={() => onDigit("8")} />
@@ -433,7 +436,12 @@ function Numpad({ onDigit, onTripleZero, onBackspace, onClear, onNext, onDone }:
         <PadKey kind="digit" label="." onPress={() => onDigit(".")} />
         <PadKey kind="digit" label="0" onPress={() => onDigit("0")} />
         <PadKey kind="digit" label="000" small onPress={onTripleZero} />
-        <PadKey kind="done" label={t("done")} small onPress={onDone} />
+        <PadKey
+          kind="done"
+          label={hasUnsavedResult ? t("save") : t("done")}
+          small
+          onPress={onDone}
+        />
       </div>
     </div>
   );

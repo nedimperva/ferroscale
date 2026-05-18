@@ -169,6 +169,26 @@ export const DesktopComparePage = memo(function DesktopComparePage({
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto px-6 py-5">
+        {items.length === 2 && base && (() => {
+          const other = items[1];
+          const pct = deltaPercent(base, other);
+          const heavier = pct >= 0 ? other : base;
+          const lighter = heavier.id === other.id ? base : other;
+          const heavierShort = heavier.normalizedProfile.shortLabel.split(/\s/).slice(0, 2).join(" ");
+          const lighterShort = lighter.normalizedProfile.shortLabel.split(/\s/).slice(0, 2).join(" ");
+          return (
+            <p className="text-pretty text-sm leading-snug text-foreground-secondary">
+              {Math.abs(pct) < 0.5
+                ? t("deltaEqualSentence", { heavier: heavierShort, lighter: lighterShort })
+                : t("deltaSentence", {
+                    heavier: heavierShort,
+                    lighter: lighterShort,
+                    percent: Math.abs(pct).toFixed(0),
+                  })}
+            </p>
+          );
+        })()}
+
         {/* Cards row */}
         <div
           className="grid gap-3.5"

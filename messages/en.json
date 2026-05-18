@@ -158,7 +158,8 @@
     "family": "Family",
     "clear": "Clear",
     "next": "Next",
-    "done": "Done"
+    "done": "Done",
+    "save": "Save →"
   },
   "workstation": {
     "searchHint": "Find profile, preset, or calc…",
@@ -237,6 +238,8 @@
     "removeAria": "Remove from comparison",
     "heavier": "Heavier",
     "deltaSummary": "Δ {delta} kg · {percent}%",
+    "deltaSentence": "{heavier} is {percent}% heavier than {lighter}.",
+    "deltaEqualSentence": "{heavier} and {lighter} weigh the same.",
     "base": "Base",
     "specTitle": "Side-by-side",
     "perMetre": "Per metre",
@@ -272,7 +275,9 @@
     "totalCost": "Total cost",
     "openCalculator": "Open Calculator →",
     "emptyTitle": "Pin calculations to compare",
-    "emptyHint": "Run a calculation, then tap Compare to add it as a column."
+    "emptyHint": "Run a calculation, then tap Compare to add it as a column.",
+    "deltaSentence": "{heavier} is {percent}% heavier than {lighter}.",
+    "deltaEqualSentence": "{heavier} and {lighter} weigh the same."
   },
   "mobileSaved": {
     "title": "Saved",
@@ -466,7 +471,9 @@
     "compareCount": "Compare ({count})",
     "reportIssue": "Report an issue",
     "report": "Report",
-    "whatsNew": "What's New"
+    "whatsNew": "What's New",
+    "workspaceGroup": "Workspace",
+    "libraryGroup": "Library"
   },
   "columns": {
     "addColumn": "Add Column",

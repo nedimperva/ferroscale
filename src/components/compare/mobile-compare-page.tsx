@@ -182,6 +182,17 @@ export const MobileComparePage = memo(function MobileComparePage({
         }}
       />
 
+      {/* Natural-language summary (review §09): one sentence beats N% chip. */}
+      <p className="mx-3.5 text-pretty text-xs leading-snug text-foreground-secondary">
+        {Math.abs(pct) < 0.5
+          ? t("deltaEqualSentence", { heavier: heavierShort, lighter: lighterShort })
+          : t("deltaSentence", {
+              heavier: heavierShort,
+              lighter: lighterShort,
+              percent: Math.abs(pct).toFixed(0),
+            })}
+      </p>
+
       {/* Sliding scale — visual anchor. */}
       <div className="mx-3.5 rounded-2xl border border-border bg-surface px-4 py-3.5">
         <div className="flex items-center justify-between">

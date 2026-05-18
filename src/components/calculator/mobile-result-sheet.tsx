@@ -43,9 +43,17 @@ function fmt(value: number, locale: string, decimals: number): string {
 
 function fmtWeight(value: number, locale: string): string {
   if (!Number.isFinite(value) || value === 0) return "0.0";
-  if (value >= 1000) return fmt(value, locale, 0);
+  if (value >= 1000) {
+    const tonnes = value / 1000;
+    if (tonnes >= 100) return fmt(tonnes, locale, 1);
+    return fmt(tonnes, locale, 2);
+  }
   if (value >= 100) return fmt(value, locale, 1);
   return fmt(value, locale, 2);
+}
+
+function weightUnitFor(value: number): "kg" | "t" {
+  return Number.isFinite(value) && value >= 1000 ? "t" : "kg";
 }
 
 export const MobileResultSheet = memo(function MobileResultSheet({
@@ -75,6 +83,14 @@ export const MobileResultSheet = memo(function MobileResultSheet({
   const animatedWeight = useAnimatedNumber(result.totalWeightKg);
 
   const profileShort = normalizedProfile?.shortLabel ?? result.profileLabel;
+  const compareActionLabel = isInCompare
+    ? t("compareTray.pinned")
+    : canCompare
+      ? t("compareTray.pin")
+      : t("result.compareFull", { max: maxCompare });
+  const compareActionTitle = isInCompare
+    ? t("result.inCompareCount", { count: compareCount, max: maxCompare })
+    : compareActionLabel;
 
   const perPieceKg = result.quantity > 0 ? result.totalWeightKg / result.quantity : 0;
   const totalLengthM =
@@ -155,15 +171,15 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                   {profileShort} · {result.gradeLabel}
                 </span>
                 <div className="mt-1 flex items-baseline gap-1.5">
-                  <span className="text-[4.25rem] font-bold leading-[0.9] tracking-[-0.045em] tabular-nums text-foreground">
+                  <span className="select-text text-[clamp(2.75rem,13vw,4.25rem)] font-bold leading-[0.9] tracking-[-0.045em] tabular-nums text-foreground">
                     {fmtWeight(animatedWeight, locale)}
                   </span>
                   <span className="text-2xl font-semibold tracking-tight text-accent">
-                    kg
+                    {weightUnitFor(animatedWeight)}
                   </span>
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5 text-sm">
-                  <span className="font-semibold tabular-nums text-foreground-secondary">
+                  <span className="select-text font-semibold tabular-nums text-foreground-secondary">
                     {currency} {fmt(animatedTotal, locale, 2)}
                   </span>
                   <span className="text-muted">
@@ -214,6 +230,7 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                   onCompare?.();
                 }}
                 disabled={!canCompare && !isInCompare}
+                title={compareActionTitle}
                 className={`flex h-11 items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-colors disabled:opacity-50 ${
                   isInCompare
                     ? "border-accent-border bg-accent-surface text-accent-text"
@@ -224,7 +241,7 @@ export const MobileResultSheet = memo(function MobileResultSheet({
                   <rect x="3" y="3" width="7" height="18" rx="1" />
                   <rect x="14" y="3" width="7" height="18" rx="1" />
                 </svg>
-                {isInCompare ? t("compareTray.pinned") : t("compareTray.pin")}
+                {compareActionLabel}
               </button>
             </div>
 

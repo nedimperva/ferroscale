@@ -114,7 +114,12 @@ export const Sidebar = memo(function Sidebar({
 
       {/* ---- Navigation ---- */}
       <nav className={`flex flex-1 flex-col gap-1 pt-4 ${collapsed ? "px-2" : "px-3.5"}`}>
-        {/* Quick Calculate */}
+        {/* Workspace — tools */}
+        {!collapsed && (
+          <span className="px-3 pb-1 pt-1 text-[0.625rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted-faint">
+            {t("sidebar.workspaceGroup")}
+          </span>
+        )}
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -144,6 +149,13 @@ export const Sidebar = memo(function Sidebar({
           collapsed={collapsed}
           onClick={onOpenCalculator}
         />
+
+        {/* Library — storage */}
+        {!collapsed && (
+          <span className="px-3 pb-1 pt-3 text-[0.625rem] font-bold uppercase tracking-[var(--label-tracking)] text-muted-faint">
+            {t("sidebar.libraryGroup")}
+          </span>
+        )}
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -164,7 +176,7 @@ export const Sidebar = memo(function Sidebar({
           }
           label={t("sidebar.projects")}
           badge={projectCount > 0 ? projectCount : undefined}
-          variant={projectCount > 0 ? "purple" : "default"}
+          badgeTone="purple"
           active={isProjectsOpen}
           collapsed={collapsed}
           onClick={onOpenProjects}
@@ -182,6 +194,13 @@ export const Sidebar = memo(function Sidebar({
           collapsed={collapsed}
           onClick={onOpenCompare}
         />
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        <div className={`mt-2 border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"}`} />
+
+        {/* Footer — Settings + low-frequency actions live here (review §05) */}
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -194,12 +213,6 @@ export const Sidebar = memo(function Sidebar({
           collapsed={collapsed}
           onClick={onOpenSettings}
         />
-
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        <div className={`mt-2 border-t border-border-faint ${collapsed ? "mx-0.5" : "mx-1"}`} />
-
         <SidebarButton
           icon={
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -281,14 +294,16 @@ export const Sidebar = memo(function Sidebar({
           )}
         </button>
 
-        {/* Collapse toggle */}
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
-          aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
-          title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
-        >
+        {/* Collapse toggle — wrapped in a tooltip-capable group so collapsed
+            users see "Expand sidebar" hover hint the same way nav items do. */}
+        <div className="group relative">
+          <button
+            type="button"
+            onClick={onToggleCollapsed}
+            className="premium-action-button flex w-full items-center justify-center border border-transparent px-2.5 py-2.5 text-muted-faint transition-colors hover:bg-surface-raised hover:text-foreground-secondary"
+            aria-label={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
+            title={collapsed ? t("theme.expandSidebar") : t("theme.collapseSidebar")}
+          >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -302,7 +317,17 @@ export const Sidebar = memo(function Sidebar({
             <path d="m11 17-5-5 5-5" />
             <path d="m18 17-5-5 5-5" />
           </svg>
-        </button>
+          </button>
+          {collapsed && (
+            <span
+              role="tooltip"
+              className="pointer-events-none absolute top-1/2 left-full z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-[0_16px_36px_rgba(20,18,15,0.12)] transition-opacity delay-75 duration-150 group-hover:opacity-100"
+            >
+              <span className="absolute top-1/2 -left-1 h-2 w-2 -translate-y-1/2 rotate-45 border-l border-b border-border bg-surface" />
+              {t("theme.expandSidebar")}
+            </span>
+          )}
+        </div>
 
         <div className="h-3" />
       </nav>
@@ -316,6 +341,8 @@ interface SidebarButtonProps {
   icon: React.ReactNode;
   label: string;
   badge?: number;
+  /** Color of the count badge — does NOT change the button chrome. */
+  badgeTone?: "default" | "purple";
   variant?: "default" | "blue" | "purple";
   active?: boolean;
   collapsed?: boolean;
@@ -326,6 +353,7 @@ function SidebarButton({
   icon,
   label,
   badge,
+  badgeTone = "default",
   variant = "default",
   active = false,
   collapsed = false,
@@ -359,7 +387,13 @@ function SidebarButton({
         <span className="shrink-0">{icon}</span>
         {!collapsed && <span className="truncate">{label}</span>}
         {!collapsed && badge !== undefined && (
-          <span className="ml-auto shrink-0 rounded-full bg-surface px-1.5 py-0.5 text-2xs font-semibold text-foreground-secondary shadow-[var(--panel-highlight)]">
+          <span
+            className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-2xs font-semibold shadow-[var(--panel-highlight)] ${
+              badgeTone === "purple"
+                ? "border border-purple-border bg-purple-surface text-purple-text"
+                : "bg-surface text-foreground-secondary"
+            }`}
+          >
             {badge}
           </span>
         )}

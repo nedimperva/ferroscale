@@ -158,7 +158,8 @@
     "family": "Porodica",
     "clear": "Ocisti",
     "next": "Dalje",
-    "done": "Gotovo"
+    "done": "Gotovo",
+    "save": "Sacuvaj →"
   },
   "workstation": {
     "searchHint": "Pretrazi profil, preset ili kalkulaciju…",
@@ -237,6 +238,8 @@
     "removeAria": "Ukloni iz poredjenja",
     "heavier": "Teze",
     "deltaSummary": "Δ {delta} kg · {percent}%",
+    "deltaSentence": "{heavier} je {percent}% teze od {lighter}.",
+    "deltaEqualSentence": "{heavier} i {lighter} su iste tezine.",
     "base": "Baza",
     "specTitle": "Jedno do drugog",
     "perMetre": "Po metru",
@@ -272,7 +275,9 @@
     "totalCost": "Ukupna cijena",
     "openCalculator": "Otvori Kalkulator →",
     "emptyTitle": "Zakaci kalkulacije za poredjenje",
-    "emptyHint": "Pokreni kalkulaciju, zatim dodirni Uporedi da je dodas kao kolonu."
+    "emptyHint": "Pokreni kalkulaciju, zatim dodirni Uporedi da je dodas kao kolonu.",
+    "deltaSentence": "{heavier} je {percent}% teze od {lighter}.",
+    "deltaEqualSentence": "{heavier} i {lighter} su iste tezine."
   },
   "mobileSaved": {
     "title": "Sacuvano",
@@ -466,7 +471,9 @@
     "compareCount": "Uporedi ({count})",
     "reportIssue": "Prijavi problem",
     "report": "Prijava",
-    "whatsNew": "Novosti"
+    "whatsNew": "Novosti",
+    "workspaceGroup": "Radni prostor",
+    "libraryGroup": "Biblioteka"
   },
   "columns": {
     "addColumn": "Dodaj kolonu",

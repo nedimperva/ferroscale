@@ -218,6 +218,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const [showMobileProfileSheet, setShowMobileProfileSheet] = useState(false);
   const [showMobileMaterialSheet, setShowMobileMaterialSheet] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [onboardingSession, setOnboardingSession] = useState(0);
   const pathname = usePathname();
   const onboarded = useSyncExternalStore(
     onboardedStore.subscribe,
@@ -855,7 +856,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           }}
           onCreateProject={(name) => {
             const created = createProject(name);
-            setActiveProjectId(created.id);
+            navigateToProject(created.id);
           }}
           onRenameProject={renameProject}
           onDeleteProject={(id) => {
@@ -947,9 +948,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             <h1 className="truncate text-sm font-semibold tracking-tight text-foreground">{mobileHeaderTitle}</h1>
             <p className="mt-0.5 flex items-center gap-1.5 truncate text-2xs leading-tight text-muted">
               {normalizedCurrentProfile && (
-                <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-surface-inset text-muted-faint">
-                  <ProfileIcon category={normalizedCurrentProfile.iconKey} className="h-2 w-2" />
-                </span>
+                <ProfileIcon
+                  category={normalizedCurrentProfile.iconKey}
+                  className="h-3 w-3 shrink-0 text-muted-faint"
+                />
               )}
               <span className="truncate">{mobileHeaderSubtitle}</span>
             </p>
@@ -1077,7 +1079,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
             }}
             onCreateProject={(name) => {
               const created = createProject(name);
-              setActiveProjectId(created.id);
+              navigateToProject(created.id);
             }}
             onRenameProject={renameProject}
             onDeleteProject={(id) => {
@@ -1236,7 +1238,10 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
               onNavigate={navigateToTab}
               onOpenChangelog={() => setShowChangelogDrawer(true)}
               onOpenContact={() => setShowContactDrawer(true)}
-              onReplayOnboarding={() => onboardedStore.set(false)}
+              onReplayOnboarding={() => {
+                setOnboardingSession((session) => session + 1);
+                onboardedStore.set(false);
+              }}
               projectCount={projectCount}
               savedCount={saved.length}
               compareCount={compareItems.length}
@@ -1316,6 +1321,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
       />
 
       <OnboardingFlow
+        key={onboardingSession}
         open={!onboarded}
         initialGradeId={input.materialGradeId}
         initialProfileId={input.profileId}
