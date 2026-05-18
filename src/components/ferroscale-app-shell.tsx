@@ -781,20 +781,32 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
   const navigateToProject = useCallback(
     (id: string) => {
       closeTransientOverlays();
-      setActiveProjectId(id);
+      // activeProjectId is synced from the URL via the effect below.
+      // Setting it here would re-render the list page with the just-tapped
+      // project as the "pinned active" hero before the route changes —
+      // user saw that as a dark card flashing in.
       startRouteNavigation(() => {
         router.push(`/projects/${id}`);
       });
     },
-    [closeTransientOverlays, router, setActiveProjectId],
+    [closeTransientOverlays, router],
   );
 
   const navigateBackFromProject = useCallback(() => {
-    setActiveProjectId(null);
     startRouteNavigation(() => {
       router.push("/projects");
     });
-  }, [router, setActiveProjectId]);
+  }, [router]);
+
+  // Keep activeProjectId in lock-step with the URL. When the route changes
+  // to /projects/<id>, activeProjectId follows; clearing the param clears
+  // active. Doing this here means the list page never re-renders with a
+  // newly-tapped project as the hero before navigation.
+  useEffect(() => {
+    if (projectDetailId && projectDetailId !== activeProjectId) {
+      setActiveProjectId(projectDetailId);
+    }
+  }, [projectDetailId, activeProjectId, setActiveProjectId]);
 
   const mobileScreen =
     currentTab === "calculator" ? (
@@ -850,10 +862,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
         <MobileProjectsPage
           projects={projects}
           activeProjectId={activeProjectId}
-          onSetActiveProject={(id) => {
-            setActiveProjectId(id);
-            navigateToProject(id);
-          }}
+          onSetActiveProject={navigateToProject}
           onCreateProject={(name) => {
             const created = createProject(name);
             navigateToProject(created.id);
@@ -1082,10 +1091,7 @@ export function FerroScaleAppShell({ currentTab }: { currentTab: AppTabId }) {
           <DesktopProjectsPage
             projects={projects}
             activeProjectId={activeProjectId}
-            onSetActiveProject={(id) => {
-              setActiveProjectId(id);
-              navigateToProject(id);
-            }}
+            onSetActiveProject={navigateToProject}
             onCreateProject={(name) => {
               const created = createProject(name);
               navigateToProject(created.id);
