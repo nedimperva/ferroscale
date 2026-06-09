@@ -2,18 +2,18 @@
 
 :root {
   /* ── Neutral / Surface ── */
-  --background: #f2efe9;
-  --surface: #fbfaf7;
-  --surface-raised: #f5f1ea;
-  --surface-inset: #ebe5da;
+  --background: #efeae0;
+  --surface: #ffffff;
+  --surface-raised: #f8f5ee;
+  --surface-inset: #ece6da;
   --surface-emphasis: #f6efe8;
-  --surface-inverted: #0f172a;
+  --surface-inverted: #16120b;
 
   /* ── Text ── */
-  --foreground: #172033;
-  --foreground-secondary: #445066;
-  --muted: #667085;
-  --muted-faint: #8a94a6;
+  --foreground: #16120b;
+  --foreground-secondary: #4a4237;
+  --muted: #8b8273;
+  --muted-faint: #c5bdad;
 
   /* ── Borders ── */
   --border: #ddd5c9;
@@ -23,12 +23,12 @@
   /* ── Overlay ── */
   --overlay: rgba(0, 0, 0, 0.3);
 
-  /* ── Accent (orange) ── */
-  --accent: #8d5f45;
-  --accent-hover: #724934;
-  --accent-surface: #f5ece5;
-  --accent-border: #d7b59f;
-  --accent-text: #70442b;
+  /* ── Accent (terracotta orange) ── */
+  --accent: #d8521f;
+  --accent-hover: #8a3110;
+  --accent-surface: #fbe6d7;
+  --accent-border: #eab896;
+  --accent-text: #8a3110;
 
   /* ── Blue (compare, active, inputs) ── */
   --blue-surface: #eef4ff;
@@ -75,33 +75,33 @@
 
 .dark {
   /* ── Neutral / Surface ── */
-  --background: #0f141b;
-  --surface: #171d25;
-  --surface-raised: #1d2530;
-  --surface-inset: #131921;
+  --background: #131009;
+  --surface: #1d1812;
+  --surface-raised: #241e16;
+  --surface-inset: #14100a;
   --surface-emphasis: #231a16;
-  --surface-inverted: #f8fafc;
+  --surface-inverted: #f5ecdb;
 
   /* ── Text ── */
-  --foreground: #eef2f8;
-  --foreground-secondary: #acb6c8;
-  --muted: #96a2b7;
-  --muted-faint: #677287;
+  --foreground: #f5ecdb;
+  --foreground-secondary: #cabca4;
+  --muted: #968b78;
+  --muted-faint: #5e5648;
 
   /* ── Borders ── */
-  --border: #2b3441;
-  --border-strong: #3b4757;
-  --border-faint: #222a34;
+  --border: #2b2418;
+  --border-strong: #3b3322;
+  --border-faint: #221d13;
 
   /* ── Overlay ── */
   --overlay: rgba(0, 0, 0, 0.6);
 
-  /* ── Accent (orange) ── */
-  --accent: #d0a184;
-  --accent-hover: #bc8a6c;
-  --accent-surface: #2d211b;
-  --accent-border: #715445;
-  --accent-text: #f5d8c3;
+  /* ── Accent (terracotta orange) ── */
+  --accent: #f0793f;
+  --accent-hover: #fbcba8;
+  --accent-surface: #2e1c11;
+  --accent-border: #683c22;
+  --accent-text: #fbcba8;
 
   /* ── Blue (compare, active, inputs) ── */
   --blue-surface: #18253c;
@@ -208,7 +208,7 @@
   --color-disabled-text: var(--disabled-text);
 
   /* ── Fonts ── */
-  --font-sans: var(--font-space-grotesk);
+  --font-sans: var(--font-archivo);
   --font-mono: var(--font-ibm-plex-mono);
 
   /* ── Typography — extra-small tier ── */
@@ -242,7 +242,7 @@ html ::-webkit-scrollbar {
 
 body {
   color: var(--foreground);
-  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   line-height: 1.5;
   min-height: 100dvh;
   overflow-x: clip;
