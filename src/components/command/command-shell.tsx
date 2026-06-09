@@ -92,6 +92,7 @@ export function CommandShell() {
   const [recents, setRecents] = useState<string[]>(STARTER_RECENTS);
   const [saved, setSaved] = useState<string[]>([]);
   const [scale, setScale] = useState(1);
+  const [isPhoneViewport, setIsPhoneViewport] = useState(false);
 
   // Hydrate persisted state on mount. setState-in-effect is intentional here:
   // initial SSR/first-paint values must match defaults to avoid hydration
@@ -113,9 +114,16 @@ export function CommandShell() {
     persistStrings("ferroscale-command-saved", saved);
   }, [saved]);
 
-  // Scale the fixed 402×874 frame to fit the viewport
+  // On phone viewports, render fullscreen — no scaled iPhone frame.
+  // On wider viewports, scale the fixed 402×874 frame to fit and show the bezel.
   useEffect(() => {
     const fit = () => {
+      const isPhone = window.innerWidth < 640;
+      setIsPhoneViewport(isPhone);
+      if (isPhone) {
+        setScale(1);
+        return;
+      }
       const sH = (window.innerHeight - 32) / FRAME_H;
       const sW = (window.innerWidth - 32) / FRAME_W;
       setScale(Math.min(1, sH, sW));
@@ -204,34 +212,55 @@ export function CommandShell() {
     unknown: "bg-[var(--surface-inset)] text-muted",
   };
 
+  const screenBg = dark ? "#161109" : "#f4f0e7";
+  const showBezel = !isPhoneViewport && scale < 1;
+
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-[var(--background)] overflow-hidden"
-      style={{ transition: "background 220ms ease" }}
+      className="fixed inset-0 flex items-center justify-center overflow-hidden"
+      style={{
+        background: isPhoneViewport ? screenBg : "var(--background)",
+        transition: "background 220ms ease",
+      }}
     >
       <div
-        style={{
-          width: FRAME_W * scale,
-          height: FRAME_H * scale,
-        }}
+        style={
+          isPhoneViewport
+            ? { width: "100%", height: "100dvh" }
+            : { width: FRAME_W * scale, height: FRAME_H * scale }
+        }
       >
         <div
-          className="relative bg-[var(--screen,var(--surface))] flex flex-col overflow-hidden text-foreground"
-          style={{
-            width: FRAME_W,
-            height: FRAME_H,
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-            borderRadius: scale < 1 ? 44 : 0,
-            background: dark ? "#161109" : "#f4f0e7",
-            boxShadow:
-              scale < 1
-                ? "0 30px 80px -20px rgba(0,0,0,0.4), 0 0 0 10px #0c0a06, 0 0 0 11px #2a2014"
-                : "none",
-          }}
+          className="relative flex flex-col overflow-hidden text-foreground"
+          style={
+            isPhoneViewport
+              ? {
+                  width: "100%",
+                  height: "100%",
+                  background: screenBg,
+                }
+              : {
+                  width: FRAME_W,
+                  height: FRAME_H,
+                  transform: `scale(${scale})`,
+                  transformOrigin: "top left",
+                  borderRadius: showBezel ? 44 : 0,
+                  background: screenBg,
+                  boxShadow: showBezel
+                    ? "0 30px 80px -20px rgba(0,0,0,0.4), 0 0 0 10px #0c0a06, 0 0 0 11px #2a2014"
+                    : "none",
+                }
+          }
         >
-          {/* Safe-top spacer */}
-          <div className="h-14 flex-shrink-0" />
+          {/* Safe-top spacer — honours real device safe-area on mobile, fixed gap in framed preview */}
+          <div
+            className="flex-shrink-0"
+            style={
+              isPhoneViewport
+                ? { paddingTop: "env(safe-area-inset-top, 12px)", height: "auto", minHeight: 12 }
+                : { height: 56 }
+            }
+          />
 
           {/* TOP BAR */}
           <div className="flex items-center justify-between px-[18px] pt-1 pb-2">
