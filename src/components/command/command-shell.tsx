@@ -432,21 +432,14 @@ export function CommandShell() {
             </div>
           </div>
 
-          {/* MIDDLE — recents (empty) or preview */}
-          {query.trim() === "" ? (
-            <RecentsList
-              recents={recents}
-              settings={settings}
-              onPick={(q) => setQuery(q)}
-            />
-          ) : (
-            <PreviewCard
-              p={p}
-              isWeight={isW}
-              sym={sym}
-              onOpen={() => p.valid && setSheet("result")}
-            />
-          )}
+          {/* MIDDLE — preview card (always visible so the layout stays stable).
+              Recents live in the bookmark sheet only. */}
+          <PreviewCard
+            p={p}
+            isWeight={isW}
+            sym={sym}
+            onOpen={() => p.valid && setSheet("result")}
+          />
 
           <div className="flex-1 min-h-[6px]" />
 
@@ -677,61 +670,6 @@ function Chev() {
     <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 1l4.5 5L1 11" />
     </svg>
-  );
-}
-
-function RecentsList({
-  recents,
-  settings,
-  onPick,
-}: {
-  recents: string[];
-  settings: CommandSettings;
-  onPick: (q: string) => void;
-}) {
-  return (
-    <div className="mt-3.5 mx-[18px]">
-      <div className="text-[10px] font-bold tracking-[1.2px] text-muted mb-2 uppercase">
-        Recent
-      </div>
-      <div
-        className="rounded-2xl border border-border-faint bg-[var(--surface)] overflow-hidden"
-        style={{ boxShadow: "var(--panel-shadow-soft)" }}
-      >
-        {recents.slice(0, 4).map((q, i) => {
-          const rp = cmdParse(q, settings);
-          return (
-            <button
-              key={i}
-              type="button"
-              onClick={() => onPick(q)}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 text-left bg-transparent ${
-                i > 0 ? "border-t border-border-faint" : ""
-              }`}
-            >
-              <div className="w-[34px] h-[34px] rounded-[10px] bg-[var(--surface-inset)] flex items-center justify-center text-foreground flex-shrink-0">
-                {rp.alias && <CommandGlyph fam={rp.alias.fam} size={19} />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-bold text-[14.5px] text-foreground truncate">
-                  {rp.name || q}
-                </div>
-                <div className="font-mono text-[11.5px] text-muted mt-0.5">
-                  {rp.valid && rp.totalKg != null
-                    ? `${fsWeight(rp.totalKg)} ${fsWeightUnit(rp.totalKg)} · ×${rp.realQty}${
-                        rp.gradeLabel ? " · " + rp.gradeLabel : ""
-                      }`
-                    : q}
-                </div>
-              </div>
-              <span className="text-muted-faint">
-                <Chev />
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
