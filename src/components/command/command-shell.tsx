@@ -31,6 +31,7 @@ import {
   CommandSettingsSheet,
 } from "./command-sheets";
 import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
+import { CompareDrawer } from "@/components/compare/compare-drawer";
 
 const FRAME_W = 402;
 const FRAME_H = 874;
@@ -87,7 +88,14 @@ export function CommandShell() {
 
   // App-wide libraries (saves, compare, projects, presets).
   const { saveCalculation, isSaved } = useSaved();
-  const { addItem: addCompareItem, isDuplicate: isInCompare } = useCompare();
+  const {
+    items: compareItems,
+    addItem: addCompareItem,
+    removeItem: removeCompareItem,
+    clearAll: clearCompare,
+    isDuplicate: isInCompare,
+    maxCompare,
+  } = useCompare();
   const { projects, createProject, addCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
 
@@ -100,6 +108,7 @@ export function CommandShell() {
   const [recents, setRecents] = useState<string[]>(STARTER_RECENTS);
   const [saved, setSaved] = useState<string[]>([]);
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
+  const [showCompareDrawer, setShowCompareDrawer] = useState(false);
   const [scale, setScale] = useState(1);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
 
@@ -660,6 +669,7 @@ export function CommandShell() {
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
               themeLabel={dark ? "Dark" : "Light"}
+              onOpenFullSettings={() => router.push("/settings")}
             />
           )}
           {effectiveSheet === "saved" && (
@@ -671,6 +681,12 @@ export function CommandShell() {
               onPick={(q) => {
                 setQuery(q);
                 setSheet(null);
+              }}
+              onOpenSaved={() => router.push("/saved")}
+              onOpenProjects={() => router.push("/projects")}
+              onOpenCompare={() => {
+                setSheet(null);
+                setShowCompareDrawer(true);
               }}
             />
           )}
@@ -721,6 +737,21 @@ export function CommandShell() {
           onOpenDrawer={() => router.push("/projects")}
         />
       )}
+
+      {/* Compare drawer — Command's only access point to the comparison list */}
+      <CompareDrawer
+        open={showCompareDrawer}
+        onClose={() => setShowCompareDrawer(false)}
+        items={compareItems}
+        onRemoveItem={removeCompareItem}
+        onClearAll={clearCompare}
+        maxCompare={maxCompare}
+        hasProjects={projects.length > 0}
+        onAddToProject={(item) => {
+          setShowCompareDrawer(false);
+          setProjectCalc({ input: item.input, result: item.result });
+        }}
+      />
     </div>
   );
 }

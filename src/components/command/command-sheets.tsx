@@ -182,7 +182,16 @@ export function CommandResultSheet({
           mono
         />
         <SheetRow label="Density" value={`${r.densityKgPerM3} kg/m³`} mono />
-        <SheetRow label="Rate" value={`${sym} ${fsMoney(r.unitPriceAmount)}/${r.priceUnit}`} mono />
+        <SheetRow
+          label="Rate"
+          value={`${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`}
+          mono
+        />
+        <SheetRow
+          label="Per piece price"
+          value={`${sym} ${fsMoney(r.unitPriceAmount)}`}
+          mono
+        />
         <SheetRow label="Subtotal" value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
         {p.pricing.wastePercent > 0 && (
           <SheetRow
@@ -237,6 +246,7 @@ interface CommandSettingsSheetProps {
   onClose: () => void;
   onToggleTheme: () => void;
   themeLabel: string;
+  onOpenFullSettings: () => void;
 }
 
 export function CommandSettingsSheet({
@@ -249,6 +259,7 @@ export function CommandSettingsSheet({
   onClose,
   onToggleTheme,
   themeLabel,
+  onOpenFullSettings,
 }: CommandSettingsSheetProps) {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   const numberInput =
@@ -372,6 +383,13 @@ export function CommandSettingsSheet({
         Pricing, grade, and unit settings are shared with the full app — changes
         here apply everywhere.
       </p>
+      <button
+        type="button"
+        onClick={onOpenFullSettings}
+        className="mt-3 w-full h-11 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-sm font-semibold text-foreground-secondary hover:text-foreground hover:bg-[var(--surface)]"
+      >
+        Open full Settings
+      </button>
     </SheetShell>
   );
 }
@@ -382,6 +400,9 @@ interface CommandSavedSheetProps {
   recents: string[];
   onClose: () => void;
   onPick: (query: string) => void;
+  onOpenSaved: () => void;
+  onOpenProjects: () => void;
+  onOpenCompare: () => void;
 }
 
 export function CommandSavedSheet({
@@ -390,6 +411,9 @@ export function CommandSavedSheet({
   recents,
   onClose,
   onPick,
+  onOpenSaved,
+  onOpenProjects,
+  onOpenCompare,
 }: CommandSavedSheetProps) {
   const [tab, setTab] = useState<"saved" | "recent">(
     saved.length > 0 ? "saved" : "recent",
@@ -450,7 +474,51 @@ export function CommandSavedSheet({
           })}
         </div>
       )}
+      <div className="mt-4">
+        <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase mb-2 px-1">
+          Open in full app
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <LibraryNavButton label="Saved" onClick={onOpenSaved}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+            </svg>
+          </LibraryNavButton>
+          <LibraryNavButton label="Projects" onClick={onOpenProjects}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+          </LibraryNavButton>
+          <LibraryNavButton label="Compare" onClick={onOpenCompare}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="18" rx="1" />
+              <rect x="14" y="3" width="7" height="18" rx="1" />
+            </svg>
+          </LibraryNavButton>
+        </div>
+      </div>
     </SheetShell>
+  );
+}
+
+function LibraryNavButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col items-center justify-center gap-1.5 h-16 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-foreground-secondary hover:text-foreground hover:bg-[var(--surface)]"
+    >
+      {children}
+      <span className="text-[11px] font-semibold tracking-wide">{label}</span>
+    </button>
   );
 }
 
