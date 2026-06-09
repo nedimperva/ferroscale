@@ -1,3 +1,4 @@
+import { MATERIAL_GRADES, METAL_FAMILIES } from "@ferroscale/metal-core";
 import type { CommandAlias } from "./types";
 
 export const COMMAND_ALIASES: CommandAlias[] = [
@@ -51,22 +52,35 @@ export const COMMAND_SIZES: Record<CommandAlias["fam"], string[]> = {
 export interface CommandGrade {
   id: string;
   label: string;
-  alias: string;
+  aliases: string[];
   group: string;
   density: number;
 }
 
-export const COMMAND_GRADES: CommandGrade[] = [
-  { id: "steel-s235jr", label: "S235", alias: "s235", group: "Steel", density: 7850 },
-  { id: "steel-s355jr", label: "S355", alias: "s355", group: "Steel", density: 7850 },
-  { id: "stainless-304", label: "304", alias: "304", group: "Stainless", density: 8000 },
-  { id: "stainless-316l", label: "316L", alias: "316l", group: "Stainless", density: 8000 },
-  { id: "al-6060", label: "6060", alias: "6060", group: "Aluminum", density: 2700 },
-  { id: "al-6082", label: "6082", alias: "6082", group: "Aluminum", density: 2700 },
-];
+/** Short labels + typeable aliases per MATERIAL_GRADES id. Aliases must not
+ *  collide with profile aliases (none starts with hea|heb|hem|ipe|...). */
+const GRADE_META: Record<string, { short: string; aliases: string[] }> = {
+  "steel-s235jr": { short: "S235", aliases: ["s235", "s235jr"] },
+  "steel-s355jr": { short: "S355", aliases: ["s355", "s355jr"] },
+  "steel-s420m": { short: "S420", aliases: ["s420", "s420m"] },
+  "stainless-304": { short: "304", aliases: ["304", "1.4301", "a2"] },
+  "stainless-316": { short: "316", aliases: ["316", "1.4401"] },
+  "stainless-316l": { short: "316L", aliases: ["316l", "1.4404", "a4"] },
+  "al-6060": { short: "6060", aliases: ["6060"] },
+  "al-6082": { short: "6082", aliases: ["6082"] },
+  "al-7075": { short: "7075", aliases: ["7075"] },
+};
+
+export const COMMAND_GRADES: CommandGrade[] = MATERIAL_GRADES.map((g) => ({
+  id: g.id,
+  label: GRADE_META[g.id]?.short ?? g.label,
+  aliases: GRADE_META[g.id]?.aliases ?? [g.id],
+  group: METAL_FAMILIES.find((f) => f.id === g.familyId)?.label ?? g.familyId,
+  density: g.densityKgPerM3,
+}));
 
 const GRADE_BY_ALIAS = new Map<string, CommandGrade>(
-  COMMAND_GRADES.map((g) => [g.alias, g]),
+  COMMAND_GRADES.flatMap((g) => g.aliases.map((a) => [a, g] as const)),
 );
 const GRADE_BY_ID = new Map<string, CommandGrade>(
   COMMAND_GRADES.map((g) => [g.id, g]),

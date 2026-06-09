@@ -1,9 +1,12 @@
 import {
   calculateMetal,
   getProfileById,
+  toMillimeters,
   type CalculationInput,
   type DimensionKey,
+  type LengthUnit,
 } from "@ferroscale/metal-core";
+import type { CommandPricing } from "@/lib/settings-stores";
 import {
   COMMAND_ALIAS_RE,
   findAliasByPrefix,
@@ -12,10 +15,15 @@ import {
 } from "./aliases";
 import type {
   CommandAlias,
+  CommandCalc,
   CommandParseResult,
-  CommandSettings,
+  CommandParserSettings,
   CommandTokenKind,
 } from "./types";
+
+const LENGTH_RE = /^(\d+(?:\.\d+)?)(mm|cm|m|in|ft)$/;
+const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
+const QTY_RE = /^[x×*](\d+)$/;
 
 /**
  * Build a CalculationInput for the metal-core engine from a parsed Command query.
@@ -27,12 +35,21 @@ function buildCalculationInput(
   lengthMm: number,
   qty: number,
   gradeId: string,
-  density: number,
+  pricing: CommandPricing,
 ): CalculationInput | null {
   const dims = sizeStr
     .split(/[x×]/)
     .map((s) => parseFloat(s))
     .filter((n) => !Number.isNaN(n));
+
+  const base = {
+    materialGradeId: gradeId,
+    useCustomDensity: false,
+    length: { value: lengthMm, unit: "mm" as const },
+    quantity: qty,
+    ...pricing,
+    rounding: { weightDecimals: 8, priceDecimals: 2, dimensionDecimals: 4 },
+  };
 
   // Standard EN beams/channels — look up the size id.
   if (alias.profileId) {
@@ -44,21 +61,10 @@ function buildCalculationInput(
     const match = profile.sizes.find((s) => s.id === targetSizeId);
     if (!match) return null;
     return {
-      materialGradeId: gradeId,
-      useCustomDensity: false,
+      ...base,
       profileId: alias.profileId,
       selectedSizeId: match.id,
       manualDimensions: {},
-      length: { value: lengthMm, unit: "mm" },
-      quantity: qty,
-      priceBasis: "weight",
-      priceUnit: "kg",
-      unitPrice: 0,
-      currency: "EUR",
-      wastePercent: 0,
-      includeVat: false,
-      vatPercent: 0,
-      rounding: { weightDecimals: 8, priceDecimals: 2, dimensionDecimals: 4 },
     };
   }
 
@@ -132,32 +138,24 @@ function buildCalculationInput(
   }
 
   return {
-    materialGradeId: gradeId,
-    useCustomDensity: density !== 7850 && density !== 8000 && density !== 2700,
-    customDensityKgPerM3: density,
+    ...base,
     profileId: alias.manualProfileId,
     manualDimensions,
-    length: { value: lengthMm, unit: "mm" },
-    quantity: qty,
-    priceBasis: "weight",
-    priceUnit: "kg",
-    unitPrice: 0,
-    currency: "EUR",
-    wastePercent: 0,
-    includeVat: false,
-    vatPercent: 0,
-    rounding: { weightDecimals: 8, priceDecimals: 2, dimensionDecimals: 4 },
   };
 }
 
-export function cmdParse(query: string, settings: CommandSettings): CommandParseResult {
+export function cmdParse(
+  query: string,
+  settings: CommandParserSettings,
+): CommandParseResult {
   const toks = (query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
 
   let alias: CommandAlias | null = null;
   let size = "";
   let lengthM: number | null = null;
   let lengthRaw: number | null = null;
-  let lengthUnit: "mm" | "cm" | "m" = "m";
+  let lengthUnit: LengthUnit = settings.defaultLengthUnit;
+  let lengthExplicit = false;
   let qty: number | null = null;
   let gradeId: string | null = null;
 
@@ -173,57 +171,66 @@ export function cmdParse(query: string, settings: CommandSettings): CommandParse
         }
       }
     }
-    const lm = tk.match(/^([\d.]+)(mm|cm|m)$/);
+    const lm = tk.match(LENGTH_RE);
     if (lm && lengthM == null) {
       const v = parseFloat(lm[1]);
-      lengthUnit = lm[2] as "mm" | "cm" | "m";
+      lengthUnit = lm[2] as LengthUnit;
       lengthRaw = v;
-      lengthM = lengthUnit === "mm" ? v / 1000 : lengthUnit === "cm" ? v / 100 : v;
+      lengthM = toMillimeters(v, lengthUnit) / 1000;
+      lengthExplicit = true;
       continue;
     }
-    const qm = tk.match(/^[x×*](\d+)$/);
+    const qm = tk.match(QTY_RE);
     if (qm && qty == null) {
       qty = parseInt(qm[1], 10);
       continue;
     }
+    // Grade check must precede the bare-number fallback so numeric grade
+    // aliases (304, 316, 6060, ...) aren't eaten as lengths. Bare lengths
+    // matching a grade alias need an explicit unit (e.g. "304mm").
     const grade = findGradeByAlias(tk);
     if (grade && !gradeId) {
       gradeId = grade.id;
       continue;
     }
+    if (BARE_NUMBER_RE.test(tk) && lengthM == null) {
+      const v = parseFloat(tk);
+      lengthUnit = settings.defaultLengthUnit;
+      lengthRaw = v;
+      lengthM = toMillimeters(v, lengthUnit) / 1000;
+      lengthExplicit = false;
+      continue;
+    }
   }
 
-  const grade = gradeId
-    ? findGradeById(gradeId)
-    : findGradeById(settings.defaultGradeId);
-  const density = grade?.density ?? settings.density;
+  // The typed grade (null when none typed) drives gradeId/gradeLabel so the
+  // suggestion bar can still offer the grade stage; the effective grade
+  // (typed ?? shared default) drives the actual calculation.
+  const typedGrade = gradeId ? findGradeById(gradeId) : null;
+  const effectiveGrade = typedGrade ?? findGradeById(settings.defaultGradeId);
+  const effectiveGradeId = effectiveGrade?.id ?? settings.defaultGradeId;
   const realQty = qty == null ? 1 : qty;
   const hasSize = !!size && /\d/.test(size);
 
   let kgm: number | null = null;
-  let perPieceKg: number | null = null;
-  let totalKg: number | null = null;
-  let totalEur: number | null = null;
-  let selectedSizeId: string | null = null;
+  let calc: CommandCalc | null = null;
+  let density = effectiveGrade?.density ?? 7850;
 
   if (alias && hasSize && lengthM != null) {
-    const lengthMm = lengthM * 1000;
     const input = buildCalculationInput(
       alias,
       size,
-      lengthMm,
+      lengthM * 1000,
       realQty,
-      grade?.id ?? settings.defaultGradeId,
-      density,
+      effectiveGradeId,
+      settings.pricing,
     );
     if (input) {
       const response = calculateMetal(input);
       if (response.ok) {
-        totalKg = response.result.totalWeightKg;
-        perPieceKg = response.result.unitWeightKg;
-        kgm = perPieceKg / lengthM;
-        totalEur = totalKg * settings.rate;
-        selectedSizeId = input.selectedSizeId ?? null;
+        calc = { input, result: response.result };
+        kgm = response.result.unitWeightKg / lengthM;
+        density = response.result.densityKgPerM3;
       }
     }
   } else if (alias && hasSize && lengthM == null) {
@@ -231,15 +238,16 @@ export function cmdParse(query: string, settings: CommandSettings): CommandParse
     const input = buildCalculationInput(
       alias,
       size,
-      1000, // 1 m
+      1000, // 1 m probe
       1,
-      grade?.id ?? settings.defaultGradeId,
-      density,
+      effectiveGradeId,
+      settings.pricing,
     );
     if (input) {
       const response = calculateMetal(input);
       if (response.ok) {
         kgm = response.result.unitWeightKg;
+        density = response.result.densityKgPerM3;
       }
     }
   }
@@ -256,27 +264,29 @@ export function cmdParse(query: string, settings: CommandSettings): CommandParse
     lengthM,
     lengthRaw,
     lengthUnit,
+    lengthExplicit,
     qty,
     realQty,
-    gradeId: grade?.id ?? null,
-    gradeLabel: grade?.label ?? null,
+    gradeId: typedGrade?.id ?? null,
+    gradeLabel: typedGrade?.label ?? null,
     density,
     kgm,
-    perPieceKg,
-    totalKg,
-    totalEur,
-    selectedSizeId,
+    calc,
+    perPieceKg: calc?.result.unitWeightKg ?? null,
+    totalKg: calc?.result.totalWeightKg ?? null,
+    totalAmount: calc?.result.grandTotalAmount ?? null,
+    selectedSizeId: calc?.input.selectedSizeId ?? null,
     name,
-    valid: totalKg != null,
-    rate: settings.rate,
+    valid: calc != null,
+    pricing: settings.pricing,
   };
 }
 
 export function cmdClassifyToken(tok: string): CommandTokenKind {
   const x = tok.toLowerCase();
   if (new RegExp(`^(${COMMAND_ALIAS_RE})`).test(x)) return "profile";
-  if (/^[x×*]\d+$/.test(x)) return "qty";
-  if (/^[\d.]+(mm|cm|m)$/.test(x)) return "len";
+  if (QTY_RE.test(x)) return "qty";
   if (findGradeByAlias(x)) return "grade";
+  if (LENGTH_RE.test(x) || BARE_NUMBER_RE.test(x)) return "len";
   return "unknown";
 }

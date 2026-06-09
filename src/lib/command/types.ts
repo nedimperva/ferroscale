@@ -1,4 +1,10 @@
-import type { ProfileId } from "@ferroscale/metal-core";
+import type {
+  CalculationInput,
+  CalculationResult,
+  LengthUnit,
+  ProfileId,
+} from "@ferroscale/metal-core";
+import type { CommandPricing } from "@/lib/settings-stores";
 
 export type CommandFamily =
   | "beam"
@@ -18,11 +24,18 @@ export interface CommandAlias {
   manualProfileId?: ProfileId;
 }
 
-export interface CommandSettings {
-  currency: "EUR" | "USD" | "GBP";
-  rate: number;
-  density: number;
+/** All external state the pure parser needs. */
+export interface CommandParserSettings {
+  pricing: CommandPricing;
   defaultGradeId: string;
+  /** Unit applied to bare-number length tokens (from defaultUnitStore). */
+  defaultLengthUnit: LengthUnit;
+}
+
+/** Full engine artifacts for a valid query — consumed by save/compare/project. */
+export interface CommandCalc {
+  input: CalculationInput;
+  result: CalculationResult;
 }
 
 export interface CommandParseResult {
@@ -32,20 +45,26 @@ export interface CommandParseResult {
   hasSize: boolean;
   lengthM: number | null;
   lengthRaw: number | null;
-  lengthUnit: "mm" | "cm" | "m";
+  lengthUnit: LengthUnit;
+  /** False when the bare-number fallback supplied the unit. */
+  lengthExplicit: boolean;
   qty: number | null;
   realQty: number;
   gradeId: string | null;
   gradeLabel: string | null;
   density: number;
   kgm: number | null;
+  /** Non-null iff valid. */
+  calc: CommandCalc | null;
   perPieceKg: number | null;
   totalKg: number | null;
-  totalEur: number | null;
+  /** result.grandTotalAmount — includes waste and VAT when configured. */
+  totalAmount: number | null;
   selectedSizeId: string | null;
   name: string | null;
   valid: boolean;
-  rate: number;
+  /** Echo of the pricing settings used (for sheet display). */
+  pricing: CommandPricing;
 }
 
 export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "unknown";

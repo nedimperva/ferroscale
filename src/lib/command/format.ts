@@ -22,8 +22,4 @@ export function fsMoney(v: number): string {
   });
 }
 
-export const CURRENCY_SYMBOLS: Record<string, string> = {
-  EUR: "€",
-  USD: "$",
-  GBP: "£",
-};
+export { CURRENCY_SYMBOLS } from "@/lib/calculator/types";

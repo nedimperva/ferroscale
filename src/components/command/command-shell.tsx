@@ -1,15 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useTheme } from "@/hooks/useTheme";
+import { useSaved } from "@/hooks/useSaved";
+import { useCompare } from "@/hooks/useCompare";
+import { useProjects } from "@/hooks/useProjects";
+import { usePresets } from "@/hooks/usePresets";
 import { useRouter } from "@/i18n/navigation";
 import { cmdParse, cmdClassifyToken } from "@/lib/command/parser";
 import { cmdSuggest, cmdApplyInsert } from "@/lib/command/suggest";
 import { COMMAND_ALIAS_RE } from "@/lib/command/aliases";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
+import {
+  defaultUnitStore,
+  sharedCalcSettingsStore,
+  weightAsMainStore,
+} from "@/lib/settings-stores";
 import type {
+  CommandCalc,
   CommandParseResult,
-  CommandSettings,
+  CommandParserSettings,
   CommandSuggestionItem,
   CommandTokenKind,
 } from "@/lib/command/types";
@@ -20,37 +30,11 @@ import {
   CommandSavedSheet,
   CommandSettingsSheet,
 } from "./command-sheets";
+import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
 
 const FRAME_W = 402;
 const FRAME_H = 874;
 const HERO_FONT_WEIGHT = 800;
-
-const DEFAULT_SETTINGS: CommandSettings = {
-  currency: "EUR",
-  rate: 1.18,
-  density: 7850,
-  defaultGradeId: "steel-s235jr",
-};
-
-function loadSettings(): CommandSettings {
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
-  try {
-    const raw = window.localStorage.getItem("ferroscale-command-settings");
-    if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
-}
-
-function persistSettings(s: CommandSettings) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem("ferroscale-command-settings", JSON.stringify(s));
-  } catch {
-    /* noop */
-  }
-}
 
 function loadStrings(key: string, fallback: string[] = []): string[] {
   if (typeof window === "undefined") return fallback;
@@ -84,29 +68,71 @@ export function CommandShell() {
   const dark = resolvedTheme === "dark";
   const router = useRouter();
 
-  const [settings, setSettingsState] = useState<CommandSettings>(DEFAULT_SETTINGS);
+  // Shared app settings — same sources the legacy /settings tab edits.
+  const shared = useSyncExternalStore(
+    sharedCalcSettingsStore.subscribe,
+    sharedCalcSettingsStore.getSnapshot,
+    sharedCalcSettingsStore.getServerSnapshot,
+  );
+  const weightAsMain = useSyncExternalStore(
+    weightAsMainStore.subscribe,
+    weightAsMainStore.getSnapshot,
+    weightAsMainStore.getServerSnapshot,
+  );
+  const defaultUnit = useSyncExternalStore(
+    defaultUnitStore.subscribe,
+    defaultUnitStore.getSnapshot,
+    defaultUnitStore.getServerSnapshot,
+  );
+
+  // App-wide libraries (saves, compare, projects, presets).
+  const { saveCalculation, isSaved } = useSaved();
+  const { addItem: addCompareItem, isDuplicate: isInCompare } = useCompare();
+  const { projects, createProject, addCalculation } = useProjects();
+  const { presetsForProfile } = usePresets();
+
   const [query, setQuery] = useState("hea120 6m x2 s235");
-  const [mode, setMode] = useState<"weight" | "price">("weight");
+  // weightAsMain decides the default hero metric; the toggle is a local override.
+  const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
+  const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "saved">(null);
   const [toast, setToast] = useState<string | null>(null);
   const [recents, setRecents] = useState<string[]>(STARTER_RECENTS);
   const [saved, setSaved] = useState<string[]>([]);
+  const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   const [scale, setScale] = useState(1);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+
+  const parserSettings: CommandParserSettings = useMemo(
+    () => ({
+      pricing: {
+        priceBasis: shared.priceBasis,
+        priceUnit: shared.priceUnit,
+        unitPrice: shared.unitPrice,
+        currency: shared.currency,
+        wastePercent: shared.wastePercent,
+        includeVat: shared.includeVat,
+        vatPercent: shared.vatPercent,
+      },
+      defaultGradeId: shared.defaultGradeId,
+      defaultLengthUnit: defaultUnit,
+    }),
+    [shared, defaultUnit],
+  );
 
   // Hydrate persisted state on mount. setState-in-effect is intentional here:
   // initial SSR/first-paint values must match defaults to avoid hydration
   // mismatches, then we apply localStorage once on the client.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSettingsState(loadSettings());
     setRecents(loadStrings("ferroscale-command-recents", STARTER_RECENTS));
     setSaved(loadStrings("ferroscale-command-saved", []));
+    // Settings moved to the shared persisted calculator input — drop the old key.
+    try {
+      window.localStorage.removeItem("ferroscale-command-settings");
+    } catch { /* noop */ }
   }, []);
 
-  useEffect(() => {
-    persistSettings(settings);
-  }, [settings]);
   useEffect(() => {
     persistStrings("ferroscale-command-recents", recents);
   }, [recents]);
@@ -134,18 +160,18 @@ export function CommandShell() {
   }, []);
 
   const p: CommandParseResult = useMemo(
-    () => cmdParse(query, settings),
-    [query, settings],
+    () => cmdParse(query, parserSettings),
+    [query, parserSettings],
   );
   const sug = useMemo(
-    () => cmdSuggest(query, settings),
-    [query, settings],
+    () => cmdSuggest(query, parserSettings, presetsForProfile),
+    [query, parserSettings, presetsForProfile],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
   const effectiveSheet = sheet === "result" && !p.valid ? null : sheet;
 
-  const sym = CURRENCY_SYMBOLS[settings.currency] ?? "€";
+  const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   const isW = mode === "weight";
 
   const showToast = useCallback((msg: string) => {
@@ -154,14 +180,36 @@ export function CommandShell() {
   }, []);
 
   const doSave = useCallback(() => {
-    if (!p.valid) {
+    if (!p.calc) {
       showToast("Add length to save");
       return;
     }
+    // Real save — appears on /saved and syncs like any other calculation.
+    if (!isSaved(p.calc.result)) {
+      const autoName = `${p.name} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
+      saveCalculation(p.calc.input, p.calc.result, autoName);
+    }
+    // Local query-string recall for the in-sheet lists.
     setSaved((s) => [query, ...s.filter((x) => x !== query)].slice(0, 12));
     setRecents((r) => [query, ...r.filter((x) => x !== query)].slice(0, 8));
     showToast("Saved");
-  }, [p.valid, query, showToast]);
+  }, [p, query, isSaved, saveCalculation, showToast]);
+
+  const doCompare = useCallback(() => {
+    if (!p.calc) return;
+    if (isInCompare(p.calc.result)) {
+      showToast("Already in compare");
+      return;
+    }
+    addCompareItem(p.calc.input, p.calc.result);
+    showToast("Added to compare");
+  }, [p.calc, isInCompare, addCompareItem, showToast]);
+
+  const openProjectModal = useCallback(() => {
+    if (!p.calc) return;
+    setSheet(null);
+    setProjectCalc(p.calc);
+  }, [p.calc]);
 
   const newCalc = useCallback(() => {
     if (p.valid) {
@@ -199,8 +247,8 @@ export function CommandShell() {
     ? p.totalKg != null
       ? fsWeight(p.totalKg)
       : "—"
-    : p.totalEur != null
-      ? fsMoney(p.totalEur)
+    : p.totalAmount != null
+      ? fsMoney(p.totalAmount)
       : "—";
 
   const tokens = query.split(/(\s+)/).filter((s) => s.length);
@@ -318,7 +366,7 @@ export function CommandShell() {
                   <button
                     key={m}
                     type="button"
-                    onClick={() => setMode(m)}
+                    onClick={() => setModeOverride(m)}
                     className="flex-1 py-2 rounded-[11px] text-[11px] font-bold tracking-[1.4px]"
                     style={{
                       border: active
@@ -352,7 +400,7 @@ export function CommandShell() {
               style={{ cursor: p.valid ? "pointer" : "default" }}
             >
               <div className="flex items-baseline gap-2">
-                {!isW && p.totalEur != null && (
+                {!isW && p.totalAmount != null && (
                   <span
                     className="text-[34px] leading-none"
                     style={{
@@ -391,14 +439,22 @@ export function CommandShell() {
 
             <div className="flex items-center gap-2.5 mt-3 pb-3.5 border-b border-border-faint">
               {p.valid && p.kgm != null ? (
-                <span className="font-mono text-[12px] text-muted">
-                  <span className="text-foreground-secondary">
-                    {p.kgm.toFixed(2)}
-                  </span>{" "}
-                  kg/m ×{" "}
-                  <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
-                  m × <span className="text-foreground-secondary">{p.realQty}</span>
-                  {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
+                  <span>
+                    <span className="text-foreground-secondary">
+                      {p.kgm.toFixed(2)}
+                    </span>{" "}
+                    kg/m ×{" "}
+                    <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
+                    m × <span className="text-foreground-secondary">{p.realQty}</span>
+                    {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                  </span>
+                  {!isW && p.pricing.wastePercent > 0 && (
+                    <PricingBadge>+{p.pricing.wastePercent}% waste</PricingBadge>
+                  )}
+                  {!isW && p.pricing.includeVat && (
+                    <PricingBadge>+VAT {p.pricing.vatPercent}%</PricingBadge>
+                  )}
                 </span>
               ) : (
                 <span className="font-mono text-[12px] text-muted-faint">
@@ -572,7 +628,6 @@ export function CommandShell() {
           {effectiveSheet === "result" && p.valid && (
             <CommandResultSheet
               p={p}
-              sym={sym}
               onClose={() => setSheet(null)}
               onSave={doSave}
               onCopy={() => {
@@ -584,12 +639,24 @@ export function CommandShell() {
                 setSheet(null);
                 newCalc();
               }}
+              onCompare={() => {
+                setSheet(null);
+                doCompare();
+              }}
+              onAddToProject={openProjectModal}
             />
           )}
           {effectiveSheet === "settings" && (
             <CommandSettingsSheet
-              settings={settings}
-              setSettings={setSettingsState}
+              shared={shared}
+              onUpdateShared={sharedCalcSettingsStore.update}
+              weightAsMain={weightAsMain}
+              onSetWeightAsMain={(value) => {
+                weightAsMainStore.set(value);
+                setModeOverride(null);
+              }}
+              defaultUnit={defaultUnit}
+              onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
               themeLabel={dark ? "Dark" : "Light"}
@@ -597,7 +664,7 @@ export function CommandShell() {
           )}
           {effectiveSheet === "saved" && (
             <CommandSavedSheet
-              settings={settings}
+              settings={parserSettings}
               saved={saved}
               recents={recents}
               onClose={() => setSheet(null)}
@@ -640,7 +707,29 @@ export function CommandShell() {
         onProjects={() => router.push("/projects")}
         onSettings={() => router.push("/settings")}
       />
+
+      {/* Add-to-project modal (snapshot of the calc at open time) */}
+      {projectCalc && (
+        <SaveToProjectModal
+          open
+          onClose={() => setProjectCalc(null)}
+          projects={projects}
+          onCreateProject={createProject}
+          onAddCalculation={addCalculation}
+          currentInput={projectCalc.input}
+          currentResult={projectCalc.result}
+          onOpenDrawer={() => router.push("/projects")}
+        />
+      )}
     </div>
+  );
+}
+
+function PricingBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--blue-surface)] text-[var(--blue-text)] whitespace-nowrap">
+      {children}
+    </span>
   );
 }
 
@@ -752,9 +841,9 @@ function PreviewCard({
               color: p.valid ? "var(--foreground)" : "var(--muted-faint)",
             }}
           >
-            {p.valid && p.totalKg != null && p.totalEur != null
+            {p.valid && p.totalKg != null && p.totalAmount != null
               ? isWeight
-                ? `${sym} ${fsMoney(p.totalEur)}`
+                ? `${sym} ${fsMoney(p.totalAmount)}`
                 : `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`
               : "—"}
           </div>

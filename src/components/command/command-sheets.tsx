@@ -5,7 +5,22 @@ import { CommandGlyph } from "./command-glyph";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
 import { COMMAND_GRADES } from "@/lib/command/aliases";
 import { cmdParse } from "@/lib/command/parser";
-import type { CommandParseResult, CommandSettings } from "@/lib/command/types";
+import type {
+  CommandParseResult,
+  CommandParserSettings,
+} from "@/lib/command/types";
+import type { SharedCalcSettings } from "@/lib/settings-stores";
+import type { CurrencyCode, LengthUnit, PriceBasis, PriceUnit } from "@/lib/calculator/types";
+
+const CURRENCIES: CurrencyCode[] = ["EUR", "USD", "GBP", "PLN", "BAM"];
+const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
+
+/** Mirrors the legacy reducer's SET_PRICE_BASIS unit mapping. */
+const BASIS_UNIT: Record<PriceBasis, PriceUnit> = {
+  weight: "kg",
+  length: "m",
+  piece: "piece",
+};
 
 interface SheetShellProps {
   title: string;
@@ -49,10 +64,12 @@ function SheetRow({
   label,
   value,
   mono,
+  strong,
 }: {
   label: string;
   value: string;
   mono?: boolean;
+  strong?: boolean;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-2.5 border-b border-border-faint last:border-b-0">
@@ -60,9 +77,9 @@ function SheetRow({
         {label}
       </span>
       <span
-        className={`text-sm font-semibold text-foreground tabular-nums ${
+        className={`text-sm text-foreground tabular-nums ${
           mono ? "font-mono" : ""
-        }`}
+        } ${strong ? "font-bold" : "font-semibold"}`}
       >
         {value}
       </span>
@@ -79,10 +96,10 @@ function SettingsRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3 border-b border-border-faint last:border-b-0">
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted whitespace-nowrap">
         {label}
       </span>
-      <div className="flex items-center gap-1.5">{children}</div>
+      <div className="flex items-center gap-1.5 flex-wrap justify-end">{children}</div>
     </div>
   );
 }
@@ -100,7 +117,7 @@ function SettingsPill({
     <button
       type="button"
       onClick={onClick}
-      className={`px-3 h-8 rounded-lg text-xs font-semibold border ${
+      className={`px-2.5 h-8 rounded-lg text-xs font-semibold border ${
         active
           ? "bg-[var(--accent-surface)] border-[var(--accent-border)] text-[var(--accent-text)]"
           : "bg-[var(--surface)] border-border-faint text-foreground-secondary"
@@ -113,26 +130,30 @@ function SettingsPill({
 
 interface CommandResultSheetProps {
   p: CommandParseResult;
-  sym: string;
   onClose: () => void;
   onSave: () => void;
   onCopy: () => void;
   onNew: () => void;
+  onCompare: () => void;
+  onAddToProject: () => void;
 }
 
 export function CommandResultSheet({
   p,
-  sym,
   onClose,
   onSave,
   onCopy,
   onNew,
+  onCompare,
+  onAddToProject,
 }: CommandResultSheetProps) {
-  if (!p.valid || p.totalKg == null || p.perPieceKg == null || p.kgm == null) {
+  if (!p.calc || p.kgm == null) {
     return null;
   }
-  const totalKg = p.totalKg;
-  const perPieceKg = p.perPieceKg;
+  const r = p.calc.result;
+  const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
+  const secondaryBtn =
+    "flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
   return (
     <SheetShell title="Result breakdown" onClose={onClose}>
       <div className="flex items-baseline gap-2 mb-3">
@@ -150,11 +171,34 @@ export function CommandResultSheet({
         <SheetRow label="Mass per metre" value={`${p.kgm.toFixed(2)} kg/m`} mono />
         <SheetRow label="Length" value={`${p.lengthM} m`} mono />
         <SheetRow label="Pieces" value={`× ${p.realQty}`} mono />
-        <SheetRow label="Per piece" value={`${fsWeight(perPieceKg)} ${fsWeightUnit(perPieceKg)}`} mono />
-        <SheetRow label="Total weight" value={`${fsWeight(totalKg)} ${fsWeightUnit(totalKg)}`} mono />
-        <SheetRow label="Density" value={`${p.density} kg/m³`} mono />
-        <SheetRow label="Rate" value={`${sym} ${p.rate.toFixed(2)}/kg`} mono />
-        <SheetRow label="Total cost" value={`${sym} ${fsMoney(p.totalEur ?? 0)}`} mono />
+        <SheetRow
+          label="Per piece"
+          value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
+          mono
+        />
+        <SheetRow
+          label="Total weight"
+          value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
+          mono
+        />
+        <SheetRow label="Density" value={`${r.densityKgPerM3} kg/m³`} mono />
+        <SheetRow label="Rate" value={`${sym} ${fsMoney(r.unitPriceAmount)}/${r.priceUnit}`} mono />
+        <SheetRow label="Subtotal" value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
+        {p.pricing.wastePercent > 0 && (
+          <SheetRow
+            label={`Waste +${p.pricing.wastePercent}%`}
+            value={`${sym} ${fsMoney(r.wasteAmount)}`}
+            mono
+          />
+        )}
+        {p.pricing.includeVat && (
+          <SheetRow
+            label={`VAT ${p.pricing.vatPercent}%`}
+            value={`${sym} ${fsMoney(r.vatAmount)}`}
+            mono
+          />
+        )}
+        <SheetRow label="Total cost" value={`${sym} ${fsMoney(r.grandTotalAmount)}`} mono strong />
       </div>
       <div className="flex gap-2 mt-4">
         <button
@@ -164,19 +208,19 @@ export function CommandResultSheet({
         >
           Save
         </button>
-        <button
-          type="button"
-          onClick={onCopy}
-          className="flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground"
-        >
+        <button type="button" onClick={onCopy} className={secondaryBtn}>
           Copy
         </button>
-        <button
-          type="button"
-          onClick={onNew}
-          className="flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground"
-        >
+        <button type="button" onClick={onNew} className={secondaryBtn}>
           New
+        </button>
+      </div>
+      <div className="flex gap-2 mt-2">
+        <button type="button" onClick={onCompare} className={secondaryBtn}>
+          Compare
+        </button>
+        <button type="button" onClick={onAddToProject} className={secondaryBtn}>
+          + Project
         </button>
       </div>
     </SheetShell>
@@ -184,52 +228,116 @@ export function CommandResultSheet({
 }
 
 interface CommandSettingsSheetProps {
-  settings: CommandSettings;
-  setSettings: (s: CommandSettings) => void;
+  shared: SharedCalcSettings;
+  onUpdateShared: (patch: Partial<SharedCalcSettings>) => void;
+  weightAsMain: boolean;
+  onSetWeightAsMain: (value: boolean) => void;
+  defaultUnit: LengthUnit;
+  onSetDefaultUnit: (unit: LengthUnit) => void;
   onClose: () => void;
   onToggleTheme: () => void;
   themeLabel: string;
 }
 
 export function CommandSettingsSheet({
-  settings,
-  setSettings,
+  shared,
+  onUpdateShared,
+  weightAsMain,
+  onSetWeightAsMain,
+  defaultUnit,
+  onSetDefaultUnit,
   onClose,
   onToggleTheme,
   themeLabel,
 }: CommandSettingsSheetProps) {
+  const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
+  const numberInput =
+    "h-9 w-20 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground";
   return (
     <SheetShell title="Settings" onClose={onClose}>
       <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4">
+        <SettingsRow label="Main result">
+          <SettingsPill active={weightAsMain} onClick={() => onSetWeightAsMain(true)}>
+            Weight
+          </SettingsPill>
+          <SettingsPill active={!weightAsMain} onClick={() => onSetWeightAsMain(false)}>
+            Price
+          </SettingsPill>
+        </SettingsRow>
         <SettingsRow label="Currency">
-          {(["EUR", "USD", "GBP"] as const).map((c) => (
+          {CURRENCIES.map((c) => (
             <SettingsPill
               key={c}
-              active={settings.currency === c}
-              onClick={() => setSettings({ ...settings, currency: c })}
+              active={shared.currency === c}
+              onClick={() => onUpdateShared({ currency: c })}
             >
               {c}
             </SettingsPill>
           ))}
         </SettingsRow>
-        <SettingsRow label="€ / kg">
+        <SettingsRow label="Price basis">
+          {(Object.keys(BASIS_UNIT) as PriceBasis[]).map((basis) => (
+            <SettingsPill
+              key={basis}
+              active={shared.priceBasis === basis}
+              onClick={() =>
+                onUpdateShared({ priceBasis: basis, priceUnit: BASIS_UNIT[basis] })
+              }
+            >
+              {basis === "weight" ? "Weight" : basis === "length" ? "Length" : "Piece"}
+            </SettingsPill>
+          ))}
+        </SettingsRow>
+        <SettingsRow label={`${sym} / ${shared.priceUnit}`}>
           <input
             type="number"
             step={0.01}
             min={0}
-            value={settings.rate}
+            value={shared.unitPrice}
             onChange={(e) =>
-              setSettings({ ...settings, rate: parseFloat(e.target.value) || 0 })
+              onUpdateShared({ unitPrice: parseFloat(e.target.value) || 0 })
             }
-            className="h-9 w-24 rounded-lg border border-border-faint bg-[var(--surface)] px-3 text-right font-mono text-sm text-foreground"
+            className={numberInput}
           />
+        </SettingsRow>
+        <SettingsRow label="Waste %">
+          <input
+            type="number"
+            step={1}
+            min={0}
+            max={100}
+            value={shared.wastePercent}
+            onChange={(e) =>
+              onUpdateShared({ wastePercent: parseFloat(e.target.value) || 0 })
+            }
+            className={numberInput}
+          />
+        </SettingsRow>
+        <SettingsRow label="VAT">
+          <SettingsPill
+            active={shared.includeVat}
+            onClick={() => onUpdateShared({ includeVat: !shared.includeVat })}
+          >
+            {shared.includeVat ? "On" : "Off"}
+          </SettingsPill>
+          {shared.includeVat && (
+            <input
+              type="number"
+              step={1}
+              min={0}
+              max={100}
+              value={shared.vatPercent}
+              onChange={(e) =>
+                onUpdateShared({ vatPercent: parseFloat(e.target.value) || 0 })
+              }
+              className={numberInput}
+            />
+          )}
         </SettingsRow>
         <SettingsRow label="Default grade">
           <select
-            value={settings.defaultGradeId}
-            onChange={(e) =>
-              setSettings({ ...settings, defaultGradeId: e.target.value })
-            }
+            value={shared.defaultGradeId}
+            onChange={(e) => onUpdateShared({ defaultGradeId: e.target.value })}
             className="h-9 rounded-lg border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground"
           >
             {COMMAND_GRADES.map((g) => (
@@ -238,6 +346,17 @@ export function CommandSettingsSheet({
               </option>
             ))}
           </select>
+        </SettingsRow>
+        <SettingsRow label="Default unit">
+          {UNIT_OPTIONS.map((u) => (
+            <SettingsPill
+              key={u}
+              active={defaultUnit === u}
+              onClick={() => onSetDefaultUnit(u)}
+            >
+              {u}
+            </SettingsPill>
+          ))}
         </SettingsRow>
         <SettingsRow label="Theme">
           <button
@@ -249,12 +368,16 @@ export function CommandSettingsSheet({
           </button>
         </SettingsRow>
       </div>
+      <p className="text-[11px] text-muted mt-3 px-1">
+        Pricing, grade, and unit settings are shared with the full app — changes
+        here apply everywhere.
+      </p>
     </SheetShell>
   );
 }
 
 interface CommandSavedSheetProps {
-  settings: CommandSettings;
+  settings: CommandParserSettings;
   saved: string[];
   recents: string[];
   onClose: () => void;

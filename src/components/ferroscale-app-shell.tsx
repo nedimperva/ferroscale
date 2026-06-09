@@ -26,7 +26,8 @@ import { getProfileById } from "@/lib/datasets/profiles";
 import { APP_TABS, getAdjacentAppTab, getAppTabHref, getAppTabIndex, type AppTabId } from "@/lib/app-shell";
 import { triggerHaptic } from "@/lib/haptics";
 import { APP_VERSION } from "@/lib/changelog";
-import { createBoolStore, createStringStore } from "@/lib/external-stores";
+import { createBoolStore } from "@/lib/external-stores";
+import { defaultUnitStore, weightAsMainStore } from "@/lib/settings-stores";
 import { useColumnLayout } from "@/hooks/useColumnLayout";
 import type { ColumnPanelId } from "@/lib/column-layout";
 import {
@@ -58,10 +59,8 @@ import { MultiColumnLayout } from "@/components/columns/multi-column-layout";
 const inlineMaterialStore = createBoolStore("ferroscale-inline-material", true);
 const inlinePriceStore = createBoolStore("ferroscale-inline-price", true);
 const settingsPreviewStore = createBoolStore("ferroscale-settings-preview", true);
-const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
 
 const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
-const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
 const SETTINGS_ISSUE_FIELDS = new Set([
   "materialGradeId",
