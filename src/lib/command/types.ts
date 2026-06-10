@@ -16,8 +16,7 @@ export type CommandFamily =
   | "flat"
   | "angle"
   | "sqbar"
-  | "sheet"
-  | "plate"
+  | "panel"
   | "chequered"
   | "expanded"
   | "corrugated";

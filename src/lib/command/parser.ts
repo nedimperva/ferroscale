@@ -6,6 +6,7 @@ import {
   type CalculationInput,
   type DimensionKey,
   type LengthUnit,
+  type ProfileId,
 } from "@ferroscale/metal-core";
 import type { CommandPricing } from "@/lib/settings-stores";
 import {
@@ -29,14 +30,16 @@ const LENGTH_RE = /^(\d+(?:\.\d+)?)(mm|cm|m|in|ft)$/;
 const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
 const QTY_RE = /^[x×*](\d+)$/;
 
-/** Families whose size token bakes the length in (w × l × t for sheets/plates). */
+/** Families whose size token bakes the length in (w × l × t for panels). */
 const SHEET_LIKE_FAMILIES = new Set<CommandFamily>([
-  "sheet",
-  "plate",
+  "panel",
   "expanded",
   "corrugated",
   "chequered",
 ]);
+
+/** EN convention: sheets are ≤ 6 mm thick, plates are thicker. */
+const PLATE_THICKNESS_THRESHOLD_MM = 6;
 
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(n));
 
@@ -76,11 +79,10 @@ export function dimsToSizeText(
       return d.legA != null && d.legB != null && d.thickness != null
         ? `${fmt(d.legA)}x${fmt(d.legB)}x${fmt(d.thickness)}`
         : null;
-    case "sheet":
-    case "plate":
+    case "panel":
     case "expanded":
     case "corrugated":
-      // Sheets/plates are spec'd as one piece: width × length × thickness.
+      // One-piece spec: width × length × thickness.
       return d.width != null && d.thickness != null && lengthMm != null
         ? `${fmt(d.width)}x${fmt(lengthMm)}x${fmt(d.thickness)}`
         : null;
@@ -121,7 +123,9 @@ export function inputToQuery(
     sizeText = input.selectedSizeId.startsWith(alias.alias)
       ? input.selectedSizeId.slice(alias.alias.length)
       : null;
-  } else if (alias.manualProfileId) {
+  } else if (alias.manualProfileId || alias.fam === "panel") {
+    // Panel has no fixed manualProfileId — the backing profile (sheet/plate)
+    // is on input.profileId itself. Other manual families bind via alias.
     const dimsMm: Partial<Record<DimensionKey, number>> = {};
     for (const key of Object.keys(input.manualDimensions) as DimensionKey[]) {
       const entry = input.manualDimensions[key];
@@ -199,7 +203,9 @@ function buildCalculationInput(
     };
   }
 
-  if (!alias.manualProfileId) return null;
+  // Panel picks its backing profile from thickness at runtime, so it has no
+  // fixed manualProfileId. Every other manual family needs one.
+  if (alias.fam !== "panel" && !alias.manualProfileId) return null;
 
   const manualDimensions: Partial<Record<DimensionKey, { value: number; unit: "mm" }>> = {};
   const setDim = (key: DimensionKey, value: number) => {
@@ -264,10 +270,25 @@ function buildCalculationInput(
       setDim("thickness", t);
       break;
     }
-    // Sheet/plate-like pieces are spec'd as one block (width × length × thickness).
-    // Length comes from the size token, not a separate length token.
-    case "sheet":
-    case "plate":
+    // Flat panels (sheets and plates) are spec'd as one block
+    // width × length × thickness. We pick the right EN backing profile by
+    // thickness so the user never has to choose between "sheet" and "plate".
+    case "panel": {
+      const w = dims[0];
+      const l = dims[1];
+      const t = dims[2];
+      if (!w || !l || !t) return null;
+      setDim("width", w);
+      setDim("thickness", t);
+      const panelProfileId: ProfileId =
+        t <= PLATE_THICKNESS_THRESHOLD_MM ? "sheet" : "plate";
+      return {
+        ...base,
+        profileId: panelProfileId,
+        manualDimensions,
+        length: { value: l, unit: "mm" },
+      };
+    }
     case "expanded":
     case "corrugated": {
       const w = dims[0];
@@ -276,6 +297,7 @@ function buildCalculationInput(
       if (!w || !l || !t) return null;
       setDim("width", w);
       setDim("thickness", t);
+      if (!alias.manualProfileId) return null;
       return {
         ...base,
         profileId: alias.manualProfileId,
@@ -292,6 +314,7 @@ function buildCalculationInput(
       setDim("width", w);
       setDim("thickness", t);
       setDim("patternHeight", ph);
+      if (!alias.manualProfileId) return null;
       return {
         ...base,
         profileId: alias.manualProfileId,
@@ -303,6 +326,7 @@ function buildCalculationInput(
       return null;
   }
 
+  if (!alias.manualProfileId) return null;
   return {
     ...base,
     profileId: alias.manualProfileId,

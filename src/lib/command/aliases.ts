@@ -17,8 +17,11 @@ export const COMMAND_ALIASES: CommandAlias[] = [
   { alias: "sq", name: "Square bar", fam: "sqbar", profileId: null, manualProfileId: "square_bar" },
   { alias: "flt", name: "Flat", fam: "flat", profileId: null, manualProfileId: "flat_bar" },
   { alias: "l", name: "Angle", fam: "angle", profileId: null, manualProfileId: "angle" },
-  { alias: "sht", name: "Sheet", fam: "sheet", profileId: null, manualProfileId: "sheet" },
-  { alias: "plt", name: "Plate", fam: "plate", profileId: null, manualProfileId: "plate" },
+  // "Sheet" and "Plate" are the same product class — just different EN
+  // standards for thin vs thick. Both aliases resolve to the unified "panel"
+  // family and the parser routes to the right backing profile by thickness.
+  { alias: "plt", name: "Plate", fam: "panel", profileId: null },
+  { alias: "sht", name: "Plate", fam: "panel", profileId: null },
   { alias: "chq", name: "Chequered", fam: "chequered", profileId: null, manualProfileId: "chequered_plate" },
   { alias: "xpm", name: "Expanded", fam: "expanded", profileId: null, manualProfileId: "expanded_metal" },
   { alias: "corr", name: "Corrugated", fam: "corrugated", profileId: null, manualProfileId: "corrugated_sheet" },
@@ -44,6 +47,11 @@ export function findAliasByKey(key: string): CommandAlias | null {
 }
 
 export function findAliasByProfileId(profileId: string): CommandAlias | null {
+  // sheet/plate backing profiles both belong to the unified "panel" family
+  // (canonical alias: plt) so saved entries round-trip cleanly.
+  if (profileId === "sheet" || profileId === "plate") {
+    return ALIAS_LOOKUP.get("plt") ?? null;
+  }
   return (
     COMMAND_ALIASES.find(
       (a) => a.profileId === profileId || a.manualProfileId === profileId,
@@ -63,18 +71,14 @@ export const COMMAND_SIZES: Record<CommandAlias["fam"], string[]> = {
   flat: ["20x5", "30x5", "40x8", "50x10", "60x8", "80x10"],
   angle: ["30x30x3", "40x40x4", "50x50x5", "60x60x6", "80x80x8"],
   // Natural piece spec: width × length × thickness, all in mm.
-  sheet: [
+  // Sheet/plate are unified — the parser picks the right backing profile
+  // (sheet for ≤6 mm, plate for >6 mm) by thickness.
+  panel: [
     "1000x2000x1",
-    "1250x2500x1.5",
     "1250x2500x2",
-    "1500x3000x2",
     "1500x3000x3",
-    "2000x1000x1.5",
-  ],
-  plate: [
     "1500x3000x6",
     "1500x3000x10",
-    "2000x6000x10",
     "2000x6000x15",
     "2500x6000x20",
   ],

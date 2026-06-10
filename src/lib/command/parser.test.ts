@@ -115,10 +115,11 @@ describe("cmdParse", () => {
     expect(p.density).toBe(8000);
   });
 
-  it("parses sheets as a single piece: width × length × thickness", () => {
-    const p = cmdParse("sht1500x3000x3", mkSettings());
+  it("parses panels as a single piece: width × length × thickness", () => {
+    const p = cmdParse("plt1500x3000x3", mkSettings());
     expect(p.valid).toBe(true);
-    expect(p.alias?.fam).toBe("sheet");
+    expect(p.alias?.fam).toBe("panel");
+    // Thin → routes to the "sheet" backing profile (EN 10051)
     expect(p.calc!.input.profileId).toBe("sheet");
     expect(p.calc!.input.manualDimensions.width).toEqual({ value: 1500, unit: "mm" });
     expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 3, unit: "mm" });
@@ -128,19 +129,33 @@ describe("cmdParse", () => {
     expect(p.lengthUnit).toBe("mm");
   });
 
-  it("parses small plate pieces with no separate length token", () => {
+  it("the sht alias still works (backward compat) — same family as plt", () => {
+    const p = cmdParse("sht1500x3000x2", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.alias?.fam).toBe("panel");
+    expect(p.calc!.input.profileId).toBe("sheet");
+  });
+
+  it("thicker panels route to the plate backing profile (EN 10029)", () => {
     const p = cmdParse("plt200x40x10", mkSettings());
     expect(p.valid).toBe(true);
+    expect(p.alias?.fam).toBe("panel");
     expect(p.calc!.input.profileId).toBe("plate");
     expect(p.calc!.input.manualDimensions.width).toEqual({ value: 200, unit: "mm" });
     expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 10, unit: "mm" });
     expect(p.calc!.input.length).toEqual({ value: 40, unit: "mm" });
   });
 
-  it("parses plates with quantity", () => {
+  it("the 6 mm boundary picks sheet for ≤ 6, plate for > 6", () => {
+    expect(cmdParse("plt1500x3000x6", mkSettings()).calc!.input.profileId).toBe("sheet");
+    expect(cmdParse("plt1500x3000x6.5", mkSettings()).calc!.input.profileId).toBe("plate");
+    expect(cmdParse("plt1500x3000x8", mkSettings()).calc!.input.profileId).toBe("plate");
+  });
+
+  it("parses panels with quantity", () => {
     const p = cmdParse("plt1500x3000x10 x4", mkSettings());
     expect(p.valid).toBe(true);
-    expect(p.alias?.fam).toBe("plate");
+    expect(p.alias?.fam).toBe("panel");
     expect(p.realQty).toBe(4);
     expect(p.calc!.input.length).toEqual({ value: 3000, unit: "mm" });
   });
@@ -212,12 +227,21 @@ describe("inputToQuery", () => {
     expect(inputToQuery(input, "m")).toBe("");
   });
 
-  it("round-trips sheets without a separate length token", () => {
+  it("round-trips panels without a separate length token (canonical alias = plt)", () => {
     const settings = mkSettings();
+    // Even if the user typed "sht", round-trip normalizes to canonical "plt".
     const p = cmdParse("sht1500x3000x3 x4", settings);
     expect(p.valid).toBe(true);
     const q = inputToQuery(p.calc!.input, "m", { defaultGradeId: settings.defaultGradeId });
-    expect(q).toBe("sht1500x3000x3 x4");
+    expect(q).toBe("plt1500x3000x3 x4");
+  });
+
+  it("round-trips thick plates", () => {
+    const settings = mkSettings();
+    const p = cmdParse("plt1500x3000x10", settings);
+    expect(p.valid).toBe(true);
+    const q = inputToQuery(p.calc!.input, "m", { defaultGradeId: settings.defaultGradeId });
+    expect(q).toBe("plt1500x3000x10");
   });
 
   it("round-trips chequered plates", () => {

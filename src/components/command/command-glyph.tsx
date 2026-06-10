@@ -76,13 +76,7 @@ export function CommandGlyph({ fam, size = 20, className }: CommandGlyphProps) {
           <path d="M4 5h16M12 5v15" />
         </svg>
       );
-    case "sheet":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
-          <rect x="3" y="11" width="18" height="2.5" rx="0.5" fill="currentColor" />
-        </svg>
-      );
-    case "plate":
+    case "panel":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
           <rect x="3" y="9" width="18" height="6" rx="0.6" fill="currentColor" />

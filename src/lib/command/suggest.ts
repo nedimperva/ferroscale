@@ -37,7 +37,7 @@ const FRONT_ALIASES = [
   "t",
   "shs", "rhs", "chs",
   "rnd", "flt", "l",
-  "sht", "plt", "chq",
+  "plt", "chq",
 ];
 
 /**
