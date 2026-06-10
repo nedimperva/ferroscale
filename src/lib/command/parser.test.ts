@@ -114,6 +114,39 @@ describe("cmdParse", () => {
     expect(p.calc!.input.materialGradeId).toBe("stainless-316l");
     expect(p.density).toBe(8000);
   });
+
+  it("parses sheets with width × thickness + separate length", () => {
+    const p = cmdParse("sht1250x2 3m", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.alias?.fam).toBe("sheet");
+    expect(p.calc!.input.profileId).toBe("sheet");
+    expect(p.calc!.input.manualDimensions.width).toEqual({ value: 1250, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 2, unit: "mm" });
+    expect(p.lengthM).toBe(3);
+  });
+
+  it("parses plates", () => {
+    const p = cmdParse("plt1500x10 2m x4", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.alias?.fam).toBe("plate");
+    expect(p.calc!.input.profileId).toBe("plate");
+    expect(p.realQty).toBe(4);
+  });
+
+  it("parses chequered plates with width × thickness × pattern", () => {
+    const p = cmdParse("chq1500x5x2 3m", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.alias?.fam).toBe("chequered");
+    expect(p.calc!.input.manualDimensions.patternHeight).toEqual({ value: 2, unit: "mm" });
+  });
+
+  it("parses tees as a standard EN profile", () => {
+    const p = cmdParse("t30x4 6m", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.alias?.fam).toBe("tee");
+    expect(p.calc!.input.profileId).toBe("tee_en");
+    expect(p.calc!.input.selectedSizeId).toBe("t30x4");
+  });
 });
 
 describe("inputToQuery", () => {

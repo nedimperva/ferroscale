@@ -241,7 +241,10 @@ export function CommandShell() {
       ? fsMoney(p.totalAmount)
       : "—";
 
-  const tokens = query.split(/(\s+)/).filter((s) => s.length);
+  const queryTokens = query.trim().split(/\s+/).filter(Boolean);
+  const removeTokenAt = (idx: number) => {
+    setQuery(queryTokens.filter((_, i) => i !== idx).join(" "));
+  };
   const kindBg: Record<CommandTokenKind, string> = {
     profile: "bg-[var(--accent-surface)] text-[var(--accent-text)]",
     len: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
@@ -579,21 +582,29 @@ export function CommandShell() {
               >
                 ›
               </span>
-              {tokens.length === 0 && (
+              {queryTokens.length === 0 && (
                 <span className="font-mono text-sm text-muted-faint">
                   type or tap a profile…
                 </span>
               )}
-              {tokens.map((tok, i) => {
-                if (/^\s+$/.test(tok)) return <span key={i} style={{ width: 3 }} />;
+              {queryTokens.map((tok, i) => {
                 const k = cmdClassifyToken(tok);
                 return (
-                  <span
-                    key={i}
-                    className={`font-mono text-sm font-semibold px-2 py-0.5 rounded-md ${kindBg[k]}`}
+                  <button
+                    key={`${tok}-${i}`}
+                    type="button"
+                    onClick={() => removeTokenAt(i)}
+                    aria-label={`Remove ${tok}`}
+                    className={`group inline-flex items-center gap-1 font-mono text-sm font-semibold pl-2 pr-1.5 py-0.5 rounded-md ${kindBg[k]}`}
                   >
-                    {tok}
-                  </span>
+                    <span>{tok}</span>
+                    <span
+                      aria-hidden="true"
+                      className="opacity-50 group-hover:opacity-100 transition-opacity text-[12px] leading-none"
+                    >
+                      ×
+                    </span>
+                  </button>
                 );
               })}
               <span

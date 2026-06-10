@@ -70,5 +70,45 @@ export function CommandGlyph({ fam, size = 20, className }: CommandGlyphProps) {
           <path d="M7 4v13h13" />
         </svg>
       );
+    case "tee":
+      return (
+        <svg {...common}>
+          <path d="M4 5h16M12 5v15" />
+        </svg>
+      );
+    case "sheet":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+          <rect x="3" y="11" width="18" height="2.5" rx="0.5" fill="currentColor" />
+        </svg>
+      );
+    case "plate":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" className={className}>
+          <rect x="3" y="9" width="18" height="6" rx="0.6" fill="currentColor" />
+        </svg>
+      );
+    case "chequered":
+      return (
+        <svg {...common}>
+          <rect x="3" y="9" width="18" height="6" rx="0.6" />
+          <circle cx="7" cy="12" r="0.9" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none" />
+          <circle cx="17" cy="12" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+      );
+    case "expanded":
+      return (
+        <svg {...common}>
+          <path d="M4 9l4 3-4 3M12 9l4 3-4 3" />
+          <path d="M8 9l4 3-4 3M16 9l4 3-4 3" />
+        </svg>
+      );
+    case "corrugated":
+      return (
+        <svg {...common}>
+          <path d="M3 13c2-3 4-3 6 0s4 3 6 0 4-3 6 0" />
+        </svg>
+      );
   }
 }

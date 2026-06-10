@@ -9,6 +9,7 @@ export const COMMAND_ALIASES: CommandAlias[] = [
   { alias: "ipn", name: "IPN", fam: "beam", profileId: "beam_ipn_en" },
   { alias: "upn", name: "UPN", fam: "beam", profileId: "channel_upn_en" },
   { alias: "upe", name: "UPE", fam: "beam", profileId: "channel_upe_en" },
+  { alias: "t", name: "T", fam: "tee", profileId: "tee_en" },
   { alias: "shs", name: "SHS", fam: "shs", profileId: null, manualProfileId: "square_hollow" },
   { alias: "rhs", name: "RHS", fam: "rhs", profileId: null, manualProfileId: "rectangular_tube" },
   { alias: "chs", name: "CHS", fam: "chs", profileId: null, manualProfileId: "pipe" },
@@ -16,6 +17,11 @@ export const COMMAND_ALIASES: CommandAlias[] = [
   { alias: "sq", name: "Square bar", fam: "sqbar", profileId: null, manualProfileId: "square_bar" },
   { alias: "flt", name: "Flat", fam: "flat", profileId: null, manualProfileId: "flat_bar" },
   { alias: "l", name: "Angle", fam: "angle", profileId: null, manualProfileId: "angle" },
+  { alias: "sht", name: "Sheet", fam: "sheet", profileId: null, manualProfileId: "sheet" },
+  { alias: "plt", name: "Plate", fam: "plate", profileId: null, manualProfileId: "plate" },
+  { alias: "chq", name: "Chequered", fam: "chequered", profileId: null, manualProfileId: "chequered_plate" },
+  { alias: "xpm", name: "Expanded", fam: "expanded", profileId: null, manualProfileId: "expanded_metal" },
+  { alias: "corr", name: "Corrugated", fam: "corrugated", profileId: null, manualProfileId: "corrugated_sheet" },
 ];
 
 const ALIAS_LOOKUP = new Map<string, CommandAlias>(
@@ -48,6 +54,7 @@ export function findAliasByProfileId(profileId: string): CommandAlias | null {
 /** Curated standard sizes per family for the suggestion chips. */
 export const COMMAND_SIZES: Record<CommandAlias["fam"], string[]> = {
   beam: ["100", "120", "140", "160", "180", "200", "220", "240", "300"],
+  tee: ["30x4", "40x5", "50x6", "60x7", "80x8", "100x11"],
   shs: ["20x20x2", "30x30x3", "40x40x3", "50x50x3", "60x60x4", "80x80x4"],
   rhs: ["40x20x2", "50x30x3", "60x40x3", "80x40x3", "100x50x4", "120x80x4"],
   chs: ["21.3x2.3", "33.7x2.6", "42.4x2.6", "48.3x3.2", "60.3x3.2", "88.9x3.2"],
@@ -55,6 +62,11 @@ export const COMMAND_SIZES: Record<CommandAlias["fam"], string[]> = {
   sqbar: ["10", "12", "16", "20", "25", "30", "40"],
   flat: ["20x5", "30x5", "40x8", "50x10", "60x8", "80x10"],
   angle: ["30x30x3", "40x40x4", "50x50x5", "60x60x6", "80x80x8"],
+  sheet: ["1000x1", "1250x1.5", "1250x2", "1500x2", "1500x3", "2000x3"],
+  plate: ["1500x6", "1500x8", "1500x10", "2000x12", "2000x15", "2500x20"],
+  chequered: ["1500x5x2", "1500x6x2", "2000x8x2"],
+  expanded: ["1000x1", "1250x2", "1500x3"],
+  corrugated: ["1000x0.7", "1250x0.7", "1500x0.8"],
 };
 
 export interface CommandGrade {

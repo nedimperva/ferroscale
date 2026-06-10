@@ -66,8 +66,20 @@ export function dimsToSizeText(
       return d.legA != null && d.legB != null && d.thickness != null
         ? `${fmt(d.legA)}x${fmt(d.legB)}x${fmt(d.thickness)}`
         : null;
+    case "sheet":
+    case "plate":
+    case "expanded":
+    case "corrugated":
+      return d.width != null && d.thickness != null
+        ? `${fmt(d.width)}x${fmt(d.thickness)}`
+        : null;
+    case "chequered":
+      return d.width != null && d.thickness != null && d.patternHeight != null
+        ? `${fmt(d.width)}x${fmt(d.thickness)}x${fmt(d.patternHeight)}`
+        : null;
     case "beam":
-      // Standard beams have no manual dims — caller derives from selectedSizeId.
+    case "tee":
+      // Standard profiles have no manual dims — caller derives from selectedSizeId.
       return null;
     default:
       return null;
@@ -157,7 +169,8 @@ function buildCalculationInput(
   if (alias.profileId) {
     const profile = getProfileById(alias.profileId);
     if (!profile || profile.mode !== "standard") return null;
-    const key = String(dims[0] ?? "");
+    // HEA/IPE etc. use single-dim keys ("120"); tees use multi-dim ("30x4").
+    const key = dims.length === 0 ? "" : dims.map(fmt).join("x");
     if (!key) return null;
     const targetSizeId = `${alias.alias}${key}`;
     const match = profile.sizes.find((s) => s.id === targetSizeId);
@@ -233,6 +246,27 @@ function buildCalculationInput(
       setDim("legA", a);
       setDim("legB", b);
       setDim("thickness", t);
+      break;
+    }
+    case "sheet":
+    case "plate":
+    case "expanded":
+    case "corrugated": {
+      const w = dims[0];
+      const t = dims[1];
+      if (!w || !t) return null;
+      setDim("width", w);
+      setDim("thickness", t);
+      break;
+    }
+    case "chequered": {
+      const w = dims[0];
+      const t = dims[1];
+      const ph = dims[2];
+      if (!w || !t || !ph) return null;
+      setDim("width", w);
+      setDim("thickness", t);
+      setDim("patternHeight", ph);
       break;
     }
     default:

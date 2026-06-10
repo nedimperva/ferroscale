@@ -32,7 +32,13 @@ function detectStage(query: string, p: CommandParseResult): { stage: Stage; part
   return { stage: "done", partial };
 }
 
-const FRONT_ALIASES = ["hea", "heb", "ipe", "upn", "shs", "rhs", "chs", "rnd", "flt", "l"];
+const FRONT_ALIASES = [
+  "hea", "heb", "ipe", "upn",
+  "t",
+  "shs", "rhs", "chs",
+  "rnd", "flt", "l",
+  "sht", "plt", "chq",
+];
 
 /**
  * Convert a saved DimensionPreset into the size text Command appends onto the

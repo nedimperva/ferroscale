@@ -8,13 +8,19 @@ import type { CommandPricing } from "@/lib/settings-stores";
 
 export type CommandFamily =
   | "beam"
+  | "tee"
   | "shs"
   | "rhs"
   | "chs"
   | "round"
   | "flat"
   | "angle"
-  | "sqbar";
+  | "sqbar"
+  | "sheet"
+  | "plate"
+  | "chequered"
+  | "expanded"
+  | "corrugated";
 
 export interface CommandAlias {
   alias: string;
