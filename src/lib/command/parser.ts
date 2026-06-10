@@ -29,6 +29,15 @@ const LENGTH_RE = /^(\d+(?:\.\d+)?)(mm|cm|m|in|ft)$/;
 const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
 const QTY_RE = /^[x×*](\d+)$/;
 
+/** Families whose size token bakes the length in (w × l × t for sheets/plates). */
+const SHEET_LIKE_FAMILIES = new Set<CommandFamily>([
+  "sheet",
+  "plate",
+  "expanded",
+  "corrugated",
+  "chequered",
+]);
+
 const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(n));
 
 /**
@@ -40,6 +49,7 @@ const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(n));
 export function dimsToSizeText(
   fam: CommandFamily,
   d: Partial<Record<DimensionKey, number>>,
+  lengthMm?: number,
 ): string | null {
   switch (fam) {
     case "shs":
@@ -70,12 +80,13 @@ export function dimsToSizeText(
     case "plate":
     case "expanded":
     case "corrugated":
-      return d.width != null && d.thickness != null
-        ? `${fmt(d.width)}x${fmt(d.thickness)}`
+      // Sheets/plates are spec'd as one piece: width × length × thickness.
+      return d.width != null && d.thickness != null && lengthMm != null
+        ? `${fmt(d.width)}x${fmt(lengthMm)}x${fmt(d.thickness)}`
         : null;
     case "chequered":
-      return d.width != null && d.thickness != null && d.patternHeight != null
-        ? `${fmt(d.width)}x${fmt(d.thickness)}x${fmt(d.patternHeight)}`
+      return d.width != null && d.thickness != null && d.patternHeight != null && lengthMm != null
+        ? `${fmt(d.width)}x${fmt(lengthMm)}x${fmt(d.thickness)}x${fmt(d.patternHeight)}`
         : null;
     case "beam":
     case "tee":
@@ -102,6 +113,8 @@ export function inputToQuery(
   const alias = findAliasByProfileId(input.profileId);
   if (!alias) return "";
 
+  const lengthMm = toMillimeters(input.length.value, input.length.unit);
+
   let sizeText: string | null;
   if (alias.profileId && input.selectedSizeId) {
     // Standard profile — strip the alias prefix off the size id.
@@ -115,17 +128,20 @@ export function inputToQuery(
       if (!entry) continue;
       dimsMm[key] = toMillimeters(entry.value, entry.unit);
     }
-    sizeText = dimsToSizeText(alias.fam, dimsMm);
+    sizeText = dimsToSizeText(alias.fam, dimsMm, lengthMm);
   } else {
     sizeText = null;
   }
   if (!sizeText) return "";
 
-  // Length token — always rendered in the user's defaultUnit so the query
-  // matches the typing convention they'd naturally use.
-  const lengthMm = toMillimeters(input.length.value, input.length.unit);
-  const lengthValue = fromMillimeters(lengthMm, defaultUnit);
-  const lengthToken = `${fmt(lengthValue)}${defaultUnit}`;
+  // Sheet-like families bake length into the size token; everything else
+  // appends a separate length token in the user's default unit.
+  const sheetLike = SHEET_LIKE_FAMILIES.has(alias.fam);
+  let lengthToken = "";
+  if (!sheetLike) {
+    const lengthValue = fromMillimeters(lengthMm, defaultUnit);
+    lengthToken = ` ${fmt(lengthValue)}${defaultUnit}`;
+  }
 
   const qtyToken = input.quantity > 1 ? ` x${input.quantity}` : "";
 
@@ -136,7 +152,7 @@ export function inputToQuery(
     gradeToken = ` ${grade.aliases[0]}`;
   }
 
-  return `${alias.alias}${sizeText} ${lengthToken}${qtyToken}${gradeToken}`;
+  return `${alias.alias}${sizeText}${lengthToken}${qtyToken}${gradeToken}`;
 }
 
 /**
@@ -248,26 +264,40 @@ function buildCalculationInput(
       setDim("thickness", t);
       break;
     }
+    // Sheet/plate-like pieces are spec'd as one block (width × length × thickness).
+    // Length comes from the size token, not a separate length token.
     case "sheet":
     case "plate":
     case "expanded":
     case "corrugated": {
       const w = dims[0];
-      const t = dims[1];
-      if (!w || !t) return null;
+      const l = dims[1];
+      const t = dims[2];
+      if (!w || !l || !t) return null;
       setDim("width", w);
       setDim("thickness", t);
-      break;
+      return {
+        ...base,
+        profileId: alias.manualProfileId,
+        manualDimensions,
+        length: { value: l, unit: "mm" },
+      };
     }
     case "chequered": {
       const w = dims[0];
-      const t = dims[1];
-      const ph = dims[2];
-      if (!w || !t || !ph) return null;
+      const l = dims[1];
+      const t = dims[2];
+      const ph = dims[3];
+      if (!w || !l || !t || !ph) return null;
       setDim("width", w);
       setDim("thickness", t);
       setDim("patternHeight", ph);
-      break;
+      return {
+        ...base,
+        profileId: alias.manualProfileId,
+        manualDimensions,
+        length: { value: l, unit: "mm" },
+      };
     }
     default:
       return null;
@@ -347,6 +377,24 @@ export function cmdParse(
   const effectiveGradeId = effectiveGrade?.id ?? settings.defaultGradeId;
   const realQty = qty == null ? 1 : qty;
   const hasSize = !!size && /\d/.test(size);
+
+  // Sheet-like families carry length inside the size token (w × l × t).
+  // Promote it so the equation line shows the real length and the stage
+  // detector skips the "length" suggestion.
+  if (alias && SHEET_LIKE_FAMILIES.has(alias.fam) && lengthM == null) {
+    const sizeDims = size
+      .split(/[x×]/)
+      .map((s) => parseFloat(s))
+      .filter((n) => !Number.isNaN(n));
+    const expected = alias.fam === "chequered" ? 4 : 3;
+    if (sizeDims.length === expected) {
+      const lMm = sizeDims[1];
+      lengthRaw = lMm;
+      lengthUnit = "mm";
+      lengthM = lMm / 1000;
+      lengthExplicit = false;
+    }
+  }
 
   let kgm: number | null = null;
   let calc: CommandCalc | null = null;

@@ -56,7 +56,8 @@ export function presetToSizeText(
     const rest = sizeId.slice(alias.alias.length);
     return rest.length > 0 ? rest : null;
   }
-  return dimsToSizeText(alias.fam, preset.manualDimensionsMm);
+  // Plate-like presets carry length separately as `lengthValue` (mm).
+  return dimsToSizeText(alias.fam, preset.manualDimensionsMm, preset.lengthValue);
 }
 
 export function cmdSuggest(

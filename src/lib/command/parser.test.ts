@@ -115,29 +115,44 @@ describe("cmdParse", () => {
     expect(p.density).toBe(8000);
   });
 
-  it("parses sheets with width × thickness + separate length", () => {
-    const p = cmdParse("sht1250x2 3m", mkSettings());
+  it("parses sheets as a single piece: width × length × thickness", () => {
+    const p = cmdParse("sht1500x3000x3", mkSettings());
     expect(p.valid).toBe(true);
     expect(p.alias?.fam).toBe("sheet");
     expect(p.calc!.input.profileId).toBe("sheet");
-    expect(p.calc!.input.manualDimensions.width).toEqual({ value: 1250, unit: "mm" });
-    expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 2, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.width).toEqual({ value: 1500, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 3, unit: "mm" });
+    expect(p.calc!.input.length).toEqual({ value: 3000, unit: "mm" });
     expect(p.lengthM).toBe(3);
+    expect(p.lengthRaw).toBe(3000);
+    expect(p.lengthUnit).toBe("mm");
   });
 
-  it("parses plates", () => {
-    const p = cmdParse("plt1500x10 2m x4", mkSettings());
+  it("parses small plate pieces with no separate length token", () => {
+    const p = cmdParse("plt200x40x10", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.calc!.input.profileId).toBe("plate");
+    expect(p.calc!.input.manualDimensions.width).toEqual({ value: 200, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 10, unit: "mm" });
+    expect(p.calc!.input.length).toEqual({ value: 40, unit: "mm" });
+  });
+
+  it("parses plates with quantity", () => {
+    const p = cmdParse("plt1500x3000x10 x4", mkSettings());
     expect(p.valid).toBe(true);
     expect(p.alias?.fam).toBe("plate");
-    expect(p.calc!.input.profileId).toBe("plate");
     expect(p.realQty).toBe(4);
+    expect(p.calc!.input.length).toEqual({ value: 3000, unit: "mm" });
   });
 
-  it("parses chequered plates with width × thickness × pattern", () => {
-    const p = cmdParse("chq1500x5x2 3m", mkSettings());
+  it("parses chequered plates: width × length × thickness × patternHeight", () => {
+    const p = cmdParse("chq1500x3000x5x2", mkSettings());
     expect(p.valid).toBe(true);
     expect(p.alias?.fam).toBe("chequered");
+    expect(p.calc!.input.manualDimensions.width).toEqual({ value: 1500, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 5, unit: "mm" });
     expect(p.calc!.input.manualDimensions.patternHeight).toEqual({ value: 2, unit: "mm" });
+    expect(p.calc!.input.length).toEqual({ value: 3000, unit: "mm" });
   });
 
   it("parses tees as a standard EN profile", () => {
@@ -195,6 +210,22 @@ describe("inputToQuery", () => {
     const p = cmdParse("hea120 6m", mkSettings());
     const input = { ...p.calc!.input, profileId: "sheet" as const };
     expect(inputToQuery(input, "m")).toBe("");
+  });
+
+  it("round-trips sheets without a separate length token", () => {
+    const settings = mkSettings();
+    const p = cmdParse("sht1500x3000x3 x4", settings);
+    expect(p.valid).toBe(true);
+    const q = inputToQuery(p.calc!.input, "m", { defaultGradeId: settings.defaultGradeId });
+    expect(q).toBe("sht1500x3000x3 x4");
+  });
+
+  it("round-trips chequered plates", () => {
+    const settings = mkSettings();
+    const p = cmdParse("chq1500x3000x5x2", settings);
+    expect(p.valid).toBe(true);
+    const q = inputToQuery(p.calc!.input, "m", { defaultGradeId: settings.defaultGradeId });
+    expect(q).toBe("chq1500x3000x5x2");
   });
 });
 
