@@ -37,6 +37,14 @@ export function findAliasByKey(key: string): CommandAlias | null {
   return ALIAS_LOOKUP.get(key) ?? null;
 }
 
+export function findAliasByProfileId(profileId: string): CommandAlias | null {
+  return (
+    COMMAND_ALIASES.find(
+      (a) => a.profileId === profileId || a.manualProfileId === profileId,
+    ) ?? null
+  );
+}
+
 /** Curated standard sizes per family for the suggestion chips. */
 export const COMMAND_SIZES: Record<CommandAlias["fam"], string[]> = {
   beam: ["100", "120", "140", "160", "180", "200", "220", "240", "300"],

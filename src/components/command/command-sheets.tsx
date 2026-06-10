@@ -3,14 +3,26 @@
 import { useState } from "react";
 import { CommandGlyph } from "./command-glyph";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
-import { COMMAND_GRADES } from "@/lib/command/aliases";
+import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
 import { cmdParse } from "@/lib/command/parser";
+import { computeCompareDeltas } from "@/lib/command/compare";
 import type {
+  CommandFamily,
   CommandParseResult,
   CommandParserSettings,
 } from "@/lib/command/types";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
-import type { CurrencyCode, LengthUnit, PriceBasis, PriceUnit } from "@/lib/calculator/types";
+import type {
+  CalculationInput,
+  CalculationResult,
+  CurrencyCode,
+  LengthUnit,
+  PriceBasis,
+  PriceUnit,
+} from "@/lib/calculator/types";
+import type { SavedEntry } from "@/hooks/useSaved";
+import type { CompareItem } from "@/hooks/useCompare";
+import type { Project } from "@/hooks/useProjects";
 
 const CURRENCIES: CurrencyCode[] = ["EUR", "USD", "GBP", "PLN", "BAM"];
 const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
@@ -246,7 +258,6 @@ interface CommandSettingsSheetProps {
   onClose: () => void;
   onToggleTheme: () => void;
   themeLabel: string;
-  onOpenFullSettings: () => void;
 }
 
 export function CommandSettingsSheet({
@@ -259,7 +270,6 @@ export function CommandSettingsSheet({
   onClose,
   onToggleTheme,
   themeLabel,
-  onOpenFullSettings,
 }: CommandSettingsSheetProps) {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   const numberInput =
@@ -380,146 +390,663 @@ export function CommandSettingsSheet({
         </SettingsRow>
       </div>
       <p className="text-[11px] text-muted mt-3 px-1">
-        Pricing, grade, and unit settings are shared with the full app — changes
-        here apply everywhere.
+        Pricing, grade, and unit settings apply across Command.
       </p>
-      <button
-        type="button"
-        onClick={onOpenFullSettings}
-        className="mt-3 w-full h-11 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-sm font-semibold text-foreground-secondary hover:text-foreground hover:bg-[var(--surface)]"
-      >
-        Open full Settings
-      </button>
     </SheetShell>
   );
 }
 
-interface CommandSavedSheetProps {
+/* ──────────────────────────────────────────────────────────────
+ *  Library sheet: Saved · Recent · Compare · Projects
+ * ────────────────────────────────────────────────────────────── */
+
+type LibraryTab = "saved" | "recent" | "compare" | "projects";
+
+interface CommandLibrarySheetProps {
   settings: CommandParserSettings;
-  saved: string[];
+  defaultUnit: LengthUnit;
   recents: string[];
+  saved: SavedEntry[];
+  compareItems: CompareItem[];
+  projects: Project[];
   onClose: () => void;
-  onPick: (query: string) => void;
-  onOpenSaved: () => void;
-  onOpenProjects: () => void;
-  onOpenCompare: () => void;
+  onLoadQuery: (query: string) => void;
+  onLoadInput: (input: CalculationInput) => void;
+  onRemoveSaved: (id: string) => void;
+  onRemoveCompare: (id: string) => void;
+  onClearCompare: () => void;
+  onCreateProject: (name: string) => void;
+  onRemoveProjectCalc: (projectId: string, calcId: string) => void;
 }
 
-export function CommandSavedSheet({
-  settings,
-  saved,
-  recents,
-  onClose,
-  onPick,
-  onOpenSaved,
-  onOpenProjects,
-  onOpenCompare,
-}: CommandSavedSheetProps) {
-  const [tab, setTab] = useState<"saved" | "recent">(
-    saved.length > 0 ? "saved" : "recent",
-  );
-  const list = tab === "saved" ? saved : recents;
+export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
+  const {
+    settings,
+    defaultUnit,
+    recents,
+    saved,
+    compareItems,
+    projects,
+    onClose,
+    onLoadQuery,
+    onLoadInput,
+    onRemoveSaved,
+    onRemoveCompare,
+    onClearCompare,
+    onCreateProject,
+    onRemoveProjectCalc,
+  } = props;
+
+  // Initial tab — pick the first non-empty section, else Saved.
+  const initialTab: LibraryTab =
+    saved.length > 0
+      ? "saved"
+      : recents.length > 0
+        ? "recent"
+        : compareItems.length > 0
+          ? "compare"
+          : projects.length > 0
+            ? "projects"
+            : "saved";
+  const [tab, setTab] = useState<LibraryTab>(initialTab);
+
   return (
-    <SheetShell title="Saved & recent" onClose={onClose}>
-      <div className="flex gap-1.5 mb-3">
-        {(["saved", "recent"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`flex-1 h-9 rounded-lg text-xs font-semibold uppercase tracking-wide ${
-              tab === t
-                ? "bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]"
-                : "bg-[var(--surface-raised)] text-muted border border-border-faint"
-            }`}
-          >
-            {t} {tab === t && `· ${(t === "saved" ? saved : recents).length}`}
-          </button>
-        ))}
+    <SheetShell title="Library" onClose={onClose}>
+      <div className="flex gap-1 mb-3" role="tablist">
+        <LibraryTabPill active={tab === "saved"} count={saved.length} onClick={() => setTab("saved")}>
+          Saved
+        </LibraryTabPill>
+        <LibraryTabPill active={tab === "recent"} count={recents.length} onClick={() => setTab("recent")}>
+          Recent
+        </LibraryTabPill>
+        <LibraryTabPill active={tab === "compare"} count={compareItems.length} onClick={() => setTab("compare")}>
+          Compare
+        </LibraryTabPill>
+        <LibraryTabPill active={tab === "projects"} count={projects.length} onClick={() => setTab("projects")}>
+          Projects
+        </LibraryTabPill>
       </div>
-      {list.length === 0 ? (
-        <div className="text-sm text-muted text-center py-12">
-          {tab === "saved" ? "No saved calculations yet." : "No recent calculations."}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden">
-          {list.map((q, i) => {
-            const rp = cmdParse(q, settings);
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => onPick(q)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left ${
-                  i > 0 ? "border-t border-border-faint" : ""
-                } hover:bg-[var(--surface)]`}
-              >
-                <div className="w-9 h-9 rounded-lg bg-[var(--surface)] flex items-center justify-center text-foreground flex-shrink-0">
-                  {rp.alias && <CommandGlyph fam={rp.alias.fam} size={18} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-foreground truncate">
-                    {rp.name || q}
-                  </div>
-                  <div className="font-mono text-[11px] text-muted mt-0.5">
-                    {rp.valid && rp.totalKg != null
-                      ? `${fsWeight(rp.totalKg)} ${fsWeightUnit(rp.totalKg)} · ×${rp.realQty}${
-                          rp.gradeLabel ? " · " + rp.gradeLabel : ""
-                        }`
-                      : q}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+
+      {tab === "saved" && (
+        <SavedTabContent
+          saved={saved}
+          defaultUnit={defaultUnit}
+          defaultGradeId={settings.defaultGradeId}
+          onLoad={(entry) => onLoadInput(entry.input)}
+          onRemove={onRemoveSaved}
+        />
       )}
-      <div className="mt-4">
-        <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase mb-2 px-1">
-          Open in full app
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <LibraryNavButton label="Saved" onClick={onOpenSaved}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-            </svg>
-          </LibraryNavButton>
-          <LibraryNavButton label="Projects" onClick={onOpenProjects}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            </svg>
-          </LibraryNavButton>
-          <LibraryNavButton label="Compare" onClick={onOpenCompare}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="18" rx="1" />
-              <rect x="14" y="3" width="7" height="18" rx="1" />
-            </svg>
-          </LibraryNavButton>
-        </div>
-      </div>
+      {tab === "recent" && (
+        <RecentTabContent
+          recents={recents}
+          settings={settings}
+          onPick={onLoadQuery}
+        />
+      )}
+      {tab === "compare" && (
+        <CompareTabContent
+          items={compareItems}
+          defaultUnit={defaultUnit}
+          defaultGradeId={settings.defaultGradeId}
+          onLoad={(item) => onLoadInput(item.input)}
+          onRemove={onRemoveCompare}
+          onClearAll={onClearCompare}
+        />
+      )}
+      {tab === "projects" && (
+        <ProjectsTabContent
+          projects={projects}
+          defaultUnit={defaultUnit}
+          defaultGradeId={settings.defaultGradeId}
+          onCreate={onCreateProject}
+          onLoadCalc={(calc) => onLoadInput(calc.input)}
+          onRemoveCalc={onRemoveProjectCalc}
+        />
+      )}
     </SheetShell>
   );
 }
 
-function LibraryNavButton({
-  label,
+function LibraryTabPill({
+  active,
+  count,
   onClick,
   children,
 }: {
-  label: string;
+  active: boolean;
+  count: number;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-1.5 h-16 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-foreground-secondary hover:text-foreground hover:bg-[var(--surface)]"
+      className={`flex-1 h-9 rounded-lg text-[11px] font-bold uppercase tracking-[1px] flex items-center justify-center gap-1 ${
+        active
+          ? "bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]"
+          : "bg-[var(--surface-raised)] text-muted border border-border-faint"
+      }`}
     >
       {children}
-      <span className="text-[11px] font-semibold tracking-wide">{label}</span>
+      {count > 0 && (
+        <span className="opacity-70 font-mono text-[10px]">{count}</span>
+      )}
     </button>
   );
+}
+
+/* ─────────────────── Shared row primitive ─────────────────── */
+
+function LibraryRow({
+  glyph,
+  title,
+  subtitle,
+  onClick,
+  onRemove,
+  trailing,
+  indent,
+}: {
+  glyph: React.ReactNode;
+  title: string;
+  subtitle: React.ReactNode;
+  onClick?: () => void;
+  onRemove?: () => void;
+  trailing?: React.ReactNode;
+  indent?: boolean;
+}) {
+  const interactive = !!onClick;
+  return (
+    <div
+      className={`flex items-center gap-3 ${
+        indent ? "pl-6 pr-3" : "px-3"
+      } py-2.5`}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!interactive}
+        className={`flex-1 min-w-0 flex items-center gap-3 text-left bg-transparent border-0 p-0 ${
+          interactive ? "cursor-pointer" : "cursor-default"
+        }`}
+      >
+        <div
+          className={`${
+            indent ? "w-7 h-7" : "w-9 h-9"
+          } rounded-lg bg-[var(--surface-inset)] flex items-center justify-center text-foreground flex-shrink-0`}
+        >
+          {glyph}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className={`${indent ? "text-[13px]" : "text-[14.5px]"} font-bold text-foreground truncate`}>
+            {title}
+          </div>
+          <div className="font-mono text-[11px] text-muted mt-0.5 truncate">
+            {subtitle}
+          </div>
+        </div>
+      </button>
+      {trailing}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Remove"
+          className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-muted-faint hover:text-foreground hover:bg-[var(--surface)]"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-sm text-muted text-center py-12 px-6 leading-relaxed">
+      {children}
+    </div>
+  );
+}
+
+function RowsCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden divide-y divide-border-faint">
+      {children}
+    </div>
+  );
+}
+
+/* ─────────────────── Saved tab ─────────────────── */
+
+function SavedTabContent({
+  saved,
+  defaultUnit,
+  defaultGradeId,
+  onLoad,
+  onRemove,
+}: {
+  saved: SavedEntry[];
+  defaultUnit: LengthUnit;
+  defaultGradeId: string;
+  onLoad: (entry: SavedEntry) => void;
+  onRemove: (id: string) => void;
+}) {
+  if (saved.length === 0) {
+    return <EmptyState>Saved calculations show here. Tap <strong className="font-semibold">Save</strong> on a result.</EmptyState>;
+  }
+  return (
+    <RowsCard>
+      {saved.map((entry) => {
+        const fam = familyForInput(entry.input);
+        const subtitle = formatWeightPriceSubtitle(entry.result);
+        const grade = entry.result.gradeLabel;
+        return (
+          <LibraryRow
+            key={entry.id}
+            glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
+            title={entry.name}
+            subtitle={
+              <>
+                {subtitle}
+                {grade ? ` · ${grade}` : ""}
+              </>
+            }
+            onClick={() => onLoad(entry)}
+            onRemove={() => onRemove(entry.id)}
+          />
+        );
+      })}
+      {/* keep defaultUnit/defaultGradeId in the dependency loop for future use */}
+      <span className="hidden" aria-hidden="true">
+        {defaultUnit}/{defaultGradeId}
+      </span>
+    </RowsCard>
+  );
+}
+
+/* ─────────────────── Recent tab ─────────────────── */
+
+function RecentTabContent({
+  recents,
+  settings,
+  onPick,
+}: {
+  recents: string[];
+  settings: CommandParserSettings;
+  onPick: (query: string) => void;
+}) {
+  if (recents.length === 0) {
+    return <EmptyState>Recent queries show here as you calculate.</EmptyState>;
+  }
+  return (
+    <RowsCard>
+      {recents.map((q, i) => {
+        const rp = cmdParse(q, settings);
+        const fam: CommandFamily | undefined = rp.alias?.fam;
+        return (
+          <LibraryRow
+            key={`${q}-${i}`}
+            glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
+            title={rp.name || q}
+            subtitle={
+              rp.valid && rp.totalKg != null
+                ? `${fsWeight(rp.totalKg)} ${fsWeightUnit(rp.totalKg)} · ×${rp.realQty}${
+                    rp.gradeLabel ? " · " + rp.gradeLabel : ""
+                  }`
+                : q
+            }
+            onClick={() => onPick(q)}
+          />
+        );
+      })}
+    </RowsCard>
+  );
+}
+
+/* ─────────────────── Compare tab ─────────────────── */
+
+function CompareTabContent({
+  items,
+  defaultUnit,
+  defaultGradeId,
+  onLoad,
+  onRemove,
+  onClearAll,
+}: {
+  items: CompareItem[];
+  defaultUnit: LengthUnit;
+  defaultGradeId: string;
+  onLoad: (item: CompareItem) => void;
+  onRemove: (id: string) => void;
+  onClearAll: () => void;
+}) {
+  if (items.length === 0) {
+    return (
+      <EmptyState>
+        Compare calcs side by side. Tap <strong className="font-semibold">Compare</strong> on a result.
+      </EmptyState>
+    );
+  }
+  const deltas = computeCompareDeltas(items);
+  const deltaById = new Map(deltas.map((d) => [d.id, d]));
+  return (
+    <>
+      <RowsCard>
+        {items.map((item) => {
+          const fam = familyForInput(item.input);
+          const subtitle = formatWeightPriceSubtitle(item.result);
+          const grade = item.result.gradeLabel;
+          const delta = deltaById.get(item.id);
+          const isMax = delta?.label === "—";
+          return (
+            <LibraryRow
+              key={item.id}
+              glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
+              title={
+                item.normalizedProfile?.shortLabel ?? item.result.profileLabel
+              }
+              subtitle={
+                <>
+                  {subtitle}
+                  {grade ? ` · ${grade}` : ""}
+                </>
+              }
+              onClick={() => onLoad(item)}
+              onRemove={() => onRemove(item.id)}
+              trailing={
+                delta && (
+                  <span
+                    className={`font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded ${
+                      isMax
+                        ? "bg-[var(--accent-surface)] text-[var(--accent-text)]"
+                        : "bg-[var(--blue-surface)] text-[var(--blue-text)]"
+                    }`}
+                  >
+                    {delta.label}
+                  </span>
+                )
+              }
+            />
+          );
+        })}
+      </RowsCard>
+      <button
+        type="button"
+        onClick={onClearAll}
+        className="mt-3 w-full h-10 rounded-xl border border-border-faint bg-transparent text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground hover:bg-[var(--surface-raised)]"
+      >
+        Clear all
+      </button>
+      <span className="hidden" aria-hidden="true">
+        {defaultUnit}/{defaultGradeId}
+      </span>
+    </>
+  );
+}
+
+/* ─────────────────── Projects tab ─────────────────── */
+
+function FolderGlyph({ size = 19 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+    </svg>
+  );
+}
+
+function ProjectsTabContent({
+  projects,
+  defaultUnit,
+  defaultGradeId,
+  onCreate,
+  onLoadCalc,
+  onRemoveCalc,
+}: {
+  projects: Project[];
+  defaultUnit: LengthUnit;
+  defaultGradeId: string;
+  onCreate: (name: string) => void;
+  onLoadCalc: (calc: Project["calculations"][number]) => void;
+  onRemoveCalc: (projectId: string, calcId: string) => void;
+}) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+
+  const submit = () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    onCreate(trimmed);
+    setNewName("");
+  };
+
+  return (
+    <>
+      <div className="flex gap-2 mb-3">
+        <input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit();
+          }}
+          placeholder="New project name…"
+          className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
+        />
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!newName.trim()}
+          className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          New
+        </button>
+      </div>
+
+      {projects.length === 0 ? (
+        <EmptyState>
+          No projects yet. Create one above, or tap <strong className="font-semibold">+ Project</strong> on a result.
+        </EmptyState>
+      ) : (
+        <div className="space-y-2">
+          {projects.map((project) => {
+            const calcs = project.calculations;
+            const totalWeight = calcs.reduce(
+              (sum, c) => sum + (c.result.totalWeightKg ?? 0),
+              0,
+            );
+            const totalCost = calcs.reduce(
+              (sum, c) => sum + (c.result.grandTotalAmount ?? 0),
+              0,
+            );
+            const currency =
+              calcs[0]?.result.currency ?? ("EUR" as CurrencyCode);
+            const sym = CURRENCY_SYMBOLS[currency] ?? "€";
+            const isOpen = expanded === project.id;
+            return (
+              <div
+                key={project.id}
+                className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden"
+              >
+                <LibraryRow
+                  glyph={
+                    <span style={{ color: "var(--accent)" }}>
+                      <FolderGlyph />
+                    </span>
+                  }
+                  title={project.name}
+                  subtitle={
+                    calcs.length === 0
+                      ? "Empty project"
+                      : `${calcs.length} calc${calcs.length === 1 ? "" : "s"} · ${fsWeight(totalWeight)} ${fsWeightUnit(totalWeight)} · ${sym} ${fsMoney(totalCost)}`
+                  }
+                  onClick={() =>
+                    setExpanded(isOpen ? null : project.id)
+                  }
+                  trailing={
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={`text-muted-faint transition-transform ${
+                        isOpen ? "rotate-90" : ""
+                      }`}
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  }
+                />
+                {isOpen && (
+                  <div className="border-t border-border-faint bg-[var(--surface-inset)]/40">
+                    {calcs.length === 0 ? (
+                      <div className="text-xs text-muted py-4 text-center">
+                        No calculations yet.
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border-faint">
+                        {calcs.map((calc) => {
+                          const fam = familyForInput(calc.input);
+                          return (
+                            <LibraryRow
+                              key={calc.id}
+                              indent
+                              glyph={
+                                fam ? (
+                                  <CommandGlyph fam={fam} size={15} />
+                                ) : null
+                              }
+                              title={
+                                calc.normalizedProfile?.shortLabel ??
+                                calc.result.profileLabel
+                              }
+                              subtitle={formatWeightPriceSubtitle(calc.result)}
+                              onClick={() => onLoadCalc(calc)}
+                              onRemove={() =>
+                                onRemoveCalc(project.id, calc.id)
+                              }
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <span className="hidden" aria-hidden="true">
+        {defaultUnit}/{defaultGradeId}
+      </span>
+    </>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Project picker sheet — replaces SaveToProjectModal
+ * ────────────────────────────────────────────────────────────── */
+
+interface CommandProjectPickerSheetProps {
+  projects: Project[];
+  onClose: () => void;
+  onCreateProject: (name: string) => Project;
+  onPickProject: (project: Project) => void;
+}
+
+export function CommandProjectPickerSheet({
+  projects,
+  onClose,
+  onCreateProject,
+  onPickProject,
+}: CommandProjectPickerSheetProps) {
+  const [newName, setNewName] = useState("");
+
+  const submit = () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    const project = onCreateProject(trimmed);
+    setNewName("");
+    onPickProject(project);
+  };
+
+  return (
+    <SheetShell title="Add to project" onClose={onClose}>
+      <div className="flex gap-2 mb-3">
+        <input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit();
+          }}
+          placeholder="New project name…"
+          className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
+        />
+        <button
+          type="button"
+          onClick={submit}
+          disabled={!newName.trim()}
+          className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Create
+        </button>
+      </div>
+      {projects.length === 0 ? (
+        <EmptyState>No projects yet. Create one above to get started.</EmptyState>
+      ) : (
+        <RowsCard>
+          {projects.map((project) => {
+            const calcs = project.calculations;
+            return (
+              <LibraryRow
+                key={project.id}
+                glyph={
+                  <span style={{ color: "var(--accent)" }}>
+                    <FolderGlyph />
+                  </span>
+                }
+                title={project.name}
+                subtitle={
+                  calcs.length === 0
+                    ? "Empty project"
+                    : `${calcs.length} calc${calcs.length === 1 ? "" : "s"}`
+                }
+                onClick={() => onPickProject(project)}
+              />
+            );
+          })}
+        </RowsCard>
+      )}
+    </SheetShell>
+  );
+}
+
+/* ─────────────────── Helpers ─────────────────── */
+
+function familyForInput(input: CalculationInput): CommandFamily | undefined {
+  return findAliasByProfileId(input.profileId)?.fam;
+}
+
+function formatWeightPriceSubtitle(result: CalculationResult): string {
+  const sym = CURRENCY_SYMBOLS[result.currency] ?? "€";
+  return `${fsWeight(result.totalWeightKg)} ${fsWeightUnit(result.totalWeightKg)} · ${sym} ${fsMoney(result.grandTotalAmount)}`;
 }
 
 export { CURRENCY_SYMBOLS };

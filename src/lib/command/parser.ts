@@ -1,5 +1,6 @@
 import {
   calculateMetal,
+  fromMillimeters,
   getProfileById,
   toMillimeters,
   type CalculationInput,
@@ -9,13 +10,16 @@ import {
 import type { CommandPricing } from "@/lib/settings-stores";
 import {
   COMMAND_ALIAS_RE,
+  findAliasByProfileId,
   findAliasByPrefix,
   findGradeByAlias,
   findGradeById,
+  type CommandGrade,
 } from "./aliases";
 import type {
   CommandAlias,
   CommandCalc,
+  CommandFamily,
   CommandParseResult,
   CommandParserSettings,
   CommandTokenKind,
@@ -24,6 +28,104 @@ import type {
 const LENGTH_RE = /^(\d+(?:\.\d+)?)(mm|cm|m|in|ft)$/;
 const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
 const QTY_RE = /^[x×*](\d+)$/;
+
+const fmt = (n: number) => (Number.isInteger(n) ? String(n) : String(n));
+
+/**
+ * Per-family conversion of mm dims into the size text Command appends onto
+ * the profile token (e.g. {side:40, wallThickness:3} → "40x40x3"). Used by
+ * both the suggestion bar (presets) and inputToQuery (saved entries).
+ * Returns null when required dimensions are missing.
+ */
+export function dimsToSizeText(
+  fam: CommandFamily,
+  d: Partial<Record<DimensionKey, number>>,
+): string | null {
+  switch (fam) {
+    case "shs":
+      return d.side != null && d.wallThickness != null
+        ? `${fmt(d.side)}x${fmt(d.side)}x${fmt(d.wallThickness)}`
+        : null;
+    case "rhs":
+      return d.width != null && d.height != null && d.wallThickness != null
+        ? `${fmt(d.width)}x${fmt(d.height)}x${fmt(d.wallThickness)}`
+        : null;
+    case "chs":
+      return d.outerDiameter != null && d.wallThickness != null
+        ? `${fmt(d.outerDiameter)}x${fmt(d.wallThickness)}`
+        : null;
+    case "round":
+      return d.diameter != null ? fmt(d.diameter) : null;
+    case "sqbar":
+      return d.side != null ? fmt(d.side) : null;
+    case "flat":
+      return d.width != null && d.thickness != null
+        ? `${fmt(d.width)}x${fmt(d.thickness)}`
+        : null;
+    case "angle":
+      return d.legA != null && d.legB != null && d.thickness != null
+        ? `${fmt(d.legA)}x${fmt(d.legB)}x${fmt(d.thickness)}`
+        : null;
+    case "beam":
+      // Standard beams have no manual dims — caller derives from selectedSizeId.
+      return null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Inverse of buildCalculationInput. Reconstitutes a Command-style query
+ * string from a stored CalculationInput so saved/compare/project entries
+ * can be loaded back into the query line.
+ *
+ * Returns "" when the profile has no Command alias (sheets/plates/tees/etc.) —
+ * the caller falls back to the entry's display name.
+ */
+export function inputToQuery(
+  input: CalculationInput,
+  defaultUnit: LengthUnit,
+  options: { defaultGradeId?: string } = {},
+): string {
+  const alias = findAliasByProfileId(input.profileId);
+  if (!alias) return "";
+
+  let sizeText: string | null;
+  if (alias.profileId && input.selectedSizeId) {
+    // Standard profile — strip the alias prefix off the size id.
+    sizeText = input.selectedSizeId.startsWith(alias.alias)
+      ? input.selectedSizeId.slice(alias.alias.length)
+      : null;
+  } else if (alias.manualProfileId) {
+    const dimsMm: Partial<Record<DimensionKey, number>> = {};
+    for (const key of Object.keys(input.manualDimensions) as DimensionKey[]) {
+      const entry = input.manualDimensions[key];
+      if (!entry) continue;
+      dimsMm[key] = toMillimeters(entry.value, entry.unit);
+    }
+    sizeText = dimsToSizeText(alias.fam, dimsMm);
+  } else {
+    sizeText = null;
+  }
+  if (!sizeText) return "";
+
+  // Length token — always rendered in the user's defaultUnit so the query
+  // matches the typing convention they'd naturally use.
+  const lengthMm = toMillimeters(input.length.value, input.length.unit);
+  const lengthValue = fromMillimeters(lengthMm, defaultUnit);
+  const lengthToken = `${fmt(lengthValue)}${defaultUnit}`;
+
+  const qtyToken = input.quantity > 1 ? ` x${input.quantity}` : "";
+
+  // Grade: omit when it equals the user's default (less noise) or unmapped.
+  let gradeToken = "";
+  const grade: CommandGrade | null = findGradeById(input.materialGradeId);
+  if (grade && grade.id !== options.defaultGradeId) {
+    gradeToken = ` ${grade.aliases[0]}`;
+  }
+
+  return `${alias.alias}${sizeText} ${lengthToken}${qtyToken}${gradeToken}`;
+}
 
 /**
  * Build a CalculationInput for the metal-core engine from a parsed Command query.

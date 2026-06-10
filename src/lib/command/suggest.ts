@@ -6,7 +6,7 @@ import {
   COMMAND_GRADES,
   COMMAND_SIZES,
 } from "./aliases";
-import { cmdParse } from "./parser";
+import { cmdParse, dimsToSizeText } from "./parser";
 import type {
   CommandAlias,
   CommandParseResult,
@@ -34,8 +34,6 @@ function detectStage(query: string, p: CommandParseResult): { stage: Stage; part
 
 const FRONT_ALIASES = ["hea", "heb", "ipe", "upn", "shs", "rhs", "chs", "rnd", "flt", "l"];
 
-const fmt = (n: number) => String(n);
-
 /**
  * Convert a saved DimensionPreset into the size text Command appends onto the
  * profile token (e.g. {side:40, wallThickness:3} → "40x40x3"). Returns null
@@ -52,35 +50,7 @@ export function presetToSizeText(
     const rest = sizeId.slice(alias.alias.length);
     return rest.length > 0 ? rest : null;
   }
-  const d = preset.manualDimensionsMm;
-  switch (alias.fam) {
-    case "shs":
-      return d.side != null && d.wallThickness != null
-        ? `${fmt(d.side)}x${fmt(d.side)}x${fmt(d.wallThickness)}`
-        : null;
-    case "rhs":
-      return d.width != null && d.height != null && d.wallThickness != null
-        ? `${fmt(d.width)}x${fmt(d.height)}x${fmt(d.wallThickness)}`
-        : null;
-    case "chs":
-      return d.outerDiameter != null && d.wallThickness != null
-        ? `${fmt(d.outerDiameter)}x${fmt(d.wallThickness)}`
-        : null;
-    case "round":
-      return d.diameter != null ? fmt(d.diameter) : null;
-    case "sqbar":
-      return d.side != null ? fmt(d.side) : null;
-    case "flat":
-      return d.width != null && d.thickness != null
-        ? `${fmt(d.width)}x${fmt(d.thickness)}`
-        : null;
-    case "angle":
-      return d.legA != null && d.legB != null && d.thickness != null
-        ? `${fmt(d.legA)}x${fmt(d.legB)}x${fmt(d.thickness)}`
-        : null;
-    default:
-      return null;
-  }
+  return dimsToSizeText(alias.fam, preset.manualDimensionsMm);
 }
 
 export function cmdSuggest(

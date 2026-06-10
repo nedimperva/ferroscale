@@ -6,8 +6,7 @@ import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
-import { useRouter } from "@/i18n/navigation";
-import { cmdParse, cmdClassifyToken } from "@/lib/command/parser";
+import { cmdParse, cmdClassifyToken, inputToQuery } from "@/lib/command/parser";
 import { cmdSuggest, cmdApplyInsert } from "@/lib/command/suggest";
 import { COMMAND_ALIAS_RE } from "@/lib/command/aliases";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
@@ -26,12 +25,12 @@ import type {
 import { CommandGlyph } from "./command-glyph";
 import { CommandKeypad } from "./command-keypad";
 import {
+  CommandLibrarySheet,
+  CommandProjectPickerSheet,
   CommandResultSheet,
-  CommandSavedSheet,
   CommandSettingsSheet,
 } from "./command-sheets";
-import { SaveToProjectModal } from "@/components/projects/save-to-project-modal";
-import { CompareDrawer } from "@/components/compare/compare-drawer";
+import type { CalculationInput } from "@/lib/calculator/types";
 
 const FRAME_W = 402;
 const FRAME_H = 874;
@@ -67,9 +66,8 @@ const STARTER_RECENTS = [
 export function CommandShell() {
   const { resolvedTheme, setTheme } = useTheme();
   const dark = resolvedTheme === "dark";
-  const router = useRouter();
 
-  // Shared app settings — same sources the legacy /settings tab edits.
+  // Shared app settings.
   const shared = useSyncExternalStore(
     sharedCalcSettingsStore.subscribe,
     sharedCalcSettingsStore.getSnapshot,
@@ -87,28 +85,30 @@ export function CommandShell() {
   );
 
   // App-wide libraries (saves, compare, projects, presets).
-  const { saveCalculation, isSaved } = useSaved();
+  const {
+    saved: savedEntries,
+    saveCalculation,
+    isSaved,
+    removeSaved,
+  } = useSaved();
   const {
     items: compareItems,
     addItem: addCompareItem,
     removeItem: removeCompareItem,
     clearAll: clearCompare,
     isDuplicate: isInCompare,
-    maxCompare,
   } = useCompare();
-  const { projects, createProject, addCalculation } = useProjects();
+  const { projects, createProject, addCalculation, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
 
   const [query, setQuery] = useState("hea120 6m x2 s235");
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
-  const [sheet, setSheet] = useState<null | "result" | "settings" | "saved">(null);
+  const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
   const [toast, setToast] = useState<string | null>(null);
   const [recents, setRecents] = useState<string[]>(STARTER_RECENTS);
-  const [saved, setSaved] = useState<string[]>([]);
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
-  const [showCompareDrawer, setShowCompareDrawer] = useState(false);
   const [scale, setScale] = useState(1);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
 
@@ -135,19 +135,16 @@ export function CommandShell() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecents(loadStrings("ferroscale-command-recents", STARTER_RECENTS));
-    setSaved(loadStrings("ferroscale-command-saved", []));
-    // Settings moved to the shared persisted calculator input — drop the old key.
+    // Old keys orphaned by previous refactors — drop them.
     try {
       window.localStorage.removeItem("ferroscale-command-settings");
+      window.localStorage.removeItem("ferroscale-command-saved");
     } catch { /* noop */ }
   }, []);
 
   useEffect(() => {
     persistStrings("ferroscale-command-recents", recents);
   }, [recents]);
-  useEffect(() => {
-    persistStrings("ferroscale-command-saved", saved);
-  }, [saved]);
 
   // On phone viewports, render fullscreen — no scaled iPhone frame.
   // On wider viewports, scale the fixed 402×874 frame to fit and show the bezel.
@@ -193,16 +190,42 @@ export function CommandShell() {
       showToast("Add length to save");
       return;
     }
-    // Real save — appears on /saved and syncs like any other calculation.
+    // Real save — appears on the Library Saved tab (shared with the full app).
     if (!isSaved(p.calc.result)) {
       const autoName = `${p.name} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
       saveCalculation(p.calc.input, p.calc.result, autoName);
     }
-    // Local query-string recall for the in-sheet lists.
-    setSaved((s) => [query, ...s.filter((x) => x !== query)].slice(0, 12));
+    // Quick recall for the Recent tab.
     setRecents((r) => [query, ...r.filter((x) => x !== query)].slice(0, 8));
     showToast("Saved");
   }, [p, query, isSaved, saveCalculation, showToast]);
+
+  const loadInput = useCallback(
+    (input: CalculationInput) => {
+      const q = inputToQuery(input, defaultUnit, {
+        defaultGradeId: shared.defaultGradeId,
+      });
+      if (q) setQuery(q);
+      setSheet(null);
+    },
+    [defaultUnit, shared.defaultGradeId],
+  );
+
+  const loadQuery = useCallback((q: string) => {
+    setQuery(q);
+    setSheet(null);
+  }, []);
+
+  const handlePickProject = useCallback(
+    (projectId: string) => {
+      if (!projectCalc) return;
+      const ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
+      setProjectCalc(null);
+      const project = projects.find((p) => p.id === projectId);
+      showToast(ok ? `Added to ${project?.name ?? "project"}` : "Project is full");
+    },
+    [projectCalc, addCalculation, projects, showToast],
+  );
 
   const doCompare = useCallback(() => {
     if (!p.calc) return;
@@ -351,7 +374,7 @@ export function CommandShell() {
                   </svg>
                 )}
               </IconBtn>
-              <IconBtn onClick={() => setSheet("saved")} ariaLabel="Saved">
+              <IconBtn onClick={() => setSheet("library")} ariaLabel="Library">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                 </svg>
@@ -669,25 +692,32 @@ export function CommandShell() {
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
               themeLabel={dark ? "Dark" : "Light"}
-              onOpenFullSettings={() => router.push("/settings")}
             />
           )}
-          {effectiveSheet === "saved" && (
-            <CommandSavedSheet
+          {effectiveSheet === "library" && (
+            <CommandLibrarySheet
               settings={parserSettings}
-              saved={saved}
+              defaultUnit={defaultUnit}
               recents={recents}
+              saved={savedEntries}
+              compareItems={compareItems}
+              projects={projects}
               onClose={() => setSheet(null)}
-              onPick={(q) => {
-                setQuery(q);
-                setSheet(null);
-              }}
-              onOpenSaved={() => router.push("/saved")}
-              onOpenProjects={() => router.push("/projects")}
-              onOpenCompare={() => {
-                setSheet(null);
-                setShowCompareDrawer(true);
-              }}
+              onLoadQuery={loadQuery}
+              onLoadInput={loadInput}
+              onRemoveSaved={removeSaved}
+              onRemoveCompare={removeCompareItem}
+              onClearCompare={clearCompare}
+              onCreateProject={createProject}
+              onRemoveProjectCalc={removeCalculation}
+            />
+          )}
+          {projectCalc && (
+            <CommandProjectPickerSheet
+              projects={projects}
+              onClose={() => setProjectCalc(null)}
+              onCreateProject={createProject}
+              onPickProject={(project) => handlePickProject(project.id)}
             />
           )}
 
@@ -717,41 +747,6 @@ export function CommandShell() {
         </div>
       </div>
 
-      {/* Bottom-anchored secondary navigation for power-users */}
-      <FloatingTabsNav
-        onSaved={() => router.push("/saved")}
-        onProjects={() => router.push("/projects")}
-        onSettings={() => router.push("/settings")}
-      />
-
-      {/* Add-to-project modal (snapshot of the calc at open time) */}
-      {projectCalc && (
-        <SaveToProjectModal
-          open
-          onClose={() => setProjectCalc(null)}
-          projects={projects}
-          onCreateProject={createProject}
-          onAddCalculation={addCalculation}
-          currentInput={projectCalc.input}
-          currentResult={projectCalc.result}
-          onOpenDrawer={() => router.push("/projects")}
-        />
-      )}
-
-      {/* Compare drawer — Command's only access point to the comparison list */}
-      <CompareDrawer
-        open={showCompareDrawer}
-        onClose={() => setShowCompareDrawer(false)}
-        items={compareItems}
-        onRemoveItem={removeCompareItem}
-        onClearAll={clearCompare}
-        maxCompare={maxCompare}
-        hasProjects={projects.length > 0}
-        onAddToProject={(item) => {
-          setShowCompareDrawer(false);
-          setProjectCalc({ input: item.input, result: item.result });
-        }}
-      />
     </div>
   );
 }
@@ -900,37 +895,5 @@ function PreviewCard({
   );
 }
 
-function FloatingTabsNav({
-  onSaved,
-  onProjects,
-  onSettings,
-}: {
-  onSaved: () => void;
-  onProjects: () => void;
-  onSettings: () => void;
-}) {
-  return (
-    <div
-      className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 flex-col gap-2 z-10"
-      aria-label="Other sections"
-    >
-      <NavBtn label="Saved" onClick={onSaved} />
-      <NavBtn label="Projects" onClick={onProjects} />
-      <NavBtn label="Settings" onClick={onSettings} />
-    </div>
-  );
-}
-
-function NavBtn({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="px-3 py-1.5 rounded-lg border border-border-faint bg-[var(--surface)] text-xs font-semibold text-foreground-secondary hover:text-foreground hover:bg-[var(--surface-raised)] shadow-sm"
-    >
-      {label}
-    </button>
-  );
-}
 // suppress unused-import lint for COMMAND_ALIAS_RE (re-exported intentionally elsewhere)
 void COMMAND_ALIAS_RE;

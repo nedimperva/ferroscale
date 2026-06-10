@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculateMetal } from "@ferroscale/metal-core";
-import { cmdParse, cmdClassifyToken } from "./parser";
+import { cmdParse, cmdClassifyToken, inputToQuery } from "./parser";
 import type { CommandParserSettings } from "./types";
 import type { CommandPricing } from "@/lib/settings-stores";
 
@@ -113,6 +113,55 @@ describe("cmdParse", () => {
     expect(p.gradeId).toBeNull();
     expect(p.calc!.input.materialGradeId).toBe("stainless-316l");
     expect(p.density).toBe(8000);
+  });
+});
+
+describe("inputToQuery", () => {
+  it("round-trips a standard beam query", () => {
+    const settings = mkSettings();
+    const p = cmdParse("hea120 6m x2 s355", settings);
+    expect(p.valid).toBe(true);
+    const reQuery = inputToQuery(p.calc!.input, "m");
+    expect(reQuery).toBe("hea120 6m x2 s355");
+    const p2 = cmdParse(reQuery, settings);
+    expect(p2.calc!.input.profileId).toBe(p.calc!.input.profileId);
+    expect(p2.calc!.input.selectedSizeId).toBe(p.calc!.input.selectedSizeId);
+    expect(p2.calc!.result.grandTotalAmount).toBe(p.calc!.result.grandTotalAmount);
+  });
+
+  it("round-trips SHS / CHS / round / flat / angle", () => {
+    const settings = mkSettings();
+    for (const q of [
+      "shs40x40x3 6m",
+      "chs60.3x3.2 3m x6 s235",
+      "rnd20 6m",
+      "flt40x8 4m",
+      "l50x50x5 3m",
+    ]) {
+      const p = cmdParse(q, settings);
+      expect(p.valid, q).toBe(true);
+      const re = inputToQuery(p.calc!.input, "m", { defaultGradeId: settings.defaultGradeId });
+      const p2 = cmdParse(re, settings);
+      expect(p2.calc!.result.totalWeightKg, q).toBeCloseTo(p.calc!.result.totalWeightKg, 6);
+    }
+  });
+
+  it("omits the grade token when it matches the user's default", () => {
+    const p = cmdParse("hea120 6m s235", mkSettings());
+    const re = inputToQuery(p.calc!.input, "m", { defaultGradeId: "steel-s235jr" });
+    expect(re).toBe("hea120 6m");
+  });
+
+  it("emits the grade token when it differs from the default", () => {
+    const p = cmdParse("hea120 6m s355", mkSettings());
+    const re = inputToQuery(p.calc!.input, "m", { defaultGradeId: "steel-s235jr" });
+    expect(re).toBe("hea120 6m s355");
+  });
+
+  it("returns empty string for profiles without a Command alias", () => {
+    const p = cmdParse("hea120 6m", mkSettings());
+    const input = { ...p.calc!.input, profileId: "sheet" as const };
+    expect(inputToQuery(input, "m")).toBe("");
   });
 });
 
