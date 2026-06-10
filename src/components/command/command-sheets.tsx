@@ -4,7 +4,6 @@ import { useState } from "react";
 import { CommandGlyph } from "./command-glyph";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
 import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
-import { cmdParse } from "@/lib/command/parser";
 import { computeCompareDeltas } from "@/lib/command/compare";
 import type {
   CommandFamily,
@@ -397,20 +396,18 @@ export function CommandSettingsSheet({
 }
 
 /* ──────────────────────────────────────────────────────────────
- *  Library sheet: Saved · Recent · Compare · Projects
+ *  Library sheet: Saved · Compare · Projects
  * ────────────────────────────────────────────────────────────── */
 
-type LibraryTab = "saved" | "recent" | "compare" | "projects";
+type LibraryTab = "saved" | "compare" | "projects";
 
 interface CommandLibrarySheetProps {
   settings: CommandParserSettings;
   defaultUnit: LengthUnit;
-  recents: string[];
   saved: SavedEntry[];
   compareItems: CompareItem[];
   projects: Project[];
   onClose: () => void;
-  onLoadQuery: (query: string) => void;
   onLoadInput: (input: CalculationInput) => void;
   onRemoveSaved: (id: string) => void;
   onRemoveCompare: (id: string) => void;
@@ -423,12 +420,10 @@ export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
   const {
     settings,
     defaultUnit,
-    recents,
     saved,
     compareItems,
     projects,
     onClose,
-    onLoadQuery,
     onLoadInput,
     onRemoveSaved,
     onRemoveCompare,
@@ -441,28 +436,38 @@ export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
   const initialTab: LibraryTab =
     saved.length > 0
       ? "saved"
-      : recents.length > 0
-        ? "recent"
-        : compareItems.length > 0
-          ? "compare"
-          : projects.length > 0
-            ? "projects"
-            : "saved";
+      : compareItems.length > 0
+        ? "compare"
+        : projects.length > 0
+          ? "projects"
+          : "saved";
   const [tab, setTab] = useState<LibraryTab>(initialTab);
 
   return (
     <SheetShell title="Library" onClose={onClose}>
       <div className="flex gap-1 mb-3" role="tablist">
-        <LibraryTabPill active={tab === "saved"} count={saved.length} onClick={() => setTab("saved")}>
+        <LibraryTabPill
+          active={tab === "saved"}
+          count={saved.length}
+          onClick={() => setTab("saved")}
+          icon={<TabIconSaved />}
+        >
           Saved
         </LibraryTabPill>
-        <LibraryTabPill active={tab === "recent"} count={recents.length} onClick={() => setTab("recent")}>
-          Recent
-        </LibraryTabPill>
-        <LibraryTabPill active={tab === "compare"} count={compareItems.length} onClick={() => setTab("compare")}>
+        <LibraryTabPill
+          active={tab === "compare"}
+          count={compareItems.length}
+          onClick={() => setTab("compare")}
+          icon={<TabIconCompare />}
+        >
           Compare
         </LibraryTabPill>
-        <LibraryTabPill active={tab === "projects"} count={projects.length} onClick={() => setTab("projects")}>
+        <LibraryTabPill
+          active={tab === "projects"}
+          count={projects.length}
+          onClick={() => setTab("projects")}
+          icon={<TabIconProjects />}
+        >
           Projects
         </LibraryTabPill>
       </div>
@@ -474,13 +479,6 @@ export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
           defaultGradeId={settings.defaultGradeId}
           onLoad={(entry) => onLoadInput(entry.input)}
           onRemove={onRemoveSaved}
-        />
-      )}
-      {tab === "recent" && (
-        <RecentTabContent
-          recents={recents}
-          settings={settings}
-          onPick={onLoadQuery}
         />
       )}
       {tab === "compare" && (
@@ -507,15 +505,72 @@ export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
   );
 }
 
+function TabIconSaved() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+    </svg>
+  );
+}
+
+function TabIconCompare() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4" width="7" height="16" rx="1" />
+      <rect x="14" y="4" width="7" height="16" rx="1" />
+    </svg>
+  );
+}
+
+function TabIconProjects() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+    </svg>
+  );
+}
+
 function LibraryTabPill({
   active,
   count,
   onClick,
+  icon,
   children,
 }: {
   active: boolean;
   count: number;
   onClick: () => void;
+  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -524,12 +579,15 @@ function LibraryTabPill({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`flex-1 h-9 rounded-lg text-[11px] font-bold uppercase tracking-[1px] flex items-center justify-center gap-1 ${
+      className={`flex-1 h-9 rounded-lg text-[11px] font-bold uppercase tracking-[1px] flex items-center justify-center gap-1.5 ${
         active
           ? "bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]"
           : "bg-[var(--surface-raised)] text-muted border border-border-faint"
       }`}
     >
+      <span className="flex items-center justify-center" aria-hidden="true">
+        {icon}
+      </span>
       {children}
       {count > 0 && (
         <span className="opacity-70 font-mono text-[10px]">{count}</span>
@@ -665,45 +723,6 @@ function SavedTabContent({
       <span className="hidden" aria-hidden="true">
         {defaultUnit}/{defaultGradeId}
       </span>
-    </RowsCard>
-  );
-}
-
-/* ─────────────────── Recent tab ─────────────────── */
-
-function RecentTabContent({
-  recents,
-  settings,
-  onPick,
-}: {
-  recents: string[];
-  settings: CommandParserSettings;
-  onPick: (query: string) => void;
-}) {
-  if (recents.length === 0) {
-    return <EmptyState>Recent queries show here as you calculate.</EmptyState>;
-  }
-  return (
-    <RowsCard>
-      {recents.map((q, i) => {
-        const rp = cmdParse(q, settings);
-        const fam: CommandFamily | undefined = rp.alias?.fam;
-        return (
-          <LibraryRow
-            key={`${q}-${i}`}
-            glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
-            title={rp.name || q}
-            subtitle={
-              rp.valid && rp.totalKg != null
-                ? `${fsWeight(rp.totalKg)} ${fsWeightUnit(rp.totalKg)} · ×${rp.realQty}${
-                    rp.gradeLabel ? " · " + rp.gradeLabel : ""
-                  }`
-                : q
-            }
-            onClick={() => onPick(q)}
-          />
-        );
-      })}
     </RowsCard>
   );
 }

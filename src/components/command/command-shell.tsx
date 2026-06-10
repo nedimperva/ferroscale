@@ -36,32 +36,6 @@ const FRAME_W = 402;
 const FRAME_H = 874;
 const HERO_FONT_WEIGHT = 800;
 
-function loadStrings(key: string, fallback: string[] = []): string[] {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === "string") : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function persistStrings(key: string, value: string[]) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* noop */
-  }
-}
-
-const STARTER_RECENTS = [
-  "ipe200 12m s355",
-  "shs40x40x3 6m x10",
-  "chs60.3x3.2 3m x6 s235",
-];
 
 export function CommandShell() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -107,7 +81,6 @@ export function CommandShell() {
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [recents, setRecents] = useState<string[]>(STARTER_RECENTS);
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   const [scale, setScale] = useState(1);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
@@ -133,18 +106,13 @@ export function CommandShell() {
   // initial SSR/first-paint values must match defaults to avoid hydration
   // mismatches, then we apply localStorage once on the client.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRecents(loadStrings("ferroscale-command-recents", STARTER_RECENTS));
     // Old keys orphaned by previous refactors — drop them.
     try {
       window.localStorage.removeItem("ferroscale-command-settings");
       window.localStorage.removeItem("ferroscale-command-saved");
+      window.localStorage.removeItem("ferroscale-command-recents");
     } catch { /* noop */ }
   }, []);
-
-  useEffect(() => {
-    persistStrings("ferroscale-command-recents", recents);
-  }, [recents]);
 
   // On phone viewports, render fullscreen — no scaled iPhone frame.
   // On wider viewports, scale the fixed 402×874 frame to fit and show the bezel.
@@ -195,10 +163,8 @@ export function CommandShell() {
       const autoName = `${p.name} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
       saveCalculation(p.calc.input, p.calc.result, autoName);
     }
-    // Quick recall for the Recent tab.
-    setRecents((r) => [query, ...r.filter((x) => x !== query)].slice(0, 8));
     showToast("Saved");
-  }, [p, query, isSaved, saveCalculation, showToast]);
+  }, [p, isSaved, saveCalculation, showToast]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
@@ -210,11 +176,6 @@ export function CommandShell() {
     },
     [defaultUnit, shared.defaultGradeId],
   );
-
-  const loadQuery = useCallback((q: string) => {
-    setQuery(q);
-    setSheet(null);
-  }, []);
 
   const handlePickProject = useCallback(
     (projectId: string) => {
@@ -244,11 +205,8 @@ export function CommandShell() {
   }, [p.calc]);
 
   const newCalc = useCallback(() => {
-    if (p.valid) {
-      setRecents((r) => [query, ...r.filter((x) => x !== query)].slice(0, 8));
-    }
     setQuery("");
-  }, [p.valid, query]);
+  }, []);
 
   const onSuggest = useCallback(
     (item: CommandSuggestionItem) => {
@@ -698,12 +656,10 @@ export function CommandShell() {
             <CommandLibrarySheet
               settings={parserSettings}
               defaultUnit={defaultUnit}
-              recents={recents}
               saved={savedEntries}
               compareItems={compareItems}
               projects={projects}
               onClose={() => setSheet(null)}
-              onLoadQuery={loadQuery}
               onLoadInput={loadInput}
               onRemoveSaved={removeSaved}
               onRemoveCompare={removeCompareItem}
