@@ -150,15 +150,16 @@ interface CommandResultSheetProps {
   onAddToProject: () => void;
 }
 
-export function CommandResultSheet({
+/** Inline result body — used by the mobile result sheet AND by the wide-desktop
+ *  layout where there is no sheet at all. */
+export function CommandResultBreakdown({
   p,
-  onClose,
   onSave,
   onCopy,
   onNew,
   onCompare,
   onAddToProject,
-}: CommandResultSheetProps) {
+}: Omit<CommandResultSheetProps, "onClose">) {
   if (!p.calc || p.kgm == null) {
     return null;
   }
@@ -167,7 +168,7 @@ export function CommandResultSheet({
   const secondaryBtn =
     "flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
   return (
-    <SheetShell title="Result breakdown" onClose={onClose}>
+    <>
       <div className="flex items-baseline gap-2 mb-3">
         {p.alias && (
           <span className="text-accent">
@@ -244,6 +245,20 @@ export function CommandResultSheet({
           + Project
         </button>
       </div>
+    </>
+  );
+}
+
+export function CommandResultSheet({
+  onClose,
+  ...rest
+}: CommandResultSheetProps) {
+  if (!rest.p.calc || rest.p.kgm == null) {
+    return null;
+  }
+  return (
+    <SheetShell title="Result breakdown" onClose={onClose}>
+      <CommandResultBreakdown {...rest} />
     </SheetShell>
   );
 }
@@ -550,21 +565,30 @@ interface CommandLibrarySheetProps {
 }
 
 export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
-  const {
-    settings,
-    defaultUnit,
-    saved,
-    compareItems,
-    projects,
-    onClose,
-    onLoadInput,
-    onRemoveSaved,
-    onRemoveCompare,
-    onClearCompare,
-    onCreateProject,
-    onRemoveProjectCalc,
-  } = props;
+  return (
+    <SheetShell title="Library" onClose={props.onClose}>
+      <CommandLibraryWorkspace {...props} />
+    </SheetShell>
+  );
+}
 
+type CommandLibraryWorkspaceProps = Omit<CommandLibrarySheetProps, "onClose">;
+
+/** The tabbed Library body — used inside the mobile/medium sheet AND as the
+ *  always-visible right pane on wide-desktop. */
+export function CommandLibraryWorkspace({
+  settings,
+  defaultUnit,
+  saved,
+  compareItems,
+  projects,
+  onLoadInput,
+  onRemoveSaved,
+  onRemoveCompare,
+  onClearCompare,
+  onCreateProject,
+  onRemoveProjectCalc,
+}: CommandLibraryWorkspaceProps) {
   // Initial tab — pick the first non-empty section, else Saved.
   const initialTab: LibraryTab =
     saved.length > 0
@@ -577,7 +601,7 @@ export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
   const [tab, setTab] = useState<LibraryTab>(initialTab);
 
   return (
-    <SheetShell title="Library" onClose={onClose}>
+    <>
       <div className="flex gap-1 mb-3" role="tablist">
         <LibraryTabPill
           active={tab === "saved"}
@@ -634,7 +658,7 @@ export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
           onRemoveCalc={onRemoveProjectCalc}
         />
       )}
-    </SheetShell>
+    </>
   );
 }
 

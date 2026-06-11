@@ -26,7 +26,9 @@ import { CommandGlyph } from "./command-glyph";
 import { CommandKeypad } from "./command-keypad";
 import {
   CommandLibrarySheet,
+  CommandLibraryWorkspace,
   CommandProjectPickerSheet,
+  CommandResultBreakdown,
   CommandResultSheet,
   CommandSettingsSheet,
 } from "./command-sheets";
@@ -83,6 +85,7 @@ export function CommandShell() {
   const [toast, setToast] = useState<string | null>(null);
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  const [isWideViewport, setIsWideViewport] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const parserSettings: CommandParserSettings = useMemo(
@@ -114,11 +117,15 @@ export function CommandShell() {
     } catch { /* noop */ }
   }, []);
 
-  // Phone vs desktop: phone gets the fullscreen mobile shell with the on-screen
-  // keypad; desktop gets a centered card and a real input element.
+  // Three viewports:
+  //  · phone (<640) → fullscreen with on-screen keypad
+  //  · medium desktop (640-1023) → centered command card, real input
+  //  · wide desktop (≥1024) → two-pane workspace, Library always visible
   useEffect(() => {
     const fit = () => {
-      setIsPhoneViewport(window.innerWidth < 640);
+      const w = window.innerWidth;
+      setIsPhoneViewport(w < 640);
+      setIsWideViewport(w >= 1024);
     };
     fit();
     window.addEventListener("resize", fit);
@@ -274,11 +281,16 @@ export function CommandShell() {
 
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
+  const outerClass = isWideViewport
+    ? "fixed inset-0 flex overflow-hidden"
+    : "fixed inset-0 flex items-center justify-center overflow-hidden";
+  const outerBg = isPhoneViewport || isWideViewport ? screenBg : "var(--background)";
+
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center overflow-hidden"
+      className={outerClass}
       style={{
-        background: isPhoneViewport ? screenBg : "var(--background)",
+        background: outerBg,
         transition: "background 220ms ease",
       }}
     >
@@ -292,7 +304,15 @@ export function CommandShell() {
                 height: "100dvh",
                 background: screenBg,
               }
-            : {
+            : isWideViewport
+              ? {
+                  flex: 1,
+                  minWidth: 0,
+                  height: "100dvh",
+                  background: screenBg,
+                  borderRight: "1px solid var(--border-faint)",
+                }
+              : {
                 width: DESKTOP_CARD_W,
                 maxWidth: "calc(100vw - 32px)",
                 maxHeight: "calc(100vh - 32px)",
@@ -346,11 +366,13 @@ export function CommandShell() {
                   </svg>
                 )}
               </IconBtn>
-              <IconBtn onClick={() => setSheet("library")} ariaLabel="Library">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                </svg>
-              </IconBtn>
+              {!isWideViewport && (
+                <IconBtn onClick={() => setSheet("library")} ariaLabel="Library">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                  </svg>
+                </IconBtn>
+              )}
               <IconBtn onClick={() => setSheet("settings")} ariaLabel="Settings">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
@@ -498,10 +520,29 @@ export function CommandShell() {
             p={p}
             isWeight={isW}
             sym={sym}
-            onOpen={() => p.valid && setSheet("result")}
+            onOpen={() => !isWideViewport && p.valid && setSheet("result")}
           />
 
-          {isPhoneViewport && <div className="flex-1 min-h-[6px]" />}
+          {/* Wide desktop: inline result breakdown + actions (no modal sheet) */}
+          {isWideViewport && p.valid && (
+            <div className="px-4 pt-4 overflow-y-auto flex-1">
+              <CommandResultBreakdown
+                p={p}
+                onSave={doSave}
+                onCopy={() => {
+                  navigator.clipboard?.writeText(query).catch(() => {});
+                  showToast("Copied to clipboard");
+                }}
+                onNew={newCalc}
+                onCompare={doCompare}
+                onAddToProject={openProjectModal}
+              />
+            </div>
+          )}
+
+          {(isPhoneViewport || (isWideViewport && !p.valid)) && (
+            <div className="flex-1 min-h-[6px]" />
+          )}
 
           {/* SUGGESTION BAR */}
           <div className="pb-1.5">
@@ -711,8 +752,9 @@ export function CommandShell() {
             />
           )}
 
-          {/* SHEETS */}
-          {effectiveSheet === "result" && p.valid && (
+          {/* SHEETS — on wide-desktop the result + library are inline, so
+              we suppress those sheet variants. */}
+          {effectiveSheet === "result" && p.valid && !isWideViewport && (
             <CommandResultSheet
               p={p}
               onClose={() => setSheet(null)}
@@ -749,7 +791,7 @@ export function CommandShell() {
               themeLabel={dark ? "Dark" : "Light"}
             />
           )}
-          {effectiveSheet === "library" && (
+          {effectiveSheet === "library" && !isWideViewport && (
             <CommandLibrarySheet
               settings={parserSettings}
               defaultUnit={defaultUnit}
@@ -801,6 +843,43 @@ export function CommandShell() {
             </div>
           )}
       </div>
+
+      {/* Wide-desktop right pane: persistent Library workspace */}
+      {isWideViewport && (
+        <aside
+          className="relative flex flex-col overflow-hidden text-foreground"
+          style={{
+            width: 440,
+            flexShrink: 0,
+            height: "100dvh",
+            background: "var(--surface-raised)",
+          }}
+        >
+          <div className="px-5 pt-6 pb-2 flex items-center justify-between">
+            <h2 className="text-[12px] font-bold tracking-[1.6px] uppercase text-muted">
+              Library
+            </h2>
+            <span className="text-[10px] font-mono text-muted-faint">
+              auto-syncs
+            </span>
+          </div>
+          <div className="px-4 pb-6 overflow-y-auto flex-1">
+            <CommandLibraryWorkspace
+              settings={parserSettings}
+              defaultUnit={defaultUnit}
+              saved={savedEntries}
+              compareItems={compareItems}
+              projects={projects}
+              onLoadInput={loadInput}
+              onRemoveSaved={removeSaved}
+              onRemoveCompare={removeCompareItem}
+              onClearCompare={clearCompare}
+              onCreateProject={createProject}
+              onRemoveProjectCalc={removeCalculation}
+            />
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
