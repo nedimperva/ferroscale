@@ -159,7 +159,8 @@ export function CommandResultBreakdown({
   onNew,
   onCompare,
   onAddToProject,
-}: Omit<CommandResultSheetProps, "onClose">) {
+  columns = 1,
+}: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
   if (!p.calc || p.kgm == null) {
     return null;
   }
@@ -167,6 +168,57 @@ export function CommandResultBreakdown({
   const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
   const secondaryBtn =
     "flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
+
+  const geometryRows = (
+    <>
+      <SheetRow label="Mass per metre" value={`${p.kgm.toFixed(2)} kg/m`} mono />
+      <SheetRow label="Length" value={`${p.lengthM} m`} mono />
+      <SheetRow label="Pieces" value={`× ${p.realQty}`} mono />
+      <SheetRow
+        label="Per piece"
+        value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
+        mono
+      />
+      <SheetRow
+        label="Total weight"
+        value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
+        mono
+      />
+      <SheetRow label="Density" value={`${r.densityKgPerM3} kg/m³`} mono />
+    </>
+  );
+
+  const pricingRows = (
+    <>
+      <SheetRow
+        label="Rate"
+        value={`${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`}
+        mono
+      />
+      <SheetRow
+        label="Per piece price"
+        value={`${sym} ${fsMoney(r.unitPriceAmount)}`}
+        mono
+      />
+      <SheetRow label="Subtotal" value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
+      {p.pricing.wastePercent > 0 && (
+        <SheetRow
+          label={`Waste +${p.pricing.wastePercent}%`}
+          value={`${sym} ${fsMoney(r.wasteAmount)}`}
+          mono
+        />
+      )}
+      {p.pricing.includeVat && (
+        <SheetRow
+          label={`VAT ${p.pricing.vatPercent}%`}
+          value={`${sym} ${fsMoney(r.vatAmount)}`}
+          mono
+        />
+      )}
+      <SheetRow label="Total cost" value={`${sym} ${fsMoney(r.grandTotalAmount)}`} mono strong />
+    </>
+  );
+
   return (
     <>
       <div className="flex items-baseline gap-2 mb-3">
@@ -180,48 +232,27 @@ export function CommandResultBreakdown({
           <span className="text-xs font-semibold text-muted">· {p.gradeLabel}</span>
         )}
       </div>
-      <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4">
-        <SheetRow label="Mass per metre" value={`${p.kgm.toFixed(2)} kg/m`} mono />
-        <SheetRow label="Length" value={`${p.lengthM} m`} mono />
-        <SheetRow label="Pieces" value={`× ${p.realQty}`} mono />
-        <SheetRow
-          label="Per piece"
-          value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
-          mono
-        />
-        <SheetRow
-          label="Total weight"
-          value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
-          mono
-        />
-        <SheetRow label="Density" value={`${r.densityKgPerM3} kg/m³`} mono />
-        <SheetRow
-          label="Rate"
-          value={`${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`}
-          mono
-        />
-        <SheetRow
-          label="Per piece price"
-          value={`${sym} ${fsMoney(r.unitPriceAmount)}`}
-          mono
-        />
-        <SheetRow label="Subtotal" value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
-        {p.pricing.wastePercent > 0 && (
-          <SheetRow
-            label={`Waste +${p.pricing.wastePercent}%`}
-            value={`${sym} ${fsMoney(r.wasteAmount)}`}
-            mono
-          />
-        )}
-        {p.pricing.includeVat && (
-          <SheetRow
-            label={`VAT ${p.pricing.vatPercent}%`}
-            value={`${sym} ${fsMoney(r.vatAmount)}`}
-            mono
-          />
-        )}
-        <SheetRow label="Total cost" value={`${sym} ${fsMoney(r.grandTotalAmount)}`} mono strong />
-      </div>
+      {columns === 2 ? (
+        <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] grid grid-cols-2 divide-x divide-border-faint">
+          <div className="px-4">
+            <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase pt-3 pb-1">
+              Geometry
+            </div>
+            {geometryRows}
+          </div>
+          <div className="px-4">
+            <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase pt-3 pb-1">
+              Pricing
+            </div>
+            {pricingRows}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4">
+          {geometryRows}
+          {pricingRows}
+        </div>
+      )}
       <div className="flex gap-2 mt-4">
         <button
           type="button"

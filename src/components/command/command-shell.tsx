@@ -87,6 +87,7 @@ export function CommandShell() {
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
 
   const parserSettings: CommandParserSettings = useMemo(
     () => ({
@@ -528,6 +529,7 @@ export function CommandShell() {
             <div className="px-4 pt-4 overflow-y-auto flex-1">
               <CommandResultBreakdown
                 p={p}
+                columns={2}
                 onSave={doSave}
                 onCopy={() => {
                   navigator.clipboard?.writeText(query).catch(() => {});
@@ -567,9 +569,29 @@ export function CommandShell() {
               {sug.items.map((it, i) => (
                 <button
                   key={i}
+                  ref={i === 0 ? firstSuggestionRef : undefined}
                   type="button"
                   onClick={() => onSuggest(it)}
-                  className="flex-shrink-0 flex items-center gap-1.5 rounded-[12px] font-bold"
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                      e.preventDefault();
+                      const dir = e.key === "ArrowRight" ? 1 : -1;
+                      const buttons = Array.from(
+                        e.currentTarget.parentElement?.querySelectorAll(
+                          "button",
+                        ) ?? [],
+                      ) as HTMLButtonElement[];
+                      const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
+                      const next = buttons[idx + dir];
+                      next?.focus();
+                      return;
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      focusInput();
+                    }
+                  }}
+                  className="flex-shrink-0 flex items-center gap-1.5 rounded-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
                   style={{
                     padding: it.sub ? "7px 12px" : "8px 13px",
                     border:
@@ -722,9 +744,26 @@ export function CommandShell() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && p.valid) {
+                    if (e.key === "Enter") {
+                      if (p.valid) {
+                        e.preventDefault();
+                        doSave();
+                        return;
+                      }
+                      // Mid-query: insert the first matching suggestion chip
+                      // (skip the "Save calculation" chip in the Ready stage).
+                      const first = sug.items.find((it) => it.kind !== "save");
+                      if (first) {
+                        e.preventDefault();
+                        onSuggest(first);
+                      }
+                      return;
+                    }
+                    if (e.key === "Tab" && !e.shiftKey && sug.items.length > 0) {
+                      // Tab focuses the first suggestion chip — Shift+Tab
+                      // keeps native back-focus.
                       e.preventDefault();
-                      doSave();
+                      firstSuggestionRef.current?.focus();
                     }
                   }}
                   autoFocus
