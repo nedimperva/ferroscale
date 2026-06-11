@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDefaultInput } from "@/hooks/useCalculator";
+import { getDefaultInput } from "@/lib/calculator/input-storage";
 import { resolveProfileSpecs } from "./profile-specs";
 
 describe("resolveProfileSpecs", () => {

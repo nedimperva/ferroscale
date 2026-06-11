@@ -1,18 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import { Archivo, IBM_Plex_Mono } from "next/font/google";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const archivo = Archivo({
+  variable: "--font-archivo",
+  weight: ["400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-plex-mono",
-  weight: ["400", "500"],
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -109,8 +110,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   interactiveWidget: "overlays-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    { media: "(prefers-color-scheme: light)", color: "#efeae0" },
+    { media: "(prefers-color-scheme: dark)", color: "#131009" },
   ],
 };
 
@@ -130,15 +131,9 @@ export default async function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem("ferroscale-theme");if(t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
           }}
         />
-        {/* Synchronous text-size script — prevents font-size flash on reload */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem("ferroscale-font-size");if(s==="small")document.documentElement.classList.add("text-size-small");else if(s==="large")document.documentElement.classList.add("text-size-large")}catch(e){}})();`,
-          }}
-        />
       </head>
       <body
-        className={`${spaceGrotesk.variable} ${ibmPlexMono.variable} antialiased min-h-dvh bg-surface md:bg-background text-foreground`}
+        className={`${archivo.variable} ${ibmPlexMono.variable} antialiased min-h-dvh bg-surface md:bg-background text-foreground`}
         suppressHydrationWarning
       >
         {children}

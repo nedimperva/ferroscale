@@ -56,6 +56,20 @@ describe("createBoolStore", () => {
     const store = createBoolStore("server-bool", true);
     expect(store.getServerSnapshot()).toBe(true);
   });
+
+  it("set writes an explicit value and notifies subscribers", () => {
+    const store = createBoolStore("set-bool", false);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.set(true);
+    expect(store.getSnapshot()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    store.set(true);
+    expect(store.getSnapshot()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("createStringStore", () => {

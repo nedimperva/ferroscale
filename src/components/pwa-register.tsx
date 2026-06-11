@@ -3,13 +3,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 
-// Extend Window to include the non-standard beforeinstallprompt event.
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-  prompt(): Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
 function subscribeOnlineStatus(onStoreChange: () => void): () => void {
   window.addEventListener("online", onStoreChange);
   window.addEventListener("offline", onStoreChange);
@@ -28,7 +21,7 @@ function getServerOfflineSnapshot(): boolean {
   return false;
 }
 
-type BannerState = "offline" | "update" | "ready" | "install" | null;
+type BannerState = "offline" | "update" | "ready" | null;
 
 interface PwaRegisterProps {
   onOpenChangelog?: () => void;
@@ -38,7 +31,6 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
   const t = useTranslations("pwa");
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
   const [banner, setBanner] = useState<BannerState>(null);
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   const isOffline = useSyncExternalStore(
     subscribeOnlineStatus,
@@ -102,18 +94,9 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
     }
   }, [banner]);
 
-  // Capture the browser's install prompt so we can show it at the right moment.
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setInstallPrompt(e as BeforeInstallPromptEvent);
-      // Only show the install banner if nothing more important is showing.
-      setBanner((prev) => (prev === null ? "install" : prev));
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-  }, []);
+  // We deliberately do NOT subscribe to `beforeinstallprompt` — the browser's
+  // install affordance (address-bar icon / share menu) is plenty, and the
+  // sticky banner felt nag-y. Offline / update / ready stay.
 
   // Offline state always takes priority over everything else.
   const activeBanner: BannerState = isOffline ? "offline" : banner;
@@ -122,17 +105,6 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
     const reg = registrationRef.current;
     if (reg?.waiting) {
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
-    }
-  }
-
-  async function handleInstall() {
-    if (!installPrompt) return;
-    const result = await installPrompt.prompt();
-    setInstallPrompt(null);
-    if (result?.outcome === "accepted") {
-      setBanner(null);
-    } else {
-      setBanner(null);
     }
   }
 
@@ -181,29 +153,6 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
         >
           ✕
         </button>
-      </div>
-    );
-  }
-
-  if (activeBanner === "install" && installPrompt) {
-    return (
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-        <span>{t("installPrompt")}</span>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={handleInstall}
-            className="rounded bg-slate-800 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:bg-slate-600 dark:hover:bg-slate-500"
-          >
-            {t("installNow")}
-          </button>
-          <button
-            onClick={() => setBanner(null)}
-            aria-label={t("dismiss")}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-          >
-            ✕
-          </button>
-        </div>
       </div>
     );
   }

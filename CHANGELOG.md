@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.1.0] - 2026-06-09
+
+### Added
+
+- FerroScale Command — a new type-or-tap calculator on the home screen: type a query like `hea120 6m x2 s235` (or tap through profile → size → length → pieces → grade) for an instant live result with a breakdown sheet
+- Command understands bare lengths using your default unit from Settings (e.g. `hea120 6`), plus explicit mm/cm/m/in/ft
+- Your saved dimension presets appear as one-tap size suggestions in Command after picking a profile
+- Compare and Add-to-project actions in Command's result breakdown
+- All 9 material grades available in Command (S235, S355, S420, 304, 316, 316L, 6060, 6082, 7075) with EN densities
+
+### Changed
+
+- Command pricing now uses your real pricing settings (unit price, price basis, currency incl. PLN/BAM, waste %, VAT) — the hero PRICE value is the same grand total the full calculator produces, with waste/VAT badges when active
+- Saving in Command stores the calculation in the shared Saved library (visible on /saved, included in sync) in addition to the quick query recall list
+- The "weight as main" setting now drives Command's default hero metric; Command's settings sheet edits the same shared pricing/grade/unit settings as the Settings tab
+
+### Fixed
+
+- Stainless 304 density corrected to 7930 kg/m³ in Command quick queries
+
+---
+
 ## [3.0.0] - 2026-05-14
 
 ### Changed

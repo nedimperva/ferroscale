@@ -18,11 +18,13 @@ export function createBoolStore(key: string, defaultValue: boolean) {
   }
   function getServerSnapshot(): boolean { return defaultValue; }
   function toggle() {
-    const next = !getSnapshot();
-    try { localStorage.setItem(key, String(next)); } catch { /* noop */ }
+    set(!getSnapshot());
+  }
+  function set(value: boolean) {
+    try { localStorage.setItem(key, String(value)); } catch { /* noop */ }
     for (const l of _listeners) l();
   }
-  return { subscribe, getSnapshot, getServerSnapshot, toggle };
+  return { subscribe, getSnapshot, getServerSnapshot, toggle, set };
 }
 
 export function createStringStore<T extends string>(key: string, defaultValue: T) {

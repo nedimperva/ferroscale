@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
-import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { fingerprint } from "@/lib/calculator/fingerprint";
 import {
   createSavedPart,
