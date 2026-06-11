@@ -30,6 +30,7 @@ import {
   CommandResultSheet,
   CommandSettingsSheet,
 } from "./command-sheets";
+import { PwaRegister } from "@/components/pwa-register";
 import type { CalculationInput } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
@@ -281,6 +282,7 @@ export function CommandShell() {
         transition: "background 220ms ease",
       }}
     >
+      <PwaRegister />
       <div
         className="relative flex flex-col overflow-hidden text-foreground"
         style={
