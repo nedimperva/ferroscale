@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getDefaultInput } from "@/hooks/useCalculator";
-import { INPUT_STORAGE_KEY, loadPersistedInput } from "@/lib/calculator/input-storage";
+import { INPUT_STORAGE_KEY, getDefaultInput, loadPersistedInput } from "@/lib/calculator/input-storage";
 import {
   DEFAULT_SHARED_SETTINGS,
   sharedCalcSettingsStore,

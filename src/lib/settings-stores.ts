@@ -6,9 +6,9 @@
  */
 
 import { createBoolStore, createStringStore } from "@/lib/external-stores";
-import { getDefaultInput } from "@/hooks/useCalculator";
 import {
   INPUT_STORAGE_KEY,
+  getDefaultInput,
   loadPersistedInput,
   persistInput,
 } from "@/lib/calculator/input-storage";
