@@ -232,10 +232,6 @@ input, textarea, .select-text {
   -webkit-user-select: text;
 }
 
-/* ── Text-size preference (scales all rem-based sizes) ── */
-html.text-size-small { font-size: 15px; }
-html.text-size-large { font-size: 17px; }
-
 html ::-webkit-scrollbar {
   display: none;
 }
