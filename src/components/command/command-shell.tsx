@@ -571,7 +571,15 @@ export function CommandShell() {
                   key={i}
                   ref={i === 0 ? firstSuggestionRef : undefined}
                   type="button"
-                  onClick={() => onSuggest(it)}
+                  // Chips stay out of the Tab order — keep typing flow unbroken.
+                  // ArrowDown / ArrowRight from input opens this list explicitly.
+                  tabIndex={-1}
+                  onClick={() => {
+                    onSuggest(it);
+                    // After picking, return focus to the input so the user can
+                    // keep typing immediately.
+                    if (!isPhoneViewport) focusInput();
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
                       e.preventDefault();
@@ -583,10 +591,14 @@ export function CommandShell() {
                       ) as HTMLButtonElement[];
                       const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
                       const next = buttons[idx + dir];
-                      next?.focus();
+                      if (next) {
+                        next.focus();
+                      } else if (dir === -1) {
+                        focusInput();
+                      }
                       return;
                     }
-                    if (e.key === "Escape") {
+                    if (e.key === "ArrowUp" || e.key === "Escape") {
                       e.preventDefault();
                       focusInput();
                     }
@@ -759,9 +771,9 @@ export function CommandShell() {
                       }
                       return;
                     }
-                    if (e.key === "Tab" && !e.shiftKey && sug.items.length > 0) {
-                      // Tab focuses the first suggestion chip — Shift+Tab
-                      // keeps native back-focus.
+                    // Arrow-down opens chip navigation; Tab stays out of the
+                    // chip row entirely so typing isn't trapped.
+                    if (e.key === "ArrowDown" && sug.items.length > 0) {
                       e.preventDefault();
                       firstSuggestionRef.current?.focus();
                     }
