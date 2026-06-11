@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
@@ -32,9 +32,8 @@ import {
 } from "./command-sheets";
 import type { CalculationInput } from "@/lib/calculator/types";
 
-const FRAME_W = 402;
-const FRAME_H = 874;
 const HERO_FONT_WEIGHT = 800;
+const DESKTOP_CARD_W = 560;
 
 
 export function CommandShell() {
@@ -82,8 +81,8 @@ export function CommandShell() {
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
   const [toast, setToast] = useState<string | null>(null);
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
-  const [scale, setScale] = useState(1);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const parserSettings: CommandParserSettings = useMemo(
     () => ({
@@ -114,19 +113,11 @@ export function CommandShell() {
     } catch { /* noop */ }
   }, []);
 
-  // On phone viewports, render fullscreen — no scaled iPhone frame.
-  // On wider viewports, scale the fixed 402×874 frame to fit and show the bezel.
+  // Phone vs desktop: phone gets the fullscreen mobile shell with the on-screen
+  // keypad; desktop gets a centered card and a real input element.
   useEffect(() => {
     const fit = () => {
-      const isPhone = window.innerWidth < 640;
-      setIsPhoneViewport(isPhone);
-      if (isPhone) {
-        setScale(1);
-        return;
-      }
-      const sH = (window.innerHeight - 32) / FRAME_H;
-      const sW = (window.innerWidth - 32) / FRAME_W;
-      setScale(Math.min(1, sH, sW));
+      setIsPhoneViewport(window.innerWidth < 640);
     };
     fit();
     window.addEventListener("resize", fit);
@@ -233,6 +224,33 @@ export function CommandShell() {
     setTheme(dark ? "light" : "dark");
   }, [dark, setTheme]);
 
+  const focusInput = useCallback(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  // Desktop: real-keyboard shortcuts. ⌘K / Ctrl K refocuses the query input,
+  // Esc closes the active sheet, Enter saves a valid query while focused.
+  useEffect(() => {
+    if (isPhoneViewport) return;
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        focusInput();
+        return;
+      }
+      if (event.key === "Escape") {
+        if (projectCalc) {
+          setProjectCalc(null);
+        } else if (sheet) {
+          setSheet(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [focusInput, isPhoneViewport, projectCalc, sheet]);
+
   const heroVal = isW
     ? p.totalKg != null
       ? fsWeight(p.totalKg)
@@ -254,7 +272,6 @@ export function CommandShell() {
   };
 
   const screenBg = dark ? "#161109" : "#f4f0e7";
-  const showBezel = !isPhoneViewport && scale < 1;
 
   return (
     <div
@@ -265,41 +282,33 @@ export function CommandShell() {
       }}
     >
       <div
+        className="relative flex flex-col overflow-hidden text-foreground"
         style={
           isPhoneViewport
-            ? { width: "100%", height: "100dvh" }
-            : { width: FRAME_W * scale, height: FRAME_H * scale }
+            ? {
+                width: "100%",
+                height: "100dvh",
+                background: screenBg,
+              }
+            : {
+                width: DESKTOP_CARD_W,
+                maxWidth: "calc(100vw - 32px)",
+                maxHeight: "calc(100vh - 32px)",
+                background: screenBg,
+                borderRadius: 20,
+                border: "1px solid var(--border-faint)",
+                boxShadow:
+                  "0 1px 2px rgba(0,0,0,0.06), 0 24px 60px -20px rgba(0,0,0,0.35)",
+              }
         }
       >
-        <div
-          className="relative flex flex-col overflow-hidden text-foreground"
-          style={
-            isPhoneViewport
-              ? {
-                  width: "100%",
-                  height: "100%",
-                  background: screenBg,
-                }
-              : {
-                  width: FRAME_W,
-                  height: FRAME_H,
-                  transform: `scale(${scale})`,
-                  transformOrigin: "top left",
-                  borderRadius: showBezel ? 44 : 0,
-                  background: screenBg,
-                  boxShadow: showBezel
-                    ? "0 30px 80px -20px rgba(0,0,0,0.4), 0 0 0 10px #0c0a06, 0 0 0 11px #2a2014"
-                    : "none",
-                }
-          }
-        >
-          {/* Safe-top spacer — honours real device safe-area on mobile, fixed gap in framed preview */}
+          {/* Safe-top spacer — honours real device safe-area on mobile, narrow gap on desktop */}
           <div
             className="flex-shrink-0"
             style={
               isPhoneViewport
                 ? { paddingTop: "env(safe-area-inset-top, 12px)", height: "auto", minHeight: 12 }
-                : { height: 56 }
+                : { height: 12 }
             }
           />
 
@@ -490,7 +499,7 @@ export function CommandShell() {
             onOpen={() => p.valid && setSheet("result")}
           />
 
-          <div className="flex-1 min-h-[6px]" />
+          {isPhoneViewport && <div className="flex-1 min-h-[6px]" />}
 
           {/* SUGGESTION BAR */}
           <div className="pb-1.5">
@@ -563,67 +572,142 @@ export function CommandShell() {
             </div>
           </div>
 
-          {/* QUERY LINE */}
-          <div className="px-[14px] pb-2">
-            <div
-              className="flex items-center gap-1.5 flex-wrap rounded-[15px] px-3 py-2.5"
-              style={{
-                minHeight: 50,
-                border: "1.5px solid var(--accent-border)",
-                background: "var(--surface)",
-                boxShadow: dark
-                  ? "0 0 0 3px rgba(240,121,63,0.13)"
-                  : "0 0 0 3px rgba(216,82,31,0.10)",
-              }}
-            >
-              <span
-                className="font-mono text-base font-bold mr-0.5"
-                style={{ color: "var(--accent)" }}
-              >
-                ›
-              </span>
-              {queryTokens.length === 0 && (
-                <span className="font-mono text-sm text-muted-faint">
-                  type or tap a profile…
-                </span>
-              )}
-              {queryTokens.map((tok, i) => {
-                const k = cmdClassifyToken(tok);
-                return (
-                  <button
-                    key={`${tok}-${i}`}
-                    type="button"
-                    onClick={() => removeTokenAt(i)}
-                    aria-label={`Remove ${tok}`}
-                    className={`group inline-flex items-center gap-1 font-mono text-sm font-semibold pl-2 pr-1.5 py-0.5 rounded-md ${kindBg[k]}`}
-                  >
-                    <span>{tok}</span>
-                    <span
-                      aria-hidden="true"
-                      className="opacity-50 group-hover:opacity-100 transition-opacity text-[12px] leading-none"
-                    >
-                      ×
-                    </span>
-                  </button>
-                );
-              })}
-              <span
-                className="w-0.5 h-5 rounded-sm"
+          {/* QUERY AREA */}
+          {isPhoneViewport ? (
+            <div className="px-[14px] pb-2">
+              <div
+                className="flex items-center gap-1.5 flex-wrap rounded-[15px] px-3 py-2.5"
                 style={{
-                  background: "var(--accent)",
-                  animation: "fsBlink 1s steps(1) infinite",
+                  minHeight: 50,
+                  border: "1.5px solid var(--accent-border)",
+                  background: "var(--surface)",
+                  boxShadow: dark
+                    ? "0 0 0 3px rgba(240,121,63,0.13)"
+                    : "0 0 0 3px rgba(216,82,31,0.10)",
                 }}
-              />
+              >
+                <span
+                  className="font-mono text-base font-bold mr-0.5"
+                  style={{ color: "var(--accent)" }}
+                >
+                  ›
+                </span>
+                {queryTokens.length === 0 && (
+                  <span className="font-mono text-sm text-muted-faint">
+                    type or tap a profile…
+                  </span>
+                )}
+                {queryTokens.map((tok, i) => {
+                  const k = cmdClassifyToken(tok);
+                  return (
+                    <button
+                      key={`${tok}-${i}`}
+                      type="button"
+                      onClick={() => removeTokenAt(i)}
+                      aria-label={`Remove ${tok}`}
+                      className={`group inline-flex items-center gap-1 font-mono text-sm font-semibold pl-2 pr-1.5 py-0.5 rounded-md ${kindBg[k]}`}
+                    >
+                      <span>{tok}</span>
+                      <span
+                        aria-hidden="true"
+                        className="opacity-50 group-hover:opacity-100 transition-opacity text-[12px] leading-none"
+                      >
+                        ×
+                      </span>
+                    </button>
+                  );
+                })}
+                <span
+                  className="w-0.5 h-5 rounded-sm"
+                  style={{
+                    background: "var(--accent)",
+                    animation: "fsBlink 1s steps(1) infinite",
+                  }}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="px-4 pb-4 flex-shrink-0">
+              {queryTokens.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2 px-0.5">
+                  {queryTokens.map((tok, i) => {
+                    const k = cmdClassifyToken(tok);
+                    return (
+                      <button
+                        key={`${tok}-${i}`}
+                        type="button"
+                        onClick={() => {
+                          removeTokenAt(i);
+                          focusInput();
+                        }}
+                        aria-label={`Remove ${tok}`}
+                        className={`group inline-flex items-center gap-1 font-mono text-sm font-semibold pl-2 pr-1.5 py-0.5 rounded-md ${kindBg[k]}`}
+                      >
+                        <span>{tok}</span>
+                        <span
+                          aria-hidden="true"
+                          className="opacity-50 group-hover:opacity-100 transition-opacity text-[12px] leading-none"
+                        >
+                          ×
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <label
+                className="flex items-center gap-2 rounded-[15px] px-3 py-2.5 cursor-text"
+                style={{
+                  minHeight: 50,
+                  border: "1.5px solid var(--accent-border)",
+                  background: "var(--surface)",
+                  boxShadow: dark
+                    ? "0 0 0 3px rgba(240,121,63,0.13)"
+                    : "0 0 0 3px rgba(216,82,31,0.10)",
+                }}
+              >
+                <span
+                  className="font-mono text-base font-bold"
+                  style={{ color: "var(--accent)" }}
+                  aria-hidden="true"
+                >
+                  ›
+                </span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && p.valid) {
+                      e.preventDefault();
+                      doSave();
+                    }
+                  }}
+                  autoFocus
+                  autoCapitalize="off"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="type or tap a profile…"
+                  aria-label="FerroScale Command query"
+                  className="flex-1 bg-transparent outline-none font-mono text-sm text-foreground placeholder:text-muted-faint min-w-0"
+                />
+                <kbd className="text-[10px] font-mono font-semibold text-muted-faint px-1.5 py-0.5 rounded border border-border-faint">
+                  ⌘K
+                </kbd>
+              </label>
+            </div>
+          )}
 
-          {/* KEYPAD */}
-          <CommandKeypad
-            onKey={onKey}
-            onBack={onBack}
-            onEnter={onEnter}
-            valid={p.valid}
-          />
+          {/* On-screen keypad: phone only */}
+          {isPhoneViewport && (
+            <CommandKeypad
+              onKey={onKey}
+              onBack={onBack}
+              onEnter={onEnter}
+              valid={p.valid}
+            />
+          )}
 
           {/* SHEETS */}
           {effectiveSheet === "result" && p.valid && (
@@ -690,7 +774,10 @@ export function CommandShell() {
 
           {/* TOAST */}
           {toast && (
-            <div className="absolute left-0 right-0 bottom-[120px] flex justify-center z-[60] pointer-events-none">
+            <div
+              className="absolute left-0 right-0 flex justify-center z-[60] pointer-events-none"
+              style={{ bottom: isPhoneViewport ? 120 : 20 }}
+            >
               <div
                 className="flex items-center gap-2 px-[18px] py-[11px] rounded-2xl font-bold text-sm"
                 style={{
@@ -711,9 +798,7 @@ export function CommandShell() {
               </div>
             </div>
           )}
-        </div>
       </div>
-
     </div>
   );
 }
