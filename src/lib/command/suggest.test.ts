@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cmdSuggest, presetToSizeText } from "./suggest";
+import { cmdApplyInsert, cmdSuggest, presetToSizeText } from "./suggest";
 import { findAliasByKey } from "./aliases";
 import type { CommandParserSettings } from "./types";
 import type { DimensionPreset } from "@/hooks/usePresets";
@@ -94,5 +94,38 @@ describe("cmdSuggest with presets", () => {
     expect(sug.hint).toBe("Grade (optional)");
     const s420 = sug.items.find((i) => i.label === "S420");
     expect(s420?.ins).toBe("s420");
+  });
+});
+
+describe("cmdApplyInsert", () => {
+  it("size inserts glue onto the profile and end with a space", () => {
+    expect(
+      cmdApplyInsert("hea", { label: "120", ins: "120", kind: "size", appendProfile: true }),
+    ).toBe("hea120 ");
+  });
+
+  it("length/qty/grade inserts end with a space so the next stage starts clean", () => {
+    expect(
+      cmdApplyInsert("hea120 ", { label: "6m", ins: "6m", kind: "length", space: true }),
+    ).toBe("hea120 6m ");
+    expect(
+      cmdApplyInsert("hea120 6m", { label: "× 2", ins: "x2", kind: "qty", space: true }),
+    ).toBe("hea120 6m x2 ");
+  });
+
+  it("profile inserts replace the trailing partial without a trailing space", () => {
+    expect(
+      cmdApplyInsert("he", { label: "HEA", ins: "hea", kind: "profile", replaceLast: true }),
+    ).toBe("hea");
+  });
+
+  it("size suggestions follow immediately after a size insert", () => {
+    const afterSize = cmdApplyInsert("hea", {
+      label: "120",
+      ins: "120",
+      kind: "size",
+      appendProfile: true,
+    });
+    expect(cmdSuggest(afterSize, SETTINGS).hint).toBe("Length");
   });
 });

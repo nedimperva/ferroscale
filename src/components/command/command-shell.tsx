@@ -6,7 +6,7 @@ import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
-import { cmdParse, cmdClassifyToken, inputToQuery } from "@/lib/command/parser";
+import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@/lib/command/parser";
 import { cmdSuggest, cmdApplyInsert } from "@/lib/command/suggest";
 import { COMMAND_ALIAS_RE } from "@/lib/command/aliases";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
@@ -77,7 +77,8 @@ export function CommandShell() {
   const { projects, createProject, addCalculation, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
 
-  const [query, setQuery] = useState("hea120 6m x2 s235");
+  // Trailing space so the demo query renders fully chipped on first load.
+  const [query, setQuery] = useState("hea120 6m x2 s235 ");
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
@@ -238,6 +239,17 @@ export function CommandShell() {
     inputRef.current?.select();
   }, []);
 
+  // Focus with the caret at the end (after chip edit/remove) — select-all
+  // would make the next keystroke wipe the whole query.
+  const focusInputAtEnd = useCallback(() => {
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+  }, []);
+
   // Desktop: real-keyboard shortcuts. ⌘K / Ctrl K refocuses the query input,
   // Esc closes the active sheet, Enter saves a valid query while focused.
   useEffect(() => {
@@ -268,9 +280,27 @@ export function CommandShell() {
       ? fsMoney(p.totalAmount)
       : "—";
 
-  const queryTokens = query.trim().split(/\s+/).filter(Boolean);
+  // Tokens come from the same tokenizer the parser uses, so glued input
+  // ("hea1006m") displays as the pieces it is parsed as.
+  const queryTokens = useMemo(() => cmdTokenize(query), [query]);
+  // While the query doesn't end in whitespace the last piece is still being
+  // typed — the phone view renders it as plain text at the cursor, not a chip.
+  const partialToken = !/\s$/.test(query) && queryTokens.length > 0
+    ? queryTokens[queryTokens.length - 1]
+    : null;
+  const chipTokens = partialToken ? queryTokens.slice(0, -1) : queryTokens;
   const removeTokenAt = (idx: number) => {
-    setQuery(queryTokens.filter((_, i) => i !== idx).join(" "));
+    const rest = queryTokens.filter((_, i) => i !== idx);
+    // Preserve a trailing space so the remaining tokens stay chips and an
+    // in-progress partial stays a partial.
+    const trailing = rest.length > 0 && /\s$/.test(query) ? " " : "";
+    setQuery(rest.join(" ") + trailing);
+  };
+  // Pull a token back to the end of the query as the editable trailing
+  // partial (parser is order-tolerant, so reordering is safe).
+  const editTokenAt = (idx: number) => {
+    const others = queryTokens.filter((_, i) => i !== idx);
+    setQuery(others.join(" ") + (others.length ? " " : "") + queryTokens[idx]);
   };
   const kindBg: Record<CommandTokenKind, string> = {
     profile: "bg-[var(--accent-surface)] text-[var(--accent-text)]",
@@ -556,12 +586,15 @@ export function CommandShell() {
                 <button
                   type="button"
                   onClick={newCalc}
-                  className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide"
+                  // Padding + negative margin grows the tap target without
+                  // shifting the layout.
+                  className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5 -mr-3"
                 >
                   CLEAR
                 </button>
               )}
             </div>
+            <div className="relative">
             <div
               className="flex gap-1.5 px-[18px] pb-0.5"
               style={{ overflowX: "auto" }}
@@ -647,6 +680,15 @@ export function CommandShell() {
                 </button>
               ))}
             </div>
+            {/* Right-edge fade hints that the chip row scrolls */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-7"
+              style={{
+                background: `linear-gradient(to right, transparent, ${screenBg})`,
+              }}
+            />
+            </div>
           </div>
 
           {/* QUERY AREA */}
@@ -674,26 +716,20 @@ export function CommandShell() {
                     type or tap a profile…
                   </span>
                 )}
-                {queryTokens.map((tok, i) => {
-                  const k = cmdClassifyToken(tok);
-                  return (
-                    <button
-                      key={`${tok}-${i}`}
-                      type="button"
-                      onClick={() => removeTokenAt(i)}
-                      aria-label={`Remove ${tok}`}
-                      className={`group inline-flex items-center gap-1 font-mono text-sm font-semibold pl-2 pr-1.5 py-0.5 rounded-md ${kindBg[k]}`}
-                    >
-                      <span>{tok}</span>
-                      <span
-                        aria-hidden="true"
-                        className="opacity-50 group-hover:opacity-100 transition-opacity text-[12px] leading-none"
-                      >
-                        ×
-                      </span>
-                    </button>
-                  );
-                })}
+                {chipTokens.map((tok, i) => (
+                  <TokenChip
+                    key={`${tok}-${i}`}
+                    tok={tok}
+                    kindClass={kindBg[cmdClassifyToken(tok)]}
+                    onEdit={() => editTokenAt(i)}
+                    onRemove={() => removeTokenAt(i)}
+                  />
+                ))}
+                {partialToken && (
+                  <span className="font-mono text-sm font-semibold text-foreground">
+                    {partialToken}
+                  </span>
+                )}
                 <span
                   className="w-0.5 h-5 rounded-sm"
                   style={{
@@ -707,29 +743,21 @@ export function CommandShell() {
             <div className="px-4 pb-4 flex-shrink-0">
               {queryTokens.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-2 px-0.5">
-                  {queryTokens.map((tok, i) => {
-                    const k = cmdClassifyToken(tok);
-                    return (
-                      <button
-                        key={`${tok}-${i}`}
-                        type="button"
-                        onClick={() => {
-                          removeTokenAt(i);
-                          focusInput();
-                        }}
-                        aria-label={`Remove ${tok}`}
-                        className={`group inline-flex items-center gap-1 font-mono text-sm font-semibold pl-2 pr-1.5 py-0.5 rounded-md ${kindBg[k]}`}
-                      >
-                        <span>{tok}</span>
-                        <span
-                          aria-hidden="true"
-                          className="opacity-50 group-hover:opacity-100 transition-opacity text-[12px] leading-none"
-                        >
-                          ×
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {queryTokens.map((tok, i) => (
+                    <TokenChip
+                      key={`${tok}-${i}`}
+                      tok={tok}
+                      kindClass={kindBg[cmdClassifyToken(tok)]}
+                      onEdit={() => {
+                        editTokenAt(i);
+                        focusInputAtEnd();
+                      }}
+                      onRemove={() => {
+                        removeTokenAt(i);
+                        focusInputAtEnd();
+                      }}
+                    />
+                  ))}
                 </div>
               )}
               <label
@@ -932,6 +960,41 @@ export function CommandShell() {
         </aside>
       )}
     </div>
+  );
+}
+
+function TokenChip({
+  tok,
+  kindClass,
+  onEdit,
+  onRemove,
+}: {
+  tok: string;
+  kindClass: string;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <span
+      className={`inline-flex items-stretch font-mono text-sm font-semibold rounded-md ${kindClass}`}
+    >
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={`Edit ${tok}`}
+        className="pl-2 pr-0.5 py-1.5 rounded-l-md"
+      >
+        {tok}
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${tok}`}
+        className="flex items-center justify-center w-7 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
+      >
+        ×
+      </button>
+    </span>
   );
 }
 
