@@ -72,6 +72,8 @@ export interface CommandDesktopProps {
   weightAsMain: boolean;
   onSetWeightAsMain: (value: boolean) => void;
   sessionTape: string[];
+  onRemoveTapeEntry: (q: string) => void;
+  onClearTape: () => void;
   saved: SavedEntry[];
   compareItems: CompareItem[];
   projects: Project[];
@@ -499,6 +501,8 @@ function DeskCalcView({
   onSetMode,
   parserSettings,
   sessionTape,
+  onRemoveTapeEntry,
+  onClearTape,
   compareItems,
   onSave,
   onCopy,
@@ -866,6 +870,16 @@ function DeskCalcView({
               <span className="font-mono text-[10.5px] text-muted-faint">
                 · every saved calc lands here
               </span>
+              {tapeRows.length > 0 && (
+                <button
+                  type="button"
+                  onClick={onClearTape}
+                  className="ml-auto bg-transparent border-0 text-muted text-[10.5px] font-bold cursor-pointer hover:text-foreground"
+                  style={{ letterSpacing: 0.4 }}
+                >
+                  CLEAR
+                </button>
+              )}
             </div>
             {tapeRows.length === 0 ? (
               <div className="font-mono text-[11.5px] text-muted-faint" style={{ padding: "6px 2px" }}>
@@ -881,46 +895,60 @@ function DeskCalcView({
                 }}
               >
                 {tapeRows.map(({ q, rp }, i) => (
-                  <button
+                  <div
                     key={`${q}-${i}`}
-                    type="button"
-                    onClick={() => {
-                      setQuery(q + " ");
-                      focusInputAtEnd();
-                    }}
-                    className="w-full flex items-center gap-[11px] border-0 cursor-pointer text-left bg-transparent"
+                    className="group flex items-center gap-[11px]"
                     style={{
-                      padding: "9.5px 16px",
+                      padding: "9.5px 12px 9.5px 16px",
                       borderTop: i ? "1px solid var(--border-faint)" : "none",
                     }}
                   >
-                    <span className="flex flex-shrink-0 text-muted">
-                      {rp.alias && <CommandGlyph fam={rp.alias.fam} size={16} />}
-                    </span>
-                    <span className="flex-1 min-w-0 font-bold text-[13.5px] text-foreground truncate">
-                      {rp.name}
-                    </span>
-                    <span className="font-mono text-[11px] text-muted flex-shrink-0">
-                      {rp.lengthM} m × {rp.realQty}
-                    </span>
-                    <span
-                      className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0"
-                      style={{ width: 88 }}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery(q + " ");
+                        focusInputAtEnd();
+                      }}
+                      className="flex-1 min-w-0 flex items-center gap-[11px] border-0 cursor-pointer text-left bg-transparent p-0"
                     >
-                      {fsWeight(rp.totalKg!)} {fsWeightUnit(rp.totalKg!)}
-                    </span>
-                    <span
-                      className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0"
-                      style={{ width: 92 }}
+                      <span className="flex flex-shrink-0 text-muted">
+                        {rp.alias && <CommandGlyph fam={rp.alias.fam} size={16} />}
+                      </span>
+                      <span className="flex-1 min-w-0 font-bold text-[13.5px] text-foreground truncate">
+                        {rp.name}
+                      </span>
+                      <span className="font-mono text-[11px] text-muted flex-shrink-0">
+                        {rp.lengthM} m × {rp.realQty}
+                      </span>
+                      <span
+                        className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0"
+                        style={{ width: 88 }}
+                      >
+                        {fsWeight(rp.totalKg!)} {fsWeightUnit(rp.totalKg!)}
+                      </span>
+                      <span
+                        className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0"
+                        style={{ width: 92 }}
+                      >
+                        {sym} {fsMoney(rp.totalAmount!)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveTapeEntry(q)}
+                      title="Remove from tape"
+                      aria-label={`Remove ${rp.name ?? q} from tape`}
+                      className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                      style={{ width: 20, height: 20, background: "var(--surface-inset)" }}
                     >
-                      {sym} {fsMoney(rp.totalAmount!)}
-                    </span>
-                  </button>
+                      <CloseIcon />
+                    </button>
+                  </div>
                 ))}
                 <div
                   className="flex items-center gap-[11px]"
                   style={{
-                    padding: "10px 16px",
+                    padding: "10px 12px 10px 16px",
                     borderTop: "1.5px solid var(--border-strong)",
                     background: "var(--surface-raised)",
                   }}
@@ -944,6 +972,8 @@ function DeskCalcView({
                   >
                     {sym} {fsMoney(sumAmount)}
                   </span>
+                  {/* spacer mirroring the per-row × button keeps columns aligned */}
+                  <span className="flex-shrink-0" style={{ width: 20 }} />
                 </div>
               </div>
             )}
@@ -1202,17 +1232,30 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
 
 /* ───────────────────────── Compare view ───────────────────────── */
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      className="flex justify-between gap-2.5"
-      style={{ padding: "6.5px 0", borderTop: "1px solid var(--border-faint)" }}
-    >
-      <span className="text-[11.5px] font-medium text-muted whitespace-nowrap">{label}</span>
-      <span className="font-mono text-xs font-semibold text-foreground whitespace-nowrap">
-        {value}
+function DeltaChip({ pct }: { pct: number }) {
+  if (!Number.isFinite(pct) || Math.abs(pct) < 0.5) {
+    return (
+      <span
+        className="font-mono text-[10px] font-bold rounded-full"
+        style={{ padding: "2px 7px", background: "var(--surface-inset)", color: "var(--muted)" }}
+      >
+        ≈ base
       </span>
-    </div>
+    );
+  }
+  const up = pct > 0;
+  return (
+    <span
+      className="font-mono text-[10px] font-bold rounded-full"
+      style={{
+        padding: "2px 7px",
+        background: up ? "var(--accent-surface)" : "var(--green-surface)",
+        color: up ? "var(--accent-text)" : "var(--green-text)",
+      }}
+    >
+      {up ? "+" : ""}
+      {pct.toFixed(0)}%
+    </span>
   );
 }
 
@@ -1231,8 +1274,43 @@ function DeskCompareView({
   gotoCalc: () => void;
   onPick: (input: CalculationInput) => void;
 }) {
-  const maxKg = Math.max(1, ...compareItems.map((x) => x.result.totalWeightKg));
-  const base = compareItems[0];
+  // One column per compare item; the first is the base every delta reads from.
+  const cols = compareItems.map((item) => {
+    const r = item.result;
+    const lengthM = r.lengthMm / 1000;
+    return {
+      item,
+      r,
+      fam: famForInput(item.input),
+      name: item.normalizedProfile?.shortLabel ?? r.profileLabel,
+      lengthM,
+      kgm: lengthM > 0 ? r.unitWeightKg / lengthM : null,
+      costPerM:
+        lengthM > 0 && r.quantity > 0
+          ? r.grandTotalAmount / (lengthM * r.quantity)
+          : null,
+      sym: CURRENCY_SYMBOLS[r.currency] ?? "€",
+    };
+  });
+  const base = cols[0];
+  const maxKg = Math.max(1, ...cols.map((c) => c.r.totalWeightKg));
+  const minKg = Math.min(...cols.map((c) => c.r.totalWeightKg));
+  const minCost = Math.min(...cols.map((c) => c.r.grandTotalAmount));
+  const multi = cols.length > 1;
+  const kgVaries = multi && cols.some((c) => c.r.totalWeightKg !== minKg);
+  const costVaries = multi && cols.some((c) => c.r.grandTotalAmount !== minCost);
+  const hasSurface = cols.some((c) => c.r.surfaceAreaM2 != null);
+
+  const labelCell: React.CSSProperties = {
+    padding: "13px 16px",
+    borderTop: "1px solid var(--border-faint)",
+  };
+  const valueCell = (i: number): React.CSSProperties => ({
+    padding: "13px 16px",
+    borderTop: "1px solid var(--border-faint)",
+    borderLeft: "1px solid var(--border-faint)",
+    background: i === 0 ? "var(--surface-raised)" : "transparent",
+  });
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
@@ -1284,69 +1362,61 @@ function DeskCompareView({
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto" style={{ padding: "24px 32px 32px" }}>
-          <div
-            className="grid gap-3"
-            style={{
-              gridTemplateColumns: `repeat(${Math.max(compareItems.length, 2)}, minmax(220px, 280px))`,
-            }}
-          >
-            {compareItems.map((item, i) => {
-              const r = item.result;
-              const fam = famForInput(item.input);
-              const itemSym = CURRENCY_SYMBOLS[r.currency] ?? "€";
-              const delta =
-                base && base.result.totalWeightKg > 0
-                  ? ((r.totalWeightKg - base.result.totalWeightKg) /
-                      base.result.totalWeightKg) *
-                    100
-                  : 0;
-              const isBase = i === 0;
-              const lengthM = r.lengthMm / 1000;
-              const kgm = lengthM > 0 ? r.unitWeightKg / lengthM : null;
-              return (
+          <div className="overflow-x-auto">
+            <div
+              className="rounded-[18px] overflow-hidden"
+              style={{
+                display: "grid",
+                gridTemplateColumns: `140px repeat(${cols.length}, minmax(190px, 250px))`,
+                width: "fit-content",
+                minWidth: 0,
+                border: "1px solid var(--border-faint)",
+                background: "var(--surface)",
+                boxShadow: "var(--panel-shadow-soft)",
+              }}
+            >
+              {/* header row */}
+              <div style={{ padding: "14px 16px" }}>
+                <span className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1.2 }}>
+                  PROFILE
+                </span>
+              </div>
+              {cols.map((c, i) => (
                 <div
-                  key={item.id}
-                  className="flex flex-col rounded-[18px]"
-                  style={{
-                    border: `1px solid ${isBase ? "var(--accent-border)" : "var(--border-faint)"}`,
-                    background: "var(--surface)",
-                    boxShadow: "var(--panel-shadow-soft)",
-                    padding: "16px 18px",
-                  }}
+                  key={c.item.id}
+                  style={{ ...valueCell(i), borderTop: "none", padding: "14px 16px 12px" }}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-start gap-2.5">
                     <div
                       className="flex items-center justify-center flex-shrink-0 rounded-[10px] text-foreground"
-                      style={{ width: 36, height: 36, background: "var(--surface-inset)" }}
+                      style={{ width: 34, height: 34, background: "var(--surface-inset)" }}
                     >
-                      {fam && <CommandGlyph fam={fam} size={20} />}
+                      {c.fam && <CommandGlyph fam={c.fam} size={19} />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div
-                        className="font-extrabold text-[15px] text-foreground truncate"
+                        className="font-extrabold text-[14.5px] text-foreground truncate"
                         style={{ letterSpacing: -0.2 }}
                       >
-                        {item.normalizedProfile?.shortLabel ?? r.profileLabel}
+                        {c.name}
                       </div>
                       <div className="font-mono text-[10.5px] text-muted mt-px">
-                        {formatLengthM(lengthM)} m × {r.quantity}
-                        {r.gradeLabel ? ` · ${r.gradeLabel}` : ""}
+                        {formatLengthM(c.lengthM)} m × {c.r.quantity}
                       </div>
                     </div>
                     <button
                       type="button"
-                      onClick={() => onRemove(item.id)}
+                      onClick={() => onRemove(c.item.id)}
                       title="Remove"
-                      aria-label="Remove from compare"
+                      aria-label={`Remove ${c.name} from compare`}
                       className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted"
-                      style={{ width: 24, height: 24, background: "var(--surface-inset)" }}
+                      style={{ width: 22, height: 22, background: "var(--surface-inset)" }}
                     >
                       <CloseIcon />
                     </button>
                   </div>
-
-                  <div className="flex items-center gap-2 mt-3.5">
-                    {isBase ? (
+                  <div className="mt-2">
+                    {i === 0 ? (
                       <span
                         className="text-[9px] font-extrabold rounded-full"
                         style={{
@@ -1360,56 +1430,158 @@ function DeskCompareView({
                         BASE
                       </span>
                     ) : (
-                      <span
-                        className="font-mono text-[10.5px] font-bold rounded-full"
-                        style={{
-                          padding: "3px 8px",
-                          background: delta > 0 ? "var(--accent-surface)" : "var(--green-surface)",
-                          color: delta > 0 ? "var(--accent-text)" : "var(--green-text)",
-                        }}
-                      >
-                        {delta > 0 ? "+" : ""}
-                        {delta.toFixed(0)}% weight
+                      <span className="font-mono text-[10px] text-muted-faint">
+                        vs {base.name}
                       </span>
                     )}
                   </div>
+                </div>
+              ))}
 
-                  <div className="flex items-baseline gap-[5px] mt-3">
-                    <span
-                      className="font-extrabold text-[32px] text-foreground"
-                      style={{ letterSpacing: -1.2 }}
-                    >
-                      {fsWeight(r.totalWeightKg)}
-                    </span>
-                    <span className="font-bold text-sm" style={{ color: "var(--accent)" }}>
-                      {fsWeightUnit(r.totalWeightKg)}
-                    </span>
-                  </div>
-                  <div
-                    className="rounded-[3px] overflow-hidden mt-2 mb-3.5"
-                    style={{ height: 6, background: "var(--surface-inset)" }}
-                  >
+              {/* total weight */}
+              <div style={labelCell}>
+                <span className="text-[11.5px] font-semibold text-muted">Total weight</span>
+              </div>
+              {cols.map((c, i) => {
+                const pct = base.r.totalWeightKg > 0
+                  ? ((c.r.totalWeightKg - base.r.totalWeightKg) / base.r.totalWeightKg) * 100
+                  : 0;
+                const best = kgVaries && c.r.totalWeightKg === minKg;
+                return (
+                  <div key={c.item.id} style={valueCell(i)}>
+                    <div className="flex items-baseline gap-1.5">
+                      <span
+                        className="font-extrabold text-[22px]"
+                        style={{
+                          letterSpacing: -0.8,
+                          color: best ? "var(--green-text)" : "var(--foreground)",
+                        }}
+                      >
+                        {fsWeight(c.r.totalWeightKg)}
+                      </span>
+                      <span className="font-bold text-xs" style={{ color: "var(--accent)" }}>
+                        {fsWeightUnit(c.r.totalWeightKg)}
+                      </span>
+                      {i > 0 && (
+                        <span className="ml-auto">
+                          <DeltaChip pct={pct} />
+                        </span>
+                      )}
+                    </div>
                     <div
-                      className="h-full rounded-[3px]"
-                      style={{
-                        width: `${Math.max(4, (r.totalWeightKg / maxKg) * 100)}%`,
-                        background: isBase ? "var(--accent)" : "var(--blue-strong)",
-                      }}
-                    />
+                      className="rounded-[3px] overflow-hidden mt-2"
+                      style={{ height: 5, background: "var(--surface-inset)" }}
+                    >
+                      <div
+                        className="h-full rounded-[3px]"
+                        style={{
+                          width: `${Math.max(4, (c.r.totalWeightKg / maxKg) * 100)}%`,
+                          background: i === 0 ? "var(--accent)" : "var(--blue-strong)",
+                        }}
+                      />
+                    </div>
                   </div>
+                );
+              })}
 
-                  <Row label="Total cost" value={`${itemSym} ${fsMoney(r.grandTotalAmount)}`} />
-                  <Row
-                    label="Weight / piece"
-                    value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
-                  />
-                  {kgm != null && <Row label="Mass per metre" value={`${kgm.toFixed(2)} kg/m`} />}
-                  <Row label="Grade" value={r.gradeLabel || "—"} />
+              {/* total cost */}
+              <div style={labelCell}>
+                <span className="text-[11.5px] font-semibold text-muted">Total cost</span>
+              </div>
+              {cols.map((c, i) => {
+                const pct = base.r.grandTotalAmount > 0
+                  ? ((c.r.grandTotalAmount - base.r.grandTotalAmount) / base.r.grandTotalAmount) * 100
+                  : 0;
+                const best = costVaries && c.r.grandTotalAmount === minCost;
+                return (
+                  <div key={c.item.id} style={valueCell(i)} className="flex items-baseline gap-1.5">
+                    <span
+                      className="font-mono text-[14px] font-bold"
+                      style={{ color: best ? "var(--green-text)" : "var(--foreground)" }}
+                    >
+                      {c.sym} {fsMoney(c.r.grandTotalAmount)}
+                    </span>
+                    {i > 0 && (
+                      <span className="ml-auto">
+                        <DeltaChip pct={pct} />
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
 
+              {/* weight / piece */}
+              <div style={labelCell}>
+                <span className="text-[11.5px] font-semibold text-muted">Weight / piece</span>
+              </div>
+              {cols.map((c, i) => (
+                <div key={c.item.id} style={valueCell(i)}>
+                  <span className="font-mono text-xs font-semibold text-foreground">
+                    {fsWeight(c.r.unitWeightKg)} {fsWeightUnit(c.r.unitWeightKg)}
+                  </span>
+                </div>
+              ))}
+
+              {/* mass per metre */}
+              <div style={labelCell}>
+                <span className="text-[11.5px] font-semibold text-muted">Mass per metre</span>
+              </div>
+              {cols.map((c, i) => (
+                <div key={c.item.id} style={valueCell(i)}>
+                  <span className="font-mono text-xs font-semibold text-foreground">
+                    {c.kgm != null ? `${c.kgm.toFixed(2)} kg/m` : "—"}
+                  </span>
+                </div>
+              ))}
+
+              {/* cost per metre */}
+              <div style={labelCell}>
+                <span className="text-[11.5px] font-semibold text-muted">Cost / metre</span>
+              </div>
+              {cols.map((c, i) => (
+                <div key={c.item.id} style={valueCell(i)}>
+                  <span className="font-mono text-xs font-semibold text-foreground">
+                    {c.costPerM != null ? `${c.sym} ${fsMoney(c.costPerM)} /m` : "—"}
+                  </span>
+                </div>
+              ))}
+
+              {/* surface area (only when the dataset provides it) */}
+              {hasSurface && (
+                <>
+                  <div style={labelCell}>
+                    <span className="text-[11.5px] font-semibold text-muted">Surface area</span>
+                  </div>
+                  {cols.map((c, i) => (
+                    <div key={c.item.id} style={valueCell(i)}>
+                      <span className="font-mono text-xs font-semibold text-foreground">
+                        {c.r.surfaceAreaM2 != null ? `${c.r.surfaceAreaM2.toFixed(2)} m²` : "—"}
+                      </span>
+                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* grade */}
+              <div style={labelCell}>
+                <span className="text-[11.5px] font-semibold text-muted">Grade</span>
+              </div>
+              {cols.map((c, i) => (
+                <div key={c.item.id} style={valueCell(i)}>
+                  <span className="font-mono text-xs font-semibold text-foreground">
+                    {c.r.gradeLabel || "—"}
+                  </span>
+                </div>
+              ))}
+
+              {/* actions */}
+              <div style={labelCell} />
+              {cols.map((c, i) => (
+                <div key={c.item.id} style={valueCell(i)}>
                   <button
                     type="button"
-                    onClick={() => onPick(item.input)}
-                    className="mt-3.5 rounded-[10px] cursor-pointer font-bold text-[11.5px] text-foreground-secondary"
+                    onClick={() => onPick(c.item.input)}
+                    className="w-full rounded-[10px] cursor-pointer font-bold text-[11.5px] text-foreground-secondary"
                     style={{
                       padding: "8px 0",
                       border: "1px solid var(--border-faint)",
@@ -1419,8 +1591,8 @@ function DeskCompareView({
                     Open in calculator
                   </button>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
       )}

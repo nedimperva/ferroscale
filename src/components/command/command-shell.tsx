@@ -227,6 +227,13 @@ export function CommandShell() {
     setQuery("");
   }, [p.valid, query]);
 
+  const removeTapeEntry = useCallback((q: string) => {
+    setSessionTape((tape) => tape.filter((x) => x !== q));
+  }, []);
+  const clearTape = useCallback(() => {
+    setSessionTape([]);
+  }, []);
+
   const onSuggest = useCallback(
     (item: CommandSuggestionItem) => {
       if (item.kind === "save") {
@@ -364,6 +371,8 @@ export function CommandShell() {
             setModeOverride(null);
           }}
           sessionTape={sessionTape}
+          onRemoveTapeEntry={removeTapeEntry}
+          onClearTape={clearTape}
           saved={savedEntries}
           compareItems={compareItems}
           projects={projects}
