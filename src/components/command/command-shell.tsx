@@ -24,16 +24,15 @@ import type {
 } from "@/lib/command/types";
 import { CommandGlyph } from "./command-glyph";
 import { CommandKeypad } from "./command-keypad";
+import { CommandDesktop } from "./command-desktop";
 import {
   CommandLibrarySheet,
-  CommandLibraryWorkspace,
   CommandProjectPickerSheet,
-  CommandResultBreakdown,
   CommandResultSheet,
   CommandSettingsSheet,
 } from "./command-sheets";
 import { PwaRegister } from "@/components/pwa-register";
-import type { CalculationInput } from "@/lib/calculator/types";
+import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
 const DESKTOP_CARD_W = 560;
@@ -84,6 +83,8 @@ export function CommandShell() {
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
   const [toast, setToast] = useState<string | null>(null);
+  // Desktop session tape — adding-machine log of queries saved this session.
+  const [sessionTape, setSessionTape] = useState<string[]>([]);
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
@@ -164,8 +165,12 @@ export function CommandShell() {
       const autoName = `${p.name} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
       saveCalculation(p.calc.input, p.calc.result, autoName);
     }
+    const q = query.trim();
+    if (q) {
+      setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
+    }
     showToast("Saved");
-  }, [p, isSaved, saveCalculation, showToast]);
+  }, [p, isSaved, saveCalculation, showToast, query]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
@@ -189,15 +194,22 @@ export function CommandShell() {
     [projectCalc, addCalculation, projects, showToast],
   );
 
+  const addCompareEntry = useCallback(
+    (input: CalculationInput, result: CalculationResult) => {
+      if (isInCompare(result)) {
+        showToast("Already in compare");
+        return;
+      }
+      addCompareItem(input, result);
+      showToast("Added to compare");
+    },
+    [isInCompare, addCompareItem, showToast],
+  );
+
   const doCompare = useCallback(() => {
     if (!p.calc) return;
-    if (isInCompare(p.calc.result)) {
-      showToast("Already in compare");
-      return;
-    }
-    addCompareItem(p.calc.input, p.calc.result);
-    showToast("Added to compare");
-  }, [p.calc, isInCompare, addCompareItem, showToast]);
+    addCompareEntry(p.calc.input, p.calc.result);
+  }, [p.calc, addCompareEntry]);
 
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
@@ -206,7 +218,20 @@ export function CommandShell() {
   }, [p.calc]);
 
   const newCalc = useCallback(() => {
+    // A valid query cleared via ⌘K / CLEAR still lands on the session tape,
+    // so starting a new line never loses the previous number.
+    const q = query.trim();
+    if (p.valid && q) {
+      setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
+    }
     setQuery("");
+  }, [p.valid, query]);
+
+  const removeTapeEntry = useCallback((q: string) => {
+    setSessionTape((tape) => tape.filter((x) => x !== q));
+  }, []);
+  const clearTape = useCallback(() => {
+    setSessionTape([]);
   }, []);
 
   const onSuggest = useCallback(
@@ -250,12 +275,17 @@ export function CommandShell() {
     });
   }, []);
 
-  // Desktop: real-keyboard shortcuts. ⌘K / Ctrl K refocuses the query input,
-  // Esc closes the active sheet, Enter saves a valid query while focused.
+  // Medium desktop: real-keyboard shortcuts. ⌘K / Ctrl K refocuses the query
+  // input, Esc closes the active sheet. (The wide-desktop shell owns its own
+  // shortcuts; only the project-picker Esc-close stays global there.)
   useEffect(() => {
     if (isPhoneViewport) return;
     const onKey = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      if (
+        !isWideViewport &&
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLowerCase() === "k"
+      ) {
         event.preventDefault();
         focusInput();
         return;
@@ -263,14 +293,14 @@ export function CommandShell() {
       if (event.key === "Escape") {
         if (projectCalc) {
           setProjectCalc(null);
-        } else if (sheet) {
+        } else if (sheet && !isWideViewport) {
           setSheet(null);
         }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focusInput, isPhoneViewport, projectCalc, sheet]);
+  }, [focusInput, isPhoneViewport, isWideViewport, projectCalc, sheet]);
 
   const heroVal = isW
     ? p.totalKg != null
@@ -312,10 +342,96 @@ export function CommandShell() {
 
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
-  const outerClass = isWideViewport
-    ? "fixed inset-0 flex overflow-hidden"
-    : "fixed inset-0 flex items-center justify-center overflow-hidden";
-  const outerBg = isPhoneViewport || isWideViewport ? screenBg : "var(--background)";
+  // ── Wide desktop (≥1024): sidebar workspace shell ──
+  if (isWideViewport) {
+    return (
+      <div
+        className="fixed inset-0 flex overflow-hidden text-foreground"
+        style={{ background: screenBg, transition: "background 220ms ease" }}
+      >
+        <PwaRegister />
+        <CommandDesktop
+          dark={dark}
+          onToggleTheme={cycleTheme}
+          query={query}
+          setQuery={setQuery}
+          p={p}
+          sug={sug}
+          sym={sym}
+          mode={mode}
+          onSetMode={setModeOverride}
+          parserSettings={parserSettings}
+          defaultUnit={defaultUnit}
+          onSetDefaultUnit={defaultUnitStore.set}
+          shared={shared}
+          onUpdateShared={sharedCalcSettingsStore.update}
+          weightAsMain={weightAsMain}
+          onSetWeightAsMain={(value) => {
+            weightAsMainStore.set(value);
+            setModeOverride(null);
+          }}
+          sessionTape={sessionTape}
+          onRemoveTapeEntry={removeTapeEntry}
+          onClearTape={clearTape}
+          saved={savedEntries}
+          compareItems={compareItems}
+          projects={projects}
+          onSave={doSave}
+          onCopy={() => {
+            navigator.clipboard?.writeText(query).catch(() => {});
+            showToast("Copied to clipboard");
+          }}
+          onNew={newCalc}
+          onSuggest={onSuggest}
+          onCompareCurrent={doCompare}
+          onAddCompare={addCompareEntry}
+          onRemoveCompare={removeCompareItem}
+          onClearCompare={clearCompare}
+          onAddToProject={openProjectModal}
+          onLoadInput={loadInput}
+          onRemoveSaved={removeSaved}
+          onCreateProject={createProject}
+          onRemoveProjectCalc={removeCalculation}
+        />
+        {projectCalc && (
+          <CommandProjectPickerSheet
+            projects={projects}
+            onClose={() => setProjectCalc(null)}
+            onCreateProject={createProject}
+            onPickProject={(project) => handlePickProject(project.id)}
+          />
+        )}
+        {toast && (
+          <div
+            className="absolute left-0 right-0 flex justify-center z-[60] pointer-events-none"
+            style={{ bottom: 32 }}
+          >
+            <div
+              className="flex items-center gap-2 px-[18px] py-[11px] rounded-2xl font-bold text-sm"
+              style={{
+                background: "var(--foreground)",
+                color: "var(--background)",
+                boxShadow: "0 12px 30px rgba(0,0,0,0.3)",
+              }}
+            >
+              <span
+                className="flex w-5 h-5 rounded-full items-center justify-center"
+                style={{ background: "var(--green-text)" }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dark ? "#102a1e" : "#fff"} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </span>
+              {toast}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const outerClass = "fixed inset-0 flex items-center justify-center overflow-hidden";
+  const outerBg = isPhoneViewport ? screenBg : "var(--background)";
 
   return (
     <div
@@ -335,15 +451,7 @@ export function CommandShell() {
                 height: "100dvh",
                 background: screenBg,
               }
-            : isWideViewport
-              ? {
-                  flex: 1,
-                  minWidth: 0,
-                  height: "100dvh",
-                  background: screenBg,
-                  borderRight: "1px solid var(--border-faint)",
-                }
-              : {
+            : {
                 width: DESKTOP_CARD_W,
                 maxWidth: "calc(100vw - 32px)",
                 maxHeight: "calc(100vh - 32px)",
@@ -397,13 +505,11 @@ export function CommandShell() {
                   </svg>
                 )}
               </IconBtn>
-              {!isWideViewport && (
-                <IconBtn onClick={() => setSheet("library")} ariaLabel="Library">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                  </svg>
-                </IconBtn>
-              )}
+              <IconBtn onClick={() => setSheet("library")} ariaLabel="Library">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                </svg>
+              </IconBtn>
               <IconBtn onClick={() => setSheet("settings")} ariaLabel="Settings">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
@@ -551,30 +657,10 @@ export function CommandShell() {
             p={p}
             isWeight={isW}
             sym={sym}
-            onOpen={() => !isWideViewport && p.valid && setSheet("result")}
+            onOpen={() => p.valid && setSheet("result")}
           />
 
-          {/* Wide desktop: inline result breakdown + actions (no modal sheet) */}
-          {isWideViewport && p.valid && (
-            <div className="px-4 pt-4 overflow-y-auto flex-1">
-              <CommandResultBreakdown
-                p={p}
-                columns={2}
-                onSave={doSave}
-                onCopy={() => {
-                  navigator.clipboard?.writeText(query).catch(() => {});
-                  showToast("Copied to clipboard");
-                }}
-                onNew={newCalc}
-                onCompare={doCompare}
-                onAddToProject={openProjectModal}
-              />
-            </div>
-          )}
-
-          {(isPhoneViewport || (isWideViewport && !p.valid)) && (
-            <div className="flex-1 min-h-[6px]" />
-          )}
+          {isPhoneViewport && <div className="flex-1 min-h-[6px]" />}
 
           {/* SUGGESTION BAR */}
           <div className="pb-1.5">
@@ -831,9 +917,8 @@ export function CommandShell() {
             />
           )}
 
-          {/* SHEETS — on wide-desktop the result + library are inline, so
-              we suppress those sheet variants. */}
-          {effectiveSheet === "result" && p.valid && !isWideViewport && (
+          {/* SHEETS */}
+          {effectiveSheet === "result" && p.valid && (
             <CommandResultSheet
               p={p}
               onClose={() => setSheet(null)}
@@ -870,7 +955,7 @@ export function CommandShell() {
               themeLabel={dark ? "Dark" : "Light"}
             />
           )}
-          {effectiveSheet === "library" && !isWideViewport && (
+          {effectiveSheet === "library" && (
             <CommandLibrarySheet
               settings={parserSettings}
               defaultUnit={defaultUnit}
@@ -922,43 +1007,6 @@ export function CommandShell() {
             </div>
           )}
       </div>
-
-      {/* Wide-desktop right pane: persistent Library workspace */}
-      {isWideViewport && (
-        <aside
-          className="relative flex flex-col overflow-hidden text-foreground"
-          style={{
-            width: 440,
-            flexShrink: 0,
-            height: "100dvh",
-            background: "var(--surface-raised)",
-          }}
-        >
-          <div className="px-5 pt-6 pb-2 flex items-center justify-between">
-            <h2 className="text-[12px] font-bold tracking-[1.6px] uppercase text-muted">
-              Library
-            </h2>
-            <span className="text-[10px] font-mono text-muted-faint">
-              auto-syncs
-            </span>
-          </div>
-          <div className="px-4 pb-6 overflow-y-auto flex-1">
-            <CommandLibraryWorkspace
-              settings={parserSettings}
-              defaultUnit={defaultUnit}
-              saved={savedEntries}
-              compareItems={compareItems}
-              projects={projects}
-              onLoadInput={loadInput}
-              onRemoveSaved={removeSaved}
-              onRemoveCompare={removeCompareItem}
-              onClearCompare={clearCompare}
-              onCreateProject={createProject}
-              onRemoveProjectCalc={removeCalculation}
-            />
-          </div>
-        </aside>
-      )}
     </div>
   );
 }
