@@ -447,7 +447,7 @@ export function CommandSettingsSheet({
  *  Sync section — Google Drive, in Command's voice
  * ────────────────────────────────────────────────────────────── */
 
-function SyncSection() {
+export function SyncSection() {
   const {
     status,
     connectProvider,

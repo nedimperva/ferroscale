@@ -390,6 +390,18 @@ details[open] .chevron-icon {
   }
 }
 
+/* Command query-line caret blink */
+@keyframes fsBlink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
 /* Momentum scrolling for lists / panels — no scroll-behavior: smooth
    (it conflicts with programmatic scrollIntoView and causes mobile jank) */
 .scroll-native {
