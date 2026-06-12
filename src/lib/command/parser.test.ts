@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculateMetal } from "@ferroscale/metal-core";
-import { cmdParse, cmdClassifyToken, inputToQuery } from "./parser";
+import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "./parser";
 import type { CommandParserSettings } from "./types";
 import type { CommandPricing } from "@/lib/settings-stores";
 
@@ -176,6 +176,94 @@ describe("cmdParse", () => {
     expect(p.alias?.fam).toBe("tee");
     expect(p.calc!.input.profileId).toBe("tee_en");
     expect(p.calc!.input.selectedSizeId).toBe("t30x4");
+  });
+});
+
+describe("cmdTokenize (space-free input)", () => {
+  it("splits a glued standard profile + length", () => {
+    expect(cmdTokenize("hea1006m")).toEqual(["hea100", "6m"]);
+    expect(cmdTokenize("hea100 6m")).toEqual(["hea100", "6m"]);
+  });
+
+  it("splits the whole glued chain: size + length + qty + grade", () => {
+    expect(cmdTokenize("hea1206mx2s235")).toEqual(["hea120", "6m", "x2", "s235"]);
+    expect(cmdTokenize("6mx2")).toEqual(["6m", "x2"]);
+  });
+
+  it("prefers the longest valid size head (hea1000 exists)", () => {
+    expect(cmdTokenize("hea1000")).toEqual(["hea1000"]);
+    expect(cmdTokenize("hea10006m")).toEqual(["hea1000", "6m"]);
+  });
+
+  it("splits a trailing bare number while it is being typed", () => {
+    expect(cmdTokenize("hea1206")).toEqual(["hea120", "6"]);
+  });
+
+  it("splits manual-family dims when the boundary is unambiguous", () => {
+    expect(cmdTokenize("shs40x40x36m")).toEqual(["shs40x40x3", "6m"]);
+    expect(cmdTokenize("l50x50x56m")).toEqual(["l50x50x5", "6m"]);
+  });
+
+  it("keeps ambiguous manual dims whole (never guesses)", () => {
+    // flat 40x412m could be 40x4 + 12m or 40x41 + 2m
+    expect(cmdTokenize("flt40x412m")).toEqual(["flt40x412m"]);
+    // round 206m could be 2 + 06m or 20 + 6m
+    expect(cmdTokenize("rnd206m")).toEqual(["rnd206m"]);
+  });
+
+  it("never splits sheet-like families (length is baked into the size)", () => {
+    expect(cmdTokenize("plt1500x3000x3")).toEqual(["plt1500x3000x3"]);
+    expect(cmdTokenize("chq1500x3000x5x2")).toEqual(["chq1500x3000x5x2"]);
+  });
+
+  it("leaves unknown junk and clean tokens untouched", () => {
+    expect(cmdTokenize("foo123bar")).toEqual(["foo123bar"]);
+    expect(cmdTokenize("hea120")).toEqual(["hea120"]);
+    expect(cmdTokenize("304")).toEqual(["304"]);
+    expect(cmdTokenize("")).toEqual([]);
+  });
+
+  it("preserves the original casing of pieces", () => {
+    expect(cmdTokenize("HEA1006M")).toEqual(["HEA100", "6M"]);
+  });
+});
+
+describe("cmdParse with glued queries", () => {
+  it("hea1006m parses identically to hea100 6m", () => {
+    const spaced = cmdParse("hea100 6m", mkSettings());
+    const glued = cmdParse("hea1006m", mkSettings());
+    expect(glued.valid).toBe(true);
+    expect(glued.totalKg).toBe(spaced.totalKg);
+    expect(glued.selectedSizeId).toBe("hea100");
+    expect(glued.lengthM).toBe(6);
+  });
+
+  it("full glued chain matches the spaced query", () => {
+    const spaced = cmdParse("hea120 6m x2 s355", mkSettings());
+    const glued = cmdParse("hea1206mx2s355", mkSettings());
+    expect(glued.valid).toBe(true);
+    expect(glued.realQty).toBe(2);
+    expect(glued.gradeId).toBe("steel-s355jr");
+    expect(glued.totalKg).toBe(spaced.totalKg);
+    expect(glued.totalAmount).toBe(spaced.totalAmount);
+  });
+
+  it("glued length + qty after a spaced profile", () => {
+    const p = cmdParse("hea120 6mx2", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.lengthM).toBe(6);
+    expect(p.realQty).toBe(2);
+  });
+
+  it("explicit unit still beats a numeric grade alias when glued", () => {
+    const p = cmdParse("hea120 6m304", mkSettings());
+    expect(p.lengthM).toBe(6);
+    expect(p.gradeId).toBe("stainless-304");
+  });
+
+  it("ambiguous glue stays invalid rather than guessing dims", () => {
+    const p = cmdParse("flt40x412m", mkSettings());
+    expect(p.valid).toBe(false);
   });
 });
 

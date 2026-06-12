@@ -177,11 +177,14 @@ export function cmdApplyInsert(query: string, item: CommandSuggestionItem): stri
     if (i >= 0) parts[i] = item.ins;
     return parts.join("");
   }
+  // Completed-stage inserts (size/length/qty/grade) end with a trailing
+  // space so the next stage starts clean — no manual space key on mobile.
   if (item.appendProfile) {
-    return query + item.ins;
+    return query + item.ins + " ";
   }
   const pre = query === "" || /\s$/.test(query) ? "" : " ";
-  return query + pre + item.ins;
+  const post = item.space ? " " : "";
+  return query + pre + item.ins + post;
 }
 
 // re-export COMMAND_ALIAS_RE so consumers can build regexes without duplicating logic

@@ -11,6 +11,8 @@ import {
 import type { CommandPricing } from "@/lib/settings-stores";
 import {
   COMMAND_ALIAS_RE,
+  COMMAND_GRADES,
+  findAliasByKey,
   findAliasByProfileId,
   findAliasByPrefix,
   findGradeByAlias,
@@ -334,11 +336,166 @@ function buildCalculationInput(
   };
 }
 
+// ——— Space-tolerant tokenization ————————————————————————————————————————
+//
+// Mobile typing glues tokens together ("hea1006m", "6mx2"). cmdTokenize
+// splits on whitespace first, then conservatively breaks each glued word
+// into recognized pieces. A word is only split when EVERY resulting piece
+// is recognized (valid size / length / qty / grade / number); anything
+// ambiguous or unknown stays whole so behavior never gets worse than the
+// old whitespace-only split.
+
+const PEEL_QTY_RE = /^[x×]\d+/;
+// "mm" before "m" so the longest unit wins while peeling.
+const PEEL_LENGTH_RE = /^\d+(?:\.\d+)?(?:mm|cm|in|ft|m)/;
+const PEEL_NUMBER_RE = /^\d+(?:\.\d+)?/;
+
+/** Grade aliases longest-first so "s235jr" beats "s235" during peeling. */
+const GRADE_ALIASES_DESC = COMMAND_GRADES.flatMap((g) => g.aliases).sort(
+  (a, b) => b.length - a.length,
+);
+
+const ALIAS_PREFIX_RE = new RegExp(`^(${COMMAND_ALIAS_RE})`);
+
+/** Dim counts accepted per manual family (mirrors buildCalculationInput). */
+const MANUAL_DIM_COUNTS: Partial<Record<CommandFamily, number[]>> = {
+  shs: [2, 3],
+  rhs: [3],
+  chs: [2],
+  round: [1],
+  sqbar: [1],
+  flat: [2],
+  angle: [2, 3],
+};
+
+const dimsReCache = new Map<number, RegExp>();
+function dimsRe(count: number): RegExp {
+  let re = dimsReCache.get(count);
+  if (!re) {
+    re = new RegExp(`^\\d+(?:\\.\\d+)?(?:x\\d+(?:\\.\\d+)?){${count - 1}}$`);
+    dimsReCache.set(count, re);
+  }
+  return re;
+}
+
+/**
+ * Peel a glued remainder into qty/length/grade/number pieces. Returns null
+ * unless the WHOLE string is consumed — partial recognition never splits.
+ * Original casing is preserved in the returned pieces.
+ */
+function peelPieces(rest: string): string[] | null {
+  const pieces: string[] = [];
+  let s = rest;
+  while (s.length > 0) {
+    const lower = s.toLowerCase();
+    const qm = lower.match(PEEL_QTY_RE);
+    if (qm) {
+      pieces.push(s.slice(0, qm[0].length));
+      s = s.slice(qm[0].length);
+      continue;
+    }
+    // Explicit unit beats a grade alias ("304mm" is a length, "304" a grade)
+    // — same precedence the parser applies to spaced tokens.
+    const lm = lower.match(PEEL_LENGTH_RE);
+    if (lm) {
+      pieces.push(s.slice(0, lm[0].length));
+      s = s.slice(lm[0].length);
+      continue;
+    }
+    const grade = GRADE_ALIASES_DESC.find((a) => lower.startsWith(a));
+    if (grade) {
+      pieces.push(s.slice(0, grade.length));
+      s = s.slice(grade.length);
+      continue;
+    }
+    const nm = lower.match(PEEL_NUMBER_RE);
+    if (nm) {
+      pieces.push(s.slice(0, nm[0].length));
+      s = s.slice(nm[0].length);
+      continue;
+    }
+    return null;
+  }
+  return pieces;
+}
+
+/**
+ * Split a profile-prefixed word ("hea1006m") into profile+size and trailing
+ * pieces. Standard profiles validate the head against the real size table
+ * and prefer the longest valid head ("hea10006m" → hea1000 + 6m). Manual
+ * families (free-form dims) only split when exactly ONE boundary works —
+ * ambiguity (flat "40x412m": 40x4+12m vs 40x41+2m) keeps the word whole.
+ */
+function splitProfileToken(token: string, aliasKey: string): string[] | null {
+  const alias = findAliasByKey(aliasKey);
+  if (!alias) return null;
+  const rest = token.slice(aliasKey.length);
+  if (!rest) return null;
+  // Sheet-like families bake length into the size token — never split.
+  if (SHEET_LIKE_FAMILIES.has(alias.fam)) return null;
+  const restNorm = rest.toLowerCase().replace(/×/g, "x");
+
+  if (alias.profileId) {
+    const profile = getProfileById(alias.profileId);
+    if (!profile || profile.mode !== "standard") return null;
+    const sizeIds = new Set(profile.sizes.map((sz) => sz.id));
+    if (sizeIds.has(aliasKey + restNorm)) return null; // already a clean size
+    for (let i = restNorm.length - 1; i >= 1; i--) {
+      if (!sizeIds.has(aliasKey + restNorm.slice(0, i))) continue;
+      const tail = peelPieces(token.slice(aliasKey.length + i));
+      if (tail) return [token.slice(0, aliasKey.length + i), ...tail];
+    }
+    return null;
+  }
+
+  const counts = MANUAL_DIM_COUNTS[alias.fam];
+  if (!counts) return null;
+  if (counts.some((k) => dimsRe(k).test(restNorm))) return null; // clean dims
+  const splits: string[][] = [];
+  for (let i = 1; i < restNorm.length; i++) {
+    const head = restNorm.slice(0, i);
+    if (!counts.some((k) => dimsRe(k).test(head))) continue;
+    const tail = peelPieces(token.slice(aliasKey.length + i));
+    if (tail) splits.push([token.slice(0, aliasKey.length + i), ...tail]);
+  }
+  return splits.length === 1 ? splits[0] : null;
+}
+
+function splitGluedToken(token: string): string[] {
+  const lower = token.toLowerCase();
+  // Already a single recognized token — keep whole.
+  if (
+    LENGTH_RE.test(lower) ||
+    QTY_RE.test(lower) ||
+    BARE_NUMBER_RE.test(lower) ||
+    findGradeByAlias(lower)
+  ) {
+    return [token];
+  }
+  const aliasMatch = lower.match(ALIAS_PREFIX_RE);
+  if (aliasMatch) {
+    return splitProfileToken(token, aliasMatch[1]) ?? [token];
+  }
+  const pieces = peelPieces(token);
+  return pieces && pieces.length >= 2 ? pieces : [token];
+}
+
+/**
+ * Whitespace split + conservative glue-splitting. Shared by cmdParse and the
+ * UI token chips so parsing and display always agree. Preserves casing.
+ */
+export function cmdTokenize(query: string): string[] {
+  const words = (query || "").trim().split(/\s+/).filter(Boolean);
+  const out: string[] = [];
+  for (const word of words) out.push(...splitGluedToken(word));
+  return out;
+}
+
 export function cmdParse(
   query: string,
   settings: CommandParserSettings,
 ): CommandParseResult {
-  const toks = (query || "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const toks = cmdTokenize(query).map((t) => t.toLowerCase());
 
   let alias: CommandAlias | null = null;
   let size = "";
