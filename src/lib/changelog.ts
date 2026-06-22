@@ -25,11 +25,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Your saved dimension presets appear as one-tap size suggestions in Command after picking a profile",
       "Compare and Add-to-project actions in Command's result breakdown",
       "All 9 material grades available in Command (S235, S355, S420, 304, 316, 316L, 6060, 6082, 7075) with EN densities",
+      "Command bar price overrides: add tokens like \"@2.50/kg\", \"3,20/m\", or \"@12/pc\" to override the default unit price for a single calculation",
     ],
     changed: [
       "Command pricing now uses your real pricing settings (unit price, price basis, currency incl. PLN/BAM, waste %, VAT) — the hero PRICE value is the same grand total the full calculator produces, with waste/VAT badges when active",
       "Saving in Command stores the calculation in the shared Saved library (visible on /saved, included in sync) in addition to the quick query recall list",
       "The \"weight as main\" setting now drives Command's default hero metric; Command's settings sheet edits the same shared pricing/grade/unit settings as the Settings tab",
+      "Bosnian localization now covers the Command workspace, settings, library, result breakdowns, sync prompts, and accessibility skip link",
+    ],
+    added_bs: [
+      "Prepis cijene u komandnoj traci: dodajte tokene poput \"@2.50/kg\", \"3,20/m\" ili \"@12/pc\" da prepišete podrazumijevanu jediničnu cijenu samo za taj izračun",
+    ],
+    changed_bs: [
+      "Bosanska lokalizacija sada pokriva Command radni prostor, postavke, biblioteku, detalje rezultata, sync poruke i link za preskakanje na glavni sadržaj",
     ],
     fixed: [
       "Stainless 304 density corrected to 7930 kg/m³ in Command quick queries",

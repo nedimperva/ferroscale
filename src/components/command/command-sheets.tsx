@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSync } from "@/hooks/useSync";
 import { CommandGlyph } from "./command-glyph";
+import { formatCommandParseName } from "./command-copy";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
 import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
 import { computeCompareDeltas } from "@/lib/command/compare";
@@ -41,11 +43,12 @@ interface SheetShellProps {
 }
 
 function SheetShell({ title, onClose, children }: SheetShellProps) {
+  const t = useTranslations("command");
   return (
     <div className="absolute inset-0 z-50 flex flex-col">
       <button
         type="button"
-        aria-label="Close sheet"
+        aria-label={t("aria.closeSheet")}
         onClick={onClose}
         className="flex-1 bg-[var(--overlay)]"
       />
@@ -63,7 +66,7 @@ function SheetShell({ title, onClose, children }: SheetShellProps) {
             onClick={onClose}
             className="text-xs font-semibold uppercase tracking-wider text-muted hover:text-foreground"
           >
-            Close
+            {t("common.close")}
           </button>
         </div>
         <div className="overflow-y-auto -mx-1 px-1">{children}</div>
@@ -161,6 +164,7 @@ export function CommandResultBreakdown({
   onAddToProject,
   columns = 1,
 }: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
+  const t = useTranslations("command");
   if (!p.calc || p.kgm == null) {
     return null;
   }
@@ -171,51 +175,51 @@ export function CommandResultBreakdown({
 
   const geometryRows = (
     <>
-      <SheetRow label="Mass per metre" value={`${p.kgm.toFixed(2)} kg/m`} mono />
-      <SheetRow label="Length" value={`${p.lengthM} m`} mono />
-      <SheetRow label="Pieces" value={`× ${p.realQty}`} mono />
+      <SheetRow label={t("result.massPerMetre")} value={`${p.kgm.toFixed(2)} kg/m`} mono />
+      <SheetRow label={t("result.length")} value={`${p.lengthM} m`} mono />
+      <SheetRow label={t("result.pieces")} value={`× ${p.realQty}`} mono />
       <SheetRow
-        label="Per piece"
+        label={t("result.perPiece")}
         value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
         mono
       />
       <SheetRow
-        label="Total weight"
+        label={t("result.totalWeight")}
         value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
         mono
       />
-      <SheetRow label="Density" value={`${r.densityKgPerM3} kg/m³`} mono />
+      <SheetRow label={t("result.density")} value={`${r.densityKgPerM3} kg/m³`} mono />
     </>
   );
 
   const pricingRows = (
     <>
       <SheetRow
-        label="Rate"
+        label={t("result.rate")}
         value={`${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`}
         mono
       />
       <SheetRow
-        label="Per piece price"
+        label={t("result.perPiecePrice")}
         value={`${sym} ${fsMoney(r.unitPriceAmount)}`}
         mono
       />
-      <SheetRow label="Subtotal" value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
+      <SheetRow label={t("result.subtotal")} value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
       {p.pricing.wastePercent > 0 && (
         <SheetRow
-          label={`Waste +${p.pricing.wastePercent}%`}
+          label={t("result.waste", { percent: p.pricing.wastePercent })}
           value={`${sym} ${fsMoney(r.wasteAmount)}`}
           mono
         />
       )}
       {p.pricing.includeVat && (
         <SheetRow
-          label={`VAT ${p.pricing.vatPercent}%`}
+          label={t("result.vat", { percent: p.pricing.vatPercent })}
           value={`${sym} ${fsMoney(r.vatAmount)}`}
           mono
         />
       )}
-      <SheetRow label="Total cost" value={`${sym} ${fsMoney(r.grandTotalAmount)}`} mono strong />
+      <SheetRow label={t("result.totalCost")} value={`${sym} ${fsMoney(r.grandTotalAmount)}`} mono strong />
     </>
   );
 
@@ -227,7 +231,7 @@ export function CommandResultBreakdown({
             <CommandGlyph fam={p.alias.fam} size={22} />
           </span>
         )}
-        <span className="text-lg font-bold text-foreground">{p.name}</span>
+        <span className="text-lg font-bold text-foreground">{formatCommandParseName(t, p)}</span>
         {p.gradeLabel && (
           <span className="text-xs font-semibold text-muted">· {p.gradeLabel}</span>
         )}
@@ -236,13 +240,13 @@ export function CommandResultBreakdown({
         <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] grid grid-cols-2 divide-x divide-border-faint">
           <div className="px-4">
             <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase pt-3 pb-1">
-              Geometry
+              {t("result.geometry")}
             </div>
             {geometryRows}
           </div>
           <div className="px-4">
             <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase pt-3 pb-1">
-              Pricing
+              {t("result.pricing")}
             </div>
             {pricingRows}
           </div>
@@ -259,21 +263,21 @@ export function CommandResultBreakdown({
           onClick={onSave}
           className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm"
         >
-          Save
+          {t("common.save")}
         </button>
         <button type="button" onClick={onCopy} className={secondaryBtn}>
-          Copy
+          {t("common.copy")}
         </button>
         <button type="button" onClick={onNew} className={secondaryBtn}>
-          New
+          {t("common.new")}
         </button>
       </div>
       <div className="flex gap-2 mt-2">
         <button type="button" onClick={onCompare} className={secondaryBtn}>
-          Compare
+          {t("common.compare")}
         </button>
         <button type="button" onClick={onAddToProject} className={secondaryBtn}>
-          + Project
+          {t("common.addProject")}
         </button>
       </div>
     </>
@@ -284,11 +288,12 @@ export function CommandResultSheet({
   onClose,
   ...rest
 }: CommandResultSheetProps) {
+  const t = useTranslations("command");
   if (!rest.p.calc || rest.p.kgm == null) {
     return null;
   }
   return (
-    <SheetShell title="Result breakdown" onClose={onClose}>
+    <SheetShell title={t("sheets.resultBreakdown")} onClose={onClose}>
       <CommandResultBreakdown {...rest} />
     </SheetShell>
   );
@@ -317,21 +322,22 @@ export function CommandSettingsSheet({
   onToggleTheme,
   themeLabel,
 }: CommandSettingsSheetProps) {
+  const t = useTranslations("command");
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   const numberInput =
     "h-9 w-20 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground";
   return (
-    <SheetShell title="Settings" onClose={onClose}>
+    <SheetShell title={t("sheets.settings")} onClose={onClose}>
       <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4">
-        <SettingsRow label="Main result">
+        <SettingsRow label={t("settings.mainResult")}>
           <SettingsPill active={weightAsMain} onClick={() => onSetWeightAsMain(true)}>
-            Weight
+            {t("settings.weight")}
           </SettingsPill>
           <SettingsPill active={!weightAsMain} onClick={() => onSetWeightAsMain(false)}>
-            Price
+            {t("settings.price")}
           </SettingsPill>
         </SettingsRow>
-        <SettingsRow label="Currency">
+        <SettingsRow label={t("settings.currency")}>
           {CURRENCIES.map((c) => (
             <SettingsPill
               key={c}
@@ -342,7 +348,7 @@ export function CommandSettingsSheet({
             </SettingsPill>
           ))}
         </SettingsRow>
-        <SettingsRow label="Price basis">
+        <SettingsRow label={t("settings.priceBasis")}>
           {(Object.keys(BASIS_UNIT) as PriceBasis[]).map((basis) => (
             <SettingsPill
               key={basis}
@@ -351,7 +357,7 @@ export function CommandSettingsSheet({
                 onUpdateShared({ priceBasis: basis, priceUnit: BASIS_UNIT[basis] })
               }
             >
-              {basis === "weight" ? "Weight" : basis === "length" ? "Length" : "Piece"}
+              {basis === "weight" ? t("settings.weight") : basis === "length" ? t("settings.length") : t("settings.piece")}
             </SettingsPill>
           ))}
         </SettingsRow>
@@ -367,7 +373,7 @@ export function CommandSettingsSheet({
             className={numberInput}
           />
         </SettingsRow>
-        <SettingsRow label="Waste %">
+        <SettingsRow label={t("settings.wastePercent")}>
           <input
             type="number"
             step={1}
@@ -380,12 +386,12 @@ export function CommandSettingsSheet({
             className={numberInput}
           />
         </SettingsRow>
-        <SettingsRow label="VAT">
+        <SettingsRow label={t("settings.vat")}>
           <SettingsPill
             active={shared.includeVat}
             onClick={() => onUpdateShared({ includeVat: !shared.includeVat })}
           >
-            {shared.includeVat ? "On" : "Off"}
+            {shared.includeVat ? t("common.on") : t("common.off")}
           </SettingsPill>
           {shared.includeVat && (
             <input
@@ -401,7 +407,7 @@ export function CommandSettingsSheet({
             />
           )}
         </SettingsRow>
-        <SettingsRow label="Default grade">
+        <SettingsRow label={t("settings.defaultGrade")}>
           <select
             value={shared.defaultGradeId}
             onChange={(e) => onUpdateShared({ defaultGradeId: e.target.value })}
@@ -414,7 +420,7 @@ export function CommandSettingsSheet({
             ))}
           </select>
         </SettingsRow>
-        <SettingsRow label="Default unit">
+        <SettingsRow label={t("settings.defaultUnit")}>
           {UNIT_OPTIONS.map((u) => (
             <SettingsPill
               key={u}
@@ -425,7 +431,7 @@ export function CommandSettingsSheet({
             </SettingsPill>
           ))}
         </SettingsRow>
-        <SettingsRow label="Theme">
+        <SettingsRow label={t("settings.theme")}>
           <button
             type="button"
             onClick={onToggleTheme}
@@ -436,7 +442,10 @@ export function CommandSettingsSheet({
         </SettingsRow>
       </div>
       <p className="text-[11px] text-muted mt-3 px-1">
-        Pricing, grade, and unit settings apply across Command.
+        {t("settings.applyAcrossCommand")}
+      </p>
+      <p className="text-[11px] text-muted mt-1 px-1">
+        {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
       </p>
       <SyncSection />
     </SheetShell>
@@ -448,6 +457,7 @@ export function CommandSettingsSheet({
  * ────────────────────────────────────────────────────────────── */
 
 export function SyncSection() {
+  const t = useTranslations("command");
   const {
     status,
     connectProvider,
@@ -459,7 +469,7 @@ export function SyncSection() {
 
   const tryConnect = async () => {
     const passphrase = window.prompt(
-      "Enter a sync passphrase. Use the same passphrase on every device — it's used to end-to-end encrypt your data before it's stored on Google Drive.",
+      t("sync.passphrasePrompt"),
     );
     if (!passphrase) return;
     setBusy("connect");
@@ -467,7 +477,7 @@ export function SyncSection() {
     try {
       await connectProvider(passphrase);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't connect.");
+      setError(err instanceof Error ? err.message : t("sync.couldNotConnect"));
     } finally {
       setBusy(null);
     }
@@ -479,20 +489,20 @@ export function SyncSection() {
     try {
       await syncNow();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sync failed.");
+      setError(err instanceof Error ? err.message : t("sync.syncFailed"));
     } finally {
       setBusy(null);
     }
   };
 
   const tryDisconnect = async () => {
-    if (!window.confirm("Disconnect Google Drive sync on this device?")) return;
+    if (!window.confirm(t("sync.disconnectConfirm"))) return;
     setBusy("disconnect");
     setError(null);
     try {
       await disconnectProvider();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't disconnect.");
+      setError(err instanceof Error ? err.message : t("sync.couldNotDisconnect"));
     } finally {
       setBusy(null);
     }
@@ -506,7 +516,7 @@ export function SyncSection() {
   return (
     <div className="mt-4">
       <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase mb-2 px-1">
-        Sync
+        {t("sync.title")}
       </div>
       <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] p-4">
         {status.connected ? (
@@ -523,8 +533,8 @@ export function SyncSection() {
             </div>
             <div className="font-mono text-[11px] text-muted">
               {status.lastPullAt
-                ? `Last sync ${new Date(status.lastPullAt).toLocaleString()}`
-                : "No sync yet"}
+                ? t("sync.lastSync", { date: new Date(status.lastPullAt).toLocaleString() })
+                : t("sync.noSyncYet")}
             </div>
             <div className="flex gap-2">
               <button
@@ -533,7 +543,7 @@ export function SyncSection() {
                 disabled={busy != null}
                 className={primary}
               >
-                {busy === "sync" ? "Syncing…" : "Sync now"}
+                {busy === "sync" ? t("sync.syncing") : t("sync.syncNow")}
               </button>
               <button
                 type="button"
@@ -541,15 +551,14 @@ export function SyncSection() {
                 disabled={busy != null}
                 className={secondary}
               >
-                Disconnect
+                {t("sync.disconnect")}
               </button>
             </div>
           </div>
         ) : (
           <div className="space-y-3">
             <p className="text-xs text-foreground-secondary">
-              Sync your saved entries, projects, compare, and presets to Google
-              Drive — end-to-end encrypted with your own passphrase.
+              {t("sync.description")}
             </p>
             <button
               type="button"
@@ -557,7 +566,7 @@ export function SyncSection() {
               disabled={busy != null}
               className={primary}
             >
-              {busy === "connect" ? "Connecting…" : "Connect Google Drive"}
+              {busy === "connect" ? t("sync.connecting") : t("sync.connectGoogleDrive")}
             </button>
           </div>
         )}
@@ -596,8 +605,9 @@ interface CommandLibrarySheetProps {
 }
 
 export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
+  const t = useTranslations("command");
   return (
-    <SheetShell title="Library" onClose={props.onClose}>
+    <SheetShell title={t("sheets.library")} onClose={props.onClose}>
       <CommandLibraryWorkspace {...props} />
     </SheetShell>
   );
@@ -620,6 +630,7 @@ export function CommandLibraryWorkspace({
   onCreateProject,
   onRemoveProjectCalc,
 }: CommandLibraryWorkspaceProps) {
+  const t = useTranslations("command");
   // Initial tab — pick the first non-empty section, else Saved.
   const initialTab: LibraryTab =
     saved.length > 0
@@ -640,7 +651,7 @@ export function CommandLibraryWorkspace({
           onClick={() => setTab("saved")}
           icon={<TabIconSaved />}
         >
-          Saved
+          {t("nav.saved")}
         </LibraryTabPill>
         <LibraryTabPill
           active={tab === "compare"}
@@ -648,7 +659,7 @@ export function CommandLibraryWorkspace({
           onClick={() => setTab("compare")}
           icon={<TabIconCompare />}
         >
-          Compare
+          {t("nav.compare")}
         </LibraryTabPill>
         <LibraryTabPill
           active={tab === "projects"}
@@ -656,7 +667,7 @@ export function CommandLibraryWorkspace({
           onClick={() => setTab("projects")}
           icon={<TabIconProjects />}
         >
-          Projects
+          {t("nav.projects")}
         </LibraryTabPill>
       </div>
 
@@ -803,6 +814,7 @@ function LibraryRow({
   trailing?: React.ReactNode;
   indent?: boolean;
 }) {
+  const t = useTranslations("command");
   const interactive = !!onClick;
   return (
     <div
@@ -839,7 +851,7 @@ function LibraryRow({
         <button
           type="button"
           onClick={onRemove}
-          aria-label="Remove"
+          aria-label={t("common.remove")}
           className="flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-muted-faint hover:text-foreground hover:bg-[var(--surface)]"
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
@@ -882,8 +894,9 @@ function SavedTabContent({
   onLoad: (entry: SavedEntry) => void;
   onRemove: (id: string) => void;
 }) {
+  const t = useTranslations("command");
   if (saved.length === 0) {
-    return <EmptyState>Saved calculations show here. Tap <strong className="font-semibold">Save</strong> on a result.</EmptyState>;
+    return <EmptyState>{t("library.emptySaved")}</EmptyState>;
   }
   return (
     <RowsCard>
@@ -932,10 +945,11 @@ function CompareTabContent({
   onRemove: (id: string) => void;
   onClearAll: () => void;
 }) {
+  const t = useTranslations("command");
   if (items.length === 0) {
     return (
       <EmptyState>
-        Compare calcs side by side. Tap <strong className="font-semibold">Compare</strong> on a result.
+        {t("library.emptyCompare")}
       </EmptyState>
     );
   }
@@ -987,7 +1001,7 @@ function CompareTabContent({
         onClick={onClearAll}
         className="mt-3 w-full h-10 rounded-xl border border-border-faint bg-transparent text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground hover:bg-[var(--surface-raised)]"
       >
-        Clear all
+        {t("common.clearAll")}
       </button>
       <span className="hidden" aria-hidden="true">
         {defaultUnit}/{defaultGradeId}
@@ -1030,6 +1044,7 @@ function ProjectsTabContent({
   onLoadCalc: (calc: Project["calculations"][number]) => void;
   onRemoveCalc: (projectId: string, calcId: string) => void;
 }) {
+  const t = useTranslations("command");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
 
@@ -1049,7 +1064,7 @@ function ProjectsTabContent({
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();
           }}
-          placeholder="New project name…"
+          placeholder={t("library.newProjectName")}
           className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
         />
         <button
@@ -1058,13 +1073,13 @@ function ProjectsTabContent({
           disabled={!newName.trim()}
           className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          New
+          {t("common.new")}
         </button>
       </div>
 
       {projects.length === 0 ? (
         <EmptyState>
-          No projects yet. Create one above, or tap <strong className="font-semibold">+ Project</strong> on a result.
+          {t("library.emptyProjects")}
         </EmptyState>
       ) : (
         <div className="space-y-2">
@@ -1096,8 +1111,8 @@ function ProjectsTabContent({
                   title={project.name}
                   subtitle={
                     calcs.length === 0
-                      ? "Empty project"
-                      : `${calcs.length} calc${calcs.length === 1 ? "" : "s"} · ${fsWeight(totalWeight)} ${fsWeightUnit(totalWeight)} · ${sym} ${fsMoney(totalCost)}`
+                      ? t("library.emptyProject")
+                      : `${t("library.calcCount", { count: calcs.length })} · ${fsWeight(totalWeight)} ${fsWeightUnit(totalWeight)} · ${sym} ${fsMoney(totalCost)}`
                   }
                   onClick={() =>
                     setExpanded(isOpen ? null : project.id)
@@ -1124,7 +1139,7 @@ function ProjectsTabContent({
                   <div className="border-t border-border-faint bg-[var(--surface-inset)]/40">
                     {calcs.length === 0 ? (
                       <div className="text-xs text-muted py-4 text-center">
-                        No calculations yet.
+                        {t("library.noCalculationsYet")}
                       </div>
                     ) : (
                       <div className="divide-y divide-border-faint">
@@ -1184,6 +1199,7 @@ export function CommandProjectPickerSheet({
   onCreateProject,
   onPickProject,
 }: CommandProjectPickerSheetProps) {
+  const t = useTranslations("command");
   const [newName, setNewName] = useState("");
 
   const submit = () => {
@@ -1195,7 +1211,7 @@ export function CommandProjectPickerSheet({
   };
 
   return (
-    <SheetShell title="Add to project" onClose={onClose}>
+    <SheetShell title={t("sheets.addToProject")} onClose={onClose}>
       <div className="flex gap-2 mb-3">
         <input
           value={newName}
@@ -1203,7 +1219,7 @@ export function CommandProjectPickerSheet({
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();
           }}
-          placeholder="New project name…"
+          placeholder={t("library.newProjectName")}
           className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
         />
         <button
@@ -1212,11 +1228,11 @@ export function CommandProjectPickerSheet({
           disabled={!newName.trim()}
           className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Create
+          {t("common.create")}
         </button>
       </div>
       {projects.length === 0 ? (
-        <EmptyState>No projects yet. Create one above to get started.</EmptyState>
+        <EmptyState>{t("library.noProjectsCreateAbove")}</EmptyState>
       ) : (
         <RowsCard>
           {projects.map((project) => {
@@ -1232,8 +1248,8 @@ export function CommandProjectPickerSheet({
                 title={project.name}
                 subtitle={
                   calcs.length === 0
-                    ? "Empty project"
-                    : `${calcs.length} calc${calcs.length === 1 ? "" : "s"}`
+                    ? t("library.emptyProject")
+                    : t("library.calcCount", { count: calcs.length })
                 }
                 onClick={() => onPickProject(project)}
               />

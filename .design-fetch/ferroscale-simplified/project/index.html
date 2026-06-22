@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ferroscale — all screens (mobile + desktop)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Geist:wght@200;300;400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #1a1a1c; color: #f4f3ef; font-family: 'Geist', -apple-system, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    @keyframes aCaret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0.18 } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="browser-window.jsx"></script>
+  <script type="text/babel" src="shared.jsx"></script>
+
+  <!-- Concept A core (mobile + workstation) — the chosen direction -->
+  <script type="text/babel" src="concept-a.jsx"></script>
+  <script type="text/babel" src="concept-a-desktop.jsx"></script>
+
+  <!-- Concept A — additional mobile screens -->
+  <script type="text/babel" src="concept-a-mobile.jsx"></script>
+  <script type="text/babel" src="concept-a-mobile-pickers.jsx"></script>
+  <script type="text/babel" src="concept-a-mobile-library.jsx"></script>
+  <script type="text/babel" src="concept-a-mobile-compare.jsx"></script>
+
+  <!-- Concept A — additional desktop screens -->
+  <script type="text/babel" src="concept-a-desktop-library.jsx"></script>
+  <script type="text/babel" src="concept-a-desktop-detail.jsx"></script>
+  <script type="text/babel" src="concept-a-desktop-settings.jsx"></script>
+
+  <script type="text/babel">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+    const { IOSDevice, ChromeWindow } = window;
+
+    function Frame({ children, dark }) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <IOSDevice width={402} height={874} dark={dark}>{children}</IOSDevice>
+        </div>
+      );
+    }
+    function Desk({ children, url = 'app.ferroscale.com', title = 'Ferroscale' }) {
+      return (
+        <ChromeWindow width={1440} height={900} url={url} tabs={[{ title }]}>
+          <div style={{ width: '100%', height: '100%' }}>{children}</div>
+        </ChromeWindow>
+      );
+    }
+
+    const ART_W = 402, ART_H = 874;
+
+    function App() {
+      return (
+        <DesignCanvas
+          title="Ferroscale — all screens"
+          subtitle="Direction locked: Numpad-native (mobile) + Workstation (desktop). Templates removed; Columns flagged off."
+        >
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Brief / what changed                                     */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="brief" title="What's locked in" subtitle="Direction, IA scope, and what's deliberately not designed yet.">
+            <DCArtboard id="brief-card" label="Brief · direction locked" width={560} height={ART_H}>
+              <div style={{ background: '#fbfaf6', height: '100%', padding: '36px 32px', fontFamily: 'IBM Plex Sans, system-ui', color: '#171612', overflow: 'auto' }}>
+                <div style={{ fontFamily: 'Geist, system-ui', fontSize: 13, fontWeight: 700, letterSpacing: 1.6, color: '#8a8071', textTransform: 'uppercase' }}>Ferroscale · v2026.x</div>
+                <div style={{ fontFamily: 'Geist, system-ui', fontSize: 30, fontWeight: 600, marginTop: 6, letterSpacing: -0.8, lineHeight: 1.1 }}>
+                  Numpad-native mobile.<br/>Workstation desktop.
+                </div>
+                <div style={{ marginTop: 18, fontSize: 14, lineHeight: 1.6, color: '#3c352b' }}>
+                  Direction is locked — every screen below uses the cream/orange Concept A DNA on mobile and the sidebar Workstation layout on desktop. Same hierarchy, same components, two surfaces.
+                </div>
+
+                <Move n="1" t="Weight first, every screen">
+                  Total kg is the largest type in every layout. Price is half-size, alongside it. Per-piece / per-metre live in a secondary row.
+                </Move>
+                <Move n="2" t="Calculator is home">
+                  Mobile: open → result in two taps from defaults. Desktop: sidebar + form + sticky result column.
+                </Move>
+                <Move n="3" t="Library = Saved + Projects">
+                  Two flat surfaces. Saved holds presets; Projects holds groups-of-parts with totals. Anything calculated can land in either.
+                </Move>
+                <Move n="4" t="Settings is a defaults dashboard">
+                  Top card shows what happens when you open the app. Toggles below adjust that one card.
+                </Move>
+
+                <div style={{ marginTop: 22, padding: 14, borderRadius: 10, background: '#f5e4cf', border: '1px solid #e6c9a4', fontSize: 12.5, color: '#5a3a05', lineHeight: 1.55 }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, letterSpacing: 0.3 }}>OUT OF SCOPE THIS ROUND</div>
+                  <div><b>Templates</b> — removed entirely. Projects covers the use-case; no separate templated start.</div>
+                  <div style={{ marginTop: 6 }}><b>Columns</b> — code shell stays, but it's behind a Beta flag in Settings. Not designed in this set. We can pick it up later.</div>
+                </div>
+
+                <div style={{ marginTop: 14, padding: 14, borderRadius: 10, background: '#eef2eb', border: '1px solid #cfd9c7', fontSize: 12.5, color: '#2e3b2a' }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Also hidden by default</div>
+                  VAT, waste %, custom densities, cloud sync, haptics, text size. All reachable via Settings or long-press.
+                </div>
+              </div>
+            </DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Mobile — onboarding                                      */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="m-onboarding" title="Mobile · onboarding" subtitle="First run. Material → profile → home. ~3 taps.">
+            <DCArtboard id="m-onb-1" label="01 · Pick default material" width={ART_W} height={ART_H}><Frame><OnboardingA/></Frame></DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Mobile — calculator + pickers                            */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="m-calc" title="Mobile · calculator + pickers" subtitle="The home screen and its two switchers.">
+            <DCArtboard id="m-calc-default" label="02 · Calculator (default home)" width={ART_W} height={ART_H}><Frame><CalcA/></Frame></DCArtboard>
+            <DCArtboard id="m-profile-picker" label="03 · Profile picker (full sheet)" width={ART_W} height={ART_H}><Frame><ProfilePickerA/></Frame></DCArtboard>
+            <DCArtboard id="m-material-picker" label="04 · Material picker (mid sheet)" width={ART_W} height={ART_H}><Frame><MaterialPickerA/></Frame></DCArtboard>
+            <DCArtboard id="m-custom-density" label="05 · Custom density modal" width={ART_W} height={ART_H}><Frame><CustomDensityA/></Frame></DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Mobile — result                                          */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="m-result" title="Mobile · result" subtitle="Sheet peeks half-height first; drags up to a full breakdown.">
+            <DCArtboard id="m-result-peek" label="06 · Result · peek" width={ART_W} height={ART_H}><Frame><ResultPeekA/></Frame></DCArtboard>
+            <DCArtboard id="m-result-full" label="07 · Result · full" width={ART_W} height={ART_H}><Frame><ResultFullA/></Frame></DCArtboard>
+            <DCArtboard id="m-add-project" label="08 · Add to project (peek)" width={ART_W} height={ART_H}><Frame><AddToProjectA/></Frame></DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Mobile — library                                         */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="m-library" title="Mobile · library" subtitle="Saved presets and Projects sit on the same tab bar. Templates not present.">
+            <DCArtboard id="m-saved" label="09 · Saved list" width={ART_W} height={ART_H}><Frame><SavedA/></Frame></DCArtboard>
+            <DCArtboard id="m-saved-empty" label="10 · Saved · empty state" width={ART_W} height={ART_H}><Frame><EmptyA/></Frame></DCArtboard>
+            <DCArtboard id="m-projects" label="11 · Projects list" width={ART_W} height={ART_H}><Frame><ProjectsA/></Frame></DCArtboard>
+            <DCArtboard id="m-project-detail" label="12 · Project detail" width={ART_W} height={ART_H}><Frame><ProjectDetailA/></Frame></DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Mobile — compare + settings                              */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="m-utils" title="Mobile · compare + settings" subtitle="Side-by-side 2-up only on mobile. Settings is the defaults dashboard.">
+            <DCArtboard id="m-compare" label="13 · Compare (2 items)" width={ART_W} height={ART_H}><Frame><CompareA/></Frame></DCArtboard>
+            <DCArtboard id="m-settings" label="14 · Settings" width={ART_W} height={ART_H}><Frame><SettingsA/></Frame></DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Desktop — calculator                                     */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="d-calc" title="Desktop · workstation" subtitle="Sidebar + form column + sticky result panel. The home screen of the desktop app.">
+            <DCArtboard id="d-calc" label="D1 · Calculator (Workstation)" width={1440} height={900}>
+              <Desk title="Ferroscale — Calculator"><DesktopA1/></Desk>
+            </DCArtboard>
+            <DCArtboard id="d-palette" label="D2 · ⌘K command palette" width={1440} height={900}>
+              <Desk title="Ferroscale"><PaletteDesktopA/></Desk>
+            </DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Desktop — library                                        */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="d-library" title="Desktop · library" subtitle="Saved is a filterable table; Projects is a card grid; detail is hero + parts table.">
+            <DCArtboard id="d-saved" label="D3 · Saved" width={1440} height={900}>
+              <Desk title="Ferroscale — Saved"><SavedDesktopA/></Desk>
+            </DCArtboard>
+            <DCArtboard id="d-projects" label="D4 · Projects" width={1440} height={900}>
+              <Desk title="Ferroscale — Projects"><ProjectsDesktopA/></Desk>
+            </DCArtboard>
+            <DCArtboard id="d-project-detail" label="D5 · Project detail (Skyline tower)" width={1440} height={900}>
+              <Desk title="Ferroscale · Skyline tower"><ProjectDetailDesktopA/></Desk>
+            </DCArtboard>
+          </DCSection>
+
+          {/* ──────────────────────────────────────────────────────── */}
+          {/* Desktop — compare + settings                             */}
+          {/* ──────────────────────────────────────────────────────── */}
+          <DCSection id="d-utils" title="Desktop · compare + settings" subtitle="Three-up comparison; defaults-dashboard settings page.">
+            <DCArtboard id="d-compare" label="D6 · Compare (3-up)" width={1440} height={900}>
+              <Desk title="Ferroscale — Compare"><CompareDesktopA/></Desk>
+            </DCArtboard>
+            <DCArtboard id="d-settings" label="D7 · Settings" width={1440} height={900}>
+              <Desk title="Ferroscale — Settings"><SettingsDesktopA/></Desk>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    function Move({ n, t, children }) {
+      return (
+        <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '34px 1fr', gap: 12 }}>
+          <div style={{
+            width: 28, height: 28, borderRadius: 7, background: '#a35a32', color: '#fbf7ec',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Geist Mono, monospace', fontWeight: 700, fontSize: 13,
+          }}>{n}</div>
+          <div>
+            <div style={{ fontFamily: 'Geist, system-ui', fontSize: 15, fontWeight: 700, color: '#171612', letterSpacing: -0.2 }}>{t}</div>
+            <div style={{ fontSize: 13, color: '#52483b', marginTop: 4, lineHeight: 1.55 }}>{children}</div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

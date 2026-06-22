@@ -30,6 +30,7 @@ export default async function LocaleLayout({
 
   const messages = await getMessages({ locale });
   const t = await getTranslations({ locale, namespace: "loading" });
+  const accessibilityT = await getTranslations({ locale, namespace: "accessibility" });
 
   return (
     <>
@@ -37,7 +38,7 @@ export default async function LocaleLayout({
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:ring-2 focus:ring-blue-500"
       >
-        Skip to main content
+        {accessibilityT("skipToMain")}
       </a>
       <NextIntlClientProvider locale={locale} messages={messages}>
         <div aria-hidden="true" className="boot-splash lg:hidden">

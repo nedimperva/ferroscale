@@ -6,6 +6,8 @@ import {
   type CalculationInput,
   type DimensionKey,
   type LengthUnit,
+  type PriceBasis,
+  type PriceUnit,
   type ProfileId,
 } from "@ferroscale/metal-core";
 import type { CommandPricing } from "@/lib/settings-stores";
@@ -31,6 +33,41 @@ import type {
 const LENGTH_RE = /^(\d+(?:\.\d+)?)(mm|cm|m|in|ft)$/;
 const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
 const QTY_RE = /^[x×*](\d+)$/;
+const PRICE_RE = /^@?(\d+(?:[.,]\d+)?)\/(kg|lb|m|ft|pc|pcs|piece)$/;
+const PRICE_VALUE_ONLY_RE = /^@(\d+(?:[.,]\d+)?)$/;
+
+const PRICE_UNIT_BASIS: Record<PriceUnit, PriceBasis> = {
+  kg: "weight",
+  lb: "weight",
+  m: "length",
+  ft: "length",
+  piece: "piece",
+};
+
+function normalizePriceUnit(unit: string | undefined): PriceUnit | undefined {
+  if (!unit) return undefined;
+  if (unit === "pc" || unit === "pcs") return "piece";
+  return unit as PriceUnit;
+}
+
+function parsePriceToken(token: string): Partial<CommandPricing> | null {
+  const explicit = token.match(PRICE_RE);
+  const valueOnly = token.match(PRICE_VALUE_ONLY_RE);
+  const match = explicit ?? valueOnly;
+  if (!match) return null;
+
+  const unitPrice = parseFloat(match[1].replace(",", "."));
+  if (!Number.isFinite(unitPrice)) return null;
+
+  const priceUnit = normalizePriceUnit(explicit?.[2]);
+  if (!priceUnit) return { unitPrice };
+
+  return {
+    unitPrice,
+    priceUnit,
+    priceBasis: PRICE_UNIT_BASIS[priceUnit],
+  };
+}
 
 /** Families whose size token bakes the length in (w × l × t for panels). */
 const SHEET_LIKE_FAMILIES = new Set<CommandFamily>([
@@ -112,7 +149,7 @@ export function dimsToSizeText(
 export function inputToQuery(
   input: CalculationInput,
   defaultUnit: LengthUnit,
-  options: { defaultGradeId?: string } = {},
+  options: { defaultGradeId?: string; defaultPricing?: CommandPricing } = {},
 ): string {
   const alias = findAliasByProfileId(input.profileId);
   if (!alias) return "";
@@ -158,7 +195,20 @@ export function inputToQuery(
     gradeToken = ` ${grade.aliases[0]}`;
   }
 
-  return `${alias.alias}${sizeText}${lengthToken}${qtyToken}${gradeToken}`;
+  let priceToken = "";
+  const defaultPricing = options.defaultPricing;
+  if (
+    defaultPricing
+    && (
+      input.unitPrice !== defaultPricing.unitPrice
+      || input.priceBasis !== defaultPricing.priceBasis
+      || input.priceUnit !== defaultPricing.priceUnit
+    )
+  ) {
+    priceToken = ` @${fmt(input.unitPrice)}/${input.priceUnit}`;
+  }
+
+  return `${alias.alias}${sizeText}${lengthToken}${qtyToken}${gradeToken}${priceToken}`;
 }
 
 /**
@@ -348,6 +398,7 @@ function buildCalculationInput(
 const PEEL_QTY_RE = /^[x×]\d+/;
 // "mm" before "m" so the longest unit wins while peeling.
 const PEEL_LENGTH_RE = /^\d+(?:\.\d+)?(?:mm|cm|in|ft|m)/;
+const PEEL_PRICE_RE = /^(?:@?\d+(?:[.,]\d+)?\/(?:kg|lb|m|ft|pc|pcs|piece)|@\d+(?:[.,]\d+)?)/;
 const PEEL_NUMBER_RE = /^\d+(?:\.\d+)?/;
 
 /** Grade aliases longest-first so "s235jr" beats "s235" during peeling. */
@@ -392,6 +443,12 @@ function peelPieces(rest: string): string[] | null {
     if (qm) {
       pieces.push(s.slice(0, qm[0].length));
       s = s.slice(qm[0].length);
+      continue;
+    }
+    const pm = lower.match(PEEL_PRICE_RE);
+    if (pm) {
+      pieces.push(s.slice(0, pm[0].length));
+      s = s.slice(pm[0].length);
       continue;
     }
     // Explicit unit beats a grade alias ("304mm" is a length, "304" a grade)
@@ -467,6 +524,7 @@ function splitGluedToken(token: string): string[] {
   if (
     LENGTH_RE.test(lower) ||
     QTY_RE.test(lower) ||
+    parsePriceToken(lower) ||
     BARE_NUMBER_RE.test(lower) ||
     findGradeByAlias(lower)
   ) {
@@ -505,6 +563,7 @@ export function cmdParse(
   let lengthExplicit = false;
   let qty: number | null = null;
   let gradeId: string | null = null;
+  let pricingOverride: Partial<CommandPricing> | null = null;
 
   for (const tk of toks) {
     if (!alias) {
@@ -517,6 +576,11 @@ export function cmdParse(
           continue;
         }
       }
+    }
+    const price = parsePriceToken(tk);
+    if (price) {
+      pricingOverride = { ...(pricingOverride ?? {}), ...price };
+      continue;
     }
     const lm = tk.match(LENGTH_RE);
     if (lm && lengthM == null) {
@@ -556,6 +620,9 @@ export function cmdParse(
   const typedGrade = gradeId ? findGradeById(gradeId) : null;
   const effectiveGrade = typedGrade ?? findGradeById(settings.defaultGradeId);
   const effectiveGradeId = effectiveGrade?.id ?? settings.defaultGradeId;
+  const effectivePricing: CommandPricing = pricingOverride
+    ? { ...settings.pricing, ...pricingOverride }
+    : settings.pricing;
   const realQty = qty == null ? 1 : qty;
   const hasSize = !!size && /\d/.test(size);
 
@@ -588,7 +655,7 @@ export function cmdParse(
       lengthM * 1000,
       realQty,
       effectiveGradeId,
-      settings.pricing,
+      effectivePricing,
     );
     if (input) {
       const response = calculateMetal(input);
@@ -606,7 +673,7 @@ export function cmdParse(
       1000, // 1 m probe
       1,
       effectiveGradeId,
-      settings.pricing,
+      effectivePricing,
     );
     if (input) {
       const response = calculateMetal(input);
@@ -643,7 +710,14 @@ export function cmdParse(
     selectedSizeId: calc?.input.selectedSizeId ?? null,
     name,
     valid: calc != null,
-    pricing: settings.pricing,
+    pricing: effectivePricing,
+    priceOverride: pricingOverride
+      ? {
+          unitPrice: effectivePricing.unitPrice,
+          priceBasis: effectivePricing.priceBasis,
+          priceUnit: effectivePricing.priceUnit,
+        }
+      : null,
   };
 }
 
@@ -651,6 +725,7 @@ export function cmdClassifyToken(tok: string): CommandTokenKind {
   const x = tok.toLowerCase();
   if (new RegExp(`^(${COMMAND_ALIAS_RE})`).test(x)) return "profile";
   if (QTY_RE.test(x)) return "qty";
+  if (parsePriceToken(x)) return "price";
   if (findGradeByAlias(x)) return "grade";
   if (LENGTH_RE.test(x) || BARE_NUMBER_RE.test(x)) return "len";
   return "unknown";

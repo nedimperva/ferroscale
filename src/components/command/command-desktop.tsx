@@ -1,10 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import { getAppTabFromPathname } from "@/lib/app-shell";
 import { APP_VERSION } from "@/lib/changelog";
 import { CommandGlyph } from "./command-glyph";
+import {
+  formatCommandHint,
+  formatCommandParseName,
+  formatCommandSuggestionLabel,
+} from "./command-copy";
 import { SyncSection } from "./command-sheets";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@/lib/command/parser";
 import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
@@ -51,6 +57,7 @@ const KIND_BG: Record<CommandTokenKind, string> = {
   len: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
   qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
   grade: "bg-[var(--surface-inset)] text-foreground-secondary",
+  price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
   unknown: "bg-[var(--surface-inset)] text-muted",
 };
 
@@ -235,6 +242,7 @@ function SidebarNavItem({
   icon: React.ReactNode;
   count?: number;
 }) {
+  const t = useTranslations("command");
   return (
     <button
       type="button"
@@ -283,6 +291,7 @@ function DeskSidebar({
   counts: { saved: number; projects: number; compare: number };
   onToggleTheme: () => void;
 }) {
+  const t = useTranslations("command");
   return (
     <aside
       className="flex flex-col flex-shrink-0"
@@ -323,33 +332,33 @@ function DeskSidebar({
         className="text-[9.5px] font-bold text-muted-faint"
         style={{ letterSpacing: 1.3, padding: "14px 12px 6px" }}
       >
-        WORKSPACE
+        {t("nav.workspace")}
       </div>
       <div className="flex flex-col gap-0.5">
         <SidebarNavItem
           active={view === "calc"}
           onClick={() => setView("calc")}
-          label="Calculator"
+          label={t("nav.calculator")}
           icon={<DeskIcon name="calc" />}
         />
         <SidebarNavItem
           active={view === "saved"}
           onClick={() => setView("saved")}
-          label="Saved"
+          label={t("nav.saved")}
           icon={<DeskIcon name="saved" />}
           count={counts.saved}
         />
         <SidebarNavItem
           active={view === "projects"}
           onClick={() => setView("projects")}
-          label="Projects"
+          label={t("nav.projects")}
           icon={<DeskIcon name="projects" />}
           count={counts.projects}
         />
         <SidebarNavItem
           active={view === "compare"}
           onClick={() => setView("compare")}
-          label="Compare"
+          label={t("nav.compare")}
           icon={<DeskIcon name="compare" />}
           count={counts.compare}
         />
@@ -363,14 +372,14 @@ function DeskSidebar({
         style={{ padding: "10px 12px", background: "var(--surface-inset)" }}
       >
         <Kbd>⌘K</Kbd>
-        <span className="text-[11px] text-muted font-semibold">New calculation</span>
+        <span className="text-[11px] text-muted font-semibold">{t("common.newCalculation")}</span>
       </div>
 
       <div className="flex flex-col gap-0.5">
         <SidebarNavItem
           active={view === "settings"}
           onClick={() => setView("settings")}
-          label="Settings"
+          label={t("nav.settings")}
           icon={<DeskIcon name="settings" />}
         />
         <button
@@ -383,7 +392,7 @@ function DeskSidebar({
             <DeskIcon name={dark ? "sun" : "moon"} />
           </span>
           <span className="flex-1 font-semibold text-[13.5px]">
-            {dark ? "Light mode" : "Dark mode"}
+            {dark ? t("settings.lightMode") : t("settings.darkMode")}
           </span>
         </button>
       </div>
@@ -515,6 +524,7 @@ function DeskCalcView({
   inputRef,
   gotoCompare,
 }: DeskCalcViewProps) {
+  const t = useTranslations("command");
   const isW = mode === "weight";
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
 
@@ -569,16 +579,17 @@ function DeskCalcView({
   );
   const sumKg = tapeRows.reduce((s, x) => s + (x.rp.totalKg ?? 0), 0);
   const sumAmount = tapeRows.reduce((s, x) => s + (x.rp.totalAmount ?? 0), 0);
+  const displayName = formatCommandParseName(t, p);
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar
-        title="Calculator"
-        subtitle={p.valid && p.name ? `${p.name} · live` : "type a profile to start"}
+        title={t("nav.calculator")}
+        subtitle={p.valid && displayName ? t("desktop.calcLive", { name: displayName }) : t("desktop.typeProfileToStart")}
         actions={
           <div className="flex items-center gap-[7px]">
-            <Kbd>↵ save</Kbd>
-            <Kbd>esc clear</Kbd>
+            <Kbd>{t("desktop.enterSave")}</Kbd>
+            <Kbd>{t("desktop.escClear")}</Kbd>
           </div>
         }
       />
@@ -666,9 +677,9 @@ function DeskCalcView({
               autoComplete="off"
               spellCheck={false}
               placeholder={
-                queryTokens.length === 0 ? "type a profile… e.g. hea120 6m x2 s235" : ""
+                queryTokens.length === 0 ? t("query.placeholderExample") : ""
               }
-              aria-label="FerroScale Command query"
+              aria-label={t("query.aria")}
               className="flex-1 bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint min-w-[120px]"
               // The command-line box carries the permanent accent glow; the
               // global :focus-visible ring on the inner input is just noise.
@@ -681,7 +692,7 @@ function DeskCalcView({
                 className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold cursor-pointer"
                 style={{ letterSpacing: 0.4 }}
               >
-                CLEAR
+                {t("common.clear")}
               </button>
             )}
           </label>
@@ -689,7 +700,7 @@ function DeskCalcView({
           {/* SUGGESTIONS */}
           <div className="mt-3.5">
             <div className="text-[10px] font-bold text-muted mb-2 uppercase" style={{ letterSpacing: 1.2 }}>
-              {sug.hint}
+              {formatCommandHint(t, sug.hint)}
             </div>
             <div className="flex gap-[7px] flex-wrap">
               {sug.items.map((it, i) => (
@@ -747,7 +758,7 @@ function DeskCalcView({
                           : ""
                       }`}
                     >
-                      {it.label}
+                      {formatCommandSuggestionLabel(t, it)}
                     </span>
                     {it.sub && (
                       <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
@@ -783,7 +794,7 @@ function DeskCalcView({
                     boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
                   }}
                 >
-                  {m.toUpperCase()}
+                  {(m === "weight" ? t("settings.weight") : t("settings.price")).toUpperCase()}
                 </button>
               ))}
             </div>
@@ -830,19 +841,19 @@ function DeskCalcView({
                     {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                   </span>
                   {!isW && p.pricing.wastePercent > 0 && (
-                    <DeskPricingBadge>+{p.pricing.wastePercent}% waste</DeskPricingBadge>
+                    <DeskPricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</DeskPricingBadge>
                   )}
                   {!isW && p.pricing.includeVat && (
-                    <DeskPricingBadge>+VAT {p.pricing.vatPercent}%</DeskPricingBadge>
+                    <DeskPricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</DeskPricingBadge>
                   )}
                 </span>
               ) : (
                 <span className="font-mono text-[13px] text-muted-faint">
                   {p.alias
                     ? p.hasSize
-                      ? "add a length →"
-                      : "add a size →"
-                    : "start with a profile →"}
+                      ? t("hint.addLength")
+                      : t("hint.addSize")
+                    : t("hint.startProfile")}
                 </span>
               )}
               <span className="ml-auto flex items-center gap-[5px]">
@@ -857,7 +868,7 @@ function DeskCalcView({
                     color: p.valid ? "var(--green-text)" : "var(--muted-faint)",
                   }}
                 >
-                  {p.valid ? "LIVE" : "WAITING"}
+                  {p.valid ? t("status.live") : t("status.waiting")}
                 </span>
               </span>
             </div>
@@ -866,9 +877,9 @@ function DeskCalcView({
           {/* SESSION TAPE */}
           <div className="mt-[22px]" style={{ maxWidth: 640 }}>
             <div className="flex items-baseline gap-2 mb-[9px]">
-              <SectionLabel>SESSION</SectionLabel>
+              <SectionLabel>{t("desktop.session")}</SectionLabel>
               <span className="font-mono text-[10.5px] text-muted-faint">
-                · every saved calc lands here
+                {t("desktop.sessionSub")}
               </span>
               {tapeRows.length > 0 && (
                 <button
@@ -877,13 +888,13 @@ function DeskCalcView({
                   className="ml-auto bg-transparent border-0 text-muted text-[10.5px] font-bold cursor-pointer hover:text-foreground"
                   style={{ letterSpacing: 0.4 }}
                 >
-                  CLEAR
+                  {t("common.clear")}
                 </button>
               )}
             </div>
             {tapeRows.length === 0 ? (
               <div className="font-mono text-[11.5px] text-muted-faint" style={{ padding: "6px 2px" }}>
-                empty tape — press ↵ to log a calculation
+                {t("desktop.emptyTape")}
               </div>
             ) : (
               <div
@@ -915,7 +926,7 @@ function DeskCalcView({
                         {rp.alias && <CommandGlyph fam={rp.alias.fam} size={16} />}
                       </span>
                       <span className="flex-1 min-w-0 font-bold text-[13.5px] text-foreground truncate">
-                        {rp.name}
+                        {formatCommandParseName(t, rp)}
                       </span>
                       <span className="font-mono text-[11px] text-muted flex-shrink-0">
                         {rp.lengthM} m × {rp.realQty}
@@ -936,8 +947,8 @@ function DeskCalcView({
                     <button
                       type="button"
                       onClick={() => onRemoveTapeEntry(q)}
-                      title="Remove from tape"
-                      aria-label={`Remove ${rp.name ?? q} from tape`}
+                      title={t("desktop.removeFromTape")}
+                      aria-label={t("desktop.removeFromTapeAria", { name: formatCommandParseName(t, rp) ?? q })}
                       className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                       style={{ width: 20, height: 20, background: "var(--surface-inset)" }}
                     >
@@ -958,7 +969,7 @@ function DeskCalcView({
                     className="flex-1 text-[11px] font-bold text-muted"
                     style={{ letterSpacing: 0.8 }}
                   >
-                    {tapeRows.length} ITEMS · RUNNING TOTAL
+                    {t("desktop.runningTotal", { count: tapeRows.length })}
                   </span>
                   <span
                     className="font-mono text-[13px] font-bold text-right"
@@ -997,27 +1008,27 @@ function DeskCalcView({
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={dark ? "#161109" : "#fff"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
               </svg>
-              Save calculation
+              {t("suggest.saveCalculation")}
             </DeskBtn>
             <div className="flex gap-2">
               <DeskBtn dark={dark} small onClick={onCompareCurrent} disabled={!p.valid}>
                 <DeskIcon name="compare" />
-                Compare
+                {t("common.compare")}
               </DeskBtn>
               <DeskBtn dark={dark} small onClick={onCopy} disabled={!p.valid}>
                 <DeskIcon name="copy" />
-                Copy
+                {t("common.copy")}
               </DeskBtn>
               <DeskBtn dark={dark} small onClick={onAddToProject} disabled={!p.valid}>
                 <DeskIcon name="plus" />
-                Project
+                {t("common.project")}
               </DeskBtn>
             </div>
           </div>
           {/* compare tray */}
           <div className="flex items-baseline justify-between mt-[26px] mb-2">
             <SectionLabel>
-              COMPARE TRAY{compareItems.length > 0 ? ` · ${compareItems.length}` : ""}
+              {t("desktop.compareTray", { count: compareItems.length })}
             </SectionLabel>
             {compareItems.length > 0 && (
               <button
@@ -1026,7 +1037,7 @@ function DeskCalcView({
                 className="border-0 bg-transparent text-[11px] font-bold cursor-pointer"
                 style={{ color: "var(--accent)" }}
               >
-                Open →
+                {t("common.openArrow")}
               </button>
             )}
           </div>
@@ -1068,8 +1079,8 @@ function DeskCalcView({
                   <button
                     type="button"
                     onClick={() => onRemoveCompare(item.id)}
-                    title="Remove"
-                    aria-label="Remove from compare"
+                    title={t("common.remove")}
+                    aria-label={t("desktop.removeFromCompare")}
                     className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted"
                     style={{ width: 20, height: 20, background: "var(--surface-inset)" }}
                   >
@@ -1083,7 +1094,7 @@ function DeskCalcView({
                 className="font-mono text-[11px] text-muted-faint"
                 style={{ padding: "2px 2px", lineHeight: 1.5 }}
               >
-                empty — hit Compare to collect
+                {t("desktop.emptyCompareTray")}
                 <br />
                 profiles for a side-by-side
               </div>
@@ -1135,6 +1146,7 @@ function Line({
 }
 
 function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
+  const t = useTranslations("command");
   const r = p.calc?.result;
 
   return (
@@ -1148,7 +1160,7 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
       }}
     >
       <div className="text-[10px] font-bold text-muted mb-2.5" style={{ letterSpacing: 1.2 }}>
-        BREAKDOWN
+        {t("desktop.breakdown")}
       </div>
       {p.valid && r && p.kgm != null ? (
         <>
@@ -1164,7 +1176,7 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
             </div>
             <div className="min-w-0">
               <div className="font-extrabold text-[15px] text-foreground" style={{ letterSpacing: -0.2 }}>
-                {p.name}
+                {formatCommandParseName(t, p)}
               </div>
               <div className="font-mono text-[10.5px] text-muted mt-px">
                 {p.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
@@ -1172,39 +1184,39 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
             </div>
           </div>
           <div style={{ paddingTop: 4 }}>
-            <Line label="Mass per metre" value={`${p.kgm.toFixed(2)} kg/m`} />
-            <Line label="Length" value={`${p.lengthM} m`} />
-            <Line label="Pieces" value={`× ${p.realQty}`} />
+            <Line label={t("result.massPerMetre")} value={`${p.kgm.toFixed(2)} kg/m`} />
+            <Line label={t("result.length")} value={`${p.lengthM} m`} />
+            <Line label={t("result.pieces")} value={`× ${p.realQty}`} />
             <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
             <Line
-              label="Weight / piece"
+              label={t("compare.weightPerPiece")}
               value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
             />
             <Line
-              label="Total weight"
+              label={t("result.totalWeight")}
               value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
               strong
               accent="var(--accent)"
             />
             <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
             <Line
-              label="Unit price"
+              label={t("result.unitPrice")}
               value={`${sym} ${fsMoney(p.calc!.input.unitPrice)} /${r.priceUnit}`}
             />
             {p.pricing.wastePercent > 0 && (
               <Line
-                label={`Waste +${p.pricing.wastePercent}%`}
+                label={t("result.waste", { percent: p.pricing.wastePercent })}
                 value={`${sym} ${fsMoney(r.wasteAmount)}`}
               />
             )}
             {p.pricing.includeVat && (
               <Line
-                label={`VAT ${p.pricing.vatPercent}%`}
+                label={t("result.vat", { percent: p.pricing.vatPercent })}
                 value={`${sym} ${fsMoney(r.vatAmount)}`}
               />
             )}
             <Line
-              label="Total cost"
+              label={t("result.totalCost")}
               value={`${sym} ${fsMoney(r.grandTotalAmount)}`}
               strong
               accent="var(--blue-strong)"
@@ -1220,9 +1232,7 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
             <CommandGlyph fam="beam" size={26} />
           </span>
           <span className="font-mono text-[11.5px] text-muted-faint" style={{ lineHeight: 1.5 }}>
-            the full breakdown appears
-            <br />
-            as you type
+            {t("desktop.breakdownEmpty")}
           </span>
         </div>
       )}
@@ -1233,13 +1243,14 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
 /* ───────────────────────── Compare view ───────────────────────── */
 
 function DeltaChip({ pct }: { pct: number }) {
+  const t = useTranslations("command");
   if (!Number.isFinite(pct) || Math.abs(pct) < 0.5) {
     return (
       <span
         className="font-mono text-[10px] font-bold rounded-full"
         style={{ padding: "2px 7px", background: "var(--surface-inset)", color: "var(--muted)" }}
       >
-        ≈ base
+        {t("compare.approxBase")}
       </span>
     );
   }
@@ -1274,6 +1285,7 @@ function DeskCompareView({
   gotoCalc: () => void;
   onPick: (input: CalculationInput) => void;
 }) {
+  const t = useTranslations("command");
   // One column per compare item; the first is the base every delta reads from.
   const cols = compareItems.map((item) => {
     const r = item.result;
@@ -1315,23 +1327,23 @@ function DeskCompareView({
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar
-        title="Compare"
+        title={t("nav.compare")}
         subtitle={
           compareItems.length
-            ? `${compareItems.length} side by side · deltas vs base`
-            : "side-by-side profiles"
+            ? t("compare.subtitleCount", { count: compareItems.length })
+            : t("compare.subtitleEmpty")
         }
         actions={
           <>
             {compareItems.length > 0 && (
               <DeskBtn dark={dark} small onClick={onClearAll}>
                 <DeskIcon name="trash" />
-                Clear all
+                {t("common.clearAll")}
               </DeskBtn>
             )}
             <DeskBtn dark={dark} small primary onClick={gotoCalc}>
               <DeskIcon name="plus" stroke={dark ? "#161109" : "#fff"} />
-              Add from calculator
+              {t("compare.addFromCalculator")}
             </DeskBtn>
           </>
         }
@@ -1352,11 +1364,10 @@ function DeskCompareView({
               <DeskIcon name="compare" />
             </div>
             <div className="font-extrabold text-[17px] text-foreground mt-4">
-              Nothing to compare yet
+              {t("compare.emptyTitle")}
             </div>
             <div className="text-[13px] text-muted mt-1.5" style={{ lineHeight: 1.5 }}>
-              Run a calculation, then hit <b>Compare</b> in the right rail. Profiles line up side
-              by side here.
+              {t("compare.emptyBody")}
             </div>
           </div>
         </div>
@@ -1378,7 +1389,7 @@ function DeskCompareView({
               {/* header row */}
               <div style={{ padding: "14px 16px" }}>
                 <span className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1.2 }}>
-                  PROFILE
+                  {t("compare.profile")}
                 </span>
               </div>
               {cols.map((c, i) => (
@@ -1407,8 +1418,8 @@ function DeskCompareView({
                     <button
                       type="button"
                       onClick={() => onRemove(c.item.id)}
-                      title="Remove"
-                      aria-label={`Remove ${c.name} from compare`}
+                      title={t("common.remove")}
+                      aria-label={t("compare.removeAria", { name: c.name })}
                       className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted"
                       style={{ width: 22, height: 22, background: "var(--surface-inset)" }}
                     >
@@ -1427,11 +1438,11 @@ function DeskCompareView({
                           border: "1px solid var(--accent-border)",
                         }}
                       >
-                        BASE
+                        {t("compare.base")}
                       </span>
                     ) : (
                       <span className="font-mono text-[10px] text-muted-faint">
-                        vs {base.name}
+                        {t("compare.vsBase", { name: base.name })}
                       </span>
                     )}
                   </div>
@@ -1440,7 +1451,7 @@ function DeskCompareView({
 
               {/* total weight */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">Total weight</span>
+                <span className="text-[11.5px] font-semibold text-muted">{t("result.totalWeight")}</span>
               </div>
               {cols.map((c, i) => {
                 const pct = base.r.totalWeightKg > 0
@@ -1486,7 +1497,7 @@ function DeskCompareView({
 
               {/* total cost */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">Total cost</span>
+                <span className="text-[11.5px] font-semibold text-muted">{t("result.totalCost")}</span>
               </div>
               {cols.map((c, i) => {
                 const pct = base.r.grandTotalAmount > 0
@@ -1512,7 +1523,7 @@ function DeskCompareView({
 
               {/* weight / piece */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">Weight / piece</span>
+                <span className="text-[11.5px] font-semibold text-muted">{t("compare.weightPerPiece")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -1524,7 +1535,7 @@ function DeskCompareView({
 
               {/* mass per metre */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">Mass per metre</span>
+                <span className="text-[11.5px] font-semibold text-muted">{t("result.massPerMetre")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -1536,7 +1547,7 @@ function DeskCompareView({
 
               {/* cost per metre */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">Cost / metre</span>
+                <span className="text-[11.5px] font-semibold text-muted">{t("compare.costPerMetre")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -1550,7 +1561,7 @@ function DeskCompareView({
               {hasSurface && (
                 <>
                   <div style={labelCell}>
-                    <span className="text-[11.5px] font-semibold text-muted">Surface area</span>
+                    <span className="text-[11.5px] font-semibold text-muted">{t("compare.surfaceArea")}</span>
                   </div>
                   {cols.map((c, i) => (
                     <div key={c.item.id} style={valueCell(i)}>
@@ -1564,7 +1575,7 @@ function DeskCompareView({
 
               {/* grade */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">Grade</span>
+                <span className="text-[11.5px] font-semibold text-muted">{t("result.grade")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -1588,7 +1599,7 @@ function DeskCompareView({
                       background: "var(--surface-raised)",
                     }}
                   >
-                    Open in calculator
+                    {t("compare.openInCalculator")}
                   </button>
                 </div>
               ))}
@@ -1617,20 +1628,21 @@ function DeskSavedView({
   onAddCompare: (entry: SavedEntry) => void;
   onRemove: (id: string) => void;
 }) {
+  const t = useTranslations("command");
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar
-        title="Saved"
+        title={t("nav.saved")}
         subtitle={
           saved.length
-            ? `${saved.length} calculation${saved.length > 1 ? "s" : ""}`
-            : "bookmarked calculations"
+            ? t("saved.subtitleCount", { count: saved.length })
+            : t("saved.subtitleEmpty")
         }
       />
       <div className="flex-1 overflow-y-auto" style={{ padding: "24px 32px 32px" }}>
         {saved.length === 0 ? (
           <div className="font-mono text-[12.5px] text-muted-faint" style={{ padding: "16px 2px" }}>
-            nothing saved yet — press ↵ in the calculator
+            {t("saved.empty")}
           </div>
         ) : (
           <div
@@ -1675,10 +1687,10 @@ function DeskSavedView({
                     </span>
                   </button>
                   <div className="flex gap-1.5 flex-shrink-0">
-                    <SavedAction title="Add to compare" onClick={() => onAddCompare(entry)}>
+                    <SavedAction title={t("saved.addToCompare")} onClick={() => onAddCompare(entry)}>
                       <DeskIcon name="compare" />
                     </SavedAction>
-                    <SavedAction title="Delete" onClick={() => onRemove(entry.id)}>
+                    <SavedAction title={t("common.delete")} onClick={() => onRemove(entry.id)}>
                       <DeskIcon name="trash" />
                     </SavedAction>
                   </div>
@@ -1735,6 +1747,7 @@ function DeskProjectsView({
   onCreateProject: (name: string) => Project;
   onRemoveCalc: (projectId: string, calcId: string) => void;
 }) {
+  const t = useTranslations("command");
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
 
@@ -1749,12 +1762,12 @@ function DeskProjectsView({
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar
-        title="Projects"
-        subtitle={projects.length ? `${projects.length} active` : "group calcs into jobs"}
+        title={t("nav.projects")}
+        subtitle={projects.length ? t("projects.subtitleCount", { count: projects.length }) : t("projects.subtitleEmpty")}
         actions={
           <DeskBtn dark={dark} small primary onClick={() => setCreating((v) => !v)}>
             <DeskIcon name="plus" stroke={dark ? "#161109" : "#fff"} />
-            New project
+            {t("library.newProject")}
           </DeskBtn>
         }
       />
@@ -1769,7 +1782,7 @@ function DeskProjectsView({
                 if (e.key === "Escape") setCreating(false);
               }}
               autoFocus
-              placeholder="New project name…"
+              placeholder={t("library.newProjectName")}
               className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
             />
             <button
@@ -1778,13 +1791,13 @@ function DeskProjectsView({
               disabled={!newName.trim()}
               className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Create
+              {t("common.create")}
             </button>
           </div>
         )}
         {projects.length === 0 && !creating ? (
           <div className="font-mono text-[12.5px] text-muted-faint" style={{ padding: "16px 2px" }}>
-            no projects yet — hit New project, or + Project on a result
+            {t("projects.empty")}
           </div>
         ) : (
           <div
@@ -1824,7 +1837,7 @@ function DeskProjectsView({
                         {project.name}
                       </span>
                       <span className="font-mono text-[10.5px] text-muted">
-                        {calcs.length} item{calcs.length === 1 ? "" : "s"}
+                        {t("projects.itemCount", { count: calcs.length })}
                       </span>
                     </div>
                     <div className="flex gap-3.5 mt-2.5">
@@ -1845,7 +1858,7 @@ function DeskProjectsView({
                   <div style={{ padding: "6px 8px 8px" }}>
                     {calcs.length === 0 ? (
                       <div className="font-mono text-[11px] text-muted-faint" style={{ padding: "8px 10px" }}>
-                        empty — add a calc from the right rail
+                        {t("projects.emptyProjectHint")}
                       </div>
                     ) : (
                       calcs.map((calc) => {
@@ -1873,8 +1886,8 @@ function DeskProjectsView({
                             <button
                               type="button"
                               onClick={() => onRemoveCalc(project.id, calc.id)}
-                              title="Remove"
-                              aria-label="Remove from project"
+                              title={t("common.remove")}
+                              aria-label={t("projects.removeFromProject")}
                               className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted opacity-0 group-hover:opacity-100"
                               style={{ width: 20, height: 20, background: "var(--surface-inset)" }}
                             >
@@ -1965,6 +1978,7 @@ function DeskSettingsView({
   onSetDefaultUnit: (unit: LengthUnit) => void;
   onToggleTheme: () => void;
 }) {
+  const t = useTranslations("command");
   const numberBox = (
     value: number,
     onChange: (v: number) => void,
@@ -1998,7 +2012,7 @@ function DeskSettingsView({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      <DeskTopbar title="Settings" subtitle="pricing · units · appearance" />
+      <DeskTopbar title={t("nav.settings")} subtitle={t("settings.subtitle")} />
       <div className="flex-1 overflow-y-auto" style={{ padding: "24px 32px 32px" }}>
         <div style={{ maxWidth: 520 }}>
           <div
@@ -2010,17 +2024,17 @@ function DeskSettingsView({
               padding: "10px 22px 16px",
             }}
           >
-            <Field label="DEFAULT RESULT">
+            <Field label={t("settings.defaultResultUpper")}>
               <Seg
                 value={weightAsMain ? "weight" : "price"}
                 onChange={(v) => onSetWeightAsMain(v === "weight")}
                 options={[
-                  { v: "weight", label: "Weight" },
-                  { v: "price", label: "Price" },
+                  { v: "weight", label: t("settings.weight") },
+                  { v: "price", label: t("settings.price") },
                 ]}
               />
             </Field>
-            <Field label="CURRENCY">
+            <Field label={t("settings.currencyUpper")}>
               <Seg
                 value={shared.currency}
                 onChange={(v) => onUpdateShared({ currency: v })}
@@ -2030,20 +2044,20 @@ function DeskSettingsView({
                 }))}
               />
             </Field>
-            <Field label="PRICE BASIS">
+            <Field label={t("settings.priceBasisUpper")}>
               <Seg
                 value={shared.priceBasis}
                 onChange={(v) =>
                   onUpdateShared({ priceBasis: v, priceUnit: BASIS_UNIT[v] })
                 }
                 options={[
-                  { v: "weight" as PriceBasis, label: "Weight" },
-                  { v: "length" as PriceBasis, label: "Length" },
-                  { v: "piece" as PriceBasis, label: "Piece" },
+                  { v: "weight" as PriceBasis, label: t("settings.weight") },
+                  { v: "length" as PriceBasis, label: t("settings.length") },
+                  { v: "piece" as PriceBasis, label: t("settings.piece") },
                 ]}
               />
             </Field>
-            <Field label={`UNIT PRICE (PER ${shared.priceUnit.toUpperCase()})`}>
+            <Field label={t("settings.unitPricePer", { unit: shared.priceUnit.toUpperCase() })}>
               {numberBox(
                 shared.unitPrice,
                 (v) => onUpdateShared({ unitPrice: v }),
@@ -2051,18 +2065,18 @@ function DeskSettingsView({
                 sym,
               )}
             </Field>
-            <Field label="WASTE %">
+            <Field label={t("settings.wastePercentUpper")}>
               {numberBox(shared.wastePercent, (v) => onUpdateShared({ wastePercent: v }), "%")}
             </Field>
-            <Field label="VAT">
+            <Field label={t("settings.vat")}>
               <div className="flex items-center gap-2.5">
                 <div className="flex-1">
                   <Seg
                     value={shared.includeVat ? "on" : "off"}
                     onChange={(v) => onUpdateShared({ includeVat: v === "on" })}
                     options={[
-                      { v: "off", label: "Off" },
-                      { v: "on", label: "On" },
+                      { v: "off", label: t("common.off") },
+                      { v: "on", label: t("common.on") },
                     ]}
                   />
                 </div>
@@ -2077,7 +2091,7 @@ function DeskSettingsView({
                 )}
               </div>
             </Field>
-            <Field label="DEFAULT GRADE">
+            <Field label={t("settings.defaultGradeUpper")}>
               <div className="flex gap-[7px] flex-wrap">
                 {COMMAND_GRADES.map((g) => {
                   const active = shared.defaultGradeId === g.id;
@@ -2101,26 +2115,29 @@ function DeskSettingsView({
                 })}
               </div>
             </Field>
-            <Field label="LENGTH UNIT FALLBACK">
+            <Field label={t("settings.lengthUnitFallback")}>
               <Seg
                 value={defaultUnit}
                 onChange={onSetDefaultUnit}
                 options={UNIT_OPTIONS.map((u) => ({ v: u, label: u, mono: true }))}
               />
             </Field>
-            <Field label="APPEARANCE">
+            <Field label={t("settings.appearance")}>
               <Seg
                 value={dark ? "dark" : "light"}
                 onChange={(v) => {
                   if ((v === "dark") !== dark) onToggleTheme();
                 }}
                 options={[
-                  { v: "light", label: "Light" },
-                  { v: "dark", label: "Dark" },
+                  { v: "light", label: t("settings.light") },
+                  { v: "dark", label: t("settings.dark") },
                 ]}
               />
             </Field>
           </div>
+          <p className="text-[11px] text-muted mt-3 px-1">
+            {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
+          </p>
           <SyncSection />
         </div>
       </div>
@@ -2141,12 +2158,13 @@ function DeskTokenChip({
   onEdit: () => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations("command");
   return (
     <span className={`inline-flex items-stretch font-mono text-base font-semibold rounded-lg ${kindClass}`}>
       <button
         type="button"
         onClick={onEdit}
-        aria-label={`Edit ${tok}`}
+        aria-label={t("token.edit", { token: tok })}
         className="pl-2.5 pr-1 py-1 rounded-l-lg"
       >
         {tok}
@@ -2154,7 +2172,7 @@ function DeskTokenChip({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${tok}`}
+        aria-label={t("token.remove", { token: tok })}
         className="flex items-center justify-center w-6 rounded-r-lg text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
       >
         ×

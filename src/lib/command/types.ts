@@ -2,6 +2,8 @@ import type {
   CalculationInput,
   CalculationResult,
   LengthUnit,
+  PriceBasis,
+  PriceUnit,
   ProfileId,
 } from "@ferroscale/metal-core";
 import type { CommandPricing } from "@/lib/settings-stores";
@@ -70,9 +72,15 @@ export interface CommandParseResult {
   valid: boolean;
   /** Echo of the pricing settings used (for sheet display). */
   pricing: CommandPricing;
+  /** Non-null when the query contains an inline price token. */
+  priceOverride: {
+    unitPrice: number;
+    priceBasis: PriceBasis;
+    priceUnit: PriceUnit;
+  } | null;
 }
 
-export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "unknown";
+export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "price" | "unknown";
 
 export interface CommandSuggestionItem {
   label: string;

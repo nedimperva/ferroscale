@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/useTheme";
 import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
@@ -23,6 +24,12 @@ import type {
   CommandTokenKind,
 } from "@/lib/command/types";
 import { CommandGlyph } from "./command-glyph";
+import {
+  formatCommandAliasName,
+  formatCommandHint,
+  formatCommandParseName,
+  formatCommandSuggestionLabel,
+} from "./command-copy";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./command-desktop";
 import {
@@ -39,6 +46,7 @@ const DESKTOP_CARD_W = 560;
 
 
 export function CommandShell() {
+  const t = useTranslations("command");
   const { resolvedTheme, setTheme } = useTheme();
   const dark = resolvedTheme === "dark";
 
@@ -157,30 +165,32 @@ export function CommandShell() {
 
   const doSave = useCallback(() => {
     if (!p.calc) {
-      showToast("Add length to save");
+      showToast(t("toast.addLength"));
       return;
     }
     // Real save — appears on the Library Saved tab (shared with the full app).
     if (!isSaved(p.calc.result)) {
-      const autoName = `${p.name} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
+      const displayName = formatCommandParseName(t, p) ?? p.name;
+      const autoName = `${displayName} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
       saveCalculation(p.calc.input, p.calc.result, autoName);
     }
     const q = query.trim();
     if (q) {
       setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
     }
-    showToast("Saved");
-  }, [p, isSaved, saveCalculation, showToast, query]);
+    showToast(t("toast.saved"));
+  }, [p, isSaved, saveCalculation, showToast, query, t]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
       const q = inputToQuery(input, defaultUnit, {
         defaultGradeId: shared.defaultGradeId,
+        defaultPricing: shared,
       });
       if (q) setQuery(q);
       setSheet(null);
     },
-    [defaultUnit, shared.defaultGradeId],
+    [defaultUnit, shared],
   );
 
   const handlePickProject = useCallback(
@@ -189,21 +199,25 @@ export function CommandShell() {
       const ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
       setProjectCalc(null);
       const project = projects.find((p) => p.id === projectId);
-      showToast(ok ? `Added to ${project?.name ?? "project"}` : "Project is full");
+      showToast(
+        ok
+          ? t("toast.addedToProject", { project: project?.name ?? t("common.project") })
+          : t("toast.projectFull"),
+      );
     },
-    [projectCalc, addCalculation, projects, showToast],
+    [projectCalc, addCalculation, projects, showToast, t],
   );
 
   const addCompareEntry = useCallback(
     (input: CalculationInput, result: CalculationResult) => {
       if (isInCompare(result)) {
-        showToast("Already in compare");
+        showToast(t("toast.alreadyInCompare"));
         return;
       }
       addCompareItem(input, result);
-      showToast("Added to compare");
+      showToast(t("toast.addedToCompare"));
     },
-    [isInCompare, addCompareItem, showToast],
+    [isInCompare, addCompareItem, showToast, t],
   );
 
   const doCompare = useCallback(() => {
@@ -337,6 +351,7 @@ export function CommandShell() {
     len: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
     qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
     grade: "bg-[var(--surface-inset)] text-foreground-secondary",
+    price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
     unknown: "bg-[var(--surface-inset)] text-muted",
   };
 
@@ -379,7 +394,7 @@ export function CommandShell() {
           onSave={doSave}
           onCopy={() => {
             navigator.clipboard?.writeText(query).catch(() => {});
-            showToast("Copied to clipboard");
+            showToast(t("toast.copied"));
           }}
           onNew={newCalc}
           onSuggest={onSuggest}
@@ -493,7 +508,7 @@ export function CommandShell() {
               </span>
             </div>
             <div className="flex gap-2">
-              <IconBtn onClick={cycleTheme} ariaLabel="Toggle theme">
+              <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
                 {dark ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
                     <circle cx="12" cy="12" r="4.5" />
@@ -505,12 +520,12 @@ export function CommandShell() {
                   </svg>
                 )}
               </IconBtn>
-              <IconBtn onClick={() => setSheet("library")} ariaLabel="Library">
+              <IconBtn onClick={() => setSheet("library")} ariaLabel={t("nav.library")}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                 </svg>
               </IconBtn>
-              <IconBtn onClick={() => setSheet("settings")} ariaLabel="Settings">
+              <IconBtn onClick={() => setSheet("settings")} ariaLabel={t("nav.settings")}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -613,19 +628,19 @@ export function CommandShell() {
                     {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                   </span>
                   {!isW && p.pricing.wastePercent > 0 && (
-                    <PricingBadge>+{p.pricing.wastePercent}% waste</PricingBadge>
+                    <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
                   )}
                   {!isW && p.pricing.includeVat && (
-                    <PricingBadge>+VAT {p.pricing.vatPercent}%</PricingBadge>
+                    <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
                   )}
                 </span>
               ) : (
                 <span className="font-mono text-[12px] text-muted-faint">
                   {p.alias
                     ? p.hasSize
-                      ? "add a length →"
-                      : "add a size →"
-                    : "start with a profile →"}
+                      ? t("hint.addLength")
+                      : t("hint.addSize")
+                    : t("hint.startProfile")}
                 </span>
               )}
               <span className="ml-auto flex items-center gap-1.5">
@@ -645,7 +660,7 @@ export function CommandShell() {
                       : "var(--muted-faint)",
                   }}
                 >
-                  {p.valid ? "LIVE" : "WAITING"}
+                  {p.valid ? t("status.live") : t("status.waiting")}
                 </span>
               </span>
             </div>
@@ -666,7 +681,7 @@ export function CommandShell() {
           <div className="pb-1.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
               <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
-                {sug.hint}
+                {formatCommandHint(t, sug.hint)}
               </span>
               {query !== "" && (
                 <button
@@ -676,7 +691,7 @@ export function CommandShell() {
                   // shifting the layout.
                   className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5 -mr-3"
                 >
-                  CLEAR
+                  {t("common.clear")}
                 </button>
               )}
             </div>
@@ -755,7 +770,7 @@ export function CommandShell() {
                           : ""
                       }`}
                     >
-                      {it.label}
+                      {formatCommandSuggestionLabel(t, it)}
                     </span>
                     {it.sub && (
                       <span className="text-[10px] text-muted font-semibold">
@@ -799,7 +814,7 @@ export function CommandShell() {
                 </span>
                 {queryTokens.length === 0 && (
                   <span className="font-mono text-sm text-muted-faint">
-                    type or tap a profile…
+                    {t("query.placeholder")}
                   </span>
                 )}
                 {chipTokens.map((tok, i) => (
@@ -896,8 +911,8 @@ export function CommandShell() {
                   autoCapitalize="off"
                   autoComplete="off"
                   spellCheck={false}
-                  placeholder="type or tap a profile…"
-                  aria-label="FerroScale Command query"
+                  placeholder={t("query.placeholder")}
+                  aria-label={t("query.aria")}
                   className="flex-1 bg-transparent outline-none font-mono text-sm text-foreground placeholder:text-muted-faint min-w-0"
                 />
                 <kbd className="text-[10px] font-mono font-semibold text-muted-faint px-1.5 py-0.5 rounded border border-border-faint">
@@ -926,7 +941,7 @@ export function CommandShell() {
               onCopy={() => {
                 navigator.clipboard?.writeText(query).catch(() => {});
                 setSheet(null);
-                showToast("Copied to clipboard");
+                showToast(t("toast.copied"));
               }}
               onNew={() => {
                 setSheet(null);
@@ -952,7 +967,7 @@ export function CommandShell() {
               onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
-              themeLabel={dark ? "Dark" : "Light"}
+              themeLabel={dark ? t("settings.dark") : t("settings.light")}
             />
           )}
           {effectiveSheet === "library" && (
@@ -1022,6 +1037,7 @@ function TokenChip({
   onEdit: () => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations("command");
   return (
     <span
       className={`inline-flex items-stretch font-mono text-sm font-semibold rounded-md ${kindClass}`}
@@ -1029,7 +1045,7 @@ function TokenChip({
       <button
         type="button"
         onClick={onEdit}
-        aria-label={`Edit ${tok}`}
+        aria-label={t("token.edit", { token: tok })}
         className="pl-2 pr-0.5 py-1.5 rounded-l-md"
       >
         {tok}
@@ -1037,7 +1053,7 @@ function TokenChip({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${tok}`}
+        aria-label={t("token.remove", { token: tok })}
         className="flex items-center justify-center w-7 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
       >
         ×
@@ -1124,6 +1140,7 @@ function PreviewCard({
   sym: string;
   onOpen: () => void;
 }) {
+  const t = useTranslations("command");
   return (
     <button
       type="button"
@@ -1138,7 +1155,7 @@ function PreviewCard({
       <div className="flex gap-3.5">
         <div className="flex-1">
           <div className="text-[9.5px] font-bold tracking-wider text-muted uppercase">
-            Per piece
+            {t("preview.perPiece")}
           </div>
           <div
             className="font-mono text-[17px] font-bold mt-1"
@@ -1154,7 +1171,7 @@ function PreviewCard({
         <div className="w-px bg-border-faint" />
         <div className="flex-1">
           <div className="text-[9.5px] font-bold tracking-wider text-muted uppercase">
-            {isWeight ? "Total cost" : "Total weight"}
+            {isWeight ? t("preview.totalCost") : t("preview.totalWeight")}
           </div>
           <div
             className="font-mono text-[17px] font-bold mt-1"
@@ -1177,14 +1194,14 @@ function PreviewCard({
       </div>
       <div className="flex gap-1.5 mt-3 flex-wrap">
         <ChipBadge on={!!p.alias} fam={p.alias?.fam}>
-          {p.alias ? p.alias.name : "profile"}
+          {p.alias ? formatCommandAliasName(t, p.alias) : t("preview.profile")}
         </ChipBadge>
-        <ChipBadge on={p.hasSize}>{p.hasSize ? p.size.replace(/x/g, "×") : "size"}</ChipBadge>
+        <ChipBadge on={p.hasSize}>{p.hasSize ? p.size.replace(/x/g, "×") : t("preview.size")}</ChipBadge>
         <ChipBadge on={p.lengthM != null}>
-          {p.lengthM != null ? `${p.lengthRaw}${p.lengthUnit}` : "length"}
+          {p.lengthM != null ? `${p.lengthRaw}${p.lengthUnit}` : t("preview.length")}
         </ChipBadge>
         <ChipBadge on={p.qty != null}>{`× ${p.realQty}`}</ChipBadge>
-        <ChipBadge on={!!p.gradeLabel}>{p.gradeLabel ?? "grade"}</ChipBadge>
+        <ChipBadge on={!!p.gradeLabel}>{p.gradeLabel ?? t("preview.grade")}</ChipBadge>
       </div>
     </button>
   );

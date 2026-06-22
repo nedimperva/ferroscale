@@ -57,6 +57,46 @@ describe("cmdParse", () => {
     expect(priced.calc!.result.grandTotalAmount).toBe(priced.totalAmount);
   });
 
+  it("overrides the shared unit price from a command token", () => {
+    const defaultPrice = cmdParse("hea120 6m", mkSettings());
+    const override = cmdParse("hea120 6m @2.50/kg", mkSettings());
+    expect(defaultPrice.valid).toBe(true);
+    expect(override.valid).toBe(true);
+    expect(override.priceOverride).toEqual({
+      unitPrice: 2.5,
+      priceBasis: "weight",
+      priceUnit: "kg",
+    });
+    expect(override.calc!.input.unitPrice).toBe(2.5);
+    expect(override.calc!.input.priceBasis).toBe("weight");
+    expect(override.calc!.input.priceUnit).toBe("kg");
+    expect(override.totalAmount).toBeGreaterThan(defaultPrice.totalAmount!);
+  });
+
+  it("supports length and piece price override units", () => {
+    const perMetre = cmdParse("flt40x8 4m 3,20/m", mkSettings());
+    const perPiece = cmdParse("flt40x8 4m x2 @12/pc", mkSettings());
+    expect(perMetre.valid).toBe(true);
+    expect(perMetre.calc!.input.unitPrice).toBe(3.2);
+    expect(perMetre.calc!.input.priceBasis).toBe("length");
+    expect(perMetre.calc!.input.priceUnit).toBe("m");
+    expect(perPiece.valid).toBe(true);
+    expect(perPiece.calc!.input.unitPrice).toBe(12);
+    expect(perPiece.calc!.input.priceBasis).toBe("piece");
+    expect(perPiece.calc!.input.priceUnit).toBe("piece");
+  });
+
+  it("supports value-only override tokens with the current price unit", () => {
+    const p = cmdParse(
+      "hea120 6m @2.5",
+      mkSettings({ pricing: { ...PRICING, priceBasis: "length", priceUnit: "ft" } }),
+    );
+    expect(p.valid).toBe(true);
+    expect(p.calc!.input.unitPrice).toBe(2.5);
+    expect(p.calc!.input.priceBasis).toBe("length");
+    expect(p.calc!.input.priceUnit).toBe("ft");
+  });
+
   it("bare number uses the default length unit (m)", () => {
     const p = cmdParse("hea120 6 x2", mkSettings({ defaultLengthUnit: "m" }));
     expect(p.valid).toBe(true);
@@ -248,6 +288,13 @@ describe("cmdParse with glued queries", () => {
     expect(glued.totalAmount).toBe(spaced.totalAmount);
   });
 
+  it("splits glued price tokens", () => {
+    const p = cmdParse("hea1206m@2.5/kg", mkSettings());
+    expect(cmdTokenize("hea1206m@2.5/kg")).toEqual(["hea120", "6m", "@2.5/kg"]);
+    expect(p.valid).toBe(true);
+    expect(p.calc!.input.unitPrice).toBe(2.5);
+  });
+
   it("glued length + qty after a spaced profile", () => {
     const p = cmdParse("hea120 6mx2", mkSettings());
     expect(p.valid).toBe(true);
@@ -277,6 +324,19 @@ describe("inputToQuery", () => {
     const p2 = cmdParse(reQuery, settings);
     expect(p2.calc!.input.profileId).toBe(p.calc!.input.profileId);
     expect(p2.calc!.input.selectedSizeId).toBe(p.calc!.input.selectedSizeId);
+    expect(p2.calc!.result.grandTotalAmount).toBe(p.calc!.result.grandTotalAmount);
+  });
+
+  it("round-trips a saved price override when it differs from current defaults", () => {
+    const settings = mkSettings();
+    const p = cmdParse("hea120 6m @2.5/kg", settings);
+    expect(p.valid).toBe(true);
+    const reQuery = inputToQuery(p.calc!.input, "m", {
+      defaultGradeId: settings.defaultGradeId,
+      defaultPricing: settings.pricing,
+    });
+    expect(reQuery).toBe("hea120 6m @2.5/kg");
+    const p2 = cmdParse(reQuery, settings);
     expect(p2.calc!.result.grandTotalAmount).toBe(p.calc!.result.grandTotalAmount);
   });
 
@@ -352,6 +412,11 @@ describe("cmdClassifyToken", () => {
     expect(cmdClassifyToken("6m")).toBe("len");
     expect(cmdClassifyToken("10ft")).toBe("len");
     expect(cmdClassifyToken("12in")).toBe("len");
+  });
+
+  it("classifies price override tokens", () => {
+    expect(cmdClassifyToken("@2.5/kg")).toBe("price");
+    expect(cmdClassifyToken("3,20/m")).toBe("price");
   });
 
   it("classifies profiles and quantities", () => {

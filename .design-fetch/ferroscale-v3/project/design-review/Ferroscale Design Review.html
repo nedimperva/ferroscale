@@ -1,0 +1,1287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ferroscale — design review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* Lifted from globals.css so this doc lives inside the same world */
+    --background:#efeae0;
+    --surface:#fbf8f1;
+    --surface-raised:#f3ede1;
+    --surface-inset:#e6dfd0;
+    --surface-emphasis:#f5e7da;
+    --surface-inverted:#1a1611;
+    --surface-pad:#e9e2d2;
+    --surface-pad-press:#dcd2bd;
+    --foreground:#1a1611;
+    --foreground-secondary:#4b4339;
+    --muted:#8d8779;
+    --muted-faint:#9b9484;
+    --border:rgba(20,18,15,.07);
+    --border-strong:rgba(20,18,15,.13);
+    --border-faint:rgba(20,18,15,.04);
+    --accent:#a35a32;
+    --accent-hover:#874829;
+    --accent-surface:#f5e7da;
+    --accent-surface-strong:#edd4be;
+    --accent-border:#d9b69a;
+    --accent-text:#6e3a17;
+    --blue-surface:#eaf0fb;--blue-text:#2a55a5;--blue-border:#c4d4ef;--blue-strong:#2f5db9;
+    --purple-surface:#f1ebf6;--purple-text:#6b4892;--purple-border:#d5c5e7;
+    --green-surface:#e3f1e8;--green-text:#198560;--green-border:#b6dcc5;
+    --red-surface:#fef2f2;--red-text:#b91c1c;--red-border:#fecaca;
+    --amber-surface:#fffbeb;--amber-text:#92400e;--amber-border:#fde68a;
+    --panel-shadow-soft:0 1px 2px rgba(20,18,15,.04),0 12px 24px -16px rgba(20,18,15,.18);
+    --panel-shadow-strong:0 1px 2px rgba(20,18,15,.08),0 24px 60px -30px rgba(20,18,15,.32);
+    --panel-highlight:inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
+    background:var(--background);
+    color:var(--foreground);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+  /* page shell */
+  .doc{max-width:1240px;margin:0 auto;padding:64px 32px 160px}
+  @media (max-width:760px){.doc{padding:36px 18px 120px}}
+
+  /* cover */
+  .cover{
+    border:1px solid var(--border);
+    border-radius:28px;
+    background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 88%,transparent),color-mix(in srgb,var(--surface) 82%,var(--background) 18%));
+    box-shadow:var(--panel-shadow-strong);
+    padding:40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .cover::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:1px;
+    background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 45%,white) 50%,transparent);
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--muted);
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:999px;background:var(--accent)}
+  h1.title{
+    font-size:clamp(34px,5.5vw,56px);
+    line-height:1.02;letter-spacing:-.035em;font-weight:700;
+    margin:14px 0 8px;text-wrap:balance;
+  }
+  .lede{font-size:18px;color:var(--foreground-secondary);max-width:60ch;text-wrap:pretty}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    height:28px;padding:0 12px;border-radius:999px;
+    background:var(--surface);border:1px solid var(--border);
+    font-size:12px;color:var(--foreground-secondary);font-weight:500;
+  }
+  .pill.accent{background:var(--accent-surface);border-color:var(--accent-border);color:var(--accent-text)}
+  .pill.green{background:var(--green-surface);border-color:var(--green-border);color:var(--green-text)}
+  .pill.blue{background:var(--blue-surface);border-color:var(--blue-border);color:var(--blue-text)}
+  .pill.purple{background:var(--purple-surface);border-color:var(--purple-border);color:var(--purple-text)}
+  .pill .kbd{font-family:'IBM Plex Mono',monospace;font-size:10.5px}
+
+  /* section header */
+  .section{margin-top:64px}
+  .section-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+  .section-num{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;
+    color:var(--accent);letter-spacing:.04em;
+  }
+  h2.section-title{
+    font-size:clamp(24px,3vw,32px);
+    line-height:1.1;letter-spacing:-.025em;font-weight:700;margin:0;
+  }
+  .section-lede{color:var(--foreground-secondary);max-width:72ch;margin:6px 0 22px;text-wrap:pretty}
+
+  /* finding rows */
+  .findings{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+  .find{
+    grid-column:span 6;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:18px 18px 16px;
+    box-shadow:var(--panel-shadow-soft);
+  }
+  .find.wide{grid-column:span 12}
+  .find.third{grid-column:span 4}
+  @media(max-width:980px){.find,.find.third{grid-column:span 12}}
+  .find-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+  .find-tag{
+    flex-shrink:0;
+    display:inline-flex;align-items:center;justify-content:center;
+    height:22px;padding:0 8px;border-radius:6px;
+    font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    border:1px solid var(--border-strong);
+    background:var(--surface-raised);color:var(--foreground-secondary);
+  }
+  .find-tag.fix{background:var(--accent-surface);border-color:var(--accent-border);color:var(--accent-text)}
+  .find-tag.crit{background:var(--red-surface);border-color:var(--red-border);color:var(--red-text)}
+  .find-tag.win{background:var(--green-surface);border-color:var(--green-border);color:var(--green-text)}
+  .find-tag.idea{background:var(--blue-surface);border-color:var(--blue-border);color:var(--blue-text)}
+  .find-title{
+    font-size:15.5px;font-weight:600;letter-spacing:-.01em;line-height:1.3;
+    margin:0;
+  }
+  .find p{margin:6px 0 0;font-size:14px;color:var(--foreground-secondary);line-height:1.5}
+  .find code{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    background:var(--surface-raised);padding:1px 6px;border-radius:5px;
+    color:var(--foreground);
+  }
+  .find ul{margin:8px 0 0;padding-left:18px;color:var(--foreground-secondary);font-size:14px}
+  .find ul li{margin-bottom:3px}
+  .find ul li::marker{color:var(--muted)}
+  .find .ref{margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);word-break:break-all}
+
+  /* exec list */
+  .exec{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+    box-shadow:var(--panel-shadow-soft);
+    margin-top:24px;
+  }
+  .exec h3{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+  .exec ol{margin:0;padding:0;list-style:none;counter-reset:tg}
+  .exec li{
+    counter-increment:tg;
+    display:grid;grid-template-columns:32px 1fr auto;gap:14px;align-items:start;
+    padding:14px 0;
+    border-top:1px solid var(--border-faint);
+  }
+  .exec li:first-child{border-top:0;padding-top:4px}
+  .exec li::before{
+    content:counter(tg,decimal-leading-zero);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;
+    color:var(--accent);align-self:center;
+  }
+  .exec li .what{font-weight:600;font-size:15px}
+  .exec li .why{display:block;color:var(--foreground-secondary);font-size:13.5px;margin-top:2px}
+  .exec li .effort{
+    align-self:center;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;
+    color:var(--muted);letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 8px;border-radius:6px;border:1px solid var(--border);
+    background:var(--surface-raised);
+  }
+  .exec li .effort.l{background:var(--green-surface);border-color:var(--green-border);color:var(--green-text)}
+  .exec li .effort.m{background:var(--amber-surface);border-color:var(--amber-border);color:var(--amber-text)}
+  .exec li .effort.h{background:var(--red-surface);border-color:var(--red-border);color:var(--red-text)}
+
+  /* comparison strip */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px}
+  @media(max-width:880px){.compare{grid-template-columns:1fr}}
+  .compare-cell{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:22px;padding:22px;box-shadow:var(--panel-shadow-soft);
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+  }
+  .compare-cell h4{
+    margin:0;font-size:11.5px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);align-self:flex-start;
+  }
+  .compare-cell.before h4::before{content:"× ";color:var(--red-text)}
+  .compare-cell.after h4::before{content:"✓ ";color:var(--green-text)}
+
+  /* device frames */
+  .phone{
+    width:300px;height:600px;background:#1a1611;
+    border-radius:42px;padding:11px;
+    box-shadow:0 30px 70px -20px rgba(20,18,15,.42),0 0 0 2px rgba(0,0,0,.18) inset;
+    position:relative;
+  }
+  .phone .notch{
+    position:absolute;top:18px;left:50%;transform:translateX(-50%);
+    width:104px;height:24px;background:#0a0907;border-radius:14px;z-index:3;
+  }
+  .phone .screen{
+    width:100%;height:100%;border-radius:32px;overflow:hidden;
+    background:var(--background);position:relative;
+    display:flex;flex-direction:column;
+  }
+  .phone .statusbar{
+    height:36px;flex-shrink:0;display:flex;align-items:flex-end;
+    justify-content:space-between;padding:0 22px 6px;font-size:11px;font-weight:600;
+    color:var(--foreground);
+  }
+  .phone .statusbar .icons{display:flex;gap:5px;align-items:center}
+  .phone .statusbar .icons svg{display:block}
+
+  /* desktop frame */
+  .desktop{
+    background:var(--surface);border:1px solid var(--border-strong);
+    border-radius:14px;overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(20,18,15,.4);
+  }
+  .desktop .titlebar{
+    height:32px;background:var(--surface-raised);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:7px;padding:0 12px;
+  }
+  .desktop .titlebar .dot{width:11px;height:11px;border-radius:999px;background:#e3dfd2;border:1px solid var(--border-strong)}
+  .desktop .titlebar .dot.r{background:#f08a72;border-color:#c66249}
+  .desktop .titlebar .dot.y{background:#f3c053;border-color:#cf9c2a}
+  .desktop .titlebar .dot.g{background:#7bc784;border-color:#4ea159}
+  .desktop .titlebar .addr{
+    margin:0 auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
+  }
+
+  /* mock app bits (mobile calc) */
+  .m-header{
+    height:44px;flex-shrink:0;padding:0 12px;
+    display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid var(--border-faint);
+    background:rgba(251,248,241,.92);backdrop-filter:blur(10px);
+  }
+  .m-header .logo{
+    width:28px;height:28px;border-radius:9px;background:var(--surface-inverted);
+    display:flex;align-items:center;justify-content:center;color:#f3ead7;
+    font-weight:700;font-size:14px;font-family:'IBM Plex Mono',monospace;
+  }
+  .m-header .t{display:flex;flex-direction:column;flex:1;min-width:0}
+  .m-header .t .title{font-size:13px;font-weight:600;line-height:1.15}
+  .m-header .t .sub{font-size:10px;color:var(--muted);line-height:1.15}
+  .m-header .icon-btn{
+    width:30px;height:30px;border-radius:8px;border:1px solid transparent;
+    display:flex;align-items:center;justify-content:center;color:var(--muted-faint);
+    background:transparent;
+  }
+  .m-body{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:7px;padding:6px 10px 8px}
+  .result-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:20px;
+    padding:11px 14px 9px;box-shadow:var(--panel-shadow-soft);
+  }
+  .result-card .top{display:flex;justify-content:space-between;align-items:center;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .result-card .top .live{display:flex;gap:5px;align-items:center;color:var(--green-text);letter-spacing:.04em}
+  .result-card .top .live .d{width:5px;height:5px;border-radius:999px;background:var(--green-text)}
+  .result-card .big{display:flex;align-items:baseline;gap:5px;margin-top:2px;font-feature-settings:"tnum"}
+  .result-card .big .n{font-size:46px;font-weight:700;letter-spacing:-.04em;line-height:.95}
+  .result-card .big .u{font-size:18px;font-weight:600;color:var(--accent)}
+  .result-card .meta{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--foreground-secondary)}
+  .result-card .meta .right{font-weight:600;font-variant-numeric:tabular-nums}
+
+  .chip-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .chip{
+    height:44px;display:flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:0 10px;
+  }
+  .chip .glyph{
+    width:28px;height:28px;border-radius:8px;background:var(--surface-raised);
+    display:flex;align-items:center;justify-content:center;color:var(--foreground);
+  }
+  .chip .col{display:flex;flex-direction:column;min-width:0;flex:1}
+  .chip .col .lbl{font-size:8.5px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)}
+  .chip .col .val{font-size:12px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .field-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}
+  .field{
+    height:50px;border-radius:11px;border:1px solid var(--border);background:var(--surface);
+    padding:6px 8px;position:relative;
+  }
+  .field .lbl{font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .field .row{display:flex;align-items:baseline;gap:4px;margin-top:3px}
+  .field .row .v{font-size:14px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .field .row .u{font-size:9.5px;font-weight:600;color:var(--muted)}
+  .field.active{background:var(--accent-surface);border-color:var(--accent-border)}
+  .field.active .lbl{color:var(--accent-text)}
+  .field.active::after{
+    content:"";position:absolute;right:7px;bottom:8px;width:2px;height:13px;
+    background:var(--accent);animation:caret 1s steps(2,end) infinite;
+  }
+  @keyframes caret{50%{opacity:.18}}
+
+  .numpad{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:18px;padding:5px;box-shadow:var(--panel-shadow-soft);
+  }
+  .numpad .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+  .key{
+    height:42px;border-radius:13px;background:var(--surface-pad);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;font-weight:500;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -2px 4px rgba(0,0,0,.04);
+    font-variant-numeric:tabular-nums;
+  }
+  .key.sm{font-size:13px;font-weight:600}
+  .key.act{color:var(--muted)}
+  .key.done{background:var(--accent);color:#fff;font-size:13px;font-weight:600;box-shadow:0 6px 12px -6px rgba(120,60,20,.4)}
+
+  /* desktop sidebar mock */
+  .ws-grid{display:grid;grid-template-columns:220px 1fr 360px;height:520px}
+  .ws-side{
+    background:linear-gradient(180deg,var(--surface),var(--surface) 60%,color-mix(in srgb,var(--surface-raised) 60%,var(--surface)));
+    border-right:1px solid var(--border-faint);padding:14px 12px;display:flex;flex-direction:column;
+  }
+  .ws-side .brand{display:flex;align-items:center;gap:10px;padding:4px 4px 12px}
+  .ws-side .brand .logo{width:32px;height:32px;border-radius:10px;background:var(--surface-inverted);color:#f3ead7;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:700}
+  .ws-side .brand .nm{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .ws-side .brand .v{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+  .ws-side .grp{border-top:1px solid var(--border-faint);margin:6px 4px;padding-top:6px}
+  .ws-side .lbl{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-faint);padding:8px 8px 4px}
+  .ws-side .nav{display:flex;flex-direction:column;gap:1px}
+  .ws-side .nav a{
+    display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;
+    font-size:12.5px;font-weight:500;color:var(--foreground-secondary);text-decoration:none;
+    position:relative;
+  }
+  .ws-side .nav a .ic{width:14px;height:14px;color:var(--muted-faint);flex-shrink:0}
+  .ws-side .nav a:hover{background:var(--surface-raised);color:var(--foreground)}
+  .ws-side .nav a.active{background:var(--surface-raised);color:var(--foreground);font-weight:600}
+  .ws-side .nav a.active::before{
+    content:"";position:absolute;left:-7px;top:8px;bottom:8px;width:3px;
+    border-radius:0 2px 2px 0;background:var(--accent);
+  }
+  .ws-side .nav a .kbd{
+    margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    background:var(--surface-raised);padding:1px 5px;border-radius:5px;color:var(--muted);
+    border:1px solid var(--border-faint);
+  }
+  .ws-side .nav a .ct{
+    margin-left:auto;font-size:10px;font-weight:600;color:var(--muted);
+    background:var(--surface);padding:1px 6px;border-radius:999px;border:1px solid var(--border);
+  }
+  .ws-side .nav a.purple .ct{background:var(--purple-surface);color:var(--purple-text);border-color:var(--purple-border)}
+  .ws-side .spacer{flex:1}
+  .ws-side .ft{display:flex;flex-direction:column;gap:2px}
+  .ws-side .ft a{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:9px;font-size:12px;color:var(--muted)}
+
+  .ws-main{background:var(--background);display:flex;flex-direction:column;min-width:0}
+  .ws-top{
+    height:48px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:12px;padding:0 18px;background:var(--surface);
+  }
+  .ws-top h3{font-size:14px;font-weight:700;letter-spacing:-.01em;margin:0}
+  .ws-top .breadcrumb{font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .ws-top .breadcrumb .sep{color:var(--muted-faint)}
+  .ws-top .search{
+    margin-left:auto;height:28px;display:flex;align-items:center;gap:6px;
+    padding:0 9px;border-radius:8px;border:1px solid var(--border);
+    background:var(--surface);font-size:11px;color:var(--muted);width:180px;
+  }
+  .ws-top .search .kbd{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9.5px;background:var(--surface-raised);padding:1px 5px;border-radius:4px;color:var(--muted)}
+  .ws-top .new{
+    height:28px;padding:0 12px;border-radius:8px;background:var(--surface-inverted);color:#f3ead7;
+    font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:5px;
+  }
+  .ws-content{flex:1;padding:18px;display:grid;grid-template-columns:1fr;gap:14px;overflow:hidden}
+
+  .ws-result{background:var(--surface-raised);border-left:1px solid var(--border-faint);padding:18px;min-width:0}
+  .ws-result .label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .ws-result .v{font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:.98;margin-top:6px}
+  .ws-result .u{font-size:18px;color:var(--accent);font-weight:600;margin-left:4px}
+  .ws-result .b{
+    margin-top:18px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;
+  }
+  .ws-result .b .row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;color:var(--foreground-secondary);border-bottom:1px solid var(--border-faint)}
+  .ws-result .b .row:last-child{border-bottom:0}
+  .ws-result .b .row .vv{font-variant-numeric:tabular-nums;color:var(--foreground);font-weight:600}
+
+  /* annotation callout */
+  .annot{
+    margin-top:14px;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;
+    padding:12px 14px;background:var(--surface-raised);border-radius:14px;border:1px solid var(--border-faint);
+  }
+  .annot .k{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;padding-top:1px}
+  .annot p{margin:0;font-size:13px;color:var(--foreground-secondary);line-height:1.5}
+
+  /* punch list table */
+  .punch{
+    margin-top:24px;background:var(--surface);border:1px solid var(--border);
+    border-radius:18px;overflow:hidden;box-shadow:var(--panel-shadow-soft);
+  }
+  .punch table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .punch thead th{
+    background:var(--surface-raised);
+    text-align:left;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    padding:11px 14px;border-bottom:1px solid var(--border);
+  }
+  .punch td{padding:11px 14px;border-bottom:1px solid var(--border-faint);vertical-align:top}
+  .punch tr:last-child td{border-bottom:0}
+  .punch td .who{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  .punch td.sev{width:88px}
+  .punch td.area{width:160px}
+  .punch td.eff{width:78px;text-align:right}
+  .punch td .sevpill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .punch td .sevpill.p1{background:var(--red-surface);color:var(--red-text);border:1px solid var(--red-border)}
+  .punch td .sevpill.p2{background:var(--amber-surface);color:var(--amber-text);border:1px solid var(--amber-border)}
+  .punch td .sevpill.p3{background:var(--blue-surface);color:var(--blue-text);border:1px solid var(--blue-border)}
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+
+  /* divider */
+  .rule{height:1px;background:var(--border-faint);margin:36px 0}
+
+  /* footnote */
+  .foot{margin-top:80px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+  .foot .mono{display:inline-block;margin-top:4px}
+
+  /* small visual: dark-mode swatches */
+  .swatch-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:8px}
+  @media(max-width:680px){.swatch-grid{grid-template-columns:repeat(3,1fr)}}
+  .sw{border-radius:10px;border:1px solid var(--border);background:var(--surface);overflow:hidden}
+  .sw .chip{height:48px}
+  .sw .name{padding:7px 9px;display:flex;flex-direction:column;font-size:11px}
+  .sw .name .h{font-weight:600}
+  .sw .name .v{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted)}
+
+  /* type sample */
+  .type-stack{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--panel-shadow-soft)}
+  .type-row{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:baseline;padding-bottom:14px;border-bottom:1px solid var(--border-faint)}
+  .type-row:last-child{border-bottom:0;padding-bottom:0}
+  .type-row .role{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+  .type-row .sample{}
+  .t-display{font-size:42px;font-weight:700;letter-spacing:-.04em;line-height:.98;font-variant-numeric:tabular-nums}
+  .t-h1{font-size:26px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+  .t-h2{font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .t-body{font-size:14.5px}
+  .t-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .t-mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums}
+
+  /* sticky on small */
+  .anchor-nav{
+    position:sticky;top:0;z-index:5;
+    margin:32px -32px 0;padding:14px 32px;
+    background:color-mix(in srgb,var(--background) 92%,transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border-faint);
+    display:flex;gap:6px;flex-wrap:wrap;
+  }
+  .anchor-nav a{
+    text-decoration:none;color:var(--foreground-secondary);font-size:12px;font-weight:500;
+    padding:5px 11px;border-radius:999px;border:1px solid var(--border);background:var(--surface);
+  }
+  .anchor-nav a:hover{background:var(--surface-raised);color:var(--foreground)}
+  @media(max-width:760px){.anchor-nav{margin:24px -18px 0;padding:12px 18px}}
+
+  /* before/after swatch comparison inside cards */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ba .cell{
+    background:var(--surface-raised);border-radius:12px;padding:12px;
+    border:1px dashed var(--border-strong);min-height:80px;display:flex;flex-direction:column;gap:6px;
+  }
+  .ba .cell.good{border-style:solid;border-color:var(--green-border);background:var(--green-surface)}
+  .ba .cell .tg{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .ba .cell.good .tg{color:var(--green-text)}
+
+  /* simple icon helpers */
+  svg.ic{display:block}
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <!-- ============== COVER ============== -->
+  <section class="cover" data-screen-label="00 Cover">
+    <span class="eyebrow"><span class="dot"></span>Design review · Ferroscale v3</span>
+    <h1 class="title">Finishing the V3 — making it feel like an app, not a layout.</h1>
+    <p class="lede">You're 90% there. The bones (warm cream palette, terracotta accent, Space Grotesk + IBM Plex Mono, premium-* control system) are strong. What's left is the last 10% — the tiny rhythm and behavior choices that separate a beautifully styled web page from a real product. This review walks the app section-by-section with concrete fixes, ranked.</p>
+    <div class="meta">
+      <span class="pill"><span class="mono">21</span>· findings</span>
+      <span class="pill accent">8 · quick wins</span>
+      <span class="pill green">9 · medium</span>
+      <span class="pill blue">4 · investigations</span>
+      <span class="pill purple">Reviewed: shell, mobile calc, desktop workstation, saved, projects, sidebar, settings</span>
+    </div>
+  </section>
+
+  <!-- anchor nav -->
+  <nav class="anchor-nav" aria-label="Sections">
+    <a href="#tldr">TL;DR</a>
+    <a href="#system">Design system</a>
+    <a href="#m-calc">Mobile calc</a>
+    <a href="#m-nav">Mobile nav</a>
+    <a href="#d-side">Desktop sidebar</a>
+    <a href="#d-work">Desktop workstation</a>
+    <a href="#saved">Saved</a>
+    <a href="#projects">Projects</a>
+    <a href="#compare">Compare</a>
+    <a href="#settings">Settings</a>
+    <a href="#empty">Empty / onboarding</a>
+    <a href="#punch">Punch list</a>
+  </nav>
+
+  <!-- ============== TL;DR ============== -->
+  <section class="section" id="tldr">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">TL;DR — the 8 things that buy you the most native feel</h2>
+    </div>
+    <p class="section-lede">Each of these is small in scope but has compound visual impact. Ship these first and the app will feel meaningfully different.</p>
+
+    <div class="exec">
+      <h3>Priority order</h3>
+      <ol>
+        <li>
+          <div>
+            <span class="what">Consolidate the panel/button vocabulary down to ~4 primitives.</span>
+            <span class="why">You currently have <code>panel-base</code>, <code>panel-unibody</code>, <code>panel-raised</code>, <code>panel-emphasis</code>, <code>premium-control</code>, <code>premium-segment</code>, <code>premium-action-button</code>, <code>premium-icon-button</code> + ad-hoc <code>card-*</code>. Eight surfaces is style sprawl — pick four (Surface, Raised, Inset, Emphasis) and one button family with size variants. Visual rhythm tightens immediately.</span>
+          </div>
+          <span class="effort m">M · 3-4h</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Lock the uppercase-label tracking to one value (0.10em).</span>
+            <span class="why">I count at least <code>0.06</code>, <code>0.08</code>, <code>0.10</code>, <code>0.12</code>, <code>0.14</code> in use for the same micro-caps role across mobile/desktop. Pick one. Same for label font-size — <code>--font-size-2xs (0.625rem)</code> is your token; use it everywhere.</span>
+          </div>
+          <span class="effort l">L · 1-2h</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Make the create-thing CTA the same across Saved, Projects, Compare.</span>
+            <span class="why">Saved's "New preset" is a black foreground button. Projects' "+" is an accent circle. Same role — adopt one. Recommendation: solid <code>--surface-inverted</code> for the primary "create" everywhere, the accent for state-bearing actions (live, in-progress, primary success).</span>
+          </div>
+          <span class="effort l">L · 1h</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Search field that doesn't search is worse than no search.</span>
+            <span class="why">Desktop Saved has a visual-only ⌘K search affordance. Users will type. Either wire it to a live filter on <code>entry.name + profileLabel + grade + tags</code> or hide it until shipped. Same applies to the ⌘K hint in projects.</span>
+          </div>
+          <span class="effort m">M · 2-3h</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Allow text selection on result numbers.</span>
+            <span class="why">Global <code>user-select:none</code> on <code>html</code> means the result weight/price can't be copied. That's the #1 reason a sales engineer opens this app — let them copy <code>347.82 kg</code>. Mark <code>.tabular-nums</code> result values + .select-text and they're back.</span>
+          </div>
+          <span class="effort l">L · 30m</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Header rhythm: mobile gets a clean app bar, desktop gets a 48px workstation topbar — make them feel like one family.</span>
+            <span class="why">Today mobile has a tall blurred sticky header with a tiny 4px profile icon inside an inset square (looks broken). Desktop tabs each invent their own topbar. Pick one topbar grammar: <code>logo · title · slim context chip · search · primary CTA · settings</code>. Bring mobile's down to 40px and make the context chip its own element below if needed.</span>
+          </div>
+          <span class="effort m">M · 3-4h</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Numpad weight display: cap to fit, and reflect units.</span>
+            <span class="why">The 60px result number on mobile breaks layout when weight ≥ 10,000 kg (5 chars + decimal) on iPhone SE-width devices. Either auto-shrink to fit container (clamp(36px,12vw,60px)) or switch to <code>t</code> at &gt;1000 kg with a tiny "kg → t" hint. Bonus: the current "kg" suffix doesn't change when user is in imperial.</span>
+          </div>
+          <span class="effort m">M · 2h</span>
+        </li>
+        <li>
+          <div>
+            <span class="what">Add a real focus / hover / pressed system for the field strip + chips.</span>
+            <span class="why">Today: active chip = accent surface (good). Hover on desktop = nothing visible. Focus-ring = global accent outline at 3px, looks heavy-handed on small chips. Add a <code>--ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent)</code> token, use it on all interactive surfaces, drop the global hard outline.</span>
+          </div>
+          <span class="effort m">M · 2h</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============== DESIGN SYSTEM ============== -->
+  <section class="section" id="system">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Design system — consolidation</h2>
+    </div>
+    <p class="section-lede">A handful of tokens are doing 90% of the work already. The other 10% is fighting itself. Three concrete consolidations:</p>
+
+    <div class="findings">
+
+      <div class="find wide">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Surface ladder is too crowded</h3></div>
+        <p>You ship 8 surface/panel primitives. Three of them — <code>panel-base</code>, <code>panel-unibody</code>, <code>panel-raised</code> — render at nearly the same elevation in light mode; users can't tell them apart and you can't stay consistent across screens. Collapse to a four-step ladder:</p>
+        <ul>
+          <li><b>Surface</b> (default, what cards sit on) — flat, 1px border</li>
+          <li><b>Raised</b> (interactive card, hover target) — soft shadow, no border</li>
+          <li><b>Inset</b> (grouped section background, secondary fills) — slightly darker, no shadow</li>
+          <li><b>Emphasis</b> (the chosen / selected / focused thing) — accent-tinted surface, accent border</li>
+        </ul>
+        <p>Same for buttons. Today you've got <code>premium-action-button</code>, <code>premium-icon-button</code>, <code>premium-segment</code>, plus inline-styled CTAs everywhere. One button family with <code>size = sm|md|lg</code> and <code>tone = neutral|primary|ghost|danger</code> kills 80% of the special cases.</p>
+        <div class="swatch-grid">
+          <div class="sw"><div class="chip" style="background:var(--surface)"></div><div class="name"><span class="h">Surface</span><span class="v">--surface</span></div></div>
+          <div class="sw"><div class="chip" style="background:var(--surface-raised)"></div><div class="name"><span class="h">Raised</span><span class="v">--surface-raised</span></div></div>
+          <div class="sw"><div class="chip" style="background:var(--surface-inset)"></div><div class="name"><span class="h">Inset</span><span class="v">--surface-inset</span></div></div>
+          <div class="sw"><div class="chip" style="background:var(--surface-emphasis)"></div><div class="name"><span class="h">Emphasis</span><span class="v">--surface-emphasis</span></div></div>
+          <div class="sw"><div class="chip" style="background:var(--accent-surface)"></div><div class="name"><span class="h">Accent surface</span><span class="v">--accent-surface</span></div></div>
+          <div class="sw"><div class="chip" style="background:var(--surface-inverted)"></div><div class="name"><span class="h">Inverted</span><span class="v">--surface-inverted</span></div></div>
+        </div>
+        <div class="annot"><span class="k">Action</span><p>Add a <code>docs/DESIGN_TOKENS.md</code> with the four-step ladder + button family rules. Refactor opportunistically — don't bulk-replace; replace as you touch components.</p></div>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Uppercase-label tracking is all over the place</h3></div>
+        <p>Same micro-caps role uses <code>0.06em</code>, <code>0.08em</code>, <code>0.10em</code>, <code>0.12em</code>, <code>0.14em</code> in different files. The eye reads inconsistent line-up across cards. Pick one — I'd use <code>0.10em</code> at <code>11px</code> for all "section eyebrow" labels and <code>0.06em</code> at <code>10px</code> for chip-internal labels.</p>
+        <div class="ba">
+          <div class="cell"><span class="tg">Today</span>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)">Total weight</span>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Length</span>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Profile</span>
+          </div>
+          <div class="cell good"><span class="tg">After</span>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--muted)">Total weight</span>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--muted)">Length</span>
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.10em;color:var(--muted)">Profile</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Focus-ring is too loud</h3></div>
+        <p>Global <code>:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px }</code> looks aggressive on small chips, numpad-style keys, and inline edits. Replace with a soft ring token:</p>
+        <pre class="mono" style="font-size:11.5px;background:var(--surface-raised);padding:10px 12px;border-radius:8px;margin:8px 0 0;overflow:auto"><code>--ring-soft: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+:focus-visible { outline: none; box-shadow: var(--ring-soft); }</code></pre>
+        <p>Keeps the affordance, loses the harshness. The Done key on the numpad is a good test case.</p>
+      </div>
+
+      <div class="find wide">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Type ladder — write it down, then enforce</h3></div>
+        <p>The actual type roles in your app cluster into 7 sizes. They aren't documented anywhere. Lock them down and components stop reinventing scales:</p>
+        <div class="type-stack" style="margin-top:6px">
+          <div class="type-row"><span class="role">display / result</span><span class="sample"><span class="t-display t-mono">347.82</span></span></div>
+          <div class="type-row"><span class="role">h1 / page title</span><span class="sample"><span class="t-h1">Saved presets</span></span></div>
+          <div class="type-row"><span class="role">h2 / card head</span><span class="sample"><span class="t-h2">EU residential renovation — Floor 02</span></span></div>
+          <div class="type-row"><span class="role">body</span><span class="sample"><span class="t-body">HEA 120 cross-section · S235JR steel · 6 m length</span></span></div>
+          <div class="type-row"><span class="role">label-caps</span><span class="sample"><span class="t-label">Total weight</span></span></div>
+          <div class="type-row"><span class="role">mono / data</span><span class="sample"><span class="t-mono" style="font-size:13.5px">HEA 120 · 6.0 m × 2 · 8.7 kg/m</span></span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============== MOBILE CALCULATOR ============== -->
+  <section class="section" id="m-calc">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Mobile calculator — the hero screen</h2>
+    </div>
+    <p class="section-lede">This is the screen users will spend the most time in. It's the strongest part of the app today, and also the screen with the most micro-polish to do.</p>
+
+    <!-- live mockup pair -->
+    <div class="compare">
+      <div class="compare-cell before">
+        <h4>Today</h4>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen">
+            <div class="statusbar">
+              <span class="mono">9:41</span>
+              <span class="icons">
+                <svg width="13" height="9" viewBox="0 0 13 9"><path fill="currentColor" d="M0 7h2v2H0V7zm3-2h2v4H3V5zm3-2h2v6H6V3zm3-2h2v8H9V1z"/></svg>
+                <svg width="13" height="9" viewBox="0 0 13 9"><path fill="none" stroke="currentColor" stroke-width="1" d="M.5 5.5l1-1.5 1 1.5L4 3l1 2 1.5-2 1 2L9 3l1 2 1.5-1.5"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10"><rect x=".5" y=".5" width="18" height="9" rx="2" fill="none" stroke="currentColor"/><rect x="2" y="2" width="14" height="6" fill="currentColor"/><rect x="19" y="3" width="2" height="4" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <div class="m-header">
+              <div class="logo">F</div>
+              <div class="t">
+                <div class="title">Calculator</div>
+                <div class="sub" style="display:flex;align-items:center;gap:4px">
+                  <span style="display:inline-flex;width:13px;height:13px;border-radius:4px;background:var(--surface-inset);align-items:center;justify-content:center"><span style="width:4px;height:4px;background:var(--muted-faint);border-radius:1px"></span></span>
+                  HEA 120 — Steel S235JR
+                </div>
+              </div>
+              <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+              <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+            </div>
+            <div class="m-body">
+              <div class="result-card">
+                <div class="top"><span>Total weight</span><span class="live"><span class="d"></span>Live</span></div>
+                <div class="big"><span class="n">347.82</span><span class="u">kg</span></div>
+                <div class="meta"><span>6 m × 2 · S235JR</span><span class="right">€ 487.95</span></div>
+              </div>
+              <div class="chip-pair">
+                <div class="chip"><div class="glyph"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18M7 8v8M17 8v8"/></svg></div><div class="col"><div class="lbl">Profile</div><div class="val">HEA 120</div></div></div>
+                <div class="chip"><div class="glyph" style="background:var(--surface-emphasis)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent);display:block"></span></div><div class="col"><div class="lbl">Material</div><div class="val">Steel · S235JR</div></div></div>
+              </div>
+              <div class="field-strip">
+                <div class="field active"><div class="lbl">Length</div><div class="row"><span class="v">6.000</span><span class="u">m</span></div></div>
+                <div class="field"><div class="lbl">Pieces</div><div class="row"><span class="v">2</span><span class="u">×</span></div></div>
+                <div class="field"><div class="lbl">Unit price</div><div class="row"><span class="v">1.40</span><span class="u">€/kg</span></div></div>
+              </div>
+              <div class="numpad">
+                <div class="grid">
+                  <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key act"><svg width="16" height="13" viewBox="0 0 22 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2L2 9l5 7h11a2 2 0 002-2V4a2 2 0 00-2-2z"/><path d="M11 6l6 6m0-6l-6 6"/></svg></div>
+                  <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key act sm">C</div>
+                  <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key act sm">Next</div>
+                  <div class="key">.</div><div class="key">0</div><div class="key sm">000</div><div class="key done">Done</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="compare-cell after">
+        <h4>Polished</h4>
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="screen" style="background:var(--background)">
+            <div class="statusbar">
+              <span class="mono">9:41</span>
+              <span class="icons">
+                <svg width="13" height="9" viewBox="0 0 13 9"><path fill="currentColor" d="M0 7h2v2H0V7zm3-2h2v4H3V5zm3-2h2v6H6V3zm3-2h2v8H9V1z"/></svg>
+                <svg width="13" height="9" viewBox="0 0 13 9"><path fill="none" stroke="currentColor" stroke-width="1" d="M.5 5.5l1-1.5 1 1.5L4 3l1 2 1.5-2 1 2L9 3l1 2 1.5-1.5"/></svg>
+                <svg width="22" height="10" viewBox="0 0 22 10"><rect x=".5" y=".5" width="18" height="9" rx="2" fill="none" stroke="currentColor"/><rect x="2" y="2" width="14" height="6" fill="currentColor"/><rect x="19" y="3" width="2" height="4" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <!-- slimmer header, single line -->
+            <div class="m-header" style="height:40px;border-bottom:0">
+              <div class="logo" style="width:24px;height:24px;font-size:12px;border-radius:7px">F</div>
+              <div class="t">
+                <div class="title" style="font-size:14px;font-weight:600">Calculator</div>
+              </div>
+              <button class="icon-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
+              <button class="icon-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg></button>
+            </div>
+            <!-- context chip moved below header -->
+            <div style="padding:0 12px 6px;display:flex;gap:6px;align-items:center">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;background:var(--surface);border:1px solid var(--border);font-size:11px;color:var(--foreground-secondary)">
+                <span style="width:14px;height:14px;border-radius:4px;background:var(--surface-raised);display:inline-flex;align-items:center;justify-content:center"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 8h18M3 16h18M7 8v8M17 8v8"/></svg></span>
+                HEA 120 · S235JR
+              </span>
+              <span style="font-size:10px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace">v3.4.1</span>
+            </div>
+
+            <div class="m-body" style="padding-top:0">
+              <div class="result-card" style="border-radius:22px">
+                <div class="top"><span>Total weight</span><span class="live"><span class="d"></span>Live</span></div>
+                <div class="big">
+                  <span class="n" style="font-size:50px;user-select:text;-webkit-user-select:text">347.82</span>
+                  <span class="u">kg</span>
+                </div>
+                <!-- Secondary value gets a real treatment, not a footnote -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:10px;padding-top:9px;border-top:1px solid var(--border-faint)">
+                  <div style="display:flex;flex-direction:column">
+                    <span style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">Total cost</span>
+                    <span style="font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:1px">€ 487.95</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;border-left:1px solid var(--border-faint);padding-left:10px">
+                    <span style="font-size:9px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">Per piece</span>
+                    <span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:1px;color:var(--foreground-secondary)">173.91 kg</span>
+                  </div>
+                </div>
+              </div>
+              <div class="chip-pair">
+                <div class="chip" style="border-radius:16px"><div class="glyph"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h18M3 16h18M7 8v8M17 8v8"/></svg></div><div class="col"><div class="lbl">Profile</div><div class="val">HEA 120</div></div></div>
+                <div class="chip" style="border-radius:16px"><div class="glyph" style="background:var(--surface-emphasis)"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent);display:block"></span></div><div class="col"><div class="lbl">Material</div><div class="val">Steel · S235JR</div></div></div>
+              </div>
+              <div class="field-strip">
+                <div class="field active" style="border-radius:13px"><div class="lbl">Length</div><div class="row"><span class="v">6.000</span><span class="u">m</span></div></div>
+                <div class="field" style="border-radius:13px"><div class="lbl">Pieces</div><div class="row"><span class="v">2</span><span class="u">×</span></div></div>
+                <div class="field" style="border-radius:13px"><div class="lbl">Unit price</div><div class="row"><span class="v">1.40</span><span class="u">€/kg</span></div></div>
+              </div>
+              <div class="numpad" style="border-radius:20px">
+                <div class="grid">
+                  <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key act"><svg width="16" height="13" viewBox="0 0 22 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 2L2 9l5 7h11a2 2 0 002-2V4a2 2 0 00-2-2z"/><path d="M11 6l6 6m0-6l-6 6"/></svg></div>
+                  <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key act sm">C</div>
+                  <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key act sm">Next</div>
+                  <div class="key">.</div><div class="key">0</div><div class="key sm">000</div><div class="key done">Save →</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot"><span class="k">Diff</span><p>① Header is one line. ② Profile+material context moves into a single pill below, with the version number where it belongs (small, monospace, right-aligned). ③ Result card grows a small <em>total cost / per-piece</em> grid — earns its real estate without bumping the result number down. ④ Done key relabels to <code>Save →</code> when there's an unsaved result; falls back to <code>Done</code> when nothing to save. ⑤ Field-chip corner radius drops from 0.85rem to match the chip cards above (16px). ⑥ Result numbers are selectable — kept users.</p></div>
+
+    <div class="findings" style="margin-top:24px">
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag crit">Critical</span><h3 class="find-title">The mobile header subtitle icon is invisible</h3></div>
+        <p>In <code>ferroscale-app-shell.tsx</code>, the subtitle profile icon is rendered inside a 16px <code>surface-inset</code> square with the icon at <code>h-2 w-2</code> (8px). On a cream-on-cream square it reads as an empty placeholder rectangle. Drop the wrapper or upgrade the icon to <code>h-3 w-3</code> on a transparent ground.</p>
+        <p class="ref">src/components/ferroscale-app-shell.tsx · ~L920 (mobile header subtitle render)</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Result number cannot be copied</h3></div>
+        <p>Global <code>user-select:none</code> on <code>html</code> blocks the weight + cost. Add <code>.select-text</code> to the <code>.tabular-nums</code> spans inside <code>mobile-numpad-calculator.tsx</code> and <code>result-content.tsx</code>. Sales engineers will thank you.</p>
+        <p class="ref">src/app/globals.css L113 · src/components/calculator/mobile-numpad-calculator.tsx L235</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Result number overflows past 4 digits</h3></div>
+        <p>At <code>3.75rem</code> (60px) the result eats horizontal space; <code>1,234.56</code> at iPhone SE width clips the kg suffix in dev. Two options:</p>
+        <ul>
+          <li><b>Switch units automatically.</b> ≥ 1000 kg → display in t with 2 decimals + a "t" suffix, keep the kg in a small line below.</li>
+          <li><b>Or fluid-shrink.</b> <code>font-size: clamp(36px, 12vw, 60px)</code> on the digit span; the layout doesn't move when the value grows.</li>
+        </ul>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">"Live" badge persists when nothing's computed</h3></div>
+        <p>The green-dot "Live" badge appears on the result card even before the user has entered anything. Map it to result state: <code>result ? Live : Idle</code>, or hide entirely until first result lands.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag win">Win</span><h3 class="find-title">Numpad active-scale is the right amount</h3></div>
+        <p>The 0.96 active scale on <code>.key</code> combined with <code>duration-75</code> feels good — keep this as the canonical "tactile pressable" combo and propagate it to chips and other touch surfaces, replacing the global 0.985.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Add an undo / redo affordance you can actually see</h3></div>
+        <p>You ship <code>UNDO</code>/<code>REDO</code> in the calc reducer + keyboard shortcuts, but mobile users have no visible entry point. A subtle ⤺ button on the result card when <code>canUndo</code>, animated in, would surface the feature for the 95% of users who'll never know the shortcut exists.</p>
+      </div>
+
+      <div class="find wide">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Profile + material chip cards: corner family</h3></div>
+        <p>Profile/Material chip cards use <code>rounded-2xl</code> (16px). FieldChip uses <code>rounded-[0.85rem]</code> (~13.6px). Profile glyph inside the chip uses <code>rounded-[0.65rem]</code>. Result card uses <code>rounded-[1.4rem]</code>. Numpad uses <code>rounded-[1.25rem]</code>. Five different radii in 200 vertical pixels.</p>
+        <p>Lock down a corner ladder and apply consistently:</p>
+        <pre class="mono" style="font-size:11.5px;background:var(--surface-raised);padding:10px 12px;border-radius:8px;overflow:auto"><code>--radius-pad: 8px;     /* inner icon glyphs */
+--radius-control: 14px;/* fields, chips, single-line controls */
+--radius-card: 20px;   /* result, numpad, chip cards */
+--radius-screen: 28px; /* outer modal, full-bleed sheet */</code></pre>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============== MOBILE NAV ============== -->
+  <section class="section" id="m-nav">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Mobile navigation</h2>
+    </div>
+    <p class="section-lede">You removed the bottom tab bar — gutsy and the right call for a focus app. But the hamburger menu is now doing all the nav work, and a single tap target for six destinations is a lot to ask.</p>
+
+    <div class="findings">
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Add a swipe-back gesture to the menu sheet</h3></div>
+        <p>The <code>MobileMenuSheet</code> opens from a corner button. iOS users will swipe to dismiss — make sure <code>vaul</code> is configured with horizontal drag dismiss as well as the existing vertical one.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Header icon density</h3></div>
+        <p>Theme toggle + menu live in the mobile header today. On Projects detail you add a third "more" button. The header gets crowded with low-frequency buttons. Move theme into the menu sheet; theme is a settings-level decision, not a header-level one.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Quick-jump pill</h3></div>
+        <p>Consider a small floating action — bottom-right, 56px, accent — that opens Quick Calc. The most powerful feature in your app currently lives behind ⌘K on desktop and nothing on mobile. A FAB earns its keep here.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag win">Win</span><h3 class="find-title">App-locked html class is a great touch</h3></div>
+        <p>The <code>app-locked</code> trick to kill iOS rubber-band on the calculator route is exactly the kind of detail that separates a web app from a native one. Keep it. Document it in <code>AGENTS.md</code> so future-you doesn't accidentally undo it.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============== DESKTOP SIDEBAR ============== -->
+  <section class="section" id="d-side">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Desktop sidebar</h2>
+    </div>
+    <p class="section-lede">Strong skeleton, but it's earning its keep through filled pills + a left accent bar + a count badge, all on the same item. Pick one strong active treatment and drop the rest.</p>
+
+    <div class="compare">
+      <div class="compare-cell before">
+        <h4>Today</h4>
+        <div class="desktop" style="width:100%;max-width:680px">
+          <div class="titlebar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="addr">ferroscale.eu / calculator</span></div>
+          <div class="ws-grid" style="grid-template-columns:220px 1fr;height:380px">
+            <div class="ws-side">
+              <div class="brand"><div class="logo">F</div><div><div class="nm">Ferroscale</div><div class="v">v3.4.1 ⓘ</div></div></div>
+              <div class="nav">
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>Quick Calculate<span class="kbd">⌘K</span></a>
+                <a class="active"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/></svg></span>Calculator</a>
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></span>Saved<span class="ct">12</span></a>
+                <a class="purple"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span>Projects<span class="ct">3</span></a>
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></span>Compare<span class="ct">2</span></a>
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4z"/></svg></span>Settings</a>
+              </div>
+              <div class="spacer"></div>
+            </div>
+            <div class="ws-main" style="padding:18px;color:var(--muted);font-size:12px">main content</div>
+          </div>
+        </div>
+      </div>
+      <div class="compare-cell after">
+        <h4>Polished</h4>
+        <div class="desktop" style="width:100%;max-width:680px">
+          <div class="titlebar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="addr">ferroscale.eu / calculator</span></div>
+          <div class="ws-grid" style="grid-template-columns:220px 1fr;height:380px">
+            <div class="ws-side">
+              <div class="brand"><div class="logo">F</div><div><div class="nm">Ferroscale</div><div class="v">v3.4.1</div></div></div>
+              <div class="lbl">Workspace</div>
+              <div class="nav">
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>Quick calculate<span class="kbd">⌘K</span></a>
+                <a class="active"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/></svg></span>Calculator</a>
+              </div>
+              <div class="lbl">Library</div>
+              <div class="nav">
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></span>Saved<span class="ct">12</span></a>
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span>Projects<span class="ct">3</span></a>
+                <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></span>Compare<span class="ct">2</span></a>
+              </div>
+              <div class="spacer"></div>
+              <div class="ft">
+                <a><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33"/></svg>Settings</a>
+                <a><svg class="ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>What's new</a>
+              </div>
+            </div>
+            <div class="ws-main" style="padding:18px;color:var(--muted);font-size:12px">main content</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot"><span class="k">Diff</span><p>① Active state is a single thing: filled raised pill + accent left bar. Drop the purple-variant for Projects — count badge color is enough. ② Group items under <em>Workspace</em> and <em>Library</em> caps so the user knows what's a tool vs. what's storage. ③ Settings + What's new move into a footer block — they're not primary nav. ④ Version chip in brand no longer carries an info icon (which read as a help button); make the whole chip itself clickable for changelog.</p></div>
+
+    <div class="findings" style="margin-top:24px">
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Hover state is missing on collapsed sidebar</h3></div>
+        <p>When collapsed, the tooltip kicks in after 75ms delay but there's no immediate hover feedback on the button itself. Add a subtle background hover so the user knows the target registered before the tooltip arrives.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Collapse toggle deserves a tooltip too</h3></div>
+        <p>The collapse caret button at the bottom doesn't get the rich tooltip treatment everything else gets. Make it consistent.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Sync status as a small footer pill</h3></div>
+        <p>You have a sync system. Where's the status? A small "Synced 2m ago" pill at the bottom of the sidebar would surface a feature users only see when they go look for it. Tap → opens the sync drawer.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag win">Win</span><h3 class="find-title">Language switcher placement</h3></div>
+        <p>Tucking the language switcher at the bottom of the sidebar in a small <code>panel-raised</code> card is the right call — it's a low-frequency action that earns its visual weight. Don't move it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== DESKTOP WORKSTATION ============== -->
+  <section class="section" id="d-work">
+    <div class="section-head">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Desktop workstation</h2>
+    </div>
+    <p class="section-lede">The two-column workstation (form + sticky result) is the right pattern. Two specific structural calls:</p>
+
+    <div class="desktop" style="margin-top:8px">
+      <div class="titlebar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="addr">ferroscale.eu / calculator</span></div>
+      <div class="ws-grid">
+        <div class="ws-side">
+          <div class="brand"><div class="logo">F</div><div><div class="nm">Ferroscale</div></div></div>
+          <div class="lbl">Workspace</div>
+          <div class="nav">
+            <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>Quick calculate<span class="kbd">⌘K</span></a>
+            <a class="active"><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/></svg></span>Calculator</a>
+          </div>
+          <div class="lbl">Library</div>
+          <div class="nav">
+            <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></span>Saved<span class="ct">12</span></a>
+            <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg></span>Projects<span class="ct">3</span></a>
+            <a><span class="ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg></span>Compare<span class="ct">2</span></a>
+          </div>
+        </div>
+        <div class="ws-main">
+          <div class="ws-top">
+            <h3>Calculator</h3>
+            <span class="breadcrumb"><span>Structural</span><span class="sep">/</span><span style="color:var(--foreground-secondary);font-weight:500">HEA 120</span></span>
+            <div class="search">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              Search profile…
+              <span class="kbd">⌘P</span>
+            </div>
+            <button class="new"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Save</button>
+          </div>
+          <div class="ws-content">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;gap:6px">
+                <span style="height:26px;padding:0 10px;border-radius:7px;background:var(--surface-inverted);color:#f3ead7;font-size:11px;font-weight:600;display:flex;align-items:center;line-height:1">Structural</span>
+                <span style="height:26px;padding:0 10px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:500;display:flex;align-items:center;line-height:1">Tubes</span>
+                <span style="height:26px;padding:0 10px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:500;display:flex;align-items:center;line-height:1">Plates / sheets</span>
+                <span style="height:26px;padding:0 10px;border-radius:7px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;font-weight:500;display:flex;align-items:center;line-height:1">Bars</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+                <div style="border:1px solid var(--accent-border);background:var(--accent-surface);border-radius:10px;padding:9px 11px"><div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--accent-text)">HEA</div><div style="font-size:13px;font-weight:600;margin-top:1px">HEA 120</div></div>
+                <div style="border:1px solid var(--border);background:var(--surface-raised);border-radius:10px;padding:9px 11px"><div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">IPE</div><div style="font-size:13px;font-weight:600;margin-top:1px;color:var(--foreground-secondary)">IPE 160</div></div>
+                <div style="border:1px solid var(--border);background:var(--surface-raised);border-radius:10px;padding:9px 11px"><div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">UPN</div><div style="font-size:13px;font-weight:600;margin-top:1px;color:var(--foreground-secondary)">UPN 100</div></div>
+                <div style="border:1px dashed var(--border-strong);background:var(--surface);border-radius:10px;padding:9px 11px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">+ 8 more</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                <div style="border:1px solid var(--border);border-radius:11px;padding:8px 10px;background:var(--surface-raised)"><div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">Length</div><div style="display:flex;align-items:baseline;gap:4px;margin-top:2px"><span style="font-size:18px;font-weight:600;font-variant-numeric:tabular-nums">6.000</span><span style="font-size:11px;font-weight:600;color:var(--muted)">m</span></div></div>
+                <div style="border:1px solid var(--border);border-radius:11px;padding:8px 10px;background:var(--surface-raised)"><div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">Pieces</div><div style="display:flex;align-items:baseline;gap:4px;margin-top:2px"><span style="font-size:18px;font-weight:600;font-variant-numeric:tabular-nums">2</span><span style="font-size:11px;font-weight:600;color:var(--muted)">×</span></div></div>
+                <div style="border:1px solid var(--border);border-radius:11px;padding:8px 10px;background:var(--surface-raised)"><div style="font-size:10px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;color:var(--muted)">Unit price</div><div style="display:flex;align-items:baseline;gap:4px;margin-top:2px"><span style="font-size:18px;font-weight:600;font-variant-numeric:tabular-nums">1.40</span><span style="font-size:11px;font-weight:600;color:var(--muted)">€/kg</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ws-result">
+          <div class="label">Total weight</div>
+          <div><span class="v">347.82</span><span class="u">kg</span></div>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <span style="font-size:11px;color:var(--muted)">↑ +12% from last calc</span>
+            <span style="font-size:11px;color:var(--muted);margin-left:auto;font-family:'IBM Plex Mono',monospace">8.7 kg/m</span>
+          </div>
+          <div class="b">
+            <div class="row"><span>Net weight</span><span class="vv">347.82 kg</span></div>
+            <div class="row"><span>Waste (3%)</span><span class="vv">10.43 kg</span></div>
+            <div class="row"><span>Material cost</span><span class="vv">€ 501.16</span></div>
+            <div class="row"><span>VAT (21%)</span><span class="vv">€ 105.24</span></div>
+            <div class="row" style="padding-top:9px;margin-top:5px;border-top:1px solid var(--border)"><span style="font-weight:600;color:var(--foreground)">Grand total</span><span class="vv" style="font-size:14px">€ 606.40</span></div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:14px">
+            <button class="new" style="flex:1;height:34px;justify-content:center;font-size:12px">Save preset</button>
+            <button style="height:34px;width:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--foreground-secondary)" aria-label="Add to project">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></svg>
+            </button>
+            <button style="height:34px;width:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--foreground-secondary)" aria-label="Compare">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="findings" style="margin-top:24px">
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Workstation topbar height is inconsistent across tabs</h3></div>
+        <p>Calculator workstation: 56px topbar. Saved: 56px. Projects: 56px left rail header. Settings: no topbar at all. Lock to 48px everywhere, with optional second-row context strip when needed (filter chips on Saved, breadcrumb on Calculator).</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Reset button placement</h3></div>
+        <p>Resetting all settings is a destructive action buried in <code>onReset</code> wiring without a clear visible affordance on desktop. If it's reachable through a kebab, fine — but make sure it requires a confirm and a "you're sure?" dialog matching the language of <code>window.confirm(t("mobileSaved.confirmRemove"))</code>. Currently the confirm strings mix native and custom modal styles across the app.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Result panel breakdown — earn the space</h3></div>
+        <p>The result panel sticks on a 360px column. Today it shows weight + breakdown. Two things would compound its value: ① the kg/m density inline (already in the data); ② a "what changed since last calc" delta — even a small ↑ +12% pill is a real product moment.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag win">Win</span><h3 class="find-title">Sticky right-column pattern is excellent</h3></div>
+        <p>The form-on-left, result-on-right with a sticky CTA is exactly how a workstation should feel. Keep this.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== SAVED ============== -->
+  <section class="section" id="saved">
+    <div class="section-head">
+      <span class="section-num">07</span>
+      <h2 class="section-title">Saved presets</h2>
+    </div>
+    <p class="section-lede">Solid table. Real friction is in the affordances around it.</p>
+    <div class="findings">
+      <div class="find">
+        <div class="find-head"><span class="find-tag crit">Critical</span><h3 class="find-title">Search bar that doesn't search</h3></div>
+        <p>The ⌘K search field on the Saved topbar is a non-functional placeholder. Either:</p>
+        <ul>
+          <li><b>Wire it.</b> Filter <code>saved</code> by <code>name + profileLabel + gradeLabel + tags</code>. Debounce 80ms. Highlight matched substrings.</li>
+          <li><b>Or remove.</b> The filter chips below already do the job; the empty search is more confusing than useful.</li>
+        </ul>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Row menu uses native confirm</h3></div>
+        <p><code>window.confirm(t("mobileSaved.confirmRemove", { name: entry.name }))</code> ships a system dialog that breaks the app's visual world. Build a small <code>ConfirmDialog</code> primitive: same panel-base, red destructive button, fade-in 120ms. Reuse for project delete + clear history.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">"Updated" column reads too quietly</h3></div>
+        <p>The <code>formatRelative</code> output is muted text; users scan for it. Bold "just now" / "1m ago" within the first hour so recent work surfaces. Beyond 1 hour, fall back to muted absolute date.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Multi-select for bulk actions</h3></div>
+        <p>The table is begging for it. Hold shift, click rows, bulk add to project / bulk delete / bulk export CSV. A shift-click multi-select plus a bottom action bar that slides up — very pro feel.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Row hover is invisible in dark mode</h3></div>
+        <p><code>hover:bg-surface-raised</code> in dark theme is ~3% lighter than <code>--surface</code>. Almost imperceptible. Either bump the hover state to <code>--surface-emphasis</code> in dark or add a 1px <code>border-color: var(--border-strong)</code> on hover.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag win">Win</span><h3 class="find-title">Inline rename on double-click is exactly right</h3></div>
+        <p>Power-user move. Keep it. Add a small "rename" pencil that fades in on row hover for users who don't know the gesture.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== PROJECTS ============== -->
+  <section class="section" id="projects">
+    <div class="section-head">
+      <span class="section-num">08</span>
+      <h2 class="section-title">Projects</h2>
+    </div>
+    <p class="section-lede">Two-pane is the right call. A few rough edges:</p>
+    <div class="findings">
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">"Create project" CTA mismatch</h3></div>
+        <p>Projects' "+" is an accent-orange circle; Saved's "New preset" is a black pill. Same role. Pick one — I'd use <code>--surface-inverted</code> as the canonical primary CTA across the app, and reserve accent for state and emphasis.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Active project chip is louder than the rest</h3></div>
+        <p>Active project gets <code>border-accent-border + bg-accent-surface</code>; inactive items get no chrome at all. Add a soft hover row-fill on inactive items and a left accent bar on active to match sidebar idiom. Same active treatment, one place.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Project totals deserve more weight</h3></div>
+        <p>Aggregates (<code>computeAggregates</code>) total weight / cost / parts is high-signal but currently lives as small muted text. Promote to a hero strip: <em>2,847 kg · 14 parts · € 4,210</em>, with a small trendline if you have history.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Empty project state too plain</h3></div>
+        <p>The rail empty state is two lines of muted text. Add a stamp-like illustration (the existing accent-square pattern from Saved empty) and a "Create your first project" CTA — empty rail is your onboarding moment.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Drag rows between projects</h3></div>
+        <p>HTML5 drag, vaul-friendly. Moves a calculation from one project to another. Even if you start with desktop-only, it's the kind of detail that makes the app feel finished.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== COMPARE ============== -->
+  <section class="section" id="compare">
+    <div class="section-head">
+      <span class="section-num">09</span>
+      <h2 class="section-title">Compare</h2>
+    </div>
+    <p class="section-lede">Couldn't fully audit without rendering — directional notes from the code:</p>
+    <div class="findings">
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Pin to compare from anywhere</h3></div>
+        <p>Compare is the kind of feature users won't discover on their own. The little "pin" button in the result panel is your hook — make sure it's visible from the saved row hover state too, not just the active calc.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Diff highlights</h3></div>
+        <p>When two profiles are side-by-side, highlight the deltas: heavier item in accent, lighter in muted. <em>"HEA 120 is 23% heavier than IPE 160 at the same length."</em> One sentence; huge value.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Mobile-capped behavior needs UI</h3></div>
+        <p>You ship <code>isMobileCapped</code> + a max of 3 on mobile. Where does the user learn that? Add an inline hint when they try to pin a 4th: <em>"Max 3 on mobile — switch to a wider screen to compare more."</em></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== SETTINGS ============== -->
+  <section class="section" id="settings">
+    <div class="section-head">
+      <span class="section-num">10</span>
+      <h2 class="section-title">Settings</h2>
+    </div>
+    <p class="section-lede">Settings will be the unloved screen. Two ways to keep it tight:</p>
+    <div class="findings">
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Group + section divider grammar</h3></div>
+        <p><code>.form-group + .form-group</code> uses a 1px top border. Section titles are H-style inline. Settings would feel more iOS-app if it switched to grouped lists: each block has its own card with a small caption above it (<em>"DISPLAY"</em>, <em>"DATA"</em>, <em>"PRIVACY"</em>). Native settings rhythm beats web-form rhythm here.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Reset-all needs friction</h3></div>
+        <p>It's nuclear. Currently <code>resetAll()</code> dispatches <code>RESET_ALL</code> immediately. Wrap in a typed confirm: user types <em>RESET</em> to enable the button. Annoying — but exactly as annoying as the action deserves.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Sync status as a real first-class block</h3></div>
+        <p>You have a full Google-backed sync. The settings sync section should look like an Apple iCloud screen — big tile up top showing connected state, last sync time, snapshot count; expand for advanced controls. Today it reads as a list of toggles.</p>
+      </div>
+      <div class="find">
+        <div class="find-head"><span class="find-tag win">Win</span><h3 class="find-title">Theme + text size live together</h3></div>
+        <p>Bundling theme, text size, default unit at the top of settings is the right call. Don't move them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== EMPTY / ONBOARDING ============== -->
+  <section class="section" id="empty">
+    <div class="section-head">
+      <span class="section-num">11</span>
+      <h2 class="section-title">Empty states + first-run</h2>
+    </div>
+    <p class="section-lede">Today empties are inconsistent: Saved has a centred icon-card + CTA; Projects rail has a 2-line text-only state; Result has an EmptyState primitive. Pick one.</p>
+
+    <div class="findings">
+      <div class="find wide">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">One empty-state primitive</h3></div>
+        <p>Promote Saved's empty to the canonical pattern and use it everywhere:</p>
+        <ul>
+          <li><b>Icon block</b> — 96px rounded square in <code>accent-surface</code> with the section icon at 40px in <code>accent-text</code>.</li>
+          <li><b>Headline</b> — 24px, <code>tracking-[-0.02em]</code>, bold.</li>
+          <li><b>Body</b> — 14px, <code>foreground-secondary</code>, max 60ch, balanced wrap.</li>
+          <li><b>CTA</b> — <code>--surface-inverted</code> primary, 44px tall, arrow tail.</li>
+          <li><b>Quiet helper link</b> — "Or try a sample" / "Learn more" — small, muted, underlined.</li>
+        </ul>
+        <p>Every empty state in the app uses these five rules and only these. No exceptions for "small" empties — they get the small-variant of the same composition.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Onboarding nudge: prefill a sample</h3></div>
+        <p>The existing <code>OnboardingFlow</code> is a stepper. Most installed PWA users will skip it and hit a blank calculator. Drop a one-time accent banner on the calc on first visit: <em>"Try a sample: HEA 120 × 6 m, S235JR."</em> One tap loads it. Dismisses on first calc.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag idea">Investigate</span><h3 class="find-title">Install prompt has a home</h3></div>
+        <p>Per your roadmap (FEATURE_IMPROVEMENTS.md P1.1), you want a PWA install CTA. Don't put it in the topbar — put it as the bottom-most item in the sidebar footer ("Install Ferroscale") and as a one-time accent banner on the settings tab the first time it's reachable. Browser-aware, dismissible.</p>
+      </div>
+
+      <div class="find">
+        <div class="find-head"><span class="find-tag fix">Fix</span><h3 class="find-title">Skeleton loaders are designed but unused</h3></div>
+        <p>You ship a <code>.skeleton</code> shimmer style — but the only place I see it consumed is loosely. Wire it into the project rail load + saved list load, even though the data is local — a 100ms shimmer on initial paint sells the "app, not a webpage" feeling for free.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <!-- ============== PUNCH LIST ============== -->
+  <section class="section" id="punch">
+    <div class="section-head">
+      <span class="section-num">12</span>
+      <h2 class="section-title">Punch list</h2>
+    </div>
+    <p class="section-lede">All findings in shippable order. Effort marks are conservative — most of these can ride on top of a single PR.</p>
+
+    <div class="legend">
+      <span class="pill"><span class="mono">P1</span> · ship before launch</span>
+      <span class="pill"><span class="mono">P2</span> · next sprint</span>
+      <span class="pill"><span class="mono">P3</span> · backlog</span>
+    </div>
+
+    <div class="punch">
+      <table>
+        <thead>
+          <tr><th class="sev">Pri</th><th class="area">Area</th><th>What</th><th class="eff">Effort</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">Mobile · header</td><td>Subtitle profile glyph is 4px and reads as an empty square. Drop wrapper or upgrade to 12px on transparent ground. <span class="who">ferroscale-app-shell.tsx ~L920</span></td><td class="eff mono">30m</td></tr>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">Global · selection</td><td>Allow text selection on result number + price. Remove global <code>user-select:none</code> from result spans.</td><td class="eff mono">30m</td></tr>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">Mobile · calc</td><td>Result number overflows past 4 digits. <code>clamp(36px,12vw,60px)</code> or auto-switch kg→t at 1000.</td><td class="eff mono">2h</td></tr>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">Saved · search</td><td>⌘K input is non-functional placeholder. Either wire to filter or remove until shipped.</td><td class="eff mono">2-3h</td></tr>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">Global · confirms</td><td>Replace <code>window.confirm</code> calls with branded ConfirmDialog primitive. Used by Saved row delete, project delete, reset-all.</td><td class="eff mono">3h</td></tr>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">Mobile · result</td><td>"Live" green-dot badge shows before first calc. Map to result state.</td><td class="eff mono">15m</td></tr>
+          <tr><td class="sev"><span class="sevpill p1">P1</span></td><td class="area">System · CTAs</td><td>Unify create CTAs across Saved + Projects. <code>--surface-inverted</code> primary everywhere; accent reserved for state.</td><td class="eff mono">1h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">System · radii</td><td>Lock to four corner tokens (pad/control/card/screen) and refactor as you touch components.</td><td class="eff mono">2-3h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">System · labels</td><td>One uppercase-label tracking value (<code>0.10em</code>). One uppercase font-size (<code>11px</code> for section, <code>10px</code> for chip-internal).</td><td class="eff mono">1-2h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">System · panels</td><td>Collapse 8 panel/button primitives into 4 surface roles + 1 button family with size + tone variants.</td><td class="eff mono">4h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">System · focus</td><td>Replace global 3px outline with soft accent ring token.</td><td class="eff mono">1h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">Sidebar</td><td>Group nav under Workspace / Library captions. Move Settings + What's new to a footer block. Drop the purple variant on Projects.</td><td class="eff mono">2h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">Sidebar · sync</td><td>Add a "Synced 2m ago" footer pill. Tap → sync drawer.</td><td class="eff mono">1-2h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">Empty states</td><td>One empty-state primitive; promote Saved's pattern. Apply to project rail + filtered-empty everywhere.</td><td class="eff mono">2-3h</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">Mobile · numpad</td><td>Done key relabels to "Save →" when result is unsaved.</td><td class="eff mono">45m</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">Saved · table</td><td>Row hover invisible in dark mode. Bump to <code>--surface-emphasis</code> or add 1px border-strong.</td><td class="eff mono">30m</td></tr>
+          <tr><td class="sev"><span class="sevpill p2">P2</span></td><td class="area">Compare</td><td>Inline "X is N% heavier than Y" sentence when two items are pinned.</td><td class="eff mono">2h</td></tr>
+          <tr><td class="sev"><span class="sevpill p3">P3</span></td><td class="area">Saved</td><td>Shift-click multi-select + bulk action bar.</td><td class="eff mono">4-6h</td></tr>
+          <tr><td class="sev"><span class="sevpill p3">P3</span></td><td class="area">Projects</td><td>Drag-and-drop calc rows between projects.</td><td class="eff mono">6h</td></tr>
+          <tr><td class="sev"><span class="sevpill p3">P3</span></td><td class="area">Mobile · nav</td><td>Floating action button for Quick Calc.</td><td class="eff mono">2h</td></tr>
+          <tr><td class="sev"><span class="sevpill p3">P3</span></td><td class="area">Onboarding</td><td>First-run "Try a sample" accent banner — one-tap sample calc.</td><td class="eff mono">2h</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="foot">
+    Design review prepared for Ferroscale V3.<br/>
+    <span class="mono">21 findings · 8 P1 · 9 P2 · 4 P3 · ~30h estimated effort total</span>
+  </p>
+
+</div>
+</body>
+</html>

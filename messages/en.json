@@ -27,6 +27,9 @@
     "title": "Loading workspace",
     "subtitle": "Preparing your calculator, projects, and live results."
   },
+  "accessibility": {
+    "skipToMain": "Skip to main content"
+  },
   "pwa": {
     "offlineBanner": "Offline mode active. You can continue calculations with cached data.",
     "updateAvailable": "A new version of the app is available.",
@@ -34,6 +37,226 @@
     "updateNow": "Update now",
     "readyForOffline": "App is ready for offline use.",
     "dismiss": "Dismiss"
+  },
+  "command": {
+    "common": {
+      "project": "project",
+      "clear": "CLEAR",
+      "close": "Close",
+      "save": "Save",
+      "copy": "Copy",
+      "new": "New",
+      "compare": "Compare",
+      "addProject": "+ Project",
+      "on": "On",
+      "off": "Off",
+      "clearAll": "Clear all",
+      "remove": "Remove",
+      "create": "Create",
+      "delete": "Delete",
+      "newCalculation": "New calculation",
+      "openArrow": "Open ->"
+    },
+    "toast": {
+      "addLength": "Add length to save",
+      "saved": "Saved",
+      "addedToProject": "Added to {project}",
+      "projectFull": "Project is full",
+      "alreadyInCompare": "Already in compare",
+      "addedToCompare": "Added to compare",
+      "copied": "Copied to clipboard"
+    },
+    "aria": {
+      "toggleTheme": "Toggle theme",
+      "closeSheet": "Close sheet"
+    },
+    "nav": {
+      "workspace": "WORKSPACE",
+      "calculator": "Calculator",
+      "saved": "Saved",
+      "projects": "Projects",
+      "compare": "Compare",
+      "settings": "Settings",
+      "library": "Library"
+    },
+    "status": {
+      "live": "LIVE",
+      "waiting": "WAITING"
+    },
+    "query": {
+      "placeholder": "type or tap a profile...",
+      "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
+      "aria": "FerroScale Command query"
+    },
+    "token": {
+      "edit": "Edit {token}",
+      "remove": "Remove {token}"
+    },
+    "preview": {
+      "perPiece": "Per piece",
+      "totalCost": "Total cost",
+      "totalWeight": "Total weight",
+      "profile": "profile",
+      "size": "size",
+      "length": "length",
+      "grade": "grade"
+    },
+    "profiles": {
+      "round": "Round",
+      "squareBar": "Square bar",
+      "flat": "Flat",
+      "angle": "Angle",
+      "plate": "Plate",
+      "chequered": "Chequered",
+      "expanded": "Expanded",
+      "corrugated": "Corrugated"
+    },
+    "pricingBadge": {
+      "waste": "+{percent}% waste",
+      "vat": "+VAT {percent}%"
+    },
+    "hint": {
+      "addLength": "add a length ->",
+      "addSize": "add a size ->",
+      "startProfile": "start with a profile ->"
+    },
+    "sheets": {
+      "resultBreakdown": "Result breakdown",
+      "settings": "Settings",
+      "library": "Library",
+      "addToProject": "Add to project"
+    },
+    "result": {
+      "massPerMetre": "Mass per metre",
+      "length": "Length",
+      "pieces": "Pieces",
+      "perPiece": "Per piece",
+      "totalWeight": "Total weight",
+      "density": "Density",
+      "rate": "Rate",
+      "perPiecePrice": "Per piece price",
+      "subtotal": "Subtotal",
+      "waste": "Waste +{percent}%",
+      "vat": "VAT {percent}%",
+      "totalCost": "Total cost",
+      "geometry": "Geometry",
+      "pricing": "Pricing",
+      "unitPrice": "Unit price",
+      "grade": "Grade"
+    },
+    "settings": {
+      "mainResult": "Main result",
+      "weight": "Weight",
+      "price": "Price",
+      "currency": "Currency",
+      "priceBasis": "Price basis",
+      "length": "Length",
+      "piece": "Piece",
+      "wastePercent": "Waste %",
+      "vat": "VAT",
+      "defaultGrade": "Default grade",
+      "defaultUnit": "Default unit",
+      "theme": "Theme",
+      "dark": "Dark",
+      "light": "Light",
+      "darkMode": "Dark mode",
+      "lightMode": "Light mode",
+      "applyAcrossCommand": "Pricing, grade, and unit settings apply across Command.",
+      "inlinePriceHint": "Override the default rate in the command bar with {example}.",
+      "subtitle": "pricing · units · appearance",
+      "defaultResultUpper": "DEFAULT RESULT",
+      "currencyUpper": "CURRENCY",
+      "priceBasisUpper": "PRICE BASIS",
+      "unitPricePer": "UNIT PRICE (PER {unit})",
+      "wastePercentUpper": "WASTE %",
+      "defaultGradeUpper": "DEFAULT GRADE",
+      "lengthUnitFallback": "LENGTH UNIT FALLBACK",
+      "appearance": "APPEARANCE"
+    },
+    "sync": {
+      "passphrasePrompt": "Enter a sync passphrase. Use the same passphrase on every device — it is used to end-to-end encrypt your data before it is stored on Google Drive.",
+      "couldNotConnect": "Could not connect.",
+      "syncFailed": "Sync failed.",
+      "disconnectConfirm": "Disconnect Google Drive sync on this device?",
+      "couldNotDisconnect": "Could not disconnect.",
+      "title": "Sync",
+      "lastSync": "Last sync {date}",
+      "noSyncYet": "No sync yet",
+      "syncing": "Syncing...",
+      "syncNow": "Sync now",
+      "disconnect": "Disconnect",
+      "description": "Sync your saved entries, projects, compare, and presets to Google Drive — end-to-end encrypted with your own passphrase.",
+      "connecting": "Connecting...",
+      "connectGoogleDrive": "Connect Google Drive"
+    },
+    "library": {
+      "emptySaved": "Saved calculations show here. Tap Save on a result.",
+      "emptyCompare": "Compare calculations side by side. Tap Compare on a result.",
+      "newProjectName": "New project name...",
+      "emptyProjects": "No projects yet. Create one above, or tap + Project on a result.",
+      "emptyProject": "Empty project",
+      "calcCount": "{count, plural, one {# calc} other {# calcs}}",
+      "noCalculationsYet": "No calculations yet.",
+      "noProjectsCreateAbove": "No projects yet. Create one above to get started.",
+      "newProject": "New project"
+    },
+    "desktop": {
+      "calcLive": "{name} · live",
+      "typeProfileToStart": "type a profile to start",
+      "enterSave": "↵ save",
+      "escClear": "esc clear",
+      "session": "SESSION",
+      "sessionSub": "· every saved calc lands here",
+      "emptyTape": "empty tape — press ↵ to log a calculation",
+      "removeFromTape": "Remove from tape",
+      "removeFromTapeAria": "Remove {name} from tape",
+      "runningTotal": "{count, plural, one {# ITEM · RUNNING TOTAL} other {# ITEMS · RUNNING TOTAL}}",
+      "compareTray": "{count, plural, =0 {COMPARE TRAY} other {COMPARE TRAY · #}}",
+      "removeFromCompare": "Remove from compare",
+      "emptyCompareTray": "empty — hit Compare to collect",
+      "breakdown": "BREAKDOWN",
+      "breakdownEmpty": "the full breakdown appears as you type"
+    },
+    "suggest": {
+      "standardSize": "standard size",
+      "profiles": "Profiles",
+      "pickProfile": "Pick a profile",
+      "length": "Length",
+      "pieces": "Pieces",
+      "gradeOptional": "Grade (optional)",
+      "ready": "Ready",
+      "saveCalculation": "Save calculation"
+    },
+    "compare": {
+      "approxBase": "≈ base",
+      "subtitleCount": "{count, plural, one {# side by side · deltas vs base} other {# side by side · deltas vs base}}",
+      "subtitleEmpty": "side-by-side profiles",
+      "addFromCalculator": "Add from calculator",
+      "emptyTitle": "Nothing to compare yet",
+      "emptyBody": "Run a calculation, then hit Compare in the right rail. Profiles line up side by side here.",
+      "profile": "PROFILE",
+      "removeAria": "Remove {name} from compare",
+      "base": "BASE",
+      "vsBase": "vs {name}",
+      "weightPerPiece": "Weight / piece",
+      "costPerMetre": "Cost / metre",
+      "surfaceArea": "Surface area",
+      "openInCalculator": "Open in calculator"
+    },
+    "saved": {
+      "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
+      "subtitleEmpty": "bookmarked calculations",
+      "empty": "nothing saved yet — press ↵ in the calculator",
+      "addToCompare": "Add to compare"
+    },
+    "projects": {
+      "subtitleCount": "{count, plural, one {# active} other {# active}}",
+      "subtitleEmpty": "group calcs into jobs",
+      "empty": "no projects yet — hit New project, or + Project on a result",
+      "itemCount": "{count, plural, one {# item} other {# items}}",
+      "emptyProjectHint": "empty — add a calc from the right rail",
+      "removeFromProject": "Remove from project"
+    }
   },
   "contact": {
     "page": {

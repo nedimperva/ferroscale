@@ -2,13 +2,13 @@
   "meta": {
     "layout": {
       "title": "FerroScale",
-      "description": "Kalkulator mase i cijene metala za EN standardne i prilagodjene profile. Precizne procjene s provjerljivim formulama.",
+      "description": "Kalkulator mase i cijene metala za EN standardne i prilagođene profile. Precizne procjene s provjerljivim formulama.",
       "applicationName": "FerroScale",
-      "openGraphDescription": "Izracunajte masu i cijenu za EN profile uz provjerljive formule i reference."
+      "openGraphDescription": "Izračunajte masu i cijenu za EN profile uz provjerljive formule i reference."
     },
     "saved": {
-      "title": "Sacuvano - FerroScale",
-      "description": "Pregledajte sacuvane izracune u FerroScale."
+      "title": "Sačuvano - FerroScale",
+      "description": "Pregledajte sačuvane izračune u FerroScale."
     },
     "projects": {
       "title": "Projekti - FerroScale",
@@ -20,51 +20,274 @@
     },
     "contact": {
       "title": "Kontakt - FerroScale",
-      "description": "Posaljite prijavu ili nas kontaktirajte u vezi FerroScale aplikacije."
+      "description": "Pošaljite prijavu ili nas kontaktirajte u vezi FerroScale aplikacije."
     }
   },
   "loading": {
-    "title": "Ucitavanje radnog prostora",
-    "subtitle": "Pripremamo kalkulator, projekte i zive rezultate."
+    "title": "Učitavanje radnog prostora",
+    "subtitle": "Pripremamo kalkulator, projekte i žive rezultate."
+  },
+  "accessibility": {
+    "skipToMain": "Preskoči na glavni sadržaj"
   },
   "pwa": {
-    "offlineBanner": "Offline rezim je aktivan. Mozete nastaviti izracune sa kesiranim podacima.",
+    "offlineBanner": "Offline režim je aktivan. Možete nastaviti izračune sa keširanim podacima.",
     "updateAvailable": "Dostupna je nova verzija aplikacije.",
-    "whatsNew": "Sta je novo",
-    "updateNow": "Azuriraj sada",
-    "readyForOffline": "Aplikacija je spremna za koriscenje bez interneta.",
+    "whatsNew": "Šta je novo",
+    "updateNow": "Ažuriraj sada",
+    "readyForOffline": "Aplikacija je spremna za korištenje bez interneta.",
     "dismiss": "Zatvori"
+  },
+  "command": {
+    "common": {
+      "project": "projekat",
+      "clear": "OBRIŠI",
+      "close": "Zatvori",
+      "save": "Sačuvaj",
+      "copy": "Kopiraj",
+      "new": "Novo",
+      "compare": "Poredi",
+      "addProject": "+ Projekat",
+      "on": "Uklj.",
+      "off": "Isklj.",
+      "clearAll": "Obriši sve",
+      "remove": "Ukloni",
+      "create": "Kreiraj",
+      "delete": "Obriši",
+      "newCalculation": "Novi izračun",
+      "openArrow": "Otvori ->"
+    },
+    "toast": {
+      "addLength": "Dodajte dužinu za čuvanje",
+      "saved": "Sačuvano",
+      "addedToProject": "Dodano u {project}",
+      "projectFull": "Projekat je pun",
+      "alreadyInCompare": "Već je u poređenju",
+      "addedToCompare": "Dodano za poređenje",
+      "copied": "Kopirano u međuspremnik"
+    },
+    "aria": {
+      "toggleTheme": "Promijeni temu",
+      "closeSheet": "Zatvori panel"
+    },
+    "nav": {
+      "workspace": "RADNI PROSTOR",
+      "calculator": "Kalkulator",
+      "saved": "Sačuvano",
+      "projects": "Projekti",
+      "compare": "Poređenje",
+      "settings": "Postavke",
+      "library": "Biblioteka"
+    },
+    "status": {
+      "live": "UŽIVO",
+      "waiting": "ČEKA"
+    },
+    "query": {
+      "placeholder": "upišite ili dodirnite profil...",
+      "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
+      "aria": "FerroScale komandni upit"
+    },
+    "token": {
+      "edit": "Uredi {token}",
+      "remove": "Ukloni {token}"
+    },
+    "preview": {
+      "perPiece": "Po komadu",
+      "totalCost": "Ukupna cijena",
+      "totalWeight": "Ukupna masa",
+      "profile": "profil",
+      "size": "dimenzija",
+      "length": "dužina",
+      "grade": "kvalitet"
+    },
+    "profiles": {
+      "round": "Okruglo",
+      "squareBar": "Kvadratna šipka",
+      "flat": "Plosnato",
+      "angle": "Ugaoni profil",
+      "plate": "Ploča",
+      "chequered": "Rebrasta ploča",
+      "expanded": "Ekspandirani lim",
+      "corrugated": "Valoviti lim"
+    },
+    "pricingBadge": {
+      "waste": "+{percent}% otpad",
+      "vat": "+PDV {percent}%"
+    },
+    "hint": {
+      "addLength": "dodajte dužinu ->",
+      "addSize": "dodajte dimenziju ->",
+      "startProfile": "počnite profilom ->"
+    },
+    "sheets": {
+      "resultBreakdown": "Detalji rezultata",
+      "settings": "Postavke",
+      "library": "Biblioteka",
+      "addToProject": "Dodaj u projekat"
+    },
+    "result": {
+      "massPerMetre": "Masa po metru",
+      "length": "Dužina",
+      "pieces": "Komadi",
+      "perPiece": "Po komadu",
+      "totalWeight": "Ukupna masa",
+      "density": "Gustoća",
+      "rate": "Cijena",
+      "perPiecePrice": "Cijena po komadu",
+      "subtotal": "Međuzbir",
+      "waste": "Otpad +{percent}%",
+      "vat": "PDV {percent}%",
+      "totalCost": "Ukupna cijena",
+      "geometry": "Geometrija",
+      "pricing": "Cijene",
+      "unitPrice": "Jedinična cijena",
+      "grade": "Kvalitet"
+    },
+    "settings": {
+      "mainResult": "Glavni rezultat",
+      "weight": "Masa",
+      "price": "Cijena",
+      "currency": "Valuta",
+      "priceBasis": "Osnova cijene",
+      "length": "Dužina",
+      "piece": "Komad",
+      "wastePercent": "Otpad %",
+      "vat": "PDV",
+      "defaultGrade": "Podrazumijevani kvalitet",
+      "defaultUnit": "Podrazumijevana jedinica",
+      "theme": "Tema",
+      "dark": "Tamna",
+      "light": "Svijetla",
+      "darkMode": "Tamni način",
+      "lightMode": "Svijetli način",
+      "applyAcrossCommand": "Cijene, kvalitet i jedinice važe u cijelom Command prikazu.",
+      "inlinePriceHint": "Podrazumijevanu cijenu možete prepisati u komandnoj traci sa {example}.",
+      "subtitle": "cijene · jedinice · izgled",
+      "defaultResultUpper": "PODRAZUMIJEVANI REZULTAT",
+      "currencyUpper": "VALUTA",
+      "priceBasisUpper": "OSNOVA CIJENE",
+      "unitPricePer": "JEDINIČNA CIJENA (PO {unit})",
+      "wastePercentUpper": "OTPAD %",
+      "defaultGradeUpper": "PODRAZUMIJEVANI KVALITET",
+      "lengthUnitFallback": "REZERVNA JEDINICA DUŽINE",
+      "appearance": "IZGLED"
+    },
+    "sync": {
+      "passphrasePrompt": "Unesite lozinku za sinhronizaciju. Koristite istu lozinku na svakom uređaju — njom se podaci šifruju prije spremanja na Google Drive.",
+      "couldNotConnect": "Povezivanje nije uspjelo.",
+      "syncFailed": "Sinhronizacija nije uspjela.",
+      "disconnectConfirm": "Prekinuti Google Drive sinhronizaciju na ovom uređaju?",
+      "couldNotDisconnect": "Prekid veze nije uspio.",
+      "title": "Sinhronizacija",
+      "lastSync": "Zadnja sinhronizacija {date}",
+      "noSyncYet": "Još nema sinhronizacije",
+      "syncing": "Sinhronizujem...",
+      "syncNow": "Sinhronizuj sada",
+      "disconnect": "Prekini vezu",
+      "description": "Sinhronizujte sačuvane stavke, projekte, poređenja i presete na Google Drive — šifrovano vašom lozinkom.",
+      "connecting": "Povezujem...",
+      "connectGoogleDrive": "Poveži Google Drive"
+    },
+    "library": {
+      "emptySaved": "Sačuvani izračuni će se prikazati ovdje. Dodirnite Sačuvaj na rezultatu.",
+      "emptyCompare": "Poredite izračune jedan pored drugog. Dodirnite Poredi na rezultatu.",
+      "newProjectName": "Naziv novog projekta...",
+      "emptyProjects": "Još nema projekata. Kreirajte jedan iznad ili dodirnite + Projekat na rezultatu.",
+      "emptyProject": "Prazan projekat",
+      "calcCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
+      "noCalculationsYet": "Još nema izračuna.",
+      "noProjectsCreateAbove": "Još nema projekata. Kreirajte jedan iznad za početak.",
+      "newProject": "Novi projekat"
+    },
+    "desktop": {
+      "calcLive": "{name} · uživo",
+      "typeProfileToStart": "upišite profil za početak",
+      "enterSave": "↵ sačuvaj",
+      "escClear": "esc obriši",
+      "session": "SESIJA",
+      "sessionSub": "· svaki sačuvani izračun dolazi ovdje",
+      "emptyTape": "prazna traka — pritisnite ↵ za upis izračuna",
+      "removeFromTape": "Ukloni sa trake",
+      "removeFromTapeAria": "Ukloni {name} sa trake",
+      "runningTotal": "{count, plural, one {# STAVKA · TEKUĆI ZBIR} few {# STAVKE · TEKUĆI ZBIR} other {# STAVKI · TEKUĆI ZBIR}}",
+      "compareTray": "{count, plural, =0 {TRAKA ZA POREĐENJE} one {TRAKA ZA POREĐENJE · #} few {TRAKA ZA POREĐENJE · #} other {TRAKA ZA POREĐENJE · #}}",
+      "removeFromCompare": "Ukloni iz poređenja",
+      "emptyCompareTray": "prazno — kliknite Poredi za dodavanje",
+      "breakdown": "DETALJI",
+      "breakdownEmpty": "detalji rezultata se prikazuju dok kucate"
+    },
+    "suggest": {
+      "standardSize": "standardna dimenzija",
+      "profiles": "Profili",
+      "pickProfile": "Izaberite profil",
+      "length": "Dužina",
+      "pieces": "Komadi",
+      "gradeOptional": "Kvalitet (opcionalno)",
+      "ready": "Spremno",
+      "saveCalculation": "Sačuvaj izračun"
+    },
+    "compare": {
+      "approxBase": "≈ osnova",
+      "subtitleCount": "{count, plural, one {# za poređenje · razlike prema osnovnom} few {# za poređenje · razlike prema osnovnom} other {# za poređenje · razlike prema osnovnom}}",
+      "subtitleEmpty": "profili jedan pored drugog",
+      "addFromCalculator": "Dodaj iz kalkulatora",
+      "emptyTitle": "Još nema stavki za poređenje",
+      "emptyBody": "Pokrenite izračun, zatim kliknite Poredi u desnom panelu. Profili će se ovdje prikazati jedan pored drugog.",
+      "profile": "PROFIL",
+      "removeAria": "Ukloni {name} iz poređenja",
+      "base": "OSNOVA",
+      "vsBase": "prema {name}",
+      "weightPerPiece": "Masa / komad",
+      "costPerMetre": "Cijena / metar",
+      "surfaceArea": "Površina",
+      "openInCalculator": "Otvori u kalkulatoru"
+    },
+    "saved": {
+      "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
+      "subtitleEmpty": "sačuvani izračuni",
+      "empty": "još ništa nije sačuvano — pritisnite ↵ u kalkulatoru",
+      "addToCompare": "Dodaj za poređenje"
+    },
+    "projects": {
+      "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
+      "subtitleEmpty": "grupišite izračune u poslove",
+      "empty": "još nema projekata — kliknite Novi projekat ili + Projekat na rezultatu",
+      "itemCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
+      "emptyProjectHint": "prazno — dodajte izračun iz desnog panela",
+      "removeFromProject": "Ukloni iz projekta"
+    }
   },
   "contact": {
     "page": {
       "back": "Nazad na kalkulator",
-      "title": "Kontakt / Posalji prijavu",
-      "description": "Nasli ste problem ili imate pitanje? Posaljite poruku ispod."
+      "title": "Kontakt / Pošalji prijavu",
+      "description": "Našli ste problem ili imate pitanje? Pošaljite poruku ispod."
     },
     "form": {
       "title": "Prijavi problem formule ili podataka",
-      "description": "Posaljite sumnjive probleme izracuna sa kontekstom. Primjenjuje se ogranicenje zahtjeva i CAPTCHA zastita.",
+      "description": "Pošaljite sumnjive probleme izračuna sa kontekstom. Primjenjuje se ograničenje zahtjeva i CAPTCHA zaštita.",
       "name": "Ime",
       "email": "Email",
       "message": "Poruka",
       "captcha": "CAPTCHA: {prompt}",
-      "captchaLoading": "Ucitam...",
-      "loadCaptcha": "Ucitaj CAPTCHA zadatak",
-      "loadingCaptcha": "Ucitavanje zadatka...",
+      "captchaLoading": "Učitavam...",
+      "loadCaptcha": "Učitaj CAPTCHA zadatak",
+      "loadingCaptcha": "Učitavanje zadatka...",
       "sending": "Slanje...",
-      "send": "Posalji prijavu",
+      "send": "Pošalji prijavu",
       "feedback": {
-        "captchaLoadFailed": "Ne mogu ucitati CAPTCHA zadatak. Osvjezite stranicu.",
-        "captchaLoaded": "CAPTCHA zadatak je ucitan. Riješite ga i posaljite ponovo.",
+        "captchaLoadFailed": "Ne mogu učitati CAPTCHA zadatak. Osvježite stranicu.",
+        "captchaLoaded": "CAPTCHA zadatak je učitan. Riješite ga i pošaljite ponovo.",
         "messageReceived": "Poruka je primljena. Hvala na prijavi.",
         "sendFailed": "Ne mogu poslati poruku.",
-        "networkError": "Mrezna greska tokom slanja poruke."
+        "networkError": "Mrežna greška tokom slanja poruke."
       }
     },
     "api": {
-      "tooManyRequests": "Previse zahtjeva. Pokusajte ponovo kasnije.",
-      "invalidJson": "Neispravan JSON sadrzaj.",
-      "invalidPayload": "Neispravan sadrzaj zahtjeva.",
+      "tooManyRequests": "Previše zahtjeva. Pokušajte ponovo kasnije.",
+      "invalidJson": "Neispravan JSON sadržaj.",
+      "invalidPayload": "Neispravan sadržaj zahtjeva.",
       "validationFailed": "Validacija nije uspjela.",
       "captchaFailed": "CAPTCHA provjera nije uspjela.",
       "messageReceived": "Poruka je primljena.",
@@ -74,9 +297,9 @@
       "deliveryFailedWithReason": "Slanje poruke nije uspjelo ({details})."
     },
     "validation": {
-      "nameRange": "Ime mora imati izmedu 2 i 80 karaktera.",
+      "nameRange": "Ime mora imati između 2 i 80 karaktera.",
       "emailInvalid": "Unesite ispravnu email adresu.",
-      "messageRange": "Poruka mora imati izmedu 10 i 1500 karaktera.",
+      "messageRange": "Poruka mora imati između 10 i 1500 karaktera.",
       "challengeRequired": "CAPTCHA zadatak je obavezan.",
       "answerRequired": "CAPTCHA odgovor je obavezan.",
       "contextTooLarge": "Kontekst je prevelik."
