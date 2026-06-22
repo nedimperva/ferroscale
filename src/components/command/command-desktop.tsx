@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
+import type { AppLocale } from "@/i18n/routing";
 import { getAppTabFromPathname } from "@/lib/app-shell";
 import { APP_VERSION } from "@/lib/changelog";
 import { CommandGlyph } from "./command-glyph";
@@ -11,7 +12,7 @@ import {
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
-import { SyncSection } from "./command-sheets";
+import { CommandDocsSection, SyncSection, useCommandLocaleSwitch } from "./command-sheets";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@/lib/command/parser";
 import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
@@ -1979,6 +1980,7 @@ function DeskSettingsView({
   onToggleTheme: () => void;
 }) {
   const t = useTranslations("command");
+  const { locale, setLocale } = useCommandLocaleSwitch();
   const numberBox = (
     value: number,
     onChange: (v: number) => void,
@@ -2014,7 +2016,14 @@ function DeskSettingsView({
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar title={t("nav.settings")} subtitle={t("settings.subtitle")} />
       <div className="flex-1 overflow-y-auto" style={{ padding: "24px 32px 32px" }}>
-        <div style={{ maxWidth: 520 }}>
+        <div
+          className="grid gap-5 items-start"
+          style={{
+            maxWidth: 1060,
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))",
+          }}
+        >
+          <div>
           <div
             className="rounded-[18px]"
             style={{
@@ -2122,6 +2131,16 @@ function DeskSettingsView({
                 options={UNIT_OPTIONS.map((u) => ({ v: u, label: u, mono: true }))}
               />
             </Field>
+            <Field label={t("settings.languageUpper")}>
+              <Seg<AppLocale>
+                value={locale}
+                onChange={setLocale}
+                options={[
+                  { v: "en", label: t("settings.locales.en") },
+                  { v: "bs", label: t("settings.locales.bs") },
+                ]}
+              />
+            </Field>
             <Field label={t("settings.appearance")}>
               <Seg
                 value={dark ? "dark" : "light"}
@@ -2139,6 +2158,8 @@ function DeskSettingsView({
             {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
           </p>
           <SyncSection />
+          </div>
+          <CommandDocsSection className="mt-0" />
         </div>
       </div>
     </div>

@@ -1,9 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface CommandKeypadProps {
   onKey: (ch: string) => void;
+  onPriceUnit: () => void;
   onBack: () => void;
   onEnter: () => void;
+  priceUnitLabel: string;
   valid: boolean;
 }
 
@@ -47,7 +51,15 @@ function Key({ label, onPress, flex = 1, variant = "default", mono, big }: KeyPr
   );
 }
 
-export function CommandKeypad({ onKey, onBack, onEnter, valid }: CommandKeypadProps) {
+export function CommandKeypad({
+  onKey,
+  onPriceUnit,
+  onBack,
+  onEnter,
+  priceUnitLabel,
+  valid,
+}: CommandKeypadProps) {
+  const t = useTranslations("command");
   return (
     <div
       className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-[10px]"
@@ -77,10 +89,11 @@ export function CommandKeypad({ onKey, onBack, onEnter, valid }: CommandKeypadPr
           <Key label="⌫" variant="dim" onPress={onBack} flex={1.3} />
         </div>
         <div className="flex gap-1.5">
-          <Key label="." mono big onPress={() => onKey(".")} flex={1} />
-          <Key label="space" variant="dim" onPress={() => onKey(" ")} flex={3.2} />
+          <Key label="." mono big onPress={() => onKey(".")} flex={0.8} />
+          <Key label={t("keypad.space")} variant="dim" onPress={() => onKey(" ")} flex={2.5} />
           <Key label="mm" mono onPress={() => onKey("mm")} flex={1.1} />
-          <Key label="m" mono big onPress={() => onKey("m")} flex={1} />
+          <Key label="m" mono big onPress={() => onKey("m")} flex={0.9} />
+          <Key label={priceUnitLabel} mono variant="dim" onPress={onPriceUnit} flex={1.55} />
           <Key
             label="↵"
             variant="accent"
@@ -90,7 +103,7 @@ export function CommandKeypad({ onKey, onBack, onEnter, valid }: CommandKeypadPr
         </div>
       </div>
       {!valid && (
-        <span className="sr-only">Add a length to compute</span>
+        <span className="sr-only">{t("keypad.addLength")}</span>
       )}
     </div>
   );

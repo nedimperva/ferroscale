@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useCallback, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { routing, type AppLocale } from "@/i18n/routing";
 import { useSync } from "@/hooks/useSync";
 import { CommandGlyph } from "./command-glyph";
 import { formatCommandParseName } from "./command-copy";
@@ -140,6 +142,66 @@ function SettingsPill({
     >
       {children}
     </button>
+  );
+}
+
+export function useCommandLocaleSwitch() {
+  const locale = useLocale() as AppLocale;
+  const router = useRouter();
+  const pathname = usePathname();
+  const setLocale = useCallback(
+    (nextLocale: AppLocale) => {
+      if (nextLocale === locale) return;
+      router.replace(pathname, { locale: nextLocale });
+    },
+    [locale, pathname, router],
+  );
+
+  return { locale, setLocale };
+}
+
+interface CommandDocSection {
+  title: string;
+  body: string;
+  tips: Record<string, string>;
+}
+
+export function CommandDocsSection({ className = "mt-4" }: { className?: string }) {
+  const t = useTranslations("command");
+  const sections = Object.values(
+    t.raw("docs.sections") as Record<string, CommandDocSection>,
+  );
+
+  return (
+    <section className={className}>
+      <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase mb-2 px-1">
+        {t("docs.label")}
+      </div>
+      <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden">
+        <div className="px-4 py-3 border-b border-border-faint">
+          <h3 className="text-sm font-extrabold text-foreground">{t("docs.title")}</h3>
+          <p className="text-xs text-muted mt-1 leading-relaxed">{t("docs.subtitle")}</p>
+        </div>
+        <div className="divide-y divide-border-faint">
+          {sections.map((section) => (
+            <article key={section.title} className="px-4 py-3.5">
+              <h4 className="text-[13px] font-bold text-foreground">{section.title}</h4>
+              <p className="text-xs text-foreground-secondary leading-relaxed mt-1">
+                {section.body}
+              </p>
+              <ul className="mt-2.5 space-y-1.5">
+                {Object.values(section.tips).map((tip) => (
+                  <li key={tip} className="flex gap-2 text-[11.5px] leading-relaxed text-muted">
+                    <span className="mt-[7px] h-1 w-1 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                    <span>{tip}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -323,6 +385,7 @@ export function CommandSettingsSheet({
   themeLabel,
 }: CommandSettingsSheetProps) {
   const t = useTranslations("command");
+  const { locale, setLocale } = useCommandLocaleSwitch();
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   const numberInput =
     "h-9 w-20 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground";
@@ -431,6 +494,17 @@ export function CommandSettingsSheet({
             </SettingsPill>
           ))}
         </SettingsRow>
+        <SettingsRow label={t("settings.language")}>
+          {routing.locales.map((localeOption) => (
+            <SettingsPill
+              key={localeOption}
+              active={locale === localeOption}
+              onClick={() => setLocale(localeOption)}
+            >
+              {t(`settings.locales.${localeOption}`)}
+            </SettingsPill>
+          ))}
+        </SettingsRow>
         <SettingsRow label={t("settings.theme")}>
           <button
             type="button"
@@ -447,6 +521,7 @@ export function CommandSettingsSheet({
       <p className="text-[11px] text-muted mt-1 px-1">
         {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
       </p>
+      <CommandDocsSection />
       <SyncSection />
     </SheetShell>
   );

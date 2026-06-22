@@ -88,6 +88,10 @@
       "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
       "aria": "FerroScale komandni upit"
     },
+    "keypad": {
+      "space": "razmak",
+      "addLength": "Dodajte dužinu za izračun"
+    },
     "token": {
       "edit": "Uredi {token}",
       "remove": "Ukloni {token}"
@@ -156,13 +160,14 @@
       "vat": "PDV",
       "defaultGrade": "Podrazumijevani kvalitet",
       "defaultUnit": "Podrazumijevana jedinica",
+      "language": "Jezik",
       "theme": "Tema",
       "dark": "Tamna",
       "light": "Svijetla",
       "darkMode": "Tamni način",
       "lightMode": "Svijetli način",
       "applyAcrossCommand": "Cijene, kvalitet i jedinice važe u cijelom Command prikazu.",
-      "inlinePriceHint": "Podrazumijevanu cijenu možete prepisati u komandnoj traci sa {example}.",
+      "inlinePriceHint": "Podrazumijevanu cijenu možete prepisati sa {example}; na mobitelu unesite broj pa dodirnite tipku za cijenu.",
       "subtitle": "cijene · jedinice · izgled",
       "defaultResultUpper": "PODRAZUMIJEVANI REZULTAT",
       "currencyUpper": "VALUTA",
@@ -171,7 +176,64 @@
       "wastePercentUpper": "OTPAD %",
       "defaultGradeUpper": "PODRAZUMIJEVANI KVALITET",
       "lengthUnitFallback": "REZERVNA JEDINICA DUŽINE",
+      "languageUpper": "JEZIK",
+      "locales": {
+        "en": "Engleski",
+        "bs": "Bosanski"
+      },
       "appearance": "IZGLED"
+    },
+    "docs": {
+      "label": "Vodič",
+      "title": "Kako koristiti FerroScale",
+      "subtitle": "Kratka referenca za Command, cijene, sačuvane stavke, projekte, sinhronizaciju i mobilne prečice.",
+      "sections": {
+        "command": {
+          "title": "Brz komandni unos",
+          "body": "Počnite profilom i dimenzijom, zatim dodajte dužinu, količinu i kvalitet bilo kojim redom.",
+          "tips": {
+            "example": "Probajte: hea120 6m x2 s235, upn100 4.5m ili round 20 2m.",
+            "fallback": "Ako unesete samo dužinu kao 6, FerroScale koristi rezervnu jedinicu dužine iz Postavki.",
+            "chips": "Dodirnite čipove za uređivanje ili uklanjanje; prijedlozi dopunjuju profile, dimenzije, dužinu, količinu i čuvanje."
+          }
+        },
+        "profiles": {
+          "title": "Profili i materijali",
+          "body": "EN standardni profili koriste ugrađene dimenzije; ručni oblici koriste dimenzije koje unesete.",
+          "tips": {
+            "grade": "Izaberite podrazumijevani kvalitet u Postavkama kako brzi izračuni počinju materijalom koji najčešće koristite.",
+            "aliases": "Koristite prijedloge profila kada niste sigurni u tačan alias.",
+            "trace": "Rezultat drži geometriju, gustoću i cijene zajedno radi provjerljive procjene."
+          }
+        },
+        "pricing": {
+          "title": "Prepisivanje cijene",
+          "body": "Postavke određuju podrazumijevanu valutu, jediničnu cijenu, osnovu cijene, otpad i PDV. Komanda može prepisati cijenu samo za taj izračun.",
+          "tips": {
+            "desktop": "Desktop: unesite @2.50/kg, 3.20/m ili 45/pc.",
+            "mobile": "Mobilno: unesite broj cijene, zatim dodirnite tipku za cijenu kao €/kg da ubacite jedinicu.",
+            "basis": "Postavite osnovu cijene na Masu kada dobavljač daje cijenu po kilogramu."
+          }
+        },
+        "library": {
+          "title": "Sačuvano, poređenje i projekti",
+          "body": "Sačuvajte ponovljive izračune, poredite alternative jednu pored druge i skupljajte stavke u projektne zbirove.",
+          "tips": {
+            "save": "Sačuvaj upisuje izračun u Biblioteku i desktop sesijsku traku.",
+            "compare": "Poređenje prikazuje razlike u masi, cijeni i površini u odnosu na osnovnu stavku.",
+            "projects": "+ Projekat dodaje trenutni izračun u kolekciju posla sa tekućim zbirovima."
+          }
+        },
+        "sync": {
+          "title": "Sinhronizacija i offline rad",
+          "body": "FerroScale radi offline nakon instalacije i može sinhronizovati sačuvane podatke preko Google Drive-a.",
+          "tips": {
+            "passphrase": "Koristite istu lozinku za sinhronizaciju na svakom uređaju; ona šifruje podatke prije slanja.",
+            "included": "Sačuvane stavke, poređenja, projekti i preseti ulaze u sinhronizaciju.",
+            "offline": "Aplikacija zadržava keširane podatke kalkulatora kada veza nestane."
+          }
+        }
+      }
     },
     "sync": {
       "passphrasePrompt": "Unesite lozinku za sinhronizaciju. Koristite istu lozinku na svakom uređaju — njom se podaci šifruju prije spremanja na Google Drive.",

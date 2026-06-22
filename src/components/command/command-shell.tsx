@@ -44,6 +44,10 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 const HERO_FONT_WEIGHT = 800;
 const DESKTOP_CARD_W = 560;
 
+function formatPriceTokenValue(value: number) {
+  if (!Number.isFinite(value)) return "0";
+  return Number(value.toFixed(4)).toString();
+}
 
 export function CommandShell() {
   const t = useTranslations("command");
@@ -156,6 +160,8 @@ export function CommandShell() {
   const effectiveSheet = sheet === "result" && !p.valid ? null : sheet;
 
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
+  const priceKeyUnit = shared.priceUnit === "piece" ? "pc" : shared.priceUnit;
+  const priceUnitLabel = `${sym}/${priceKeyUnit}`;
   const isW = mode === "weight";
 
   const showToast = useCallback((msg: string) => {
@@ -262,6 +268,14 @@ export function CommandShell() {
   const onKey = useCallback((ch: string) => {
     setQuery((q) => q + ch);
   }, []);
+  const onPriceUnit = useCallback(() => {
+    setQuery((q) => {
+      const token = /\s$/.test(q) || q.length === 0
+        ? `${formatPriceTokenValue(shared.unitPrice)}/${shared.priceUnit}`
+        : `/${shared.priceUnit}`;
+      return `${q}${token} `;
+    });
+  }, [shared.priceUnit, shared.unitPrice]);
   const onBack = useCallback(() => {
     setQuery((q) => q.slice(0, -1));
   }, []);
@@ -564,7 +578,7 @@ export function CommandShell() {
                         : "var(--muted)",
                     }}
                   >
-                    {m.toUpperCase()}
+                    {(m === "weight" ? t("settings.weight") : t("settings.price")).toUpperCase()}
                   </button>
                 );
               })}
@@ -926,8 +940,10 @@ export function CommandShell() {
           {isPhoneViewport && (
             <CommandKeypad
               onKey={onKey}
+              onPriceUnit={onPriceUnit}
               onBack={onBack}
               onEnter={onEnter}
+              priceUnitLabel={priceUnitLabel}
               valid={p.valid}
             />
           )}

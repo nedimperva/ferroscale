@@ -88,6 +88,10 @@
       "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
       "aria": "FerroScale Command query"
     },
+    "keypad": {
+      "space": "space",
+      "addLength": "Add a length to compute"
+    },
     "token": {
       "edit": "Edit {token}",
       "remove": "Remove {token}"
@@ -156,13 +160,14 @@
       "vat": "VAT",
       "defaultGrade": "Default grade",
       "defaultUnit": "Default unit",
+      "language": "Language",
       "theme": "Theme",
       "dark": "Dark",
       "light": "Light",
       "darkMode": "Dark mode",
       "lightMode": "Light mode",
       "applyAcrossCommand": "Pricing, grade, and unit settings apply across Command.",
-      "inlinePriceHint": "Override the default rate in the command bar with {example}.",
+      "inlinePriceHint": "Override the default rate with {example}; on mobile, type the number then tap the rate key.",
       "subtitle": "pricing · units · appearance",
       "defaultResultUpper": "DEFAULT RESULT",
       "currencyUpper": "CURRENCY",
@@ -171,7 +176,64 @@
       "wastePercentUpper": "WASTE %",
       "defaultGradeUpper": "DEFAULT GRADE",
       "lengthUnitFallback": "LENGTH UNIT FALLBACK",
+      "languageUpper": "LANGUAGE",
+      "locales": {
+        "en": "English",
+        "bs": "Bosnian"
+      },
       "appearance": "APPEARANCE"
+    },
+    "docs": {
+      "label": "Guide",
+      "title": "How to use FerroScale",
+      "subtitle": "A compact reference for Command, pricing, saved work, projects, sync, and mobile shortcuts.",
+      "sections": {
+        "command": {
+          "title": "Fast command input",
+          "body": "Start with a profile and size, then add length, quantity, and grade in any order.",
+          "tips": {
+            "example": "Try: hea120 6m x2 s235, upn100 4.5m, or round 20 2m.",
+            "fallback": "If you type a bare length like 6, FerroScale uses the fallback length unit from Settings.",
+            "chips": "Tap chips to edit or remove them; suggestions complete profiles, sizes, length, quantity, and saving."
+          }
+        },
+        "profiles": {
+          "title": "Profiles and materials",
+          "body": "EN standard profiles use built-in sizes; manual shapes use the dimensions you enter.",
+          "tips": {
+            "grade": "Pick a default grade in Settings so quick calculations start with the material you use most.",
+            "aliases": "Use profile suggestions when you are unsure of the exact alias.",
+            "trace": "The result keeps geometry, density, and pricing together for traceable estimates."
+          }
+        },
+        "pricing": {
+          "title": "Pricing overrides",
+          "body": "Settings define the default currency, unit price, price basis, waste, and VAT. A command can override the rate for just that calculation.",
+          "tips": {
+            "desktop": "Desktop: type @2.50/kg, 3.20/m, or 45/pc.",
+            "mobile": "Mobile: type the rate number, then tap the rate key such as €/kg to insert the unit token.",
+            "basis": "Set Price basis to Weight when your supplier quotes per kilogram."
+          }
+        },
+        "library": {
+          "title": "Saved, compare, and projects",
+          "body": "Save repeat calculations, compare alternatives side by side, and collect items into project totals.",
+          "tips": {
+            "save": "Save logs the calculation to Library and the desktop session tape.",
+            "compare": "Compare shows weight, cost, and surface deltas against the base item.",
+            "projects": "+ Project adds the current calculation to a job collection with running totals."
+          }
+        },
+        "sync": {
+          "title": "Sync and offline",
+          "body": "FerroScale works offline after install and can sync saved data through Google Drive.",
+          "tips": {
+            "passphrase": "Use the same sync passphrase on each device; it encrypts data before upload.",
+            "included": "Saved entries, compare items, projects, and presets are included in sync.",
+            "offline": "The app keeps cached calculator data available when the network drops."
+          }
+        }
+      }
     },
     "sync": {
       "passphrasePrompt": "Enter a sync passphrase. Use the same passphrase on every device — it is used to end-to-end encrypt your data before it is stored on Google Drive.",
