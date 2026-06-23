@@ -46,6 +46,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Bosanska lokalizacija sada pokriva Command radni prostor, postavke, biblioteku, detalje rezultata, sync poruke i link za preskakanje na glavni sadržaj",
     ],
     fixed: [
+      "Mobile Command keypad now stays anchored to the bottom of the screen while the content above it scrolls when space is tight",
       "Stainless 304 density corrected to 7930 kg/m³ in Command quick queries",
     ],
   },

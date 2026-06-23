@@ -492,6 +492,18 @@ export function CommandShell() {
               }
         }
       >
+        <div
+          className={
+            isPhoneViewport
+              ? "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+              : "contents"
+          }
+          style={
+            isPhoneViewport
+              ? { WebkitOverflowScrolling: "touch" }
+              : undefined
+          }
+        >
           {/* Safe-top spacer — honours real device safe-area on mobile, narrow gap on desktop */}
           <div
             className="flex-shrink-0"
@@ -935,6 +947,7 @@ export function CommandShell() {
               </label>
             </div>
           )}
+        </div>
 
           {/* On-screen keypad: phone only */}
           {isPhoneViewport && (

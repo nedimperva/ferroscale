@@ -28,6 +28,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Mobile Command keypad now stays anchored to the bottom of the screen while the content above it scrolls when space is tight
 - Stainless 304 density corrected to 7930 kg/m³ in Command quick queries
 
 ---
