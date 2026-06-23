@@ -63,7 +63,6 @@ export function CommandKeypad({
   return (
     <div
       className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-[10px]"
-      style={{ paddingBottom: "calc(18px + env(safe-area-inset-bottom, 0px))" }}
     >
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5">
