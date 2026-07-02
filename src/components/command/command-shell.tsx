@@ -21,7 +21,6 @@ import type {
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestionItem,
-  CommandTokenKind,
 } from "@ferroscale/metal-core";
 import { CommandGlyph } from "./command-glyph";
 import {
@@ -31,6 +30,7 @@ import {
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
+import { KIND_BG } from "./command-constants";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./command-desktop";
 import {
@@ -361,15 +361,6 @@ export function CommandShell() {
     const others = queryTokens.filter((_, i) => i !== idx);
     setQuery(others.join(" ") + (others.length ? " " : "") + queryTokens[idx]);
   };
-  const kindBg: Record<CommandTokenKind, string> = {
-    profile: "bg-[var(--accent-surface)] text-[var(--accent-text)]",
-    len: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-    qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
-    grade: "bg-[var(--surface-inset)] text-foreground-secondary",
-    price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-    unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
-  };
-
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
   // ── Wide desktop (≥1024): sidebar workspace shell ──
@@ -851,7 +842,7 @@ export function CommandShell() {
                   <TokenChip
                     key={`${tok}-${i}`}
                     tok={tok}
-                    kindClass={kindBg[cmdClassifyToken(tok)]}
+                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
                     onEdit={() => editTokenAt(i)}
                     onRemove={() => removeTokenAt(i)}
                   />
@@ -878,7 +869,7 @@ export function CommandShell() {
                     <TokenChip
                       key={`${tok}-${i}`}
                       tok={tok}
-                      kindClass={kindBg[cmdClassifyToken(tok)]}
+                      kindClass={KIND_BG[cmdClassifyToken(tok)]}
                       onEdit={() => {
                         editTokenAt(i);
                         focusInputAtEnd();

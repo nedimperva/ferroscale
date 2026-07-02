@@ -7,6 +7,7 @@ import type { AppLocale } from "@/i18n/routing";
 import { getAppTabFromPathname } from "@/lib/app-shell";
 import { APP_VERSION } from "@/lib/changelog";
 import { CommandGlyph } from "./command-glyph";
+import { BASIS_UNIT, CURRENCIES, KIND_BG, UNIT_OPTIONS } from "./command-constants";
 import {
   formatCommandHint,
   formatCommandIssue,
@@ -22,7 +23,6 @@ import type {
   CommandParserSettings,
   CommandSuggestion,
   CommandSuggestionItem,
-  CommandTokenKind,
 } from "@ferroscale/metal-core";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
 import type {
@@ -31,7 +31,6 @@ import type {
   CurrencyCode,
   LengthUnit,
   PriceBasis,
-  PriceUnit,
 } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
@@ -46,22 +45,6 @@ import type { Project } from "@/hooks/useProjects";
 
 type DeskView = "calc" | "saved" | "projects" | "compare" | "settings";
 
-const CURRENCIES: CurrencyCode[] = ["EUR", "USD", "GBP", "PLN", "BAM"];
-const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
-const BASIS_UNIT: Record<PriceBasis, PriceUnit> = {
-  weight: "kg",
-  length: "m",
-  piece: "piece",
-};
-
-const KIND_BG: Record<CommandTokenKind, string> = {
-  profile: "bg-[var(--accent-surface)] text-[var(--accent-text)]",
-  len: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-  qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
-  grade: "bg-[var(--surface-inset)] text-foreground-secondary",
-  price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-  unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
-};
 
 export interface CommandDesktopProps {
   dark: boolean;

@@ -7,6 +7,7 @@ import { routing, type AppLocale } from "@/i18n/routing";
 import { useSync } from "@/hooks/useSync";
 import { CommandGlyph } from "./command-glyph";
 import { formatCommandParseName } from "./command-copy";
+import { BASIS_UNIT, CURRENCIES, UNIT_OPTIONS } from "./command-constants";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { COMMAND_GRADES, findAliasByProfileId } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
@@ -22,21 +23,11 @@ import type {
   CurrencyCode,
   LengthUnit,
   PriceBasis,
-  PriceUnit,
 } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 
-const CURRENCIES: CurrencyCode[] = ["EUR", "USD", "GBP", "PLN", "BAM"];
-const UNIT_OPTIONS: LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
-
-/** Mirrors the legacy reducer's SET_PRICE_BASIS unit mapping. */
-const BASIS_UNIT: Record<PriceBasis, PriceUnit> = {
-  weight: "kg",
-  length: "m",
-  piece: "piece",
-};
 
 interface SheetShellProps {
   title: string;
