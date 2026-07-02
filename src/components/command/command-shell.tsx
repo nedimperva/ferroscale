@@ -170,6 +170,22 @@ export function CommandShell() {
     window.setTimeout(() => setToast(null), 1700);
   }, []);
 
+  // Copy the hero metric itself (e.g. "141.2 kg" / "€169.44") — the query
+  // string has its own copy action.
+  const copyValue = useCallback(() => {
+    if (!p.valid) return;
+    const text = isW
+      ? p.totalKg != null
+        ? `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`
+        : ""
+      : p.totalAmount != null
+        ? `${sym}${fsMoney(p.totalAmount)}`
+        : "";
+    if (!text) return;
+    navigator.clipboard?.writeText(text).catch(() => {});
+    showToast(t("toast.copiedValue"));
+  }, [p, isW, sym, showToast, t]);
+
   const doSave = useCallback(() => {
     if (!p.calc) {
       showToast(t("toast.addLength"));
@@ -402,6 +418,7 @@ export function CommandShell() {
             navigator.clipboard?.writeText(query).catch(() => {});
             showToast(t("toast.copied"));
           }}
+          onCopyValue={copyValue}
           onNew={newCalc}
           onSuggest={onSuggest}
           onCompareCurrent={doCompare}
@@ -966,6 +983,10 @@ export function CommandShell() {
                 navigator.clipboard?.writeText(query).catch(() => {});
                 setSheet(null);
                 showToast(t("toast.copied"));
+              }}
+              onCopyValue={() => {
+                setSheet(null);
+                copyValue();
               }}
               onNew={() => {
                 setSheet(null);

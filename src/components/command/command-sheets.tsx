@@ -201,6 +201,7 @@ interface CommandResultSheetProps {
   onClose: () => void;
   onSave: () => void;
   onCopy: () => void;
+  onCopyValue: () => void;
   onNew: () => void;
   onCompare: () => void;
   onAddToProject: () => void;
@@ -212,6 +213,7 @@ export function CommandResultBreakdown({
   p,
   onSave,
   onCopy,
+  onCopyValue,
   onNew,
   onCompare,
   onAddToProject,
@@ -326,6 +328,9 @@ export function CommandResultBreakdown({
         </button>
       </div>
       <div className="flex gap-2 mt-2">
+        <button type="button" onClick={onCopyValue} className={secondaryBtn}>
+          {t("common.copyValue")}
+        </button>
         <button type="button" onClick={onCompare} className={secondaryBtn}>
           {t("common.compare")}
         </button>

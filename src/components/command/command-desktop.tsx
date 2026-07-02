@@ -71,6 +71,7 @@ export interface CommandDesktopProps {
   projects: Project[];
   onSave: () => void;
   onCopy: () => void;
+  onCopyValue: () => void;
   onNew: () => void;
   onSuggest: (item: CommandSuggestionItem) => void;
   onCompareCurrent: () => void;
@@ -499,6 +500,7 @@ function DeskCalcView({
   compareItems,
   onSave,
   onCopy,
+  onCopyValue,
   onNew,
   onSuggest,
   onCompareCurrent,
@@ -1014,6 +1016,12 @@ function DeskCalcView({
               <DeskBtn dark={dark} small onClick={onAddToProject} disabled={!p.valid}>
                 <DeskIcon name="plus" />
                 {t("common.project")}
+              </DeskBtn>
+            </div>
+            <div className="flex gap-2">
+              <DeskBtn dark={dark} small onClick={onCopyValue} disabled={!p.valid}>
+                <DeskIcon name="copy" />
+                {t("common.copyValue")}
               </DeskBtn>
             </div>
           </div>

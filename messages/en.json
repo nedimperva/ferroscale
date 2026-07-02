@@ -55,7 +55,8 @@
       "create": "Create",
       "delete": "Delete",
       "newCalculation": "New calculation",
-      "openArrow": "Open ->"
+      "openArrow": "Open ->",
+      "copyValue": "Copy value"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -64,7 +65,8 @@
       "projectFull": "Project is full",
       "alreadyInCompare": "Already in compare",
       "addedToCompare": "Added to compare",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "copiedValue": "Value copied"
     },
     "aria": {
       "toggleTheme": "Toggle theme",

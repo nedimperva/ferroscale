@@ -55,7 +55,8 @@
       "create": "Kreiraj",
       "delete": "Obriši",
       "newCalculation": "Novi izračun",
-      "openArrow": "Otvori ->"
+      "openArrow": "Otvori ->",
+      "copyValue": "Kopiraj vrijednost"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -64,7 +65,8 @@
       "projectFull": "Projekat je pun",
       "alreadyInCompare": "Već je u poređenju",
       "addedToCompare": "Dodano za poređenje",
-      "copied": "Kopirano u međuspremnik"
+      "copied": "Kopirano u međuspremnik",
+      "copiedValue": "Vrijednost kopirana"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
