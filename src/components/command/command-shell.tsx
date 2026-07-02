@@ -7,6 +7,7 @@ import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
+import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import { cmdSuggest, cmdApplyInsert } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
@@ -96,8 +97,14 @@ export function CommandShell() {
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
   const [toast, setToast] = useState<string | null>(null);
-  // Desktop session tape — adding-machine log of queries saved this session.
-  const [sessionTape, setSessionTape] = useState<string[]>([]);
+  // Query history — persisted (and Drive-synced) via the quickHistory
+  // collection. Backs the desktop session tape and recency suggestions.
+  const {
+    history: quickHistory,
+    push: pushHistory,
+    remove: removeHistoryEntry,
+    clear: clearHistory,
+  } = useQuickHistory();
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
@@ -153,8 +160,8 @@ export function CommandShell() {
     [query, parserSettings],
   );
   const sug = useMemo(
-    () => cmdSuggest(query, parserSettings, presetsForProfile),
-    [query, parserSettings, presetsForProfile],
+    () => cmdSuggest(query, parserSettings, presetsForProfile, quickHistory),
+    [query, parserSettings, presetsForProfile, quickHistory],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
@@ -197,12 +204,9 @@ export function CommandShell() {
       const autoName = `${displayName} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
       saveCalculation(p.calc.input, p.calc.result, autoName);
     }
-    const q = query.trim();
-    if (q) {
-      setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
-    }
+    pushHistory(query);
     showToast(t("toast.saved"));
-  }, [p, isSaved, saveCalculation, showToast, query, t]);
+  }, [p, isSaved, saveCalculation, showToast, query, t, pushHistory]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
@@ -257,19 +261,9 @@ export function CommandShell() {
   const newCalc = useCallback(() => {
     // A valid query cleared via ⌘K / CLEAR still lands on the session tape,
     // so starting a new line never loses the previous number.
-    const q = query.trim();
-    if (p.valid && q) {
-      setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
-    }
+    if (p.valid) pushHistory(query);
     setQuery("");
-  }, [p.valid, query]);
-
-  const removeTapeEntry = useCallback((q: string) => {
-    setSessionTape((tape) => tape.filter((x) => x !== q));
-  }, []);
-  const clearTape = useCallback(() => {
-    setSessionTape([]);
-  }, []);
+  }, [p.valid, query, pushHistory]);
 
   const onSuggest = useCallback(
     (item: CommandSuggestionItem) => {
@@ -407,9 +401,9 @@ export function CommandShell() {
             weightAsMainStore.set(value);
             setModeOverride(null);
           }}
-          sessionTape={sessionTape}
-          onRemoveTapeEntry={removeTapeEntry}
-          onClearTape={clearTape}
+          sessionTape={quickHistory.slice(0, 8)}
+          onRemoveTapeEntry={removeHistoryEntry}
+          onClearTape={clearHistory}
           saved={savedEntries}
           compareItems={compareItems}
           projects={projects}

@@ -125,3 +125,40 @@ describe("cmdApplyInsert", () => {
     expect(cmdSuggest(afterSize, SETTINGS).hint).toBe("Length");
   });
 });
+
+describe("cmdSuggest recents", () => {
+  const RECENTS = ["hea120 6m x2", "not a real query", "flt40x8 4m", "shs40x40x3 6m"];
+
+  it("puts recent valid queries before the curated profile chips", () => {
+    const s = cmdSuggest("", SETTINGS, undefined, RECENTS);
+    expect(s.items[0]).toMatchObject({ kind: "recent", label: "hea120 6m x2" });
+    expect(s.items[1]).toMatchObject({ kind: "recent", label: "flt40x8 4m" });
+    expect(s.items[2]).toMatchObject({ kind: "recent", label: "shs40x40x3 6m" });
+    expect(s.items[3].kind).toBe("profile");
+  });
+
+  it("skips recents that don't parse", () => {
+    const s = cmdSuggest("", SETTINGS, undefined, ["garbage garbage"]);
+    expect(s.items.every((i) => i.kind !== "recent")).toBe(true);
+  });
+
+  it("filters recents by the typed partial", () => {
+    const s = cmdSuggest("fl", SETTINGS, undefined, RECENTS);
+    const recents = s.items.filter((i) => i.kind === "recent");
+    expect(recents).toHaveLength(1);
+    expect(recents[0].label).toBe("flt40x8 4m");
+    expect(recents[0].replaceLast).toBe(true);
+  });
+
+  it("offers recent sizes for the same family at the size stage", () => {
+    const s = cmdSuggest("shs", SETTINGS, undefined, ["shs45x45x4 6m", "hea120 6m"]);
+    expect(s.items[0]).toMatchObject({ kind: "size", label: "45×45×4" });
+  });
+
+  it("does not duplicate a recent size that is already curated", () => {
+    // 40x40x3 is in COMMAND_SIZES.shs
+    const s = cmdSuggest("shs", SETTINGS, undefined, ["shs40x40x3 6m"]);
+    const labels = s.items.filter((i) => i.label === "40×40×3");
+    expect(labels).toHaveLength(1);
+  });
+});

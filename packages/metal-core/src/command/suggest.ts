@@ -60,15 +60,39 @@ export function presetToSizeText(
   return dimsToSizeText(alias.fam, preset.manualDimensionsMm, preset.lengthValue);
 }
 
+const MAX_RECENT_SUGGESTIONS = 3;
+
 export function cmdSuggest(
   query: string,
   settings: CommandParserSettings,
   presetsForProfile?: (profileId: ProfileId) => CommandSizePreset[],
+  recentQueries?: string[],
 ): CommandSuggestion {
   const p = cmdParse(query, settings);
   const { stage, partial } = detectStage(query, p);
 
   if (stage === "empty" || stage === "profile") {
+    // Recent valid queries first — one tap re-runs a whole calculation.
+    const recentItems: CommandSuggestionItem[] = [];
+    if (recentQueries) {
+      for (const rq of recentQueries) {
+        if (recentItems.length >= MAX_RECENT_SUGGESTIONS) break;
+        const trimmed = rq.trim();
+        if (!trimmed) continue;
+        if (partial && !trimmed.toLowerCase().startsWith(partial.toLowerCase())) continue;
+        const rp = cmdParse(trimmed, settings);
+        if (!rp.valid) continue;
+        recentItems.push({
+          label: trimmed,
+          fam: rp.alias?.fam,
+          kind: "recent",
+          // Trailing space so the inserted query lands fully chipped.
+          ins: `${trimmed} `,
+          replaceLast: !!partial,
+        });
+      }
+    }
+
     const list = COMMAND_ALIASES.filter((a) => FRONT_ALIASES.includes(a.alias));
     const matches = partial
       ? list.filter(
@@ -80,23 +104,47 @@ export function cmdSuggest(
     const final = matches.length ? matches : list;
     return {
       hint: partial ? "Profiles" : "Pick a profile",
-      items: final.map<CommandSuggestionItem>((a) => ({
-        label: a.name,
-        fam: a.fam,
-        kind: "profile",
-        ins: a.alias,
-        replaceLast: !!partial,
-      })),
+      items: [
+        ...recentItems,
+        ...final.map<CommandSuggestionItem>((a) => ({
+          label: a.name,
+          fam: a.fam,
+          kind: "profile",
+          ins: a.alias,
+          replaceLast: !!partial,
+        })),
+      ],
     };
   }
 
   if (stage === "size" && p.alias) {
     const alias = p.alias;
     const standard = COMMAND_SIZES[alias.fam] ?? [];
+    const seen = new Set<string>();
+
+    // Sizes the user recently calculated for this family, newest first.
+    const recentSizeItems: CommandSuggestionItem[] = [];
+    if (recentQueries) {
+      for (const rq of recentQueries) {
+        if (recentSizeItems.length >= MAX_RECENT_SUGGESTIONS) break;
+        const rp = cmdParse(rq, settings);
+        if (!rp.valid || rp.alias?.alias !== alias.alias || !rp.hasSize) continue;
+        const text = rp.size;
+        if (seen.has(text) || standard.includes(text)) continue;
+        seen.add(text);
+        recentSizeItems.push({
+          label: text.replace(/x/g, "×"),
+          fam: alias.fam,
+          ins: text,
+          kind: "size",
+          appendProfile: true,
+        });
+      }
+    }
+
     const profileId = alias.profileId ?? alias.manualProfileId;
     const presetItems: CommandSuggestionItem[] = [];
     if (profileId && presetsForProfile) {
-      const seen = new Set<string>();
       for (const preset of presetsForProfile(profileId)) {
         const text = presetToSizeText(alias, preset);
         if (!text || seen.has(text) || standard.includes(text)) continue;
@@ -114,6 +162,7 @@ export function cmdSuggest(
     return {
       hint: `${alias.name} · standard size`,
       items: [
+        ...recentSizeItems,
         ...presetItems,
         ...standard.map<CommandSuggestionItem>((s) => ({
           label: s.replace(/x/g, "×"),
