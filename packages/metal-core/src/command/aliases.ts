@@ -1,4 +1,4 @@
-import { MATERIAL_GRADES, METAL_FAMILIES } from "@ferroscale/metal-core";
+import { MATERIAL_GRADES, METAL_FAMILIES } from "../datasets/materials";
 import type { CommandAlias } from "./types";
 
 export const COMMAND_ALIASES: CommandAlias[] = [

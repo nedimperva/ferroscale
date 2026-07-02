@@ -7,14 +7,14 @@ import { routing, type AppLocale } from "@/i18n/routing";
 import { useSync } from "@/hooks/useSync";
 import { CommandGlyph } from "./command-glyph";
 import { formatCommandParseName } from "./command-copy";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
-import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
+import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { COMMAND_GRADES, findAliasByProfileId } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
 import type {
   CommandFamily,
   CommandParseResult,
   CommandParserSettings,
-} from "@/lib/command/types";
+} from "@ferroscale/metal-core";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
 import type {
   CalculationInput,

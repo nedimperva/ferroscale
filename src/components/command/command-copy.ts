@@ -2,7 +2,7 @@ import type {
   CommandAlias,
   CommandParseResult,
   CommandSuggestionItem,
-} from "@/lib/command/types";
+} from "@ferroscale/metal-core";
 
 type CommandT = (key: string, values?: Record<string, string | number>) => string;
 

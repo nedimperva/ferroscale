@@ -1,16 +1,13 @@
-import {
-  calculateMetal,
-  fromMillimeters,
-  getProfileById,
-  toMillimeters,
-  type CalculationInput,
-  type DimensionKey,
-  type LengthUnit,
-  type PriceBasis,
-  type PriceUnit,
-  type ProfileId,
-} from "@ferroscale/metal-core";
-import type { CommandPricing } from "@/lib/settings-stores";
+import { calculateMetal } from "../calculator/engine";
+import { fromMillimeters, toMillimeters } from "../calculator/units";
+import type {
+  CalculationInput,
+  LengthUnit,
+  PriceBasis,
+  PriceUnit,
+} from "../calculator/types";
+import { getProfileById } from "../datasets/profiles";
+import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
   COMMAND_ALIAS_RE,
   COMMAND_GRADES,
@@ -27,6 +24,7 @@ import type {
   CommandFamily,
   CommandParseResult,
   CommandParserSettings,
+  CommandPricing,
   CommandTokenKind,
 } from "./types";
 

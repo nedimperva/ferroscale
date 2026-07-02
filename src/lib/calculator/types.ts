@@ -1,1 +1,1 @@
-export * from "../../../packages/metal-core/src/calculator/types";
+export * from "@ferroscale/metal-core/calculator/types";

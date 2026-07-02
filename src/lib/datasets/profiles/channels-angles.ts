@@ -1,1 +1,1 @@
-export { CHANNEL_ANGLE_PROFILES } from "../../../../packages/metal-core/src/datasets/profiles/channels-angles";
+export { CHANNEL_ANGLE_PROFILES } from "@ferroscale/metal-core/datasets/profiles/channels-angles";

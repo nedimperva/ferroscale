@@ -1,12 +1,34 @@
 import type {
   CalculationInput,
   CalculationResult,
+  CurrencyCode,
   LengthUnit,
   PriceBasis,
   PriceUnit,
-  ProfileId,
-} from "@ferroscale/metal-core";
-import type { CommandPricing } from "@/lib/settings-stores";
+} from "../calculator/types";
+import type { DimensionKey, ProfileId } from "../datasets/types";
+
+/** The pricing fields of CalculationInput that Command needs for live totals. */
+export interface CommandPricing {
+  priceBasis: PriceBasis;
+  priceUnit: PriceUnit;
+  unitPrice: number;
+  currency: CurrencyCode;
+  wastePercent: number;
+  includeVat: boolean;
+  vatPercent: number;
+}
+
+/**
+ * Structural subset of the web app's DimensionPreset that size suggestions
+ * need — keeps the parser package decoupled from app storage models.
+ */
+export interface CommandSizePreset {
+  label?: string;
+  selectedSizeId?: string;
+  manualDimensionsMm: Partial<Record<DimensionKey, number>>;
+  lengthValue?: number;
+}
 
 export type CommandFamily =
   | "beam"

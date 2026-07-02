@@ -13,16 +13,16 @@ import {
   formatCommandSuggestionLabel,
 } from "./command-copy";
 import { CommandDocsSection, SyncSection, useCommandLocaleSwitch } from "./command-sheets";
-import { cmdParse, cmdClassifyToken, cmdTokenize } from "@/lib/command/parser";
-import { COMMAND_GRADES, findAliasByProfileId } from "@/lib/command/aliases";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
+import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
+import { COMMAND_GRADES, findAliasByProfileId } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type {
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestion,
   CommandSuggestionItem,
   CommandTokenKind,
-} from "@/lib/command/types";
+} from "@ferroscale/metal-core";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
 import type {
   CalculationInput,

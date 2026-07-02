@@ -1,5 +1,4 @@
-import type { ProfileId } from "@ferroscale/metal-core";
-import type { DimensionPreset } from "@/hooks/usePresets";
+import type { ProfileId } from "../datasets/types";
 import {
   COMMAND_ALIAS_RE,
   COMMAND_ALIASES,
@@ -11,6 +10,7 @@ import type {
   CommandAlias,
   CommandParseResult,
   CommandParserSettings,
+  CommandSizePreset,
   CommandSuggestion,
   CommandSuggestionItem,
 } from "./types";
@@ -41,13 +41,13 @@ const FRONT_ALIASES = [
 ];
 
 /**
- * Convert a saved DimensionPreset into the size text Command appends onto the
+ * Convert a saved CommandSizePreset into the size text Command appends onto the
  * profile token (e.g. {side:40, wallThickness:3} → "40x40x3"). Returns null
  * when the preset is missing required dimensions for the family.
  */
 export function presetToSizeText(
   alias: CommandAlias,
-  preset: DimensionPreset,
+  preset: CommandSizePreset,
 ): string | null {
   if (alias.profileId) {
     // Standard profiles: strip the alias prefix off the size id ("hea120" → "120").
@@ -63,7 +63,7 @@ export function presetToSizeText(
 export function cmdSuggest(
   query: string,
   settings: CommandParserSettings,
-  presetsForProfile?: (profileId: ProfileId) => DimensionPreset[],
+  presetsForProfile?: (profileId: ProfileId) => CommandSizePreset[],
 ): CommandSuggestion {
   const p = cmdParse(query, settings);
   const { stage, partial } = detectStage(query, p);

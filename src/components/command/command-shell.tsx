@@ -7,10 +7,10 @@ import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
-import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@/lib/command/parser";
-import { cmdSuggest, cmdApplyInsert } from "@/lib/command/suggest";
-import { COMMAND_ALIAS_RE } from "@/lib/command/aliases";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
+import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
+import { cmdSuggest, cmdApplyInsert } from "@ferroscale/metal-core";
+import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   defaultUnitStore,
   sharedCalcSettingsStore,
@@ -22,7 +22,7 @@ import type {
   CommandParserSettings,
   CommandSuggestionItem,
   CommandTokenKind,
-} from "@/lib/command/types";
+} from "@ferroscale/metal-core";
 import { CommandGlyph } from "./command-glyph";
 import {
   formatCommandAliasName,
@@ -1129,7 +1129,7 @@ function ChipBadge({
   children,
 }: {
   on: boolean;
-  fam?: import("@/lib/command/types").CommandFamily;
+  fam?: import("@ferroscale/metal-core").CommandFamily;
   children: React.ReactNode;
 }) {
   return (

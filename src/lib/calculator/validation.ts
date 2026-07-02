@@ -1,1 +1,1 @@
-export { validateCalculationInput } from "../../../packages/metal-core/src/calculator/validation";
+export { validateCalculationInput } from "@ferroscale/metal-core/calculator/validation";

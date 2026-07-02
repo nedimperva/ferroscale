@@ -22,4 +22,4 @@ export function fsMoney(v: number): string {
   });
 }
 
-export { CURRENCY_SYMBOLS } from "@/lib/calculator/types";
+export { CURRENCY_SYMBOLS } from "../calculator/types";
