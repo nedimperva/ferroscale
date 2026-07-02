@@ -56,7 +56,8 @@
       "delete": "Obriši",
       "newCalculation": "Novi izračun",
       "openArrow": "Otvori ->",
-      "copyValue": "Kopiraj vrijednost"
+      "copyValue": "Kopiraj vrijednost",
+      "shareLink": "Podijeli link"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -66,7 +67,8 @@
       "alreadyInCompare": "Već je u poređenju",
       "addedToCompare": "Dodano za poređenje",
       "copied": "Kopirano u međuspremnik",
-      "copiedValue": "Vrijednost kopirana"
+      "copiedValue": "Vrijednost kopirana",
+      "linkCopied": "Link kopiran"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",

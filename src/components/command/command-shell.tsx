@@ -41,10 +41,13 @@ import {
   CommandSettingsSheet,
 } from "./command-sheets";
 import { PwaRegister } from "@/components/pwa-register";
+import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
 const DESKTOP_CARD_W = 560;
+// Trailing space so the demo query renders fully chipped on first load.
+const DEMO_QUERY = "hea120 6m x2 s235 ";
 
 function formatPriceTokenValue(value: number) {
   if (!Number.isFinite(value)) return "0";
@@ -90,8 +93,10 @@ export function CommandShell() {
   const { projects, createProject, addCalculation, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
 
-  // Trailing space so the demo query renders fully chipped on first load.
-  const [query, setQuery] = useState("hea120 6m x2 s235 ");
+  const [query, setQuery] = useState(DEMO_QUERY);
+  // The URL only mirrors the query once the user has replaced the demo query
+  // (or arrived via a share link) — a pristine visit keeps a clean URL.
+  const touchedRef = useRef(false);
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
@@ -138,7 +143,28 @@ export function CommandShell() {
       window.localStorage.removeItem("ferroscale-command-saved");
       window.localStorage.removeItem("ferroscale-command-recents");
     } catch { /* noop */ }
+    // A shared ?q= link beats the demo query. Trailing space → fully chipped.
+    const sharedQuery = readSharedQuery(window.location.search);
+    if (sharedQuery) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQuery(`${sharedQuery} `);
+      touchedRef.current = true;
+    }
   }, []);
+
+  // Once the user leaves the demo query, mirror the query into the URL so the
+  // current calculation is always linkable (debounced; replaceState keeps
+  // history clean).
+  useEffect(() => {
+    if (!touchedRef.current) {
+      if (query === DEMO_QUERY) return;
+      touchedRef.current = true;
+    }
+    const id = window.setTimeout(() => {
+      window.history.replaceState(null, "", buildShareUrl(query, window.location));
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [query]);
 
   // Three viewports:
   //  · phone (<640) → fullscreen with on-screen keypad
@@ -192,6 +218,17 @@ export function CommandShell() {
     navigator.clipboard?.writeText(text).catch(() => {});
     showToast(t("toast.copiedValue"));
   }, [p, isW, sym, showToast, t]);
+
+  const shareLink = useCallback(() => {
+    if (!p.valid) return;
+    const url = buildShareUrl(query, window.location);
+    if (isPhoneViewport && typeof navigator.share === "function") {
+      navigator.share({ url }).catch(() => {});
+      return;
+    }
+    navigator.clipboard?.writeText(url).catch(() => {});
+    showToast(t("toast.linkCopied"));
+  }, [p.valid, query, isPhoneViewport, showToast, t]);
 
   const doSave = useCallback(() => {
     if (!p.calc) {
@@ -413,6 +450,7 @@ export function CommandShell() {
             showToast(t("toast.copied"));
           }}
           onCopyValue={copyValue}
+          onShareLink={shareLink}
           onNew={newCalc}
           onSuggest={onSuggest}
           onCompareCurrent={doCompare}
@@ -981,6 +1019,10 @@ export function CommandShell() {
               onCopyValue={() => {
                 setSheet(null);
                 copyValue();
+              }}
+              onShareLink={() => {
+                setSheet(null);
+                shareLink();
               }}
               onNew={() => {
                 setSheet(null);

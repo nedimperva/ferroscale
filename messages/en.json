@@ -56,7 +56,8 @@
       "delete": "Delete",
       "newCalculation": "New calculation",
       "openArrow": "Open ->",
-      "copyValue": "Copy value"
+      "copyValue": "Copy value",
+      "shareLink": "Share link"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -66,7 +67,8 @@
       "alreadyInCompare": "Already in compare",
       "addedToCompare": "Added to compare",
       "copied": "Copied to clipboard",
-      "copiedValue": "Value copied"
+      "copiedValue": "Value copied",
+      "linkCopied": "Link copied"
     },
     "aria": {
       "toggleTheme": "Toggle theme",

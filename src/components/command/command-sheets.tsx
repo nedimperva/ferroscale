@@ -202,6 +202,7 @@ interface CommandResultSheetProps {
   onSave: () => void;
   onCopy: () => void;
   onCopyValue: () => void;
+  onShareLink: () => void;
   onNew: () => void;
   onCompare: () => void;
   onAddToProject: () => void;
@@ -214,6 +215,7 @@ export function CommandResultBreakdown({
   onSave,
   onCopy,
   onCopyValue,
+  onShareLink,
   onNew,
   onCompare,
   onAddToProject,
@@ -331,6 +333,11 @@ export function CommandResultBreakdown({
         <button type="button" onClick={onCopyValue} className={secondaryBtn}>
           {t("common.copyValue")}
         </button>
+        <button type="button" onClick={onShareLink} className={secondaryBtn}>
+          {t("common.shareLink")}
+        </button>
+      </div>
+      <div className="flex gap-2 mt-2">
         <button type="button" onClick={onCompare} className={secondaryBtn}>
           {t("common.compare")}
         </button>

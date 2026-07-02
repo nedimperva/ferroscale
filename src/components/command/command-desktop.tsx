@@ -72,6 +72,7 @@ export interface CommandDesktopProps {
   onSave: () => void;
   onCopy: () => void;
   onCopyValue: () => void;
+  onShareLink: () => void;
   onNew: () => void;
   onSuggest: (item: CommandSuggestionItem) => void;
   onCompareCurrent: () => void;
@@ -501,6 +502,7 @@ function DeskCalcView({
   onSave,
   onCopy,
   onCopyValue,
+  onShareLink,
   onNew,
   onSuggest,
   onCompareCurrent,
@@ -1022,6 +1024,10 @@ function DeskCalcView({
               <DeskBtn dark={dark} small onClick={onCopyValue} disabled={!p.valid}>
                 <DeskIcon name="copy" />
                 {t("common.copyValue")}
+              </DeskBtn>
+              <DeskBtn dark={dark} small onClick={onShareLink} disabled={!p.valid}>
+                <DeskIcon name="link" />
+                {t("common.shareLink")}
               </DeskBtn>
             </div>
           </div>
@@ -2287,6 +2293,13 @@ function DeskIcon({ name, stroke }: { name: string; stroke?: string }) {
       return (
         <svg {...common} width={15} height={15} strokeWidth={2.2} strokeLinejoin={undefined}>
           <path d="M12 5v14M5 12h14" />
+        </svg>
+      );
+    case "link":
+      return (
+        <svg {...common} width={15} height={15}>
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
         </svg>
       );
     case "trash":
