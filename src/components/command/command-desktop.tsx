@@ -9,6 +9,7 @@ import { APP_VERSION } from "@/lib/changelog";
 import { CommandGlyph } from "./command-glyph";
 import {
   formatCommandHint,
+  formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
@@ -59,7 +60,7 @@ const KIND_BG: Record<CommandTokenKind, string> = {
   qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
   grade: "bg-[var(--surface-inset)] text-foreground-secondary",
   price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-  unknown: "bg-[var(--surface-inset)] text-muted",
+  unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
 };
 
 export interface CommandDesktopProps {
@@ -846,6 +847,14 @@ function DeskCalcView({
                   {!isW && p.pricing.includeVat && (
                     <DeskPricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</DeskPricingBadge>
                   )}
+                </span>
+              ) : p.issues.length > 0 ? (
+                <span
+                  className="font-mono text-[13px]"
+                  style={{ color: "var(--amber-text)" }}
+                  role="status"
+                >
+                  {formatCommandIssue(t, p.issues[0])}
                 </span>
               ) : (
                 <span className="font-mono text-[13px] text-muted-faint">

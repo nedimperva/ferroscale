@@ -124,6 +124,11 @@
       "addSize": "add a size ->",
       "startProfile": "start with a profile ->"
     },
+    "issues": {
+      "unknownToken": "Didn't understand \"{token}\"",
+      "unknownSize": "No {profile} size \"{size}\"",
+      "invalidQty": "Quantity must be at least 1"
+    },
     "sheets": {
       "resultBreakdown": "Result breakdown",
       "settings": "Settings",

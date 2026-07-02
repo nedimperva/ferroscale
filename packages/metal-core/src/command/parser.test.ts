@@ -1,8 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calculateMetal } from "@ferroscale/metal-core";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "./parser";
-import type { CommandParserSettings } from "./types";
-import type { CommandPricing } from "@/lib/settings-stores";
+import type { CommandParserSettings, CommandPricing } from "./types";
 
 const PRICING: CommandPricing = {
   priceBasis: "weight",
@@ -422,5 +421,47 @@ describe("cmdClassifyToken", () => {
   it("classifies profiles and quantities", () => {
     expect(cmdClassifyToken("hea120")).toBe("profile");
     expect(cmdClassifyToken("x2")).toBe("qty");
+  });
+});
+
+describe("cmdParse issues", () => {
+  it("returns no issues for a clean query", () => {
+    expect(cmdParse("hea120 6m x2 s235 ", mkSettings()).issues).toEqual([]);
+  });
+
+  it("flags an unrecognized committed token but keeps the rest valid", () => {
+    const p = cmdParse("hea120 zzz 6m ", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.issues).toHaveLength(1);
+    expect(p.issues[0]).toMatchObject({ code: "unknownToken", token: "zzz" });
+  });
+
+  it("does not flag the trailing token while it is still being typed", () => {
+    expect(cmdParse("hea120 6m zz", mkSettings()).issues).toEqual([]);
+    expect(cmdParse("hea120 6m zz ", mkSettings()).issues).toHaveLength(1);
+  });
+
+  it("flags an unknown standard size once the token is committed", () => {
+    expect(cmdParse("hea999", mkSettings()).issues).toEqual([]); // still typing
+    const p = cmdParse("hea999 ", mkSettings());
+    expect(p.valid).toBe(false);
+    expect(p.issues[0]).toMatchObject({
+      code: "unknownSize",
+      params: { profile: "HEA", size: "999" },
+    });
+  });
+
+  it("flags a quantity below one", () => {
+    const p = cmdParse("hea120 6m x0 ", mkSettings());
+    expect(p.valid).toBe(false);
+    expect(p.issues[0]).toMatchObject({ code: "invalidQty", token: "x0" });
+  });
+
+  it("surfaces engine validation failures as invalidGeometry", () => {
+    // Pipe wall thickness must be below the outer radius.
+    const p = cmdParse("chs20x15 6m ", mkSettings());
+    expect(p.valid).toBe(false);
+    expect(p.issues[0]?.code).toBe("invalidGeometry");
+    expect(p.issues[0]?.message.length).toBeGreaterThan(0);
   });
 });

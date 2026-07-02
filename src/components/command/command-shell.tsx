@@ -27,6 +27,7 @@ import { CommandGlyph } from "./command-glyph";
 import {
   formatCommandAliasName,
   formatCommandHint,
+  formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
@@ -366,7 +367,7 @@ export function CommandShell() {
     qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
     grade: "bg-[var(--surface-inset)] text-foreground-secondary",
     price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-    unknown: "bg-[var(--surface-inset)] text-muted",
+    unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
   };
 
   const screenBg = dark ? "#161109" : "#f4f0e7";
@@ -654,6 +655,14 @@ export function CommandShell() {
                   {!isW && p.pricing.includeVat && (
                     <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
                   )}
+                </span>
+              ) : p.issues.length > 0 ? (
+                <span
+                  className="font-mono text-[12px]"
+                  style={{ color: "var(--amber-text)" }}
+                  role="status"
+                >
+                  {formatCommandIssue(t, p.issues[0])}
                 </span>
               ) : (
                 <span className="font-mono text-[12px] text-muted-faint">

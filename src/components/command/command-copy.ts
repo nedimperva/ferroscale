@@ -1,10 +1,28 @@
 import type {
   CommandAlias,
+  CommandParseIssue,
   CommandParseResult,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
 
 type CommandT = (key: string, values?: Record<string, string | number>) => string;
+
+export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): string {
+  switch (issue.code) {
+    case "unknownToken":
+      return t("issues.unknownToken", { token: issue.token });
+    case "unknownSize":
+      return t("issues.unknownSize", {
+        profile: String(issue.params?.profile ?? ""),
+        size: String(issue.params?.size ?? issue.token),
+      });
+    case "invalidQty":
+      return t("issues.invalidQty");
+    case "invalidGeometry":
+      // Engine validation messages are not localized yet — show them as-is.
+      return issue.message;
+  }
+}
 
 export function formatCommandHint(t: CommandT, hint: string): string {
   const standardSizeSuffix = " · standard size";

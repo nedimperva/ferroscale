@@ -124,6 +124,11 @@
       "addSize": "dodajte dimenziju ->",
       "startProfile": "počnite profilom ->"
     },
+    "issues": {
+      "unknownToken": "Nije prepoznato \"{token}\"",
+      "unknownSize": "Ne postoji {profile} veličina \"{size}\"",
+      "invalidQty": "Količina mora biti najmanje 1"
+    },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
       "settings": "Postavke",

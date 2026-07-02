@@ -92,6 +92,8 @@ export interface CommandParseResult {
   selectedSizeId: string | null;
   name: string | null;
   valid: boolean;
+  /** Parse/validation problems worth telling the user about; [] when clean. */
+  issues: CommandParseIssue[];
   /** Echo of the pricing settings used (for sheet display). */
   pricing: CommandPricing;
   /** Non-null when the query contains an inline price token. */
@@ -100,6 +102,28 @@ export interface CommandParseResult {
     priceBasis: PriceBasis;
     priceUnit: PriceUnit;
   } | null;
+}
+
+export type CommandParseIssueCode =
+  | "unknownToken"
+  | "unknownSize"
+  | "invalidQty"
+  | "invalidGeometry";
+
+/**
+ * Structured feedback for input the parser could not act on. `message` is a
+ * plain-English fallback for non-web consumers (CLI/Raycast); the web app
+ * maps `code` + `params` to localized strings instead.
+ */
+export interface CommandParseIssue {
+  code: CommandParseIssueCode;
+  /** The offending raw token (or size text for unknownSize). */
+  token: string;
+  message: string;
+  params?: Record<string, string | number>;
+  /** invalidGeometry only: engine validation key, localized under `validation.*`. */
+  messageKey?: string;
+  messageValues?: Record<string, string | number>;
 }
 
 export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "price" | "unknown";

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { cmdApplyInsert, cmdSuggest, presetToSizeText } from "./suggest";
 import { findAliasByKey } from "./aliases";
 import type { CommandParserSettings } from "./types";
-import type { DimensionPreset } from "@/hooks/usePresets";
+import type { CommandSizePreset } from "./types";
 
 const SETTINGS: CommandParserSettings = {
   pricing: {
@@ -18,14 +18,10 @@ const SETTINGS: CommandParserSettings = {
   defaultLengthUnit: "m",
 };
 
-function mkPreset(overrides: Partial<DimensionPreset>): DimensionPreset {
+function mkPreset(overrides: Partial<CommandSizePreset>): CommandSizePreset {
   return {
-    id: "p1",
-    profileId: "square_hollow",
     label: "Shop standard",
     manualDimensionsMm: {},
-    createdAt: 0,
-    updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
   };
 }
@@ -33,7 +29,7 @@ function mkPreset(overrides: Partial<DimensionPreset>): DimensionPreset {
 describe("presetToSizeText", () => {
   it("strips the alias prefix from standard size ids", () => {
     const hea = findAliasByKey("hea")!;
-    expect(presetToSizeText(hea, mkPreset({ profileId: "beam_hea_en", selectedSizeId: "hea120" }))).toBe("120");
+    expect(presetToSizeText(hea, mkPreset({ selectedSizeId: "hea120" }))).toBe("120");
   });
 
   it("rejects standard presets whose size id belongs to another alias", () => {
@@ -72,8 +68,8 @@ describe("presetToSizeText", () => {
 describe("cmdSuggest with presets", () => {
   it("prepends presets in the size stage and dedupes against standard sizes", () => {
     const presets = [
-      mkPreset({ id: "a", label: "Custom", manualDimensionsMm: { side: 45, wallThickness: 4 } }),
-      mkPreset({ id: "b", label: "Dup of standard", manualDimensionsMm: { side: 40, wallThickness: 3 } }), // 40x40x3 is in COMMAND_SIZES.shs
+      mkPreset({ label: "Custom", manualDimensionsMm: { side: 45, wallThickness: 4 } }),
+      mkPreset({ label: "Dup of standard", manualDimensionsMm: { side: 40, wallThickness: 3 } }), // 40x40x3 is in COMMAND_SIZES.shs
     ];
     const sug = cmdSuggest("shs", SETTINGS, () => presets);
     expect(sug.items[0].label).toBe("45×45×4");

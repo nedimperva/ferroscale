@@ -2,6 +2,7 @@ import { calculateMetal } from "../calculator/engine";
 import { fromMillimeters, toMillimeters } from "../calculator/units";
 import type {
   CalculationInput,
+  CalculationResponse,
   LengthUnit,
   PriceBasis,
   PriceUnit,
@@ -22,6 +23,7 @@ import type {
   CommandAlias,
   CommandCalc,
   CommandFamily,
+  CommandParseIssue,
   CommandParseResult,
   CommandParserSettings,
   CommandPricing,
@@ -552,8 +554,12 @@ export function cmdParse(
   settings: CommandParserSettings,
 ): CommandParseResult {
   const toks = cmdTokenize(query).map((t) => t.toLowerCase());
+  // The trailing token is still being typed unless the query ends with
+  // whitespace — never flag it, or every keystroke would raise an issue.
+  const lastTokenCommitted = /\s$/.test(query);
 
   let alias: CommandAlias | null = null;
+  let aliasCommitted = false;
   let size = "";
   let lengthM: number | null = null;
   let lengthRaw: number | null = null;
@@ -562,14 +568,18 @@ export function cmdParse(
   let qty: number | null = null;
   let gradeId: string | null = null;
   let pricingOverride: Partial<CommandPricing> | null = null;
+  const issues: CommandParseIssue[] = [];
 
-  for (const tk of toks) {
+  for (let i = 0; i < toks.length; i++) {
+    const tk = toks[i];
+    const committed = i < toks.length - 1 || lastTokenCommitted;
     if (!alias) {
       const aliasMatch = tk.match(new RegExp(`^(${COMMAND_ALIAS_RE})(.*)$`));
       if (aliasMatch) {
         const found = findAliasByPrefix(aliasMatch[1]);
         if (found) {
           alias = found;
+          aliasCommitted = committed;
           size = aliasMatch[2].replace(/×/g, "x");
           continue;
         }
@@ -592,6 +602,13 @@ export function cmdParse(
     const qm = tk.match(QTY_RE);
     if (qm && qty == null) {
       qty = parseInt(qm[1], 10);
+      if (qty < 1) {
+        issues.push({
+          code: "invalidQty",
+          token: tk,
+          message: "Quantity must be at least 1.",
+        });
+      }
       continue;
     }
     // Grade check must precede the bare-number fallback so numeric grade
@@ -609,6 +626,15 @@ export function cmdParse(
       lengthM = toMillimeters(v, lengthUnit) / 1000;
       lengthExplicit = false;
       continue;
+    }
+    // Fell through every matcher. Duplicates of an already-filled slot keep
+    // their token kind and stay silent; genuinely unrecognized input is an issue.
+    if (committed && cmdClassifyToken(tk) === "unknown") {
+      issues.push({
+        code: "unknownToken",
+        token: tk,
+        message: `Didn't understand "${tk}".`,
+      });
     }
   }
 
@@ -646,6 +672,31 @@ export function cmdParse(
   let calc: CommandCalc | null = null;
   let density = effectiveGrade?.density ?? 7850;
 
+  // Only report size/geometry problems once the profile token is committed —
+  // "hea1" on the way to "hea120" is progress, not an error.
+  const reportGeometry = (input: CalculationInput | null, response: CalculationResponse | null) => {
+    if (!aliasCommitted || !alias) return;
+    if (!input) {
+      issues.push({
+        code: "unknownSize",
+        token: size,
+        message: `No ${alias.name} size "${size}".`,
+        params: { profile: alias.name, size },
+      });
+      return;
+    }
+    if (response && !response.ok) {
+      const first = response.issues[0];
+      issues.push({
+        code: "invalidGeometry",
+        token: size,
+        message: first?.message ?? "Invalid dimensions.",
+        messageKey: first?.messageKey,
+        messageValues: first?.messageValues,
+      });
+    }
+  };
+
   if (alias && hasSize && lengthM != null) {
     const input = buildCalculationInput(
       alias,
@@ -655,13 +706,13 @@ export function cmdParse(
       effectiveGradeId,
       effectivePricing,
     );
-    if (input) {
-      const response = calculateMetal(input);
-      if (response.ok) {
-        calc = { input, result: response.result };
-        kgm = response.result.unitWeightKg / lengthM;
-        density = response.result.densityKgPerM3;
-      }
+    const response = input ? calculateMetal(input) : null;
+    if (input && response?.ok) {
+      calc = { input, result: response.result };
+      kgm = response.result.unitWeightKg / lengthM;
+      density = response.result.densityKgPerM3;
+    } else {
+      reportGeometry(input, response);
     }
   } else if (alias && hasSize && lengthM == null) {
     // Compute kg/m even without a length so the equation line can show it.
@@ -673,12 +724,12 @@ export function cmdParse(
       effectiveGradeId,
       effectivePricing,
     );
-    if (input) {
-      const response = calculateMetal(input);
-      if (response.ok) {
-        kgm = response.result.unitWeightKg;
-        density = response.result.densityKgPerM3;
-      }
+    const response = input ? calculateMetal(input) : null;
+    if (input && response?.ok) {
+      kgm = response.result.unitWeightKg;
+      density = response.result.densityKgPerM3;
+    } else {
+      reportGeometry(input, response);
     }
   }
 
@@ -708,6 +759,7 @@ export function cmdParse(
     selectedSizeId: calc?.input.selectedSizeId ?? null,
     name,
     valid: calc != null,
+    issues,
     pricing: effectivePricing,
     priceOverride: pricingOverride
       ? {
