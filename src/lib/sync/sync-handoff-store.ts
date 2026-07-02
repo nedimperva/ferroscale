@@ -22,7 +22,6 @@ type ErrorEntry = {
 type HandoffEntry = PendingEntry | CompleteEntry | ErrorEntry;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __ferroscaleAuthHandoffStore: Map<string, HandoffEntry> | undefined;
 }
 

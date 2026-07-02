@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design concept mockups — prototypes, not app source.
+    ".design-fetch/**",
   ]),
 ]);
 

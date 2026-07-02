@@ -243,7 +243,6 @@ function SidebarNavItem({
   icon: React.ReactNode;
   count?: number;
 }) {
-  const t = useTranslations("command");
   return (
     <button
       type="button"

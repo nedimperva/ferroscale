@@ -19,12 +19,10 @@
     "test:all": "npm run test && npm run test:core"
   },
   "dependencies": {
-    "framer-motion": "^12.34.3",
     "next": "16.1.6",
     "next-intl": "^4.8.2",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "vaul": "^1.1.2"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
