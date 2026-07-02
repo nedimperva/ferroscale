@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.2.0] - 2026-07-02
+
+### Added
+
+- Shareable calculation links: the URL now mirrors your query (e.g. `/en?q=hea120+6m+x2`), and a new Share link action copies it — opening a link restores the calculation instantly
+- Copy value action copies the result itself (total weight or total price) instead of the query text
+- The command bar now explains input it didn't understand — unknown tokens, non-existent standard sizes, invalid quantities, and impossible geometry show a message under the query line, and unrecognized tokens are highlighted
+- Smarter suggestions: your recent queries appear before the profile chips, and sizes you recently used for a profile appear before the standard sizes
+- Continuous integration: lint (hard gate), en/bs message parity, both test suites, and a production build run on every push and pull request
+
+### Changed
+
+- The session tape is now persistent — logged calculations survive reloads and are included in Google Drive sync (up to 50 entries)
+- The command query parser (grammar, suggestions, formatting) moved into `@ferroscale/metal-core` as the package's single parser, ready for reuse by non-web surfaces such as a Raycast extension or CLI
+- Internal: removed unused dependencies (framer-motion, vaul) and dead hooks/components; deduplicated command UI constants; refreshed AGENTS.md, READMEs, and docs; replaced the stale e2e suite with a command-bar spec
+
+### Removed
+
+- **Breaking (metal-core):** the unused `quick` module (`parseQuickQuery`, `calculateQuickWeight`, `@ferroscale/metal-core/quick`) — it had no consumers; use the `command` module instead
+
+---
+
 ## [3.1.0] - 2026-06-09
 
 ### Added

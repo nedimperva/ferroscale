@@ -17,6 +17,28 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.2.0",
+    date: "2026-07-02",
+    added: [
+      "Shareable calculation links: the URL now mirrors your query (e.g. /en?q=hea120+6m+x2), and a new Share link action copies it — opening a link restores the calculation instantly",
+      "Copy value action copies the result itself (total weight or total price) instead of the query text",
+      "The command bar now explains input it didn't understand — unknown tokens, non-existent standard sizes, invalid quantities, and impossible geometry show a message under the query line, and unrecognized tokens are highlighted",
+      "Smarter suggestions: your recent queries appear before the profile chips, and sizes you recently used for a profile appear before the standard sizes",
+    ],
+    changed: [
+      "The session tape is now persistent — logged calculations survive reloads and are included in Google Drive sync (up to 50 entries)",
+    ],
+    added_bs: [
+      "Linkovi za dijeljenje izračuna: URL sada prati vaš upit (npr. /en?q=hea120+6m+x2), a nova akcija Podijeli link ga kopira — otvaranje linka odmah vraća izračun",
+      "Akcija Kopiraj vrijednost kopira sam rezultat (ukupnu težinu ili ukupnu cijenu) umjesto teksta upita",
+      "Komandna traka sada objašnjava unos koji nije razumjela — nepoznati tokeni, nepostojeće standardne veličine, neispravne količine i nemoguća geometrija prikazuju poruku ispod linije upita",
+      "Pametniji prijedlozi: vaši nedavni upiti pojavljuju se prije profila, a nedavno korištene veličine prije standardnih veličina",
+    ],
+    changed_bs: [
+      "Sesijska traka je sada trajna — zabilježeni izračuni preživljavaju ponovno učitavanje i uključeni su u Google Drive sinhronizaciju (do 50 unosa)",
+    ],
+  },
+  {
     version: "3.1.0",
     date: "2026-06-09",
     added: [

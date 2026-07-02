@@ -1,117 +1,147 @@
 # AGENTS.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+Guidance for coding agents working in this repository.
 
 ## Project Overview
 
-EU-focused web app for metal profile weight and price estimation. Supports 12 profile types (manual and EN-standard sizes), steel/stainless/aluminum grades, and multiple pricing modes.
+EU-focused web app for metal profile weight and price estimation, built
+around a command bar: the user types a query like `hea120 6m x2 s235
+@2.50/kg` and gets a live result. Supports 20 profile types (manual and
+EN-standard sizes), steel/stainless/aluminum grades, and multiple
+pricing modes.
 
 ## Commands
 
-```powershell
-npm run dev        # Start dev server at localhost:3000
-npm run build      # Production build
-npm run lint       # ESLint (flat config, ESLint 9)
-npm run test       # Run Vitest test suite
-npm run test:watch # Watch mode for tests
+```bash
+npm run dev        # Start dev server at localhost:3000 (use /en — root redirects by locale)
+npm run build      # Production build (prebuild injects the SW cache version)
+npm run lint       # ESLint (flat config) — must stay green; CI treats it as a hard gate
+npm run test       # Web vitest suite
+npm run test:core  # metal-core vitest suite (command parser, suggestions)
+npm run test:all   # Both suites
+npm run i18n:check # en/bs message parity — fails CI when locales drift
+npx playwright test  # e2e (set PLAYWRIGHT_CHROMIUM_EXECUTABLE to reuse a system Chromium)
 ```
 
-Run a single test file:
-```powershell
-npx vitest run src/lib/calculator/engine.test.ts
-```
+Run a single test file: `npx vitest run src/lib/calculator/engine.test.ts`
 
 ## Architecture
 
-### Core Calculation Flow
-1. **Input collection** → `useCalculator` hook manages form state via reducer (`src/hooks/useCalculator.ts`)
-2. **Validation** → `validateCalculationInput()` in `src/lib/calculator/validation.ts`
-3. **Calculation** → `calculateMetal()` in `src/lib/calculator/engine.ts` computes weight/price
-4. **Result display** → Components in `src/components/calculator/`
+### The command flow (the whole app)
 
-### Key Modules
+Every app route (`/`, `/saved`, `/projects`, `/settings`) renders `null`
+and exists only for metadata/URLs; `RouteAwareAppShell`
+(`src/components/route-aware-app-shell.tsx`) mounts the client-side
+`CommandShell` for all of them.
 
-**Calculation Engine** (`src/lib/calculator/`)
-- `engine.ts` - Core `calculateMetal()` function; resolves cross-section area by profile type, computes volume → weight → pricing
-- `types.ts` - TypeScript types for `CalculationInput`, `CalculationResult`, units, and validation
-- `validation.ts` - Input validation with geometry checks (e.g., pipe wall thickness < outer radius)
-- `units.ts` - Unit conversion utilities (mm/cm/m/in/ft, kg/lb)
+1. **State** — `CommandShell` (`src/components/command/command-shell.tsx`)
+   holds the query string; everything derives from it. Three viewports:
+   phone <640 (on-screen keypad), medium 640–1023 (centered card), wide
+   ≥1024 (`CommandDesktop` two-pane workspace).
+2. **Parsing** — `cmdParse()` from `@ferroscale/metal-core` (source:
+   `packages/metal-core/src/command/parser.ts`). Order-tolerant tokens:
+   profile+size, length (or bare number using the default unit), `xN`
+   quantity, grade alias, inline `@price/unit`. Returns totals plus
+   `issues[]` (structured feedback for unknown tokens/sizes, bad
+   quantities, geometry rejections).
+3. **Suggestions** — `cmdSuggest()` (same package) drives the chip bar:
+   stage machine empty → profile → size → length → qty → grade → done,
+   with recent queries/sizes (from `useQuickHistory`) ranked before the
+   curated lists.
+4. **Calculation** — `calculateMetal()` in
+   `packages/metal-core/src/calculator/engine.ts`.
+5. **Share links** — the query is mirrored to `?q=` (`src/lib/command/share.ts`);
+   a `?q=` param on load hydrates the command line.
 
-**Datasets** (`src/lib/datasets/`)
-- `materials.ts` - Metal families and grades with EN-standard densities
-- `profiles/` - Profile definitions split by category:
-  - `manual.ts` - Simple profiles (bars, pipes, plates) with user-entered dimensions
-  - `beams.ts` - IPE, IPN, HEA, HEB, HEM beam sizes with pre-computed areas
-  - `channels-angles.ts` - UPN, UPE channels and equal angles
-  - `tees.ts` - T-section profiles
-- `types.ts` - TypeScript types for profiles, dimensions, and categories
-- `version.ts` - Dataset version string used in calculation traceability
+### Workspace layout
 
-**Hooks** (`src/hooks/`)
-- `useCalculator.ts` - Main state management with `useReducer`; handles profile switching, input persistence to localStorage, debounced reactive calculation
-- `useHistory.ts` - Local browser history (last 10 calculations) and starred entries
+- `src/` — Next.js app. `src/lib/calculator/*` and `src/lib/datasets/*`
+  are one-line re-export shims over metal-core (kept so app imports stay
+  short); real web-only logic lives in `src/lib/command/share.ts`,
+  `profile-specs.ts`, `standard-sizes.ts`, `csv.ts`, `fingerprint.ts`,
+  `input-storage.ts`, `settings-stores.ts`, `sync/`.
+- `packages/metal-core/` — shared package (engine, validation, units,
+  datasets, command parser/suggestions). UI-independent; intended to be
+  reusable by non-web surfaces (Raycast/CLI) — keep it free of web
+  imports and i18n.
 
-### Profile System
+### State & persistence
+
+- Settings: `useSyncExternalStore` stores in `src/lib/settings-stores.ts`
+  (shared pricing/grade read-modify-writes the persisted
+  `CalculationInput`) and `src/lib/external-stores.ts` factories.
+- Collections (all localStorage + Google Drive sync):
+  `useSaved` (`ferroscale-saved-v2`), `useProjects`
+  (`advanced-calc-projects-v2`, max 20×50), `useCompare`, `usePresets`,
+  `useQuickHistory` (`ferroscale-quick-history` — the session tape and
+  recency suggestions, capped at 50).
+- Sync layer: `src/lib/sync/` — schema-versioned snapshots
+  (`SYNC_SCHEMA_VERSION`), AES-GCM encryption, dirty-tracking registry.
+  Adding a synced collection touches `keys.ts`, `collections.ts`,
+  `records.ts`, and the snapshot types.
+
+### Profile system
+
 Profiles have two modes:
-- **manual**: User enters dimensions (e.g., diameter for round bar); area computed via formula in `resolveAreaMm2()`
-- **standard**: User selects from EN-standard sizes with pre-computed `areaMm2` values
+- **manual**: user-entered dimensions; area formula branch in
+  `resolveAreaMm2()` (and `resolvePerimeterMm()`) in the engine
+- **standard**: EN-standard sizes with pre-computed `areaMm2`
 
 When adding a new profile:
-1. Add `ProfileId` to `src/lib/datasets/types.ts`
-2. Add profile definition to appropriate file in `src/lib/datasets/profiles/`
-3. If manual mode, add area formula case in `resolveAreaMm2()` in `engine.ts`
-4. Add validation rules in `validation.ts` if needed
-5. Add test cases to `engine.test.ts`
+1. Add `ProfileId` to `packages/metal-core/src/datasets/types.ts`
+2. Add the definition under `packages/metal-core/src/datasets/profiles/`
+3. Manual mode: add area/perimeter branches in the engine + validation rules
+4. Add drawing geometry in `src/lib/calculator/profile-specs.ts`
+5. Add command aliases in `packages/metal-core/src/command/aliases.ts`
+   (without an alias, saved entries can't restore into the command line)
+6. Add engine test cases
 
-### API Routes
-- `GET /api/health` - Health check
-- `GET /api/captcha` - Generate CAPTCHA challenge
-- `POST /api/contact` - Contact form with rate limiting (`src/lib/contact/`)
+### API routes
+
+- `GET /api/health`, `GET /api/captcha`, `POST /api/contact` (rate-limited)
+- `src/app/api/sync/google/*` — Drive appdata sync (auth device flow,
+  pull/push/disconnect); reads env at request time, so builds need no secrets
 
 ### PWA
-- Service worker: `public/sw.js`
-- Offline fallback: `public/offline.html`
-- Manifest route: `src/app/manifest.ts`
-- Registration: `src/components/pwa-register.tsx`
+
+- `public/sw.js` (cache name injected by `scripts/inject-sw-version.mjs`
+  from app version + `DATASET_VERSION`), `public/offline.html`,
+  `src/app/manifest.ts`, registration in `src/components/pwa-register.tsx`.
 
 ## Testing
 
-Tests use Vitest with `@/` path alias. The benchmark suite in `engine.test.ts` runs 200+ cases across all profiles × multiple lengths/quantities/waste/VAT combinations and enforces ≤0.5% deviation from expected values.
+Vitest with `@/` and `@ferroscale/metal-core` aliases (see both
+`vitest.config.ts` files). The benchmark suite in `engine.test.ts` runs
+200+ cases and enforces ≤0.5% deviation. e2e lives in `e2e/command.spec.ts`.
+
+## i18n
+
+next-intl, locales `en` + `bs` (`messages/*.json`, bs deep-merges over
+en). Every new user-facing string needs keys in **both** files or
+`npm run i18n:check` fails CI. metal-core stays i18n-free — parser
+issues carry a `code` the web maps to `command.issues.*`.
 
 ## Tech Stack
-- Next.js 16 (App Router)
-- React 19
-- TypeScript 5
-- Tailwind CSS 4
-- Vitest 4
+
+Next.js 16 (App Router) · React 19 · TypeScript 5 · Tailwind CSS 4
+(CSS-first, tokens in `src/app/globals.css`) · Vitest 4 · Playwright
 
 ## Changelog Maintenance
 
 When adding any user-visible feature, fix, or change:
 
-1. Add an entry to `src/lib/changelog.ts` under the current version block, or create a new version block if shipping a release. This is the **single source of truth** for the in-app changelog viewer.
-2. Keep `CHANGELOG.md` at the repo root in sync — it mirrors `src/lib/changelog.ts` in Keep-a-Changelog markdown format.
-3. Bump `DATASET_VERSION` in `packages/metal-core/src/datasets/version.ts` if any dataset (profiles, materials, densities) changed.
+1. Add an entry to `src/lib/changelog.ts` under the current version
+   block (single source of truth for the in-app changelog viewer).
+2. Keep `CHANGELOG.md` at the repo root in sync (Keep-a-Changelog format).
+3. Bump `DATASET_VERSION` in `packages/metal-core/src/datasets/version.ts`
+   if any dataset (profiles, materials, densities) changed.
 
-Entry categories:
-- **added** — new features or capabilities visible to users
-- **changed** — existing behaviour modified (UX, layout, defaults)
-- **fixed** — bug fixes
+Entry categories: **added** / **changed** / **fixed** (+ `_bs` variants
+for Bosnian).
 
-Example `src/lib/changelog.ts` entry:
-```ts
-{
-  version: "1.6.0",
-  date: "2026-03-15",
-  added: ["New feature description here"],
-  fixed: ["Bug fix description here"],
-},
-```
+## Environment notes
 
-## Cursor Cloud specific instructions
-
-- **Single service**: The only service is the Next.js dev server (`npm run dev`, port 3000). No database, Docker, or external services are required.
-- **Locale redirect**: The root `/` returns a 307 redirect to `/en` (or the user's locale). Always use `http://localhost:3000/en` when testing in a browser or with curl.
-- **Lint baseline**: `npm run lint` currently exits with code 1 due to one pre-existing `react-hooks/set-state-in-effect` error in `src/hooks/useAnimatedNumber.ts` plus several unused-variable warnings. This is expected and does not indicate a broken environment.
-- **No env vars needed**: The app runs fully without any `.env` file. The optional `RESEND_API_KEY`/`RESEND_FROM`/`RESEND_TO` vars only affect the contact form email delivery.
-- See the **Commands** section above for all standard dev/lint/test/build commands.
+- Single service: the Next.js dev server. No database or Docker.
+- No env vars needed to run; `RESEND_*` only affect contact-form email,
+  `GOOGLE_*` only affect Drive sync.
+- The root `/` returns a 307 redirect — always test against `/en`.
