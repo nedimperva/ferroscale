@@ -94,9 +94,9 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
     }
   }, [banner]);
 
-  // We deliberately do NOT subscribe to `beforeinstallprompt` — the browser's
-  // install affordance (address-bar icon / share menu) is plenty, and the
-  // sticky banner felt nag-y. Offline / update / ready stay.
+  // Installation is deliberately NOT a banner here — it felt nag-y. The
+  // deferred beforeinstallprompt is captured in lib/install-prompt.ts and
+  // surfaced as a user-initiated action in Settings (InstallAppSection).
 
   // Offline state always takes priority over everything else.
   const activeBanner: BannerState = isOffline ? "offline" : banner;

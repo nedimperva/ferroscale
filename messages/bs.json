@@ -36,7 +36,10 @@
     "whatsNew": "Šta je novo",
     "updateNow": "Ažuriraj sada",
     "readyForOffline": "Aplikacija je spremna za korištenje bez interneta.",
-    "dismiss": "Zatvori"
+    "dismiss": "Zatvori",
+    "installTitle": "Instaliraj FerroScale",
+    "installBody": "Dodajte aplikaciju na početni ekran ili radnu površinu — otvara se odmah i radi offline.",
+    "installButton": "Instaliraj aplikaciju"
   },
   "command": {
     "common": {

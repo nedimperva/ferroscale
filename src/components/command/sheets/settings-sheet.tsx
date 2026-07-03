@@ -13,6 +13,7 @@ import {
 } from "../settings-model";
 import { SheetShell } from "./sheet-shell";
 import { SyncSection } from "./sync-section";
+import { InstallAppSection } from "../install-section";
 
 function SettingsRow({
   label,
@@ -239,6 +240,7 @@ export function CommandSettingsSheet({
       <p className="text-[11px] text-muted mt-1 px-1">
         {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
       </p>
+      <InstallAppSection />
       <CommandDocsSection />
       <SyncSection />
     </SheetShell>

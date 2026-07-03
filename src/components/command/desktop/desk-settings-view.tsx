@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { CommandDocsSection, useCommandLocaleSwitch } from "../sheets/settings-sheet";
 import { SyncSection } from "../sheets/sync-section";
+import { InstallAppSection } from "../install-section";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
@@ -235,6 +236,7 @@ export function DeskSettingsView({
           <p className="text-[11px] text-muted mt-3 px-1">
             {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
           </p>
+          <InstallAppSection />
           <SyncSection />
           </div>
           <CommandDocsSection className="mt-0" />

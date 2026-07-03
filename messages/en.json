@@ -36,7 +36,10 @@
     "whatsNew": "What changed",
     "updateNow": "Update now",
     "readyForOffline": "App is ready for offline use.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "installTitle": "Install FerroScale",
+    "installBody": "Add the app to your home screen or desktop — it opens instantly and works offline.",
+    "installButton": "Install app"
   },
   "command": {
     "common": {
