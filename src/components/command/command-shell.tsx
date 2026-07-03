@@ -32,7 +32,7 @@ import {
   formatCommandSuggestionLabel,
 } from "./command-copy";
 import { KIND_BG } from "./command-constants";
-import { CommandToast, PricingBadge } from "./command-atoms";
+import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
@@ -377,6 +377,17 @@ export function CommandShell() {
       ? fsMoney(p.totalAmount)
       : "—";
 
+  // Screen-reader announcement for the settled result (mirrors the hero +
+  // secondary metric). Empty while invalid — the issue line announces errors.
+  const liveResultText =
+    p.valid && p.totalKg != null
+      ? t("aria.liveResult", {
+          value:
+            `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}` +
+            (p.totalAmount != null ? ` · ${sym}${fsMoney(p.totalAmount)}` : ""),
+        })
+      : "";
+
   // Tokens come from the same tokenizer the parser uses, so glued input
   // ("hea1006m") displays as the pieces it is parsed as.
   const queryTokens = useMemo(() => cmdTokenize(query), [query]);
@@ -463,6 +474,7 @@ export function CommandShell() {
           />
         )}
         <CommandToast toast={toast} bottom={32} dark={dark} />
+        <ResultAnnouncer text={liveResultText} />
       </div>
     );
   }
@@ -1045,6 +1057,7 @@ export function CommandShell() {
 
           {/* TOAST */}
           <CommandToast toast={toast} bottom={isPhoneViewport ? 120 : 20} dark={dark} />
+          <ResultAnnouncer text={liveResultText} />
       </div>
     </div>
   );

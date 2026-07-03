@@ -110,7 +110,7 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
 
   if (activeBanner === "offline") {
     return (
-      <div className="sticky top-0 z-50 border-b border-orange-300 bg-orange-100 px-4 py-2 text-center text-sm text-orange-950 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-100">
+      <div role="status" className="sticky top-0 z-50 border-b border-orange-300 bg-orange-100 px-4 py-2 text-center text-sm text-orange-950 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-100">
         {t("offlineBanner")}
       </div>
     );
@@ -119,7 +119,7 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
   if (activeBanner === "update") {
     return (
       <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
-        <span className="min-w-0 flex-1">{t("updateAvailable")}</span>
+        <span role="status" className="min-w-0 flex-1">{t("updateAvailable")}</span>
         <div className="flex shrink-0 items-center gap-2">
           {onOpenChangelog && (
             <button
@@ -144,7 +144,7 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
 
   if (activeBanner === "ready") {
     return (
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-green-200 bg-green-50 px-4 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
+      <div role="status" className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-green-200 bg-green-50 px-4 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
         <span>{t("readyForOffline")}</span>
         <button
           onClick={() => setBanner(null)}
