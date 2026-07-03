@@ -33,7 +33,7 @@ import {
 } from "./command-copy";
 import { KIND_BG } from "./command-constants";
 import { CommandKeypad } from "./command-keypad";
-import { CommandDesktop } from "./command-desktop";
+import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
