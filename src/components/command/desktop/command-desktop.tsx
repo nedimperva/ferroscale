@@ -128,7 +128,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "settings" && (
         <DeskSettingsView
           dark={props.dark}
-          sym={props.sym}
           shared={props.shared}
           onUpdateShared={props.onUpdateShared}
           weightAsMain={props.weightAsMain}

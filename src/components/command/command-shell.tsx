@@ -1027,7 +1027,7 @@ export function CommandShell() {
               onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
-              themeLabel={dark ? t("settings.dark") : t("settings.light")}
+              dark={dark}
             />
           )}
           {effectiveSheet === "library" && (

@@ -3,11 +3,14 @@
 import { useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { routing, type AppLocale } from "@/i18n/routing";
-import { COMMAND_GRADES, CURRENCY_SYMBOLS } from "@ferroscale/metal-core";
-import { BASIS_UNIT, CURRENCIES, UNIT_OPTIONS } from "../command-constants";
+import type { AppLocale } from "@/i18n/routing";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
-import type { LengthUnit, PriceBasis } from "@/lib/calculator/types";
+import type { LengthUnit } from "@/lib/calculator/types";
+import {
+  buildSettingsFields,
+  CHOICE_SELECT_THRESHOLD,
+  type SettingsField,
+} from "../settings-model";
 import { SheetShell } from "./sheet-shell";
 import { SyncSection } from "./sync-section";
 
@@ -112,6 +115,79 @@ export function CommandDocsSection({ className = "mt-4" }: { className?: string 
   );
 }
 
+const NUMBER_INPUT_CLASS =
+  "h-9 w-20 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground";
+
+/** Renders one model field with the sheet's control language (pills/select/input). */
+function SheetField({ field }: { field: SettingsField }) {
+  const t = useTranslations("command");
+  if (field.kind === "choice") {
+    return (
+      <SettingsRow label={field.label}>
+        {field.options.length > CHOICE_SELECT_THRESHOLD ? (
+          <select
+            aria-label={field.label}
+            value={field.value}
+            onChange={(e) => field.onSelect(e.target.value)}
+            className="h-9 rounded-lg border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground"
+          >
+            {field.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.sub ? `${o.sub} · ${o.label}` : o.label}
+              </option>
+            ))}
+          </select>
+        ) : (
+          field.options.map((o) => (
+            <SettingsPill
+              key={o.value}
+              active={field.value === o.value}
+              onClick={() => field.onSelect(o.value)}
+            >
+              {o.label}
+            </SettingsPill>
+          ))
+        )}
+      </SettingsRow>
+    );
+  }
+  if (field.kind === "number") {
+    return (
+      <SettingsRow label={field.label}>
+        <input
+          aria-label={field.label}
+          type="number"
+          step={field.step}
+          min={field.min}
+          max={field.max}
+          value={field.value}
+          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+          className={NUMBER_INPUT_CLASS}
+        />
+      </SettingsRow>
+    );
+  }
+  return (
+    <SettingsRow label={field.label}>
+      <SettingsPill active={field.on} onClick={() => field.onToggle(!field.on)}>
+        {field.on ? t("common.on") : t("common.off")}
+      </SettingsPill>
+      {field.on && (
+        <input
+          aria-label={field.label}
+          type="number"
+          step={field.step}
+          min={field.min}
+          max={field.max}
+          value={field.value}
+          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+          className={NUMBER_INPUT_CLASS}
+        />
+      )}
+    </SettingsRow>
+  );
+}
+
 interface CommandSettingsSheetProps {
   shared: SharedCalcSettings;
   onUpdateShared: (patch: Partial<SharedCalcSettings>) => void;
@@ -121,7 +197,7 @@ interface CommandSettingsSheetProps {
   onSetDefaultUnit: (unit: LengthUnit) => void;
   onClose: () => void;
   onToggleTheme: () => void;
-  themeLabel: string;
+  dark: boolean;
 }
 
 export function CommandSettingsSheet({
@@ -133,142 +209,29 @@ export function CommandSettingsSheet({
   onSetDefaultUnit,
   onClose,
   onToggleTheme,
-  themeLabel,
+  dark,
 }: CommandSettingsSheetProps) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
-  const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
-  const numberInput =
-    "h-9 w-20 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground";
+  const fields = buildSettingsFields({
+    t,
+    shared,
+    onUpdateShared,
+    weightAsMain,
+    onSetWeightAsMain,
+    defaultUnit,
+    onSetDefaultUnit,
+    locale,
+    setLocale,
+    dark,
+    onToggleTheme,
+  });
   return (
     <SheetShell title={t("sheets.settings")} onClose={onClose}>
       <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4">
-        <SettingsRow label={t("settings.mainResult")}>
-          <SettingsPill active={weightAsMain} onClick={() => onSetWeightAsMain(true)}>
-            {t("settings.weight")}
-          </SettingsPill>
-          <SettingsPill active={!weightAsMain} onClick={() => onSetWeightAsMain(false)}>
-            {t("settings.price")}
-          </SettingsPill>
-        </SettingsRow>
-        <SettingsRow label={t("settings.currency")}>
-          {CURRENCIES.map((c) => (
-            <SettingsPill
-              key={c}
-              active={shared.currency === c}
-              onClick={() => onUpdateShared({ currency: c })}
-            >
-              {c}
-            </SettingsPill>
-          ))}
-        </SettingsRow>
-        <SettingsRow label={t("settings.priceBasis")}>
-          {(Object.keys(BASIS_UNIT) as PriceBasis[]).map((basis) => (
-            <SettingsPill
-              key={basis}
-              active={shared.priceBasis === basis}
-              onClick={() =>
-                onUpdateShared({ priceBasis: basis, priceUnit: BASIS_UNIT[basis] })
-              }
-            >
-              {basis === "weight" ? t("settings.weight") : basis === "length" ? t("settings.length") : t("settings.piece")}
-            </SettingsPill>
-          ))}
-        </SettingsRow>
-        <SettingsRow label={`${sym} / ${shared.priceUnit}`}>
-          <input
-            aria-label={`${sym} / ${shared.priceUnit}`}
-            type="number"
-            step={0.01}
-            min={0}
-            value={shared.unitPrice}
-            onChange={(e) =>
-              onUpdateShared({ unitPrice: parseFloat(e.target.value) || 0 })
-            }
-            className={numberInput}
-          />
-        </SettingsRow>
-        <SettingsRow label={t("settings.wastePercent")}>
-          <input
-            aria-label={t("settings.wastePercent")}
-            type="number"
-            step={1}
-            min={0}
-            max={100}
-            value={shared.wastePercent}
-            onChange={(e) =>
-              onUpdateShared({ wastePercent: parseFloat(e.target.value) || 0 })
-            }
-            className={numberInput}
-          />
-        </SettingsRow>
-        <SettingsRow label={t("settings.vat")}>
-          <SettingsPill
-            active={shared.includeVat}
-            onClick={() => onUpdateShared({ includeVat: !shared.includeVat })}
-          >
-            {shared.includeVat ? t("common.on") : t("common.off")}
-          </SettingsPill>
-          {shared.includeVat && (
-            <input
-              aria-label={t("settings.vat")}
-              type="number"
-              step={1}
-              min={0}
-              max={100}
-              value={shared.vatPercent}
-              onChange={(e) =>
-                onUpdateShared({ vatPercent: parseFloat(e.target.value) || 0 })
-              }
-              className={numberInput}
-            />
-          )}
-        </SettingsRow>
-        <SettingsRow label={t("settings.defaultGrade")}>
-          <select
-            aria-label={t("settings.defaultGrade")}
-            value={shared.defaultGradeId}
-            onChange={(e) => onUpdateShared({ defaultGradeId: e.target.value })}
-            className="h-9 rounded-lg border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground"
-          >
-            {COMMAND_GRADES.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.group} · {g.label}
-              </option>
-            ))}
-          </select>
-        </SettingsRow>
-        <SettingsRow label={t("settings.defaultUnit")}>
-          {UNIT_OPTIONS.map((u) => (
-            <SettingsPill
-              key={u}
-              active={defaultUnit === u}
-              onClick={() => onSetDefaultUnit(u)}
-            >
-              {u}
-            </SettingsPill>
-          ))}
-        </SettingsRow>
-        <SettingsRow label={t("settings.language")}>
-          {routing.locales.map((localeOption) => (
-            <SettingsPill
-              key={localeOption}
-              active={locale === localeOption}
-              onClick={() => setLocale(localeOption)}
-            >
-              {t(`settings.locales.${localeOption}`)}
-            </SettingsPill>
-          ))}
-        </SettingsRow>
-        <SettingsRow label={t("settings.theme")}>
-          <button
-            type="button"
-            onClick={onToggleTheme}
-            className="h-9 px-3 rounded-lg border border-border-faint bg-[var(--surface)] text-sm font-semibold text-foreground"
-          >
-            {themeLabel}
-          </button>
-        </SettingsRow>
+        {fields.map((field) => (
+          <SheetField key={field.id} field={field} />
+        ))}
       </div>
       <p className="text-[11px] text-muted mt-3 px-1">
         {t("settings.applyAcrossCommand")}

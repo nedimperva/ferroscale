@@ -1,23 +1,27 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { COMMAND_GRADES, CURRENCY_SYMBOLS } from "@ferroscale/metal-core";
-import { BASIS_UNIT, CURRENCIES, UNIT_OPTIONS } from "../command-constants";
 import { CommandDocsSection, useCommandLocaleSwitch } from "../sheets/settings-sheet";
 import { SyncSection } from "../sheets/sync-section";
-import type { AppLocale } from "@/i18n/routing";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
-import type { LengthUnit, PriceBasis } from "@/lib/calculator/types";
+import type { LengthUnit } from "@/lib/calculator/types";
+import {
+  buildSettingsFields,
+  CHOICE_SELECT_THRESHOLD,
+  type SettingsField,
+  type SettingsNumberField,
+  type SettingsToggleNumberField,
+} from "../settings-model";
 import { DeskTopbar } from "./desk-sidebar";
 
-function Seg<T extends string>({
+function Seg({
   value,
   options,
   onChange,
 }: {
-  value: T;
-  options: { v: T; label: string; mono?: boolean }[];
-  onChange: (v: T) => void;
+  value: string;
+  options: { v: string; label: string; mono?: boolean }[];
+  onChange: (v: string) => void;
 }) {
   return (
     <div
@@ -57,36 +61,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function DeskSettingsView({
-  dark,
-  sym,
-  shared,
-  onUpdateShared,
-  weightAsMain,
-  onSetWeightAsMain,
-  defaultUnit,
-  onSetDefaultUnit,
-  onToggleTheme,
+function NumberBox({
+  field,
+  prefix,
 }: {
-  dark: boolean;
-  sym: string;
-  shared: SharedCalcSettings;
-  onUpdateShared: (patch: Partial<SharedCalcSettings>) => void;
-  weightAsMain: boolean;
-  onSetWeightAsMain: (value: boolean) => void;
-  defaultUnit: LengthUnit;
-  onSetDefaultUnit: (unit: LengthUnit) => void;
-  onToggleTheme: () => void;
+  field: SettingsNumberField | SettingsToggleNumberField;
+  prefix?: string;
 }) {
-  const t = useTranslations("command");
-  const { locale, setLocale } = useCommandLocaleSwitch();
-  const numberBox = (
-    label: string,
-    value: number,
-    onChange: (v: number) => void,
-    suffix: string,
-    prefix?: string,
-  ) => (
+  return (
     <div
       className="flex items-center gap-2.5 rounded-[13px]"
       style={{
@@ -101,17 +83,129 @@ export function DeskSettingsView({
         </span>
       )}
       <input
-        aria-label={label}
+        aria-label={field.deskLabel}
         type="number"
-        step={0.01}
-        min={0}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        step={field.step}
+        min={field.min}
+        max={field.max}
+        value={field.value}
+        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
         className="flex-1 w-full border-0 bg-transparent outline-none font-mono text-[17px] font-bold text-foreground"
       />
-      <span className="text-[13px] text-muted font-semibold">{suffix}</span>
+      <span className="text-[13px] text-muted font-semibold">{field.suffix}</span>
     </div>
   );
+}
+
+/** Renders one model field with the desktop control language (Seg/grid/box). */
+function DeskField({ field }: { field: SettingsField }) {
+  const t = useTranslations("command");
+  if (field.kind === "choice") {
+    return (
+      <Field label={field.deskLabel}>
+        {field.options.length > CHOICE_SELECT_THRESHOLD ? (
+          <div className="flex gap-[7px] flex-wrap">
+            {field.options.map((o) => {
+              const active = field.value === o.value;
+              return (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => field.onSelect(o.value)}
+                  className={`rounded-[11px] cursor-pointer font-bold text-[13px] ${o.mono ? "font-mono" : ""}`}
+                  style={{
+                    padding: "8px 14px",
+                    border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
+                    background: active ? "var(--accent-surface)" : "var(--surface-raised)",
+                    color: active ? "var(--accent-text)" : "var(--foreground-secondary)",
+                  }}
+                >
+                  {o.label}
+                  {o.sub && (
+                    <span className="font-sans text-[10px] text-muted ml-1.5">{o.sub}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <Seg
+            value={field.value}
+            onChange={field.onSelect}
+            options={field.options.map((o) => ({
+              v: o.value,
+              label: o.deskLabel ?? o.label,
+              mono: o.mono,
+            }))}
+          />
+        )}
+      </Field>
+    );
+  }
+  if (field.kind === "number") {
+    return (
+      <Field label={field.deskLabel}>
+        <NumberBox field={field} prefix={field.prefix} />
+      </Field>
+    );
+  }
+  return (
+    <Field label={field.deskLabel}>
+      <div className="flex items-center gap-2.5">
+        <div className="flex-1">
+          <Seg
+            value={field.on ? "on" : "off"}
+            onChange={(v) => field.onToggle(v === "on")}
+            options={[
+              { v: "off", label: t("common.off") },
+              { v: "on", label: t("common.on") },
+            ]}
+          />
+        </div>
+        {field.on && (
+          <div className="flex-1">
+            <NumberBox field={field} />
+          </div>
+        )}
+      </div>
+    </Field>
+  );
+}
+
+export function DeskSettingsView({
+  dark,
+  shared,
+  onUpdateShared,
+  weightAsMain,
+  onSetWeightAsMain,
+  defaultUnit,
+  onSetDefaultUnit,
+  onToggleTheme,
+}: {
+  dark: boolean;
+  shared: SharedCalcSettings;
+  onUpdateShared: (patch: Partial<SharedCalcSettings>) => void;
+  weightAsMain: boolean;
+  onSetWeightAsMain: (value: boolean) => void;
+  defaultUnit: LengthUnit;
+  onSetDefaultUnit: (unit: LengthUnit) => void;
+  onToggleTheme: () => void;
+}) {
+  const t = useTranslations("command");
+  const { locale, setLocale } = useCommandLocaleSwitch();
+  const fields = buildSettingsFields({
+    t,
+    shared,
+    onUpdateShared,
+    weightAsMain,
+    onSetWeightAsMain,
+    defaultUnit,
+    onSetDefaultUnit,
+    locale,
+    setLocale,
+    dark,
+    onToggleTheme,
+  });
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
@@ -134,128 +228,9 @@ export function DeskSettingsView({
               padding: "10px 22px 16px",
             }}
           >
-            <Field label={t("settings.defaultResultUpper")}>
-              <Seg
-                value={weightAsMain ? "weight" : "price"}
-                onChange={(v) => onSetWeightAsMain(v === "weight")}
-                options={[
-                  { v: "weight", label: t("settings.weight") },
-                  { v: "price", label: t("settings.price") },
-                ]}
-              />
-            </Field>
-            <Field label={t("settings.currencyUpper")}>
-              <Seg
-                value={shared.currency}
-                onChange={(v) => onUpdateShared({ currency: v })}
-                options={CURRENCIES.map((c) => ({
-                  v: c,
-                  label: `${CURRENCY_SYMBOLS[c] ?? ""} ${c}`.trim(),
-                }))}
-              />
-            </Field>
-            <Field label={t("settings.priceBasisUpper")}>
-              <Seg
-                value={shared.priceBasis}
-                onChange={(v) =>
-                  onUpdateShared({ priceBasis: v, priceUnit: BASIS_UNIT[v] })
-                }
-                options={[
-                  { v: "weight" as PriceBasis, label: t("settings.weight") },
-                  { v: "length" as PriceBasis, label: t("settings.length") },
-                  { v: "piece" as PriceBasis, label: t("settings.piece") },
-                ]}
-              />
-            </Field>
-            <Field label={t("settings.unitPricePer", { unit: shared.priceUnit.toUpperCase() })}>
-              {numberBox(
-                t("settings.unitPricePer", { unit: shared.priceUnit.toUpperCase() }),
-                shared.unitPrice,
-                (v) => onUpdateShared({ unitPrice: v }),
-                `/${shared.priceUnit}`,
-                sym,
-              )}
-            </Field>
-            <Field label={t("settings.wastePercentUpper")}>
-              {numberBox(t("settings.wastePercentUpper"), shared.wastePercent, (v) => onUpdateShared({ wastePercent: v }), "%")}
-            </Field>
-            <Field label={t("settings.vat")}>
-              <div className="flex items-center gap-2.5">
-                <div className="flex-1">
-                  <Seg
-                    value={shared.includeVat ? "on" : "off"}
-                    onChange={(v) => onUpdateShared({ includeVat: v === "on" })}
-                    options={[
-                      { v: "off", label: t("common.off") },
-                      { v: "on", label: t("common.on") },
-                    ]}
-                  />
-                </div>
-                {shared.includeVat && (
-                  <div className="flex-1">
-                    {numberBox(
-                      t("settings.vat"),
-                      shared.vatPercent,
-                      (v) => onUpdateShared({ vatPercent: v }),
-                      "%",
-                    )}
-                  </div>
-                )}
-              </div>
-            </Field>
-            <Field label={t("settings.defaultGradeUpper")}>
-              <div className="flex gap-[7px] flex-wrap">
-                {COMMAND_GRADES.map((g) => {
-                  const active = shared.defaultGradeId === g.id;
-                  return (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => onUpdateShared({ defaultGradeId: g.id })}
-                      className="rounded-[11px] cursor-pointer font-mono font-bold text-[13px]"
-                      style={{
-                        padding: "8px 14px",
-                        border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
-                        background: active ? "var(--accent-surface)" : "var(--surface-raised)",
-                        color: active ? "var(--accent-text)" : "var(--foreground-secondary)",
-                      }}
-                    >
-                      {g.label}
-                      <span className="font-sans text-[10px] text-muted ml-1.5">{g.group}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
-            <Field label={t("settings.lengthUnitFallback")}>
-              <Seg
-                value={defaultUnit}
-                onChange={onSetDefaultUnit}
-                options={UNIT_OPTIONS.map((u) => ({ v: u, label: u, mono: true }))}
-              />
-            </Field>
-            <Field label={t("settings.languageUpper")}>
-              <Seg<AppLocale>
-                value={locale}
-                onChange={setLocale}
-                options={[
-                  { v: "en", label: t("settings.locales.en") },
-                  { v: "bs", label: t("settings.locales.bs") },
-                ]}
-              />
-            </Field>
-            <Field label={t("settings.appearance")}>
-              <Seg
-                value={dark ? "dark" : "light"}
-                onChange={(v) => {
-                  if ((v === "dark") !== dark) onToggleTheme();
-                }}
-                options={[
-                  { v: "light", label: t("settings.light") },
-                  { v: "dark", label: t("settings.dark") },
-                ]}
-              />
-            </Field>
+            {fields.map((field) => (
+              <DeskField key={field.id} field={field} />
+            ))}
           </div>
           <p className="text-[11px] text-muted mt-3 px-1">
             {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
@@ -268,5 +243,3 @@ export function DeskSettingsView({
     </div>
   );
 }
-
-/* ───────────────────────── small pieces ───────────────────────── */
