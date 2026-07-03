@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParseResult } from "@ferroscale/metal-core";
+import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
 import { KIND_BG } from "../command-constants";
 import {
@@ -536,7 +537,7 @@ export function DeskCalcView({
             background: "var(--surface-raised)",
           }}
         >
-          <DeskBreakdown p={p} sym={sym} />
+          <DeskBreakdown p={p} />
           {/* actions */}
           <div className="flex flex-col gap-2 mt-3.5">
             <DeskBtn dark={dark} primary onClick={onSave} disabled={!p.valid}>
@@ -690,9 +691,22 @@ function Line({
   );
 }
 
-function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
+/** Desktop styling per shared row id; rows not listed render as plain lines. */
+const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?: string }>> = {
+  totalWeight: { strong: true, accent: "var(--accent)" },
+  totalCost: { strong: true, accent: "var(--blue-strong)" },
+};
+
+function DeskBreakdown({ p }: { p: CommandParseResult }) {
   const t = useTranslations("command");
   const r = p.calc?.result;
+  const rows = p.valid ? buildBreakdownRows(p, t) : null;
+  // The right rail keeps a tighter subset: density lives in the header, and
+  // per-piece price / subtotal stay sheet-only.
+  const geometry = rows?.geometry.filter((row) => row.id !== "density") ?? [];
+  const pricing = rows?.pricing.filter(
+    (row) => row.id !== "perPiecePrice" && row.id !== "subtotal",
+  ) ?? [];
 
   return (
     <div
@@ -707,7 +721,7 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
       <div className="text-[10px] font-bold text-muted mb-2.5" style={{ letterSpacing: 1.2 }}>
         {t("desktop.breakdown")}
       </div>
-      {p.valid && r && p.kgm != null ? (
+      {rows && r ? (
         <>
           <div
             className="flex items-center gap-[11px]"
@@ -729,43 +743,18 @@ function DeskBreakdown({ p, sym }: { p: CommandParseResult; sym: string }) {
             </div>
           </div>
           <div style={{ paddingTop: 4 }}>
-            <Line label={t("result.massPerMetre")} value={`${p.kgm.toFixed(2)} kg/m`} />
-            <Line label={t("result.length")} value={`${p.lengthM} m`} />
-            <Line label={t("result.pieces")} value={`× ${p.realQty}`} />
+            {geometry.map((row) => (
+              <div key={row.id}>
+                <Line label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+                {row.id === "pieces" && (
+                  <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
+                )}
+              </div>
+            ))}
             <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
-            <Line
-              label={t("compare.weightPerPiece")}
-              value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
-            />
-            <Line
-              label={t("result.totalWeight")}
-              value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
-              strong
-              accent="var(--accent)"
-            />
-            <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
-            <Line
-              label={t("result.unitPrice")}
-              value={`${sym} ${fsMoney(p.calc!.input.unitPrice)} /${r.priceUnit}`}
-            />
-            {p.pricing.wastePercent > 0 && (
-              <Line
-                label={t("result.waste", { percent: p.pricing.wastePercent })}
-                value={`${sym} ${fsMoney(r.wasteAmount)}`}
-              />
-            )}
-            {p.pricing.includeVat && (
-              <Line
-                label={t("result.vat", { percent: p.pricing.vatPercent })}
-                value={`${sym} ${fsMoney(r.vatAmount)}`}
-              />
-            )}
-            <Line
-              label={t("result.totalCost")}
-              value={`${sym} ${fsMoney(r.grandTotalAmount)}`}
-              strong
-              accent="var(--blue-strong)"
-            />
+            {pricing.map((row) => (
+              <Line key={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+            ))}
           </div>
         </>
       ) : (

@@ -1,10 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { formatCommandParseName } from "../command-copy";
+import { buildBreakdownRows } from "../breakdown-rows";
 import { SheetShell } from "./sheet-shell";
 
 function SheetRow({
@@ -60,61 +60,32 @@ export function CommandResultBreakdown({
   columns = 1,
 }: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
   const t = useTranslations("command");
-  if (!p.calc || p.kgm == null) {
+  const rows = buildBreakdownRows(p, t);
+  if (!rows) {
     return null;
   }
-  const r = p.calc.result;
-  const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
   const secondaryBtn =
     "flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
 
   const geometryRows = (
     <>
-      <SheetRow label={t("result.massPerMetre")} value={`${p.kgm.toFixed(2)} kg/m`} mono />
-      <SheetRow label={t("result.length")} value={`${p.lengthM} m`} mono />
-      <SheetRow label={t("result.pieces")} value={`× ${p.realQty}`} mono />
-      <SheetRow
-        label={t("result.perPiece")}
-        value={`${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`}
-        mono
-      />
-      <SheetRow
-        label={t("result.totalWeight")}
-        value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
-        mono
-      />
-      <SheetRow label={t("result.density")} value={`${r.densityKgPerM3} kg/m³`} mono />
+      {rows.geometry.map((row) => (
+        <SheetRow key={row.id} label={row.label} value={row.value} mono />
+      ))}
     </>
   );
 
   const pricingRows = (
     <>
-      <SheetRow
-        label={t("result.rate")}
-        value={`${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`}
-        mono
-      />
-      <SheetRow
-        label={t("result.perPiecePrice")}
-        value={`${sym} ${fsMoney(r.unitPriceAmount)}`}
-        mono
-      />
-      <SheetRow label={t("result.subtotal")} value={`${sym} ${fsMoney(r.subtotalAmount)}`} mono />
-      {p.pricing.wastePercent > 0 && (
+      {rows.pricing.map((row) => (
         <SheetRow
-          label={t("result.waste", { percent: p.pricing.wastePercent })}
-          value={`${sym} ${fsMoney(r.wasteAmount)}`}
+          key={row.id}
+          label={row.label}
+          value={row.value}
           mono
+          strong={row.id === "totalCost"}
         />
-      )}
-      {p.pricing.includeVat && (
-        <SheetRow
-          label={t("result.vat", { percent: p.pricing.vatPercent })}
-          value={`${sym} ${fsMoney(r.vatAmount)}`}
-          mono
-        />
-      )}
-      <SheetRow label={t("result.totalCost")} value={`${sym} ${fsMoney(r.grandTotalAmount)}`} mono strong />
+      ))}
     </>
   );
 
