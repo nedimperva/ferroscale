@@ -34,12 +34,10 @@ import {
 import { KIND_BG } from "./command-constants";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./command-desktop";
-import {
-  CommandLibrarySheet,
-  CommandProjectPickerSheet,
-  CommandResultSheet,
-  CommandSettingsSheet,
-} from "./command-sheets";
+import { CommandLibrarySheet } from "./sheets/library-sheet";
+import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
+import { CommandResultSheet } from "./sheets/result-sheet";
+import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";

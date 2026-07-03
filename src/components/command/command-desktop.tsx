@@ -14,7 +14,8 @@ import {
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
-import { CommandDocsSection, SyncSection, useCommandLocaleSwitch } from "./command-sheets";
+import { CommandDocsSection, useCommandLocaleSwitch } from "./sheets/settings-sheet";
+import { SyncSection } from "./sheets/sync-section";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
 import { COMMAND_GRADES, findAliasByProfileId } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
