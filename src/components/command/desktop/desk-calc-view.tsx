@@ -135,7 +135,7 @@ export function DeskCalcView({
               padding: "13px 18px",
               boxShadow: dark
                 ? "0 0 0 3px rgba(240,121,63,0.13)"
-                : "0 0 0 3px rgba(216,82,31,0.10)",
+                : "0 0 0 3px rgba(196,71,26,0.10)",
             }}
           >
             <span

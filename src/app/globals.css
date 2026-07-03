@@ -12,8 +12,8 @@
   /* ── Text ── */
   --foreground: #16120b;
   --foreground-secondary: #4a4237;
-  --muted: #8b8273;
-  --muted-faint: #c5bdad;
+  --muted: #6a614f;
+  --muted-faint: #736959;
 
   /* ── Borders ── */
   --border: #ddd5c9;
@@ -24,7 +24,7 @@
   --overlay: rgba(0, 0, 0, 0.3);
 
   /* ── Accent (terracotta orange) ── */
-  --accent: #d8521f;
+  --accent: #c4471a;
   --accent-hover: #8a3110;
   --accent-surface: #fbe6d7;
   --accent-border: #eab896;
@@ -46,7 +46,7 @@
 
   /* ── Green (success) ── */
   --green-surface: #f0fdf4;
-  --green-text: #15803d;
+  --green-text: #166534;
   --green-border: #bbf7d0;
 
   /* ── Red (error) ── */
@@ -85,8 +85,8 @@
   /* ── Text ── */
   --foreground: #f5ecdb;
   --foreground-secondary: #cabca4;
-  --muted: #968b78;
-  --muted-faint: #5e5648;
+  --muted: #a29781;
+  --muted-faint: #93876f;
 
   /* ── Borders ── */
   --border: #2b2418;
