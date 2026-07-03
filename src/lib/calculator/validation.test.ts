@@ -259,3 +259,76 @@ describe("validateCalculationInput", () => {
     expect(issues).toHaveLength(0);
   });
 });
+
+describe("relational geometry checks (via profile.validateGeometry)", () => {
+  it("rejects a pipe wall at or above half the outer diameter", () => {
+    const issues = validateCalculationInput(makeBaseInput({
+      profileId: "pipe",
+      manualDimensions: {
+        outerDiameter: { value: 20, unit: "mm" },
+        wallThickness: { value: 10, unit: "mm" },
+      },
+    }));
+    const issue = issues.find((i) => i.messageKey === "validation.pipeWall");
+    expect(issue).toBeDefined();
+    expect(issue!.field).toBe("manualDimensions.wallThickness");
+    expect(issue!.messageValues).toEqual({ wallMm: 10, halfOdMm: 10 });
+  });
+
+  it("rejects a rectangular tube wall at or above half the smaller side", () => {
+    const issues = validateCalculationInput(makeBaseInput({
+      profileId: "rectangular_tube",
+      manualDimensions: {
+        width: { value: 120, unit: "mm" },
+        height: { value: 80, unit: "mm" },
+        wallThickness: { value: 40, unit: "mm" },
+      },
+    }));
+    expect(issues.some((i) => i.messageKey === "validation.rectangularWall")).toBe(true);
+  });
+
+  it("rejects a square hollow wall at or above half the side", () => {
+    const issues = validateCalculationInput(makeBaseInput({
+      profileId: "square_hollow",
+      manualDimensions: {
+        side: { value: 100, unit: "mm" },
+        wallThickness: { value: 50, unit: "mm" },
+      },
+    }));
+    expect(issues.some((i) => i.messageKey === "validation.squareWall")).toBe(true);
+  });
+
+  it("rejects an angle thickness at or above the shorter leg", () => {
+    const issues = validateCalculationInput(makeBaseInput({
+      profileId: "angle",
+      manualDimensions: {
+        legA: { value: 80, unit: "mm" },
+        legB: { value: 35, unit: "mm" },
+        thickness: { value: 35, unit: "mm" },
+      },
+    }));
+    expect(issues.some((i) => i.messageKey === "validation.angleThickness")).toBe(true);
+  });
+
+  it("converts units before checking (cm wall vs mm diameter)", () => {
+    const issues = validateCalculationInput(makeBaseInput({
+      profileId: "pipe",
+      manualDimensions: {
+        outerDiameter: { value: 60.3, unit: "mm" },
+        wallThickness: { value: 4, unit: "cm" }, // 40 mm — invalid
+      },
+    }));
+    expect(issues.some((i) => i.messageKey === "validation.pipeWall")).toBe(true);
+  });
+
+  it("accepts valid geometry", () => {
+    const issues = validateCalculationInput(makeBaseInput({
+      profileId: "pipe",
+      manualDimensions: {
+        outerDiameter: { value: 60.3, unit: "mm" },
+        wallThickness: { value: 3.2, unit: "mm" },
+      },
+    }));
+    expect(issues).toEqual([]);
+  });
+});

@@ -83,18 +83,23 @@ and exists only for metadata/URLs; `RouteAwareAppShell`
 ### Profile system
 
 Profiles have two modes:
-- **manual**: user-entered dimensions; area formula branch in
-  `resolveAreaMm2()` (and `resolvePerimeterMm()`) in the engine
+- **manual**: user-entered dimensions; the definition itself carries the
+  math — `area(dims)`, `perimeter(dims)`, and optional
+  `validateGeometry(dims)` for relational constraints. The engine and
+  validation are generic and never switch on profile ids.
 - **standard**: EN-standard sizes with pre-computed `areaMm2`
 
 When adding a new profile:
 1. Add `ProfileId` to `packages/metal-core/src/datasets/types.ts`
 2. Add the definition under `packages/metal-core/src/datasets/profiles/`
-3. Manual mode: add area/perimeter branches in the engine + validation rules
-4. Add drawing geometry in `src/lib/calculator/profile-specs.ts`
-5. Add command aliases in `packages/metal-core/src/command/aliases.ts`
+   — for manual profiles implement `area`/`perimeter` (and
+   `validateGeometry` if dims constrain each other) right on the entry;
+   no engine or validation edits needed
+3. Add drawing geometry in `src/lib/calculator/profile-specs.ts`
+4. Add command aliases in `packages/metal-core/src/command/aliases.ts`
    (without an alias, saved entries can't restore into the command line)
-6. Add engine test cases
+5. Add engine test cases (the benchmark oracle in `engine.test.ts`
+   re-implements each formula independently — keep it independent)
 
 ### API routes
 
