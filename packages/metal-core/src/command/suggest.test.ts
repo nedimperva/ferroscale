@@ -126,39 +126,87 @@ describe("cmdApplyInsert", () => {
   });
 });
 
-describe("cmdSuggest recents", () => {
-  const RECENTS = ["hea120 6m x2", "not a real query", "flt40x8 4m", "shs40x40x3 6m"];
+import type { CommandUsageSource } from "./suggest";
 
-  it("puts recent valid queries before the curated profile chips", () => {
-    const s = cmdSuggest("", SETTINGS, undefined, RECENTS);
+function usageStub(overrides: Partial<CommandUsageSource> = {}): CommandUsageSource {
+  return {
+    recentQueries: () => [],
+    topSizes: () => [],
+    topLengths: () => [],
+    topQuantities: () => [],
+    topGradeIds: () => [],
+    ...overrides,
+  };
+}
+
+describe("cmdSuggest usage ranking", () => {
+  it("puts recently run queries before the curated profile chips", () => {
+    const usage = usageStub({
+      recentQueries: () => ["hea120 6m x2", "not a real query", "flt40x8 4m"],
+    });
+    const s = cmdSuggest("", SETTINGS, undefined, usage);
     expect(s.items[0]).toMatchObject({ kind: "recent", label: "hea120 6m x2" });
     expect(s.items[1]).toMatchObject({ kind: "recent", label: "flt40x8 4m" });
-    expect(s.items[2]).toMatchObject({ kind: "recent", label: "shs40x40x3 6m" });
-    expect(s.items[3].kind).toBe("profile");
+    expect(s.items[2].kind).toBe("profile");
   });
 
-  it("skips recents that don't parse", () => {
-    const s = cmdSuggest("", SETTINGS, undefined, ["garbage garbage"]);
-    expect(s.items.every((i) => i.kind !== "recent")).toBe(true);
-  });
-
-  it("filters recents by the typed partial", () => {
-    const s = cmdSuggest("fl", SETTINGS, undefined, RECENTS);
+  it("filters recent queries by the typed partial", () => {
+    const usage = usageStub({
+      recentQueries: () => ["hea120 6m x2", "flt40x8 4m"],
+    });
+    const s = cmdSuggest("fl", SETTINGS, undefined, usage);
     const recents = s.items.filter((i) => i.kind === "recent");
     expect(recents).toHaveLength(1);
     expect(recents[0].label).toBe("flt40x8 4m");
-    expect(recents[0].replaceLast).toBe(true);
   });
 
-  it("offers recent sizes for the same family at the size stage", () => {
-    const s = cmdSuggest("shs", SETTINGS, undefined, ["shs45x45x4 6m", "hea120 6m"]);
+  it("surfaces the family's own top sizes first", () => {
+    const usage = usageStub({
+      topSizes: (fam) => (fam === "shs" ? ["45x45x4", "50x50x5"] : []),
+    });
+    const s = cmdSuggest("shs", SETTINGS, undefined, usage);
     expect(s.items[0]).toMatchObject({ kind: "size", label: "45×45×4" });
+    expect(s.items[1]).toMatchObject({ kind: "size", label: "50×50×5" });
+    // a different family gets none of them
+    const hea = cmdSuggest("hea", SETTINGS, undefined, usage);
+    expect(hea.items.every((i) => i.label !== "45×45×4")).toBe(true);
   });
 
-  it("does not duplicate a recent size that is already curated", () => {
-    // 40x40x3 is in COMMAND_SIZES.shs
-    const s = cmdSuggest("shs", SETTINGS, undefined, ["shs40x40x3 6m"]);
-    const labels = s.items.filter((i) => i.label === "40×40×3");
-    expect(labels).toHaveLength(1);
+  it("drops usage sizes that no longer resolve and duplicates of curated sizes", () => {
+    const usage = usageStub({
+      // hea has a real size table: 999 doesn't exist there
+      topSizes: () => ["999", "120"],
+    });
+    const s = cmdSuggest("hea", SETTINGS, undefined, usage);
+    expect(s.items.every((i) => i.label !== "999")).toBe(true);
+    // "120" is already in COMMAND_SIZES.beam → appears exactly once
+    expect(s.items.filter((i) => i.label === "120")).toHaveLength(1);
+  });
+
+  it("surfaces used lengths and quantities before the curated defaults", () => {
+    const usage = usageStub({
+      topLengths: (fam) => (fam === "beam" ? ["7.5m", "6m"] : []),
+      topQuantities: (fam) => (fam === "beam" ? ["x7", "garbage"] : []),
+    });
+    const len = cmdSuggest("hea120 ", SETTINGS, undefined, usage);
+    // "6m" is curated → not duplicated; "7.5m" leads
+    expect(len.items[0]).toMatchObject({ kind: "length", label: "7.5m" });
+    expect(len.items.filter((i) => i.label === "6m")).toHaveLength(1);
+
+    const qty = cmdSuggest("hea120 6m ", SETTINGS, undefined, usage);
+    expect(qty.items[0]).toMatchObject({ kind: "qty", label: "× 7" });
+    expect(qty.items.every((i) => i.label !== "garbage")).toBe(true);
+  });
+
+  it("reorders grades by usage without losing the rest of the catalog", () => {
+    const usage = usageStub({
+      topGradeIds: (fam) => (fam === "beam" ? ["stainless-304"] : []),
+    });
+    const s = cmdSuggest("hea120 6m x2 ", SETTINGS, undefined, usage);
+    expect(s.items[0]).toMatchObject({ kind: "grade", label: "304" });
+    // catalog is intact (all grades present exactly once)
+    const labels = s.items.filter((i) => i.kind === "grade").map((i) => i.label);
+    expect(new Set(labels).size).toBe(labels.length);
+    expect(labels.length).toBeGreaterThan(5);
   });
 });

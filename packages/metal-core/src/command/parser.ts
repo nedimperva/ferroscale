@@ -70,7 +70,7 @@ function parsePriceToken(token: string): Partial<CommandPricing> | null {
 }
 
 /** Families whose size token bakes the length in (w × l × t for panels). */
-const SHEET_LIKE_FAMILIES = new Set<CommandFamily>([
+export const SHEET_LIKE_FAMILIES = new Set<CommandFamily>([
   "panel",
   "expanded",
   "corrugated",

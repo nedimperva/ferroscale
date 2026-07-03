@@ -41,6 +41,7 @@ import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
+import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
@@ -184,9 +185,32 @@ export function CommandShell() {
     () => cmdParse(query, parserSettings),
     [query, parserSettings],
   );
+
+  // Usage learning: after the user stops typing on a live result (~2.5 s),
+  // record the query's tokens (per profile family) so suggestions rank real
+  // habits first — no Save required. The pristine demo query never counts.
+  const [usageVersion, setUsageVersion] = useState(0);
+  useEffect(() => {
+    // Hydrate persisted habits once on the client.
+    setUsageVersion((v) => v + 1); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
+  useEffect(() => {
+    if (!p.valid) return;
+    if (!touchedRef.current && query === DEMO_QUERY) return;
+    const id = window.setTimeout(() => {
+      recordCommandUsage(p, query);
+      setUsageVersion((v) => v + 1);
+    }, 2500);
+    return () => window.clearTimeout(id);
+  }, [p, query]);
+  const usageSource = useMemo(
+    () => (usageVersion > 0 ? buildUsageSource() : undefined),
+    [usageVersion],
+  );
+
   const sug = useMemo(
-    () => cmdSuggest(query, parserSettings, presetsForProfile, quickHistory),
-    [query, parserSettings, presetsForProfile, quickHistory],
+    () => cmdSuggest(query, parserSettings, presetsForProfile, usageSource),
+    [query, parserSettings, presetsForProfile, usageSource],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)

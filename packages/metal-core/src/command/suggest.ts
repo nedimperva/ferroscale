@@ -8,6 +8,7 @@ import {
 import { cmdParse, dimsToSizeText } from "./parser";
 import type {
   CommandAlias,
+  CommandFamily,
   CommandParseResult,
   CommandParserSettings,
   CommandSizePreset,
@@ -61,21 +62,43 @@ export function presetToSizeText(
 }
 
 const MAX_RECENT_SUGGESTIONS = 3;
+const MAX_USAGE_SIZES = 4;
+const MAX_USAGE_VALUES = 3;
+
+/**
+ * What the user actually types, ranked by the consumer (typically frequency ×
+ * recency), split per profile family so SHS habits never pollute HEA
+ * suggestions. All methods may return [] — every stage falls back to the
+ * curated defaults. Storage lives with the consumer (the web app persists to
+ * localStorage); this package stays storage-agnostic.
+ */
+export interface CommandUsageSource {
+  /** Settled valid queries, newest first. */
+  recentQueries(): string[];
+  /** Size texts for the family (e.g. "40x40x3", "120"), best first. */
+  topSizes(fam: CommandFamily): string[];
+  /** Length tokens for the family (e.g. "6m", "4500"), best first. */
+  topLengths(fam: CommandFamily): string[];
+  /** Quantity tokens for the family (e.g. "x2"), best first. */
+  topQuantities(fam: CommandFamily): string[];
+  /** Material grade ids for the family, best first. */
+  topGradeIds(fam: CommandFamily): string[];
+}
 
 export function cmdSuggest(
   query: string,
   settings: CommandParserSettings,
   presetsForProfile?: (profileId: ProfileId) => CommandSizePreset[],
-  recentQueries?: string[],
+  usage?: CommandUsageSource,
 ): CommandSuggestion {
   const p = cmdParse(query, settings);
   const { stage, partial } = detectStage(query, p);
 
   if (stage === "empty" || stage === "profile") {
-    // Recent valid queries first — one tap re-runs a whole calculation.
+    // Queries the user actually ran, first — one tap re-runs the calculation.
     const recentItems: CommandSuggestionItem[] = [];
-    if (recentQueries) {
-      for (const rq of recentQueries) {
+    if (usage) {
+      for (const rq of usage.recentQueries()) {
         if (recentItems.length >= MAX_RECENT_SUGGESTIONS) break;
         const trimmed = rq.trim();
         if (!trimmed) continue;
@@ -122,17 +145,17 @@ export function cmdSuggest(
     const standard = COMMAND_SIZES[alias.fam] ?? [];
     const seen = new Set<string>();
 
-    // Sizes the user recently calculated for this family, newest first.
-    const recentSizeItems: CommandSuggestionItem[] = [];
-    if (recentQueries) {
-      for (const rq of recentQueries) {
-        if (recentSizeItems.length >= MAX_RECENT_SUGGESTIONS) break;
-        const rp = cmdParse(rq, settings);
-        if (!rp.valid || rp.alias?.alias !== alias.alias || !rp.hasSize) continue;
-        const text = rp.size;
-        if (seen.has(text) || standard.includes(text)) continue;
+    // The sizes this user actually uses for THIS family, best first. Each is
+    // re-validated against the current catalog so stale entries never render.
+    const usageSizeItems: CommandSuggestionItem[] = [];
+    if (usage) {
+      for (const text of usage.topSizes(alias.fam)) {
+        if (usageSizeItems.length >= MAX_USAGE_SIZES) break;
+        if (!text || seen.has(text) || standard.includes(text)) continue;
+        const rp = cmdParse(`${alias.alias}${text} `, settings);
+        if (rp.kgm == null) continue;
         seen.add(text);
-        recentSizeItems.push({
+        usageSizeItems.push({
           label: text.replace(/x/g, "×"),
           fam: alias.fam,
           ins: text,
@@ -162,7 +185,7 @@ export function cmdSuggest(
     return {
       hint: `${alias.name} · standard size`,
       items: [
-        ...recentSizeItems,
+        ...usageSizeItems,
         ...presetItems,
         ...standard.map<CommandSuggestionItem>((s) => ({
           label: s.replace(/x/g, "×"),
@@ -175,9 +198,15 @@ export function cmdSuggest(
   }
 
   if (stage === "length") {
+    const curated = ["3m", "4m", "6m", "12m"];
+    const used = p.alias && usage
+      ? usage.topLengths(p.alias.fam)
+          .filter((s) => s && !curated.includes(s))
+          .slice(0, MAX_USAGE_VALUES)
+      : [];
     return {
       hint: "Length",
-      items: ["3m", "4m", "6m", "12m"].map<CommandSuggestionItem>((s) => ({
+      items: [...used, ...curated].map<CommandSuggestionItem>((s) => ({
         label: s,
         ins: s,
         kind: "length",
@@ -187,9 +216,15 @@ export function cmdSuggest(
   }
 
   if (stage === "qty") {
+    const curated = ["x1", "x2", "x5", "x10", "x20"];
+    const used = p.alias && usage
+      ? usage.topQuantities(p.alias.fam)
+          .filter((s) => QTY_TOKEN_RE.test(s) && !curated.includes(s))
+          .slice(0, MAX_USAGE_VALUES)
+      : [];
     return {
       hint: "Pieces",
-      items: ["x1", "x2", "x5", "x10", "x20"].map<CommandSuggestionItem>((s) => ({
+      items: [...used, ...curated].map<CommandSuggestionItem>((s) => ({
         label: "× " + s.slice(1),
         ins: s,
         kind: "qty",
@@ -199,9 +234,18 @@ export function cmdSuggest(
   }
 
   if (stage === "grade") {
+    // Grades the user actually picks for this family come first; the rest of
+    // the catalog keeps its usual order behind them.
+    const usedIds = p.alias && usage ? usage.topGradeIds(p.alias.fam) : [];
+    const ordered = [
+      ...usedIds
+        .map((id) => COMMAND_GRADES.find((g) => g.id === id))
+        .filter((g): g is (typeof COMMAND_GRADES)[number] => !!g),
+      ...COMMAND_GRADES.filter((g) => !usedIds.includes(g.id)),
+    ];
     return {
       hint: "Grade (optional)",
-      items: COMMAND_GRADES.map<CommandSuggestionItem>((g) => ({
+      items: ordered.map<CommandSuggestionItem>((g) => ({
         label: g.label,
         sub: g.group,
         ins: g.aliases[0],
@@ -216,6 +260,8 @@ export function cmdSuggest(
     items: [{ label: "Save calculation", ins: "__save", kind: "save" }],
   };
 }
+
+const QTY_TOKEN_RE = /^x\d+$/;
 
 export function cmdApplyInsert(query: string, item: CommandSuggestionItem): string {
   if (item.kind === "save") return query;
