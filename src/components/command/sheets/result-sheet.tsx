@@ -127,7 +127,7 @@ export function CommandResultBreakdown({
         <button
           type="button"
           onClick={onSave}
-          className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm"
+          className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
         >
           {t("common.save")}
         </button>

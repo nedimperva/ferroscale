@@ -100,7 +100,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
       )}
       {view === "compare" && (
         <DeskCompareView
-          dark={props.dark}
           compareItems={props.compareItems}
           onRemove={props.onRemoveCompare}
           onClearAll={props.onClearCompare}
@@ -118,7 +117,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
       )}
       {view === "projects" && (
         <DeskProjectsView
-          dark={props.dark}
           projects={props.projects}
           onPickItem={pickInput}
           onCreateProject={props.onCreateProject}

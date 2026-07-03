@@ -25,6 +25,7 @@
 
   /* ── Accent (terracotta orange) ── */
   --accent: #c4471a;
+  --accent-contrast: #ffffff;
   --accent-hover: #8a3110;
   --accent-surface: #fbe6d7;
   --accent-border: #eab896;
@@ -98,6 +99,7 @@
 
   /* ── Accent (terracotta orange) ── */
   --accent: #f0793f;
+  --accent-contrast: #161109;
   --accent-hover: #fbcba8;
   --accent-surface: #2e1c11;
   --accent-border: #683c22;
@@ -167,6 +169,7 @@
 
   /* ── Accent (orange) ── */
   --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
   --color-accent-hover: var(--accent-hover);
   --color-accent-surface: var(--accent-surface);
   --color-accent-border: var(--accent-border);

@@ -58,7 +58,7 @@ export function SyncSection() {
 
   const action =
     "h-9 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50";
-  const primary = `${action} bg-[var(--accent)] text-white dark:text-[#161109]`;
+  const primary = `${action} bg-[var(--accent)] text-[var(--accent-contrast)]`;
   const secondary = `${action} border border-border-faint bg-[var(--surface)] text-foreground`;
 
   return (

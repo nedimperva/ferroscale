@@ -38,14 +38,12 @@ function DeltaChip({ pct }: { pct: number }) {
 }
 
 export function DeskCompareView({
-  dark,
   compareItems,
   onRemove,
   onClearAll,
   gotoCalc,
   onPick,
 }: {
-  dark: boolean;
   compareItems: CompareItem[];
   onRemove: (id: string) => void;
   onClearAll: () => void;
@@ -103,13 +101,13 @@ export function DeskCompareView({
         actions={
           <>
             {compareItems.length > 0 && (
-              <DeskBtn dark={dark} small onClick={onClearAll}>
+              <DeskBtn small onClick={onClearAll}>
                 <DeskIcon name="trash" />
                 {t("common.clearAll")}
               </DeskBtn>
             )}
-            <DeskBtn dark={dark} small primary onClick={gotoCalc}>
-              <DeskIcon name="plus" stroke={dark ? "#161109" : "#fff"} />
+            <DeskBtn small primary onClick={gotoCalc}>
+              <DeskIcon name="plus" stroke={"var(--accent-contrast)"} />
               {t("compare.addFromCalculator")}
             </DeskBtn>
           </>

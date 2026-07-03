@@ -269,7 +269,7 @@ export function DeskCalcView({
                     padding: it.sub ? "7px 13px" : "8px 14px",
                     border: it.kind === "save" ? "none" : "1px solid var(--border-faint)",
                     background: it.kind === "save" ? "var(--accent)" : "var(--surface)",
-                    color: it.kind === "save" ? (dark ? "#161109" : "#fff") : "var(--foreground)",
+                    color: it.kind === "save" ? ("var(--accent-contrast)") : "var(--foreground)",
                     boxShadow: "var(--panel-shadow-soft)",
                   }}
                 >
@@ -540,32 +540,32 @@ export function DeskCalcView({
           <DeskBreakdown p={p} />
           {/* actions */}
           <div className="flex flex-col gap-2 mt-3.5">
-            <DeskBtn dark={dark} primary onClick={onSave} disabled={!p.valid}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={dark ? "#161109" : "#fff"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <DeskBtn primary onClick={onSave} disabled={!p.valid}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={"var(--accent-contrast)"} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
               </svg>
               {t("suggest.saveCalculation")}
             </DeskBtn>
             <div className="flex gap-2">
-              <DeskBtn dark={dark} small onClick={onCompareCurrent} disabled={!p.valid}>
+              <DeskBtn small onClick={onCompareCurrent} disabled={!p.valid}>
                 <DeskIcon name="compare" />
                 {t("common.compare")}
               </DeskBtn>
-              <DeskBtn dark={dark} small onClick={onCopy} disabled={!p.valid}>
+              <DeskBtn small onClick={onCopy} disabled={!p.valid}>
                 <DeskIcon name="copy" />
                 {t("common.copy")}
               </DeskBtn>
-              <DeskBtn dark={dark} small onClick={onAddToProject} disabled={!p.valid}>
+              <DeskBtn small onClick={onAddToProject} disabled={!p.valid}>
                 <DeskIcon name="plus" />
                 {t("common.project")}
               </DeskBtn>
             </div>
             <div className="flex gap-2">
-              <DeskBtn dark={dark} small onClick={onCopyValue} disabled={!p.valid}>
+              <DeskBtn small onClick={onCopyValue} disabled={!p.valid}>
                 <DeskIcon name="copy" />
                 {t("common.copyValue")}
               </DeskBtn>
-              <DeskBtn dark={dark} small onClick={onShareLink} disabled={!p.valid}>
+              <DeskBtn small onClick={onShareLink} disabled={!p.valid}>
                 <DeskIcon name="link" />
                 {t("common.shareLink")}
               </DeskBtn>

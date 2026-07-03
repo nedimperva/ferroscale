@@ -3,14 +3,12 @@
 import { useTranslations } from "next-intl";
 
 export function DeskBtn({
-  dark,
   children,
   onClick,
   primary,
   small,
   disabled,
 }: {
-  dark: boolean;
   children: React.ReactNode;
   onClick: () => void;
   primary?: boolean;
@@ -28,7 +26,7 @@ export function DeskBtn({
         cursor: disabled ? "default" : "pointer",
         border: primary ? "none" : "1px solid var(--border-faint)",
         background: primary ? "var(--accent)" : "var(--surface)",
-        color: primary ? (dark ? "#161109" : "#fff") : "var(--foreground)",
+        color: primary ? ("var(--accent-contrast)") : "var(--foreground)",
         fontSize: small ? 12 : 13,
         opacity: disabled ? 0.45 : 1,
         boxShadow: primary ? "none" : "var(--panel-shadow-soft)",

@@ -11,13 +11,11 @@ import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
 import { familyForInput } from "../command-copy";
 
 export function DeskProjectsView({
-  dark,
   projects,
   onPickItem,
   onCreateProject,
   onRemoveCalc,
 }: {
-  dark: boolean;
   projects: Project[];
   onPickItem: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
@@ -41,8 +39,8 @@ export function DeskProjectsView({
         title={t("nav.projects")}
         subtitle={projects.length ? t("projects.subtitleCount", { count: projects.length }) : t("projects.subtitleEmpty")}
         actions={
-          <DeskBtn dark={dark} small primary onClick={() => setCreating((v) => !v)}>
-            <DeskIcon name="plus" stroke={dark ? "#161109" : "#fff"} />
+          <DeskBtn small primary onClick={() => setCreating((v) => !v)}>
+            <DeskIcon name="plus" stroke={"var(--accent-contrast)"} />
             {t("library.newProject")}
           </DeskBtn>
         }
@@ -65,7 +63,7 @@ export function DeskProjectsView({
               type="button"
               onClick={submit}
               disabled={!newName.trim()}
-              className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              className="h-10 px-4 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t("common.create")}
             </button>

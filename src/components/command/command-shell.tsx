@@ -563,7 +563,7 @@ export function CommandShell() {
                 <span
                   className="w-2.5 h-2.5"
                   style={{
-                    background: dark ? "#161109" : "#fff",
+                    background: "var(--accent-contrast)",
                     borderRadius: 2.5,
                   }}
                 />
@@ -823,9 +823,7 @@ export function CommandShell() {
                         : "var(--surface)",
                     color:
                       it.kind === "save"
-                        ? dark
-                          ? "#161109"
-                          : "#fff"
+                        ? "var(--accent-contrast)"
                         : "var(--foreground)",
                     boxShadow: "var(--panel-shadow-soft)",
                   }}

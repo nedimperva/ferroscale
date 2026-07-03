@@ -87,7 +87,7 @@ export function DeskSidebar({
             style={{
               width: 12,
               height: 12,
-              background: dark ? "#161109" : "#fff",
+              background: "var(--accent-contrast)",
               borderRadius: 3,
             }}
           />

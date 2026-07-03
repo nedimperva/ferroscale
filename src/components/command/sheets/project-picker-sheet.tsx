@@ -50,7 +50,7 @@ export function CommandProjectPickerSheet({
           type="button"
           onClick={submit}
           disabled={!newName.trim()}
-          className="h-10 px-4 rounded-xl bg-[var(--accent)] text-white dark:text-[#161109] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+          className="h-10 px-4 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {t("common.create")}
         </button>

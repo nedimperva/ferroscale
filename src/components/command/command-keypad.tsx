@@ -31,7 +31,7 @@ function Key({ label, onPress, flex = 1, variant = "default", mono, big }: KeyPr
   let style = "";
   if (variant === "accent") {
     style =
-      "bg-[var(--accent)] text-[#fff] dark:text-[#161109] font-bold border border-transparent";
+      "bg-[var(--accent)] text-[var(--accent-contrast)] font-bold border border-transparent";
   } else if (variant === "dim") {
     style =
       "bg-[var(--surface)] dark:bg-[#262017] text-muted border border-border-faint";
