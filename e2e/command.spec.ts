@@ -43,3 +43,49 @@ test.describe("Command bar", () => {
     await expect(page.getByText("WAITING")).toBeVisible();
   });
 });
+
+// Medium viewport (640–1023) — the centered command card where the bottom
+// sheets (Settings, Library, Result) render.
+test.describe("Sheet dialogs (medium viewport)", () => {
+  test.use({ viewport: { width: 800, height: 900 } });
+
+  test("the settings sheet is a modal dialog: named, focused, Escape closes", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "Settings" }).click();
+
+    const dialog = page.getByRole("dialog", { name: "Settings" });
+    await expect(dialog).toBeVisible();
+    // Focus lands inside the dialog (focus trap's focus-first).
+    expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    // Focus returns to the opener.
+    await expect(page.getByRole("button", { name: "Settings" })).toBeFocused();
+  });
+
+  test("Tab cycles inside the dialog without escaping it", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "Library" }).click();
+    const dialog = page.getByRole("dialog", { name: "Library" });
+    await expect(dialog).toBeVisible();
+
+    // Shift+Tab from the first focusable wraps to the last; repeated Tab
+    // never leaves the dialog.
+    await page.keyboard.press("Shift+Tab");
+    expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+    for (let i = 0; i < 12; i++) {
+      await page.keyboard.press("Tab");
+    }
+    expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+  });
+
+  test("the backdrop click still closes the sheet", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "Settings" }).click();
+    const dialog = page.getByRole("dialog", { name: "Settings" });
+    await expect(dialog).toBeVisible();
+    await page.getByRole("button", { name: "Close sheet" }).click();
+    await expect(dialog).toBeHidden();
+  });
+});

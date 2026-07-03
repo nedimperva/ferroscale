@@ -350,9 +350,9 @@ export function CommandShell() {
     });
   }, []);
 
-  // Medium desktop: real-keyboard shortcuts. ⌘K / Ctrl K refocuses the query
-  // input, Esc closes the active sheet. (The wide-desktop shell owns its own
-  // shortcuts; only the project-picker Esc-close stays global there.)
+  // Medium desktop: ⌘K / Ctrl K refocuses the query input. Escape-to-close
+  // lives inside SheetShell itself (works on every viewport, with the focus
+  // trap guaranteeing the sheet owns the keyboard).
   useEffect(() => {
     if (isPhoneViewport) return;
     const onKey = (event: KeyboardEvent) => {
@@ -363,19 +363,11 @@ export function CommandShell() {
       ) {
         event.preventDefault();
         focusInput();
-        return;
-      }
-      if (event.key === "Escape") {
-        if (projectCalc) {
-          setProjectCalc(null);
-        } else if (sheet && !isWideViewport) {
-          setSheet(null);
-        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focusInput, isPhoneViewport, isWideViewport, projectCalc, sheet]);
+  }, [focusInput, isPhoneViewport, isWideViewport]);
 
   const heroVal = isW
     ? p.totalKg != null
