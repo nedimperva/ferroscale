@@ -177,6 +177,7 @@ export function CommandSettingsSheet({
         </SettingsRow>
         <SettingsRow label={`${sym} / ${shared.priceUnit}`}>
           <input
+            aria-label={`${sym} / ${shared.priceUnit}`}
             type="number"
             step={0.01}
             min={0}
@@ -189,6 +190,7 @@ export function CommandSettingsSheet({
         </SettingsRow>
         <SettingsRow label={t("settings.wastePercent")}>
           <input
+            aria-label={t("settings.wastePercent")}
             type="number"
             step={1}
             min={0}
@@ -209,6 +211,7 @@ export function CommandSettingsSheet({
           </SettingsPill>
           {shared.includeVat && (
             <input
+              aria-label={t("settings.vat")}
               type="number"
               step={1}
               min={0}
@@ -223,6 +226,7 @@ export function CommandSettingsSheet({
         </SettingsRow>
         <SettingsRow label={t("settings.defaultGrade")}>
           <select
+            aria-label={t("settings.defaultGrade")}
             value={shared.defaultGradeId}
             onChange={(e) => onUpdateShared({ defaultGradeId: e.target.value })}
             className="h-9 rounded-lg border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground"

@@ -81,6 +81,7 @@ export function DeskSettingsView({
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
   const numberBox = (
+    label: string,
     value: number,
     onChange: (v: number) => void,
     suffix: string,
@@ -100,6 +101,7 @@ export function DeskSettingsView({
         </span>
       )}
       <input
+        aria-label={label}
         type="number"
         step={0.01}
         min={0}
@@ -167,6 +169,7 @@ export function DeskSettingsView({
             </Field>
             <Field label={t("settings.unitPricePer", { unit: shared.priceUnit.toUpperCase() })}>
               {numberBox(
+                t("settings.unitPricePer", { unit: shared.priceUnit.toUpperCase() }),
                 shared.unitPrice,
                 (v) => onUpdateShared({ unitPrice: v }),
                 `/${shared.priceUnit}`,
@@ -174,7 +177,7 @@ export function DeskSettingsView({
               )}
             </Field>
             <Field label={t("settings.wastePercentUpper")}>
-              {numberBox(shared.wastePercent, (v) => onUpdateShared({ wastePercent: v }), "%")}
+              {numberBox(t("settings.wastePercentUpper"), shared.wastePercent, (v) => onUpdateShared({ wastePercent: v }), "%")}
             </Field>
             <Field label={t("settings.vat")}>
               <div className="flex items-center gap-2.5">
@@ -191,6 +194,7 @@ export function DeskSettingsView({
                 {shared.includeVat && (
                   <div className="flex-1">
                     {numberBox(
+                      t("settings.vat"),
                       shared.vatPercent,
                       (v) => onUpdateShared({ vatPercent: v }),
                       "%",
