@@ -88,15 +88,15 @@ Items 1–3 **✅ shipped in 3.3.0**; the rest ordered by expected value:
    (`MANUAL_DIM_COUNTS`, `buildCalculationInput`, `dimsToSizeText`) and
    `profile-specs.ts`' drawing/metric switches are separate duplication
    axes that would need their own descriptors.
-4. **Token-system stragglers.** `pwa-register.tsx`, the contact page,
-   and the error boundary use raw Tailwind palette colors instead of
-   tokens; the manifest theme colors (`#111827`/`#f3f4f6`) don't match
-   the real palette (`#131009`/`#efeae0`); a few raw hex values
-   (`#161109`, `#fff`) recur for "text on accent" — worth a dedicated
-   token.
-5. **Frequency-aware suggestions.** Recency is live; a small usage
-   counter per query/size (already present as `useCount` on saved
-   entries) could rank suggestions by frequency × recency.
+4. ~~**Token-system stragglers.**~~ ✅ shipped in 3.5.0 — an
+   `--accent-contrast` token replaced the raw on-accent hexes; the PWA
+   banners, contact page, error boundary, and skip link use tokens; the
+   manifest colors match the palette.
+5. ~~**Frequency-aware suggestions.**~~ ✅ shipped in 3.5.0 — every
+   settled query is recorded (no Save required) and sizes/lengths/
+   quantities/grades rank by frequency × recency (14-day half-life),
+   bucketed per profile family (`usage-stats.ts` + metal-core's
+   `CommandUsageSource`).
 6. **Component tests for the command UI.** The vitest suites cover the
    engine/parser/stores well, but the three big components have only
    e2e smoke coverage. Consider `@testing-library/react` + jsdom for

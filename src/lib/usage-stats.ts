@@ -73,14 +73,17 @@ export function recordCommandUsage(p: CommandParseResult, query: string): void {
   const now = Date.now();
   const stats = loadStats();
 
-  const existing = stats.queries.find((e) => e.q === q);
-  if (existing) {
-    existing.n += 1;
-    existing.t = now;
+  // Move-to-front keeps recency order deterministic (timestamps can tie
+  // within a millisecond).
+  const idx = stats.queries.findIndex((e) => e.q === q);
+  if (idx >= 0) {
+    const [entry] = stats.queries.splice(idx, 1);
+    entry.n += 1;
+    entry.t = now;
+    stats.queries.unshift(entry);
   } else {
-    stats.queries.push({ q, n: 1, t: now });
+    stats.queries.unshift({ q, n: 1, t: now });
   }
-  stats.queries.sort((a, b) => b.t - a.t);
   stats.queries = stats.queries.slice(0, MAX_RECENT_QUERIES);
 
   const fam = p.alias.fam;

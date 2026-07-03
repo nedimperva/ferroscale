@@ -17,6 +17,24 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.5.0",
+    date: "2026-07-03",
+    added: [
+      "Suggestions now learn from what you actually type: any query that settles on a live result counts (no Save needed), and sizes, lengths, quantities, and grades you use most rank first — tracked separately per profile, so your SHS habits never show up for HEA",
+      "Install app from Settings: when your browser supports it, a quiet card in Settings installs FerroScale to your home screen or desktop — no banners",
+    ],
+    changed: [
+      "The offline/update banners and other secondary surfaces now follow the app theme exactly (design tokens everywhere), and the browser install splash matches the app colors",
+    ],
+    added_bs: [
+      "Prijedlozi sada uče iz onoga što stvarno kucate: svaki upit koji se zaustavi na živom rezultatu se računa (spremanje nije potrebno), a veličine, dužine, količine i kvalitete koje najčešće koristite rangiraju se prve — praćeno odvojeno po profilu, pa se vaše SHS navike nikad ne prikazuju za HEA",
+      "Instalacija aplikacije iz Postavki: kada vaš preglednik to podržava, diskretna kartica u Postavkama instalira FerroScale na početni ekran ili radnu površinu — bez banera",
+    ],
+    changed_bs: [
+      "Offline/update obavještenja i ostale sekundarne površine sada tačno prate temu aplikacije (dizajn tokeni svugdje), a instalacijski splash preglednika odgovara bojama aplikacije",
+    ],
+  },
+  {
     version: "3.4.0",
     date: "2026-07-03",
     changed: [

@@ -11,11 +11,7 @@ grammar it consumes.
 
 ## Priority 1 (Next)
 
-1. Install Prompt UX
-Description: Show in-app "Install app" CTA via `beforeinstallprompt` for PWA adoption.
-Acceptance: Prompt available on supported browsers; dismiss/install states handled.
-
-2. Import/Export Workflow
+1. Import/Export Workflow
 Description: Add CSV import for multi-line calculations alongside the project CSV export.
 Acceptance: Upload CSV with profile rows; compute totals; downloadable result CSV.
 
@@ -29,16 +25,15 @@ Acceptance: Displays pass/fail summary and max error delta for current dataset v
 Description: Dialog semantics + focus trap for sheets, live regions for results/toasts, re-enable pinch zoom, automated a11y checks (axe + keyboard path tests).
 Acceptance: CI includes accessibility checks for main flows.
 
-2. Frequency-aware Suggestions
-Description: Rank command suggestions by usage frequency × recency (recency shipped in 3.2.0).
-Acceptance: Most-used queries/sizes rank first after repeated use.
-
-3. Analytics (Privacy-first)
+2. Analytics (Privacy-first)
 Description: Add anonymous event metrics for calculate/export actions.
 Acceptance: No personal identifiers; can disable tracking from UI.
 
 ## Shipped (recent)
 
+- Usage-learning suggestions (frequency × recency, per profile family) — 3.5.0
+- Install-app action in Settings — 3.5.0
+- WCAG AA contrast + full token adoption — 3.4.0/3.5.0
 - Result sharing links (`?q=` URLs) — 3.2.0
 - Structured parse issues in the command bar — 3.2.0
 - Persistent session tape + recency suggestions — 3.2.0

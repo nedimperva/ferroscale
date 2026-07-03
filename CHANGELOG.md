@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.5.0] - 2026-07-03
+
+### Added
+
+- Suggestions now learn from what you actually type: any query that settles on a live result counts (no Save needed), and sizes, lengths, quantities, and grades you use most rank first — frequency × recency with a 14-day half-life, tracked separately per profile family so SHS habits never surface for HEA (`cmdSuggest` gains a storage-agnostic `CommandUsageSource`; the web adapter persists locally per device)
+- Install app from Settings: when the browser supports it, a quiet card in Settings installs FerroScale to the home screen or desktop — deliberately not a banner
+
+### Changed
+
+- Token-system adoption is complete: a new `--accent-contrast` token replaces the recurring raw hexes for text on the accent color; the PWA banners, contact page, error boundary, and skip link use design tokens; the web manifest theme/background colors match the real palette
+
+---
+
 ## [3.4.0] - 2026-07-03
 
 ### Changed
