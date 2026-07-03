@@ -77,6 +77,32 @@ export interface DimensionDefinition {
   defaultMm: number;
 }
 
+/** Manual dimensions resolved to millimetres. Missing keys read as absent. */
+export type ManualDimsMm = Partial<Record<DimensionKey, number>>;
+
+export interface ResolvedSectionArea {
+  areaMm2: number;
+  expression: string;
+}
+
+export interface ResolvedSectionPerimeter {
+  perimeterMm: number;
+  expression: string;
+}
+
+/**
+ * Structurally identical to the calculator's ValidationIssue. Declared here so
+ * datasets never imports calculator (calculator/types already imports
+ * datasets/types — the reverse import would create a cycle). Values are
+ * assignable to ValidationIssue by structure.
+ */
+export interface GeometryIssue {
+  field: string;
+  message: string;
+  messageKey?: string;
+  messageValues?: Record<string, string | number>;
+}
+
 export interface StandardSizeOption {
   id: string;
   label: string;
@@ -140,6 +166,18 @@ export interface ManualProfileDefinition {
   formulaLabel: string;
   referenceLabel: string;
   dimensions: DimensionDefinition[];
+  /**
+   * Cross-section area from dims in mm. Missing dims coerce to 0 (range
+   * validation runs upstream) — matches the engine's historical behavior.
+   */
+  area(dims: ManualDimsMm): ResolvedSectionArea;
+  /** Painting perimeter from dims in mm. */
+  perimeter(dims: ManualDimsMm): ResolvedSectionPerimeter;
+  /**
+   * Optional relational geometry checks (e.g. wall × 2 < outer diameter).
+   * Returns [] when the involved dims are not all present.
+   */
+  validateGeometry?(dims: ManualDimsMm): GeometryIssue[];
 }
 
 export interface StandardProfileDefinition {
