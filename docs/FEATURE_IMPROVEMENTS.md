@@ -1,11 +1,13 @@
 # Feature Improvements Backlog
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 Shipped items are pruned from this list; see `CHANGELOG.md` for history
 and `docs/DESIGN_REVIEW.md` for the reviewed follow-up roadmap
-(component splitting, accessibility pass, formula-on-definition,
-Raycast extension, token stragglers, frequency-aware suggestions).
+(token stragglers, frequency-aware suggestions, command component
+tests). The Raycast extension lives in its own repository and is out of
+scope here — `@ferroscale/metal-core`'s command module is the shared
+grammar it consumes.
 
 ## Priority 1 (Next)
 

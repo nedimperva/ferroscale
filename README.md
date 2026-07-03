@@ -79,7 +79,7 @@ Examples:
 Main exports from `@ferroscale/metal-core`:
 1. Calculator engine: `calculateMetal`, `validateCalculationInput`, `resolveAreaMm2`
 2. Command parser: `cmdParse`, `cmdTokenize`, `cmdSuggest`, `inputToQuery`
-   (UI-independent — ready to power a Raycast extension or CLI)
+   (UI-independent — also consumed by the Raycast extension, which lives in its own repository)
 3. Datasets: profile/material definitions and helpers
 
 ## Internationalization

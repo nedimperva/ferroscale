@@ -63,19 +63,24 @@ Items 1–3 **✅ shipped in 3.3.0**; the rest ordered by expected value:
    `command-desktop.tsx` became nine under `desktop/` (workspace root,
    types-only props module, sidebar, shared atoms, one file per view);
    byte-identical duplicates (PricingBadge, toast, `familyForInput`)
-   were consolidated. Residuals: the parallel mobile/desktop
-   Settings/Library/Breakdown implementations still exist as separate
-   code (a visual-consolidation project), TokenChip/DeskTokenChip
-   remain separate (sizing differences), and the inline `style={{}}`
-   blocks still await a token migration.
+   were consolidated. **3.4.0** went further: a single settings field
+   model (`settings-model.ts`) and a single breakdown row builder
+   (`breakdown-rows.ts`) now sit behind both the mobile sheets and the
+   desktop views — adding a setting or a breakdown row is one entry.
+   The Library's list/grid/table renderers intentionally stay per form
+   factor; their data/formatting helpers are the shared layer.
+   Residuals: TokenChip/DeskTokenChip remain separate (sizing
+   differences) and the inline `style={{}}` blocks still await a token
+   migration.
 2. ~~**Accessibility pass.**~~ ✅ shipped in 3.3.0 — sheets are real
    modal dialogs (`role="dialog"`, `aria-modal`, `aria-labelledby`,
    restored `useFocusTrap` with focus-first/Tab-cycle/focus-restore,
    Escape on every viewport incl. phone), toast/result/PWA banners have
    polite live regions, pinch zoom is re-enabled, settings inputs are
-   labeled, and axe-core scans run in e2e (critical = fail). Residual:
-   placeholder text on `--muted-faint` likely still fails 4.5:1
-   contrast — axe logs it as non-blocking.
+   labeled, and axe-core scans run in e2e (critical = fail). **3.4.0**
+   closed the contrast residual: muted/muted-faint (and the light
+   accent/green) tokens now meet WCAG AA 4.5:1 — the axe scans report
+   zero serious color-contrast violations.
 3. ~~**Formula-on-definition for profiles.**~~ ✅ shipped in 3.3.0 —
    manual definitions carry `area()`/`perimeter()`/`validateGeometry()`;
    the engine and validation are profile-agnostic. Residuals: the
@@ -83,24 +88,21 @@ Items 1–3 **✅ shipped in 3.3.0**; the rest ordered by expected value:
    (`MANUAL_DIM_COUNTS`, `buildCalculationInput`, `dimsToSizeText`) and
    `profile-specs.ts`' drawing/metric switches are separate duplication
    axes that would need their own descriptors.
-4. **Ship the Raycast extension.** The parser consolidation made
-   `@ferroscale/metal-core/command` the reusable, structured-error
-   grammar it needs; the extension itself is now mostly UI glue.
-5. **Token-system stragglers.** `pwa-register.tsx`, the contact page,
+4. **Token-system stragglers.** `pwa-register.tsx`, the contact page,
    and the error boundary use raw Tailwind palette colors instead of
    tokens; the manifest theme colors (`#111827`/`#f3f4f6`) don't match
    the real palette (`#131009`/`#efeae0`); a few raw hex values
    (`#161109`, `#fff`) recur for "text on accent" — worth a dedicated
    token.
-6. **Frequency-aware suggestions.** Recency is live; a small usage
+5. **Frequency-aware suggestions.** Recency is live; a small usage
    counter per query/size (already present as `useCount` on saved
    entries) could rank suggestions by frequency × recency.
-7. **Component tests for the command UI.** The vitest suites cover the
+6. **Component tests for the command UI.** The vitest suites cover the
    engine/parser/stores well, but the three big components have only
    e2e smoke coverage. Consider `@testing-library/react` + jsdom for
    the interaction logic (chip editing, keyboard routing, suggestion
    insertion).
-8. **Misc.** `plt`/`sht` both render as "Plate" (thickness decides
+7. **Misc.** `plt`/`sht` both render as "Plate" (thickness decides
    sheet vs plate invisibly); the mobile keypad cannot type `@`/`/` so
    inline price overrides depend on the rate key; `settings-stores.ts`
    still documents a removed "legacy FerroScaleAppShell"; localStorage

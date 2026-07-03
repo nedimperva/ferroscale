@@ -1,8 +1,8 @@
 # @ferroscale/metal-core
 
-Shared calculation package used by the Ferroscale web app. It is also the
-foundation for future non-web surfaces (e.g. a Raycast extension or CLI):
-the command parser below is UI-independent and ready to reuse.
+Shared calculation package used by the Ferroscale web app and by the
+Raycast extension (maintained in its own repository): the command parser
+below is UI-independent and is the grammar both surfaces share.
 
 ## What It Contains
 

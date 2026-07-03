@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.4.0] - 2026-07-03
+
+### Changed
+
+- Text contrast now meets WCAG AA everywhere: secondary text, placeholders, hints, and status labels are darker in light mode (and slightly lighter in dark mode), and the accent orange and confirmation green were tuned so buttons and highlighted values stay readable — the automated axe scans report zero serious color-contrast violations
+- Settings look and behave the same everywhere — both the mobile settings sheet and the desktop settings view are driven by one shared field model (`settings-model.ts`); the theme row on mobile is now a Light/Dark choice like the other rows
+- The result breakdown shows consistent labels on mobile and desktop (per piece, rate) — both surfaces now render from one shared row builder (`breakdown-rows.ts`)
+- Internal: the desktop saved cards reuse the shared subtitle helper; the Raycast extension is documented as living in its own repository (out of scope here) with `@ferroscale/metal-core`'s command module as the shared grammar
+
+---
+
 ## [3.3.0] - 2026-07-03
 
 ### Added

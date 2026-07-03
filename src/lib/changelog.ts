@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.4.0",
+    date: "2026-07-03",
+    changed: [
+      "Text contrast now meets WCAG AA everywhere: secondary text, placeholders, hints, and status labels are darker in light mode (and slightly lighter in dark mode), and the accent orange and confirmation green were tuned so buttons and highlighted values stay readable",
+      "Settings look and behave the same everywhere — both the mobile settings sheet and the desktop settings view are driven by one shared definition, and the theme row on mobile is now a Light/Dark choice like the other rows",
+      "The result breakdown shows consistent labels on mobile and desktop (per piece, rate) — previously the two surfaces named the same rows differently",
+    ],
+    changed_bs: [
+      "Kontrast teksta sada svugdje ispunjava WCAG AA: sekundarni tekst, placeholderi, savjeti i statusne oznake su tamniji u svijetlom režimu (i nešto svjetliji u tamnom), a narandžasta i zelena boja su podešene da dugmad i istaknute vrijednosti ostanu čitljive",
+      "Postavke izgledaju i ponašaju se isto svugdje — i mobilni panel i desktop pogled postavki koriste jednu zajedničku definiciju, a red teme na mobilnom je sada izbor Svijetlo/Tamno kao i ostali redovi",
+      "Pregled rezultata prikazuje dosljedne oznake na mobilnom i desktopu (po komadu, cijena) — ranije su dvije površine iste redove različito nazivale",
+    ],
+  },
+  {
     version: "3.3.0",
     date: "2026-07-03",
     added: [
