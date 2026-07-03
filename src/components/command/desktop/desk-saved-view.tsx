@@ -5,7 +5,8 @@ import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/m
 import { CommandGlyph } from "../command-glyph";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { DeskTopbar } from "./desk-sidebar";
-import { DeskIcon, famForInput } from "./desk-atoms";
+import { DeskIcon } from "./desk-atoms";
+import { familyForInput } from "../command-copy";
 
 export function DeskSavedView({
   saved,
@@ -43,7 +44,7 @@ export function DeskSavedView({
             }}
           >
             {saved.map((entry) => {
-              const fam = famForInput(entry.input);
+              const fam = familyForInput(entry.input);
               const r = entry.result;
               const entrySym = CURRENCY_SYMBOLS[r.currency] ?? "€";
               return (

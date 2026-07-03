@@ -7,7 +7,8 @@ import { CommandGlyph } from "../command-glyph";
 import type { CalculationInput, CurrencyCode } from "@/lib/calculator/types";
 import type { Project } from "@/hooks/useProjects";
 import { DeskTopbar } from "./desk-sidebar";
-import { CloseIcon, DeskBtn, DeskIcon, famForInput } from "./desk-atoms";
+import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
+import { familyForInput } from "../command-copy";
 
 export function DeskProjectsView({
   dark,
@@ -137,7 +138,7 @@ export function DeskProjectsView({
                       </div>
                     ) : (
                       calcs.map((calc) => {
-                        const fam = famForInput(calc.input);
+                        const fam = familyForInput(calc.input);
                         return (
                           <div
                             key={calc.id}

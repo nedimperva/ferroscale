@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import { findAliasByProfileId } from "@ferroscale/metal-core";
-import type { CommandFamily, CommandParserSettings } from "@ferroscale/metal-core";
+import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
-import type { CalculationInput, CalculationResult, CurrencyCode, LengthUnit } from "@/lib/calculator/types";
+import type { CalculationInput, CurrencyCode, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
+import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 import { SheetShell } from "./sheet-shell";
 
 /* ──────────────────────────────────────────────────────────────
@@ -614,11 +614,3 @@ function ProjectsTabContent({
 
 /* ─────────────────── Helpers ─────────────────── */
 
-function familyForInput(input: CalculationInput): CommandFamily | undefined {
-  return findAliasByProfileId(input.profileId)?.fam;
-}
-
-function formatWeightPriceSubtitle(result: CalculationResult): string {
-  const sym = CURRENCY_SYMBOLS[result.currency] ?? "€";
-  return `${fsWeight(result.totalWeightKg)} ${fsWeightUnit(result.totalWeightKg)} · ${sym} ${fsMoney(result.grandTotalAmount)}`;
-}

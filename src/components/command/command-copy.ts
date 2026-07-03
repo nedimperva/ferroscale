@@ -1,11 +1,31 @@
+import {
+  CURRENCY_SYMBOLS,
+  findAliasByProfileId,
+  fsMoney,
+  fsWeight,
+  fsWeightUnit,
+} from "@ferroscale/metal-core";
 import type {
   CommandAlias,
+  CommandFamily,
   CommandParseIssue,
   CommandParseResult,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
+import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 type CommandT = (key: string, values?: Record<string, string | number>) => string;
+
+/** Profile family (glyph key) for a stored calculation input. */
+export function familyForInput(input: CalculationInput): CommandFamily | undefined {
+  return findAliasByProfileId(input.profileId)?.fam;
+}
+
+/** "238.8 kg · € 286.56" — the standard saved/compare row subtitle. */
+export function formatWeightPriceSubtitle(result: CalculationResult): string {
+  const sym = CURRENCY_SYMBOLS[result.currency] ?? "€";
+  return `${fsWeight(result.totalWeightKg)} ${fsWeightUnit(result.totalWeightKg)} · ${sym} ${fsMoney(result.grandTotalAmount)}`;
+}
 
 export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): string {
   switch (issue.code) {

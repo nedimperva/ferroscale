@@ -1,8 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { findAliasByProfileId } from "@ferroscale/metal-core";
-import type { CalculationInput } from "@/lib/calculator/types";
 
 export function DeskBtn({
   dark,
@@ -65,10 +63,6 @@ export function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function famForInput(input: CalculationInput) {
-  return findAliasByProfileId(input.profileId)?.fam;
-}
-
 /* ───────────────────────── Calculator view ───────────────────────── */
 
 export function DeskTokenChip({
@@ -101,14 +95,6 @@ export function DeskTokenChip({
       >
         ×
       </button>
-    </span>
-  );
-}
-
-export function DeskPricingBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--blue-surface)] text-[var(--blue-text)] whitespace-nowrap">
-      {children}
     </span>
   );
 }

@@ -15,16 +15,9 @@ import {
 } from "../command-copy";
 import type { CommandDesktopProps } from "./desktop-props";
 import { DeskTopbar } from "./desk-sidebar";
-import {
-  CloseIcon,
-  DeskBtn,
-  DeskIcon,
-  DeskPricingBadge,
-  DeskTokenChip,
-  Kbd,
-  SectionLabel,
-  famForInput,
-} from "./desk-atoms";
+import { CloseIcon, DeskBtn, DeskIcon, DeskTokenChip, Kbd, SectionLabel } from "./desk-atoms";
+import { PricingBadge } from "../command-atoms";
+import { familyForInput } from "../command-copy";
 
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -375,10 +368,10 @@ export function DeskCalcView({
                     {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                   </span>
                   {!isW && p.pricing.wastePercent > 0 && (
-                    <DeskPricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</DeskPricingBadge>
+                    <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
                   )}
                   {!isW && p.pricing.includeVat && (
-                    <DeskPricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</DeskPricingBadge>
+                    <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
                   )}
                 </span>
               ) : p.issues.length > 0 ? (
@@ -595,7 +588,7 @@ export function DeskCalcView({
           </div>
           <div className="flex flex-col gap-1.5">
             {compareItems.map((item, i) => {
-              const fam = famForInput(item.input);
+              const fam = familyForInput(item.input);
               const r = item.result;
               return (
                 <div

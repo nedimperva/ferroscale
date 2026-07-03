@@ -6,7 +6,8 @@ import { CommandGlyph } from "../command-glyph";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CompareItem } from "@/hooks/useCompare";
 import { DeskTopbar } from "./desk-sidebar";
-import { CloseIcon, DeskBtn, DeskIcon, famForInput } from "./desk-atoms";
+import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
+import { familyForInput } from "../command-copy";
 
 function DeltaChip({ pct }: { pct: number }) {
   const t = useTranslations("command");
@@ -59,7 +60,7 @@ export function DeskCompareView({
     return {
       item,
       r,
-      fam: famForInput(item.input),
+      fam: familyForInput(item.input),
       name: item.normalizedProfile?.shortLabel ?? r.profileLabel,
       lengthM,
       kgm: lengthM > 0 ? r.unitWeightKg / lengthM : null,
