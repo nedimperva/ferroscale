@@ -17,6 +17,26 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.3.0",
+    date: "2026-07-03",
+    added: [
+      "Sheets (Settings, Library, Result, Add to project) are now real modal dialogs for assistive technology: screen readers announce them by name, keyboard focus stays inside while they are open and returns to the opener on close, and Escape closes them on every device — including phones",
+      "Screen readers now announce the calculated result once you stop typing, confirmation toasts (Saved, Link copied, …), and the offline/update banners",
+    ],
+    changed: [
+      "Pinch zoom is enabled again everywhere — accessibility over app-like feel",
+      "Settings inputs (unit price, waste, VAT, default grade) are now properly labeled for assistive technology",
+    ],
+    added_bs: [
+      "Paneli (Postavke, Biblioteka, Rezultat, Dodaj u projekat) su sada pravi modalni dijalozi za pomoćne tehnologije: čitači ekrana ih najavljuju po imenu, fokus tastature ostaje unutar panela dok je otvoren i vraća se nazad pri zatvaranju, a Escape ih zatvara na svakom uređaju — uključujući telefone",
+      "Čitači ekrana sada najavljuju izračunati rezultat kada prestanete kucati, potvrdne poruke (Sačuvano, Link kopiran, …) i offline/update obavještenja",
+    ],
+    changed_bs: [
+      "Pinch zoom je ponovo omogućen svugdje — pristupačnost ispred izgleda aplikacije",
+      "Polja u postavkama (jedinična cijena, otpad, PDV, podrazumijevani kvalitet) sada su ispravno označena za pomoćne tehnologije",
+    ],
+  },
+  {
     version: "3.2.0",
     date: "2026-07-02",
     added: [

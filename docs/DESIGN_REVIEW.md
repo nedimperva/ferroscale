@@ -1,6 +1,6 @@
 # Ferroscale — Design, UX & Architecture Review
 
-Date: 2026-07-02 · Reviewed at v3.1.0, findings addressed in v3.2.0
+Date: 2026-07-02 · Reviewed at v3.1.0, findings addressed in v3.2.0–v3.3.0
 
 This is a full review of the app across visual design, user experience,
 developer experience, and future-proofing. Items marked **✅ shipped in
@@ -54,30 +54,35 @@ fallback, full Apple splash set).
 | Stale e2e spec asserting a removed UI | ✅ shipped in 3.2.0 — replaced with a command-bar spec (demo result, typing, share-link hydration, parse issues) |
 | Stale docs (AGENTS.md described non-existent hooks; READMEs described an absent `raycast-extension/` workspace) | ✅ shipped in 3.2.0 — rewritten |
 
-## 3. Recommended follow-ups (not done in 3.2.0)
+## 3. Recommended follow-ups
 
-Ordered by expected value:
+Items 1–3 **✅ shipped in 3.3.0**; the rest ordered by expected value:
 
-1. **Split the giant command components.** `command-desktop.tsx`
-   (~2,300 lines), `command-sheets.tsx` (~1,400), `command-shell.tsx`
-   (~1,300) are the change bottleneck: every feature funnels through
-   them, they are the least memoized and least unit-tested code, and
-   the mobile/desktop variants of Settings/Library/Breakdown duplicate
-   each other. Extract per-view files (`desk-settings-view.tsx`,
-   `desk-saved-view.tsx`, …) and shared primitives (`Button`, `Pill`,
-   `SheetShell`) first; the ~130 inline `style={{}}` blocks in the
-   desktop file can migrate to tokens as views move.
-2. **Accessibility pass.** Bottom sheets have no `role="dialog"`,
-   `aria-modal`, or focus trap (a `useFocusTrap` hook existed but was
-   never wired — it was removed as dead code; reintroduce with the
-   sheet work). Results and toasts have no live regions. Pinch zoom is
-   disabled (`userScalable: false`) — a WCAG 1.4.4 issue. Placeholder
-   text on `--muted-faint` likely fails 4.5:1 contrast.
-3. **Formula-on-definition for profiles.** Adding a manual profile
-   today touches ~6 places (type union, definition, two parallel
-   if-chains in `resolveAreaMm2`/`resolvePerimeterMm`, validation,
-   drawing specs, parser aliases). Moving area/perimeter formulas onto
-   the profile definition would collapse most of that.
+1. ~~**Split the giant command components.**~~ ✅ shipped in 3.3.0 —
+   `command-sheets.tsx` became six modules under `sheets/`,
+   `command-desktop.tsx` became nine under `desktop/` (workspace root,
+   types-only props module, sidebar, shared atoms, one file per view);
+   byte-identical duplicates (PricingBadge, toast, `familyForInput`)
+   were consolidated. Residuals: the parallel mobile/desktop
+   Settings/Library/Breakdown implementations still exist as separate
+   code (a visual-consolidation project), TokenChip/DeskTokenChip
+   remain separate (sizing differences), and the inline `style={{}}`
+   blocks still await a token migration.
+2. ~~**Accessibility pass.**~~ ✅ shipped in 3.3.0 — sheets are real
+   modal dialogs (`role="dialog"`, `aria-modal`, `aria-labelledby`,
+   restored `useFocusTrap` with focus-first/Tab-cycle/focus-restore,
+   Escape on every viewport incl. phone), toast/result/PWA banners have
+   polite live regions, pinch zoom is re-enabled, settings inputs are
+   labeled, and axe-core scans run in e2e (critical = fail). Residual:
+   placeholder text on `--muted-faint` likely still fails 4.5:1
+   contrast — axe logs it as non-blocking.
+3. ~~**Formula-on-definition for profiles.**~~ ✅ shipped in 3.3.0 —
+   manual definitions carry `area()`/`perimeter()`/`validateGeometry()`;
+   the engine and validation are profile-agnostic. Residuals: the
+   command parser's per-family dimension-token layout
+   (`MANUAL_DIM_COUNTS`, `buildCalculationInput`, `dimsToSizeText`) and
+   `profile-specs.ts`' drawing/metric switches are separate duplication
+   axes that would need their own descriptors.
 4. **Ship the Raycast extension.** The parser consolidation made
    `@ferroscale/metal-core/command` the reusable, structured-error
    grammar it needs; the extension itself is now mostly UI glue.

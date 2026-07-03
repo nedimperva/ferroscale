@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.3.0] - 2026-07-03
+
+### Added
+
+- Sheets (Settings, Library, Result, Add to project) are now real modal dialogs for assistive technology: screen readers announce them by name, keyboard focus stays inside while they are open and returns to the opener on close, and Escape closes them on every device — including phones
+- Screen readers now announce the calculated result once you stop typing, confirmation toasts (Saved, Link copied, …), and the offline/update banners
+- Automated accessibility scans (axe-core) in the e2e suite — critical violations fail the run
+
+### Changed
+
+- Pinch zoom is enabled again everywhere — accessibility over app-like feel
+- Settings inputs (unit price, waste, VAT, default grade) are now properly labeled for assistive technology
+- Internal: manual profile definitions now carry their own area/perimeter formulas and geometry constraints — adding a profile no longer touches the engine or validation; the three 1,300–2,300-line command components are split into focused modules under `sheets/` and `desktop/` with shared atoms deduplicated
+
+---
+
 ## [3.2.0] - 2026-07-02
 
 ### Added
