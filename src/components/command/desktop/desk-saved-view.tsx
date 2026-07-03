@@ -1,12 +1,11 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { DeskTopbar } from "./desk-sidebar";
 import { DeskIcon } from "./desk-atoms";
-import { familyForInput } from "../command-copy";
+import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 
 export function DeskSavedView({
   saved,
@@ -46,7 +45,6 @@ export function DeskSavedView({
             {saved.map((entry) => {
               const fam = familyForInput(entry.input);
               const r = entry.result;
-              const entrySym = CURRENCY_SYMBOLS[r.currency] ?? "€";
               return (
                 <div
                   key={entry.id}
@@ -73,8 +71,7 @@ export function DeskSavedView({
                       {entry.name}
                     </span>
                     <span className="block font-mono text-[11.5px] text-muted mt-0.5 truncate">
-                      {fsWeight(r.totalWeightKg)} {fsWeightUnit(r.totalWeightKg)} · {entrySym}{" "}
-                      {fsMoney(r.grandTotalAmount)} · ×{r.quantity}
+                      {formatWeightPriceSubtitle(r)} · ×{r.quantity}
                     </span>
                   </button>
                   <div className="flex gap-1.5 flex-shrink-0">
