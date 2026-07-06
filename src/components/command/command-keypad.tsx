@@ -75,10 +75,12 @@ export function CommandKeypad({
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
         </div>
-        <div className="flex gap-1.5 px-4">
+        <div className="flex gap-1.5">
+          <Key label="@" mono onPress={() => onKey("@")} flex={0.9} />
           {ROW_MID.map((k) => (
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
+          <Key label="/" mono onPress={() => onKey("/")} flex={0.9} />
         </div>
         <div className="flex gap-1.5">
           <Key label="×" mono big onPress={() => onKey("×")} flex={1.3} />
