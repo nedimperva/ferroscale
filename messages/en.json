@@ -98,7 +98,9 @@
     },
     "keypad": {
       "space": "space",
-      "addLength": "Add a length to compute"
+      "addLength": "Add a length to compute",
+      "closeUnitPicker": "Close unit picker",
+      "unitPicker": "Price unit"
     },
     "token": {
       "edit": "Edit {token}",
@@ -225,7 +227,7 @@
           "body": "Settings define the default currency, unit price, price basis, waste, and VAT. A command can override the rate for just that calculation.",
           "tips": {
             "desktop": "Desktop: type @2.50/kg, 3.20/m, or 45/pc.",
-            "mobile": "Mobile: type the rate number, then tap the rate key such as €/kg to insert the unit token.",
+            "mobile": "Mobile: type the rate number, then tap the rate key (e.g. €/kg) — or hold it to pick /kg, /m, or /pc.",
             "basis": "Set Price basis to Weight when your supplier quotes per kilogram."
           }
         },

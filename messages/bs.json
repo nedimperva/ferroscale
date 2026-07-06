@@ -98,7 +98,9 @@
     },
     "keypad": {
       "space": "razmak",
-      "addLength": "Dodajte dužinu za izračun"
+      "addLength": "Dodajte dužinu za izračun",
+      "closeUnitPicker": "Zatvori izbor jedinice",
+      "unitPicker": "Jedinica cijene"
     },
     "token": {
       "edit": "Uredi {token}",
@@ -225,7 +227,7 @@
           "body": "Postavke određuju podrazumijevanu valutu, jediničnu cijenu, osnovu cijene, otpad i PDV. Komanda može prepisati cijenu samo za taj izračun.",
           "tips": {
             "desktop": "Desktop: unesite @2.50/kg, 3.20/m ili 45/pc.",
-            "mobile": "Mobilno: unesite broj cijene, zatim dodirnite tipku za cijenu kao €/kg da ubacite jedinicu.",
+            "mobile": "Mobilni: ukucajte iznos, zatim dodirnite tipku cijene (npr. €/kg) — ili je zadržite da izaberete /kg, /m ili /pc.",
             "basis": "Postavite osnovu cijene na Masu kada dobavljač daje cijenu po kilogramu."
           }
         },

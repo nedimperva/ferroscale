@@ -339,14 +339,21 @@ export function CommandShell() {
   const onKey = useCallback((ch: string) => {
     setQuery((q) => q + ch);
   }, []);
+  const insertPriceToken = useCallback(
+    (unit: string) => {
+      setQuery((q) => {
+        const token = /\s$/.test(q) || q.length === 0
+          ? `${formatPriceTokenValue(shared.unitPrice)}/${unit}`
+          : `/${unit}`;
+        return `${q}${token} `;
+      });
+    },
+    [shared.unitPrice],
+  );
+  // Tap = default unit; long-press picker passes an explicit one.
   const onPriceUnit = useCallback(() => {
-    setQuery((q) => {
-      const token = /\s$/.test(q) || q.length === 0
-        ? `${formatPriceTokenValue(shared.unitPrice)}/${shared.priceUnit}`
-        : `/${shared.priceUnit}`;
-      return `${q}${token} `;
-    });
-  }, [shared.priceUnit, shared.unitPrice]);
+    insertPriceToken(shared.priceUnit === "piece" ? "pc" : shared.priceUnit);
+  }, [insertPriceToken, shared.priceUnit]);
   const onBack = useCallback(() => {
     setQuery((q) => q.slice(0, -1));
   }, []);
@@ -999,6 +1006,7 @@ export function CommandShell() {
             <CommandKeypad
               onKey={onKey}
               onPriceUnit={onPriceUnit}
+              onPriceUnitPick={insertPriceToken}
               onBack={onBack}
               onEnter={onEnter}
               priceUnitLabel={priceUnitLabel}

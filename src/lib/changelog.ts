@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.6.1",
+    date: "2026-07-03",
+    changed: [
+      "Cleaner mobile keypad: the separate @ and / keys are gone — tap the rate key (e.g. €/kg) to insert your default price token, or hold it to pick /kg, /m, or /pc, just like holding a key for alternate characters on a phone keyboard",
+    ],
+    changed_bs: [
+      "Urednija mobilna tastatura: odvojene tipke @ i / su uklonjene — dodirnite tipku cijene (npr. €/kg) da ubacite podrazumijevanu cijenu, ili je zadržite da izaberete /kg, /m ili /pc, kao kad zadržite tipku za alternativne znakove na telefonu",
+    ],
+  },
+  {
     version: "3.6.0",
     date: "2026-07-03",
     added: [

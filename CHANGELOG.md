@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.6.1] - 2026-07-03
+
+### Changed
+
+- Cleaner mobile keypad: the separate `@` and `/` keys (added in 3.6.0) are folded into the rate key — tap inserts the default price token, **hold** opens a `/kg` `/m` `/pc` picker (the familiar hold-for-alternatives keyboard pattern)
+
+---
+
 ## [3.6.0] - 2026-07-03
 
 ### Added

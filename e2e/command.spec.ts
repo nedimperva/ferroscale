@@ -99,3 +99,30 @@ test.describe("Formula QA page", () => {
     await expect(page.getByText("FAIL", { exact: true })).toHaveCount(0);
   });
 });
+
+// Phone viewport (<640) — fullscreen app with the on-screen keypad.
+test.describe("Keypad rate key (phone viewport)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test("tap inserts the default price token", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: /€\/kg/ }).click();
+    await expect(page.getByText(/^1\.2\/kg$/).first()).toBeVisible();
+  });
+
+  test("hold opens the unit picker and inserts the chosen unit", async ({ page }) => {
+    await page.goto("/en");
+    const rateKey = page.getByRole("button", { name: /€\/kg/ });
+    const box = await rateKey.boundingBox();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(600);
+    await page.mouse.up();
+
+    const menu = page.getByRole("menu", { name: "Price unit" });
+    await expect(menu).toBeVisible();
+    await menu.getByRole("menuitem", { name: "/m" }).click();
+    await expect(menu).toBeHidden();
+    await expect(page.getByText(/^1\.2\/m$/).first()).toBeVisible();
+  });
+});
