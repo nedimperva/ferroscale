@@ -89,3 +89,13 @@ test.describe("Sheet dialogs (medium viewport)", () => {
     await expect(dialog).toBeHidden();
   });
 });
+
+test.describe("Formula QA page", () => {
+  test("renders the benchmark table with all checks passing", async ({ page }) => {
+    await page.goto("/en/qa");
+    await expect(page.getByRole("heading", { name: "Formula QA" })).toBeVisible();
+    await expect(page.getByText(/All \d+ checks pass/)).toBeVisible();
+    await expect(page.getByText("HEA 200")).toBeVisible();
+    await expect(page.getByText("FAIL", { exact: true })).toHaveCount(0);
+  });
+});

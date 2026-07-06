@@ -380,5 +380,24 @@
       "answerRequired": "CAPTCHA odgovor je obavezan.",
       "contextTooLarge": "Kontekst je prevelik."
     }
+  },
+  "qa": {
+    "title": "Provjera formula",
+    "subtitle": "Izlaz živog kalkulatora provjeren prema nezavisnim referencama — objavljene EN kataloške mase i ručno izračunate formule (S235JR, po metru).",
+    "back": "Nazad na kalkulator",
+    "summaryPass": "Svih {count} provjera prolazi",
+    "summaryFail": "{fail} od {total} provjera ne prolazi",
+    "maxDelta": "Maks. odstupanje",
+    "tolerance": "Tolerancija",
+    "dataset": "Skup podataka",
+    "colProfile": "Profil",
+    "colExpected": "Očekivano kg/m",
+    "colActual": "Izračunato kg/m",
+    "colDelta": "Δ",
+    "colSource": "Referenca",
+    "colStatus": "Status",
+    "pass": "PROLAZI",
+    "fail": "NE PROLAZI",
+    "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni."
   }
 }

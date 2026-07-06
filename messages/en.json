@@ -380,5 +380,24 @@
       "answerRequired": "Captcha answer is required.",
       "contextTooLarge": "Context payload is too large."
     }
+  },
+  "qa": {
+    "title": "Formula QA",
+    "subtitle": "Live engine output checked against independent references — published EN catalog masses and hand-computed formulas (S235JR, per metre).",
+    "back": "Back to calculator",
+    "summaryPass": "All {count} checks pass",
+    "summaryFail": "{fail} of {total} checks failing",
+    "maxDelta": "Max deviation",
+    "tolerance": "Tolerance",
+    "dataset": "Dataset",
+    "colProfile": "Profile",
+    "colExpected": "Expected kg/m",
+    "colActual": "Computed kg/m",
+    "colDelta": "Δ",
+    "colSource": "Reference",
+    "colStatus": "Status",
+    "pass": "PASS",
+    "fail": "FAIL",
+    "note": "Reference values are deliberately independent of the app's datasets: standard profiles use published catalog masses, manual profiles use hand-computed cross-section formulas. The same checks run in CI on every change."
   }
 }
