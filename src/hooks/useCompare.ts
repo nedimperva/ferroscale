@@ -22,7 +22,7 @@ export interface CompareItem {
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-const COMPARE_LIMIT_KEY = "advanced-calc-compare-limit-v1";
+const COMPARE_LIMIT_KEY = "ferroscale-compare-limit-v1";
 const DEFAULT_COMPARE_LIMIT = 3;
 
 function clampCompareLimit(value: number): number {
