@@ -15,10 +15,6 @@ grammar it consumes.
 Description: Add CSV import for multi-line calculations alongside the project CSV export.
 Acceptance: Upload CSV with profile rows; compute totals; downloadable result CSV.
 
-3. Formula QA Surface
-Description: Add dedicated "validation mode" page that compares computed outputs to saved benchmark rows.
-Acceptance: Displays pass/fail summary and max error delta for current dataset version.
-
 ## Priority 2
 
 1. Accessibility Hardening
@@ -31,6 +27,7 @@ Acceptance: No personal identifiers; can disable tracking from UI.
 
 ## Shipped (recent)
 
+- Formula QA page (/qa) + independent benchmark in CI; UPE dataset correction — 3.6.0
 - Usage-learning suggestions (frequency × recency, per profile family) — 3.5.0
 - Install-app action in Settings — 3.5.0
 - WCAG AA contrast + full token adoption — 3.4.0/3.5.0

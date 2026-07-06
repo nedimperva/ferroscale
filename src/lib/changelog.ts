@@ -17,6 +17,26 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.6.0",
+    date: "2026-07-03",
+    added: [
+      "Formula QA page (/qa): the live calculator is checked against independent references — published EN catalog masses and hand-computed formulas — with a pass/fail table, per-row deviation, and the dataset version; the same checks run automatically on every code change",
+      "The mobile keypad gained @ and / keys, so inline price overrides like @2.50/kg can be typed directly",
+    ],
+    fixed: [
+      "UPE channel weights corrected: eleven UPE sizes carried cross-section areas 1–4% off the EN 10279 catalog values (found by the new formula-QA benchmark); all now match the published figures",
+      "Typing sht now shows \"Sheet\" instead of \"Plate\" in chips, hints, and saved names",
+    ],
+    added_bs: [
+      "Stranica za provjeru formula (/qa): živi kalkulator se provjerava prema nezavisnim referencama — objavljene EN kataloške mase i ručno izračunate formule — sa tabelom prolaza/pada, odstupanjem po redu i verzijom skupa podataka; iste provjere se izvršavaju automatski pri svakoj izmjeni koda",
+      "Mobilna tastatura je dobila tipke @ i /, pa se prepisi cijene poput @2.50/kg mogu kucati direktno",
+    ],
+    fixed_bs: [
+      "Ispravljene težine UPE profila: jedanaest UPE veličina imalo je površine presjeka 1–4% van EN 10279 kataloških vrijednosti (otkriveno novom provjerom formula); sve sada odgovaraju objavljenim vrijednostima",
+      "Kucanje sht sada prikazuje \"Lim\" umjesto \"Ploča\" u čipovima, savjetima i sačuvanim nazivima",
+    ],
+  },
+  {
     version: "3.5.0",
     date: "2026-07-03",
     added: [

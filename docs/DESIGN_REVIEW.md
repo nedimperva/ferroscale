@@ -102,12 +102,10 @@ Items 1–3 **✅ shipped in 3.3.0**; the rest ordered by expected value:
    e2e smoke coverage. Consider `@testing-library/react` + jsdom for
    the interaction logic (chip editing, keyboard routing, suggestion
    insertion).
-7. **Misc.** `plt`/`sht` both render as "Plate" (thickness decides
-   sheet vs plate invisibly); the mobile keypad cannot type `@`/`/` so
-   inline price overrides depend on the rate key; `settings-stores.ts`
-   still documents a removed "legacy FerroScaleAppShell"; localStorage
-   keys mix `ferroscale-` and `advanced-calc-` prefixes (harmless, but
-   a migration could unify them).
+7. ~~**Misc.**~~ mostly ✅ shipped in 3.6.0 — `sht` displays as
+   "Sheet"; the keypad has `@` and `/`; localStorage keys are unified
+   under `ferroscale-` (one-time migration), and the stale
+   "legacy FerroScaleAppShell" comment is gone.
 
 ## 4. Architecture notes for future features
 

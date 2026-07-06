@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.6.0] - 2026-07-03
+
+### Added
+
+- Formula QA page (`/qa`): the live engine + dataset are validated against independent references — published EN catalog masses for standard profiles and hand-computed cross-section formulas for manual ones (20 rows, 0.5% tolerance) — with a server-rendered pass/fail table, per-row deviation, max delta, and the dataset version. The same benchmark runs as a vitest gate in CI and an e2e smoke test
+- The mobile keypad gained `@` and `/` keys, so inline price overrides like `@2.50/kg` can be typed directly
+
+### Fixed
+
+- **UPE channel weights corrected** (dataset `2026.07.1`): eleven UPE sizes carried cross-section areas 1–4% off the EN 10279 catalog values — found by the new formula-QA benchmark; all now match the published figures (each cross-checked against mass = area × 0.785)
+- Typing `sht` now shows "Sheet" instead of "Plate" in chips, hints, and saved names
+- localStorage keys unified under the `ferroscale-` prefix with a safe one-time migration (the `advanced-calc-*` names predated the rename)
+
+---
+
 ## [3.5.0] - 2026-07-03
 
 ### Added
