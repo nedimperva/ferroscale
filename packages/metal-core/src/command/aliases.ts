@@ -21,7 +21,7 @@ export const COMMAND_ALIASES: CommandAlias[] = [
   // standards for thin vs thick. Both aliases resolve to the unified "panel"
   // family and the parser routes to the right backing profile by thickness.
   { alias: "plt", name: "Plate", fam: "panel", profileId: null },
-  { alias: "sht", name: "Plate", fam: "panel", profileId: null },
+  { alias: "sht", name: "Sheet", fam: "panel", profileId: null },
   { alias: "chq", name: "Chequered", fam: "chequered", profileId: null, manualProfileId: "chequered_plate" },
   { alias: "xpm", name: "Expanded", fam: "expanded", profileId: null, manualProfileId: "expanded_metal" },
   { alias: "corr", name: "Corrugated", fam: "corrugated", profileId: null, manualProfileId: "corrugated_sheet" },

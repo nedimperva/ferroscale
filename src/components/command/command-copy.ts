@@ -88,7 +88,7 @@ export function formatCommandAliasName(t: CommandT, alias: CommandAlias): string
     case "angle":
       return t("profiles.angle");
     case "panel":
-      return t("profiles.plate");
+      return alias.name === "Sheet" ? t("profiles.sheet") : t("profiles.plate");
     case "chequered":
       return t("profiles.chequered");
     case "expanded":
@@ -121,6 +121,8 @@ function formatProfileLabel(t: CommandT, label: string): string {
       return t("profiles.angle");
     case "Plate":
       return t("profiles.plate");
+    case "Sheet":
+      return t("profiles.sheet");
     case "Chequered":
       return t("profiles.chequered");
     case "Expanded":

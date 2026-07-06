@@ -119,6 +119,7 @@
       "flat": "Flat",
       "angle": "Angle",
       "plate": "Plate",
+      "sheet": "Sheet",
       "chequered": "Chequered",
       "expanded": "Expanded",
       "corrugated": "Corrugated"
