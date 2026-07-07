@@ -1,1 +1,1 @@
-export { DATASET_VERSION } from "../../../packages/metal-core/src/datasets/version";
+export { DATASET_VERSION } from "@ferroscale/metal-core/datasets/version";

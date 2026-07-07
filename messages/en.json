@@ -36,7 +36,10 @@
     "whatsNew": "What changed",
     "updateNow": "Update now",
     "readyForOffline": "App is ready for offline use.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "installTitle": "Install FerroScale",
+    "installBody": "Add the app to your home screen or desktop — it opens instantly and works offline.",
+    "installButton": "Install app"
   },
   "command": {
     "common": {
@@ -55,7 +58,9 @@
       "create": "Create",
       "delete": "Delete",
       "newCalculation": "New calculation",
-      "openArrow": "Open ->"
+      "openArrow": "Open ->",
+      "copyValue": "Copy value",
+      "shareLink": "Share link"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -64,11 +69,14 @@
       "projectFull": "Project is full",
       "alreadyInCompare": "Already in compare",
       "addedToCompare": "Added to compare",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "copiedValue": "Value copied",
+      "linkCopied": "Link copied"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
-      "closeSheet": "Close sheet"
+      "closeSheet": "Close sheet",
+      "liveResult": "Result: {value}"
     },
     "nav": {
       "workspace": "WORKSPACE",
@@ -90,7 +98,10 @@
     },
     "keypad": {
       "space": "space",
-      "addLength": "Add a length to compute"
+      "addLength": "Add a length to compute",
+      "closeUnitPicker": "Close unit picker",
+      "priceUnitPicker": "Price unit",
+      "lengthUnitPicker": "Length unit"
     },
     "token": {
       "edit": "Edit {token}",
@@ -111,6 +122,7 @@
       "flat": "Flat",
       "angle": "Angle",
       "plate": "Plate",
+      "sheet": "Sheet",
       "chequered": "Chequered",
       "expanded": "Expanded",
       "corrugated": "Corrugated"
@@ -123,6 +135,11 @@
       "addLength": "add a length ->",
       "addSize": "add a size ->",
       "startProfile": "start with a profile ->"
+    },
+    "issues": {
+      "unknownToken": "Didn't understand \"{token}\"",
+      "unknownSize": "No {profile} size \"{size}\"",
+      "invalidQty": "Quantity must be at least 1"
     },
     "sheets": {
       "resultBreakdown": "Result breakdown",
@@ -194,6 +211,7 @@
           "tips": {
             "example": "Try: hea120 6m x2 s235, upn100 4.5m, or round 20 2m.",
             "fallback": "If you type a bare length like 6, FerroScale uses the fallback length unit from Settings.",
+            "mobileUnitKeys": "On phones, hold the mm or €/kg keys to pick a different unit (cm, m, /m, /pc).",
             "chips": "Tap chips to edit or remove them; suggestions complete profiles, sizes, length, quantity, and saving."
           }
         },
@@ -211,7 +229,7 @@
           "body": "Settings define the default currency, unit price, price basis, waste, and VAT. A command can override the rate for just that calculation.",
           "tips": {
             "desktop": "Desktop: type @2.50/kg, 3.20/m, or 45/pc.",
-            "mobile": "Mobile: type the rate number, then tap the rate key such as €/kg to insert the unit token.",
+            "mobile": "Mobile: type the rate number, then tap the rate key (e.g. €/kg) — or hold it to pick /kg, /m, or /pc.",
             "basis": "Set Price basis to Weight when your supplier quotes per kilogram."
           }
         },
@@ -366,5 +384,24 @@
       "answerRequired": "Captcha answer is required.",
       "contextTooLarge": "Context payload is too large."
     }
+  },
+  "qa": {
+    "title": "Formula QA",
+    "subtitle": "Live engine output checked against independent references — published EN catalog masses and hand-computed formulas (S235JR, per metre).",
+    "back": "Back to calculator",
+    "summaryPass": "All {count} checks pass",
+    "summaryFail": "{fail} of {total} checks failing",
+    "maxDelta": "Max deviation",
+    "tolerance": "Tolerance",
+    "dataset": "Dataset",
+    "colProfile": "Profile",
+    "colExpected": "Expected kg/m",
+    "colActual": "Computed kg/m",
+    "colDelta": "Δ",
+    "colSource": "Reference",
+    "colStatus": "Status",
+    "pass": "PASS",
+    "fail": "FAIL",
+    "note": "Reference values are deliberately independent of the app's datasets: standard profiles use published catalog masses, manual profiles use hand-computed cross-section formulas. The same checks run in CI on every change."
   }
 }

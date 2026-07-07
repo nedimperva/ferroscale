@@ -7,7 +7,7 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./quick": "./src/quick/index.ts",
+    "./command": "./src/command/index.ts",
     "./calculator": "./src/calculator/index.ts",
     "./datasets": "./src/datasets/index.ts"
   },

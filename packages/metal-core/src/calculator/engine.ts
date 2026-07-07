@@ -10,21 +10,13 @@ import type {
 import { CURRENCY_SYMBOLS } from "./types";
 import {
   kilogramsToPounds,
+  manualDimensionsToMm,
   metersToFeet,
   millimetersToMeters,
   roundTo,
   toMillimeters,
 } from "./units";
 import { validateCalculationInput } from "./validation";
-
-function getManualDimensionMm(input: CalculationInput, key: keyof CalculationInput["manualDimensions"]): number {
-  const dimension = input.manualDimensions[key];
-  if (!dimension) {
-    return 0;
-  }
-
-  return toMillimeters(dimension.value, dimension.unit);
-}
 
 export function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expression: string } {
   const profile = getProfileById(input.profileId);
@@ -44,89 +36,8 @@ export function resolveAreaMm2(input: CalculationInput): { areaMm2: number; expr
     };
   }
 
-  if (profile.id === "round_bar") {
-    const diameter = getManualDimensionMm(input, "diameter");
-    return {
-      areaMm2: (Math.PI * diameter * diameter) / 4,
-      expression: `A = pi * ${diameter.toFixed(3)}^2 / 4`,
-    };
-  }
-
-  if (profile.id === "square_bar") {
-    const side = getManualDimensionMm(input, "side");
-    return {
-      areaMm2: side * side,
-      expression: `A = ${side.toFixed(3)}^2`,
-    };
-  }
-
-  if (
-    profile.id === "flat_bar" ||
-    profile.id === "sheet" ||
-    profile.id === "plate" ||
-    profile.id === "expanded_metal" ||
-    profile.id === "corrugated_sheet"
-  ) {
-    const width = getManualDimensionMm(input, "width");
-    const thickness = getManualDimensionMm(input, "thickness");
-    return {
-      areaMm2: width * thickness,
-      expression: `A = ${width.toFixed(3)} × ${thickness.toFixed(3)}`,
-    };
-  }
-
-  if (profile.id === "chequered_plate") {
-    const width = getManualDimensionMm(input, "width");
-    const thickness = getManualDimensionMm(input, "thickness");
-    const patternHeight = getManualDimensionMm(input, "patternHeight");
-    return {
-      areaMm2: width * (thickness + patternHeight * 0.5),
-      expression: `A = ${width.toFixed(3)} × (${thickness.toFixed(3)} + ${patternHeight.toFixed(3)} × 0.5)`,
-    };
-  }
-
-  if (profile.id === "pipe") {
-    const outerDiameter = getManualDimensionMm(input, "outerDiameter");
-    const wallThickness = getManualDimensionMm(input, "wallThickness");
-    const innerDiameter = outerDiameter - wallThickness * 2;
-    return {
-      areaMm2: (Math.PI * (outerDiameter * outerDiameter - innerDiameter * innerDiameter)) / 4,
-      expression: `A = pi * (${outerDiameter.toFixed(3)}^2 - ${innerDiameter.toFixed(3)}^2) / 4`,
-    };
-  }
-
-  if (profile.id === "rectangular_tube") {
-    const width = getManualDimensionMm(input, "width");
-    const height = getManualDimensionMm(input, "height");
-    const wallThickness = getManualDimensionMm(input, "wallThickness");
-    return {
-      areaMm2: width * height - (width - wallThickness * 2) * (height - wallThickness * 2),
-      expression: `A = ${width.toFixed(3)}×${height.toFixed(3)} − (${width.toFixed(3)}−2×${wallThickness.toFixed(
-        3,
-      )})×(${height.toFixed(3)}−2×${wallThickness.toFixed(3)})`,
-    };
-  }
-
-  if (profile.id === "square_hollow") {
-    const side = getManualDimensionMm(input, "side");
-    const wallThickness = getManualDimensionMm(input, "wallThickness");
-    return {
-      areaMm2: side * side - (side - wallThickness * 2) * (side - wallThickness * 2),
-      expression: `A = ${side.toFixed(3)}² − (${side.toFixed(3)}−2×${wallThickness.toFixed(3)})²`,
-    };
-  }
-
-  if (profile.id === "angle") {
-    const legA = getManualDimensionMm(input, "legA");
-    const legB = getManualDimensionMm(input, "legB");
-    const thickness = getManualDimensionMm(input, "thickness");
-    return {
-      areaMm2: (legA + legB - thickness) * thickness,
-      expression: `A = (${legA.toFixed(3)} + ${legB.toFixed(3)} − ${thickness.toFixed(3)}) × ${thickness.toFixed(3)}`,
-    };
-  }
-
-  return { areaMm2: 0, expression: "Unsupported profile formula" };
+  // Manual profiles carry their own formula on the definition.
+  return profile.area(manualDimensionsToMm(input.manualDimensions));
 }
 
 export function resolvePerimeterMm(input: CalculationInput): { perimeterMm: number | null; expression: string } {
@@ -146,80 +57,8 @@ export function resolvePerimeterMm(input: CalculationInput): { perimeterMm: numb
     };
   }
 
-  if (profile.id === "round_bar") {
-    const diameter = getManualDimensionMm(input, "diameter");
-    return {
-      perimeterMm: Math.PI * diameter,
-      expression: `P = π × ${diameter.toFixed(3)}`,
-    };
-  }
-
-  if (profile.id === "square_bar") {
-    const side = getManualDimensionMm(input, "side");
-    return {
-      perimeterMm: 4 * side,
-      expression: `P = 4 × ${side.toFixed(3)}`,
-    };
-  }
-
-  if (profile.id === "flat_bar") {
-    const width = getManualDimensionMm(input, "width");
-    const thickness = getManualDimensionMm(input, "thickness");
-    return {
-      perimeterMm: 2 * (width + thickness),
-      expression: `P = 2 × (${width.toFixed(3)} + ${thickness.toFixed(3)})`,
-    };
-  }
-
-  if (
-    profile.id === "sheet" ||
-    profile.id === "plate" ||
-    profile.id === "chequered_plate" ||
-    profile.id === "expanded_metal" ||
-    profile.id === "corrugated_sheet"
-  ) {
-    const width = getManualDimensionMm(input, "width");
-    return {
-      perimeterMm: 2 * width,
-      expression: `P = 2 × ${width.toFixed(3)} (two faces)`,
-    };
-  }
-
-  if (profile.id === "pipe") {
-    const outerDiameter = getManualDimensionMm(input, "outerDiameter");
-    return {
-      perimeterMm: Math.PI * outerDiameter,
-      expression: `P = π × ${outerDiameter.toFixed(3)}`,
-    };
-  }
-
-  if (profile.id === "rectangular_tube") {
-    const width = getManualDimensionMm(input, "width");
-    const height = getManualDimensionMm(input, "height");
-    return {
-      perimeterMm: 2 * (width + height),
-      expression: `P = 2 × (${width.toFixed(3)} + ${height.toFixed(3)})`,
-    };
-  }
-
-  if (profile.id === "square_hollow") {
-    const side = getManualDimensionMm(input, "side");
-    return {
-      perimeterMm: 4 * side,
-      expression: `P = 4 × ${side.toFixed(3)}`,
-    };
-  }
-
-  if (profile.id === "angle") {
-    const legA = getManualDimensionMm(input, "legA");
-    const legB = getManualDimensionMm(input, "legB");
-    return {
-      perimeterMm: 2 * (legA + legB),
-      expression: `P = 2 × (${legA.toFixed(3)} + ${legB.toFixed(3)})`,
-    };
-  }
-
-  return { perimeterMm: null, expression: "Unsupported profile for perimeter" };
+  const resolved = profile.perimeter(manualDimensionsToMm(input.manualDimensions));
+  return { perimeterMm: resolved.perimeterMm, expression: resolved.expression };
 }
 
 function calculateUnitPrice(

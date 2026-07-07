@@ -1,1 +1,1 @@
-export { MANUAL_PROFILES } from "../../../../packages/metal-core/src/datasets/profiles/manual";
+export { MANUAL_PROFILES } from "@ferroscale/metal-core/datasets/profiles/manual";

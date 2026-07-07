@@ -1,48 +1,44 @@
 # Feature Improvements Backlog
 
-Last updated: 2026-02-13
+Last updated: 2026-07-03
+
+Shipped items are pruned from this list; see `CHANGELOG.md` for history
+and `docs/DESIGN_REVIEW.md` for the reviewed follow-up roadmap
+(token stragglers, frequency-aware suggestions, command component
+tests). The Raycast extension lives in its own repository and is out of
+scope here — `@ferroscale/metal-core`'s command module is the shared
+grammar it consumes.
 
 ## Priority 1 (Next)
 
-1. Install Prompt UX
-Description: Show in-app "Install app" CTA via `beforeinstallprompt` for PWA adoption.
-Acceptance: Prompt available on supported browsers; dismiss/install states handled.
-
-2. Import/Export Workflow
-Description: Add CSV import for multi-line calculations and keep current CSV export.
+1. Import/Export Workflow
+Description: Add CSV import for multi-line calculations alongside the project CSV export.
 Acceptance: Upload CSV with profile rows; compute totals; downloadable result CSV.
-
-3. Formula QA Surface
-Description: Add dedicated "validation mode" page that compares computed outputs to saved benchmark rows.
-Acceptance: Displays pass/fail summary and max error delta for current dataset version.
 
 ## Priority 2
 
-1. Saved Dataset Changelog View
-Description: Show user-visible changelog for constants/profile table updates.
-Acceptance: Changelog panel with dataset version and delta notes.
-
-2. Result Sharing Link
-Description: Encode a calculation into URL query params for shareable links.
-Acceptance: Opening link restores state and result.
-
-3. Accessibility Hardening
-Description: Add automated a11y checks (axe + keyboard path tests).
+1. Accessibility Hardening
+Description: Dialog semantics + focus trap for sheets, live regions for results/toasts, re-enable pinch zoom, automated a11y checks (axe + keyboard path tests).
 Acceptance: CI includes accessibility checks for main flows.
 
-## Priority 3
-
-1. Per-Profile Presets
-Description: Preload common dimension presets by profile + region defaults.
-Acceptance: User can choose preset and edit values before calculation.
-
-2. Multi-language Support
-Description: Add EN + one EU language for labels and validation messages.
-Acceptance: Language toggle and translated strings for all calculator fields.
-
-3. Analytics (Privacy-first)
+2. Analytics (Privacy-first)
 Description: Add anonymous event metrics for calculate/export actions.
 Acceptance: No personal identifiers; can disable tracking from UI.
+
+## Shipped (recent)
+
+- Formula QA page (/qa) + independent benchmark in CI; UPE dataset correction — 3.6.0
+- Usage-learning suggestions (frequency × recency, per profile family) — 3.5.0
+- Install-app action in Settings — 3.5.0
+- WCAG AA contrast + full token adoption — 3.4.0/3.5.0
+- Result sharing links (`?q=` URLs) — 3.2.0
+- Structured parse issues in the command bar — 3.2.0
+- Persistent session tape + recency suggestions — 3.2.0
+- Copy result value — 3.2.0
+- CI (lint/i18n/tests/build gates) — 3.2.0
+- Multi-language support (EN + BS) — 3.1.0
+- Per-profile presets — 3.0.x
+- Service worker version strategy (app + dataset cache busting) — 3.0.x
 
 ## Technical Debt
 
@@ -52,5 +48,5 @@ Description: Current contact API logs to console only; add storage/notification 
 2. Rate limit durability
 Description: Current in-memory limiter resets on redeploy; move to durable store for production.
 
-3. Service worker version strategy
-Description: Add cache-busting tied to app build metadata to simplify upgrades.
+3. Command component size
+Description: `command-desktop.tsx` / `command-sheets.tsx` / `command-shell.tsx` are 1.3–2.3k lines each; split per view and extract shared primitives (see DESIGN_REVIEW §3.1).

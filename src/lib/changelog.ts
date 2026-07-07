@@ -17,6 +17,120 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.6.2",
+    date: "2026-07-03",
+    changed: [
+      "The mobile keypad's mm and m keys are now a single length key: tap for mm, or hold to pick mm, cm, or m — matching the rate key. Cleaner layout, and cm is reachable for the first time",
+    ],
+    changed_bs: [
+      "Tipke mm i m na mobilnoj tastaturi sada su jedna tipka za dužinu: dodirnite za mm, ili zadržite da izaberete mm, cm ili m — kao i tipka cijene. Urednije, a cm je sada prvi put dostupan",
+    ],
+  },
+  {
+    version: "3.6.1",
+    date: "2026-07-03",
+    changed: [
+      "Cleaner mobile keypad: the separate @ and / keys are gone — tap the rate key (e.g. €/kg) to insert your default price token, or hold it to pick /kg, /m, or /pc, just like holding a key for alternate characters on a phone keyboard",
+    ],
+    changed_bs: [
+      "Urednija mobilna tastatura: odvojene tipke @ i / su uklonjene — dodirnite tipku cijene (npr. €/kg) da ubacite podrazumijevanu cijenu, ili je zadržite da izaberete /kg, /m ili /pc, kao kad zadržite tipku za alternativne znakove na telefonu",
+    ],
+  },
+  {
+    version: "3.6.0",
+    date: "2026-07-03",
+    added: [
+      "Formula QA page (/qa): the live calculator is checked against independent references — published EN catalog masses and hand-computed formulas — with a pass/fail table, per-row deviation, and the dataset version; the same checks run automatically on every code change",
+      "The mobile keypad gained @ and / keys, so inline price overrides like @2.50/kg can be typed directly",
+    ],
+    fixed: [
+      "UPE channel weights corrected: eleven UPE sizes carried cross-section areas 1–4% off the EN 10279 catalog values (found by the new formula-QA benchmark); all now match the published figures",
+      "Typing sht now shows \"Sheet\" instead of \"Plate\" in chips, hints, and saved names",
+    ],
+    added_bs: [
+      "Stranica za provjeru formula (/qa): živi kalkulator se provjerava prema nezavisnim referencama — objavljene EN kataloške mase i ručno izračunate formule — sa tabelom prolaza/pada, odstupanjem po redu i verzijom skupa podataka; iste provjere se izvršavaju automatski pri svakoj izmjeni koda",
+      "Mobilna tastatura je dobila tipke @ i /, pa se prepisi cijene poput @2.50/kg mogu kucati direktno",
+    ],
+    fixed_bs: [
+      "Ispravljene težine UPE profila: jedanaest UPE veličina imalo je površine presjeka 1–4% van EN 10279 kataloških vrijednosti (otkriveno novom provjerom formula); sve sada odgovaraju objavljenim vrijednostima",
+      "Kucanje sht sada prikazuje \"Lim\" umjesto \"Ploča\" u čipovima, savjetima i sačuvanim nazivima",
+    ],
+  },
+  {
+    version: "3.5.0",
+    date: "2026-07-03",
+    added: [
+      "Suggestions now learn from what you actually type: any query that settles on a live result counts (no Save needed), and sizes, lengths, quantities, and grades you use most rank first — tracked separately per profile, so your SHS habits never show up for HEA",
+      "Install app from Settings: when your browser supports it, a quiet card in Settings installs FerroScale to your home screen or desktop — no banners",
+    ],
+    changed: [
+      "The offline/update banners and other secondary surfaces now follow the app theme exactly (design tokens everywhere), and the browser install splash matches the app colors",
+    ],
+    added_bs: [
+      "Prijedlozi sada uče iz onoga što stvarno kucate: svaki upit koji se zaustavi na živom rezultatu se računa (spremanje nije potrebno), a veličine, dužine, količine i kvalitete koje najčešće koristite rangiraju se prve — praćeno odvojeno po profilu, pa se vaše SHS navike nikad ne prikazuju za HEA",
+      "Instalacija aplikacije iz Postavki: kada vaš preglednik to podržava, diskretna kartica u Postavkama instalira FerroScale na početni ekran ili radnu površinu — bez banera",
+    ],
+    changed_bs: [
+      "Offline/update obavještenja i ostale sekundarne površine sada tačno prate temu aplikacije (dizajn tokeni svugdje), a instalacijski splash preglednika odgovara bojama aplikacije",
+    ],
+  },
+  {
+    version: "3.4.0",
+    date: "2026-07-03",
+    changed: [
+      "Text contrast now meets WCAG AA everywhere: secondary text, placeholders, hints, and status labels are darker in light mode (and slightly lighter in dark mode), and the accent orange and confirmation green were tuned so buttons and highlighted values stay readable",
+      "Settings look and behave the same everywhere — both the mobile settings sheet and the desktop settings view are driven by one shared definition, and the theme row on mobile is now a Light/Dark choice like the other rows",
+      "The result breakdown shows consistent labels on mobile and desktop (per piece, rate) — previously the two surfaces named the same rows differently",
+    ],
+    changed_bs: [
+      "Kontrast teksta sada svugdje ispunjava WCAG AA: sekundarni tekst, placeholderi, savjeti i statusne oznake su tamniji u svijetlom režimu (i nešto svjetliji u tamnom), a narandžasta i zelena boja su podešene da dugmad i istaknute vrijednosti ostanu čitljive",
+      "Postavke izgledaju i ponašaju se isto svugdje — i mobilni panel i desktop pogled postavki koriste jednu zajedničku definiciju, a red teme na mobilnom je sada izbor Svijetlo/Tamno kao i ostali redovi",
+      "Pregled rezultata prikazuje dosljedne oznake na mobilnom i desktopu (po komadu, cijena) — ranije su dvije površine iste redove različito nazivale",
+    ],
+  },
+  {
+    version: "3.3.0",
+    date: "2026-07-03",
+    added: [
+      "Sheets (Settings, Library, Result, Add to project) are now real modal dialogs for assistive technology: screen readers announce them by name, keyboard focus stays inside while they are open and returns to the opener on close, and Escape closes them on every device — including phones",
+      "Screen readers now announce the calculated result once you stop typing, confirmation toasts (Saved, Link copied, …), and the offline/update banners",
+    ],
+    changed: [
+      "Pinch zoom is enabled again everywhere — accessibility over app-like feel",
+      "Settings inputs (unit price, waste, VAT, default grade) are now properly labeled for assistive technology",
+    ],
+    added_bs: [
+      "Paneli (Postavke, Biblioteka, Rezultat, Dodaj u projekat) su sada pravi modalni dijalozi za pomoćne tehnologije: čitači ekrana ih najavljuju po imenu, fokus tastature ostaje unutar panela dok je otvoren i vraća se nazad pri zatvaranju, a Escape ih zatvara na svakom uređaju — uključujući telefone",
+      "Čitači ekrana sada najavljuju izračunati rezultat kada prestanete kucati, potvrdne poruke (Sačuvano, Link kopiran, …) i offline/update obavještenja",
+    ],
+    changed_bs: [
+      "Pinch zoom je ponovo omogućen svugdje — pristupačnost ispred izgleda aplikacije",
+      "Polja u postavkama (jedinična cijena, otpad, PDV, podrazumijevani kvalitet) sada su ispravno označena za pomoćne tehnologije",
+    ],
+  },
+  {
+    version: "3.2.0",
+    date: "2026-07-02",
+    added: [
+      "Shareable calculation links: the URL now mirrors your query (e.g. /en?q=hea120+6m+x2), and a new Share link action copies it — opening a link restores the calculation instantly",
+      "Copy value action copies the result itself (total weight or total price) instead of the query text",
+      "The command bar now explains input it didn't understand — unknown tokens, non-existent standard sizes, invalid quantities, and impossible geometry show a message under the query line, and unrecognized tokens are highlighted",
+      "Smarter suggestions: your recent queries appear before the profile chips, and sizes you recently used for a profile appear before the standard sizes",
+    ],
+    changed: [
+      "The session tape is now persistent — logged calculations survive reloads and are included in Google Drive sync (up to 50 entries)",
+    ],
+    added_bs: [
+      "Linkovi za dijeljenje izračuna: URL sada prati vaš upit (npr. /en?q=hea120+6m+x2), a nova akcija Podijeli link ga kopira — otvaranje linka odmah vraća izračun",
+      "Akcija Kopiraj vrijednost kopira sam rezultat (ukupnu težinu ili ukupnu cijenu) umjesto teksta upita",
+      "Komandna traka sada objašnjava unos koji nije razumjela — nepoznati tokeni, nepostojeće standardne veličine, neispravne količine i nemoguća geometrija prikazuju poruku ispod linije upita",
+      "Pametniji prijedlozi: vaši nedavni upiti pojavljuju se prije profila, a nedavno korištene veličine prije standardnih veličina",
+    ],
+    changed_bs: [
+      "Sesijska traka je sada trajna — zabilježeni izračuni preživljavaju ponovno učitavanje i uključeni su u Google Drive sinhronizaciju (do 50 unosa)",
+    ],
+  },
+  {
     version: "3.1.0",
     date: "2026-06-09",
     added: [

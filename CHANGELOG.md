@@ -5,6 +5,99 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.6.2] - 2026-07-03
+
+### Changed
+
+- The mobile keypad's separate `mm` and `m` keys are merged into one length key — tap inserts `mm`, **hold** opens an `mm` `cm` `m` picker (same pattern as the rate key). `cm` is now reachable from the keypad for the first time, and both pickers share one component
+
+---
+
+## [3.6.1] - 2026-07-03
+
+### Changed
+
+- Cleaner mobile keypad: the separate `@` and `/` keys (added in 3.6.0) are folded into the rate key — tap inserts the default price token, **hold** opens a `/kg` `/m` `/pc` picker (the familiar hold-for-alternatives keyboard pattern)
+
+---
+
+## [3.6.0] - 2026-07-03
+
+### Added
+
+- Formula QA page (`/qa`): the live engine + dataset are validated against independent references — published EN catalog masses for standard profiles and hand-computed cross-section formulas for manual ones (20 rows, 0.5% tolerance) — with a server-rendered pass/fail table, per-row deviation, max delta, and the dataset version. The same benchmark runs as a vitest gate in CI and an e2e smoke test
+- The mobile keypad gained `@` and `/` keys, so inline price overrides like `@2.50/kg` can be typed directly
+
+### Fixed
+
+- **UPE channel weights corrected** (dataset `2026.07.1`): eleven UPE sizes carried cross-section areas 1–4% off the EN 10279 catalog values — found by the new formula-QA benchmark; all now match the published figures (each cross-checked against mass = area × 0.785)
+- Typing `sht` now shows "Sheet" instead of "Plate" in chips, hints, and saved names
+- localStorage keys unified under the `ferroscale-` prefix with a safe one-time migration (the `advanced-calc-*` names predated the rename)
+
+---
+
+## [3.5.0] - 2026-07-03
+
+### Added
+
+- Suggestions now learn from what you actually type: any query that settles on a live result counts (no Save needed), and sizes, lengths, quantities, and grades you use most rank first — frequency × recency with a 14-day half-life, tracked separately per profile family so SHS habits never surface for HEA (`cmdSuggest` gains a storage-agnostic `CommandUsageSource`; the web adapter persists locally per device)
+- Install app from Settings: when the browser supports it, a quiet card in Settings installs FerroScale to the home screen or desktop — deliberately not a banner
+
+### Changed
+
+- Token-system adoption is complete: a new `--accent-contrast` token replaces the recurring raw hexes for text on the accent color; the PWA banners, contact page, error boundary, and skip link use design tokens; the web manifest theme/background colors match the real palette
+
+---
+
+## [3.4.0] - 2026-07-03
+
+### Changed
+
+- Text contrast now meets WCAG AA everywhere: secondary text, placeholders, hints, and status labels are darker in light mode (and slightly lighter in dark mode), and the accent orange and confirmation green were tuned so buttons and highlighted values stay readable — the automated axe scans report zero serious color-contrast violations
+- Settings look and behave the same everywhere — both the mobile settings sheet and the desktop settings view are driven by one shared field model (`settings-model.ts`); the theme row on mobile is now a Light/Dark choice like the other rows
+- The result breakdown shows consistent labels on mobile and desktop (per piece, rate) — both surfaces now render from one shared row builder (`breakdown-rows.ts`)
+- Internal: the desktop saved cards reuse the shared subtitle helper; the Raycast extension is documented as living in its own repository (out of scope here) with `@ferroscale/metal-core`'s command module as the shared grammar
+
+---
+
+## [3.3.0] - 2026-07-03
+
+### Added
+
+- Sheets (Settings, Library, Result, Add to project) are now real modal dialogs for assistive technology: screen readers announce them by name, keyboard focus stays inside while they are open and returns to the opener on close, and Escape closes them on every device — including phones
+- Screen readers now announce the calculated result once you stop typing, confirmation toasts (Saved, Link copied, …), and the offline/update banners
+- Automated accessibility scans (axe-core) in the e2e suite — critical violations fail the run
+
+### Changed
+
+- Pinch zoom is enabled again everywhere — accessibility over app-like feel
+- Settings inputs (unit price, waste, VAT, default grade) are now properly labeled for assistive technology
+- Internal: manual profile definitions now carry their own area/perimeter formulas and geometry constraints — adding a profile no longer touches the engine or validation; the three 1,300–2,300-line command components are split into focused modules under `sheets/` and `desktop/` with shared atoms deduplicated
+
+---
+
+## [3.2.0] - 2026-07-02
+
+### Added
+
+- Shareable calculation links: the URL now mirrors your query (e.g. `/en?q=hea120+6m+x2`), and a new Share link action copies it — opening a link restores the calculation instantly
+- Copy value action copies the result itself (total weight or total price) instead of the query text
+- The command bar now explains input it didn't understand — unknown tokens, non-existent standard sizes, invalid quantities, and impossible geometry show a message under the query line, and unrecognized tokens are highlighted
+- Smarter suggestions: your recent queries appear before the profile chips, and sizes you recently used for a profile appear before the standard sizes
+- Continuous integration: lint (hard gate), en/bs message parity, both test suites, and a production build run on every push and pull request
+
+### Changed
+
+- The session tape is now persistent — logged calculations survive reloads and are included in Google Drive sync (up to 50 entries)
+- The command query parser (grammar, suggestions, formatting) moved into `@ferroscale/metal-core` as the package's single parser, ready for reuse by non-web surfaces such as a Raycast extension or CLI
+- Internal: removed unused dependencies (framer-motion, vaul) and dead hooks/components; deduplicated command UI constants; refreshed AGENTS.md, READMEs, and docs; replaced the stale e2e suite with a command-bar spec
+
+### Removed
+
+- **Breaking (metal-core):** the unused `quick` module (`parseQuickQuery`, `calculateQuickWeight`, `@ferroscale/metal-core/quick`) — it had no consumers; use the `command` module instead
+
+---
+
 ## [3.1.0] - 2026-06-09
 
 ### Added

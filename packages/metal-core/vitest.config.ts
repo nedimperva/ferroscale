@@ -6,10 +6,16 @@ const rootDir = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "@ferroscale/metal-core": path.resolve(rootDir, "src/index.ts"),
-      "@ferroscale/metal-core/": path.resolve(rootDir, "src/"),
-    },
+    alias: [
+      {
+        find: /^@ferroscale\/metal-core$/,
+        replacement: path.resolve(rootDir, "src/index.ts"),
+      },
+      {
+        find: /^@ferroscale\/metal-core\/(.*)$/,
+        replacement: path.resolve(rootDir, "src") + "/$1",
+      },
+    ],
   },
   test: {
     environment: "node",

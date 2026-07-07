@@ -1,6 +1,6 @@
 {
   "name": "ferroscale",
-  "version": "3.1.0",
+  "version": "3.6.2",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -19,14 +19,13 @@
     "test:all": "npm run test && npm run test:core"
   },
   "dependencies": {
-    "framer-motion": "^12.34.3",
     "next": "16.1.6",
     "next-intl": "^4.8.2",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "vaul": "^1.1.2"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

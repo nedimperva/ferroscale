@@ -1,8 +1,7 @@
 /**
- * App-wide setting stores shared between the Command screen and the legacy
- * FerroScaleAppShell (saved/projects/settings tabs). The two shells are never
- * mounted simultaneously (route-aware-app-shell.tsx switches between them),
- * which makes read-modify-write against the persisted calculator input safe.
+ * App-wide setting stores for the Command shell. Pricing and the default
+ * grade live inside the persisted CalculationInput (ferroscale-input-v1);
+ * updates are read-modify-write so geometry fields survive untouched.
  */
 
 import { createBoolStore, createStringStore } from "@/lib/external-stores";
@@ -12,27 +11,13 @@ import {
   loadPersistedInput,
   persistInput,
 } from "@/lib/calculator/input-storage";
-import type {
-  CalculationInput,
-  CurrencyCode,
-  LengthUnit,
-  PriceBasis,
-  PriceUnit,
-} from "@/lib/calculator/types";
+import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
+import type { CommandPricing } from "@ferroscale/metal-core";
 
 export const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
 export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
-/** The pricing fields of CalculationInput that Command needs for live totals. */
-export interface CommandPricing {
-  priceBasis: PriceBasis;
-  priceUnit: PriceUnit;
-  unitPrice: number;
-  currency: CurrencyCode;
-  wastePercent: number;
-  includeVat: boolean;
-  vatPercent: number;
-}
+export type { CommandPricing };
 
 /** Pricing plus the shared default material grade (= input.materialGradeId). */
 export interface SharedCalcSettings extends CommandPricing {

@@ -1,4 +1,5 @@
-import type { LengthUnit } from "./types";
+import type { LengthUnit, UnitValue } from "./types";
+import type { DimensionKey, ManualDimsMm } from "../datasets/types";
 
 const MM_PER_UNIT: Record<LengthUnit, number> = {
   mm: 1,
@@ -17,6 +18,19 @@ export function toMillimeters(value: number, unit: LengthUnit): number {
 
 export function fromMillimeters(valueMm: number, unit: LengthUnit): number {
   return valueMm / MM_PER_UNIT[unit];
+}
+
+/** Resolve the present manual dimensions to millimetres; absent keys stay absent. */
+export function manualDimensionsToMm(
+  dimensions: Partial<Record<DimensionKey, UnitValue>>,
+): ManualDimsMm {
+  const dims: ManualDimsMm = {};
+  for (const key of Object.keys(dimensions) as DimensionKey[]) {
+    const entry = dimensions[key];
+    if (!entry) continue;
+    dims[key] = toMillimeters(entry.value, entry.unit);
+  }
+  return dims;
 }
 
 export function kilogramsToPounds(valueKg: number): number {

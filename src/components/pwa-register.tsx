@@ -94,9 +94,9 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
     }
   }, [banner]);
 
-  // We deliberately do NOT subscribe to `beforeinstallprompt` — the browser's
-  // install affordance (address-bar icon / share menu) is plenty, and the
-  // sticky banner felt nag-y. Offline / update / ready stay.
+  // Installation is deliberately NOT a banner here — it felt nag-y. The
+  // deferred beforeinstallprompt is captured in lib/install-prompt.ts and
+  // surfaced as a user-initiated action in Settings (InstallAppSection).
 
   // Offline state always takes priority over everything else.
   const activeBanner: BannerState = isOffline ? "offline" : banner;
@@ -110,7 +110,7 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
 
   if (activeBanner === "offline") {
     return (
-      <div className="sticky top-0 z-50 border-b border-orange-300 bg-orange-100 px-4 py-2 text-center text-sm text-orange-950 dark:border-orange-700 dark:bg-orange-950 dark:text-orange-100">
+      <div role="status" className="sticky top-0 z-50 border-b border-[var(--amber-border)] bg-[var(--amber-surface)] px-4 py-2 text-center text-sm text-[var(--amber-text)]">
         {t("offlineBanner")}
       </div>
     );
@@ -118,14 +118,14 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
 
   if (activeBanner === "update") {
     return (
-      <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-100">
-        <span className="min-w-0 flex-1">{t("updateAvailable")}</span>
+      <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--blue-border)] bg-[var(--blue-surface)] px-4 py-2 text-sm text-[var(--blue-text)]">
+        <span role="status" className="min-w-0 flex-1">{t("updateAvailable")}</span>
         <div className="flex shrink-0 items-center gap-2">
           {onOpenChangelog && (
             <button
               type="button"
               onClick={onOpenChangelog}
-              className="rounded border border-blue-300 bg-white/80 px-2.5 py-1 text-xs font-semibold text-blue-900 hover:bg-white dark:border-blue-700 dark:bg-blue-900/60 dark:text-blue-100 dark:hover:bg-blue-900"
+              className="rounded border border-[var(--blue-border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-semibold text-[var(--blue-text)] hover:bg-[var(--surface-raised)]"
             >
               {t("whatsNew")}
             </button>
@@ -133,7 +133,7 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
           <button
             type="button"
             onClick={handleUpdate}
-            className="rounded bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
+            className="rounded bg-[var(--blue-strong)] px-3 py-1 text-xs font-semibold text-white hover:bg-[var(--blue-strong-hover)]"
           >
             {t("updateNow")}
           </button>
@@ -144,12 +144,12 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
 
   if (activeBanner === "ready") {
     return (
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-green-200 bg-green-50 px-4 py-2 text-sm text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
+      <div role="status" className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[var(--green-border)] bg-[var(--green-surface)] px-4 py-2 text-sm text-[var(--green-text)]">
         <span>{t("readyForOffline")}</span>
         <button
           onClick={() => setBanner(null)}
           aria-label={t("dismiss")}
-          className="shrink-0 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200"
+          className="shrink-0 text-[var(--green-text)] hover:text-foreground"
         >
           ✕
         </button>

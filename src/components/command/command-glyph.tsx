@@ -1,4 +1,4 @@
-import type { CommandFamily } from "@/lib/command/types";
+import type { CommandFamily } from "@ferroscale/metal-core";
 
 interface CommandGlyphProps {
   fam: CommandFamily;

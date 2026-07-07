@@ -1,3 +1,5 @@
+import "@/lib/storage-migrations";
+
 export const SYNC_PROVIDER = "google";
 export const SYNC_SCOPE = "https://www.googleapis.com/auth/drive.appdata openid email";
 export const SYNC_FILE_PREFIX = "ferroscale-sync-v2";
@@ -18,9 +20,9 @@ export const SYNC_COLLECTION_UPDATED_AT_KEYS = {
 export const SYNC_STORAGE_KEYS = {
   saved: "ferroscale-saved-v2",
   savedLegacy: "ferroscale-saved-v1",
-  projects: "advanced-calc-projects-v2",
+  projects: "ferroscale-projects-v2",
   presets: "ferroscale-presets-v1",
-  compare: "advanced-calc-compare-v2",
+  compare: "ferroscale-compare-v2",
   quickHistory: "ferroscale-quick-history",
 } as const;
 

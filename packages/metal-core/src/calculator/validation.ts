@@ -1,7 +1,7 @@
 import { getMaterialGradeById } from "../datasets/materials";
 import { getProfileById } from "../datasets/profiles";
 import type { CalculationInput, ValidationIssue } from "./types";
-import { toMillimeters } from "./units";
+import { manualDimensionsToMm, toMillimeters } from "./units";
 
 const MAX_LENGTH_MM = 50_000;
 const MAX_UNIT_PRICE = 1_000_000;
@@ -134,88 +134,9 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
       }
     }
 
-    if (profile.id === "pipe") {
-      const od = input.manualDimensions.outerDiameter;
-      const wall = input.manualDimensions.wallThickness;
-      if (od && wall) {
-        const odMm = toMillimeters(od.value, od.unit);
-        const wallMm = toMillimeters(wall.value, wall.unit);
-        if (wallMm * 2 >= odMm) {
-          issues.push({
-            field: "manualDimensions.wallThickness",
-            message: "Wall thickness must be less than half of the outer diameter.",
-            messageKey: "validation.pipeWall",
-            messageValues: {
-              wallMm: Math.round(wallMm * 100) / 100,
-              halfOdMm: Math.round((odMm / 2) * 100) / 100,
-            },
-          });
-        }
-      }
-    }
-
-    if (profile.id === "rectangular_tube") {
-      const width = input.manualDimensions.width;
-      const height = input.manualDimensions.height;
-      const wall = input.manualDimensions.wallThickness;
-      if (width && height && wall) {
-        const widthMm = toMillimeters(width.value, width.unit);
-        const heightMm = toMillimeters(height.value, height.unit);
-        const wallMm = toMillimeters(wall.value, wall.unit);
-        if (wallMm * 2 >= Math.min(widthMm, heightMm)) {
-          issues.push({
-            field: "manualDimensions.wallThickness",
-            message: "Wall thickness must be less than half of width and height.",
-            messageKey: "validation.rectangularWall",
-            messageValues: {
-              wallMm: Math.round(wallMm * 100) / 100,
-              maxWallMm: Math.round((Math.min(widthMm, heightMm) / 2) * 100) / 100,
-            },
-          });
-        }
-      }
-    }
-
-    if (profile.id === "square_hollow") {
-      const side = input.manualDimensions.side;
-      const wall = input.manualDimensions.wallThickness;
-      if (side && wall) {
-        const sideMm = toMillimeters(side.value, side.unit);
-        const wallMm = toMillimeters(wall.value, wall.unit);
-        if (wallMm * 2 >= sideMm) {
-          issues.push({
-            field: "manualDimensions.wallThickness",
-            message: "Wall thickness must be less than half of the side length.",
-            messageKey: "validation.squareWall",
-            messageValues: {
-              wallMm: Math.round(wallMm * 100) / 100,
-              halfSideMm: Math.round((sideMm / 2) * 100) / 100,
-            },
-          });
-        }
-      }
-    }
-
-    if (profile.id === "angle") {
-      const legA = input.manualDimensions.legA;
-      const legB = input.manualDimensions.legB;
-      const t = input.manualDimensions.thickness;
-      if (legA && legB && t) {
-        const legAMm = toMillimeters(legA.value, legA.unit);
-        const legBMm = toMillimeters(legB.value, legB.unit);
-        const tMm = toMillimeters(t.value, t.unit);
-        if (tMm >= Math.min(legAMm, legBMm)) {
-          issues.push({
-            field: "manualDimensions.thickness",
-            message: "Thickness must be less than the shorter leg.",
-            messageKey: "validation.angleThickness",
-            messageValues: {
-              thicknessMm: Math.round(tMm * 100) / 100,
-              shorterLegMm: Math.round(Math.min(legAMm, legBMm) * 100) / 100,
-            },
-          });
-        }
-      }
+    // Relational geometry constraints live on the profile definition.
+    if (profile.validateGeometry) {
+      issues.push(...profile.validateGeometry(manualDimensionsToMm(input.manualDimensions)));
     }
   }
 

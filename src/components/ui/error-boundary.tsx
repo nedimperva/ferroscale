@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-6 w-full rounded-lg bg-blue-strong px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-strong-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              className="mt-6 w-full rounded-lg bg-blue-strong px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-strong-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-offset-2"
             >
               Reload page
             </button>

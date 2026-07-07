@@ -7,10 +7,11 @@ import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
-import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@/lib/command/parser";
-import { cmdSuggest, cmdApplyInsert } from "@/lib/command/suggest";
-import { COMMAND_ALIAS_RE } from "@/lib/command/aliases";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@/lib/command/format";
+import { useQuickHistory } from "@/hooks/useQuickHistory";
+import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
+import { cmdSuggest, cmdApplyInsert } from "@ferroscale/metal-core";
+import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   defaultUnitStore,
   sharedCalcSettingsStore,
@@ -21,28 +22,32 @@ import type {
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestionItem,
-  CommandTokenKind,
-} from "@/lib/command/types";
+} from "@ferroscale/metal-core";
 import { CommandGlyph } from "./command-glyph";
 import {
   formatCommandAliasName,
   formatCommandHint,
+  formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
+import { KIND_BG } from "./command-constants";
+import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
-import { CommandDesktop } from "./command-desktop";
-import {
-  CommandLibrarySheet,
-  CommandProjectPickerSheet,
-  CommandResultSheet,
-  CommandSettingsSheet,
-} from "./command-sheets";
+import { CommandDesktop } from "./desktop/command-desktop";
+import { CommandLibrarySheet } from "./sheets/library-sheet";
+import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
+import { CommandResultSheet } from "./sheets/result-sheet";
+import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { PwaRegister } from "@/components/pwa-register";
+import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
+import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
 const DESKTOP_CARD_W = 560;
+// Trailing space so the demo query renders fully chipped on first load.
+const DEMO_QUERY = "hea120 6m x2 s235 ";
 
 function formatPriceTokenValue(value: number) {
   if (!Number.isFinite(value)) return "0";
@@ -88,15 +93,23 @@ export function CommandShell() {
   const { projects, createProject, addCalculation, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
 
-  // Trailing space so the demo query renders fully chipped on first load.
-  const [query, setQuery] = useState("hea120 6m x2 s235 ");
+  const [query, setQuery] = useState(DEMO_QUERY);
+  // The URL only mirrors the query once the user has replaced the demo query
+  // (or arrived via a share link) — a pristine visit keeps a clean URL.
+  const touchedRef = useRef(false);
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
   const [toast, setToast] = useState<string | null>(null);
-  // Desktop session tape — adding-machine log of queries saved this session.
-  const [sessionTape, setSessionTape] = useState<string[]>([]);
+  // Query history — persisted (and Drive-synced) via the quickHistory
+  // collection. Backs the desktop session tape and recency suggestions.
+  const {
+    history: quickHistory,
+    push: pushHistory,
+    remove: removeHistoryEntry,
+    clear: clearHistory,
+  } = useQuickHistory();
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
@@ -130,7 +143,28 @@ export function CommandShell() {
       window.localStorage.removeItem("ferroscale-command-saved");
       window.localStorage.removeItem("ferroscale-command-recents");
     } catch { /* noop */ }
+    // A shared ?q= link beats the demo query. Trailing space → fully chipped.
+    const sharedQuery = readSharedQuery(window.location.search);
+    if (sharedQuery) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQuery(`${sharedQuery} `);
+      touchedRef.current = true;
+    }
   }, []);
+
+  // Once the user leaves the demo query, mirror the query into the URL so the
+  // current calculation is always linkable (debounced; replaceState keeps
+  // history clean).
+  useEffect(() => {
+    if (!touchedRef.current) {
+      if (query === DEMO_QUERY) return;
+      touchedRef.current = true;
+    }
+    const id = window.setTimeout(() => {
+      window.history.replaceState(null, "", buildShareUrl(query, window.location));
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [query]);
 
   // Three viewports:
   //  · phone (<640) → fullscreen with on-screen keypad
@@ -151,9 +185,32 @@ export function CommandShell() {
     () => cmdParse(query, parserSettings),
     [query, parserSettings],
   );
+
+  // Usage learning: after the user stops typing on a live result (~2.5 s),
+  // record the query's tokens (per profile family) so suggestions rank real
+  // habits first — no Save required. The pristine demo query never counts.
+  const [usageVersion, setUsageVersion] = useState(0);
+  useEffect(() => {
+    // Hydrate persisted habits once on the client.
+    setUsageVersion((v) => v + 1); // eslint-disable-line react-hooks/set-state-in-effect
+  }, []);
+  useEffect(() => {
+    if (!p.valid) return;
+    if (!touchedRef.current && query === DEMO_QUERY) return;
+    const id = window.setTimeout(() => {
+      recordCommandUsage(p, query);
+      setUsageVersion((v) => v + 1);
+    }, 2500);
+    return () => window.clearTimeout(id);
+  }, [p, query]);
+  const usageSource = useMemo(
+    () => (usageVersion > 0 ? buildUsageSource() : undefined),
+    [usageVersion],
+  );
+
   const sug = useMemo(
-    () => cmdSuggest(query, parserSettings, presetsForProfile),
-    [query, parserSettings, presetsForProfile],
+    () => cmdSuggest(query, parserSettings, presetsForProfile, usageSource),
+    [query, parserSettings, presetsForProfile, usageSource],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
@@ -169,6 +226,33 @@ export function CommandShell() {
     window.setTimeout(() => setToast(null), 1700);
   }, []);
 
+  // Copy the hero metric itself (e.g. "141.2 kg" / "€169.44") — the query
+  // string has its own copy action.
+  const copyValue = useCallback(() => {
+    if (!p.valid) return;
+    const text = isW
+      ? p.totalKg != null
+        ? `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`
+        : ""
+      : p.totalAmount != null
+        ? `${sym}${fsMoney(p.totalAmount)}`
+        : "";
+    if (!text) return;
+    navigator.clipboard?.writeText(text).catch(() => {});
+    showToast(t("toast.copiedValue"));
+  }, [p, isW, sym, showToast, t]);
+
+  const shareLink = useCallback(() => {
+    if (!p.valid) return;
+    const url = buildShareUrl(query, window.location);
+    if (isPhoneViewport && typeof navigator.share === "function") {
+      navigator.share({ url }).catch(() => {});
+      return;
+    }
+    navigator.clipboard?.writeText(url).catch(() => {});
+    showToast(t("toast.linkCopied"));
+  }, [p.valid, query, isPhoneViewport, showToast, t]);
+
   const doSave = useCallback(() => {
     if (!p.calc) {
       showToast(t("toast.addLength"));
@@ -180,12 +264,9 @@ export function CommandShell() {
       const autoName = `${displayName} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
       saveCalculation(p.calc.input, p.calc.result, autoName);
     }
-    const q = query.trim();
-    if (q) {
-      setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
-    }
+    pushHistory(query);
     showToast(t("toast.saved"));
-  }, [p, isSaved, saveCalculation, showToast, query, t]);
+  }, [p, isSaved, saveCalculation, showToast, query, t, pushHistory]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
@@ -240,19 +321,9 @@ export function CommandShell() {
   const newCalc = useCallback(() => {
     // A valid query cleared via ⌘K / CLEAR still lands on the session tape,
     // so starting a new line never loses the previous number.
-    const q = query.trim();
-    if (p.valid && q) {
-      setSessionTape((tape) => [q, ...tape.filter((x) => x !== q)].slice(0, 8));
-    }
+    if (p.valid) pushHistory(query);
     setQuery("");
-  }, [p.valid, query]);
-
-  const removeTapeEntry = useCallback((q: string) => {
-    setSessionTape((tape) => tape.filter((x) => x !== q));
-  }, []);
-  const clearTape = useCallback(() => {
-    setSessionTape([]);
-  }, []);
+  }, [p.valid, query, pushHistory]);
 
   const onSuggest = useCallback(
     (item: CommandSuggestionItem) => {
@@ -268,14 +339,21 @@ export function CommandShell() {
   const onKey = useCallback((ch: string) => {
     setQuery((q) => q + ch);
   }, []);
+  const insertPriceToken = useCallback(
+    (unit: string) => {
+      setQuery((q) => {
+        const token = /\s$/.test(q) || q.length === 0
+          ? `${formatPriceTokenValue(shared.unitPrice)}/${unit}`
+          : `/${unit}`;
+        return `${q}${token} `;
+      });
+    },
+    [shared.unitPrice],
+  );
+  // Tap = default unit; long-press picker passes an explicit one.
   const onPriceUnit = useCallback(() => {
-    setQuery((q) => {
-      const token = /\s$/.test(q) || q.length === 0
-        ? `${formatPriceTokenValue(shared.unitPrice)}/${shared.priceUnit}`
-        : `/${shared.priceUnit}`;
-      return `${q}${token} `;
-    });
-  }, [shared.priceUnit, shared.unitPrice]);
+    insertPriceToken(shared.priceUnit === "piece" ? "pc" : shared.priceUnit);
+  }, [insertPriceToken, shared.priceUnit]);
   const onBack = useCallback(() => {
     setQuery((q) => q.slice(0, -1));
   }, []);
@@ -303,9 +381,9 @@ export function CommandShell() {
     });
   }, []);
 
-  // Medium desktop: real-keyboard shortcuts. ⌘K / Ctrl K refocuses the query
-  // input, Esc closes the active sheet. (The wide-desktop shell owns its own
-  // shortcuts; only the project-picker Esc-close stays global there.)
+  // Medium desktop: ⌘K / Ctrl K refocuses the query input. Escape-to-close
+  // lives inside SheetShell itself (works on every viewport, with the focus
+  // trap guaranteeing the sheet owns the keyboard).
   useEffect(() => {
     if (isPhoneViewport) return;
     const onKey = (event: KeyboardEvent) => {
@@ -316,19 +394,11 @@ export function CommandShell() {
       ) {
         event.preventDefault();
         focusInput();
-        return;
-      }
-      if (event.key === "Escape") {
-        if (projectCalc) {
-          setProjectCalc(null);
-        } else if (sheet && !isWideViewport) {
-          setSheet(null);
-        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [focusInput, isPhoneViewport, isWideViewport, projectCalc, sheet]);
+  }, [focusInput, isPhoneViewport, isWideViewport]);
 
   const heroVal = isW
     ? p.totalKg != null
@@ -337,6 +407,17 @@ export function CommandShell() {
     : p.totalAmount != null
       ? fsMoney(p.totalAmount)
       : "—";
+
+  // Screen-reader announcement for the settled result (mirrors the hero +
+  // secondary metric). Empty while invalid — the issue line announces errors.
+  const liveResultText =
+    p.valid && p.totalKg != null
+      ? t("aria.liveResult", {
+          value:
+            `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}` +
+            (p.totalAmount != null ? ` · ${sym}${fsMoney(p.totalAmount)}` : ""),
+        })
+      : "";
 
   // Tokens come from the same tokenizer the parser uses, so glued input
   // ("hea1006m") displays as the pieces it is parsed as.
@@ -360,15 +441,6 @@ export function CommandShell() {
     const others = queryTokens.filter((_, i) => i !== idx);
     setQuery(others.join(" ") + (others.length ? " " : "") + queryTokens[idx]);
   };
-  const kindBg: Record<CommandTokenKind, string> = {
-    profile: "bg-[var(--accent-surface)] text-[var(--accent-text)]",
-    len: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-    qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
-    grade: "bg-[var(--surface-inset)] text-foreground-secondary",
-    price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
-    unknown: "bg-[var(--surface-inset)] text-muted",
-  };
-
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
   // ── Wide desktop (≥1024): sidebar workspace shell ──
@@ -399,9 +471,9 @@ export function CommandShell() {
             weightAsMainStore.set(value);
             setModeOverride(null);
           }}
-          sessionTape={sessionTape}
-          onRemoveTapeEntry={removeTapeEntry}
-          onClearTape={clearTape}
+          sessionTape={quickHistory.slice(0, 8)}
+          onRemoveTapeEntry={removeHistoryEntry}
+          onClearTape={clearHistory}
           saved={savedEntries}
           compareItems={compareItems}
           projects={projects}
@@ -410,6 +482,8 @@ export function CommandShell() {
             navigator.clipboard?.writeText(query).catch(() => {});
             showToast(t("toast.copied"));
           }}
+          onCopyValue={copyValue}
+          onShareLink={shareLink}
           onNew={newCalc}
           onSuggest={onSuggest}
           onCompareCurrent={doCompare}
@@ -430,31 +504,8 @@ export function CommandShell() {
             onPickProject={(project) => handlePickProject(project.id)}
           />
         )}
-        {toast && (
-          <div
-            className="absolute left-0 right-0 flex justify-center z-[60] pointer-events-none"
-            style={{ bottom: 32 }}
-          >
-            <div
-              className="flex items-center gap-2 px-[18px] py-[11px] rounded-2xl font-bold text-sm"
-              style={{
-                background: "var(--foreground)",
-                color: "var(--background)",
-                boxShadow: "0 12px 30px rgba(0,0,0,0.3)",
-              }}
-            >
-              <span
-                className="flex w-5 h-5 rounded-full items-center justify-center"
-                style={{ background: "var(--green-text)" }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dark ? "#102a1e" : "#fff"} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              </span>
-              {toast}
-            </div>
-          </div>
-        )}
+        <CommandToast toast={toast} bottom={32} dark={dark} />
+        <ResultAnnouncer text={liveResultText} />
       </div>
     );
   }
@@ -519,7 +570,7 @@ export function CommandShell() {
                 <span
                   className="w-2.5 h-2.5"
                   style={{
-                    background: dark ? "#161109" : "#fff",
+                    background: "var(--accent-contrast)",
                     borderRadius: 2.5,
                   }}
                 />
@@ -655,6 +706,14 @@ export function CommandShell() {
                     <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
                   )}
                 </span>
+              ) : p.issues.length > 0 ? (
+                <span
+                  className="font-mono text-[12px]"
+                  style={{ color: "var(--amber-text)" }}
+                  role="status"
+                >
+                  {formatCommandIssue(t, p.issues[0])}
+                </span>
               ) : (
                 <span className="font-mono text-[12px] text-muted-faint">
                   {p.alias
@@ -771,9 +830,7 @@ export function CommandShell() {
                         : "var(--surface)",
                     color:
                       it.kind === "save"
-                        ? dark
-                          ? "#161109"
-                          : "#fff"
+                        ? "var(--accent-contrast)"
                         : "var(--foreground)",
                     boxShadow: "var(--panel-shadow-soft)",
                   }}
@@ -824,7 +881,7 @@ export function CommandShell() {
                   background: "var(--surface)",
                   boxShadow: dark
                     ? "0 0 0 3px rgba(240,121,63,0.13)"
-                    : "0 0 0 3px rgba(216,82,31,0.10)",
+                    : "0 0 0 3px rgba(196,71,26,0.10)",
                 }}
               >
                 <span
@@ -842,7 +899,7 @@ export function CommandShell() {
                   <TokenChip
                     key={`${tok}-${i}`}
                     tok={tok}
-                    kindClass={kindBg[cmdClassifyToken(tok)]}
+                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
                     onEdit={() => editTokenAt(i)}
                     onRemove={() => removeTokenAt(i)}
                   />
@@ -869,7 +926,7 @@ export function CommandShell() {
                     <TokenChip
                       key={`${tok}-${i}`}
                       tok={tok}
-                      kindClass={kindBg[cmdClassifyToken(tok)]}
+                      kindClass={KIND_BG[cmdClassifyToken(tok)]}
                       onEdit={() => {
                         editTokenAt(i);
                         focusInputAtEnd();
@@ -890,7 +947,7 @@ export function CommandShell() {
                   background: "var(--surface)",
                   boxShadow: dark
                     ? "0 0 0 3px rgba(240,121,63,0.13)"
-                    : "0 0 0 3px rgba(216,82,31,0.10)",
+                    : "0 0 0 3px rgba(196,71,26,0.10)",
                 }}
               >
                 <span
@@ -949,6 +1006,7 @@ export function CommandShell() {
             <CommandKeypad
               onKey={onKey}
               onPriceUnit={onPriceUnit}
+              onPriceUnitPick={insertPriceToken}
               onBack={onBack}
               onEnter={onEnter}
               priceUnitLabel={priceUnitLabel}
@@ -966,6 +1024,14 @@ export function CommandShell() {
                 navigator.clipboard?.writeText(query).catch(() => {});
                 setSheet(null);
                 showToast(t("toast.copied"));
+              }}
+              onCopyValue={() => {
+                setSheet(null);
+                copyValue();
+              }}
+              onShareLink={() => {
+                setSheet(null);
+                shareLink();
               }}
               onNew={() => {
                 setSheet(null);
@@ -991,7 +1057,7 @@ export function CommandShell() {
               onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
-              themeLabel={dark ? t("settings.dark") : t("settings.light")}
+              dark={dark}
             />
           )}
           {effectiveSheet === "library" && (
@@ -1020,31 +1086,8 @@ export function CommandShell() {
           )}
 
           {/* TOAST */}
-          {toast && (
-            <div
-              className="absolute left-0 right-0 flex justify-center z-[60] pointer-events-none"
-              style={{ bottom: isPhoneViewport ? 120 : 20 }}
-            >
-              <div
-                className="flex items-center gap-2 px-[18px] py-[11px] rounded-2xl font-bold text-sm"
-                style={{
-                  background: "var(--foreground)",
-                  color: "var(--background)",
-                  boxShadow: "0 12px 30px rgba(0,0,0,0.3)",
-                }}
-              >
-                <span
-                  className="flex w-5 h-5 rounded-full items-center justify-center"
-                  style={{ background: "var(--green-text)" }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dark ? "#102a1e" : "#fff"} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                </span>
-                {toast}
-              </div>
-            </div>
-          )}
+          <CommandToast toast={toast} bottom={isPhoneViewport ? 120 : 20} dark={dark} />
+          <ResultAnnouncer text={liveResultText} />
       </div>
     </div>
   );
@@ -1086,14 +1129,6 @@ function TokenChip({
   );
 }
 
-function PricingBadge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--blue-surface)] text-[var(--blue-text)] whitespace-nowrap">
-      {children}
-    </span>
-  );
-}
-
 function IconBtn({
   children,
   onClick,
@@ -1129,7 +1164,7 @@ function ChipBadge({
   children,
 }: {
   on: boolean;
-  fam?: import("@/lib/command/types").CommandFamily;
+  fam?: import("@ferroscale/metal-core").CommandFamily;
   children: React.ReactNode;
 }) {
   return (

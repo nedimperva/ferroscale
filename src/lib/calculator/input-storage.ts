@@ -1,9 +1,10 @@
+import "@/lib/storage-migrations";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { MetalFamilyId, ProfileDefinition } from "@/lib/datasets/types";
 import { getMaterialGradesByFamily } from "@/lib/datasets/materials";
 import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles";
 
-export const INPUT_STORAGE_KEY = "advanced-calc-input-v1";
+export const INPUT_STORAGE_KEY = "ferroscale-input-v1";
 
 export function loadPersistedInput(): CalculationInput | null {
   if (typeof window === "undefined") return null;

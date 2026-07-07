@@ -82,7 +82,7 @@ describe("sync records", () => {
       modifiedTime: "2026-04-03T09:00:00.000Z",
     }]);
 
-    expect(JSON.parse(localStorage.getItem("advanced-calc-compare-v2") || "[]")).toEqual([
+    expect(JSON.parse(localStorage.getItem("ferroscale-compare-v2") || "[]")).toEqual([
       expect.objectContaining({ id: "cmp-remote" }),
     ]);
   });

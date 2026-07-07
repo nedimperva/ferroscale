@@ -104,9 +104,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  minimumScale: 1,
-  userScalable: false,
+  // Pinch zoom stays enabled (WCAG 1.4.4) — double-tap zoom is already
+  // suppressed per-control via `touch-action: manipulation` in globals.css.
   viewportFit: "cover",
   interactiveWidget: "overlays-content",
   themeColor: [

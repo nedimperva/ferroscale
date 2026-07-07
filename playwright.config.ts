@@ -14,7 +14,17 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        // Allow environments with a system Chromium to skip the download.
+        ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+          ? {
+              launchOptions: {
+                executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+              },
+            }
+          : {}),
+      },
     },
   ],
   webServer: process.env.BASE_URL

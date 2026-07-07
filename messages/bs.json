@@ -36,7 +36,10 @@
     "whatsNew": "Šta je novo",
     "updateNow": "Ažuriraj sada",
     "readyForOffline": "Aplikacija je spremna za korištenje bez interneta.",
-    "dismiss": "Zatvori"
+    "dismiss": "Zatvori",
+    "installTitle": "Instaliraj FerroScale",
+    "installBody": "Dodajte aplikaciju na početni ekran ili radnu površinu — otvara se odmah i radi offline.",
+    "installButton": "Instaliraj aplikaciju"
   },
   "command": {
     "common": {
@@ -55,7 +58,9 @@
       "create": "Kreiraj",
       "delete": "Obriši",
       "newCalculation": "Novi izračun",
-      "openArrow": "Otvori ->"
+      "openArrow": "Otvori ->",
+      "copyValue": "Kopiraj vrijednost",
+      "shareLink": "Podijeli link"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -64,11 +69,14 @@
       "projectFull": "Projekat je pun",
       "alreadyInCompare": "Već je u poređenju",
       "addedToCompare": "Dodano za poređenje",
-      "copied": "Kopirano u međuspremnik"
+      "copied": "Kopirano u međuspremnik",
+      "copiedValue": "Vrijednost kopirana",
+      "linkCopied": "Link kopiran"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
-      "closeSheet": "Zatvori panel"
+      "closeSheet": "Zatvori panel",
+      "liveResult": "Rezultat: {value}"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",
@@ -90,7 +98,10 @@
     },
     "keypad": {
       "space": "razmak",
-      "addLength": "Dodajte dužinu za izračun"
+      "addLength": "Dodajte dužinu za izračun",
+      "closeUnitPicker": "Zatvori izbor jedinice",
+      "priceUnitPicker": "Jedinica cijene",
+      "lengthUnitPicker": "Jedinica dužine"
     },
     "token": {
       "edit": "Uredi {token}",
@@ -111,6 +122,7 @@
       "flat": "Plosnato",
       "angle": "Ugaoni profil",
       "plate": "Ploča",
+      "sheet": "Lim",
       "chequered": "Rebrasta ploča",
       "expanded": "Ekspandirani lim",
       "corrugated": "Valoviti lim"
@@ -123,6 +135,11 @@
       "addLength": "dodajte dužinu ->",
       "addSize": "dodajte dimenziju ->",
       "startProfile": "počnite profilom ->"
+    },
+    "issues": {
+      "unknownToken": "Nije prepoznato \"{token}\"",
+      "unknownSize": "Ne postoji {profile} veličina \"{size}\"",
+      "invalidQty": "Količina mora biti najmanje 1"
     },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
@@ -194,6 +211,7 @@
           "tips": {
             "example": "Probajte: hea120 6m x2 s235, upn100 4.5m ili round 20 2m.",
             "fallback": "Ako unesete samo dužinu kao 6, FerroScale koristi rezervnu jedinicu dužine iz Postavki.",
+            "mobileUnitKeys": "Na telefonu, zadržite tipke mm ili €/kg da izaberete drugu jedinicu (cm, m, /m, /pc).",
             "chips": "Dodirnite čipove za uređivanje ili uklanjanje; prijedlozi dopunjuju profile, dimenzije, dužinu, količinu i čuvanje."
           }
         },
@@ -211,7 +229,7 @@
           "body": "Postavke određuju podrazumijevanu valutu, jediničnu cijenu, osnovu cijene, otpad i PDV. Komanda može prepisati cijenu samo za taj izračun.",
           "tips": {
             "desktop": "Desktop: unesite @2.50/kg, 3.20/m ili 45/pc.",
-            "mobile": "Mobilno: unesite broj cijene, zatim dodirnite tipku za cijenu kao €/kg da ubacite jedinicu.",
+            "mobile": "Mobilni: ukucajte iznos, zatim dodirnite tipku cijene (npr. €/kg) — ili je zadržite da izaberete /kg, /m ili /pc.",
             "basis": "Postavite osnovu cijene na Masu kada dobavljač daje cijenu po kilogramu."
           }
         },
@@ -366,5 +384,24 @@
       "answerRequired": "CAPTCHA odgovor je obavezan.",
       "contextTooLarge": "Kontekst je prevelik."
     }
+  },
+  "qa": {
+    "title": "Provjera formula",
+    "subtitle": "Izlaz živog kalkulatora provjeren prema nezavisnim referencama — objavljene EN kataloške mase i ručno izračunate formule (S235JR, po metru).",
+    "back": "Nazad na kalkulator",
+    "summaryPass": "Svih {count} provjera prolazi",
+    "summaryFail": "{fail} od {total} provjera ne prolazi",
+    "maxDelta": "Maks. odstupanje",
+    "tolerance": "Tolerancija",
+    "dataset": "Skup podataka",
+    "colProfile": "Profil",
+    "colExpected": "Očekivano kg/m",
+    "colActual": "Izračunato kg/m",
+    "colDelta": "Δ",
+    "colSource": "Referenca",
+    "colStatus": "Status",
+    "pass": "PROLAZI",
+    "fail": "NE PROLAZI",
+    "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni."
   }
 }

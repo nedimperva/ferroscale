@@ -28,7 +28,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
       <header className="mb-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-sm text-slate-500 no-underline transition-colors hover:text-slate-800"
+          className="inline-flex items-center gap-1 text-sm text-muted no-underline transition-colors hover:text-foreground"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
           {t("back")}
         </Link>
         <h1 className="mt-3 text-2xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="mt-1 text-sm text-slate-600">{t("description")}</p>
+        <p className="mt-1 text-sm text-foreground-secondary">{t("description")}</p>
       </header>
       <ContactForm />
     </div>

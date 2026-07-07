@@ -1,1 +1,1 @@
-export * from "../../../../packages/metal-core/src/datasets/profiles";
+export * from "@ferroscale/metal-core/datasets/profiles";

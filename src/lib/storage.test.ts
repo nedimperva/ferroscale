@@ -69,3 +69,19 @@ describe("persistToStorage", () => {
     expect(() => persistToStorage("key", "value")).not.toThrow();
   });
 });
+
+describe("migrateLegacyStorageKeys", () => {
+  it("moves legacy advanced-calc values to ferroscale keys without clobbering", async () => {
+    const OLD_PREFIX = "advanced-calc";
+    mockStorage.set(`${OLD_PREFIX}-projects-v2`, JSON.stringify([{ id: "p1" }]));
+    mockStorage.set(`${OLD_PREFIX}-input-v1`, JSON.stringify({ q: 1 }));
+    mockStorage.set("ferroscale-input-v1", JSON.stringify({ q: 2 })); // already migrated
+    const { migrateLegacyStorageKeys } = await import("./storage-migrations");
+    migrateLegacyStorageKeys();
+    expect(mockStorage.get("ferroscale-projects-v2")).toBe(JSON.stringify([{ id: "p1" }]));
+    expect(mockStorage.has(`${OLD_PREFIX}-projects-v2`)).toBe(false);
+    // new-key value wins; old copy is still cleaned up
+    expect(mockStorage.get("ferroscale-input-v1")).toBe(JSON.stringify({ q: 2 }));
+    expect(mockStorage.has(`${OLD_PREFIX}-input-v1`)).toBe(false);
+  });
+});

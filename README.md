@@ -1,21 +1,18 @@
 # Ferroscale
 
 EU-focused metal calculator with:
-1. A Next.js web app for full weight/price workflows.
-2. A shared `@ferroscale/metal-core` package for formulas, datasets, validation, and quick parser logic.
-3. A Raycast extension for one-line quick weight calculations.
+1. A Next.js web app built around a command bar for fast weight/price calculations.
+2. A shared `@ferroscale/metal-core` package for formulas, datasets, validation, and the command query parser.
 
 ## Workspace Layout
 
 1. `src/`: main web app (Next.js App Router).
 2. `packages/metal-core/`: shared calculator and parser package.
-3. `raycast-extension/`: Raycast command implementation.
 
 ## Prerequisites
 
 1. Node.js 20+
 2. npm 10+
-3. For Raycast development: Raycast app (macOS) and `ray` CLI available via npm scripts.
 
 ## Install
 
@@ -45,57 +42,44 @@ npm run test:core
 # Web + core tests
 npm run test:all
 
+# i18n message parity (en/bs)
+npm run i18n:check
+
+# End-to-end tests (Playwright)
+npx playwright test
+
 # Web production build
 npm run build
 ```
 
-## Raycast Extension
+CI (`.github/workflows/ci.yml`) runs lint, the i18n check, both test
+suites, and a production build on every push and pull request. Lint is
+a hard gate — keep it green.
 
-Extension sources are in `raycast-extension/`.
+## Command Query Format
 
-### Configure
+The command bar (and share links, e.g. `/en?q=hea120+6m+x2`) accepts
+order-tolerant tokens:
 
-1. Open `raycast-extension/package.json`.
-2. Set `"author"` to your real Raycast handle.
-
-### Run and Build
-
-```bash
-# Start extension in development mode
-npm run dev --workspace raycast-extension
-
-# Build extension
-npm run build --workspace raycast-extension
-
-# Validate extension
-npm run lint --workspace raycast-extension
-```
-
-### Quick Query Format
-
-Manual profiles:
-1. `<alias> <dimensions>x<length> [flags]`
-
-EN standard profiles:
-1. `<alias> <size>x<length> [flags]`
+1. Profile + size: `hea120`, `shs40x40x3`, `rhs60x40x3`, `chs48.3x3.2`,
+   `rnd20`, `flt40x8`, `l50x50x5`, `plt1500x3000x3`
+2. Length: `6m`, `4500mm`, `10ft`, or a bare number using the default
+   unit from Settings
+3. Quantity: `x2`
+4. Grade: `s235`, `s355`, `304`, `316l`, `a4`, `6060`, `7075`, …
+5. Inline price override: `@2.50/kg`, `3,20/m`, `@12/pc`
 
 Examples:
-1. `shs 40x40x2x4500mm`
-2. `rhs 120x80x4x6000 qty=2`
-3. `ipe 200x6000 mat=s355`
-4. `chs 60.3x3.2x3000 dens=8000`
-
-Flags:
-1. `qty=<number>` default `1`
-2. `mat=<grade|alias>` default `steel-s235jr`
-3. `dens=<kg/m3>` optional custom density override
-4. `unit=<mm|cm|m|in|ft>` fallback unit when input has no inline unit
+1. `hea120 6m x2 s235`
+2. `shs40x40x3 6m x10 @2.50/kg`
+3. `plt1500x3000x3 316`
 
 ## Shared Core API
 
 Main exports from `@ferroscale/metal-core`:
 1. Calculator engine: `calculateMetal`, `validateCalculationInput`, `resolveAreaMm2`
-2. Quick APIs: `parseQuickQuery`, `calculateQuickWeight`, `calculateQuickFromQuery`
+2. Command parser: `cmdParse`, `cmdTokenize`, `cmdSuggest`, `inputToQuery`
+   (UI-independent — also consumed by the Raycast extension, which lives in its own repository)
 3. Datasets: profile/material definitions and helpers
 
 ## Internationalization
@@ -113,20 +97,18 @@ Add a new language:
 ## Environment Variables
 
 1. `NEXT_PUBLIC_SITE_URL`: public base URL used by sitemap/robots metadata.
+2. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` (optional): path to a system Chromium
+   for e2e runs without downloading browsers.
 
 ## API Endpoints
 
 1. `GET /api/health`
 2. `GET /api/captcha`
 3. `POST /api/contact`
+4. `/api/sync/google/*` (Google Drive sync)
 
-## Notes and Troubleshooting
+## Docs
 
-1. If `ray lint` reports invalid author, update `raycast-extension/package.json` with your Raycast username.
-2. Root `npm run lint` currently reports existing lint issues in the repository; use it as a baseline check, not a strict green gate.
-3. If extension assets fail validation, verify `raycast-extension/assets/icon.png` exists and command icon paths match.
-
-## Roadmap Docs
-
-1. `docs/PROJECT_TRACKER.md`
-2. `docs/FEATURE_IMPROVEMENTS.md`
+1. `docs/DESIGN_REVIEW.md` — full design/UX/architecture review and follow-up roadmap
+2. `docs/PROJECT_TRACKER.md`
+3. `docs/FEATURE_IMPROVEMENTS.md`

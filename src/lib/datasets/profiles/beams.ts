@@ -1,1 +1,1 @@
-export { BEAM_PROFILES } from "../../../../packages/metal-core/src/datasets/profiles/beams";
+export { BEAM_PROFILES } from "@ferroscale/metal-core/datasets/profiles/beams";

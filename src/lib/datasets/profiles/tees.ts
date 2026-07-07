@@ -1,1 +1,1 @@
-export { TEE_PROFILES } from "../../../../packages/metal-core/src/datasets/profiles/tees";
+export { TEE_PROFILES } from "@ferroscale/metal-core/datasets/profiles/tees";
