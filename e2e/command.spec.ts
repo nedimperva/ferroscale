@@ -126,3 +126,31 @@ test.describe("Keypad rate key (phone viewport)", () => {
     await expect(page.getByText(/^1\.2\/m$/).first()).toBeVisible();
   });
 });
+
+test.describe("Keypad length key (phone viewport)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test("tap inserts mm as the default length unit", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "5", exact: true }).click();
+    await page.getByRole("button", { name: /^mm ▾$/ }).click();
+    await expect(page.getByText("5mm", { exact: true }).first()).toBeVisible();
+  });
+
+  test("hold opens the length picker and inserts the chosen unit", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "5", exact: true }).click();
+    const lengthKey = page.getByRole("button", { name: /^mm ▾$/ });
+    const box = await lengthKey.boundingBox();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(600);
+    await page.mouse.up();
+
+    const menu = page.getByRole("menu", { name: "Length unit" });
+    await expect(menu).toBeVisible();
+    await menu.getByRole("menuitem", { name: "cm", exact: true }).click();
+    await expect(menu).toBeHidden();
+    await expect(page.getByText("5cm", { exact: true }).first()).toBeVisible();
+  });
+});

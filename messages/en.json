@@ -100,7 +100,8 @@
       "space": "space",
       "addLength": "Add a length to compute",
       "closeUnitPicker": "Close unit picker",
-      "unitPicker": "Price unit"
+      "priceUnitPicker": "Price unit",
+      "lengthUnitPicker": "Length unit"
     },
     "token": {
       "edit": "Edit {token}",
@@ -210,6 +211,7 @@
           "tips": {
             "example": "Try: hea120 6m x2 s235, upn100 4.5m, or round 20 2m.",
             "fallback": "If you type a bare length like 6, FerroScale uses the fallback length unit from Settings.",
+            "mobileUnitKeys": "On phones, hold the mm or €/kg keys to pick a different unit (cm, m, /m, /pc).",
             "chips": "Tap chips to edit or remove them; suggestions complete profiles, sizes, length, quantity, and saving."
           }
         },

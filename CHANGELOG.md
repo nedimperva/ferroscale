@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.6.2] - 2026-07-03
+
+### Changed
+
+- The mobile keypad's separate `mm` and `m` keys are merged into one length key — tap inserts `mm`, **hold** opens an `mm` `cm` `m` picker (same pattern as the rate key). `cm` is now reachable from the keypad for the first time, and both pickers share one component
+
+---
+
 ## [3.6.1] - 2026-07-03
 
 ### Changed

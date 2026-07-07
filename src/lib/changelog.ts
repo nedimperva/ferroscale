@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.6.2",
+    date: "2026-07-03",
+    changed: [
+      "The mobile keypad's mm and m keys are now a single length key: tap for mm, or hold to pick mm, cm, or m — matching the rate key. Cleaner layout, and cm is reachable for the first time",
+    ],
+    changed_bs: [
+      "Tipke mm i m na mobilnoj tastaturi sada su jedna tipka za dužinu: dodirnite za mm, ili zadržite da izaberete mm, cm ili m — kao i tipka cijene. Urednije, a cm je sada prvi put dostupan",
+    ],
+  },
+  {
     version: "3.6.1",
     date: "2026-07-03",
     changed: [

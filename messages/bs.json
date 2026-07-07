@@ -100,7 +100,8 @@
       "space": "razmak",
       "addLength": "Dodajte dužinu za izračun",
       "closeUnitPicker": "Zatvori izbor jedinice",
-      "unitPicker": "Jedinica cijene"
+      "priceUnitPicker": "Jedinica cijene",
+      "lengthUnitPicker": "Jedinica dužine"
     },
     "token": {
       "edit": "Uredi {token}",
@@ -210,6 +211,7 @@
           "tips": {
             "example": "Probajte: hea120 6m x2 s235, upn100 4.5m ili round 20 2m.",
             "fallback": "Ako unesete samo dužinu kao 6, FerroScale koristi rezervnu jedinicu dužine iz Postavki.",
+            "mobileUnitKeys": "Na telefonu, zadržite tipke mm ili €/kg da izaberete drugu jedinicu (cm, m, /m, /pc).",
             "chips": "Dodirnite čipove za uređivanje ili uklanjanje; prijedlozi dopunjuju profile, dimenzije, dužinu, količinu i čuvanje."
           }
         },
