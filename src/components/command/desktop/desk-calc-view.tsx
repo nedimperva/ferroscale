@@ -7,6 +7,7 @@ import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
+import { ProfileDrawing } from "../profile-drawing";
 import { KIND_BG } from "../command-constants";
 import {
   applyIssueSuggestion,
@@ -801,22 +802,20 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
       {rows && r ? (
         <>
           <div
-            className="flex items-center gap-[11px]"
+            className="rounded-xl flex items-center justify-center mb-3"
+            style={{ background: "var(--surface-inset)", padding: "12px 8px 8px" }}
+          >
+            <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+          </div>
+          <div
+            className="min-w-0"
             style={{ paddingBottom: 12, borderBottom: "1px solid var(--border-faint)" }}
           >
-            <div
-              className="flex items-center justify-center flex-shrink-0 rounded-[11px] text-foreground"
-              style={{ width: 40, height: 40, background: "var(--surface-inset)" }}
-            >
-              {p.alias && <CommandGlyph fam={p.alias.fam} size={23} />}
+            <div className="font-extrabold text-[15px] text-foreground" style={{ letterSpacing: -0.2 }}>
+              {formatCommandParseName(t, p)}
             </div>
-            <div className="min-w-0">
-              <div className="font-extrabold text-[15px] text-foreground" style={{ letterSpacing: -0.2 }}>
-                {formatCommandParseName(t, p)}
-              </div>
-              <div className="font-mono text-[10.5px] text-muted mt-px">
-                {p.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
-              </div>
+            <div className="font-mono text-[10.5px] text-muted mt-px">
+              {p.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
             </div>
           </div>
           <div style={{ paddingTop: 4 }}>

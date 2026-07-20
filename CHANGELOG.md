@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Dimensioned profile drawings.** The result breakdown (mobile sheet + desktop rail) now shows a scaled cross-section of the current profile instead of a flat glyph — a real I-beam / channel / tee / hollow section / pipe / angle / plate outline with the overall width and height dimensioned and the section thicknesses (web, flange, wall, root radius) called out. Standard profiles read their geometry from the shared spec records; manual families from the parsed dimensions; expanded/corrugated keep the glyph
 - **The command bar types with you.** As you type a profile (or the start of a query you've run before), a faint inline completion appears after the caret — press **Tab** or **→** to accept it, or just keep typing. Works on phone (tap the ghost text), the medium command card, and the desktop workspace
 - **Did-you-mean fixes.** A mistyped profile, grade, or off-catalog size no longer just fails: the parse line offers a one-tap correction (`hae120` → **hea120**, `hea125` → **120**, a fat-fingered grade → the nearest real code). Corrections use edit distance that counts a transposition as a single typo, and are never applied automatically
 - **Type it the way you'd say it.** The parser now accepts natural, spaced forms — `hea 120`, `6 meters` / `6 m`, `2 pieces` / `2 kom`, `x 2` — folding them into the canonical grammar while it reads. The strict token form is still what round-trips into share links and saved entries (EN + common BS/DE unit and quantity words)

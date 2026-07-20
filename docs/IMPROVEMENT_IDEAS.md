@@ -10,7 +10,8 @@ committed work — it's a catalog to choose from.
 **Shipped in 3.7.0** (the "bar feels magic" sprint): item 1 (natural-language
 tolerance), item 2 (did-you-mean typo correction), item 3 (ghost-text inline
 autocomplete), item 5 (↑/↓ query history), and item 13 (kg/m preview on size
-chips).
+chips). Plus item 28 (dimensioned profile cross-section drawings on the result
+breakdown).
 
 Existing backlogs
 (`FEATURE_IMPROVEMENTS.md`, `DESIGN_REVIEW.md` §3) still apply; items
@@ -221,7 +222,10 @@ with staged tap-to-insert suggestions. The theme of this section:
 
 ## 4. Design / visual
 
-28. **Dimensioned profile drawings on the result** — **M/L**
+28. **Dimensioned profile drawings on the result** — **M/L** — ✅ shipped in
+    3.7.0 (`profile-drawing.tsx`: scaled SVG cross-sections with dimensioned
+    width/height + thickness callouts, on the mobile result sheet and the
+    desktop breakdown rail).
     Replace/augment the glyph with a scaled SVG cross-section with
     labeled dimensions (b, h, t, r) for the current profile — the
     single change that would make the app feel like a professional
