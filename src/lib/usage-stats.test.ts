@@ -95,4 +95,28 @@ describe("recordCommandUsage / buildUsageSource", () => {
     expect(usage.topSizes("panel")).toEqual(["1500x3000x3"]);
     expect(usage.topLengths("panel")).toEqual([]);
   });
+
+  it("collapses a refinement chain into the latest, most complete form", () => {
+    // Building one calculation across idle pauses must not leave a trail of
+    // near-duplicate recents (the reported bug).
+    record("hea120 6m");
+    record("hea120 6m x2");
+    record("hea120 6m x2 s355");
+    expect(buildUsageSource().recentQueries()).toEqual(["hea120 6m x2 s355"]);
+  });
+
+  it("keeps genuinely different queries as separate recents", () => {
+    record("hea120 6m x2 s355");
+    record("rnd20 6m");
+    const recents = buildUsageSource().recentQueries();
+    expect(recents).toHaveLength(2);
+    expect(recents[0]).toBe("rnd20 6m");
+    expect(recents).toContain("hea120 6m x2 s355");
+  });
+
+  it("supersedes a stored entry when the user backs off to a shorter prefix", () => {
+    record("hea120 6m x2 s355");
+    record("hea120 6m");
+    expect(buildUsageSource().recentQueries()).toEqual(["hea120 6m"]);
+  });
 });

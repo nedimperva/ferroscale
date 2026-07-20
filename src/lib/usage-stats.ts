@@ -42,6 +42,16 @@ function loadStats(): UsageStats {
   return raw;
 }
 
+/** True when one token list is a prefix of the other (equal lists included) —
+ *  i.e. the two queries lie on the same refinement chain. */
+function prefixRelated(a: string[], b: string[]): boolean {
+  const min = Math.min(a.length, b.length);
+  for (let i = 0; i < min; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 function score(value: UsageValue, now: number): number {
   return value.n * Math.pow(0.5, Math.max(0, now - value.t) / HALF_LIFE_MS);
 }
@@ -75,16 +85,25 @@ export function recordCommandUsage(p: CommandParseResult, query: string): void {
 
   // Move-to-front keeps recency order deterministic (timestamps can tie
   // within a millisecond).
-  const idx = stats.queries.findIndex((e) => e.q === q);
-  if (idx >= 0) {
-    const [entry] = stats.queries.splice(idx, 1);
-    entry.n += 1;
-    entry.t = now;
-    stats.queries.unshift(entry);
-  } else {
-    stats.queries.unshift({ q, n: 1, t: now });
-  }
-  stats.queries = stats.queries.slice(0, MAX_RECENT_QUERIES);
+  // Collapse refinement chains: while a user builds one calculation, each idle
+  // pause records a settled state (`…304`, then `…304 @6`). Those are the same
+  // job at different stages, so a new query drops every stored entry that it
+  // extends — or that extends it — keeping only the latest, most complete form.
+  // The dropped entries' weight (`n`) carries onto the survivor so a genuinely
+  // frequent query never loses its ranking to this pruning.
+  const qToks = q.split(/\s+/);
+  let carriedN = 0;
+  const kept = stats.queries.filter((e) => {
+    if (prefixRelated(qToks, e.q.split(/\s+/))) {
+      carriedN = Math.max(carriedN, e.n);
+      return false;
+    }
+    return true;
+  });
+  stats.queries = [{ q, n: carriedN + 1, t: now }, ...kept].slice(
+    0,
+    MAX_RECENT_QUERIES,
+  );
 
   const fam = p.alias.fam;
   if (p.hasSize && p.size) {

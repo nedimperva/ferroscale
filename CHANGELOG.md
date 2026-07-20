@@ -18,6 +18,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Size suggestion chips now show the per-metre weight (e.g. `120 · 26.7 kg/m`) so you can judge a size before picking it; sheet/plate families stay per-piece and show none
 
+### Fixed
+
+- Recent queries no longer pile up near-duplicates while you build a single calculation. Each idle pause used to record the raw text — including half-typed trailing tokens like a lone `@` — so refining one query left a trail (`… 304`, `… 304 @`, `… 304 @6`). Now the settled query is recorded in canonical form (dropping dangling partials) and a refinement supersedes the shorter version it grew from, so one calculation leaves one recent
+
 ---
 
 ## [3.6.2] - 2026-07-03

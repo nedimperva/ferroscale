@@ -204,11 +204,21 @@ export function CommandShell() {
     if (!p.valid) return;
     if (!touchedRef.current && query === DEMO_QUERY) return;
     const id = window.setTimeout(() => {
-      recordCommandUsage(p, query);
+      // Record the canonical query, not the raw text: this drops half-typed
+      // trailing tokens (a lone "@", an incomplete grade) so mid-edit pauses
+      // don't each leave their own near-duplicate recent.
+      const canonical =
+        (p.calc &&
+          inputToQuery(p.calc.input, defaultUnit, {
+            defaultGradeId: shared.defaultGradeId,
+            defaultPricing: shared,
+          })) ||
+        query.trim();
+      recordCommandUsage(p, canonical);
       setUsageVersion((v) => v + 1);
     }, 2500);
     return () => window.clearTimeout(id);
-  }, [p, query]);
+  }, [p, query, defaultUnit, shared]);
   const usageSource = useMemo(
     () => (usageVersion > 0 ? buildUsageSource() : undefined),
     [usageVersion],
