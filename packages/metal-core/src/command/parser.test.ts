@@ -267,6 +267,70 @@ describe("cmdTokenize (space-free input)", () => {
   });
 });
 
+describe("cmdTokenize (natural-language folding)", () => {
+  it("merges a spaced alias + size once both are committed", () => {
+    expect(cmdTokenize("hea 120 ")).toEqual(["hea120"]);
+    expect(cmdTokenize("l 50x50x5 ")).toEqual(["l50x50x5"]);
+    expect(cmdTokenize("t 30x4 ")).toEqual(["t30x4"]);
+  });
+
+  it("leaves the trailing word alone while it is still being typed", () => {
+    // "120" has no trailing space → still editable, not yet folded onto "hea"
+    expect(cmdTokenize("hea 120")).toEqual(["hea", "120"]);
+  });
+
+  it("folds spoken length units (word and abbreviation)", () => {
+    expect(cmdTokenize("hea120 6 meters ")).toEqual(["hea120", "6m"]);
+    expect(cmdTokenize("hea120 6 m ")).toEqual(["hea120", "6m"]);
+    expect(cmdTokenize("rnd20 6000 mm ")).toEqual(["rnd20", "6000mm"]);
+  });
+
+  it("folds spoken quantities", () => {
+    expect(cmdTokenize("hea120 6m 2 pieces ")).toEqual(["hea120", "6m", "x2"]);
+    expect(cmdTokenize("hea120 6m 2 kom ")).toEqual(["hea120", "6m", "x2"]);
+    expect(cmdTokenize("hea120 6m x 2 ")).toEqual(["hea120", "6m", "x2"]);
+  });
+
+  it("computes the same result from spoken and canonical forms", () => {
+    const spoken = cmdParse("hea 120 6 meters x2 s235 ", mkSettings());
+    const canonical = cmdParse("hea120 6m x2 s235 ", mkSettings());
+    expect(spoken.valid).toBe(true);
+    expect(spoken.totalKg).toBe(canonical.totalKg);
+    expect(spoken.realQty).toBe(2);
+  });
+});
+
+describe("cmdParse did-you-mean suggestions", () => {
+  it("suggests the nearest alias for a mistyped profile (transposition)", () => {
+    const p = cmdParse("hae120 ", mkSettings());
+    expect(p.issues[0]).toMatchObject({
+      code: "unknownToken",
+      token: "hae120",
+      suggestion: "hea120",
+    });
+  });
+
+  it("suggests the nearest grade code for a mistyped grade", () => {
+    const p = cmdParse("hea120 6m s356 ", mkSettings());
+    const issue = p.issues.find((x) => x.code === "unknownToken");
+    expect(issue?.suggestion).toBe("s355");
+  });
+
+  it("suggests the nearest catalog size for an off-catalog standard size", () => {
+    const p = cmdParse("hea125 ", mkSettings());
+    expect(p.issues[0]).toMatchObject({
+      code: "unknownSize",
+      suggestion: "120",
+    });
+  });
+
+  it("offers no suggestion for genuinely unrecognizable input", () => {
+    const p = cmdParse("hea120 zzqqx ", mkSettings());
+    const issue = p.issues.find((x) => x.code === "unknownToken");
+    expect(issue?.suggestion).toBeUndefined();
+  });
+});
+
 describe("cmdParse with glued queries", () => {
   it("hea1006m parses identically to hea100 6m", () => {
     const spaced = cmdParse("hea100 6m", mkSettings());

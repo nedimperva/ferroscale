@@ -124,6 +124,13 @@ export interface CommandParseIssue {
   /** invalidGeometry only: engine validation key, localized under `validation.*`. */
   messageKey?: string;
   messageValues?: Record<string, string | number>;
+  /**
+   * A near-miss the user probably meant (e.g. "hea120" for a mistyped
+   * "hae120", or "120" for an off-catalog "125"). When present, the UI can
+   * offer a one-tap "Did you mean …?" fix that swaps `token` for this text in
+   * the raw query. Never applied automatically.
+   */
+  suggestion?: string;
 }
 
 export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "price" | "unknown";

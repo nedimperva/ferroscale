@@ -5,7 +5,14 @@ Date: 2026-07-19 · Written against v3.6.2
 A broad menu of improvements to pick from, grouped by category. Each item
 has a short "how" sketch pointing at the code it touches, plus an effort
 tag: **S** (hours), **M** (days), **L** (a week+). Nothing here is
-committed work — it's a catalog to choose from. Existing backlogs
+committed work — it's a catalog to choose from.
+
+**Shipped in 3.7.0** (the "bar feels magic" sprint): item 1 (natural-language
+tolerance), item 2 (did-you-mean typo correction), item 3 (ghost-text inline
+autocomplete), item 5 (↑/↓ query history), and item 13 (kg/m preview on size
+chips).
+
+Existing backlogs
 (`FEATURE_IMPROVEMENTS.md`, `DESIGN_REVIEW.md` §3) still apply; items
 from them are not repeated unless extended.
 

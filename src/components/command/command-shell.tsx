@@ -25,12 +25,15 @@ import type {
 } from "@ferroscale/metal-core";
 import { CommandGlyph } from "./command-glyph";
 import {
+  applyIssueSuggestion,
+  computeGhost,
   formatCommandAliasName,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "./command-copy";
+import { GhostField } from "./ghost-field";
 import { KIND_BG } from "./command-constants";
 import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
@@ -115,6 +118,9 @@ export function CommandShell() {
   const [isWideViewport, setIsWideViewport] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
+  // Medium-desktop ↑/↓ history recall (draft holds the in-progress query).
+  const historyIdxRef = useRef(-1);
+  const draftRef = useRef("");
 
   const parserSettings: CommandParserSettings = useMemo(
     () => ({
@@ -428,6 +434,11 @@ export function CommandShell() {
     ? queryTokens[queryTokens.length - 1]
     : null;
   const chipTokens = partialToken ? queryTokens.slice(0, -1) : queryTokens;
+  // Faint completion drawn after the caret (profile letters / recent prefix).
+  const ghost = computeGhost(partialToken ?? "", sug);
+  const acceptGhost = () => {
+    if (ghost && sug.items[0]) onSuggest(sug.items[0]);
+  };
   const removeTokenAt = (idx: number) => {
     const rest = queryTokens.filter((_, i) => i !== idx);
     // Preserve a trailing space so the remaining tokens stay chips and an
@@ -708,11 +719,35 @@ export function CommandShell() {
                 </span>
               ) : p.issues.length > 0 ? (
                 <span
-                  className="font-mono text-[12px]"
+                  className="font-mono text-[12px] flex items-center gap-2 flex-wrap"
                   style={{ color: "var(--amber-text)" }}
                   role="status"
                 >
-                  {formatCommandIssue(t, p.issues[0])}
+                  <span>{formatCommandIssue(t, p.issues[0])}</span>
+                  {p.issues[0].suggestion && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery(
+                          applyIssueSuggestion(
+                            query,
+                            p.issues[0].token,
+                            p.issues[0].suggestion!,
+                          ),
+                        );
+                        if (!isPhoneViewport) focusInputAtEnd();
+                      }}
+                      className="rounded-full font-bold"
+                      style={{
+                        padding: "2px 9px",
+                        background: "var(--accent-surface)",
+                        color: "var(--accent-text)",
+                        border: "1px solid var(--accent-border)",
+                      }}
+                    >
+                      {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
+                    </button>
+                  )}
                 </span>
               ) : (
                 <span className="font-mono text-[12px] text-muted-faint">
@@ -909,6 +944,17 @@ export function CommandShell() {
                     {partialToken}
                   </span>
                 )}
+                {ghost && (
+                  <button
+                    type="button"
+                    onClick={acceptGhost}
+                    aria-label={t("query.acceptGhost", { text: ghost.trim() })}
+                    className="font-mono text-sm font-semibold whitespace-pre"
+                    style={{ color: "var(--muted-faint)" }}
+                  >
+                    {ghost}
+                  </button>
+                )}
                 <span
                   className="w-0.5 h-5 rounded-sm"
                   style={{
@@ -957,11 +1003,15 @@ export function CommandShell() {
                 >
                   ›
                 </span>
-                <input
+                <GhostField
                   ref={inputRef}
                   type="text"
+                  ghost={ghost}
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    historyIdxRef.current = -1;
+                    setQuery(e.target.value);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       if (p.valid) {
@@ -978,11 +1028,48 @@ export function CommandShell() {
                       }
                       return;
                     }
-                    // Arrow-down opens chip navigation; Tab stays out of the
-                    // chip row entirely so typing isn't trapped.
-                    if (e.key === "ArrowDown" && sug.items.length > 0) {
+                    // Accept the ghost completion (Tab, or → at the caret end).
+                    if (e.key === "Tab" && ghost) {
                       e.preventDefault();
-                      firstSuggestionRef.current?.focus();
+                      acceptGhost();
+                      return;
+                    }
+                    if (
+                      e.key === "ArrowRight" &&
+                      ghost &&
+                      e.currentTarget.selectionStart === e.currentTarget.value.length &&
+                      e.currentTarget.selectionStart === e.currentTarget.selectionEnd
+                    ) {
+                      e.preventDefault();
+                      acceptGhost();
+                      return;
+                    }
+                    // ↑ recalls older queries; ↓ walks back toward the draft.
+                    if (e.key === "ArrowUp" && quickHistory.length > 0) {
+                      e.preventDefault();
+                      if (historyIdxRef.current === -1) draftRef.current = query;
+                      historyIdxRef.current = Math.min(
+                        historyIdxRef.current + 1,
+                        quickHistory.length - 1,
+                      );
+                      setQuery(quickHistory[historyIdxRef.current] + " ");
+                      focusInputAtEnd();
+                      return;
+                    }
+                    if (e.key === "ArrowDown") {
+                      if (historyIdxRef.current >= 0) {
+                        e.preventDefault();
+                        const nextIdx = historyIdxRef.current - 1;
+                        historyIdxRef.current = nextIdx;
+                        setQuery(nextIdx < 0 ? draftRef.current : quickHistory[nextIdx] + " ");
+                        focusInputAtEnd();
+                        return;
+                      }
+                      // Not browsing history → open chip navigation.
+                      if (sug.items.length > 0) {
+                        e.preventDefault();
+                        firstSuggestionRef.current?.focus();
+                      }
                     }
                   }}
                   autoFocus
@@ -991,7 +1078,9 @@ export function CommandShell() {
                   spellCheck={false}
                   placeholder={t("query.placeholder")}
                   aria-label={t("query.aria")}
-                  className="flex-1 bg-transparent outline-none font-mono text-sm text-foreground placeholder:text-muted-faint min-w-0"
+                  wrapperClassName="flex-1"
+                  inputClassName="bg-transparent outline-none font-mono text-sm text-foreground placeholder:text-muted-faint"
+                  mirrorClassName="font-mono text-sm"
                 />
                 <kbd className="text-[10px] font-mono font-semibold text-muted-faint px-1.5 py-0.5 rounded border border-border-faint">
                   ⌘K

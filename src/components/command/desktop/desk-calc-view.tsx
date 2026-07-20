@@ -9,11 +9,14 @@ import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
 import { KIND_BG } from "../command-constants";
 import {
+  applyIssueSuggestion,
+  computeGhost,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "../command-copy";
+import { GhostField } from "../ghost-field";
 import type { CommandDesktopProps } from "./desktop-props";
 import { DeskTopbar } from "./desk-sidebar";
 import { CloseIcon, DeskBtn, DeskIcon, DeskTokenChip, Kbd, SectionLabel } from "./desk-atoms";
@@ -55,6 +58,10 @@ export function DeskCalcView({
   const t = useTranslations("command");
   const isW = mode === "weight";
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
+  // ↑/↓ recall through the session tape; draft holds the in-progress query so
+  // ↓ past the newest entry restores it.
+  const historyIdxRef = useRef(-1);
+  const draftRef = useRef("");
 
   const queryTokens = useMemo(() => cmdTokenize(query), [query]);
   // The trailing piece (no whitespace after it) is still being typed — it
@@ -63,6 +70,8 @@ export function DeskCalcView({
   const chipTokens = hasPartial ? queryTokens.slice(0, -1) : queryTokens;
   const partial = hasPartial ? queryTokens[queryTokens.length - 1] : "";
   const chipPrefix = chipTokens.length > 0 ? chipTokens.join(" ") + " " : "";
+  // Faint completion after the caret (profile letters / recent-query prefix).
+  const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
 
   const focusInputAtEnd = useCallback(() => {
     requestAnimationFrame(() => {
@@ -154,11 +163,15 @@ export function DeskCalcView({
                 onRemove={() => removeTokenAt(i)}
               />
             ))}
-            <input
+            <GhostField
               ref={inputRef}
               type="text"
+              ghost={ghost}
               value={partial}
-              onChange={(e) => setQuery(chipPrefix + e.target.value)}
+              onChange={(e) => {
+                historyIdxRef.current = -1;
+                setQuery(chipPrefix + e.target.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   if (p.valid) {
@@ -175,9 +188,53 @@ export function DeskCalcView({
                   }
                   return;
                 }
+                // Accept the ghost completion (Tab, or → at the caret's end).
+                if (e.key === "Tab" && ghost) {
+                  e.preventDefault();
+                  onSuggest(sug.items[0]);
+                  return;
+                }
+                if (
+                  e.key === "ArrowRight" &&
+                  ghost &&
+                  e.currentTarget.selectionStart === e.currentTarget.value.length &&
+                  e.currentTarget.selectionStart === e.currentTarget.selectionEnd
+                ) {
+                  e.preventDefault();
+                  onSuggest(sug.items[0]);
+                  return;
+                }
                 if (e.key === "Escape") {
                   e.preventDefault();
                   onNew();
+                  return;
+                }
+                // ↑ recalls older tape entries; ↓ walks back toward the draft.
+                if (e.key === "ArrowUp" && sessionTape.length > 0) {
+                  e.preventDefault();
+                  if (historyIdxRef.current === -1) draftRef.current = query;
+                  historyIdxRef.current = Math.min(
+                    historyIdxRef.current + 1,
+                    sessionTape.length - 1,
+                  );
+                  setQuery(sessionTape[historyIdxRef.current] + " ");
+                  focusInputAtEnd();
+                  return;
+                }
+                if (e.key === "ArrowDown") {
+                  if (historyIdxRef.current >= 0) {
+                    e.preventDefault();
+                    const nextIdx = historyIdxRef.current - 1;
+                    historyIdxRef.current = nextIdx;
+                    setQuery(nextIdx < 0 ? draftRef.current : sessionTape[nextIdx] + " ");
+                    focusInputAtEnd();
+                    return;
+                  }
+                  // Not browsing history → open chip navigation.
+                  if (sug.items.length > 0) {
+                    e.preventDefault();
+                    firstSuggestionRef.current?.focus();
+                  }
                   return;
                 }
                 // Empty partial + backspace pulls the last chip back into
@@ -193,12 +250,6 @@ export function DeskCalcView({
                   focusInputAtEnd();
                   return;
                 }
-                // Arrow-down opens chip navigation; Tab stays out of the
-                // chip row entirely so typing isn't trapped.
-                if (e.key === "ArrowDown" && sug.items.length > 0) {
-                  e.preventDefault();
-                  firstSuggestionRef.current?.focus();
-                }
               }}
               autoFocus
               autoCapitalize="off"
@@ -208,7 +259,9 @@ export function DeskCalcView({
                 queryTokens.length === 0 ? t("query.placeholderExample") : ""
               }
               aria-label={t("query.aria")}
-              className="flex-1 bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint min-w-[120px]"
+              wrapperClassName="flex-1 min-w-[120px]"
+              inputClassName="bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint"
+              mirrorClassName="font-mono text-base font-semibold"
               // The command-line box carries the permanent accent glow; the
               // global :focus-visible ring on the inner input is just noise.
               style={{ outline: "none" }}
@@ -377,11 +430,35 @@ export function DeskCalcView({
                 </span>
               ) : p.issues.length > 0 ? (
                 <span
-                  className="font-mono text-[13px]"
+                  className="font-mono text-[13px] flex items-center gap-2 flex-wrap"
                   style={{ color: "var(--amber-text)" }}
                   role="status"
                 >
-                  {formatCommandIssue(t, p.issues[0])}
+                  <span>{formatCommandIssue(t, p.issues[0])}</span>
+                  {p.issues[0].suggestion && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery(
+                          applyIssueSuggestion(
+                            query,
+                            p.issues[0].token,
+                            p.issues[0].suggestion!,
+                          ),
+                        );
+                        focusInputAtEnd();
+                      }}
+                      className="rounded-full font-bold cursor-pointer"
+                      style={{
+                        padding: "2px 9px",
+                        background: "var(--accent-surface)",
+                        color: "var(--accent-text)",
+                        border: "1px solid var(--accent-border)",
+                      }}
+                    >
+                      {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
+                    </button>
+                  )}
                 </span>
               ) : (
                 <span className="font-mono text-[13px] text-muted-faint">

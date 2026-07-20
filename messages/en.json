@@ -94,7 +94,8 @@
     "query": {
       "placeholder": "type or tap a profile...",
       "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
-      "aria": "FerroScale Command query"
+      "aria": "FerroScale Command query",
+      "acceptGhost": "Complete: {text}"
     },
     "keypad": {
       "space": "space",
@@ -139,7 +140,8 @@
     "issues": {
       "unknownToken": "Didn't understand \"{token}\"",
       "unknownSize": "No {profile} size \"{size}\"",
-      "invalidQty": "Quantity must be at least 1"
+      "invalidQty": "Quantity must be at least 1",
+      "didYouMean": "Did you mean {suggestion}?"
     },
     "sheets": {
       "resultBreakdown": "Result breakdown",
