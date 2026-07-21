@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/useTheme";
+import { useCountUp } from "@/hooks/useCountUp";
 import { useSaved } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
@@ -416,13 +417,25 @@ export function CommandShell() {
     return () => window.removeEventListener("keydown", onKey);
   }, [focusInput, isPhoneViewport, isWideViewport]);
 
-  const heroVal = isW
+  // Hero metric counts up when the query settles. The number is animated in the
+  // target's display unit (kg or t) so the tween never crosses a unit boundary;
+  // the unit/symbol beside it stays driven by the real value.
+  const weightUnit = p.totalKg != null ? fsWeightUnit(p.totalKg) : "kg";
+  const heroTarget = isW
     ? p.totalKg != null
-      ? fsWeight(p.totalKg)
-      : "—"
-    : p.totalAmount != null
-      ? fsMoney(p.totalAmount)
-      : "—";
+      ? weightUnit === "t"
+        ? p.totalKg / 1000
+        : p.totalKg
+      : null
+    : p.totalAmount ?? null;
+  const heroAnim = useCountUp(heroTarget, isW ? `w-${weightUnit}` : "price");
+  const heroVal =
+    heroAnim == null
+      ? "—"
+      : heroAnim.toLocaleString("en-US", {
+          minimumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+          maximumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+        });
 
   // Screen-reader announcement for the settled result (mirrors the hero +
   // secondary metric). Empty while invalid — the issue line announces errors.

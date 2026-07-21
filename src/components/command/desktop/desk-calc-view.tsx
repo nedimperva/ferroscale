@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { useCountUp } from "@/hooks/useCountUp";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
@@ -97,13 +98,23 @@ export function DeskCalcView({
     focusInputAtEnd();
   };
 
-  const heroVal = isW
+  // Hero metric counts up when the query settles (see useCountUp).
+  const weightUnit = p.totalKg != null ? fsWeightUnit(p.totalKg) : "kg";
+  const heroTarget = isW
     ? p.totalKg != null
-      ? fsWeight(p.totalKg)
-      : "—"
-    : p.totalAmount != null
-      ? fsMoney(p.totalAmount)
-      : "—";
+      ? weightUnit === "t"
+        ? p.totalKg / 1000
+        : p.totalKg
+      : null
+    : p.totalAmount ?? null;
+  const heroAnim = useCountUp(heroTarget, isW ? `w-${weightUnit}` : "price");
+  const heroVal =
+    heroAnim == null
+      ? "—"
+      : heroAnim.toLocaleString("en-US", {
+          minimumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+          maximumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+        });
 
   const tapeRows = useMemo(
     () =>
