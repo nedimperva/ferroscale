@@ -458,14 +458,20 @@ export function ProfileDrawing({
   if (!sec) {
     // Expanded/corrugated or incomplete geometry — keep the recognisable glyph.
     return (
-      <div className={className} style={{ color: "var(--accent)" }}>
+      <div
+        key={p.alias?.fam ?? "none"}
+        className={`fs-appear ${className ?? ""}`}
+        style={{ color: "var(--accent)" }}
+      >
         {p.alias ? <CommandGlyph fam={p.alias.fam} size={64} /> : null}
       </div>
     );
   }
 
   return (
-    <figure className={className} style={{ margin: 0, width: "100%" }}>
+    // Keyed by drawing type so switching profile shape replays the entrance,
+    // while size tweaks on the same shape update in place.
+    <figure key={sec.kind} className={`fs-appear ${className ?? ""}`} style={{ margin: 0, width: "100%" }}>
       <svg
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         width="100%"

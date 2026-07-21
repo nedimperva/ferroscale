@@ -323,6 +323,29 @@ details[open] .chevron-icon {
   transition-duration: var(--motion-medium);
 }
 
+/* Soft entrance for result visuals (profile drawing, breakdown) — replays when
+   the keyed element remounts, e.g. the section type changes. */
+@keyframes fsAppear {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fs-appear {
+  animation: fsAppear var(--motion-medium) ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-appear {
+    animation: none;
+  }
+}
+
 /* Keep details open on lg with Tailwind open attribute workaround */
 @media (min-width: 1024px) {
   details.lg\:open {
