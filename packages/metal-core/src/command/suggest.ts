@@ -5,7 +5,7 @@ import {
   COMMAND_GRADES,
   COMMAND_SIZES,
 } from "./aliases";
-import { cmdParse, dimsToSizeText } from "./parser";
+import { cmdParse, dimsToSizeText, SHEET_LIKE_FAMILIES } from "./parser";
 import type {
   CommandAlias,
   CommandFamily,
@@ -64,6 +64,25 @@ export function presetToSizeText(
 const MAX_RECENT_SUGGESTIONS = 3;
 const MAX_USAGE_SIZES = 4;
 const MAX_USAGE_VALUES = 3;
+
+/** "26.7 kg/m" — the per-metre weight shown under a size chip so the user
+ *  can judge sizes without picking one. Fewer decimals as the number grows. */
+function kgmSub(kgm: number): string {
+  const digits = kgm < 10 ? 2 : kgm < 100 ? 1 : 0;
+  return `${kgm.toFixed(digits)} kg/m`;
+}
+
+/** Per-metre weight for a candidate size, or undefined when it can't be shown
+ *  (sheet-like families are priced per piece, not per metre). */
+function sizeKgmSub(
+  alias: CommandAlias,
+  sizeText: string,
+  settings: CommandParserSettings,
+): string | undefined {
+  if (SHEET_LIKE_FAMILIES.has(alias.fam)) return undefined;
+  const rp = cmdParse(`${alias.alias}${sizeText} `, settings);
+  return rp.kgm != null ? kgmSub(rp.kgm) : undefined;
+}
 
 /**
  * What the user actually types, ranked by the consumer (typically frequency ×
@@ -157,6 +176,7 @@ export function cmdSuggest(
         seen.add(text);
         usageSizeItems.push({
           label: text.replace(/x/g, "×"),
+          sub: SHEET_LIKE_FAMILIES.has(alias.fam) ? undefined : kgmSub(rp.kgm),
           fam: alias.fam,
           ins: text,
           kind: "size",
@@ -189,6 +209,7 @@ export function cmdSuggest(
         ...presetItems,
         ...standard.map<CommandSuggestionItem>((s) => ({
           label: s.replace(/x/g, "×"),
+          sub: sizeKgmSub(alias, s, settings),
           ins: s,
           kind: "size",
           appendProfile: true,

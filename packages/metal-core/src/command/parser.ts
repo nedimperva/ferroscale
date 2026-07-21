@@ -538,15 +538,187 @@ function splitGluedToken(token: string): string[] {
   return pieces && pieces.length >= 2 ? pieces : [token];
 }
 
+// ——— Natural-language normalization ————————————————————————————————————
+//
+// People (and voice input) say "6 meters", "2 pieces", "hea 120" — spaced
+// word forms the strict grammar wouldn't otherwise accept. mergeWordPairs
+// folds those adjacent word pairs into canonical tokens BEFORE glue-splitting,
+// so the reader is forgiving while the canonical round-trip form (inputToQuery)
+// stays untouched. Only fully-committed words merge: the trailing word (when
+// the query has no trailing space) is still being typed and is left alone, so
+// the chip/inline-input display never rewrites what the caret sits on.
+
+/** Spoken/written length units → canonical abbreviation. EN + common BS.
+ *  Includes the bare abbreviations so a spaced "6 m" / "6 mm" also folds. */
+const UNIT_WORDS: Record<string, string> = {
+  m: "m", mm: "mm", cm: "cm", in: "in", ft: "ft",
+  meter: "m", meters: "m", metre: "m", metres: "m",
+  metar: "m", metra: "m", metara: "m",
+  millimeter: "mm", millimeters: "mm", millimetre: "mm", millimetres: "mm",
+  milimetar: "mm", milimetra: "mm", milimetara: "mm",
+  centimeter: "cm", centimeters: "cm", centimetre: "cm", centimetres: "cm",
+  centimetar: "cm", centimetra: "cm", centimetara: "cm",
+  inch: "in", inches: "in",
+  foot: "ft", feet: "ft",
+};
+
+/** Words that mean "pieces" after a count. EN + common BS/DE. */
+const QTY_WORDS = new Set([
+  "pc", "pcs", "piece", "pieces",
+  "kom", "komad", "komada",
+  "stk", "stuck", "stück", "stuecke",
+]);
+
+/** A bare number or an x-joined dimension chain ("120", "40x40x3", "60.3x3.2"). */
+const SIZE_LIKE_RE = /^\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)*$/;
+
 /**
- * Whitespace split + conservative glue-splitting. Shared by cmdParse and the
- * UI token chips so parsing and display always agree. Preserves casing.
+ * Fold spoken word pairs into canonical tokens. `lastCommitted` is false when
+ * the final word is still being typed (no trailing whitespace) — that word is
+ * never merged into or rewritten, keeping the inline input stable.
+ */
+function mergeWordPairs(words: string[], lastCommitted: boolean): string[] {
+  const out: string[] = [];
+  const n = words.length;
+  const committed = (idx: number) => lastCommitted || idx < n - 1;
+  let i = 0;
+  while (i < n) {
+    const w = words[i];
+    const next = i + 1 < n ? words[i + 1] : null;
+    // A pair may fold only when both words are committed.
+    if (next !== null && committed(i) && committed(i + 1)) {
+      const wl = w.toLowerCase();
+      const nl = next.toLowerCase();
+      // "6" "meters" → "6m"
+      if (BARE_NUMBER_RE.test(wl) && UNIT_WORDS[nl]) {
+        out.push(w + UNIT_WORDS[nl]);
+        i += 2;
+        continue;
+      }
+      // "2" "pieces" / "2" "kom" → "x2"
+      if (BARE_NUMBER_RE.test(wl) && QTY_WORDS.has(nl)) {
+        out.push("x" + w);
+        i += 2;
+        continue;
+      }
+      // "x" "2" / "×" "2" → "x2"
+      if ((wl === "x" || wl === "×") && BARE_NUMBER_RE.test(nl)) {
+        out.push("x" + next);
+        i += 2;
+        continue;
+      }
+      // "hea" "120" → "hea120"  (also "l" "50x50x5", "t" "30x4")
+      if (findAliasByKey(wl) && SIZE_LIKE_RE.test(nl)) {
+        out.push(w + next);
+        i += 2;
+        continue;
+      }
+    }
+    out.push(w);
+    i += 1;
+  }
+  return out;
+}
+
+/**
+ * Whitespace split + natural-language folding + conservative glue-splitting.
+ * Shared by cmdParse and the UI token chips so parsing and display always
+ * agree. Preserves casing.
  */
 export function cmdTokenize(query: string): string[] {
-  const words = (query || "").trim().split(/\s+/).filter(Boolean);
+  const raw = query || "";
+  const words = raw.trim().split(/\s+/).filter(Boolean);
+  // The final word is committed only when the query ends in whitespace.
+  const lastCommitted = words.length > 0 && /\s$/.test(raw);
+  const merged = mergeWordPairs(words, lastCommitted);
   const out: string[] = [];
-  for (const word of words) out.push(...splitGluedToken(word));
+  for (const word of merged) out.push(...splitGluedToken(word));
   return out;
+}
+
+// ——— Typo correction (did-you-mean) ————————————————————————————————————
+//
+// Optimal string alignment distance (restricted Damerau-Levenshtein): an
+// adjacent transposition ("hae"→"hea") counts as one edit — the most common
+// typo, which plain Levenshtein scores as two. All strings here are tiny
+// (aliases, grade codes, size texts) so the O(mn) table is negligible.
+
+function osaDistance(a: string, b: string): number {
+  const m = a.length;
+  const k = b.length;
+  if (!m) return k;
+  if (!k) return m;
+  const d: number[][] = Array.from({ length: m + 1 }, () =>
+    new Array<number>(k + 1).fill(0),
+  );
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= k; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= k; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost,
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return d[m][k];
+}
+
+// Alias keys ("hea", "shs", "l", …) — recovered from the shared regex so
+// there's one source of truth for the alias set.
+const ALIAS_KEYS = COMMAND_ALIAS_RE.split("|");
+const GRADE_ALIASES_ALL = COMMAND_GRADES.flatMap((g) => g.aliases);
+
+/** Closest candidate within `maxDist` edits, or undefined (exact ≠ typo). */
+function nearestFrom(
+  word: string,
+  candidates: string[],
+  maxDist: number,
+): string | undefined {
+  let best: string | undefined;
+  let bestD = Infinity;
+  for (const c of candidates) {
+    if (c === word) return undefined;
+    const dist = osaDistance(word, c);
+    if (dist < bestD) {
+      bestD = dist;
+      best = c;
+    }
+  }
+  return best !== undefined && bestD <= maxDist ? best : undefined;
+}
+
+/** For an unrecognized whole token: a near grade code, or a near alias with
+ *  any trailing size kept ("hae120" → "hea120", "s2355" → "s235"). */
+function suggestForUnknownToken(tok: string): string | undefined {
+  const grade = nearestFrom(tok, GRADE_ALIASES_ALL, 1);
+  if (grade) return grade;
+  const m = tok.match(/^([a-z]+)(.*)$/);
+  if (m) {
+    const near = nearestFrom(m[1], ALIAS_KEYS, 1);
+    if (near) return near + m[2];
+  }
+  return undefined;
+}
+
+/** For an off-catalog standard size ("hea125"): the nearest real size text.
+ *  Manual free-form dims are too ambiguous to guess, so they get nothing. */
+function suggestForUnknownSize(
+  alias: CommandAlias,
+  size: string,
+): string | undefined {
+  if (!alias.profileId) return undefined;
+  const profile = getProfileById(alias.profileId);
+  if (!profile || profile.mode !== "standard") return undefined;
+  const texts = profile.sizes.map((s) =>
+    s.id.startsWith(alias.alias) ? s.id.slice(alias.alias.length) : s.id,
+  );
+  return nearestFrom(size, texts, 1);
 }
 
 export function cmdParse(
@@ -634,6 +806,7 @@ export function cmdParse(
         code: "unknownToken",
         token: tk,
         message: `Didn't understand "${tk}".`,
+        suggestion: suggestForUnknownToken(tk),
       });
     }
   }
@@ -682,6 +855,7 @@ export function cmdParse(
         token: size,
         message: `No ${alias.name} size "${size}".`,
         params: { profile: alias.name, size },
+        suggestion: suggestForUnknownSize(alias, size),
       });
       return;
     }

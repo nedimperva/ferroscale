@@ -5,6 +5,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.7.0] - 2026-07-20
+
+### Added
+
+- **The hero metric counts up.** When a query settles, the big weight/price number tweens to its new value (easeOutCubic, ~0.4s) instead of snapping — animated in the target's own unit so it never flips kg↔t mid-count, and instantly snapped when reduced motion is requested
+- **The profile drawing eases in** when you switch profile shape (a soft fade-and-rise), so the result feels like it arrives rather than blinks; disabled under reduced motion, and size tweaks on the same shape update in place without re-animating
+- **Dimensioned profile drawings.** The result breakdown (mobile sheet + desktop rail) now shows a scaled cross-section of the current profile instead of a flat glyph — a real I-beam / channel / tee / hollow section / pipe / angle / plate outline with **every dimension labelled in mm on the picture**: overall width and height as arrowed dimension lines, and each thickness (web, flange, wall, leg, root radius, pattern height) as a leader pointing at the exact feature. The rolled sections (I-beam / channel / tee) draw their real rounded root fillets at the web/flange junctions. Standard profiles read their geometry from the shared spec records; manual families from the parsed dimensions; expanded/corrugated keep the glyph
+- **The command bar types with you.** As you type a profile (or the start of a query you've run before), a faint inline completion appears after the caret — press **Tab** or **→** to accept it, or just keep typing. Works on phone (tap the ghost text), the medium command card, and the desktop workspace
+- **Did-you-mean fixes.** A mistyped profile, grade, or off-catalog size no longer just fails: the parse line offers a one-tap correction (`hae120` → **hea120**, `hea125` → **120**, a fat-fingered grade → the nearest real code). Corrections use edit distance that counts a transposition as a single typo, and are never applied automatically
+- **Type it the way you'd say it.** The parser now accepts natural, spaced forms — `hea 120`, `6 meters` / `6 m`, `2 pieces` / `2 kom`, `x 2` — folding them into the canonical grammar while it reads. The strict token form is still what round-trips into share links and saved entries (EN + common BS/DE unit and quantity words)
+- **↑/↓ query history.** On the desktop inputs, Up recalls earlier queries and Down walks back toward what you were typing — terminal-style, no reach for the mouse
+
+### Changed
+
+- Size suggestion chips now show the per-metre weight (e.g. `120 · 26.7 kg/m`) so you can judge a size before picking it; sheet/plate families stay per-piece and show none
+
+### Fixed
+
+- Recent queries no longer pile up near-duplicates while you build a single calculation. Each idle pause used to record the raw text — including half-typed trailing tokens like a lone `@` — so refining one query left a trail (`… 304`, `… 304 @`, `… 304 @6`). Now the settled query is recorded in canonical form (dropping dangling partials) and a refinement supersedes the shorter version it grew from, so one calculation leaves one recent
+
+---
+
 ## [3.6.2] - 2026-07-03
 
 ### Changed

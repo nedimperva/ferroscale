@@ -4,16 +4,21 @@ import { useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { useCountUp } from "@/hooks/useCountUp";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
+import { ProfileDrawing } from "../profile-drawing";
 import { KIND_BG } from "../command-constants";
 import {
+  applyIssueSuggestion,
+  computeGhost,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "../command-copy";
+import { GhostField } from "../ghost-field";
 import type { CommandDesktopProps } from "./desktop-props";
 import { DeskTopbar } from "./desk-sidebar";
 import { CloseIcon, DeskBtn, DeskIcon, DeskTokenChip, Kbd, SectionLabel } from "./desk-atoms";
@@ -55,6 +60,10 @@ export function DeskCalcView({
   const t = useTranslations("command");
   const isW = mode === "weight";
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
+  // ↑/↓ recall through the session tape; draft holds the in-progress query so
+  // ↓ past the newest entry restores it.
+  const historyIdxRef = useRef(-1);
+  const draftRef = useRef("");
 
   const queryTokens = useMemo(() => cmdTokenize(query), [query]);
   // The trailing piece (no whitespace after it) is still being typed — it
@@ -63,6 +72,8 @@ export function DeskCalcView({
   const chipTokens = hasPartial ? queryTokens.slice(0, -1) : queryTokens;
   const partial = hasPartial ? queryTokens[queryTokens.length - 1] : "";
   const chipPrefix = chipTokens.length > 0 ? chipTokens.join(" ") + " " : "";
+  // Faint completion after the caret (profile letters / recent-query prefix).
+  const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
 
   const focusInputAtEnd = useCallback(() => {
     requestAnimationFrame(() => {
@@ -87,13 +98,23 @@ export function DeskCalcView({
     focusInputAtEnd();
   };
 
-  const heroVal = isW
+  // Hero metric counts up when the query settles (see useCountUp).
+  const weightUnit = p.totalKg != null ? fsWeightUnit(p.totalKg) : "kg";
+  const heroTarget = isW
     ? p.totalKg != null
-      ? fsWeight(p.totalKg)
-      : "—"
-    : p.totalAmount != null
-      ? fsMoney(p.totalAmount)
-      : "—";
+      ? weightUnit === "t"
+        ? p.totalKg / 1000
+        : p.totalKg
+      : null
+    : p.totalAmount ?? null;
+  const heroAnim = useCountUp(heroTarget, isW ? `w-${weightUnit}` : "price");
+  const heroVal =
+    heroAnim == null
+      ? "—"
+      : heroAnim.toLocaleString("en-US", {
+          minimumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+          maximumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+        });
 
   const tapeRows = useMemo(
     () =>
@@ -154,11 +175,15 @@ export function DeskCalcView({
                 onRemove={() => removeTokenAt(i)}
               />
             ))}
-            <input
+            <GhostField
               ref={inputRef}
               type="text"
+              ghost={ghost}
               value={partial}
-              onChange={(e) => setQuery(chipPrefix + e.target.value)}
+              onChange={(e) => {
+                historyIdxRef.current = -1;
+                setQuery(chipPrefix + e.target.value);
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   if (p.valid) {
@@ -175,9 +200,53 @@ export function DeskCalcView({
                   }
                   return;
                 }
+                // Accept the ghost completion (Tab, or → at the caret's end).
+                if (e.key === "Tab" && ghost) {
+                  e.preventDefault();
+                  onSuggest(sug.items[0]);
+                  return;
+                }
+                if (
+                  e.key === "ArrowRight" &&
+                  ghost &&
+                  e.currentTarget.selectionStart === e.currentTarget.value.length &&
+                  e.currentTarget.selectionStart === e.currentTarget.selectionEnd
+                ) {
+                  e.preventDefault();
+                  onSuggest(sug.items[0]);
+                  return;
+                }
                 if (e.key === "Escape") {
                   e.preventDefault();
                   onNew();
+                  return;
+                }
+                // ↑ recalls older tape entries; ↓ walks back toward the draft.
+                if (e.key === "ArrowUp" && sessionTape.length > 0) {
+                  e.preventDefault();
+                  if (historyIdxRef.current === -1) draftRef.current = query;
+                  historyIdxRef.current = Math.min(
+                    historyIdxRef.current + 1,
+                    sessionTape.length - 1,
+                  );
+                  setQuery(sessionTape[historyIdxRef.current] + " ");
+                  focusInputAtEnd();
+                  return;
+                }
+                if (e.key === "ArrowDown") {
+                  if (historyIdxRef.current >= 0) {
+                    e.preventDefault();
+                    const nextIdx = historyIdxRef.current - 1;
+                    historyIdxRef.current = nextIdx;
+                    setQuery(nextIdx < 0 ? draftRef.current : sessionTape[nextIdx] + " ");
+                    focusInputAtEnd();
+                    return;
+                  }
+                  // Not browsing history → open chip navigation.
+                  if (sug.items.length > 0) {
+                    e.preventDefault();
+                    firstSuggestionRef.current?.focus();
+                  }
                   return;
                 }
                 // Empty partial + backspace pulls the last chip back into
@@ -193,12 +262,6 @@ export function DeskCalcView({
                   focusInputAtEnd();
                   return;
                 }
-                // Arrow-down opens chip navigation; Tab stays out of the
-                // chip row entirely so typing isn't trapped.
-                if (e.key === "ArrowDown" && sug.items.length > 0) {
-                  e.preventDefault();
-                  firstSuggestionRef.current?.focus();
-                }
               }}
               autoFocus
               autoCapitalize="off"
@@ -208,7 +271,9 @@ export function DeskCalcView({
                 queryTokens.length === 0 ? t("query.placeholderExample") : ""
               }
               aria-label={t("query.aria")}
-              className="flex-1 bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint min-w-[120px]"
+              wrapperClassName="flex-1 min-w-[120px]"
+              inputClassName="bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint"
+              mirrorClassName="font-mono text-base font-semibold"
               // The command-line box carries the permanent accent glow; the
               // global :focus-visible ring on the inner input is just noise.
               style={{ outline: "none" }}
@@ -377,11 +442,35 @@ export function DeskCalcView({
                 </span>
               ) : p.issues.length > 0 ? (
                 <span
-                  className="font-mono text-[13px]"
+                  className="font-mono text-[13px] flex items-center gap-2 flex-wrap"
                   style={{ color: "var(--amber-text)" }}
                   role="status"
                 >
-                  {formatCommandIssue(t, p.issues[0])}
+                  <span>{formatCommandIssue(t, p.issues[0])}</span>
+                  {p.issues[0].suggestion && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuery(
+                          applyIssueSuggestion(
+                            query,
+                            p.issues[0].token,
+                            p.issues[0].suggestion!,
+                          ),
+                        );
+                        focusInputAtEnd();
+                      }}
+                      className="rounded-full font-bold cursor-pointer"
+                      style={{
+                        padding: "2px 9px",
+                        background: "var(--accent-surface)",
+                        color: "var(--accent-text)",
+                        border: "1px solid var(--accent-border)",
+                      }}
+                    >
+                      {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
+                    </button>
+                  )}
                 </span>
               ) : (
                 <span className="font-mono text-[13px] text-muted-faint">
@@ -724,22 +813,20 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
       {rows && r ? (
         <>
           <div
-            className="flex items-center gap-[11px]"
+            className="rounded-xl flex items-center justify-center mb-3"
+            style={{ background: "var(--surface-inset)", padding: "12px 8px 8px" }}
+          >
+            <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+          </div>
+          <div
+            className="min-w-0"
             style={{ paddingBottom: 12, borderBottom: "1px solid var(--border-faint)" }}
           >
-            <div
-              className="flex items-center justify-center flex-shrink-0 rounded-[11px] text-foreground"
-              style={{ width: 40, height: 40, background: "var(--surface-inset)" }}
-            >
-              {p.alias && <CommandGlyph fam={p.alias.fam} size={23} />}
+            <div className="font-extrabold text-[15px] text-foreground" style={{ letterSpacing: -0.2 }}>
+              {formatCommandParseName(t, p)}
             </div>
-            <div className="min-w-0">
-              <div className="font-extrabold text-[15px] text-foreground" style={{ letterSpacing: -0.2 }}>
-                {formatCommandParseName(t, p)}
-              </div>
-              <div className="font-mono text-[10.5px] text-muted mt-px">
-                {p.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
-              </div>
+            <div className="font-mono text-[10.5px] text-muted mt-px">
+              {p.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
             </div>
           </div>
           <div style={{ paddingTop: 4 }}>

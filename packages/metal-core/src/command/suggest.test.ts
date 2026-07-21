@@ -85,6 +85,19 @@ describe("cmdSuggest with presets", () => {
     expect(sug.items[0].kind).toBe("size");
   });
 
+  it("shows a per-metre weight under standard size chips", () => {
+    const sug = cmdSuggest("hea", SETTINGS);
+    const size = sug.items.find((i) => i.kind === "size");
+    expect(size?.sub).toMatch(/kg\/m$/);
+  });
+
+  it("omits the per-metre weight for sheet-like families (priced per piece)", () => {
+    const sug = cmdSuggest("plt", SETTINGS);
+    const sizes = sug.items.filter((i) => i.kind === "size");
+    expect(sizes.length).toBeGreaterThan(0);
+    expect(sizes.every((i) => i.sub === undefined)).toBe(true);
+  });
+
   it("grade chips use the primary alias as insert text", () => {
     const sug = cmdSuggest("hea120 6m x2 ", SETTINGS);
     expect(sug.hint).toBe("Grade (optional)");

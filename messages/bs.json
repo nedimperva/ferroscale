@@ -94,7 +94,8 @@
     "query": {
       "placeholder": "upišite ili dodirnite profil...",
       "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
-      "aria": "FerroScale komandni upit"
+      "aria": "FerroScale komandni upit",
+      "acceptGhost": "Dovrši: {text}"
     },
     "keypad": {
       "space": "razmak",
@@ -139,7 +140,8 @@
     "issues": {
       "unknownToken": "Nije prepoznato \"{token}\"",
       "unknownSize": "Ne postoji {profile} veličina \"{size}\"",
-      "invalidQty": "Količina mora biti najmanje 1"
+      "invalidQty": "Količina mora biti najmanje 1",
+      "didYouMean": "Jeste li mislili {suggestion}?"
     },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",

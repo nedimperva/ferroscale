@@ -10,6 +10,7 @@ import type {
   CommandFamily,
   CommandParseIssue,
   CommandParseResult,
+  CommandSuggestion,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
@@ -25,6 +26,45 @@ export function familyForInput(input: CalculationInput): CommandFamily | undefin
 export function formatWeightPriceSubtitle(result: CalculationResult): string {
   const sym = CURRENCY_SYMBOLS[result.currency] ?? "€";
   return `${fsWeight(result.totalWeightKg)} ${fsWeightUnit(result.totalWeightKg)} · ${sym} ${fsMoney(result.grandTotalAmount)}`;
+}
+
+/**
+ * The faint inline completion to draw after the caret: the remainder of the top
+ * suggestion when it cleanly extends the trailing partial token (profile letters
+ * being typed, or a recent-query prefix). Empty when there's nothing
+ * unambiguous to finish — the caller then shows no ghost. Accepting it means
+ * inserting `sug.items[0]`.
+ */
+export function computeGhost(partial: string, sug: CommandSuggestion): string {
+  if (!partial) return "";
+  const top = sug.items[0];
+  if (!top || !top.replaceLast) return "";
+  const ins = top.ins;
+  if (
+    ins.length > partial.length &&
+    ins.toLowerCase().startsWith(partial.toLowerCase())
+  ) {
+    return ins.slice(partial.length);
+  }
+  return "";
+}
+
+/**
+ * Apply a did-you-mean fix: swap the first (case-insensitive) occurrence of the
+ * offending token for the suggested text, keeping a trailing space so the query
+ * re-chips cleanly. Shared by the phone, medium, and desktop issue lines.
+ */
+export function applyIssueSuggestion(
+  query: string,
+  token: string,
+  replacement: string,
+): string {
+  const at = query.toLowerCase().indexOf(token.toLowerCase());
+  const next =
+    at < 0
+      ? query
+      : query.slice(0, at) + replacement + query.slice(at + token.length);
+  return /\s$/.test(next) ? next : next + " ";
 }
 
 export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): string {

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
+import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { SheetShell } from "./sheet-shell";
@@ -101,6 +102,9 @@ export function CommandResultBreakdown({
         {p.gradeLabel && (
           <span className="text-xs font-semibold text-muted">· {p.gradeLabel}</span>
         )}
+      </div>
+      <div className="rounded-2xl border border-border-faint bg-[var(--surface)] flex items-center justify-center px-4 py-4 mb-3">
+        <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
       </div>
       {columns === 2 ? (
         <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] grid grid-cols-2 divide-x divide-border-faint">
