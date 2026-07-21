@@ -151,6 +151,39 @@ function fitBox(bw: number, bh: number) {
   };
 }
 
+/** Build a closed path through `pts`, rounding each vertex whose `radii` entry
+ *  is > 0 with an arc tangent to both adjacent edges. Used to give the rolled
+ *  sections their real root fillets at the web/flange junctions. */
+function roundedPath(pts: [number, number][], radii: number[]): string {
+  const n = pts.length;
+  const norm = (ax: number, ay: number): [number, number] => {
+    const m = Math.hypot(ax, ay) || 1;
+    return [ax / m, ay / m];
+  };
+  let d = "";
+  for (let i = 0; i < n; i++) {
+    const [cx, cy] = pts[i];
+    const [px, py] = pts[(i - 1 + n) % n];
+    const [nx, ny] = pts[(i + 1) % n];
+    const r = radii[i] ?? 0;
+    if (r <= 0.5) {
+      d += i === 0 ? `M${cx},${cy}` : ` L${cx},${cy}`;
+      continue;
+    }
+    const [v1x, v1y] = norm(px - cx, py - cy);
+    const [v2x, v2y] = norm(nx - cx, ny - cy);
+    const rr = Math.min(r, Math.hypot(px - cx, py - cy) / 2, Math.hypot(nx - cx, ny - cy) / 2);
+    const t1x = cx + v1x * rr;
+    const t1y = cy + v1y * rr;
+    const t2x = cx + v2x * rr;
+    const t2y = cy + v2y * rr;
+    const sweep = v1x * v2y - v1y * v2x < 0 ? 1 : 0;
+    d += i === 0 ? `M${t1x},${t1y}` : ` L${t1x},${t1y}`;
+    d += ` A${rr},${rr} 0 0 ${sweep} ${t2x},${t2y}`;
+  }
+  return `${d} Z`;
+}
+
 function Label({
   x,
   y,
@@ -252,42 +285,50 @@ function renderSection(sec: Section): React.ReactNode {
       const Y = f.py;
       const l = (sec.b - sec.tw) / 2;
       const rr = (sec.b + sec.tw) / 2;
+      // Fillet radius in px, kept within the flange/web thickness it sits in.
+      const rp = Math.min(sec.r * f.s, sec.tf * f.s, sec.tw * f.s);
       let d: string;
       let webFx: number;
       let filletFx: number;
       let filletFy: number;
       if (sec.kind === "ibeam") {
-        d = [
-          `M${X(0)},${Y(0)}`, `L${X(sec.b)},${Y(0)}`, `L${X(sec.b)},${Y(sec.tf)}`,
-          `L${X(rr)},${Y(sec.tf)}`, `L${X(rr)},${Y(sec.h - sec.tf)}`,
-          `L${X(sec.b)},${Y(sec.h - sec.tf)}`, `L${X(sec.b)},${Y(sec.h)}`,
-          `L${X(0)},${Y(sec.h)}`, `L${X(0)},${Y(sec.h - sec.tf)}`,
-          `L${X(l)},${Y(sec.h - sec.tf)}`, `L${X(l)},${Y(sec.tf)}`,
-          `L${X(0)},${Y(sec.tf)}`, "Z",
-        ].join(" ");
+        d = roundedPath(
+          [
+            [X(0), Y(0)], [X(sec.b), Y(0)], [X(sec.b), Y(sec.tf)],
+            [X(rr), Y(sec.tf)], [X(rr), Y(sec.h - sec.tf)],
+            [X(sec.b), Y(sec.h - sec.tf)], [X(sec.b), Y(sec.h)],
+            [X(0), Y(sec.h)], [X(0), Y(sec.h - sec.tf)],
+            [X(l), Y(sec.h - sec.tf)], [X(l), Y(sec.tf)], [X(0), Y(sec.tf)],
+          ],
+          [0, 0, 0, rp, rp, 0, 0, 0, 0, rp, rp, 0],
+        );
         webFx = X(sec.b / 2);
-        filletFx = X(rr);
-        filletFy = Y(sec.tf);
+        filletFx = X(rr) + rp * 0.4;
+        filletFy = Y(sec.tf) + rp * 0.4;
       } else if (sec.kind === "channel") {
-        d = [
-          `M${X(0)},${Y(0)}`, `L${X(sec.b)},${Y(0)}`, `L${X(sec.b)},${Y(sec.tf)}`,
-          `L${X(sec.tw)},${Y(sec.tf)}`, `L${X(sec.tw)},${Y(sec.h - sec.tf)}`,
-          `L${X(sec.b)},${Y(sec.h - sec.tf)}`, `L${X(sec.b)},${Y(sec.h)}`,
-          `L${X(0)},${Y(sec.h)}`, "Z",
-        ].join(" ");
+        d = roundedPath(
+          [
+            [X(0), Y(0)], [X(sec.b), Y(0)], [X(sec.b), Y(sec.tf)],
+            [X(sec.tw), Y(sec.tf)], [X(sec.tw), Y(sec.h - sec.tf)],
+            [X(sec.b), Y(sec.h - sec.tf)], [X(sec.b), Y(sec.h)], [X(0), Y(sec.h)],
+          ],
+          [0, 0, 0, rp, rp, 0, 0, 0],
+        );
         webFx = X(sec.tw / 2);
-        filletFx = X(sec.tw);
-        filletFy = Y(sec.tf);
+        filletFx = X(sec.tw) + rp * 0.4;
+        filletFy = Y(sec.tf) + rp * 0.4;
       } else {
-        d = [
-          `M${X(0)},${Y(0)}`, `L${X(sec.b)},${Y(0)}`, `L${X(sec.b)},${Y(sec.tf)}`,
-          `L${X(rr)},${Y(sec.tf)}`, `L${X(rr)},${Y(sec.h)}`,
-          `L${X(l)},${Y(sec.h)}`, `L${X(l)},${Y(sec.tf)}`,
-          `L${X(0)},${Y(sec.tf)}`, "Z",
-        ].join(" ");
+        d = roundedPath(
+          [
+            [X(0), Y(0)], [X(sec.b), Y(0)], [X(sec.b), Y(sec.tf)],
+            [X(rr), Y(sec.tf)], [X(rr), Y(sec.h)],
+            [X(l), Y(sec.h)], [X(l), Y(sec.tf)], [X(0), Y(sec.tf)],
+          ],
+          [0, 0, 0, rp, 0, 0, rp, 0],
+        );
         webFx = X(sec.b / 2);
-        filletFx = X(rr);
-        filletFy = Y(sec.tf);
+        filletFx = X(rr) + rp * 0.4;
+        filletFy = Y(sec.tf) + rp * 0.4;
       }
       const leaders = [
         { value: `tf ${fmt(sec.tf)}`, fx: X(sec.b * 0.82), fy: Y(sec.tf / 2) },
