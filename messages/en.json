@@ -297,7 +297,9 @@
       "removeFromCompare": "Remove from compare",
       "emptyCompareTray": "empty — hit Compare to collect",
       "breakdown": "BREAKDOWN",
-      "breakdownEmpty": "the full breakdown appears as you type"
+      "breakdownEmpty": "the full breakdown appears as you type",
+      "totalCostLabel": "TOTAL COST",
+      "perPieceLabel": "PER PIECE"
     },
     "suggest": {
       "standardSize": "standard size",

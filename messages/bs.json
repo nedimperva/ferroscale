@@ -297,7 +297,9 @@
       "removeFromCompare": "Ukloni iz poređenja",
       "emptyCompareTray": "prazno — kliknite Poredi za dodavanje",
       "breakdown": "DETALJI",
-      "breakdownEmpty": "detalji rezultata se prikazuju dok kucate"
+      "breakdownEmpty": "detalji rezultata se prikazuju dok kucate",
+      "totalCostLabel": "UKUPNA CIJENA",
+      "perPieceLabel": "PO KOMADU"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
