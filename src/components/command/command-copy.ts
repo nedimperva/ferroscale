@@ -149,6 +149,44 @@ export function formatCommandParseName(
   return parsed.hasSize ? `${label} ${parsed.size.replace(/x/g, "×")}` : label;
 }
 
+/**
+ * A clean, paste-ready plain-text summary of a live result — the payload of the
+ * calculator's single Copy action. Columns are space-padded so labelled rows
+ * line up in a monospace/notes context. Returns null when the query isn't a
+ * complete, valid calculation.
+ */
+export function buildCommandSummary(
+  t: CommandT,
+  p: CommandParseResult,
+): string | null {
+  if (!p.valid || !p.calc || p.kgm == null) return null;
+  const r = p.calc.result;
+  const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
+  const name = formatCommandParseName(t, p) ?? p.name ?? "";
+  const grade = p.gradeLabel ?? r.gradeLabel;
+
+  const header = grade ? `${name} · ${grade}` : name;
+  const meta = `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${p.kgm.toFixed(2)} kg/m`;
+
+  const rows: Array<[string, string]> = [];
+  if (p.totalKg != null) {
+    rows.push([t("result.totalWeight"), `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`]);
+  }
+  if (p.totalAmount != null) {
+    rows.push([t("result.totalCost"), `${sym} ${fsMoney(p.totalAmount)}`]);
+    rows.push([
+      t("result.rate"),
+      `${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`,
+    ]);
+  }
+
+  const labelWidth = rows.reduce((w, [label]) => Math.max(w, label.length), 0);
+  const body = rows.map(([label, value]) => `${label.padEnd(labelWidth + 3)}${value}`).join("\n");
+  const divider = "─".repeat(Math.max(header.length, meta.length));
+
+  return `${header}\n${meta}\n${divider}\n${body}`;
+}
+
 function formatProfileLabel(t: CommandT, label: string): string {
   switch (label) {
     case "Round":

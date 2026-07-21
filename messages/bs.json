@@ -60,6 +60,7 @@
       "newCalculation": "Novi izračun",
       "openArrow": "Otvori ->",
       "copyValue": "Kopiraj vrijednost",
+      "copySummary": "Kopiraj sažetak",
       "shareLink": "Podijeli link"
     },
     "toast": {
@@ -71,6 +72,7 @@
       "addedToCompare": "Dodano za poređenje",
       "copied": "Kopirano u međuspremnik",
       "copiedValue": "Vrijednost kopirana",
+      "copiedSummary": "Sažetak kopiran",
       "linkCopied": "Link kopiran"
     },
     "aria": {
@@ -162,6 +164,7 @@
       "waste": "Otpad +{percent}%",
       "vat": "PDV {percent}%",
       "totalCost": "Ukupna cijena",
+      "pcs": "kom",
       "geometry": "Geometrija",
       "pricing": "Cijene",
       "unitPrice": "Jedinična cijena",

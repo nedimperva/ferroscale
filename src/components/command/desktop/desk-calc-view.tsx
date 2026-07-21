@@ -103,8 +103,7 @@ export function DeskCalcView({
   onRemoveTapeEntry,
   onClearTape,
   onSave,
-  onCopy,
-  onCopyValue,
+  onCopySummary,
   onShareLink,
   onNew,
   onSuggest,
@@ -620,20 +619,12 @@ export function DeskCalcView({
                   {t("common.compare")}
                 </button>
                 <PanelIconBtn
-                  onClick={onCopy}
+                  onClick={onCopySummary}
                   disabled={!p.valid}
-                  title={t("common.copy")}
-                  ariaLabel={t("common.copy")}
+                  title={t("common.copySummary")}
+                  ariaLabel={t("common.copySummary")}
                 >
                   <DeskIcon name="copy" stroke="currentColor" />
-                </PanelIconBtn>
-                <PanelIconBtn
-                  onClick={onCopyValue}
-                  disabled={!p.valid}
-                  title={t("common.copyValue")}
-                  ariaLabel={t("common.copyValue")}
-                >
-                  <DeskIcon name="calc" stroke="currentColor" />
                 </PanelIconBtn>
                 <PanelIconBtn
                   onClick={onAddToProject}
