@@ -36,8 +36,8 @@ export interface CommandDesktopProps {
   compareItems: CompareItem[];
   projects: Project[];
   onSave: () => void;
-  onCopy: () => void;
-  onCopyValue: () => void;
+  /** Copy a clean, paste-ready text summary of the current result. */
+  onCopySummary: () => void;
   onShareLink: () => void;
   onNew: () => void;
   onSuggest: (item: CommandSuggestionItem) => void;

@@ -60,6 +60,7 @@
       "newCalculation": "New calculation",
       "openArrow": "Open ->",
       "copyValue": "Copy value",
+      "copySummary": "Copy summary",
       "shareLink": "Share link"
     },
     "toast": {
@@ -71,6 +72,7 @@
       "addedToCompare": "Added to compare",
       "copied": "Copied to clipboard",
       "copiedValue": "Value copied",
+      "copiedSummary": "Summary copied",
       "linkCopied": "Link copied"
     },
     "aria": {
@@ -162,6 +164,7 @@
       "waste": "Waste +{percent}%",
       "vat": "VAT {percent}%",
       "totalCost": "Total cost",
+      "pcs": "pcs",
       "geometry": "Geometry",
       "pricing": "Pricing",
       "unitPrice": "Unit price",
@@ -297,7 +300,9 @@
       "removeFromCompare": "Remove from compare",
       "emptyCompareTray": "empty — hit Compare to collect",
       "breakdown": "BREAKDOWN",
-      "breakdownEmpty": "the full breakdown appears as you type"
+      "breakdownEmpty": "the full breakdown appears as you type",
+      "totalCostLabel": "TOTAL COST",
+      "perPieceLabel": "PER PIECE"
     },
     "suggest": {
       "standardSize": "standard size",

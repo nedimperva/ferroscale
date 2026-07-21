@@ -33,6 +33,7 @@ import {
   formatCommandIssue,
   formatCommandParseName,
   formatCommandSuggestionLabel,
+  buildCommandSummary,
 } from "./command-copy";
 import { GhostField } from "./ghost-field";
 import { KIND_BG } from "./command-constants";
@@ -258,6 +259,15 @@ export function CommandShell() {
     navigator.clipboard?.writeText(text).catch(() => {});
     showToast(t("toast.copiedValue"));
   }, [p, isW, sym, showToast, t]);
+
+  // Desktop's single Copy action: a clean, paste-ready text summary of the
+  // live result (replaces the old copy-query / copy-value pair).
+  const copySummary = useCallback(() => {
+    const summary = buildCommandSummary(t, p);
+    if (!summary) return;
+    navigator.clipboard?.writeText(summary).catch(() => {});
+    showToast(t("toast.copiedSummary"));
+  }, [t, p, showToast]);
 
   const shareLink = useCallback(() => {
     if (!p.valid) return;
@@ -512,11 +522,7 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
-          onCopy={() => {
-            navigator.clipboard?.writeText(query).catch(() => {});
-            showToast(t("toast.copied"));
-          }}
-          onCopyValue={copyValue}
+          onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
           onSuggest={onSuggest}

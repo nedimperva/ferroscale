@@ -5,7 +5,7 @@ import { usePathname } from "@/i18n/navigation";
 import { getAppTabFromPathname } from "@/lib/app-shell";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CommandDesktopProps, DeskView } from "./desktop-props";
-import { DeskSidebar } from "./desk-sidebar";
+import { DeskTopTabs } from "./desk-top-tabs";
 import { DeskCalcView } from "./desk-calc-view";
 import { DeskCompareView } from "./desk-compare-view";
 import { DeskSavedView } from "./desk-saved-view";
@@ -42,6 +42,14 @@ export function CommandDesktop(props: CommandDesktopProps) {
     requestAnimationFrame(() => focusInputAtEnd());
   }, [focusInputAtEnd]);
 
+  // Top-bar "New" (mirrors ⌘K): clear the line, jump to the calculator, focus.
+  const { onNew } = props;
+  const startNewCalc = useCallback(() => {
+    setView("calc");
+    onNew();
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }, [onNew]);
+
   const pickInput = useCallback(
     (input: CalculationInput) => {
       props.onLoadInput(input);
@@ -53,7 +61,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
   // ⌘K from anywhere → new calculation: clear the line, focus it.
   // A printable key outside any field routes into the command line
   // (focus happens during keydown, so the character lands in the input).
-  const { onNew } = props;
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -87,12 +94,13 @@ export function CommandDesktop(props: CommandDesktopProps) {
   };
 
   return (
-    <div className="flex flex-1 min-w-0 overflow-hidden">
-      <DeskSidebar
+    <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+      <DeskTopTabs
         dark={props.dark}
         view={view}
         setView={setView}
         counts={counts}
+        onNew={startNewCalc}
         onToggleTheme={props.onToggleTheme}
       />
       {view === "calc" && (
