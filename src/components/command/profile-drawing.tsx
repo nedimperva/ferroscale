@@ -3,12 +3,13 @@ import { getStandardProfileSpecRecord, toMillimeters } from "@ferroscale/metal-c
 import { CommandGlyph } from "./command-glyph";
 
 /**
- * A scaled, dimensioned cross-section of the current profile — the flat glyph
- * upgraded into something that reads like an engineering drawing. Standard
- * profiles (I-beams, channels, tees) take their geometry from the shared spec
- * records (web/flange thickness, root radius); manual families read their
- * parsed dimensions. Shapes we can't meaningfully dimension (expanded /
- * corrugated) fall back to the plain glyph.
+ * A scaled, fully-dimensioned cross-section of the current profile — the flat
+ * glyph upgraded into an engineering drawing that labels every dimension in mm
+ * directly on the picture: overall width/height with arrowheaded dimension
+ * lines, and each thickness (web, flange, wall, root radius, …) with a leader
+ * pointing at the feature it measures. Standard profiles (I-beams, channels,
+ * tees) take their geometry from the shared spec records; manual families from
+ * the parsed dimensions. Expanded/corrugated fall back to the plain glyph.
  */
 
 type Section =
@@ -106,87 +107,142 @@ function resolveSection(p: CommandParseResult): Section | null {
   }
 }
 
-/* ── SVG frame ───────────────────────────────────────────────────────────── */
+/* ── SVG frame & primitives ──────────────────────────────────────────────── */
 
-const VB_W = 240;
-const VB_H = 170;
-const MARGIN = { l: 22, r: 48, t: 28, b: 22 };
-const CW = VB_W - MARGIN.l - MARGIN.r;
-const CH = VB_H - MARGIN.t - MARGIN.b;
-const MIN_THICK = 7; // keep very thin sections/walls visible
+const VB_W = 320;
+const VB_H = 236;
+// Room around the shape for the dimension lines and leader labels.
+const M = { t: 34, r: 94, b: 22, l: 54 };
+const CW = VB_W - M.l - M.r;
+const CH = VB_H - M.t - M.b;
+const MIN_THICK = 8; // keep very thin sections/walls visible
+
+const DIM = "var(--muted)";
+const TXT = "var(--foreground-secondary)";
+const MONO = "var(--font-mono, ui-monospace, monospace)";
+const FONT = 11.5;
 
 const SHAPE = {
   fill: "var(--accent-surface)",
   stroke: "var(--accent)",
-  strokeWidth: 1.6,
+  strokeWidth: 1.7,
 } as const;
 
-/** Fit a real mm bounding box into the content area; returns a mm→px mapper. */
+/** Fit a real mm bounding box into the content area; returns mm→px mappers and
+ *  the shape's pixel rect. Aspect ratio is preserved (both axes share a scale). */
 function fitBox(bw: number, bh: number) {
   const s = Math.min(CW / bw, CH / bh);
   let w = bw * s;
   let h = bh * s;
   if (h < MIN_THICK && w > h) h = Math.min(MIN_THICK, CH);
   if (w < MIN_THICK && h > w) w = Math.min(MIN_THICK, CW);
-  const x0 = MARGIN.l + (CW - w) / 2;
-  const y0 = MARGIN.t + (CH - h) / 2;
+  const x0 = M.l + (CW - w) / 2;
+  const y0 = M.t + (CH - h) / 2;
   return {
     x0,
     y0,
     w,
     h,
-    px: (mx: number) => x0 + (mx / bw) * w,
-    py: (my: number) => y0 + (my / bh) * h,
+    x1: x0 + w,
+    y1: y0 + h,
+    s,
+    px: (mx: number) => x0 + mx * s,
+    py: (my: number) => y0 + my * s,
   };
 }
 
-function DimTop({ x0, x1, y, value }: { x0: number; x1: number; y: number; value: string }) {
+function Label({
+  x,
+  y,
+  children,
+  anchor = "middle",
+  baseline = "auto",
+}: {
+  x: number;
+  y: number;
+  children: React.ReactNode;
+  anchor?: "start" | "middle" | "end";
+  baseline?: "auto" | "central";
+}) {
   return (
-    <g stroke="var(--muted)" strokeWidth={0.9}>
-      <line x1={x0} y1={y} x2={x1} y2={y} />
-      <line x1={x0} y1={y - 3} x2={x0} y2={y + 3} />
-      <line x1={x1} y1={y - 3} x2={x1} y2={y + 3} />
-      <text
-        x={(x0 + x1) / 2}
-        y={y - 5}
-        textAnchor="middle"
-        stroke="none"
-        fill="var(--foreground-secondary)"
-        fontSize={10}
-        fontFamily="var(--font-mono, monospace)"
-        fontWeight={600}
-      >
+    <text
+      x={x}
+      y={y}
+      textAnchor={anchor}
+      dominantBaseline={baseline}
+      fill={TXT}
+      fontSize={FONT}
+      fontFamily={MONO}
+      fontWeight={600}
+      stroke="none"
+    >
+      {children}
+    </text>
+  );
+}
+
+/** Horizontal overall dimension above the shape: extension lines up from the
+ *  shape edge, an arrowed dimension line, and the value centred above it. */
+function DimTop({ x1, x2, shapeY, value }: { x1: number; x2: number; shapeY: number; value: string }) {
+  // Hug the shape rather than pinning to the canvas top, so thin sections
+  // (plates) don't grow absurdly long extension lines.
+  const y = Math.max(M.t - 16, shapeY - 18);
+  return (
+    <g stroke={DIM} strokeWidth={1}>
+      <line x1={x1} y1={shapeY - 3} x2={x1} y2={y - 2} />
+      <line x1={x2} y1={shapeY - 3} x2={x2} y2={y - 2} />
+      <line x1={x1} y1={y} x2={x2} y2={y} markerStart="url(#fsArrow)" markerEnd="url(#fsArrow)" />
+      <Label x={(x1 + x2) / 2} y={y - 4}>
         {value}
-      </text>
+      </Label>
     </g>
   );
 }
 
-function DimRight({ y0, y1, x, value }: { y0: number; y1: number; x: number; value: string }) {
+/** Vertical overall dimension to the left of the shape. */
+function DimLeft({ y1, y2, shapeX, value }: { y1: number; y2: number; shapeX: number; value: string }) {
+  const x = M.l - 20;
   return (
-    <g stroke="var(--muted)" strokeWidth={0.9}>
-      <line x1={x} y1={y0} x2={x} y2={y1} />
-      <line x1={x - 3} y1={y0} x2={x + 3} y2={y0} />
-      <line x1={x - 3} y1={y1} x2={x + 3} y2={y1} />
-      <text
-        x={x + 5}
-        y={(y0 + y1) / 2}
-        dominantBaseline="middle"
-        stroke="none"
-        fill="var(--foreground-secondary)"
-        fontSize={10}
-        fontFamily="var(--font-mono, monospace)"
-        fontWeight={600}
-      >
+    <g stroke={DIM} strokeWidth={1}>
+      <line x1={shapeX - 3} y1={y1} x2={x + 2} y2={y1} />
+      <line x1={shapeX - 3} y1={y2} x2={x + 2} y2={y2} />
+      <line x1={x} y1={y1} x2={x} y2={y2} markerStart="url(#fsArrow)" markerEnd="url(#fsArrow)" />
+      <Label x={x - 4} y={(y1 + y2) / 2} anchor="end" baseline="central">
         {value}
-      </text>
+      </Label>
     </g>
+  );
+}
+
+/** A leader: a labelled callout on the right pointing at a feature (fx, fy). */
+function Leader({ fx, fy, lx, ly, value }: { fx: number; fy: number; lx: number; ly: number; value: string }) {
+  return (
+    <g>
+      <line x1={lx - 2} y1={ly} x2={fx} y2={fy} stroke={DIM} strokeWidth={1} />
+      <circle cx={fx} cy={fy} r={1.7} fill={DIM} stroke="none" />
+      <Label x={lx} y={ly} anchor="start" baseline="central">
+        {value}
+      </Label>
+    </g>
+  );
+}
+
+/** Stack leader labels down the right margin, each pointing at its feature. */
+function Leaders({ shapeX1, items }: { shapeX1: number; items: { value: string; fx: number; fy: number }[] }) {
+  const lx = Math.min(shapeX1 + 18, VB_W - 44);
+  const startY = M.t + 6;
+  return (
+    <>
+      {items.map((it, i) => (
+        <Leader key={i} fx={it.fx} fy={it.fy} lx={lx} ly={startY + i * 18} value={it.value} />
+      ))}
+    </>
   );
 }
 
 /* ── Per-kind rendering ──────────────────────────────────────────────────── */
 
-function renderSection(sec: Section): { body: React.ReactNode; caption: string } {
+function renderSection(sec: Section): React.ReactNode {
   switch (sec.kind) {
     case "ibeam":
     case "channel":
@@ -194,10 +250,13 @@ function renderSection(sec: Section): { body: React.ReactNode; caption: string }
       const f = fitBox(sec.b, sec.h);
       const X = f.px;
       const Y = f.py;
+      const l = (sec.b - sec.tw) / 2;
+      const rr = (sec.b + sec.tw) / 2;
       let d: string;
+      let webFx: number;
+      let filletFx: number;
+      let filletFy: number;
       if (sec.kind === "ibeam") {
-        const l = (sec.b - sec.tw) / 2;
-        const rr = (sec.b + sec.tw) / 2;
         d = [
           `M${X(0)},${Y(0)}`, `L${X(sec.b)},${Y(0)}`, `L${X(sec.b)},${Y(sec.tf)}`,
           `L${X(rr)},${Y(sec.tf)}`, `L${X(rr)},${Y(sec.h - sec.tf)}`,
@@ -206,6 +265,9 @@ function renderSection(sec: Section): { body: React.ReactNode; caption: string }
           `L${X(l)},${Y(sec.h - sec.tf)}`, `L${X(l)},${Y(sec.tf)}`,
           `L${X(0)},${Y(sec.tf)}`, "Z",
         ].join(" ");
+        webFx = X(sec.b / 2);
+        filletFx = X(rr);
+        filletFy = Y(sec.tf);
       } else if (sec.kind === "channel") {
         d = [
           `M${X(0)},${Y(0)}`, `L${X(sec.b)},${Y(0)}`, `L${X(sec.b)},${Y(sec.tf)}`,
@@ -213,120 +275,110 @@ function renderSection(sec: Section): { body: React.ReactNode; caption: string }
           `L${X(sec.b)},${Y(sec.h - sec.tf)}`, `L${X(sec.b)},${Y(sec.h)}`,
           `L${X(0)},${Y(sec.h)}`, "Z",
         ].join(" ");
+        webFx = X(sec.tw / 2);
+        filletFx = X(sec.tw);
+        filletFy = Y(sec.tf);
       } else {
-        const l = (sec.b - sec.tw) / 2;
-        const rr = (sec.b + sec.tw) / 2;
         d = [
           `M${X(0)},${Y(0)}`, `L${X(sec.b)},${Y(0)}`, `L${X(sec.b)},${Y(sec.tf)}`,
           `L${X(rr)},${Y(sec.tf)}`, `L${X(rr)},${Y(sec.h)}`,
           `L${X(l)},${Y(sec.h)}`, `L${X(l)},${Y(sec.tf)}`,
           `L${X(0)},${Y(sec.tf)}`, "Z",
         ].join(" ");
+        webFx = X(sec.b / 2);
+        filletFx = X(rr);
+        filletFy = Y(sec.tf);
       }
-      const caption =
-        `tw ${fmt(sec.tw)} · tf ${fmt(sec.tf)}` + (sec.r > 0 ? ` · r ${fmt(sec.r)}` : "");
-      return {
-        body: (
-          <>
-            <path d={d} {...SHAPE} strokeLinejoin="round" />
-            <DimTop x0={f.x0} x1={f.x0 + f.w} y={MARGIN.t - 12} value={fmt(sec.b)} />
-            <DimRight y0={f.y0} y1={f.y0 + f.h} x={f.x0 + f.w + 8} value={fmt(sec.h)} />
-          </>
-        ),
-        caption,
-      };
+      const leaders = [
+        { value: `tf ${fmt(sec.tf)}`, fx: X(sec.b * 0.82), fy: Y(sec.tf / 2) },
+        { value: `tw ${fmt(sec.tw)}`, fx: webFx, fy: Y(sec.h / 2) },
+      ];
+      if (sec.r > 0) leaders.push({ value: `r ${fmt(sec.r)}`, fx: filletFx, fy: filletFy });
+      return (
+        <>
+          <path d={d} {...SHAPE} strokeLinejoin="round" />
+          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
+          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
+          <Leaders shapeX1={f.x1} items={leaders} />
+        </>
+      );
     }
     case "box": {
       const f = fitBox(sec.b, sec.h);
-      const wall = Math.max(3, (sec.t / sec.b) * f.w);
+      const wall = Math.max(3, sec.t * f.s);
       const inner = `M${f.x0 + wall},${f.y0 + wall} h${f.w - 2 * wall} v${f.h - 2 * wall} h${-(f.w - 2 * wall)} Z`;
       const outer = `M${f.x0},${f.y0} h${f.w} v${f.h} h${-f.w} Z`;
-      return {
-        body: (
-          <>
-            <path d={`${outer} ${inner}`} fillRule="evenodd" {...SHAPE} />
-            <DimTop x0={f.x0} x1={f.x0 + f.w} y={MARGIN.t - 12} value={fmt(sec.b)} />
-            <DimRight y0={f.y0} y1={f.y0 + f.h} x={f.x0 + f.w + 8} value={fmt(sec.h)} />
-          </>
-        ),
-        caption: `t ${fmt(sec.t)}`,
-      };
+      return (
+        <>
+          <path d={`${outer} ${inner}`} fillRule="evenodd" {...SHAPE} />
+          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
+          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
+          <Leaders shapeX1={f.x1} items={[{ value: `t ${fmt(sec.t)}`, fx: f.x1 - wall / 2, fy: f.y0 + f.h / 2 }]} />
+        </>
+      );
     }
     case "pipe": {
       const f = fitBox(sec.d, sec.d);
       const cx = f.x0 + f.w / 2;
       const cy = f.y0 + f.h / 2;
       const R = f.w / 2;
-      const wall = Math.max(3, (sec.t / sec.d) * f.w);
+      const wall = Math.max(3, sec.t * f.s);
       const r = R - wall;
       const ring =
         `M${cx - R},${cy} a${R},${R} 0 1,0 ${2 * R},0 a${R},${R} 0 1,0 ${-2 * R},0 ` +
         `M${cx - r},${cy} a${r},${r} 0 1,0 ${2 * r},0 a${r},${r} 0 1,0 ${-2 * r},0`;
-      return {
-        body: (
-          <>
-            <path d={ring} fillRule="evenodd" {...SHAPE} />
-            <DimTop x0={cx - R} x1={cx + R} y={MARGIN.t - 12} value={`Ø${fmt(sec.d)}`} />
-          </>
-        ),
-        caption: `t ${fmt(sec.t)}`,
-      };
+      return (
+        <>
+          <path d={ring} fillRule="evenodd" {...SHAPE} />
+          <DimTop x1={cx - R} x2={cx + R} shapeY={f.y0} value={`Ø${fmt(sec.d)}`} />
+          <Leaders shapeX1={f.x1} items={[{ value: `t ${fmt(sec.t)}`, fx: cx + R - wall / 2, fy: cy }]} />
+        </>
+      );
     }
     case "round": {
       const f = fitBox(sec.d, sec.d);
       const cx = f.x0 + f.w / 2;
       const cy = f.y0 + f.h / 2;
-      return {
-        body: (
-          <>
-            <circle cx={cx} cy={cy} r={f.w / 2} {...SHAPE} />
-            <DimTop x0={f.x0} x1={f.x0 + f.w} y={MARGIN.t - 12} value={`Ø${fmt(sec.d)}`} />
-          </>
-        ),
-        caption: "",
-      };
+      return (
+        <>
+          <circle cx={cx} cy={cy} r={f.w / 2} {...SHAPE} />
+          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={`Ø${fmt(sec.d)}`} />
+        </>
+      );
     }
     case "square": {
       const f = fitBox(sec.a, sec.a);
-      return {
-        body: (
-          <>
-            <rect x={f.x0} y={f.y0} width={f.w} height={f.h} rx={1.5} {...SHAPE} />
-            <DimTop x0={f.x0} x1={f.x0 + f.w} y={MARGIN.t - 12} value={fmt(sec.a)} />
-            <DimRight y0={f.y0} y1={f.y0 + f.h} x={f.x0 + f.w + 8} value={fmt(sec.a)} />
-          </>
-        ),
-        caption: "",
-      };
+      return (
+        <>
+          <rect x={f.x0} y={f.y0} width={f.w} height={f.h} rx={1.5} {...SHAPE} />
+          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.a)} />
+          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
+        </>
+      );
     }
     case "plate":
     case "chequered": {
       const w = sec.w;
       const t = sec.t;
       const f = fitBox(w, t);
+      const items = [{ value: `t ${fmt(t)}`, fx: f.x1 - 4, fy: f.y0 + f.h / 2 }];
+      if (sec.kind === "chequered") {
+        items.push({ value: `pat ${fmt(sec.ph)}`, fx: f.x0 + f.w * 0.5, fy: f.y0 - 2 });
+      }
       const dots =
         sec.kind === "chequered"
-          ? [0.25, 0.5, 0.75].map((frac, i) => (
-              <circle
-                key={i}
-                cx={f.x0 + frac * f.w}
-                cy={f.y0 - 2}
-                r={1.4}
-                fill="var(--accent)"
-              />
+          ? [0.28, 0.5, 0.72].map((frac, i) => (
+              <circle key={i} cx={f.x0 + frac * f.w} cy={f.y0 - 2.4} r={1.5} fill="var(--accent)" stroke="none" />
             ))
           : null;
-      return {
-        body: (
-          <>
-            <rect x={f.x0} y={f.y0} width={f.w} height={f.h} rx={1} {...SHAPE} />
-            {dots}
-            <DimTop x0={f.x0} x1={f.x0 + f.w} y={MARGIN.t - 12} value={fmt(w)} />
-            <DimRight y0={f.y0} y1={f.y0 + f.h} x={f.x0 + f.w + 8} value={fmt(t)} />
-          </>
-        ),
-        caption: sec.kind === "chequered" ? `pattern ${fmt(sec.ph)}` : "",
-      };
+      return (
+        <>
+          <rect x={f.x0} y={f.y0} width={f.w} height={f.h} rx={1} {...SHAPE} />
+          {dots}
+          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(w)} />
+          <Leaders shapeX1={f.x1} items={items} />
+        </>
+      );
     }
     case "angle": {
       const f = fitBox(sec.b, sec.a);
@@ -338,16 +390,17 @@ function renderSection(sec: Section): { body: React.ReactNode; caption: string }
         `L${X(sec.b)},${Y(sec.a - t)}`, `L${X(sec.b)},${Y(sec.a)}`,
         `L${X(0)},${Y(sec.a)}`, "Z",
       ].join(" ");
-      return {
-        body: (
-          <>
-            <path d={d} {...SHAPE} strokeLinejoin="round" />
-            <DimTop x0={f.x0} x1={f.x0 + f.w} y={MARGIN.t - 12} value={fmt(sec.b)} />
-            <DimRight y0={f.y0} y1={f.y0 + f.h} x={f.x0 + f.w + 8} value={fmt(sec.a)} />
-          </>
-        ),
-        caption: `t ${fmt(t)}`,
-      };
+      return (
+        <>
+          <path d={d} {...SHAPE} strokeLinejoin="round" />
+          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
+          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
+          <Leaders
+            shapeX1={f.x1}
+            items={[{ value: `t ${fmt(t)}`, fx: X(sec.b * 0.72), fy: Y(sec.a - t / 2) }]}
+          />
+        </>
+      );
     }
   }
 }
@@ -370,26 +423,30 @@ export function ProfileDrawing({
     );
   }
 
-  const { body, caption } = renderSection(sec);
   return (
-    <figure className={className} style={{ margin: 0 }}>
+    <figure className={className} style={{ margin: 0, width: "100%" }}>
       <svg
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         width="100%"
         role="img"
         aria-label={p.name ?? undefined}
-        style={{ display: "block", maxWidth: 260 }}
+        style={{ display: "block", maxWidth: 340, margin: "0 auto" }}
       >
-        {body}
+        <defs>
+          <marker
+            id="fsArrow"
+            markerWidth={8}
+            markerHeight={8}
+            refX={7}
+            refY={4}
+            orient="auto-start-reverse"
+            markerUnits="userSpaceOnUse"
+          >
+            <path d="M0,0 L8,4 L0,8 Z" fill={DIM} />
+          </marker>
+        </defs>
+        {renderSection(sec)}
       </svg>
-      {caption ? (
-        <figcaption
-          className="font-mono text-[10.5px] text-muted text-center"
-          style={{ marginTop: -4 }}
-        >
-          {caption}
-        </figcaption>
-      ) : null}
     </figure>
   );
 }
