@@ -77,7 +77,8 @@
       "linkCopied": "Link kopiran",
       "savedBumped": "Već sačuvano — pomjereno na vrh",
       "templateInserted": "Umetnuto {name}",
-      "cantShare": "Ovo se ne može podijeliti kao link"
+      "cantShare": "Ovo se ne može podijeliti kao link",
+      "savedSet": "Poređenje sačuvano u biblioteku"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -336,7 +337,10 @@
       "weightPerPiece": "Masa / komad",
       "costPerMetre": "Cijena / metar",
       "surfaceArea": "Površina",
-      "openInCalculator": "Otvori u kalkulatoru"
+      "openInCalculator": "Otvori u kalkulatoru",
+      "setAsBase": "Postavi kao osnovu",
+      "saveSet": "Sačuvaj skup",
+      "savedSetName": "Poređenje: {label}"
     },
     "saved": {
       "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",

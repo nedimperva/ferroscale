@@ -9,21 +9,27 @@ export interface CompareDelta {
 }
 
 /**
- * Compute each compare item's total-weight delta vs the heaviest item.
- * The heaviest item gets the sentinel "—". Items sharing the max weight
- * are all labeled "—" too (no ambiguity about who's the baseline).
+ * Compute each compare item's total-weight delta against a baseline.
+ * The baseline is the item whose id is `baselineId`, or — when that is absent
+ * or unmatched — the heaviest item (the historical default). The baseline gets
+ * the sentinel "—", as does any item that ties it exactly.
  */
-export function computeCompareDeltas(items: CompareItem[]): CompareDelta[] {
+export function computeCompareDeltas(
+  items: CompareItem[],
+  baselineId?: string,
+): CompareDelta[] {
   if (items.length === 0) return [];
-  const max = items.reduce(
-    (acc, item) => Math.max(acc, item.result.totalWeightKg),
-    0,
-  );
-  if (max <= 0) {
+  const pinned = baselineId
+    ? items.find((item) => item.id === baselineId)
+    : undefined;
+  const baseWeight = pinned
+    ? pinned.result.totalWeightKg
+    : items.reduce((acc, item) => Math.max(acc, item.result.totalWeightKg), 0);
+  if (baseWeight <= 0) {
     return items.map((item) => ({ id: item.id, deltaFraction: 0, label: "—" }));
   }
   return items.map((item) => {
-    const fraction = item.result.totalWeightKg / max - 1;
+    const fraction = item.result.totalWeightKg / baseWeight - 1;
     if (Math.abs(fraction) < 1e-9) {
       return { id: item.id, deltaFraction: 0, label: "—" };
     }

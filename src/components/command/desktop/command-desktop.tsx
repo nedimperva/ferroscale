@@ -159,6 +159,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
           compareItems={props.compareItems}
           onRemove={props.onRemoveCompare}
           onClearAll={props.onClearCompare}
+          onSaveSet={props.onSaveComparison}
           gotoCalc={gotoCalc}
           onPick={pickInput}
         />

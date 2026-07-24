@@ -77,7 +77,8 @@
       "linkCopied": "Link copied",
       "savedBumped": "Already saved — bumped to top",
       "templateInserted": "Inserted {name}",
-      "cantShare": "Can’t share this one as a link"
+      "cantShare": "Can’t share this one as a link",
+      "savedSet": "Comparison saved to library"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -336,7 +337,10 @@
       "weightPerPiece": "Weight / piece",
       "costPerMetre": "Cost / metre",
       "surfaceArea": "Surface area",
-      "openInCalculator": "Open in calculator"
+      "openInCalculator": "Open in calculator",
+      "setAsBase": "Set as base",
+      "saveSet": "Save set",
+      "savedSetName": "Compare: {label}"
     },
     "saved": {
       "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",

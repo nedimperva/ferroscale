@@ -45,4 +45,18 @@ describe("computeCompareDeltas", () => {
     const out = computeCompareDeltas([mk("a", 100), mk("b", 87.4)]);
     expect(out.find((d) => d.id === "b")?.label).toBe("-13%");
   });
+
+  it("compares against a pinned baseline when given", () => {
+    const out = computeCompareDeltas([mk("a", 100), mk("b", 80), mk("c", 50)], "b");
+    // Baseline is b; a is heavier (+25%), c is lighter (50/80-1 = -37.5% → -37%).
+    expect(out.find((d) => d.id === "b")?.label).toBe("—");
+    expect(out.find((d) => d.id === "a")?.label).toBe("+25%");
+    expect(out.find((d) => d.id === "c")?.label).toBe("-37%");
+  });
+
+  it("falls back to the heaviest when the baseline id is unknown", () => {
+    const out = computeCompareDeltas([mk("a", 100), mk("b", 80)], "missing");
+    expect(out.find((d) => d.id === "a")?.label).toBe("—");
+    expect(out.find((d) => d.id === "b")?.label).toBe("-20%");
+  });
 });

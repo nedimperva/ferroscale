@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
@@ -41,17 +42,21 @@ export function DeskCompareView({
   compareItems,
   onRemove,
   onClearAll,
+  onSaveSet,
   gotoCalc,
   onPick,
 }: {
   compareItems: CompareItem[];
   onRemove: (id: string) => void;
   onClearAll: () => void;
+  onSaveSet: () => void;
   gotoCalc: () => void;
   onPick: (input: CalculationInput) => void;
 }) {
   const t = useTranslations("command");
-  // One column per compare item; the first is the base every delta reads from.
+  // One column per compare item. The user can pin any column as the baseline
+  // every delta reads from; unpinned defaults to the first column.
+  const [baseId, setBaseId] = useState<string | null>(null);
   const cols = compareItems.map((item) => {
     const r = item.result;
     const lengthM = r.lengthMm / 1000;
@@ -69,7 +74,8 @@ export function DeskCompareView({
       sym: CURRENCY_SYMBOLS[r.currency] ?? "€",
     };
   });
-  const base = cols[0];
+  const baseIndex = Math.max(0, cols.findIndex((c) => c.item.id === baseId));
+  const base = cols[baseIndex] ?? cols[0];
   const maxKg = Math.max(1, ...cols.map((c) => c.r.totalWeightKg));
   const minKg = Math.min(...cols.map((c) => c.r.totalWeightKg));
   const minCost = Math.min(...cols.map((c) => c.r.grandTotalAmount));
@@ -86,7 +92,7 @@ export function DeskCompareView({
     padding: "13px 16px",
     borderTop: "1px solid var(--border-faint)",
     borderLeft: "1px solid var(--border-faint)",
-    background: i === 0 ? "var(--surface-raised)" : "transparent",
+    background: i === baseIndex ? "var(--surface-raised)" : "transparent",
   });
 
   return (
@@ -100,6 +106,12 @@ export function DeskCompareView({
         }
         actions={
           <>
+            {compareItems.length >= 2 && (
+              <DeskBtn small onClick={onSaveSet}>
+                <DeskIcon name="saved" />
+                {t("compare.saveSet")}
+              </DeskBtn>
+            )}
             {compareItems.length > 0 && (
               <DeskBtn small onClick={onClearAll}>
                 <DeskIcon name="trash" />
@@ -192,7 +204,7 @@ export function DeskCompareView({
                     </button>
                   </div>
                   <div className="mt-2">
-                    {i === 0 ? (
+                    {i === baseIndex ? (
                       <span
                         className="text-[9px] font-extrabold rounded-full"
                         style={{
@@ -206,9 +218,15 @@ export function DeskCompareView({
                         {t("compare.base")}
                       </span>
                     ) : (
-                      <span className="font-mono text-[10px] text-muted-faint">
-                        {t("compare.vsBase", { name: base.name })}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setBaseId(c.item.id)}
+                        title={t("compare.setAsBase")}
+                        className="font-mono text-[10px] cursor-pointer rounded-full border-0"
+                        style={{ padding: "2px 7px", background: "var(--surface-inset)", color: "var(--muted)" }}
+                      >
+                        {t("compare.setAsBase")}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -238,7 +256,7 @@ export function DeskCompareView({
                       <span className="font-bold text-xs" style={{ color: "var(--accent)" }}>
                         {fsWeightUnit()}
                       </span>
-                      {i > 0 && (
+                      {i !== baseIndex && (
                         <span className="ml-auto">
                           <DeltaChip pct={pct} />
                         </span>
@@ -252,7 +270,7 @@ export function DeskCompareView({
                         className="h-full rounded-[3px]"
                         style={{
                           width: `${Math.max(4, (c.r.totalWeightKg / maxKg) * 100)}%`,
-                          background: i === 0 ? "var(--accent)" : "var(--blue-strong)",
+                          background: i === baseIndex ? "var(--accent)" : "var(--blue-strong)",
                         }}
                       />
                     </div>
@@ -277,7 +295,7 @@ export function DeskCompareView({
                     >
                       {c.sym} {fsMoney(c.r.grandTotalAmount)}
                     </span>
-                    {i > 0 && (
+                    {i !== baseIndex && (
                       <span className="ml-auto">
                         <DeltaChip pct={pct} />
                       </span>

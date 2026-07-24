@@ -50,6 +50,8 @@ export interface CommandDesktopProps {
   onNew: () => void;
   onSuggest: (item: CommandSuggestionItem) => void;
   onCompareCurrent: () => void;
+  /** Save the current comparison as a set in the Saved library. */
+  onSaveComparison: () => void;
   onAddCompare: (input: CalculationInput, result: CalculationResult) => void;
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;

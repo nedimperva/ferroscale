@@ -384,6 +384,22 @@ export function CommandShell() {
     addCompareEntry(p.calc.input, p.calc.result);
   }, [p.calc, addCompareEntry]);
 
+  // Save the current comparison as a multi-part entry in the Saved library, so
+  // a considered set of options can be revisited or renamed later.
+  const saveComparison = useCallback(() => {
+    if (compareItems.length < 2) return;
+    const parts = compareItems.map((item) => ({
+      name: item.normalizedProfile?.shortLabel ?? item.result.profileLabel,
+      input: item.input,
+      result: item.result,
+    }));
+    const names = parts.map((part) => part.name);
+    const label =
+      names.slice(0, 2).join(" / ") + (names.length > 2 ? ` +${names.length - 2}` : "");
+    saveCalculation(parts[0].input, parts[0].result, t("compare.savedSetName", { label }), undefined, undefined, parts);
+    showToast(t("toast.savedSet"));
+  }, [compareItems, saveCalculation, showToast, t]);
+
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
@@ -596,6 +612,7 @@ export function CommandShell() {
           onNew={newCalc}
           onSuggest={onSuggest}
           onCompareCurrent={doCompare}
+          onSaveComparison={saveComparison}
           onAddCompare={addCompareEntry}
           onRemoveCompare={removeCompareItem}
           onClearCompare={clearCompare}
