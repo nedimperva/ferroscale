@@ -354,7 +354,7 @@ function SavedTabContent({
                   className="text-[12px] font-bold"
                   style={{ color: "var(--accent-text)" }}
                 >
-                  {fsWeight(r.totalWeightKg)} {fsWeightUnit(r.totalWeightKg)}
+                  {fsWeight(r.totalWeightKg)} {fsWeightUnit()}
                 </span>
                 <span
                   className="text-[10.5px] font-semibold mt-0.5"
@@ -559,7 +559,7 @@ function ProjectsTabContent({
                   subtitle={
                     calcs.length === 0
                       ? t("library.emptyProject")
-                      : `${t("library.calcCount", { count: calcs.length })} · ${fsWeight(totalWeight)} ${fsWeightUnit(totalWeight)} · ${sym} ${fsMoney(totalCost)}`
+                      : `${t("library.calcCount", { count: calcs.length })} · ${fsWeight(totalWeight)} ${fsWeightUnit()} · ${sym} ${fsMoney(totalCost)}`
                   }
                   onClick={() =>
                     setExpanded(isOpen ? null : project.id)

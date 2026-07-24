@@ -106,7 +106,7 @@ export function DeskSavedView({
                   >
                     <SavedStat
                       label={t("result.totalWeight")}
-                      value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
+                      value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit()}`}
                       accent="var(--accent-text)"
                     />
                     <SavedStat

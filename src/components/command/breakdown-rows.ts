@@ -49,12 +49,12 @@ export function buildBreakdownRows(
     {
       id: "perPieceWeight",
       label: t("result.perPiece"),
-      value: `${fsWeight(r.unitWeightKg)} ${fsWeightUnit(r.unitWeightKg)}`,
+      value: `${fsWeight(r.unitWeightKg)} ${fsWeightUnit()}`,
     },
     {
       id: "totalWeight",
       label: t("result.totalWeight"),
-      value: `${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`,
+      value: `${fsWeight(r.totalWeightKg)} ${fsWeightUnit()}`,
     },
     { id: "density", label: t("result.density"), value: `${r.densityKgPerM3} kg/m³` },
   ];

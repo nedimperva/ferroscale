@@ -236,7 +236,7 @@ export function DeskCompareView({
                         {fsWeight(c.r.totalWeightKg)}
                       </span>
                       <span className="font-bold text-xs" style={{ color: "var(--accent)" }}>
-                        {fsWeightUnit(c.r.totalWeightKg)}
+                        {fsWeightUnit()}
                       </span>
                       {i > 0 && (
                         <span className="ml-auto">
@@ -293,7 +293,7 @@ export function DeskCompareView({
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
                   <span className="font-mono text-xs font-semibold text-foreground">
-                    {fsWeight(c.r.unitWeightKg)} {fsWeightUnit(c.r.unitWeightKg)}
+                    {fsWeight(c.r.unitWeightKg)} {fsWeightUnit()}
                   </span>
                 </div>
               ))}

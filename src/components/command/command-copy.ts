@@ -25,7 +25,7 @@ export function familyForInput(input: CalculationInput): CommandFamily | undefin
 /** "238.8 kg · € 286.56" — the standard saved/compare row subtitle. */
 export function formatWeightPriceSubtitle(result: CalculationResult): string {
   const sym = CURRENCY_SYMBOLS[result.currency] ?? "€";
-  return `${fsWeight(result.totalWeightKg)} ${fsWeightUnit(result.totalWeightKg)} · ${sym} ${fsMoney(result.grandTotalAmount)}`;
+  return `${fsWeight(result.totalWeightKg)} ${fsWeightUnit()} · ${sym} ${fsMoney(result.grandTotalAmount)}`;
 }
 
 /**
@@ -170,7 +170,7 @@ export function buildCommandSummary(
 
   const rows: Array<[string, string]> = [];
   if (p.totalKg != null) {
-    rows.push([t("result.totalWeight"), `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`]);
+    rows.push([t("result.totalWeight"), `${fsWeight(p.totalKg)} ${fsWeightUnit()}`]);
   }
   if (p.totalAmount != null) {
     rows.push([t("result.totalCost"), `${sym} ${fsMoney(p.totalAmount)}`]);
