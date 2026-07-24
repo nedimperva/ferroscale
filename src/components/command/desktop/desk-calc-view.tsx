@@ -104,6 +104,7 @@ export function DeskCalcView({
   onClearTape,
   onSave,
   onLogSession,
+  onExpandTemplate,
   onCopySummary,
   onShareLink,
   onNew,
@@ -221,6 +222,10 @@ export function DeskCalcView({
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
+                if (onExpandTemplate()) {
+                  e.preventDefault();
+                  return;
+                }
                 if (p.valid) {
                   e.preventDefault();
                   onLogSession();

@@ -46,6 +46,7 @@ import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
+import { expandTemplateReference } from "@/lib/saved/template-ref";
 import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
@@ -393,9 +394,35 @@ export function CommandShell() {
   const onBack = useCallback(() => {
     setQuery((q) => q.slice(0, -1));
   }, []);
+  // Template recall: `#gate` (or `#gate x3`) expands to the canonical query of
+  // the saved entry named "gate" — the library as a first-class citizen of the
+  // input line. expandTemplateReference reuses inputToQuery, so a `#ref` can
+  // recall anything the click-to-load path can, and returns null otherwise.
+  const templateExpansion = useCallback(
+    (raw: string) =>
+      expandTemplateReference(raw, savedEntries, {
+        defaultUnit,
+        defaultGradeId: shared.defaultGradeId,
+        defaultPricing: shared,
+      }),
+    [savedEntries, defaultUnit, shared],
+  );
+
+  // Enter on a `#ref` expands it (so `#gate x3` can be typed in full first).
+  // Returns true when it consumed the Enter, letting each input surface fall
+  // through to its normal commit behaviour otherwise.
+  const commitTemplate = useCallback((): boolean => {
+    const expansion = templateExpansion(query);
+    if (!expansion) return false;
+    setQuery(`${expansion.query} `);
+    showToast(t("toast.templateInserted", { name: expansion.name }));
+    return true;
+  }, [query, templateExpansion, showToast, t]);
+
   const onEnter = useCallback(() => {
+    if (commitTemplate()) return;
     logToSession();
-  }, [logToSession]);
+  }, [commitTemplate, logToSession]);
 
   const cycleTheme = useCallback(() => {
     setTheme(dark ? "light" : "dark");
@@ -526,6 +553,7 @@ export function CommandShell() {
           projects={projects}
           onSave={doSave}
           onLogSession={logToSession}
+          onExpandTemplate={commitTemplate}
           onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
@@ -1047,6 +1075,10 @@ export function CommandShell() {
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
+                      if (commitTemplate()) {
+                        e.preventDefault();
+                        return;
+                      }
                       if (p.valid) {
                         e.preventDefault();
                         logToSession();

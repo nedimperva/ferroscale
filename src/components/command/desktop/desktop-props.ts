@@ -38,6 +38,8 @@ export interface CommandDesktopProps {
   onSave: () => void;
   /** Log the current line onto the session tape without bookmarking it. */
   onLogSession: () => void;
+  /** Expand a `#template` reference in the query; returns true when it did. */
+  onExpandTemplate: () => boolean;
   /** Copy a clean, paste-ready text summary of the current result. */
   onCopySummary: () => void;
   onShareLink: () => void;

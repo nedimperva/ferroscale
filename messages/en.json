@@ -75,7 +75,8 @@
       "copiedValue": "Value copied",
       "copiedSummary": "Summary copied",
       "linkCopied": "Link copied",
-      "savedBumped": "Already saved — bumped to top"
+      "savedBumped": "Already saved — bumped to top",
+      "templateInserted": "Inserted {name}"
     },
     "aria": {
       "toggleTheme": "Toggle theme",

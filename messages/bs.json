@@ -75,7 +75,8 @@
       "copiedValue": "Vrijednost kopirana",
       "copiedSummary": "Sažetak kopiran",
       "linkCopied": "Link kopiran",
-      "savedBumped": "Već sačuvano — pomjereno na vrh"
+      "savedBumped": "Već sačuvano — pomjereno na vrh",
+      "templateInserted": "Umetnuto {name}"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
