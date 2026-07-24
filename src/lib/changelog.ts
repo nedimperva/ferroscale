@@ -17,6 +17,30 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.7.0",
+    date: "2026-07-20",
+    added: [
+      "The command bar types with you: as you type a profile — or the start of a query you've run before — a faint completion appears after the caret. Press Tab or → to accept it, or just keep typing",
+      "Did-you-mean fixes: a mistyped profile, grade, or off-catalog size no longer just fails — the parse line offers a one-tap correction (hae120 → hea120), never applied automatically",
+      "Type it the way you'd say it: the bar now accepts natural spaced forms like ‘hea 120’, ‘6 meters’, and ‘2 pieces’, folding them into the strict grammar as it reads",
+      "Dimensioned profile drawings: the result shows a real scaled cross-section of the current profile — I-beam, channel, tee, hollow section, pipe, angle, plate — with every dimension labelled in mm",
+      "The hero number counts up when a query settles, and ↑/↓ recall earlier queries on the desktop inputs",
+    ],
+    changed: [
+      "Size suggestion chips now show the per-metre weight (e.g. 120 · 26.7 kg/m) so you can judge a size before picking it",
+    ],
+    added_bs: [
+      "Komandna traka piše s vama: dok kucate profil — ili početak upita koji ste već koristili — iza kursora se pojavi blijeda dopuna. Pritisnite Tab ili → da je prihvatite, ili samo nastavite kucati",
+      "‘Da li ste mislili’ ispravke: pogrešno ukucan profil, marka ili veličina van kataloga više ne pada — linija za tumačenje nudi ispravku u jednom dodiru (hae120 → hea120), nikad automatski",
+      "Kucajte kako biste rekli: traka sada prihvata prirodne oblike s razmakom kao ‘hea 120’, ‘6 metara’ i ‘2 komada’, i uklapa ih u strogu gramatiku dok čita",
+      "Dimenzionisani crteži profila: rezultat prikazuje stvarni razmjerni presjek trenutnog profila — I-nosač, U-profil, T-profil, šuplji profil, cijev, ugao, ploča — sa svakom dimenzijom označenom u mm",
+      "Glavni broj se odbrojava kad se upit smiri, a ↑/↓ pozivaju ranije upite na desktop unosima",
+    ],
+    changed_bs: [
+      "Prijedlozi veličina sada prikazuju težinu po metru (npr. 120 · 26.7 kg/m) da možete procijeniti veličinu prije odabira",
+    ],
+  },
+  {
     version: "3.6.2",
     date: "2026-07-03",
     changed: [
@@ -772,5 +796,30 @@ export const CHANGELOG: ChangelogEntry[] = [
 
 /** Latest app version — matches the first (newest) entry in CHANGELOG. */
 export const APP_VERSION = CHANGELOG[0].version;
+
+/**
+ * Entries newer than `version` (what shipped since the user last looked).
+ * Returns [] when the user is already on the latest entry; [] for an unknown
+ * version too, so callers can fall back to showing just the newest entry.
+ */
+export function changelogSince(version: string | null): ChangelogEntry[] {
+  if (!version) return [];
+  const idx = CHANGELOG.findIndex((entry) => entry.version === version);
+  if (idx < 0) return [];
+  return CHANGELOG.slice(0, idx);
+}
+
+/** Locale-aware bullet lists for an entry (falls back to English). */
+export function entryBullets(
+  entry: ChangelogEntry,
+  locale: string,
+): { added: string[]; changed: string[]; fixed: string[] } {
+  const bs = locale.startsWith("bs");
+  return {
+    added: (bs ? entry.added_bs : entry.added) ?? entry.added ?? [],
+    changed: (bs ? entry.changed_bs : entry.changed) ?? entry.changed ?? [],
+    fixed: (bs ? entry.fixed_bs : entry.fixed) ?? entry.fixed ?? [],
+  };
+}
 
 

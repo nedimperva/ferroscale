@@ -198,6 +198,7 @@ interface CommandSettingsSheetProps {
   onSetDefaultUnit: (unit: LengthUnit) => void;
   onClose: () => void;
   onToggleTheme: () => void;
+  onOpenChangelog: () => void;
   dark: boolean;
 }
 
@@ -210,6 +211,7 @@ export function CommandSettingsSheet({
   onSetDefaultUnit,
   onClose,
   onToggleTheme,
+  onOpenChangelog,
   dark,
 }: CommandSettingsSheetProps) {
   const t = useTranslations("command");
@@ -241,6 +243,16 @@ export function CommandSettingsSheet({
         {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
       </p>
       <InstallAppSection />
+      <button
+        type="button"
+        onClick={() => {
+          onClose();
+          onOpenChangelog();
+        }}
+        className="mt-3 w-full h-10 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground"
+      >
+        {t("settings.whatsNew")}
+      </button>
       <CommandDocsSection />
       <SyncSection />
     </SheetShell>

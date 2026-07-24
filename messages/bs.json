@@ -152,7 +152,8 @@
       "resultBreakdown": "Detalji rezultata",
       "settings": "Postavke",
       "library": "Biblioteka",
-      "addToProject": "Dodaj u projekat"
+      "addToProject": "Dodaj u projekat",
+      "whatsNew": "Šta je novo"
     },
     "result": {
       "massPerMetre": "Masa po metru",
@@ -206,7 +207,8 @@
         "en": "Engleski",
         "bs": "Bosanski"
       },
-      "appearance": "IZGLED"
+      "appearance": "IZGLED",
+      "whatsNew": "Šta je novo"
     },
     "docs": {
       "label": "Vodič",
@@ -349,6 +351,11 @@
       "itemCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
       "emptyProjectHint": "prazno — dodajte izračun iz desnog panela",
       "removeFromProject": "Ukloni iz projekta"
+    },
+    "whatsNew": {
+      "added": "Novo",
+      "changed": "Poboljšano",
+      "fixed": "Popravljeno"
     }
   },
   "contact": {

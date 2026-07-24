@@ -9,6 +9,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
+import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import { cmdSuggest, cmdApplyInsert } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
@@ -44,6 +45,7 @@ import { CommandLibrarySheet } from "./sheets/library-sheet";
 import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
+import { ChangelogSheet } from "./sheets/changelog-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
 import { expandTemplateReference } from "@/lib/saved/template-ref";
@@ -97,6 +99,7 @@ export function CommandShell() {
   } = useCompare();
   const { projects, createProject, addCalculation, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
+  const whatsNew = useWhatsNew();
 
   const [query, setQuery] = useState(DEMO_QUERY);
   // The URL only mirrors the query once the user has replaced the demo query
@@ -524,7 +527,7 @@ export function CommandShell() {
         className="fixed inset-0 flex overflow-hidden text-foreground"
         style={{ background: screenBg, transition: "background 220ms ease" }}
       >
-        <PwaRegister />
+        <PwaRegister onOpenChangelog={whatsNew.open} />
         <CommandDesktop
           dark={dark}
           onToggleTheme={cycleTheme}
@@ -576,6 +579,9 @@ export function CommandShell() {
             onPickProject={(project) => handlePickProject(project.id)}
           />
         )}
+        {whatsNew.isOpen && (
+          <ChangelogSheet lastSeen={whatsNew.lastSeen} onClose={whatsNew.close} />
+        )}
         <CommandToast toast={toast} bottom={32} dark={dark} />
         <ResultAnnouncer text={liveResultText} />
       </div>
@@ -593,7 +599,7 @@ export function CommandShell() {
         transition: "background 220ms ease",
       }}
     >
-      <PwaRegister />
+      <PwaRegister onOpenChangelog={whatsNew.open} />
       <div
         className="relative flex flex-col overflow-hidden text-foreground"
         style={
@@ -1211,6 +1217,7 @@ export function CommandShell() {
               onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
+              onOpenChangelog={whatsNew.open}
               dark={dark}
             />
           )}
@@ -1237,6 +1244,10 @@ export function CommandShell() {
               onCreateProject={createProject}
               onPickProject={(project) => handlePickProject(project.id)}
             />
+          )}
+
+          {whatsNew.isOpen && (
+            <ChangelogSheet lastSeen={whatsNew.lastSeen} onClose={whatsNew.close} />
           )}
 
           {/* TOAST */}

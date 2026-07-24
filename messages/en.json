@@ -152,7 +152,8 @@
       "resultBreakdown": "Result breakdown",
       "settings": "Settings",
       "library": "Library",
-      "addToProject": "Add to project"
+      "addToProject": "Add to project",
+      "whatsNew": "What's new"
     },
     "result": {
       "massPerMetre": "Mass per metre",
@@ -206,7 +207,8 @@
         "en": "English",
         "bs": "Bosnian"
       },
-      "appearance": "APPEARANCE"
+      "appearance": "APPEARANCE",
+      "whatsNew": "What's new"
     },
     "docs": {
       "label": "Guide",
@@ -349,6 +351,11 @@
       "itemCount": "{count, plural, one {# item} other {# items}}",
       "emptyProjectHint": "empty — add a calc from the right rail",
       "removeFromProject": "Remove from project"
+    },
+    "whatsNew": {
+      "added": "New",
+      "changed": "Improved",
+      "fixed": "Fixed"
     }
   },
   "contact": {
