@@ -103,6 +103,7 @@ export function DeskCalcView({
   onRemoveTapeEntry,
   onClearTape,
   onSave,
+  onLogSession,
   onCopySummary,
   onShareLink,
   onNew,
@@ -228,7 +229,7 @@ export function DeskCalcView({
               if (e.key === "Enter") {
                 if (p.valid) {
                   e.preventDefault();
-                  onSave();
+                  onLogSession();
                   return;
                 }
                 // Mid-query: insert the first matching suggestion chip

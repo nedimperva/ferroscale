@@ -295,6 +295,17 @@ export function CommandShell() {
     showToast(t("toast.saved"));
   }, [p, isSaved, saveCalculation, showToast, query, t, pushHistory]);
 
+  // Enter only logs the line onto the session tape — bookmarking into the
+  // Saved library is the explicit Save action (doSave) alone.
+  const logToSession = useCallback(() => {
+    if (!p.valid) {
+      showToast(t("toast.addLength"));
+      return;
+    }
+    pushHistory(query);
+    showToast(t("toast.addedToSession"));
+  }, [p.valid, query, pushHistory, showToast, t]);
+
   const loadInput = useCallback(
     (input: CalculationInput) => {
       const q = inputToQuery(input, defaultUnit, {
@@ -385,8 +396,8 @@ export function CommandShell() {
     setQuery((q) => q.slice(0, -1));
   }, []);
   const onEnter = useCallback(() => {
-    doSave();
-  }, [doSave]);
+    logToSession();
+  }, [logToSession]);
 
   const cycleTheme = useCallback(() => {
     setTheme(dark ? "light" : "dark");
@@ -522,6 +533,7 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
+          onLogSession={logToSession}
           onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
@@ -1045,7 +1057,7 @@ export function CommandShell() {
                     if (e.key === "Enter") {
                       if (p.valid) {
                         e.preventDefault();
-                        doSave();
+                        logToSession();
                         return;
                       }
                       // Mid-query: insert the first matching suggestion chip

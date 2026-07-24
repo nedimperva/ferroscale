@@ -36,6 +36,8 @@ export interface CommandDesktopProps {
   compareItems: CompareItem[];
   projects: Project[];
   onSave: () => void;
+  /** Log the current line onto the session tape without bookmarking it. */
+  onLogSession: () => void;
   /** Copy a clean, paste-ready text summary of the current result. */
   onCopySummary: () => void;
   onShareLink: () => void;

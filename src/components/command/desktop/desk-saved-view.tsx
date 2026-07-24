@@ -1,11 +1,12 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { DeskTopbar } from "./desk-sidebar";
 import { DeskIcon } from "./desk-atoms";
-import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
+import { familyForInput } from "../command-copy";
 
 export function DeskSavedView({
   saved,
@@ -19,6 +20,7 @@ export function DeskSavedView({
   onRemove: (id: string) => void;
 }) {
   const t = useTranslations("command");
+  const locale = useLocale();
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar
@@ -36,7 +38,7 @@ export function DeskSavedView({
           </div>
         ) : (
           <div
-            className="grid gap-2.5"
+            className="grid gap-3"
             style={{
               gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))",
               maxWidth: 960,
@@ -45,48 +47,106 @@ export function DeskSavedView({
             {saved.map((entry) => {
               const fam = familyForInput(entry.input);
               const r = entry.result;
+              const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
+              const savedOn = new Date(entry.timestamp).toLocaleDateString(locale, {
+                day: "numeric",
+                month: "short",
+              });
+              const meta = [r.gradeLabel, `×${r.quantity}`, savedOn]
+                .filter(Boolean)
+                .join(" · ");
               return (
                 <div
                   key={entry.id}
-                  className="flex items-center gap-3 rounded-2xl"
+                  className="flex flex-col rounded-2xl border border-border-faint transition-colors hover:border-[var(--accent-border)]"
                   style={{
-                    padding: "13px 15px",
-                    border: "1px solid var(--border-faint)",
                     background: "var(--surface)",
                     boxShadow: "var(--panel-shadow-soft)",
                   }}
                 >
-                  <div
-                    className="flex items-center justify-center flex-shrink-0 rounded-[11px] text-foreground"
-                    style={{ width: 40, height: 40, background: "var(--surface-inset)" }}
-                  >
-                    {fam && <CommandGlyph fam={fam} size={22} />}
+                  <div className="flex items-center gap-3" style={{ padding: "13px 15px 11px" }}>
+                    <div
+                      className="flex items-center justify-center flex-shrink-0 rounded-[11px]"
+                      style={{
+                        width: 40,
+                        height: 40,
+                        background: "var(--accent-surface)",
+                        color: "var(--accent-text)",
+                      }}
+                    >
+                      {fam && <CommandGlyph fam={fam} size={22} />}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onPick(entry)}
+                      className="flex-1 min-w-0 border-0 bg-transparent text-left cursor-pointer p-0"
+                    >
+                      <span className="block font-bold text-[14.5px] text-foreground truncate">
+                        {entry.name}
+                      </span>
+                      <span className="block font-mono text-[11px] text-muted mt-0.5 truncate">
+                        {meta}
+                      </span>
+                    </button>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <SavedAction title={t("saved.addToCompare")} onClick={() => onAddCompare(entry)}>
+                        <DeskIcon name="compare" />
+                      </SavedAction>
+                      <SavedAction title={t("common.delete")} onClick={() => onRemove(entry.id)}>
+                        <DeskIcon name="trash" />
+                      </SavedAction>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onPick(entry)}
-                    className="flex-1 min-w-0 border-0 bg-transparent text-left cursor-pointer p-0"
+                  <div
+                    className="flex items-end gap-5"
+                    style={{
+                      padding: "9px 15px 12px",
+                      borderTop: "1px solid var(--border-faint)",
+                    }}
                   >
-                    <span className="block font-bold text-[14.5px] text-foreground truncate">
-                      {entry.name}
-                    </span>
-                    <span className="block font-mono text-[11.5px] text-muted mt-0.5 truncate">
-                      {formatWeightPriceSubtitle(r)} · ×{r.quantity}
-                    </span>
-                  </button>
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <SavedAction title={t("saved.addToCompare")} onClick={() => onAddCompare(entry)}>
-                      <DeskIcon name="compare" />
-                    </SavedAction>
-                    <SavedAction title={t("common.delete")} onClick={() => onRemove(entry.id)}>
-                      <DeskIcon name="trash" />
-                    </SavedAction>
+                    <SavedStat
+                      label={t("result.totalWeight")}
+                      value={`${fsWeight(r.totalWeightKg)} ${fsWeightUnit(r.totalWeightKg)}`}
+                      accent="var(--accent-text)"
+                    />
+                    <SavedStat
+                      label={t("result.totalCost")}
+                      value={`${sym} ${fsMoney(r.grandTotalAmount)}`}
+                      accent="var(--blue-text)"
+                    />
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SavedStat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+}) {
+  return (
+    <div className="min-w-0">
+      <div
+        className="text-[9.5px] font-bold text-muted uppercase truncate"
+        style={{ letterSpacing: 0.8 }}
+      >
+        {label}
+      </div>
+      <div
+        className="font-mono text-[14.5px] font-extrabold mt-0.5 whitespace-nowrap"
+        style={{ color: accent }}
+      >
+        {value}
       </div>
     </div>
   );
@@ -119,5 +179,3 @@ function SavedAction({
     </button>
   );
 }
-
-/* ───────────────────────── Projects view ───────────────────────── */
