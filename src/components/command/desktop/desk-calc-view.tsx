@@ -103,6 +103,7 @@ export function DeskCalcView({
   onRemoveTapeEntry,
   onClearTape,
   onSave,
+  onLogSession,
   onCopySummary,
   onShareLink,
   onNew,
@@ -152,22 +153,16 @@ export function DeskCalcView({
     focusInputAtEnd();
   };
 
-  // Hero metric counts up when the query settles (see useCountUp).
-  const weightUnit = p.totalKg != null ? fsWeightUnit(p.totalKg) : "kg";
-  const heroTarget = isW
-    ? p.totalKg != null
-      ? weightUnit === "t"
-        ? p.totalKg / 1000
-        : p.totalKg
-      : null
-    : p.totalAmount ?? null;
-  const heroAnim = useCountUp(heroTarget, isW ? `w-${weightUnit}` : "price");
+  // Hero metric counts up when the query settles (see useCountUp). Weight
+  // always counts up in exact kilograms (no tonne conversion).
+  const heroTarget = isW ? p.totalKg ?? null : p.totalAmount ?? null;
+  const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
   const heroVal =
     heroAnim == null
       ? "—"
       : heroAnim.toLocaleString("en-US", {
-          minimumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
-          maximumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+          minimumFractionDigits: isW ? 0 : 2,
+          maximumFractionDigits: 2,
         });
 
   const tapeRows = useMemo(
@@ -228,7 +223,7 @@ export function DeskCalcView({
               if (e.key === "Enter") {
                 if (p.valid) {
                   e.preventDefault();
-                  onSave();
+                  onLogSession();
                   return;
                 }
                 // Mid-query: insert the first matching suggestion chip
@@ -487,7 +482,7 @@ export function DeskCalcView({
                 </span>
                 {isW && p.totalKg != null && (
                   <span className="font-bold text-[40px]" style={{ color: "var(--accent)" }}>
-                    {fsWeightUnit(p.totalKg)}
+                    {fsWeightUnit()}
                   </span>
                 )}
               </div>
@@ -568,7 +563,7 @@ export function DeskCalcView({
                 label={t("desktop.perPieceLabel")}
                 value={
                   p.valid && p.perPieceKg != null
-                    ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit(p.perPieceKg)}`
+                    ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
                     : "—"
                 }
               />
@@ -709,7 +704,7 @@ export function DeskCalcView({
                           className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0"
                           style={{ width: 82 }}
                         >
-                          {fsWeight(rp.totalKg!)} {fsWeightUnit(rp.totalKg!)}
+                          {fsWeight(rp.totalKg!)} {fsWeightUnit()}
                         </span>
                         <span
                           className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0"
@@ -748,7 +743,7 @@ export function DeskCalcView({
                     className="font-mono text-[13.5px] font-extrabold text-right"
                     style={{ width: 82, color: "var(--accent)" }}
                   >
-                    {fsWeight(sumKg)} {fsWeightUnit(sumKg)}
+                    {fsWeight(sumKg)} {fsWeightUnit()}
                   </span>
                   <span
                     className="font-mono text-[13.5px] font-extrabold text-right"

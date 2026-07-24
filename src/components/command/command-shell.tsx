@@ -250,7 +250,7 @@ export function CommandShell() {
     if (!p.valid) return;
     const text = isW
       ? p.totalKg != null
-        ? `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`
+        ? `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
         : ""
       : p.totalAmount != null
         ? `${sym}${fsMoney(p.totalAmount)}`
@@ -294,6 +294,17 @@ export function CommandShell() {
     pushHistory(query);
     showToast(t("toast.saved"));
   }, [p, isSaved, saveCalculation, showToast, query, t, pushHistory]);
+
+  // Enter only logs the line onto the session tape — bookmarking into the
+  // Saved library is the explicit Save action (doSave) alone.
+  const logToSession = useCallback(() => {
+    if (!p.valid) {
+      showToast(t("toast.addLength"));
+      return;
+    }
+    pushHistory(query);
+    showToast(t("toast.addedToSession"));
+  }, [p.valid, query, pushHistory, showToast, t]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
@@ -385,8 +396,8 @@ export function CommandShell() {
     setQuery((q) => q.slice(0, -1));
   }, []);
   const onEnter = useCallback(() => {
-    doSave();
-  }, [doSave]);
+    logToSession();
+  }, [logToSession]);
 
   const cycleTheme = useCallback(() => {
     setTheme(dark ? "light" : "dark");
@@ -429,22 +440,16 @@ export function CommandShell() {
 
   // Hero metric counts up when the query settles. The number is animated in the
   // target's display unit (kg or t) so the tween never crosses a unit boundary;
-  // the unit/symbol beside it stays driven by the real value.
-  const weightUnit = p.totalKg != null ? fsWeightUnit(p.totalKg) : "kg";
-  const heroTarget = isW
-    ? p.totalKg != null
-      ? weightUnit === "t"
-        ? p.totalKg / 1000
-        : p.totalKg
-      : null
-    : p.totalAmount ?? null;
-  const heroAnim = useCountUp(heroTarget, isW ? `w-${weightUnit}` : "price");
+  // the unit/symbol beside it stays driven by the real value. Weight always
+  // counts up in exact kilograms (no tonne conversion).
+  const heroTarget = isW ? p.totalKg ?? null : p.totalAmount ?? null;
+  const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
   const heroVal =
     heroAnim == null
       ? "—"
       : heroAnim.toLocaleString("en-US", {
-          minimumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
-          maximumFractionDigits: isW ? (weightUnit === "t" ? 2 : 1) : 2,
+          minimumFractionDigits: isW ? 0 : 2,
+          maximumFractionDigits: 2,
         });
 
   // Screen-reader announcement for the settled result (mirrors the hero +
@@ -453,7 +458,7 @@ export function CommandShell() {
     p.valid && p.totalKg != null
       ? t("aria.liveResult", {
           value:
-            `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}` +
+            `${fsWeight(p.totalKg)} ${fsWeightUnit()}` +
             (p.totalAmount != null ? ` · ${sym}${fsMoney(p.totalAmount)}` : ""),
         })
       : "";
@@ -522,6 +527,7 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
+          onLogSession={logToSession}
           onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
@@ -716,7 +722,7 @@ export function CommandShell() {
                     className="text-[26px] font-bold"
                     style={{ color: "var(--accent)" }}
                   >
-                    {fsWeightUnit(p.totalKg)}
+                    {fsWeightUnit()}
                   </span>
                 )}
                 {p.valid && (
@@ -1045,7 +1051,7 @@ export function CommandShell() {
                     if (e.key === "Enter") {
                       if (p.valid) {
                         e.preventDefault();
-                        doSave();
+                        logToSession();
                         return;
                       }
                       // Mid-query: insert the first matching suggestion chip
@@ -1341,7 +1347,7 @@ function PreviewCard({
             }}
           >
             {p.valid && p.perPieceKg != null
-              ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit(p.perPieceKg)}`
+              ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
               : "—"}
           </div>
         </div>
@@ -1359,7 +1365,7 @@ function PreviewCard({
             {p.valid && p.totalKg != null && p.totalAmount != null
               ? isWeight
                 ? `${sym} ${fsMoney(p.totalAmount)}`
-                : `${fsWeight(p.totalKg)} ${fsWeightUnit(p.totalKg)}`
+                : `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
               : "—"}
           </div>
         </div>

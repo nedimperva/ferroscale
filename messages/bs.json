@@ -66,6 +66,7 @@
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
       "saved": "Sačuvano",
+      "addedToSession": "Dodano u sesiju",
       "addedToProject": "Dodano u {project}",
       "projectFull": "Projekat je pun",
       "alreadyInCompare": "Već je u poređenju",
@@ -288,10 +289,10 @@
     "desktop": {
       "calcLive": "{name} · uživo",
       "typeProfileToStart": "upišite profil za početak",
-      "enterSave": "↵ sačuvaj",
+      "enterSave": "↵ upiši",
       "escClear": "esc obriši",
       "session": "SESIJA",
-      "sessionSub": "· svaki sačuvani izračun dolazi ovdje",
+      "sessionSub": "· ↵ upisuje svaki izračun ovdje",
       "emptyTape": "prazna traka — pritisnite ↵ za upis izračuna",
       "removeFromTape": "Ukloni sa trake",
       "removeFromTapeAria": "Ukloni {name} sa trake",
@@ -333,7 +334,7 @@
     "saved": {
       "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "subtitleEmpty": "sačuvani izračuni",
-      "empty": "još ništa nije sačuvano — pritisnite ↵ u kalkulatoru",
+      "empty": "još ništa nije sačuvano — pritisnite Sačuvaj na izračunu",
       "addToCompare": "Dodaj za poređenje"
     },
     "projects": {

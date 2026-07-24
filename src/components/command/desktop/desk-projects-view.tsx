@@ -119,7 +119,7 @@ export function DeskProjectsView({
                         className="font-mono text-[12.5px] font-bold"
                         style={{ color: "var(--accent)" }}
                       >
-                        {fsWeight(totKg)} {fsWeightUnit(totKg)}
+                        {fsWeight(totKg)} {fsWeightUnit()}
                       </span>
                       <span
                         className="font-mono text-[12.5px] font-bold"
@@ -155,7 +155,7 @@ export function DeskProjectsView({
                             </button>
                             <span className="font-mono text-[11px] text-muted flex-shrink-0">
                               ×{calc.result.quantity} · {fsWeight(calc.result.totalWeightKg)}{" "}
-                              {fsWeightUnit(calc.result.totalWeightKg)}
+                              {fsWeightUnit()}
                             </span>
                             <button
                               type="button"

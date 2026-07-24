@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
@@ -325,6 +325,7 @@ function SavedTabContent({
   onRemove: (id: string) => void;
 }) {
   const t = useTranslations("command");
+  const locale = useLocale();
   if (saved.length === 0) {
     return <EmptyState>{t("library.emptySaved")}</EmptyState>;
   }
@@ -332,21 +333,37 @@ function SavedTabContent({
     <RowsCard>
       {saved.map((entry) => {
         const fam = familyForInput(entry.input);
-        const subtitle = formatWeightPriceSubtitle(entry.result);
-        const grade = entry.result.gradeLabel;
+        const r = entry.result;
+        const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
+        const savedOn = new Date(entry.timestamp).toLocaleDateString(locale, {
+          day: "numeric",
+          month: "short",
+        });
+        const meta = [r.gradeLabel, `×${r.quantity}`, savedOn].filter(Boolean).join(" · ");
         return (
           <LibraryRow
             key={entry.id}
             glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
             title={entry.name}
-            subtitle={
-              <>
-                {subtitle}
-                {grade ? ` · ${grade}` : ""}
-              </>
-            }
+            subtitle={meta}
             onClick={() => onLoad(entry)}
             onRemove={() => onRemove(entry.id)}
+            trailing={
+              <span className="flex flex-col items-end flex-shrink-0 font-mono leading-tight">
+                <span
+                  className="text-[12px] font-bold"
+                  style={{ color: "var(--accent-text)" }}
+                >
+                  {fsWeight(r.totalWeightKg)} {fsWeightUnit()}
+                </span>
+                <span
+                  className="text-[10.5px] font-semibold mt-0.5"
+                  style={{ color: "var(--blue-text)" }}
+                >
+                  {sym} {fsMoney(r.grandTotalAmount)}
+                </span>
+              </span>
+            }
           />
         );
       })}
@@ -542,7 +559,7 @@ function ProjectsTabContent({
                   subtitle={
                     calcs.length === 0
                       ? t("library.emptyProject")
-                      : `${t("library.calcCount", { count: calcs.length })} · ${fsWeight(totalWeight)} ${fsWeightUnit(totalWeight)} · ${sym} ${fsMoney(totalCost)}`
+                      : `${t("library.calcCount", { count: calcs.length })} · ${fsWeight(totalWeight)} ${fsWeightUnit()} · ${sym} ${fsMoney(totalCost)}`
                   }
                   onClick={() =>
                     setExpanded(isOpen ? null : project.id)

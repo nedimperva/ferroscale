@@ -1,18 +1,16 @@
+// Weight is always shown in exact kilograms — no tonne conversion, which
+// would round away the kilograms the user cares about. Kept to 2 decimals
+// (10 g resolution) with thousands separators, e.g. "12,347.5".
 export function fsWeight(kg: number): string {
-  if (kg >= 1000) {
-    return (kg / 1000).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  }
   return kg.toLocaleString("en-US", {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   });
 }
 
-export function fsWeightUnit(kg: number): "kg" | "t" {
-  return kg >= 1000 ? "t" : "kg";
+// Weight is always reported in kilograms now (no tonne switch).
+export function fsWeightUnit(): "kg" {
+  return "kg";
 }
 
 export function fsMoney(v: number): string {

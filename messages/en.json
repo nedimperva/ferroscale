@@ -66,6 +66,7 @@
     "toast": {
       "addLength": "Add length to save",
       "saved": "Saved",
+      "addedToSession": "Added to session",
       "addedToProject": "Added to {project}",
       "projectFull": "Project is full",
       "alreadyInCompare": "Already in compare",
@@ -288,10 +289,10 @@
     "desktop": {
       "calcLive": "{name} · live",
       "typeProfileToStart": "type a profile to start",
-      "enterSave": "↵ save",
+      "enterSave": "↵ log",
       "escClear": "esc clear",
       "session": "SESSION",
-      "sessionSub": "· every saved calc lands here",
+      "sessionSub": "· ↵ logs every calculation here",
       "emptyTape": "empty tape — press ↵ to log a calculation",
       "removeFromTape": "Remove from tape",
       "removeFromTapeAria": "Remove {name} from tape",
@@ -333,7 +334,7 @@
     "saved": {
       "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
       "subtitleEmpty": "bookmarked calculations",
-      "empty": "nothing saved yet — press ↵ in the calculator",
+      "empty": "nothing saved yet — press Save on a calculation",
       "addToCompare": "Add to compare"
     },
     "projects": {
