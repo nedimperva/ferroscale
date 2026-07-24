@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Projects: materials to order.** Each desktop project card now expands to a purchasing summary that groups its lines by profile size + grade — regardless of per-piece length — into total pieces, total length, and total weight per item. Answers "what do I order Monday" instead of scanning a flat line list; templates expand into their parts by quantity
 - **Compare against any column, and save the set.** On the desktop Compare view you can now pin any column as the baseline — every weight and cost delta recomputes against your pick instead of always the first column — and **Save set** stores the whole comparison in the Saved library to revisit or rename later
 - **Your activity, privately.** A new sheet shows numbers derived from data the app already keeps on your device — calculations recorded, most-used calculations and materials, and your library's total weight and value (grouped by currency, never mixed). No tracking, no account, nothing leaves the device. Open it from Settings, or `g i` on the desktop
 - **Saved cards show the real profile.** Each desktop Saved card's thumbnail is now a scaled, undimensioned cross-section of that entry's actual profile (I-beam, channel, tee, hollow section, pipe, angle, plate) instead of a generic glyph — recognise a saved calc by its shape at a glance. Falls back to the glyph where geometry can't be drawn

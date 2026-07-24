@@ -362,7 +362,10 @@
       "empty": "no projects yet — hit New project, or + Project on a result",
       "itemCount": "{count, plural, one {# item} other {# items}}",
       "emptyProjectHint": "empty — add a calc from the right rail",
-      "removeFromProject": "Remove from project"
+      "removeFromProject": "Remove from project",
+      "materials": "Materials to order",
+      "materialsCount": "{count, plural, one {# item} other {# items}}",
+      "materialPieces": "{count, plural, one {# pc} other {# pcs}}"
     },
     "whatsNew": {
       "added": "New",

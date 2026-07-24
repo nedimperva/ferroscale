@@ -6,6 +6,7 @@ import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/m
 import { CommandGlyph } from "../command-glyph";
 import type { CalculationInput, CurrencyCode } from "@/lib/calculator/types";
 import type { Project } from "@/hooks/useProjects";
+import { computeProjectMaterials } from "@/lib/projects/materials";
 import { DeskTopbar } from "./desk-sidebar";
 import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
 import { familyForInput } from "../command-copy";
@@ -24,6 +25,16 @@ export function DeskProjectsView({
   const t = useTranslations("command");
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
+  const [materialsOpen, setMaterialsOpen] = useState<Set<string>>(new Set());
+
+  const toggleMaterials = (projectId: string) => {
+    setMaterialsOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(projectId)) next.delete(projectId);
+      else next.add(projectId);
+      return next;
+    });
+  };
 
   const submit = () => {
     const trimmed = newName.trim();
@@ -87,6 +98,8 @@ export function DeskProjectsView({
               const totAmount = calcs.reduce((s, c) => s + (c.result.grandTotalAmount ?? 0), 0);
               const currency = calcs[0]?.result.currency ?? ("EUR" as CurrencyCode);
               const projSym = CURRENCY_SYMBOLS[currency] ?? "€";
+              const materials = computeProjectMaterials(project);
+              const showMaterials = materialsOpen.has(project.id);
               return (
                 <div
                   key={project.id}
@@ -172,6 +185,55 @@ export function DeskProjectsView({
                       })
                     )}
                   </div>
+                  {materials.length > 0 && (
+                    <div style={{ borderTop: "1px solid var(--border-faint)" }}>
+                      <button
+                        type="button"
+                        onClick={() => toggleMaterials(project.id)}
+                        className="w-full flex items-center gap-2 cursor-pointer border-0 bg-transparent text-left"
+                        style={{ padding: "10px 16px" }}
+                        aria-expanded={showMaterials}
+                      >
+                        <svg
+                          width="11" height="11" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"
+                          className={`text-muted-faint transition-transform ${showMaterials ? "rotate-90" : ""}`}
+                        >
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted flex-1">
+                          {t("projects.materials")}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-faint">
+                          {t("projects.materialsCount", { count: materials.length })}
+                        </span>
+                      </button>
+                      {showMaterials && (
+                        <div style={{ padding: "0 8px 8px" }}>
+                          {materials.map((m) => (
+                            <div
+                              key={m.key}
+                              className="flex items-baseline gap-2 rounded-[9px]"
+                              style={{ padding: "6px 10px" }}
+                            >
+                              <span className="min-w-0 flex-1">
+                                <span className="font-semibold text-[12.5px] text-foreground">{m.label}</span>
+                                {m.gradeLabel && (
+                                  <span className="font-mono text-[10.5px] text-muted-faint ml-1.5">{m.gradeLabel}</span>
+                                )}
+                              </span>
+                              <span className="font-mono text-[10.5px] text-muted flex-shrink-0 whitespace-nowrap">
+                                {t("projects.materialPieces", { count: m.pieceCount })}
+                                {m.totalLengthM > 0 ? ` · ${formatLengthM(m.totalLengthM)} m` : ""}
+                                {" · "}
+                                {fsWeight(m.totalWeightKg)} {fsWeightUnit()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -180,6 +242,10 @@ export function DeskProjectsView({
       </div>
     </div>
   );
+}
+
+function formatLengthM(lengthM: number): string {
+  return Number(lengthM.toFixed(1)).toString();
 }
 
 /* ───────────────────────── Settings view ───────────────────────── */

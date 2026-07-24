@@ -362,7 +362,10 @@
       "empty": "još nema projekata — kliknite Novi projekat ili + Projekat na rezultatu",
       "itemCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
       "emptyProjectHint": "prazno — dodajte izračun iz desnog panela",
-      "removeFromProject": "Ukloni iz projekta"
+      "removeFromProject": "Ukloni iz projekta",
+      "materials": "Materijal za narudžbu",
+      "materialsCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
+      "materialPieces": "{count, plural, one {# kom} other {# kom}}"
     },
     "whatsNew": {
       "added": "Novo",
