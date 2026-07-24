@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Share a saved entry as a template link.** The Saved grid gains a link action that copies (or, on a phone, natively shares) a `?q=` URL for the entry — the recipient gets it pre-filled in their own bar to use or save. Trades templates over WhatsApp, the metal trade's default channel
 - **Keyboard navigation on the desktop workspace.** Press `g` then `c`/`s`/`p`/`k`/`,` to jump to Calculator, Saved, Projects, Compare, or Settings without reaching for the mouse, and `?` opens a shortcuts overlay (which also documents `#name ↵` template recall). Chords fire only when you're not typing in the command line, so a `g` in a query is still just a `g`
 - **"What's new" after an update.** When the app updates, a sheet shows what shipped since the version you last opened — reachable any time from Settings and from the update banner, and never shown to a brand-new install. (The structured changelog now carries a 3.7.0 entry, so the sidebar version reads true again.)
 - **Recall a saved template from the bar.** Type `#gate` and press Enter to load the saved entry you named "gate" straight into the command bar — `#gate x3` recalls it with the quantity forced to three. Recall reuses the same query reconstruction as click-to-load, so a `#reference` reaches anything the library can already open. Matching is by name slug: exact wins, otherwise the freshest entry whose name starts with what you typed

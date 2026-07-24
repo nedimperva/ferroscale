@@ -15,11 +15,13 @@ export function DeskSavedView({
   saved,
   onPick,
   onAddCompare,
+  onShare,
   onRemove,
 }: {
   saved: SavedEntry[];
   onPick: (entry: SavedEntry) => void;
   onAddCompare: (entry: SavedEntry) => void;
+  onShare: (entry: SavedEntry) => void;
   onRemove: (id: string) => void;
 }) {
   const t = useTranslations("command");
@@ -145,6 +147,9 @@ export function DeskSavedView({
                     <div className="flex gap-1.5 flex-shrink-0">
                       <SavedAction title={t("saved.addToCompare")} onClick={() => onAddCompare(entry)}>
                         <DeskIcon name="compare" />
+                      </SavedAction>
+                      <SavedAction title={t("saved.shareTemplate")} onClick={() => onShare(entry)}>
+                        <DeskIcon name="link" />
                       </SavedAction>
                       <SavedAction title={t("common.delete")} onClick={() => onRemove(entry.id)}>
                         <DeskIcon name="trash" />

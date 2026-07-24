@@ -272,6 +272,31 @@ export function CommandShell() {
     showToast(t("toast.copiedSummary"));
   }, [t, p, showToast]);
 
+  // Share a saved entry as a template link: reconstruct its canonical query and
+  // hand off a ?q= URL (native share on phone, clipboard elsewhere). The
+  // recipient gets it pre-filled in their bar to use or save — trades over
+  // WhatsApp, the metal trade's default channel.
+  const shareSaved = useCallback(
+    (input: CalculationInput) => {
+      const q = inputToQuery(input, defaultUnit, {
+        defaultGradeId: shared.defaultGradeId,
+        defaultPricing: shared,
+      });
+      if (!q) {
+        showToast(t("toast.cantShare"));
+        return;
+      }
+      const url = buildShareUrl(q, window.location);
+      if (isPhoneViewport && typeof navigator.share === "function") {
+        navigator.share({ url }).catch(() => {});
+        return;
+      }
+      navigator.clipboard?.writeText(url).catch(() => {});
+      showToast(t("toast.linkCopied"));
+    },
+    [defaultUnit, shared, isPhoneViewport, showToast, t],
+  );
+
   const shareLink = useCallback(() => {
     if (!p.valid) return;
     const url = buildShareUrl(query, window.location);
@@ -568,6 +593,7 @@ export function CommandShell() {
           onAddToProject={openProjectModal}
           onLoadInput={loadInput}
           onRemoveSaved={removeSaved}
+          onShareSaved={shareSaved}
           onCreateProject={createProject}
           onRemoveProjectCalc={removeCalculation}
         />

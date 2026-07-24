@@ -76,7 +76,8 @@
       "copiedSummary": "Summary copied",
       "linkCopied": "Link copied",
       "savedBumped": "Already saved — bumped to top",
-      "templateInserted": "Inserted {name}"
+      "templateInserted": "Inserted {name}",
+      "cantShare": "Can’t share this one as a link"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -342,7 +343,8 @@
       "addToCompare": "Add to compare",
       "stale": "unused",
       "staleTitle": "Saved a while ago and never reused",
-      "allTag": "All"
+      "allTag": "All",
+      "shareTemplate": "Share as template link"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# active} other {# active}}",

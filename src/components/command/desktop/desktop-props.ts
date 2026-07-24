@@ -52,6 +52,8 @@ export interface CommandDesktopProps {
   onAddToProject: () => void;
   onLoadInput: (input: CalculationInput) => void;
   onRemoveSaved: (id: string) => void;
+  /** Share a saved entry as a template link (?q= URL). */
+  onShareSaved: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
 }

@@ -162,6 +162,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
           saved={props.saved}
           onPick={(entry) => pickInput(entry.input)}
           onAddCompare={(entry) => props.onAddCompare(entry.input, entry.result)}
+          onShare={(entry) => props.onShareSaved(entry.input)}
           onRemove={props.onRemoveSaved}
         />
       )}

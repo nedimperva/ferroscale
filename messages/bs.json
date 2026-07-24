@@ -76,7 +76,8 @@
       "copiedSummary": "Sažetak kopiran",
       "linkCopied": "Link kopiran",
       "savedBumped": "Već sačuvano — pomjereno na vrh",
-      "templateInserted": "Umetnuto {name}"
+      "templateInserted": "Umetnuto {name}",
+      "cantShare": "Ovo se ne može podijeliti kao link"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -342,7 +343,8 @@
       "addToCompare": "Dodaj za poređenje",
       "stale": "nekorišteno",
       "staleTitle": "Sačuvano davno i nikad ponovo korišteno",
-      "allTag": "Sve"
+      "allTag": "Sve",
+      "shareTemplate": "Podijeli kao link predloška"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
