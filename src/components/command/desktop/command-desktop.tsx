@@ -175,6 +175,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
           onAddCompare={(entry) => props.onAddCompare(entry.input, entry.result)}
           onShare={(entry) => props.onShareSaved(entry.input)}
           onSetVariable={props.onSetSavedVariable}
+          onRenameTag={props.onRenameTag}
           onRemove={props.onRemoveSaved}
         />
       )}

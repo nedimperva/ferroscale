@@ -29,6 +29,7 @@ export function DeskSavedView({
   onAddCompare,
   onShare,
   onSetVariable,
+  onRenameTag,
   onRemove,
 }: {
   saved: SavedEntry[];
@@ -38,11 +39,13 @@ export function DeskSavedView({
   onAddCompare: (entry: SavedEntry) => void;
   onShare: (entry: SavedEntry) => void;
   onSetVariable: (id: string, variable: "length" | null) => void;
+  onRenameTag: (from: string, to: string) => void;
   onRemove: (id: string) => void;
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [editingTags, setEditingTags] = useState(false);
 
   // Reconstruct a parse result per entry (round-trip through the canonical
   // query) so the card can show a scaled cross-section thumbnail. Memoized so
@@ -96,20 +99,45 @@ export function DeskSavedView({
           </div>
         ) : (
           <>
-          {allTags.length > 1 && (
-            <div className="flex flex-wrap gap-1.5 mb-4" style={{ maxWidth: 960 }}>
-              <TagFilterChip active={activeTag === null} onClick={() => setActiveTag(null)}>
-                {t("saved.allTag")}
-              </TagFilterChip>
-              {allTags.map((tag) => (
-                <TagFilterChip
-                  key={tag}
-                  active={activeTag === tag}
-                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                >
-                  {tag}
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mb-4" style={{ maxWidth: 960 }}>
+              {!editingTags && (
+                <TagFilterChip active={activeTag === null} onClick={() => setActiveTag(null)}>
+                  {t("saved.allTag")}
                 </TagFilterChip>
-              ))}
+              )}
+              {allTags.map((tag) =>
+                editingTags ? (
+                  <TagEditor
+                    key={tag}
+                    tag={tag}
+                    onRename={(next) => {
+                      onRenameTag(tag, next);
+                      if (activeTag === tag) setActiveTag(next.trim() || null);
+                    }}
+                  />
+                ) : (
+                  <TagFilterChip
+                    key={tag}
+                    active={activeTag === tag}
+                    onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                  >
+                    {tag}
+                  </TagFilterChip>
+                ),
+              )}
+              <button
+                type="button"
+                onClick={() => setEditingTags((v) => !v)}
+                className="font-mono text-[11px] font-semibold rounded-lg px-2.5 h-7 flex items-center"
+                style={{
+                  background: editingTags ? "var(--accent-surface)" : "transparent",
+                  color: editingTags ? "var(--accent-text)" : "var(--muted-faint)",
+                  border: `1px solid ${editingTags ? "var(--accent-border)" : "var(--border-faint)"}`,
+                }}
+              >
+                {editingTags ? t("common.done") : t("saved.editTags")}
+              </button>
             </div>
           )}
           <div
@@ -240,6 +268,36 @@ export function DeskSavedView({
         )}
       </div>
     </div>
+  );
+}
+
+/** Inline tag editor: commit on Enter/blur. Renaming to an existing tag merges;
+ *  clearing it removes the tag from every entry. */
+function TagEditor({ tag, onRename }: { tag: string; onRename: (next: string) => void }) {
+  const [value, setValue] = useState(tag);
+  const commit = () => {
+    const next = value.trim();
+    if (next !== tag) onRename(next);
+  };
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") setValue(tag);
+      }}
+      onBlur={commit}
+      aria-label={tag}
+      className="font-mono text-[11px] font-semibold rounded-lg px-2 h-7"
+      style={{
+        width: `${Math.max(4, value.length + 1)}ch`,
+        minWidth: 48,
+        background: "var(--surface)",
+        color: "var(--foreground)",
+        border: "1px solid var(--accent-border)",
+      }}
+    />
   );
 }
 

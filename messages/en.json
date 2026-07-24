@@ -61,7 +61,8 @@
       "openArrow": "Open ->",
       "copyValue": "Copy value",
       "copySummary": "Copy summary",
-      "shareLink": "Share link"
+      "shareLink": "Share link",
+      "done": "Done"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -354,7 +355,8 @@
       "variableBadge": "L?",
       "variableLengthTitle": "Recall asks for a new length",
       "variableLengthOn": "Make length variable (ask on recall)",
-      "variableLengthOff": "Fix the saved length"
+      "variableLengthOff": "Fix the saved length",
+      "editTags": "Edit tags"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# active} other {# active}}",

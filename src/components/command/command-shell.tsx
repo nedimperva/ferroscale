@@ -91,6 +91,7 @@ export function CommandShell() {
     saveCalculation,
     removeSaved,
     updateSaved,
+    renameTag,
   } = useSaved();
   const {
     items: compareItems,
@@ -628,6 +629,7 @@ export function CommandShell() {
           onLoadInput={loadInput}
           onRemoveSaved={removeSaved}
           onShareSaved={shareSaved}
+          onRenameTag={renameTag}
           onSetSavedVariable={(id, variable) => updateSaved(id, { variableParam: variable })}
           onCreateProject={createProject}
           onRemoveProjectCalc={removeCalculation}

@@ -62,6 +62,8 @@ export interface CommandDesktopProps {
   onRemoveSaved: (id: string) => void;
   /** Share a saved entry as a template link (?q= URL). */
   onShareSaved: (input: CalculationInput) => void;
+  /** Rename/merge a tag across the whole Saved library. */
+  onRenameTag: (from: string, to: string) => void;
   onCreateProject: (name: string) => Project;
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
   onDuplicateProject: (id: string) => void;

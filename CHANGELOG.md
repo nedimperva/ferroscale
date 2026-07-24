@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Tidy your Saved tags.** An **Edit tags** mode on the desktop Saved view turns the filter chips into inline editors — rename a tag across the whole library at once, merge two by renaming one to the other, or clear it to remove it everywhere
 - **Projects: lifecycle, duplicate, delete.** Each desktop project card now carries a status you can cycle — **Draft → Quoted → Won** — and gains duplicate and delete actions (delete asks for a second click, since there's no in-view undo). Status is stored with the project and synced
 - **Projects: materials to order.** Each desktop project card now expands to a purchasing summary that groups its lines by profile size + grade — regardless of per-piece length — into total pieces, total length, and total weight per item. Answers "what do I order Monday" instead of scanning a flat line list; templates expand into their parts by quantity
 - **Compare against any column, and save the set.** On the desktop Compare view you can now pin any column as the baseline — every weight and cost delta recomputes against your pick instead of always the first column — and **Save set** stores the whole comparison in the Saved library to revisit or rename later

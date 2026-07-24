@@ -89,6 +89,9 @@ export interface UseSavedReturn {
     id: string,
     patch: { name?: string; notes?: string; tags?: string[]; variableParam?: "length" | null },
   ) => void;
+  /** Rename a tag across the whole library; an empty target removes it, and a
+   *  target that already exists on an entry merges (deduped). */
+  renameTag: (from: string, to: string) => void;
   markSavedUsed: (id: string) => void;
   isSaved: (result: CalculationResult) => boolean;
   getSavedCount: (result: CalculationResult) => number;
@@ -406,6 +409,26 @@ export function useSaved(): UseSavedReturn {
     [setSavedWithPersist],
   );
 
+  const renameTag = useCallback(
+    (from: string, to: string) => {
+      const target = to.trim();
+      if (!from || target === from) return;
+      const updatedAt = new Date().toISOString();
+      setSavedWithPersist((previous) =>
+        previous.map((entry) => {
+          if (entry.deletedAt || !entry.tags || !entry.tags.includes(from)) return entry;
+          const next: string[] = [];
+          for (const tag of entry.tags) {
+            const mapped = tag === from ? target : tag;
+            if (mapped && !next.includes(mapped)) next.push(mapped);
+          }
+          return { ...entry, tags: next.length > 0 ? next : undefined, updatedAt };
+        }),
+      );
+    },
+    [setSavedWithPersist],
+  );
+
   const markSavedUsed = useCallback(
     (id: string) => {
       const usedAt = new Date().toISOString();
@@ -456,6 +479,7 @@ export function useSaved(): UseSavedReturn {
     removePartFromSaved,
     reorderPartInSaved,
     updateSaved,
+    renameTag,
     markSavedUsed,
     isSaved,
     getSavedCount,
