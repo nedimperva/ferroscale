@@ -46,6 +46,7 @@ import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { ChangelogSheet } from "./sheets/changelog-sheet";
+import { InsightsSheet } from "./sheets/insights-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
 import { expandTemplateReference, stripLengthToken } from "@/lib/saved/template-ref";
@@ -101,6 +102,7 @@ export function CommandShell() {
   const { projects, createProject, addCalculation, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
   const whatsNew = useWhatsNew();
+  const [insightsOpen, setInsightsOpen] = useState(false);
 
   const [query, setQuery] = useState(DEMO_QUERY);
   // The URL only mirrors the query once the user has replaced the demo query
@@ -587,6 +589,8 @@ export function CommandShell() {
           onSave={doSave}
           onLogSession={logToSession}
           onExpandTemplate={commitTemplate}
+          onOpenInsights={() => setInsightsOpen(true)}
+          onOpenChangelog={whatsNew.open}
           onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
@@ -613,6 +617,9 @@ export function CommandShell() {
         )}
         {whatsNew.isOpen && (
           <ChangelogSheet lastSeen={whatsNew.lastSeen} onClose={whatsNew.close} />
+        )}
+        {insightsOpen && (
+          <InsightsSheet saved={savedEntries} projects={projects} onClose={() => setInsightsOpen(false)} />
         )}
         <CommandToast toast={toast} bottom={32} dark={dark} />
         <ResultAnnouncer text={liveResultText} />
@@ -1250,6 +1257,7 @@ export function CommandShell() {
               onClose={() => setSheet(null)}
               onToggleTheme={cycleTheme}
               onOpenChangelog={whatsNew.open}
+              onOpenInsights={() => setInsightsOpen(true)}
               dark={dark}
             />
           )}
@@ -1280,6 +1288,9 @@ export function CommandShell() {
 
           {whatsNew.isOpen && (
             <ChangelogSheet lastSeen={whatsNew.lastSeen} onClose={whatsNew.close} />
+          )}
+          {insightsOpen && (
+            <InsightsSheet saved={savedEntries} projects={projects} onClose={() => setInsightsOpen(false)} />
           )}
 
           {/* TOAST */}

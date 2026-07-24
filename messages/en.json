@@ -154,7 +154,8 @@
       "settings": "Settings",
       "library": "Library",
       "addToProject": "Add to project",
-      "whatsNew": "What's new"
+      "whatsNew": "What's new",
+      "insights": "Your activity"
     },
     "result": {
       "massPerMetre": "Mass per metre",
@@ -209,7 +210,8 @@
         "bs": "Bosnian"
       },
       "appearance": "APPEARANCE",
-      "whatsNew": "What's new"
+      "whatsNew": "What's new",
+      "insights": "Your activity"
     },
     "docs": {
       "label": "Guide",
@@ -372,7 +374,17 @@
       "gotoCompare": "Go to Compare",
       "gotoSettings": "Go to Settings",
       "recallTemplate": "Recall a saved template",
-      "help": "Show this help"
+      "help": "Show this help",
+      "insights": "Your activity"
+    },
+    "insights": {
+      "empty": "Start calculating and your activity shows up here — all private, all on this device.",
+      "calcsRecorded": "Calculations",
+      "libraryWeight": "Library weight",
+      "libraryValue": "Library value",
+      "topQueries": "Most-used calculations",
+      "topGrades": "Most-used materials",
+      "privacyNote": "These numbers never leave your device — no tracking, no account needed."
     }
   },
   "contact": {

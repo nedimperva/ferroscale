@@ -154,7 +154,8 @@
       "settings": "Postavke",
       "library": "Biblioteka",
       "addToProject": "Dodaj u projekat",
-      "whatsNew": "Šta je novo"
+      "whatsNew": "Šta je novo",
+      "insights": "Vaša aktivnost"
     },
     "result": {
       "massPerMetre": "Masa po metru",
@@ -209,7 +210,8 @@
         "bs": "Bosanski"
       },
       "appearance": "IZGLED",
-      "whatsNew": "Šta je novo"
+      "whatsNew": "Šta je novo",
+      "insights": "Vaša aktivnost"
     },
     "docs": {
       "label": "Vodič",
@@ -372,7 +374,17 @@
       "gotoCompare": "Idi na Poređenje",
       "gotoSettings": "Idi na Postavke",
       "recallTemplate": "Pozovi sačuvani predložak",
-      "help": "Prikaži ovu pomoć"
+      "help": "Prikaži ovu pomoć",
+      "insights": "Vaša aktivnost"
+    },
+    "insights": {
+      "empty": "Počnite računati i vaša aktivnost će se prikazati ovdje — sve privatno, sve na ovom uređaju.",
+      "calcsRecorded": "Izračuni",
+      "libraryWeight": "Težina biblioteke",
+      "libraryValue": "Vrijednost biblioteke",
+      "topQueries": "Najčešći izračuni",
+      "topGrades": "Najčešći materijali",
+      "privacyNote": "Ovi brojevi nikad ne napuštaju vaš uređaj — bez praćenja, bez naloga."
     }
   },
   "contact": {

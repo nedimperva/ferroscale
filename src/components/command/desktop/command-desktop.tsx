@@ -47,7 +47,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
   }, [focusInputAtEnd]);
 
   // Top-bar "New" (mirrors ⌘K): clear the line, jump to the calculator, focus.
-  const { onNew } = props;
+  const { onNew, onOpenInsights } = props;
   const startNewCalc = useCallback(() => {
     setView("calc");
     onNew();
@@ -101,6 +101,12 @@ export function CommandDesktop(props: CommandDesktopProps) {
       }
       if (pendingGRef.current && now - pendingGRef.current < 1200) {
         pendingGRef.current = 0;
+        const key = event.key.toLowerCase();
+        if (key === "i") {
+          event.preventDefault();
+          onOpenInsights();
+          return;
+        }
         const dest: Record<string, DeskView> = {
           c: "calc",
           s: "saved",
@@ -108,7 +114,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
           k: "compare",
           ",": "settings",
         };
-        const next = dest[event.key.toLowerCase()];
+        const next = dest[key];
         if (next) {
           event.preventDefault();
           if (next === "calc") gotoCalc();
@@ -127,7 +133,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [view, focusInputAtEnd, onNew, showHelp, gotoCalc]);
+  }, [view, focusInputAtEnd, onNew, onOpenInsights, showHelp, gotoCalc]);
 
   const counts = {
     saved: props.saved.length,
@@ -189,6 +195,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
           defaultUnit={props.defaultUnit}
           onSetDefaultUnit={props.onSetDefaultUnit}
           onToggleTheme={props.onToggleTheme}
+          onOpenInsights={props.onOpenInsights}
+          onOpenChangelog={props.onOpenChangelog}
         />
       )}
       {showHelp && <DeskShortcutsOverlay onClose={() => setShowHelp(false)} />}
@@ -206,6 +214,7 @@ function DeskShortcutsOverlay({ onClose }: { onClose: () => void }) {
     { keys: ["g", "p"], label: t("shortcuts.gotoProjects") },
     { keys: ["g", "k"], label: t("shortcuts.gotoCompare") },
     { keys: ["g", ","], label: t("shortcuts.gotoSettings") },
+    { keys: ["g", "i"], label: t("shortcuts.insights") },
     { keys: ["#name", "↵"], label: t("shortcuts.recallTemplate") },
     { keys: ["?"], label: t("shortcuts.help") },
   ];

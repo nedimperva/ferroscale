@@ -40,6 +40,10 @@ export interface CommandDesktopProps {
   onLogSession: () => void;
   /** Expand a `#template` reference in the query; returns true when it did. */
   onExpandTemplate: () => boolean;
+  /** Open the private, local activity/insights sheet. */
+  onOpenInsights: () => void;
+  /** Open the "what's new" changelog sheet. */
+  onOpenChangelog: () => void;
   /** Copy a clean, paste-ready text summary of the current result. */
   onCopySummary: () => void;
   onShareLink: () => void;

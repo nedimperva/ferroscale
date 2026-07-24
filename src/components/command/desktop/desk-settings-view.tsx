@@ -182,6 +182,8 @@ export function DeskSettingsView({
   defaultUnit,
   onSetDefaultUnit,
   onToggleTheme,
+  onOpenInsights,
+  onOpenChangelog,
 }: {
   dark: boolean;
   shared: SharedCalcSettings;
@@ -191,6 +193,8 @@ export function DeskSettingsView({
   defaultUnit: LengthUnit;
   onSetDefaultUnit: (unit: LengthUnit) => void;
   onToggleTheme: () => void;
+  onOpenInsights: () => void;
+  onOpenChangelog: () => void;
 }) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
@@ -237,6 +241,22 @@ export function DeskSettingsView({
             {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
           </p>
           <InstallAppSection />
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={onOpenInsights}
+              className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground"
+            >
+              {t("settings.insights")}
+            </button>
+            <button
+              type="button"
+              onClick={onOpenChangelog}
+              className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface-raised)] text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground"
+            >
+              {t("settings.whatsNew")}
+            </button>
+          </div>
           <SyncSection />
           </div>
           <CommandDocsSection className="mt-0" />

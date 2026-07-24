@@ -148,5 +148,16 @@ export function buildUsageSource(): CommandUsageSource {
   };
 }
 
+/** Raw persisted usage snapshot (queries + buckets) for the Insights view. */
+export interface UsageSnapshot {
+  queries: { q: string; n: number; t: number }[];
+  buckets: Record<string, Record<string, { n: number; t: number }>>;
+}
+
+/** Read the persisted usage stats as a plain snapshot (empty when none yet). */
+export function readUsageSnapshot(): UsageSnapshot {
+  return loadStats();
+}
+
 /** Test hook. */
 export const USAGE_STORAGE_KEY = USAGE_KEY;

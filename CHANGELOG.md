@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Your activity, privately.** A new sheet shows numbers derived from data the app already keeps on your device — calculations recorded, most-used calculations and materials, and your library's total weight and value (grouped by currency, never mixed). No tracking, no account, nothing leaves the device. Open it from Settings, or `g i` on the desktop
 - **Saved cards show the real profile.** Each desktop Saved card's thumbnail is now a scaled, undimensioned cross-section of that entry's actual profile (I-beam, channel, tee, hollow section, pipe, angle, plate) instead of a generic glyph — recognise a saved calc by its shape at a glance. Falls back to the glyph where geometry can't be drawn
 - **Parametric templates (length).** Mark a saved calculation's length as variable with the `L?` toggle on its Saved card; recalling it — by tapping the card or typing `#name ↵` — drops you into the bar with everything remembered except the length, ready to type a fresh one and see the new weight/price live. No modal, no re-entering the profile. Shown on single-calc entries
 - **Share a saved entry as a template link.** The Saved grid gains a link action that copies (or, on a phone, natively shares) a `?q=` URL for the entry — the recipient gets it pre-filled in their own bar to use or save. Trades templates over WhatsApp, the metal trade's default channel
