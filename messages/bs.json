@@ -365,7 +365,16 @@
       "removeFromProject": "Ukloni iz projekta",
       "materials": "Materijal za narudžbu",
       "materialsCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
-      "materialPieces": "{count, plural, one {# kom} other {# kom}}"
+      "materialPieces": "{count, plural, one {# kom} other {# kom}}",
+      "status": {
+        "draft": "Nacrt",
+        "quoted": "Ponuđeno",
+        "won": "Dobijeno"
+      },
+      "cycleStatus": "Promijeni status",
+      "duplicate": "Dupliciraj projekat",
+      "delete": "Obriši projekat",
+      "confirmDelete": "Kliknite ponovo za brisanje"
     },
     "whatsNew": {
       "added": "Novo",

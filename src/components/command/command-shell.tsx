@@ -99,7 +99,15 @@ export function CommandShell() {
     clearAll: clearCompare,
     isDuplicate: isInCompare,
   } = useCompare();
-  const { projects, createProject, addCalculation, removeCalculation } = useProjects();
+  const {
+    projects,
+    createProject,
+    addCalculation,
+    removeCalculation,
+    duplicateProject,
+    deleteProject,
+    setProjectStatus,
+  } = useProjects();
   const { presetsForProfile } = usePresets();
   const whatsNew = useWhatsNew();
   const [insightsOpen, setInsightsOpen] = useState(false);
@@ -623,6 +631,9 @@ export function CommandShell() {
           onSetSavedVariable={(id, variable) => updateSaved(id, { variableParam: variable })}
           onCreateProject={createProject}
           onRemoveProjectCalc={removeCalculation}
+          onDuplicateProject={(id) => { duplicateProject(id); }}
+          onDeleteProject={deleteProject}
+          onSetProjectStatus={setProjectStatus}
         />
         {projectCalc && (
           <CommandProjectPickerSheet

@@ -184,6 +184,9 @@ export function CommandDesktop(props: CommandDesktopProps) {
           onPickItem={pickInput}
           onCreateProject={props.onCreateProject}
           onRemoveCalc={props.onRemoveProjectCalc}
+          onDuplicate={props.onDuplicateProject}
+          onDelete={props.onDeleteProject}
+          onSetStatus={props.onSetProjectStatus}
         />
       )}
       {view === "settings" && (

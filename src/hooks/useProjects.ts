@@ -40,6 +40,10 @@ export interface ProjectCalculation {
   quantityMultiplier?: number;
 }
 
+export type ProjectStatus = "draft" | "quoted" | "won";
+
+export const PROJECT_STATUSES: ProjectStatus[] = ["draft", "quoted", "won"];
+
 export interface Project {
   id: string;
   name: string;
@@ -47,6 +51,8 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
+  /** Lifecycle stage; absent is treated as "draft". */
+  status?: ProjectStatus;
   calculations: ProjectCalculation[];
   /** Paint price per kg. */
   paintingPricePerKg?: number;
@@ -482,6 +488,7 @@ export interface UseProjectsReturn {
   setActiveProjectId: (id: string | null) => void;
   createProject: (name: string) => Project;
   renameProject: (id: string, name: string) => void;
+  setProjectStatus: (id: string, status: ProjectStatus) => void;
   deleteProject: (id: string) => void;
   duplicateProject: (id: string) => Project | null;
   addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
@@ -537,6 +544,16 @@ export function useProjects(): UseProjectsReturn {
       prev.map((p) =>
         p.id === id && !p.deletedAt
           ? { ...p, name: name.trim() || p.name, updatedAt: new Date().toISOString() }
+          : p,
+      ),
+    );
+  }, [setProjects]);
+
+  const setProjectStatus = useCallback((id: string, status: ProjectStatus) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === id && !p.deletedAt
+          ? { ...p, status, updatedAt: new Date().toISOString() }
           : p,
       ),
     );
@@ -757,6 +774,7 @@ export function useProjects(): UseProjectsReturn {
     setActiveProjectId,
     createProject,
     renameProject,
+    setProjectStatus,
     deleteProject,
     duplicateProject,
     addCalculation,

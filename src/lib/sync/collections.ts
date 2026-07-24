@@ -110,6 +110,10 @@ function normalizeProject(raw: unknown): Project | null {
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
     deletedAt: candidate.deletedAt,
+    status:
+      candidate.status === "quoted" || candidate.status === "won" || candidate.status === "draft"
+        ? candidate.status
+        : undefined,
     calculations: candidate.calculations,
     paintingPricePerKg: candidate.paintingPricePerKg,
     paintingCoverageM2PerKg: candidate.paintingCoverageM2PerKg,

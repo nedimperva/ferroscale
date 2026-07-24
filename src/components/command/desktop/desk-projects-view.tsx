@@ -5,27 +5,52 @@ import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import type { CalculationInput, CurrencyCode } from "@/lib/calculator/types";
-import type { Project } from "@/hooks/useProjects";
+import type { Project, ProjectStatus } from "@/hooks/useProjects";
+import { PROJECT_STATUSES } from "@/hooks/useProjects";
 import { computeProjectMaterials } from "@/lib/projects/materials";
 import { DeskTopbar } from "./desk-sidebar";
 import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
 import { familyForInput } from "../command-copy";
+
+const STATUS_STYLE: Record<ProjectStatus, { bg: string; fg: string }> = {
+  draft: { bg: "var(--surface-inset)", fg: "var(--muted)" },
+  quoted: { bg: "var(--blue-surface)", fg: "var(--blue-text)" },
+  won: { bg: "var(--green-surface)", fg: "var(--green-text)" },
+};
 
 export function DeskProjectsView({
   projects,
   onPickItem,
   onCreateProject,
   onRemoveCalc,
+  onDuplicate,
+  onDelete,
+  onSetStatus,
 }: {
   projects: Project[];
   onPickItem: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
   onRemoveCalc: (projectId: string, calcId: string) => void;
+  onDuplicate: (id: string) => void;
+  onDelete: (id: string) => void;
+  onSetStatus: (id: string, status: ProjectStatus) => void;
 }) {
   const t = useTranslations("command");
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [materialsOpen, setMaterialsOpen] = useState<Set<string>>(new Set());
+  // Delete needs a second click within a few seconds — a project is a lot of
+  // work to lose to a stray click, and there's no in-view undo.
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const requestDelete = (id: string) => {
+    if (confirmDelete === id) {
+      onDelete(id);
+      setConfirmDelete(null);
+      return;
+    }
+    setConfirmDelete(id);
+    window.setTimeout(() => setConfirmDelete((cur) => (cur === id ? null : cur)), 3000);
+  };
 
   const toggleMaterials = (projectId: string) => {
     setMaterialsOpen((prev) => {
@@ -100,10 +125,15 @@ export function DeskProjectsView({
               const projSym = CURRENCY_SYMBOLS[currency] ?? "€";
               const materials = computeProjectMaterials(project);
               const showMaterials = materialsOpen.has(project.id);
+              const status: ProjectStatus = project.status ?? "draft";
+              const cycleStatus = () => {
+                const idx = PROJECT_STATUSES.indexOf(status);
+                onSetStatus(project.id, PROJECT_STATUSES[(idx + 1) % PROJECT_STATUSES.length]);
+              };
               return (
                 <div
                   key={project.id}
-                  className="rounded-[18px] overflow-hidden"
+                  className="group rounded-[18px] overflow-hidden"
                   style={{
                     border: "1px solid var(--border-faint)",
                     background: "var(--surface)",
@@ -123,11 +153,46 @@ export function DeskProjectsView({
                       >
                         {project.name}
                       </span>
-                      <span className="font-mono text-[10.5px] text-muted">
+                      <button
+                        type="button"
+                        onClick={cycleStatus}
+                        title={t("projects.cycleStatus")}
+                        className="font-mono text-[9px] font-bold uppercase tracking-wider rounded-full cursor-pointer border-0 flex-shrink-0"
+                        style={{ padding: "3px 8px", background: STATUS_STYLE[status].bg, color: STATUS_STYLE[status].fg }}
+                      >
+                        {t(`projects.status.${status}`)}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDuplicate(project.id)}
+                        title={t("projects.duplicate")}
+                        aria-label={t("projects.duplicate")}
+                        className="flex items-center justify-center rounded-[7px] cursor-pointer flex-shrink-0 text-muted opacity-0 group-hover:opacity-100"
+                        style={{ width: 24, height: 24, background: "var(--surface-raised)", border: "1px solid var(--border-faint)" }}
+                      >
+                        <DeskIcon name="copy" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => requestDelete(project.id)}
+                        title={confirmDelete === project.id ? t("projects.confirmDelete") : t("projects.delete")}
+                        aria-label={confirmDelete === project.id ? t("projects.confirmDelete") : t("projects.delete")}
+                        className={`flex items-center justify-center rounded-[7px] cursor-pointer flex-shrink-0 ${
+                          confirmDelete === project.id ? "opacity-100" : "text-muted opacity-0 group-hover:opacity-100"
+                        }`}
+                        style={
+                          confirmDelete === project.id
+                            ? { width: 24, height: 24, background: "var(--accent-surface)", color: "var(--accent-text)", border: "1px solid var(--accent-border)" }
+                            : { width: 24, height: 24, background: "var(--surface-raised)", border: "1px solid var(--border-faint)" }
+                        }
+                      >
+                        <DeskIcon name="trash" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3.5 mt-2.5">
+                      <span className="font-mono text-[10.5px] text-muted-faint">
                         {t("projects.itemCount", { count: calcs.length })}
                       </span>
-                    </div>
-                    <div className="flex gap-3.5 mt-2.5">
                       <span
                         className="font-mono text-[12.5px] font-bold"
                         style={{ color: "var(--accent)" }}

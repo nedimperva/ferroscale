@@ -365,7 +365,16 @@
       "removeFromProject": "Remove from project",
       "materials": "Materials to order",
       "materialsCount": "{count, plural, one {# item} other {# items}}",
-      "materialPieces": "{count, plural, one {# pc} other {# pcs}}"
+      "materialPieces": "{count, plural, one {# pc} other {# pcs}}",
+      "status": {
+        "draft": "Draft",
+        "quoted": "Quoted",
+        "won": "Won"
+      },
+      "cycleStatus": "Change status",
+      "duplicate": "Duplicate project",
+      "delete": "Delete project",
+      "confirmDelete": "Click again to delete"
     },
     "whatsNew": {
       "added": "New",

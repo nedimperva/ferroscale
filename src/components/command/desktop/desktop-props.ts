@@ -8,7 +8,7 @@ import type { SharedCalcSettings } from "@/lib/settings-stores";
 import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
-import type { Project } from "@/hooks/useProjects";
+import type { Project, ProjectStatus } from "@/hooks/useProjects";
 
 export type DeskView = "calc" | "saved" | "projects" | "compare" | "settings";
 
@@ -64,4 +64,7 @@ export interface CommandDesktopProps {
   onShareSaved: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  onDuplicateProject: (id: string) => void;
+  onDeleteProject: (id: string) => void;
+  onSetProjectStatus: (id: string, status: ProjectStatus) => void;
 }
