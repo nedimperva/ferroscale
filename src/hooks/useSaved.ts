@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { fingerprint } from "@/lib/calculator/fingerprint";
+import { suggestTags } from "@/lib/saved/tags";
 import {
   createSavedPart,
   isActiveSyncEntity,
@@ -50,6 +51,12 @@ export interface TemplatePartDraft {
 /*  Hook                                                              */
 /* ------------------------------------------------------------------ */
 
+export interface SaveOutcome {
+  id: string;
+  /** True when an identical entry already existed and was bumped, not cloned. */
+  bumped: boolean;
+}
+
 export interface UseSavedReturn {
   saved: SavedEntry[];
   saveCalculation: (
@@ -59,7 +66,7 @@ export interface UseSavedReturn {
     notes?: string,
     tags?: string[],
     parts?: TemplatePartDraft[],
-  ) => void;
+  ) => SaveOutcome;
   removeSaved: (id: string) => void;
   removeSavedMany: (ids: string[]) => void;
   duplicateSaved: (id: string) => void;
@@ -124,12 +131,52 @@ export function useSaved(): UseSavedReturn {
       const defaultPart = createSavedPart(result.profileLabel, input, result);
       const finalParts = normalizedParts.length > 0 ? normalizedParts : [defaultPart];
 
+      // Explicit tags win; otherwise seed zero-keystroke family/grade tags so
+      // the library stays filterable without any tagging effort.
+      const cleanedTags = tags?.map((tag) => tag.trim()).filter(Boolean).slice(0, 8);
+      const entryTags = cleanedTags && cleanedTags.length > 0
+        ? cleanedTags
+        : suggestTags(result);
+
+      // Duplicate-aware save: a plain single-calc save that matches an existing
+      // single-part entry bumps that entry (recency + a use tick, floated to the
+      // top) instead of leaving a near-identical twin behind. Multi-part
+      // templates always create a fresh entry.
+      const isPlainSave = finalParts.length === 1;
+      const outcome: SaveOutcome = { id: crypto.randomUUID(), bumped: false };
+      if (isPlainSave) {
+        const fp = fingerprint(result);
+        const existing = allSaved.find(
+          (entry) => isActiveSyncEntity(entry) && entry.parts.length === 1 && fingerprint(entry.result) === fp,
+        );
+        if (existing) {
+          outcome.id = existing.id;
+          outcome.bumped = true;
+        }
+      }
+
+      if (outcome.bumped) {
+        const bumpId = outcome.id;
+        setSavedWithPersist((previous) => {
+          const target = previous.find((entry) => entry.id === bumpId);
+          if (!target) return previous;
+          const bumped: SavedEntry = {
+            ...target,
+            useCount: target.useCount + 1,
+            lastUsedAt: timestamp,
+            updatedAt: timestamp,
+          };
+          return [bumped, ...previous.filter((entry) => entry.id !== bumpId)];
+        });
+        return outcome;
+      }
+
       const entry: SavedEntry = {
-        id: crypto.randomUUID(),
+        id: outcome.id,
         timestamp,
         name: name.trim() || result.profileLabel,
         notes: notes?.trim() || undefined,
-        tags: tags?.map((tag) => tag.trim()).filter(Boolean).slice(0, 8),
+        tags: entryTags && entryTags.length > 0 ? entryTags : undefined,
         useCount: 0,
         updatedAt: timestamp,
         parts: finalParts,
@@ -138,8 +185,9 @@ export function useSaved(): UseSavedReturn {
         normalizedProfile: finalParts[0].normalizedProfile,
       };
       setSavedWithPersist((previous) => [entry, ...previous]);
+      return outcome;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const removeSaved = useCallback((id: string) => {

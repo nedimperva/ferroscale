@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Saved library keeps itself tidy.** Saving a calculation that's already in your library no longer leaves a near-identical twin — the existing entry is bumped to the top with a use tick, and the toast says so. New saves also pick up automatic tags (profile family + grade) with zero typing, and the desktop Saved grid gains a one-click tag filter so a growing library stays navigable. Entries you saved long ago and never reused get a subtle **unused** marker — the gentle nudge half of an archive flow
+
+---
+
 ## [3.7.0] - 2026-07-20
 
 ### Added

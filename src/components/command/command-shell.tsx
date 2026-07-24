@@ -85,7 +85,6 @@ export function CommandShell() {
   const {
     saved: savedEntries,
     saveCalculation,
-    isSaved,
     removeSaved,
   } = useSaved();
   const {
@@ -286,14 +285,13 @@ export function CommandShell() {
       return;
     }
     // Real save — appears on the Library Saved tab (shared with the full app).
-    if (!isSaved(p.calc.result)) {
-      const displayName = formatCommandParseName(t, p) ?? p.name;
-      const autoName = `${displayName} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
-      saveCalculation(p.calc.input, p.calc.result, autoName);
-    }
+    // saveCalculation dedupes: an identical entry is bumped, not twinned.
+    const displayName = formatCommandParseName(t, p) ?? p.name;
+    const autoName = `${displayName} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
+    const outcome = saveCalculation(p.calc.input, p.calc.result, autoName);
     pushHistory(query);
-    showToast(t("toast.saved"));
-  }, [p, isSaved, saveCalculation, showToast, query, t, pushHistory]);
+    showToast(outcome.bumped ? t("toast.savedBumped") : t("toast.saved"));
+  }, [p, saveCalculation, showToast, query, t, pushHistory]);
 
   // Enter only logs the line onto the session tape — bookmarking into the
   // Saved library is the explicit Save action (doSave) alone.

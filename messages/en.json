@@ -74,7 +74,8 @@
       "copied": "Copied to clipboard",
       "copiedValue": "Value copied",
       "copiedSummary": "Summary copied",
-      "linkCopied": "Link copied"
+      "linkCopied": "Link copied",
+      "savedBumped": "Already saved — bumped to top"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -335,7 +336,10 @@
       "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
       "subtitleEmpty": "bookmarked calculations",
       "empty": "nothing saved yet — press Save on a calculation",
-      "addToCompare": "Add to compare"
+      "addToCompare": "Add to compare",
+      "stale": "unused",
+      "staleTitle": "Saved a while ago and never reused",
+      "allTag": "All"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# active} other {# active}}",

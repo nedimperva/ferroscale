@@ -74,7 +74,8 @@
       "copied": "Kopirano u međuspremnik",
       "copiedValue": "Vrijednost kopirana",
       "copiedSummary": "Sažetak kopiran",
-      "linkCopied": "Link kopiran"
+      "linkCopied": "Link kopiran",
+      "savedBumped": "Već sačuvano — pomjereno na vrh"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -335,7 +336,10 @@
       "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "subtitleEmpty": "sačuvani izračuni",
       "empty": "još ništa nije sačuvano — pritisnite Sačuvaj na izračunu",
-      "addToCompare": "Dodaj za poređenje"
+      "addToCompare": "Dodaj za poređenje",
+      "stale": "nekorišteno",
+      "staleTitle": "Sačuvano davno i nikad ponovo korišteno",
+      "allTag": "Sve"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",

@@ -7,6 +7,8 @@ import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
 import type { CalculationInput, CurrencyCode, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
+import { useNow } from "@/hooks/useNow";
+import { isStaleSaved } from "@/lib/saved/tags";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
@@ -326,6 +328,7 @@ function SavedTabContent({
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
+  const now = useNow();
   if (saved.length === 0) {
     return <EmptyState>{t("library.emptySaved")}</EmptyState>;
   }
@@ -335,6 +338,7 @@ function SavedTabContent({
         const fam = familyForInput(entry.input);
         const r = entry.result;
         const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
+        const stale = isStaleSaved(entry, now);
         const savedOn = new Date(entry.timestamp).toLocaleDateString(locale, {
           day: "numeric",
           month: "short",
@@ -345,7 +349,7 @@ function SavedTabContent({
             key={entry.id}
             glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
             title={entry.name}
-            subtitle={meta}
+            subtitle={stale ? `${meta} · ${t("saved.stale")}` : meta}
             onClick={() => onLoad(entry)}
             onRemove={() => onRemove(entry.id)}
             trailing={

@@ -1,9 +1,12 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import type { SavedEntry } from "@/hooks/useSaved";
+import { useNow } from "@/hooks/useNow";
+import { isStaleSaved } from "@/lib/saved/tags";
 import { DeskTopbar } from "./desk-sidebar";
 import { DeskIcon } from "./desk-atoms";
 import { familyForInput } from "../command-copy";
@@ -21,6 +24,28 @@ export function DeskSavedView({
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  // Distinct tags across the library, in first-seen order — the substrate for
+  // a one-click filter that keeps a growing library navigable.
+  const allTags = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const entry of saved) {
+      for (const tag of entry.tags ?? []) {
+        if (seen.has(tag)) continue;
+        seen.add(tag);
+        out.push(tag);
+      }
+    }
+    return out;
+  }, [saved]);
+
+  const visible = useMemo(
+    () => (activeTag ? saved.filter((entry) => entry.tags?.includes(activeTag)) : saved),
+    [saved, activeTag],
+  );
+  const now = useNow();
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopbar
@@ -37,6 +62,23 @@ export function DeskSavedView({
             {t("saved.empty")}
           </div>
         ) : (
+          <>
+          {allTags.length > 1 && (
+            <div className="flex flex-wrap gap-1.5 mb-4" style={{ maxWidth: 960 }}>
+              <TagFilterChip active={activeTag === null} onClick={() => setActiveTag(null)}>
+                {t("saved.allTag")}
+              </TagFilterChip>
+              {allTags.map((tag) => (
+                <TagFilterChip
+                  key={tag}
+                  active={activeTag === tag}
+                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                >
+                  {tag}
+                </TagFilterChip>
+              ))}
+            </div>
+          )}
           <div
             className="grid gap-3"
             style={{
@@ -44,7 +86,8 @@ export function DeskSavedView({
               maxWidth: 960,
             }}
           >
-            {saved.map((entry) => {
+            {visible.map((entry) => {
+              const stale = isStaleSaved(entry, now);
               const fam = familyForInput(entry.input);
               const r = entry.result;
               const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
@@ -81,8 +124,19 @@ export function DeskSavedView({
                       onClick={() => onPick(entry)}
                       className="flex-1 min-w-0 border-0 bg-transparent text-left cursor-pointer p-0"
                     >
-                      <span className="block font-bold text-[14.5px] text-foreground truncate">
-                        {entry.name}
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-bold text-[14.5px] text-foreground truncate">
+                          {entry.name}
+                        </span>
+                        {stale && (
+                          <span
+                            title={t("saved.staleTitle")}
+                            className="flex-shrink-0 font-mono text-[9px] font-bold uppercase tracking-wide rounded px-1 py-0.5"
+                            style={{ background: "var(--surface-inset)", color: "var(--muted-faint)" }}
+                          >
+                            {t("saved.stale")}
+                          </span>
+                        )}
                       </span>
                       <span className="block font-mono text-[11px] text-muted mt-0.5 truncate">
                         {meta}
@@ -119,9 +173,35 @@ export function DeskSavedView({
               );
             })}
           </div>
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+function TagFilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="font-mono text-[11px] font-semibold rounded-lg px-2.5 h-7 flex items-center transition-colors"
+      style={{
+        background: active ? "var(--accent-surface)" : "var(--surface-raised)",
+        color: active ? "var(--accent-text)" : "var(--muted)",
+        border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
