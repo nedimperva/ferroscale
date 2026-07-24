@@ -356,6 +356,17 @@
       "added": "Novo",
       "changed": "Poboljšano",
       "fixed": "Popravljeno"
+    },
+    "shortcuts": {
+      "title": "Prečice na tastaturi",
+      "newCalc": "Novi izračun",
+      "gotoCalc": "Idi na Kalkulator",
+      "gotoSaved": "Idi na Sačuvano",
+      "gotoProjects": "Idi na Projekte",
+      "gotoCompare": "Idi na Poređenje",
+      "gotoSettings": "Idi na Postavke",
+      "recallTemplate": "Pozovi sačuvani predložak",
+      "help": "Prikaži ovu pomoć"
     }
   },
   "contact": {

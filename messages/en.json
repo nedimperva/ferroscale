@@ -356,6 +356,17 @@
       "added": "New",
       "changed": "Improved",
       "fixed": "Fixed"
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts",
+      "newCalc": "New calculation",
+      "gotoCalc": "Go to Calculator",
+      "gotoSaved": "Go to Saved",
+      "gotoProjects": "Go to Projects",
+      "gotoCompare": "Go to Compare",
+      "gotoSettings": "Go to Settings",
+      "recallTemplate": "Recall a saved template",
+      "help": "Show this help"
     }
   },
   "contact": {
