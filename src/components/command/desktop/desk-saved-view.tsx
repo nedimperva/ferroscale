@@ -2,9 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import {
+  CURRENCY_SYMBOLS,
+  cmdParse,
+  fsMoney,
+  fsWeight,
+  fsWeightUnit,
+  inputToQuery,
+} from "@ferroscale/metal-core";
+import type { CommandParserSettings, CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
+import { ProfileMiniShape } from "../profile-drawing";
 import type { SavedEntry } from "@/hooks/useSaved";
+import type { LengthUnit } from "@/lib/calculator/types";
 import { useNow } from "@/hooks/useNow";
 import { isStaleSaved } from "@/lib/saved/tags";
 import { DeskTopbar } from "./desk-sidebar";
@@ -13,6 +23,8 @@ import { familyForInput } from "../command-copy";
 
 export function DeskSavedView({
   saved,
+  parserSettings,
+  defaultUnit,
   onPick,
   onAddCompare,
   onShare,
@@ -20,6 +32,8 @@ export function DeskSavedView({
   onRemove,
 }: {
   saved: SavedEntry[];
+  parserSettings: CommandParserSettings;
+  defaultUnit: LengthUnit;
   onPick: (entry: SavedEntry) => void;
   onAddCompare: (entry: SavedEntry) => void;
   onShare: (entry: SavedEntry) => void;
@@ -29,6 +43,21 @@ export function DeskSavedView({
   const t = useTranslations("command");
   const locale = useLocale();
   const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  // Reconstruct a parse result per entry (round-trip through the canonical
+  // query) so the card can show a scaled cross-section thumbnail. Memoized so
+  // it only recomputes when the library or settings change.
+  const shapes = useMemo(() => {
+    const map = new Map<string, CommandParseResult | null>();
+    for (const entry of saved) {
+      const q = inputToQuery(entry.input, defaultUnit, {
+        defaultGradeId: parserSettings.defaultGradeId,
+        defaultPricing: parserSettings.pricing,
+      });
+      map.set(entry.id, q ? cmdParse(q, parserSettings) : null);
+    }
+    return map;
+  }, [saved, parserSettings, defaultUnit]);
 
   // Distinct tags across the library, in first-seen order — the substrate for
   // a one-click filter that keeps a growing library navigable.
@@ -96,6 +125,7 @@ export function DeskSavedView({
               // v1 parametric templates are single-calc; hide the toggle on
               // multi-part templates (which can't be a single length-less query).
               const canParametrize = entry.parts.length === 1;
+              const shape = shapes.get(entry.id) ?? null;
               const fam = familyForInput(entry.input);
               const r = entry.result;
               const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
@@ -117,7 +147,7 @@ export function DeskSavedView({
                 >
                   <div className="flex items-center gap-3" style={{ padding: "13px 15px 11px" }}>
                     <div
-                      className="flex items-center justify-center flex-shrink-0 rounded-[11px]"
+                      className="flex items-center justify-center flex-shrink-0 rounded-[11px] overflow-hidden"
                       style={{
                         width: 40,
                         height: 40,
@@ -125,7 +155,11 @@ export function DeskSavedView({
                         color: "var(--accent-text)",
                       }}
                     >
-                      {fam && <CommandGlyph fam={fam} size={22} />}
+                      {shape ? (
+                        <ProfileMiniShape p={shape} size={34} />
+                      ) : (
+                        fam && <CommandGlyph fam={fam} size={22} />
+                      )}
                     </div>
                     <button
                       type="button"

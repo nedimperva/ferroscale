@@ -275,7 +275,7 @@ function Leaders({ shapeX1, items }: { shapeX1: number; items: { value: string; 
 
 /* ── Per-kind rendering ──────────────────────────────────────────────────── */
 
-function renderSection(sec: Section): React.ReactNode {
+function renderSection(sec: Section, bare = false): React.ReactNode {
   switch (sec.kind) {
     case "ibeam":
     case "channel":
@@ -338,9 +338,13 @@ function renderSection(sec: Section): React.ReactNode {
       return (
         <>
           <path d={d} {...SHAPE} strokeLinejoin="round" />
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
-          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
-          <Leaders shapeX1={f.x1} items={leaders} />
+          {!bare && (
+            <>
+              <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
+              <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
+              <Leaders shapeX1={f.x1} items={leaders} />
+            </>
+          )}
         </>
       );
     }
@@ -352,9 +356,13 @@ function renderSection(sec: Section): React.ReactNode {
       return (
         <>
           <path d={`${outer} ${inner}`} fillRule="evenodd" {...SHAPE} />
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
-          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
-          <Leaders shapeX1={f.x1} items={[{ value: `t ${fmt(sec.t)}`, fx: f.x1 - wall / 2, fy: f.y0 + f.h / 2 }]} />
+          {!bare && (
+            <>
+              <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
+              <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
+              <Leaders shapeX1={f.x1} items={[{ value: `t ${fmt(sec.t)}`, fx: f.x1 - wall / 2, fy: f.y0 + f.h / 2 }]} />
+            </>
+          )}
         </>
       );
     }
@@ -371,8 +379,12 @@ function renderSection(sec: Section): React.ReactNode {
       return (
         <>
           <path d={ring} fillRule="evenodd" {...SHAPE} />
-          <DimTop x1={cx - R} x2={cx + R} shapeY={f.y0} value={`Ø${fmt(sec.d)}`} />
-          <Leaders shapeX1={f.x1} items={[{ value: `t ${fmt(sec.t)}`, fx: cx + R - wall / 2, fy: cy }]} />
+          {!bare && (
+            <>
+              <DimTop x1={cx - R} x2={cx + R} shapeY={f.y0} value={`Ø${fmt(sec.d)}`} />
+              <Leaders shapeX1={f.x1} items={[{ value: `t ${fmt(sec.t)}`, fx: cx + R - wall / 2, fy: cy }]} />
+            </>
+          )}
         </>
       );
     }
@@ -383,7 +395,7 @@ function renderSection(sec: Section): React.ReactNode {
       return (
         <>
           <circle cx={cx} cy={cy} r={f.w / 2} {...SHAPE} />
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={`Ø${fmt(sec.d)}`} />
+          {!bare && <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={`Ø${fmt(sec.d)}`} />}
         </>
       );
     }
@@ -392,8 +404,12 @@ function renderSection(sec: Section): React.ReactNode {
       return (
         <>
           <rect x={f.x0} y={f.y0} width={f.w} height={f.h} rx={1.5} {...SHAPE} />
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.a)} />
-          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
+          {!bare && (
+            <>
+              <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.a)} />
+              <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
+            </>
+          )}
         </>
       );
     }
@@ -416,8 +432,12 @@ function renderSection(sec: Section): React.ReactNode {
         <>
           <rect x={f.x0} y={f.y0} width={f.w} height={f.h} rx={1} {...SHAPE} />
           {dots}
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(w)} />
-          <Leaders shapeX1={f.x1} items={items} />
+          {!bare && (
+            <>
+              <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(w)} />
+              <Leaders shapeX1={f.x1} items={items} />
+            </>
+          )}
         </>
       );
     }
@@ -434,16 +454,48 @@ function renderSection(sec: Section): React.ReactNode {
       return (
         <>
           <path d={d} {...SHAPE} strokeLinejoin="round" />
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
-          <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
-          <Leaders
-            shapeX1={f.x1}
-            items={[{ value: `t ${fmt(t)}`, fx: X(sec.b * 0.72), fy: Y(sec.a - t / 2) }]}
-          />
+          {!bare && (
+            <>
+              <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
+              <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
+              <Leaders
+                shapeX1={f.x1}
+                items={[{ value: `t ${fmt(t)}`, fx: X(sec.b * 0.72), fy: Y(sec.a - t / 2) }]}
+              />
+            </>
+          )}
         </>
       );
     }
   }
+}
+
+/**
+ * A tiny, undimensioned cross-section for list thumbnails — the same scaled
+ * shape as ProfileDrawing but without the dimension callouts, cropped to a
+ * square around the content box so it reads at ~40px. Returns null when the
+ * geometry can't be drawn, so callers fall back to the flat glyph.
+ */
+export function ProfileMiniShape({
+  p,
+  size = 40,
+}: {
+  p: CommandParseResult;
+  size?: number;
+}) {
+  const sec = p.valid ? resolveSection(p) : null;
+  if (!sec) return null;
+  return (
+    <svg
+      viewBox="50 34 180 180"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      style={{ display: "block" }}
+    >
+      {renderSection(sec, true)}
+    </svg>
+  );
 }
 
 export function ProfileDrawing({

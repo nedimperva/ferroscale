@@ -160,6 +160,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "saved" && (
         <DeskSavedView
           saved={props.saved}
+          parserSettings={props.parserSettings}
+          defaultUnit={props.defaultUnit}
           onPick={(entry) =>
             pickInput(entry.input, { stripLength: entry.variableParam === "length" })
           }
