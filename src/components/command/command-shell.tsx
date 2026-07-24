@@ -48,7 +48,7 @@ import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { ChangelogSheet } from "./sheets/changelog-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
-import { expandTemplateReference } from "@/lib/saved/template-ref";
+import { expandTemplateReference, stripLengthToken } from "@/lib/saved/template-ref";
 import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
@@ -89,6 +89,7 @@ export function CommandShell() {
     saved: savedEntries,
     saveCalculation,
     removeSaved,
+    updateSaved,
   } = useSaved();
   const {
     items: compareItems,
@@ -334,12 +335,16 @@ export function CommandShell() {
   }, [p.valid, query, pushHistory, showToast, t]);
 
   const loadInput = useCallback(
-    (input: CalculationInput) => {
+    (input: CalculationInput, options?: { stripLength?: boolean }) => {
       const q = inputToQuery(input, defaultUnit, {
         defaultGradeId: shared.defaultGradeId,
         defaultPricing: shared,
       });
-      if (q) setQuery(q);
+      if (q) {
+        // A length-parametric template loads without its length so the user
+        // types a fresh one against the remembered profile/grade/quantity.
+        setQuery(options?.stripLength ? `${stripLengthToken(q)} ` : q);
+      }
       setSheet(null);
     },
     [defaultUnit, shared],
@@ -594,6 +599,7 @@ export function CommandShell() {
           onLoadInput={loadInput}
           onRemoveSaved={removeSaved}
           onShareSaved={shareSaved}
+          onSetSavedVariable={(id, variable) => updateSaved(id, { variableParam: variable })}
           onCreateProject={createProject}
           onRemoveProjectCalc={removeCalculation}
         />

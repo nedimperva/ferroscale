@@ -344,7 +344,11 @@
       "stale": "nekorišteno",
       "staleTitle": "Sačuvano davno i nikad ponovo korišteno",
       "allTag": "Sve",
-      "shareTemplate": "Podijeli kao link predloška"
+      "shareTemplate": "Podijeli kao link predloška",
+      "variableBadge": "D?",
+      "variableLengthTitle": "Pri pozivu traži novu dužinu",
+      "variableLengthOn": "Učini dužinu promjenljivom (pitaj pri pozivu)",
+      "variableLengthOff": "Fiksiraj sačuvanu dužinu"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",

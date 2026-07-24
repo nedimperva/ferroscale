@@ -27,6 +27,11 @@ export interface SavedEntry {
   lastUsedAt?: string;
   updatedAt: string;
   deletedAt?: string;
+  /**
+   * Parametric template: the dimension left blank on recall so the user types
+   * a fresh value while everything else is remembered. Only "length" today.
+   */
+  variableParam?: "length";
   parts: TemplatePart[];
   input: CalculationInput;
   result: CalculationResult;
@@ -80,7 +85,10 @@ export interface UseSavedReturn {
   appendPartsToSaved: (id: string, parts: TemplatePartDraft[]) => boolean;
   removePartFromSaved: (id: string, partId: string) => boolean;
   reorderPartInSaved: (id: string, partId: string, direction: -1 | 1) => boolean;
-  updateSaved: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
+  updateSaved: (
+    id: string,
+    patch: { name?: string; notes?: string; tags?: string[]; variableParam?: "length" | null },
+  ) => void;
   markSavedUsed: (id: string) => void;
   isSaved: (result: CalculationResult) => boolean;
   getSavedCount: (result: CalculationResult) => number;
@@ -266,7 +274,10 @@ export function useSaved(): UseSavedReturn {
   );
 
   const updateSaved = useCallback(
-    (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => {
+    (
+      id: string,
+      patch: { name?: string; notes?: string; tags?: string[]; variableParam?: "length" | null },
+    ) => {
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) =>
@@ -279,6 +290,9 @@ export function useSaved(): UseSavedReturn {
                   ? {
                       tags: patch.tags.map((tag) => tag.trim()).filter(Boolean).slice(0, 8),
                     }
+                  : {}),
+                ...(patch.variableParam !== undefined
+                  ? { variableParam: patch.variableParam ?? undefined }
                   : {}),
                 updatedAt,
               }

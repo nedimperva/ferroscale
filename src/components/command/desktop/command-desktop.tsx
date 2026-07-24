@@ -55,8 +55,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
   }, [onNew]);
 
   const pickInput = useCallback(
-    (input: CalculationInput) => {
-      props.onLoadInput(input);
+    (input: CalculationInput, options?: { stripLength?: boolean }) => {
+      props.onLoadInput(input, options);
       gotoCalc();
     },
     [props, gotoCalc],
@@ -160,9 +160,12 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "saved" && (
         <DeskSavedView
           saved={props.saved}
-          onPick={(entry) => pickInput(entry.input)}
+          onPick={(entry) =>
+            pickInput(entry.input, { stripLength: entry.variableParam === "length" })
+          }
           onAddCompare={(entry) => props.onAddCompare(entry.input, entry.result)}
           onShare={(entry) => props.onShareSaved(entry.input)}
+          onSetVariable={props.onSetSavedVariable}
           onRemove={props.onRemoveSaved}
         />
       )}

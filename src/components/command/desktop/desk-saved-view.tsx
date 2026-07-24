@@ -16,12 +16,14 @@ export function DeskSavedView({
   onPick,
   onAddCompare,
   onShare,
+  onSetVariable,
   onRemove,
 }: {
   saved: SavedEntry[];
   onPick: (entry: SavedEntry) => void;
   onAddCompare: (entry: SavedEntry) => void;
   onShare: (entry: SavedEntry) => void;
+  onSetVariable: (id: string, variable: "length" | null) => void;
   onRemove: (id: string) => void;
 }) {
   const t = useTranslations("command");
@@ -90,6 +92,10 @@ export function DeskSavedView({
           >
             {visible.map((entry) => {
               const stale = isStaleSaved(entry, now);
+              const parametric = entry.variableParam === "length";
+              // v1 parametric templates are single-calc; hide the toggle on
+              // multi-part templates (which can't be a single length-less query).
+              const canParametrize = entry.parts.length === 1;
               const fam = familyForInput(entry.input);
               const r = entry.result;
               const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
@@ -130,6 +136,15 @@ export function DeskSavedView({
                         <span className="font-bold text-[14.5px] text-foreground truncate">
                           {entry.name}
                         </span>
+                        {parametric && (
+                          <span
+                            title={t("saved.variableLengthTitle")}
+                            className="flex-shrink-0 font-mono text-[9px] font-bold uppercase tracking-wide rounded px-1 py-0.5"
+                            style={{ background: "var(--accent-surface)", color: "var(--accent-text)" }}
+                          >
+                            {t("saved.variableBadge")}
+                          </span>
+                        )}
                         {stale && (
                           <span
                             title={t("saved.staleTitle")}
@@ -145,6 +160,15 @@ export function DeskSavedView({
                       </span>
                     </button>
                     <div className="flex gap-1.5 flex-shrink-0">
+                      {canParametrize && (
+                        <SavedAction
+                          title={parametric ? t("saved.variableLengthOff") : t("saved.variableLengthOn")}
+                          active={parametric}
+                          onClick={() => onSetVariable(entry.id, parametric ? null : "length")}
+                        >
+                          <span className="font-mono text-[11px] font-bold">L?</span>
+                        </SavedAction>
+                      )}
                       <SavedAction title={t("saved.addToCompare")} onClick={() => onAddCompare(entry)}>
                         <DeskIcon name="compare" />
                       </SavedAction>
@@ -240,10 +264,12 @@ function SavedStat({
 function SavedAction({
   title,
   onClick,
+  active,
   children,
 }: {
   title: string;
   onClick: () => void;
+  active?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -252,12 +278,14 @@ function SavedAction({
       onClick={onClick}
       title={title}
       aria-label={title}
-      className="flex items-center justify-center rounded-[9px] cursor-pointer text-foreground-secondary"
+      aria-pressed={active}
+      className="flex items-center justify-center rounded-[9px] cursor-pointer"
       style={{
         width: 30,
         height: 30,
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface-raised)",
+        border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
+        background: active ? "var(--accent-surface)" : "var(--surface-raised)",
+        color: active ? "var(--accent-text)" : "var(--foreground-secondary)",
       }}
     >
       {children}

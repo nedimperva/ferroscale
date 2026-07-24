@@ -1,4 +1,4 @@
-import { inputToQuery } from "@ferroscale/metal-core";
+import { cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CommandPricing } from "@ferroscale/metal-core";
 import type { LengthUnit } from "@/lib/calculator/types";
@@ -18,6 +18,21 @@ export interface TemplateSource {
   input: CalculationInput;
   /** ISO timestamp; the freshest match wins an ambiguous prefix. */
   updatedAt?: string;
+  /** When "length", recall drops the length token so the user types a fresh one. */
+  variableParam?: "length";
+}
+
+/**
+ * Drop the length token from a canonical query, leaving profile/size, quantity,
+ * grade, and price intact — the recall shape of a length-parametric template
+ * (the user lands ready to type the new length). Sheet-like families bake the
+ * length into the size token, so nothing is stripped and the query is returned
+ * unchanged.
+ */
+export function stripLengthToken(query: string): string {
+  return cmdTokenize(query)
+    .filter((tok) => cmdClassifyToken(tok) !== "len")
+    .join(" ");
 }
 
 export interface TemplateExpandOptions {
@@ -112,5 +127,9 @@ export function expandTemplateReference(
     defaultPricing: opts.defaultPricing,
   });
   if (!base) return null;
-  return { query: applyMultiplier(base, ref.multiplier), name: source.name };
+  const withQty = applyMultiplier(base, ref.multiplier);
+  // A length-parametric template recalls without its length so the user types
+  // a fresh one against the remembered profile/grade/quantity.
+  const expanded = source.variableParam === "length" ? stripLengthToken(withQty) : withQty;
+  return { query: expanded, name: source.name };
 }

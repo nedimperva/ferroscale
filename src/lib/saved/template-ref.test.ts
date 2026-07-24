@@ -6,6 +6,7 @@ import {
   findTemplateSource,
   parseTemplateRef,
   slugifyName,
+  stripLengthToken,
   type TemplateSource,
 } from "./template-ref";
 
@@ -100,5 +101,23 @@ describe("expandTemplateReference", () => {
   it("returns null for an unknown reference or a non-reference query", () => {
     expect(expandTemplateReference("#nope", sources, OPTS)).toBeNull();
     expect(expandTemplateReference("hea120 6m", sources, OPTS)).toBeNull();
+  });
+
+  it("drops the length for a length-parametric template", () => {
+    const parametric = [{ ...source("gate", "hea120 6m x2"), variableParam: "length" as const }];
+    expect(expandTemplateReference("#gate", parametric, OPTS)?.query).toBe("hea120 x2");
+    // multiplier still applies, length still dropped
+    expect(expandTemplateReference("#gate x4", parametric, OPTS)?.query).toBe("hea120 x4");
+  });
+});
+
+describe("stripLengthToken", () => {
+  it("removes the length token, keeping profile, quantity, and grade", () => {
+    expect(stripLengthToken("hea120 6m x2")).toBe("hea120 x2");
+    expect(stripLengthToken("rnd20 3m s355")).toBe("rnd20 s355");
+  });
+
+  it("leaves a query without a separate length token unchanged", () => {
+    expect(stripLengthToken("hea120 x2")).toBe("hea120 x2");
   });
 });

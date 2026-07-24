@@ -50,7 +50,9 @@ export interface CommandDesktopProps {
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
   onAddToProject: () => void;
-  onLoadInput: (input: CalculationInput) => void;
+  onLoadInput: (input: CalculationInput, options?: { stripLength?: boolean }) => void;
+  /** Toggle a saved entry's length-parametric flag (null clears it). */
+  onSetSavedVariable: (id: string, variable: "length" | null) => void;
   onRemoveSaved: (id: string) => void;
   /** Share a saved entry as a template link (?q= URL). */
   onShareSaved: (input: CalculationInput) => void;

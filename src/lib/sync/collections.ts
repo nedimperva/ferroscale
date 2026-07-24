@@ -89,6 +89,7 @@ function normalizeSavedEntry(raw: unknown): SavedEntry | null {
     lastUsedAt: candidate.lastUsedAt,
     updatedAt: candidate.updatedAt ?? candidate.lastUsedAt ?? candidate.timestamp,
     deletedAt: candidate.deletedAt,
+    variableParam: candidate.variableParam === "length" ? "length" : undefined,
     parts,
     input: parts[0].input,
     result: parts[0].result,
