@@ -103,6 +103,7 @@ export function DeskCalcView({
   onRemoveTapeEntry,
   onClearTape,
   onSave,
+  currentSaved,
   onLogSession,
   onCopySummary,
   onShareLink,
@@ -568,16 +569,20 @@ export function DeskCalcView({
                 }
               />
               <div className="ml-auto flex items-center gap-2">
+                {/* Save is a toggle: filled bookmark = this exact line is in
+                    the library, press again to remove it. */}
                 <button
                   type="button"
                   onClick={onSave}
                   disabled={!p.valid}
+                  aria-pressed={currentSaved}
+                  title={currentSaved ? t("common.saved") : t("common.save")}
                   className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap"
                   style={{
                     padding: "9px 16px",
-                    border: "none",
-                    background: "var(--accent)",
-                    color: "var(--accent-contrast)",
+                    border: currentSaved ? "1px solid var(--accent-border)" : "none",
+                    background: currentSaved ? "var(--accent-surface)" : "var(--accent)",
+                    color: currentSaved ? "var(--accent-text)" : "var(--accent-contrast)",
                     cursor: p.valid ? "pointer" : "default",
                     opacity: p.valid ? 1 : 0.45,
                   }}
@@ -586,15 +591,15 @@ export function DeskCalcView({
                     width="15"
                     height="15"
                     viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--accent-contrast)"
+                    fill={currentSaved ? "currentColor" : "none"}
+                    stroke={currentSaved ? "currentColor" : "var(--accent-contrast)"}
                     strokeWidth={2}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
                     <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                   </svg>
-                  {t("common.save")}
+                  {currentSaved ? t("common.saved") : t("common.save")}
                 </button>
                 <button
                   type="button"

@@ -403,6 +403,25 @@ describe("inputToQuery", () => {
     expect(p2.calc!.result.grandTotalAmount).toBe(p.calc!.result.grandTotalAmount);
   });
 
+  it("drops the price token under omitPrice so the line reprices at today's rate", () => {
+    const settings = mkSettings();
+    const p = cmdParse("hea120 6m @2.5/kg", settings);
+    expect(p.valid).toBe(true);
+
+    const reQuery = inputToQuery(p.calc!.input, "m", {
+      defaultGradeId: settings.defaultGradeId,
+      defaultPricing: settings.pricing,
+      omitPrice: true,
+    });
+    expect(reQuery).toBe("hea120 6m");
+
+    // Re-parsed, it prices at the current default (1.2/kg) — not the 2.5 it
+    // was saved at, which is the whole point of the flag.
+    const p2 = cmdParse(reQuery, settings);
+    expect(p2.calc!.input.unitPrice).toBe(settings.pricing.unitPrice);
+    expect(p2.calc!.result.grandTotalAmount).toBeLessThan(p.calc!.result.grandTotalAmount);
+  });
+
   it("round-trips SHS / CHS / round / flat / angle", () => {
     const settings = mkSettings();
     for (const q of [

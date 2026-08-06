@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useSaved } from "@/hooks/useSaved";
+import type { SavedEntry } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
@@ -38,14 +39,21 @@ import {
 import { GhostField } from "./ghost-field";
 import { KIND_BG } from "./command-constants";
 import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
+import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
+import { SavedEditSheet } from "./sheets/saved-edit-sheet";
 import { PwaRegister } from "@/components/pwa-register";
-import { buildShareUrl, readSharedQuery } from "@/lib/command/share";
+import {
+  buildShareUrl,
+  readSharedPricing,
+  readSharedQuery,
+  sharedPricingDiffers,
+} from "@/lib/command/share";
 import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
@@ -85,8 +93,14 @@ export function CommandShell() {
   const {
     saved: savedEntries,
     saveCalculation,
-    isSaved,
+    getSavedEntry,
     removeSaved,
+    removeSavedMany,
+    restoreSaved,
+    duplicateSaved,
+    toggleSavedPinned,
+    updateSaved,
+    markSavedUsed,
   } = useSaved();
   const {
     items: compareItems,
@@ -106,7 +120,7 @@ export function CommandShell() {
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<CommandToastState | null>(null);
   // Query history — persisted (and Drive-synced) via the quickHistory
   // collection. Backs the desktop session tape and recency suggestions.
   const {
@@ -116,6 +130,9 @@ export function CommandShell() {
     clear: clearHistory,
   } = useQuickHistory();
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
+  // Which saved entry the name/notes/tags editor is open for (id, not the
+  // record, so the sheet always renders the live version of it).
+  const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -141,38 +158,20 @@ export function CommandShell() {
     [shared, defaultUnit],
   );
 
-  // Hydrate persisted state on mount. setState-in-effect is intentional here:
-  // initial SSR/first-paint values must match defaults to avoid hydration
-  // mismatches, then we apply localStorage once on the client.
-  useEffect(() => {
-    // Old keys orphaned by previous refactors — drop them.
-    try {
-      window.localStorage.removeItem("ferroscale-command-settings");
-      window.localStorage.removeItem("ferroscale-command-saved");
-      window.localStorage.removeItem("ferroscale-command-recents");
-    } catch { /* noop */ }
-    // A shared ?q= link beats the demo query. Trailing space → fully chipped.
-    const sharedQuery = readSharedQuery(window.location.search);
-    if (sharedQuery) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setQuery(`${sharedQuery} `);
-      touchedRef.current = true;
-    }
-  }, []);
-
   // Once the user leaves the demo query, mirror the query into the URL so the
   // current calculation is always linkable (debounced; replaceState keeps
-  // history clean).
+  // history clean). The rate context rides along, so whatever is in the
+  // address bar prices the same for whoever it's sent to.
   useEffect(() => {
     if (!touchedRef.current) {
       if (query === DEMO_QUERY) return;
       touchedRef.current = true;
     }
     const id = window.setTimeout(() => {
-      window.history.replaceState(null, "", buildShareUrl(query, window.location));
+      window.history.replaceState(null, "", buildShareUrl(query, window.location, shared));
     }, 400);
     return () => window.clearTimeout(id);
-  }, [query]);
+  }, [query, shared]);
 
   // Three viewports:
   //  · phone (<640) → fullscreen with on-screen keypad
@@ -240,9 +239,48 @@ export function CommandShell() {
   const isW = mode === "weight";
 
   const showToast = useCallback((msg: string) => {
-    setToast(msg);
+    setToast({ text: msg });
     window.setTimeout(() => setToast(null), 1700);
   }, []);
+
+  /** Toast with an action button (Undo, Name it) — stays up longer. */
+  const showActionToast = useCallback(
+    (msg: string, action: { label: string; onAction: () => void }) => {
+      const entry = { text: msg, ...action };
+      setToast(entry);
+      window.setTimeout(() => {
+        // Only clear if this toast is still the visible one.
+        setToast((current) => (current === entry ? null : current));
+      }, 5000);
+    },
+    [],
+  );
+
+  // Hydrate persisted state on mount. setState-in-effect is intentional here:
+  // initial SSR/first-paint values must match defaults to avoid hydration
+  // mismatches, then we apply localStorage once on the client.
+  useEffect(() => {
+    // Old keys orphaned by previous refactors — drop them.
+    try {
+      window.localStorage.removeItem("ferroscale-command-settings");
+      window.localStorage.removeItem("ferroscale-command-saved");
+      window.localStorage.removeItem("ferroscale-command-recents");
+    } catch { /* noop */ }
+    // A shared ?q= link beats the demo query. Trailing space → fully chipped.
+    const sharedQuery = readSharedQuery(window.location.search);
+    if (!sharedQuery) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery(`${sharedQuery} `);
+    touchedRef.current = true;
+    // A link carries the sender's rate context. Apply it (otherwise the same
+    // link shows a different price to every recipient) and say so out loud —
+    // silently rewriting someone's pricing settings would be worse.
+    const linkPricing = readSharedPricing(window.location.search);
+    if (linkPricing && sharedPricingDiffers(linkPricing, sharedCalcSettingsStore.getSnapshot())) {
+      sharedCalcSettingsStore.update(linkPricing);
+      showToast(t("toast.linkPricingApplied"));
+    }
+  }, [showToast, t]);
 
   // Copy the hero metric itself (e.g. "141.2 kg" / "€169.44") — the query
   // string has its own copy action.
@@ -271,29 +309,93 @@ export function CommandShell() {
 
   const shareLink = useCallback(() => {
     if (!p.valid) return;
-    const url = buildShareUrl(query, window.location);
+    const url = buildShareUrl(query, window.location, shared);
     if (isPhoneViewport && typeof navigator.share === "function") {
       navigator.share({ url }).catch(() => {});
       return;
     }
     navigator.clipboard?.writeText(url).catch(() => {});
     showToast(t("toast.linkCopied"));
-  }, [p.valid, query, isPhoneViewport, showToast, t]);
+  }, [p.valid, query, shared, isPhoneViewport, showToast, t]);
 
+  // The bookmark state of the line currently in the bar — drives the Save
+  // button's filled/outlined look, so "is this one saved?" is answerable
+  // without opening the library.
+  const currentSavedEntry = p.calc ? getSavedEntry(p.calc.result) : undefined;
+
+  /** Delete with a 5-second Undo — the tombstone is reversible until then. */
+  const removeSavedEntry = useCallback(
+    (entry: SavedEntry) => {
+      removeSaved(entry.id);
+      showActionToast(t("toast.savedRemoved"), {
+        label: t("common.undo"),
+        onAction: () => {
+          restoreSaved(entry.id);
+          showToast(t("toast.restored"));
+        },
+      });
+    },
+    [removeSaved, restoreSaved, showActionToast, showToast, t],
+  );
+
+  /**
+   * Save is a toggle: bookmark the line, or un-bookmark it if it's already
+   * there. It used to no-op on a duplicate and still report "Saved".
+   */
   const doSave = useCallback(() => {
     if (!p.calc) {
       showToast(t("toast.addLength"));
       return;
     }
-    // Real save — appears on the Library Saved tab (shared with the full app).
-    if (!isSaved(p.calc.result)) {
-      const displayName = formatCommandParseName(t, p) ?? p.name;
-      const autoName = `${displayName} · ${p.lengthRaw}${p.lengthUnit} ×${p.realQty}`;
-      saveCalculation(p.calc.input, p.calc.result, autoName);
+    const existing = getSavedEntry(p.calc.result);
+    if (existing) {
+      removeSavedEntry(existing);
+      return;
     }
+    // The name is just the spec — the card renders length/qty/grade itself, so
+    // repeating them in the title only bought truncation. Rename to override.
+    const autoName = formatCommandParseName(t, p) ?? p.name ?? p.calc.result.profileLabel;
+    const entry = saveCalculation(p.calc.input, p.calc.result, autoName);
     pushHistory(query);
-    showToast(t("toast.saved"));
-  }, [p, isSaved, saveCalculation, showToast, query, t, pushHistory]);
+    showActionToast(t("toast.saved"), {
+      label: t("common.nameIt"),
+      onAction: () => setEditingSavedId(entry.id),
+    });
+  }, [
+    p,
+    getSavedEntry,
+    removeSavedEntry,
+    saveCalculation,
+    showToast,
+    showActionToast,
+    query,
+    t,
+    pushHistory,
+  ]);
+
+  const duplicateSavedEntry = useCallback(
+    (entry: SavedEntry) => {
+      duplicateSaved(entry.id);
+      showToast(t("toast.duplicated"));
+    },
+    [duplicateSaved, showToast, t],
+  );
+
+  const removeSavedEntries = useCallback(
+    (entries: SavedEntry[]) => {
+      if (entries.length === 0) return;
+      const ids = entries.map((entry) => entry.id);
+      removeSavedMany(ids);
+      showActionToast(t("toast.savedRemovedMany", { count: ids.length }), {
+        label: t("common.undo"),
+        onAction: () => {
+          restoreSaved(ids);
+          showToast(t("toast.restored"));
+        },
+      });
+    },
+    [removeSavedMany, restoreSaved, showActionToast, showToast, t],
+  );
 
   // Enter only logs the line onto the session tape — bookmarking into the
   // Saved library is the explicit Save action (doSave) alone.
@@ -316,6 +418,24 @@ export function CommandShell() {
       setSheet(null);
     },
     [defaultUnit, shared],
+  );
+
+  /**
+   * Open a saved entry. Counts the use (so "most used" sorting means
+   * something) and restores at today's rate — `omitPrice` keeps the bar
+   * showing the same money the card showed.
+   */
+  const loadSavedEntry = useCallback(
+    (entry: SavedEntry) => {
+      markSavedUsed(entry.id);
+      const q = inputToQuery(entry.input, defaultUnit, {
+        defaultGradeId: shared.defaultGradeId,
+        omitPrice: true,
+      });
+      if (q) setQuery(`${q} `);
+      setSheet(null);
+    },
+    [markSavedUsed, defaultUnit, shared.defaultGradeId],
   );
 
   const handlePickProject = useCallback(
@@ -492,6 +612,29 @@ export function CommandShell() {
   };
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
+  // Saved-library actions, identical on every viewport.
+  const editingEntry = editingSavedId
+    ? savedEntries.find((entry) => entry.id === editingSavedId) ?? null
+    : null;
+  const savedHandlers = {
+    onLoadSaved: loadSavedEntry,
+    onRemoveSaved: removeSavedEntry,
+    onAddCompareSaved: (entry: SavedEntry) => addCompareEntry(entry.input, entry.result),
+    onDuplicateSaved: duplicateSavedEntry,
+    onTogglePinSaved: (entry: SavedEntry) => toggleSavedPinned(entry.id),
+    onEditSaved: (entry: SavedEntry) => setEditingSavedId(entry.id),
+  };
+  const savedEditSheet = editingEntry ? (
+    <SavedEditSheet
+      entry={editingEntry}
+      onClose={() => setEditingSavedId(null)}
+      onSubmit={(patch) => {
+        updateSaved(editingEntry.id, patch);
+        showToast(t("toast.savedUpdated"));
+      }}
+    />
+  ) : null;
+
   // ── Wide desktop (≥1024): sidebar workspace shell ──
   if (isWideViewport) {
     return (
@@ -538,10 +681,13 @@ export function CommandShell() {
           onClearCompare={clearCompare}
           onAddToProject={openProjectModal}
           onLoadInput={loadInput}
-          onRemoveSaved={removeSaved}
           onCreateProject={createProject}
           onRemoveProjectCalc={removeCalculation}
+          currentSaved={!!currentSavedEntry}
+          onRemoveSavedMany={removeSavedEntries}
+          {...savedHandlers}
         />
+        {savedEditSheet}
         {projectCalc && (
           <CommandProjectPickerSheet
             projects={projects}
@@ -1144,6 +1290,7 @@ export function CommandShell() {
               p={p}
               onClose={() => setSheet(null)}
               onSave={doSave}
+              isSaved={!!currentSavedEntry}
               onCopy={() => {
                 navigator.clipboard?.writeText(query).catch(() => {});
                 setSheet(null);
@@ -1188,18 +1335,20 @@ export function CommandShell() {
             <CommandLibrarySheet
               settings={parserSettings}
               defaultUnit={defaultUnit}
+              mode={mode}
               saved={savedEntries}
               compareItems={compareItems}
               projects={projects}
               onClose={() => setSheet(null)}
               onLoadInput={loadInput}
-              onRemoveSaved={removeSaved}
+              {...savedHandlers}
               onRemoveCompare={removeCompareItem}
               onClearCompare={clearCompare}
               onCreateProject={createProject}
               onRemoveProjectCalc={removeCalculation}
             />
           )}
+          {savedEditSheet}
           {projectCalc && (
             <CommandProjectPickerSheet
               projects={projects}

@@ -5,6 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.8.0] - 2026-08-06
+
+### Added
+
+- **Saved calculations are real cards.** Each one shows the **actual cross-section** of its profile (the same drawing the breakdown uses, scaled to card size), the spec — `6 m × 2 · S235` — under the title, both totals with the mode-leading metric dominant, and mass per metre / weight per piece alongside. An expander opens the full breakdown, notes and tags in place
+- **Search, sort, tag and pin.** Filter saved work by name, note, tag, profile or grade (multi-word, any order); sort by newest, most used, recently used or name; pin the ones you reach for daily to the top of every sort
+- **Name, notes and tags** on any saved calculation, plus a **Name it** action on the save confirmation — the one moment you still have the job in your head
+- **Duplicate** a saved calculation to tweak a copy without touching the original
+- **Bulk selection**: select several entries to compare or delete them in one go; **card / compact** view toggle for large libraries
+- **Undo** on deleting a saved calculation (single or bulk), from the toast that confirms it
+- **Save is a toggle.** The button shows a filled bookmark when the line in the bar is already saved; pressing it again removes it
+
+### Changed
+
+- **Saved entries are priced at today's rate, and say so.** A saved calculation stores geometry as its identity; the money is recomputed from your current pricing every time it renders, with the rate stated on the card (`@ €1.20/kg`). When today's rate moves the total, the card shows a `was €1,193.51` badge instead of quietly displaying a stale figure. Opening one restores it at today's rate too, so the command line matches the card
+- **Opening a saved calculation counts as a use** — `useCount` / `lastUsedAt` are recorded, which is what makes "most used" and "recently used" sorting meaningful
+- **Share links carry pricing.** `?q=` links now also encode the sender's rate, rate unit, basis, currency, waste and VAT, so a shared calculation shows the same price to whoever opens it; applying a link's pricing is announced rather than silent
+- **One empty state** across Saved, Projects, Compare and the library sheets — icon, title, sentence, and the action (or shortcut) that fills it
+- Saved-entry identity ignores price, so re-saving a restored entry after a rate change no longer creates a duplicate
+
+### Fixed
+
+- Saving an already-saved calculation reported "Saved" while doing nothing — the button now reflects the real state, and pressing it removes the entry
+- A saved card's price and the price of the line it restored could disagree whenever the stored rate differed from the current default
+
+---
+
 ## [3.7.0] - 2026-07-20
 
 ### Added

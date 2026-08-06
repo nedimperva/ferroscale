@@ -39,6 +39,8 @@ interface CommandResultSheetProps {
   p: CommandParseResult;
   onClose: () => void;
   onSave: () => void;
+  /** Whether this exact calculation is already bookmarked (Save toggles). */
+  isSaved: boolean;
   onCopy: () => void;
   onCopyValue: () => void;
   onShareLink: () => void;
@@ -52,6 +54,7 @@ interface CommandResultSheetProps {
 export function CommandResultBreakdown({
   p,
   onSave,
+  isSaved,
   onCopy,
   onCopyValue,
   onShareLink,
@@ -131,9 +134,19 @@ export function CommandResultBreakdown({
         <button
           type="button"
           onClick={onSave}
-          className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
+          aria-pressed={isSaved}
+          className="flex-1 h-11 rounded-xl font-bold text-sm"
+          style={
+            isSaved
+              ? {
+                  background: "var(--accent-surface)",
+                  color: "var(--accent-text)",
+                  border: "1px solid var(--accent-border)",
+                }
+              : { background: "var(--accent)", color: "var(--accent-contrast)" }
+          }
         >
-          {t("common.save")}
+          {isSaved ? t("common.saved") : t("common.save")}
         </button>
         <button type="button" onClick={onCopy} className={secondaryBtn}>
           {t("common.copy")}

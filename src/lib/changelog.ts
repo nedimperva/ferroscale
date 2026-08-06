@@ -17,6 +17,78 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.8.0",
+    date: "2026-08-06",
+    added: [
+      "Saved calculations are real cards now: each one shows the actual cross-section of its profile, the spec (length × pieces × grade) under the title, and both totals — with mass per metre and weight per piece alongside",
+      "Search, sort and tag your saved work: filter by name, note, tag, profile or grade, sort by newest, most used, recently used or name, and pin the ones you reach for daily to the top",
+      "Name, notes and tags on any saved calculation — and a 'name it' shortcut on the save confirmation, while you still have the job in mind",
+      "Duplicate a saved calculation to tweak a copy without losing the original",
+      "Select several saved calculations at once to compare or delete them together, and switch between card and compact views",
+      "Deleting a saved calculation can be undone from the confirmation that follows it",
+      "Save is now a toggle: the button shows a filled bookmark when the line in the bar is already saved, and pressing it again removes it",
+    ],
+    changed: [
+      "Saved calculations are always priced at your current rate, and each card states the rate it used. When today's rate moves the total, the card shows what it cost when you saved it instead of quietly showing a stale number",
+      "Opening a saved calculation counts as a use (so 'most used' means something) and restores it at today's rate, so the command line matches the card",
+      "Share links now carry the sender's rate, currency, waste and VAT, so a link shows the same price to whoever opens it — and says so when it changes your pricing",
+      "One shared empty state across Saved, Projects and Compare, each pointing at the action that fills it",
+    ],
+    fixed: [
+      "Saving a calculation that was already saved reported 'Saved' but did nothing — now the button reflects the real state and the action removes it",
+    ],
+    added_bs: [
+      "Sačuvani izračuni su sada prave kartice: svaka prikazuje stvarni presjek profila, specifikaciju (dužina × komadi × kvalitet) ispod naziva i oba iznosa — uz masu po metru i težinu po komadu",
+      "Pretraga, sortiranje i oznake za sačuvano: filtrirajte po nazivu, bilješci, oznaci, profilu ili kvalitetu, sortirajte po najnovijem, najkorištenijem, nedavno korištenom ili nazivu, i zakačite na vrh one koje koristite svaki dan",
+      "Naziv, bilješke i oznake na svakom sačuvanom izračunu — uz prečicu „Imenuj\" na potvrdi čuvanja, dok vam je posao još svjež",
+      "Duplirajte sačuvani izračun da mijenjate kopiju bez gubitka originala",
+      "Označite više sačuvanih izračuna odjednom za poređenje ili brisanje, i prebacujte se između prikaza kartica i kompaktnog prikaza",
+      "Brisanje sačuvanog izračuna može se vratiti sa potvrde koja slijedi",
+      "Sačuvaj je sada prekidač: dugme prikazuje ispunjenu oznaku kada je linija u traci već sačuvana, a ponovni pritisak je uklanja",
+    ],
+    changed_bs: [
+      "Sačuvani izračuni se uvijek obračunavaju po vašoj trenutnoj cijeni, a svaka kartica navodi cijenu koju je koristila. Kada današnja cijena promijeni iznos, kartica prikazuje koliko je koštalo u trenutku čuvanja umjesto da tiho pokazuje zastarjeli broj",
+      "Otvaranje sačuvanog izračuna se broji kao korištenje (da „najkorištenije\" nešto znači) i vraća ga po današnjoj cijeni, pa komandna linija odgovara kartici",
+      "Linkovi za dijeljenje sada nose cijenu, valutu, otpad i PDV pošiljaoca, pa link prikazuje istu cijenu svakome ko ga otvori — i to javi kada promijeni vaše postavke",
+      "Jedinstven prazan ekran u Sačuvano, Projekti i Poređenje, svaki upućuje na akciju koja ga popunjava",
+    ],
+    fixed_bs: [
+      "Čuvanje izračuna koji je već sačuvan javljalo je „Sačuvano\" ali nije radilo ništa — sada dugme odražava stvarno stanje, a akcija ga uklanja",
+    ],
+  },
+  {
+    version: "3.7.0",
+    date: "2026-07-20",
+    added: [
+      "The command bar types with you: a faint inline completion appears after the caret — press Tab or → to accept it",
+      "Did-you-mean fixes for a mistyped profile, grade or off-catalog size, offered as a one-tap correction and never applied automatically",
+      "Type it the way you'd say it: hea 120, 6 meters, 2 pieces / 2 kom all parse",
+      "↑/↓ query history on the desktop inputs",
+      "Dimensioned profile drawings on the result breakdown, with every dimension labelled in mm on the picture",
+      "The hero metric counts up when a query settles, and the profile drawing eases in when the shape changes",
+    ],
+    changed: [
+      "Size suggestion chips show the per-metre weight (e.g. 120 · 26.7 kg/m) so you can judge a size before picking it",
+    ],
+    fixed: [
+      "Recent queries no longer pile up near-duplicates while you build a single calculation — one calculation leaves one recent",
+    ],
+    added_bs: [
+      "Komandna traka kuca s vama: blijeda dopuna se pojavljuje iza kursora — pritisnite Tab ili → da je prihvatite",
+      "Prijedlozi ispravki za pogrešno otkucan profil, kvalitet ili veličinu van kataloga, ponuđeni jednim dodirom i nikad primijenjeni automatski",
+      "Kucajte kako biste rekli: hea 120, 6 meters, 2 pieces / 2 kom — sve se prepoznaje",
+      "Historija upita sa ↑/↓ na desktop poljima",
+      "Crteži presjeka s kotama na pregledu rezultata, sa svakom dimenzijom označenom u mm na slici",
+      "Glavni broj se odbrojava kada se upit smiri, a crtež profila se blago pojavljuje pri promjeni oblika",
+    ],
+    changed_bs: [
+      "Čipovi s veličinama prikazuju težinu po metru (npr. 120 · 26.7 kg/m) da možete procijeniti veličinu prije izbora",
+    ],
+    fixed_bs: [
+      "Nedavni upiti se više ne gomilaju kao skoro-duplikati dok gradite jedan izračun — jedan izračun ostavlja jedan unos",
+    ],
+  },
+  {
     version: "3.6.2",
     date: "2026-07-03",
     changed: [

@@ -8,9 +8,12 @@ interface SheetShellProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** Cap the panel width and centre it — a three-field form has no business
+   *  spanning a 1440px workspace. Full-bleed (the default) stays for lists. */
+  maxWidth?: number;
 }
 
-export function SheetShell({ title, onClose, children }: SheetShellProps) {
+export function SheetShell({ title, onClose, children, maxWidth }: SheetShellProps) {
   const t = useTranslations("command");
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -45,8 +48,12 @@ export function SheetShell({ title, onClose, children }: SheetShellProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="bg-[var(--surface)] border-t border-border-faint rounded-t-3xl px-5 pt-3 pb-6 flex flex-col"
-        style={{ maxHeight: "82%" }}
+        className="bg-[var(--surface)] border-t border-border-faint rounded-t-3xl px-5 pt-3 pb-6 flex flex-col w-full"
+        style={
+          maxWidth
+            ? { maxHeight: "82%", maxWidth, margin: "0 auto", borderRadius: "24px 24px 0 0" }
+            : { maxHeight: "82%" }
+        }
       >
         <div className="flex flex-col items-center mb-2">
           <span className="w-9 h-1 rounded-full bg-border" />

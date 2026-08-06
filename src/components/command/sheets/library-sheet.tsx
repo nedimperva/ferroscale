@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
+import { collectSavedTags, filterSortSaved } from "@/lib/saved/query";
 import type { CalculationInput, CurrencyCode, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
+import { EmptyState } from "../empty-state";
+import { buildSavedCardModel } from "../saved/saved-model";
+import { SavedCard } from "../saved/saved-card";
+import { SavedToolbar, type SavedToolbarState } from "../saved/saved-toolbar";
 import { SheetShell } from "./sheet-shell";
 
 /* ──────────────────────────────────────────────────────────────
@@ -22,12 +27,19 @@ type LibraryTab = "saved" | "compare" | "projects";
 interface CommandLibrarySheetProps {
   settings: CommandParserSettings;
   defaultUnit: LengthUnit;
+  /** Which metric leads on saved cards — follows the app-wide result mode. */
+  mode: "weight" | "price";
   saved: SavedEntry[];
   compareItems: CompareItem[];
   projects: Project[];
   onClose: () => void;
   onLoadInput: (input: CalculationInput) => void;
-  onRemoveSaved: (id: string) => void;
+  onLoadSaved: (entry: SavedEntry) => void;
+  onRemoveSaved: (entry: SavedEntry) => void;
+  onAddCompareSaved: (entry: SavedEntry) => void;
+  onDuplicateSaved: (entry: SavedEntry) => void;
+  onTogglePinSaved: (entry: SavedEntry) => void;
+  onEditSaved: (entry: SavedEntry) => void;
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
   onCreateProject: (name: string) => void;
@@ -50,11 +62,17 @@ type CommandLibraryWorkspaceProps = Omit<CommandLibrarySheetProps, "onClose">;
 export function CommandLibraryWorkspace({
   settings,
   defaultUnit,
+  mode,
   saved,
   compareItems,
   projects,
   onLoadInput,
+  onLoadSaved,
   onRemoveSaved,
+  onAddCompareSaved,
+  onDuplicateSaved,
+  onTogglePinSaved,
+  onEditSaved,
   onRemoveCompare,
   onClearCompare,
   onCreateProject,
@@ -104,10 +122,15 @@ export function CommandLibraryWorkspace({
       {tab === "saved" && (
         <SavedTabContent
           saved={saved}
+          settings={settings}
           defaultUnit={defaultUnit}
-          defaultGradeId={settings.defaultGradeId}
-          onLoad={(entry) => onLoadInput(entry.input)}
+          mode={mode}
+          onLoad={onLoadSaved}
           onRemove={onRemoveSaved}
+          onAddCompare={onAddCompareSaved}
+          onDuplicate={onDuplicateSaved}
+          onTogglePin={onTogglePinSaved}
+          onEdit={onEditSaved}
         />
       )}
       {tab === "compare" && (
@@ -293,14 +316,6 @@ export function LibraryRow({
   );
 }
 
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-sm text-muted text-center py-12 px-6 leading-relaxed">
-      {children}
-    </div>
-  );
-}
-
 export function RowsCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden divide-y divide-border-faint">
@@ -313,65 +328,85 @@ export function RowsCard({ children }: { children: React.ReactNode }) {
 
 function SavedTabContent({
   saved,
+  settings,
   defaultUnit,
-  defaultGradeId,
+  mode,
   onLoad,
   onRemove,
+  onAddCompare,
+  onDuplicate,
+  onTogglePin,
+  onEdit,
 }: {
   saved: SavedEntry[];
+  settings: CommandParserSettings;
   defaultUnit: LengthUnit;
-  defaultGradeId: string;
+  mode: "weight" | "price";
   onLoad: (entry: SavedEntry) => void;
-  onRemove: (id: string) => void;
+  onRemove: (entry: SavedEntry) => void;
+  onAddCompare: (entry: SavedEntry) => void;
+  onDuplicate: (entry: SavedEntry) => void;
+  onTogglePin: (entry: SavedEntry) => void;
+  onEdit: (entry: SavedEntry) => void;
 }) {
   const t = useTranslations("command");
-  const locale = useLocale();
+  const [query, setQuery] = useState<SavedToolbarState>({
+    search: "",
+    sort: "recent",
+    tags: [],
+  });
+
+  const tags = useMemo(() => collectSavedTags(saved), [saved]);
+  const models = useMemo(
+    () =>
+      filterSortSaved(saved, query).map((entry) =>
+        buildSavedCardModel(entry, settings, defaultUnit),
+      ),
+    [saved, query, settings, defaultUnit],
+  );
+
   if (saved.length === 0) {
-    return <EmptyState>{t("library.emptySaved")}</EmptyState>;
+    return (
+      <EmptyState
+        compact
+        icon={<TabIconSaved />}
+        title={t("saved.emptyTitle")}
+        body={t("saved.emptyBodyMobile")}
+      />
+    );
   }
+
   return (
-    <RowsCard>
-      {saved.map((entry) => {
-        const fam = familyForInput(entry.input);
-        const r = entry.result;
-        const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
-        const savedOn = new Date(entry.timestamp).toLocaleDateString(locale, {
-          day: "numeric",
-          month: "short",
-        });
-        const meta = [r.gradeLabel, `×${r.quantity}`, savedOn].filter(Boolean).join(" · ");
-        return (
-          <LibraryRow
-            key={entry.id}
-            glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
-            title={entry.name}
-            subtitle={meta}
-            onClick={() => onLoad(entry)}
-            onRemove={() => onRemove(entry.id)}
-            trailing={
-              <span className="flex flex-col items-end flex-shrink-0 font-mono leading-tight">
-                <span
-                  className="text-[12px] font-bold"
-                  style={{ color: "var(--accent-text)" }}
-                >
-                  {fsWeight(r.totalWeightKg)} {fsWeightUnit()}
-                </span>
-                <span
-                  className="text-[10.5px] font-semibold mt-0.5"
-                  style={{ color: "var(--blue-text)" }}
-                >
-                  {sym} {fsMoney(r.grandTotalAmount)}
-                </span>
-              </span>
-            }
+    <div className="flex flex-col gap-2.5">
+      {/* The filter row earns its space once there's enough to sift through. */}
+      {(saved.length > 3 || tags.length > 0) && (
+        <SavedToolbar
+          compact
+          state={query}
+          onChange={(patch) => setQuery((current) => ({ ...current, ...patch }))}
+          availableTags={tags}
+        />
+      )}
+      {models.length === 0 ? (
+        <EmptyState compact title={t("saved.noMatchTitle")} body={t("saved.noMatchBody")} />
+      ) : (
+        models.map((model) => (
+          <SavedCard
+            key={model.entry.id}
+            model={model}
+            mode={mode}
+            actions={{
+              onOpen: () => onLoad(model.entry),
+              onCompare: () => onAddCompare(model.entry),
+              onDuplicate: () => onDuplicate(model.entry),
+              onTogglePin: () => onTogglePin(model.entry),
+              onEdit: () => onEdit(model.entry),
+              onRemove: () => onRemove(model.entry),
+            }}
           />
-        );
-      })}
-      {/* keep defaultUnit/defaultGradeId in the dependency loop for future use */}
-      <span className="hidden" aria-hidden="true">
-        {defaultUnit}/{defaultGradeId}
-      </span>
-    </RowsCard>
+        ))
+      )}
+    </div>
   );
 }
 
@@ -395,9 +430,12 @@ function CompareTabContent({
   const t = useTranslations("command");
   if (items.length === 0) {
     return (
-      <EmptyState>
-        {t("library.emptyCompare")}
-      </EmptyState>
+      <EmptyState
+        compact
+        icon={<TabIconCompare />}
+        title={t("compare.emptyTitle")}
+        body={t("library.emptyCompare")}
+      />
     );
   }
   const deltas = computeCompareDeltas(items);
@@ -525,9 +563,12 @@ function ProjectsTabContent({
       </div>
 
       {projects.length === 0 ? (
-        <EmptyState>
-          {t("library.emptyProjects")}
-        </EmptyState>
+        <EmptyState
+          compact
+          icon={<TabIconProjects />}
+          title={t("projects.emptyTitle")}
+          body={t("library.emptyProjects")}
+        />
       ) : (
         <div className="space-y-2">
           {projects.map((project) => {

@@ -85,6 +85,7 @@ function normalizeSavedEntry(raw: unknown): SavedEntry | null {
     tags: Array.isArray(candidate.tags)
       ? candidate.tags.map((tag) => String(tag).trim()).filter(Boolean).slice(0, 8)
       : undefined,
+    pinned: candidate.pinned === true || undefined,
     useCount: Math.max(0, Number(candidate.useCount ?? 0) || 0),
     lastUsedAt: candidate.lastUsedAt,
     updatedAt: candidate.updatedAt ?? candidate.lastUsedAt ?? candidate.timestamp,

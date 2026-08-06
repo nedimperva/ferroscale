@@ -49,7 +49,15 @@ export interface CommandDesktopProps {
   onClearCompare: () => void;
   onAddToProject: () => void;
   onLoadInput: (input: CalculationInput) => void;
-  onRemoveSaved: (id: string) => void;
   onCreateProject: (name: string) => Project;
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  /** True when the line in the bar is already bookmarked (Save is a toggle). */
+  currentSaved: boolean;
+  onLoadSaved: (entry: SavedEntry) => void;
+  onRemoveSaved: (entry: SavedEntry) => void;
+  onRemoveSavedMany: (entries: SavedEntry[]) => void;
+  onAddCompareSaved: (entry: SavedEntry) => void;
+  onDuplicateSaved: (entry: SavedEntry) => void;
+  onTogglePinSaved: (entry: SavedEntry) => void;
+  onEditSaved: (entry: SavedEntry) => void;
 }

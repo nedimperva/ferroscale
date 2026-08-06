@@ -29,6 +29,33 @@ test.describe("axe scans", () => {
     await scan(page, "wide /en");
   });
 
+  test("saved library with a card in it", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByLabel("FerroScale Command query").click();
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page
+      .getByRole("button", { name: /^Saved?$/ })
+      .and(page.locator("[aria-pressed]"))
+      .click();
+    await page.getByRole("button", { name: /^Saved\s*1$/ }).click();
+    await expect(page.getByRole("button", { name: /in the calculator$/ })).toBeVisible();
+    await scan(page, "wide /en saved");
+  });
+
+  test("saved edit sheet open", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByLabel("FerroScale Command query").click();
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page
+      .getByRole("button", { name: /^Saved?$/ })
+      .and(page.locator("[aria-pressed]"))
+      .click();
+    await page.getByRole("button", { name: /^Saved\s*1$/ }).click();
+    await page.getByRole("button", { name: "Rename, notes and tags" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit saved calculation" })).toBeVisible();
+    await scan(page, "wide /en saved edit sheet");
+  });
+
   test.describe("medium viewport", () => {
     test.use({ viewport: { width: 800, height: 900 } });
 

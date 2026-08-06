@@ -61,7 +61,13 @@
       "openArrow": "Otvori ->",
       "copyValue": "Kopiraj vrijednost",
       "copySummary": "Kopiraj sažetak",
-      "shareLink": "Podijeli link"
+      "shareLink": "Podijeli link",
+      "saved": "Sačuvano",
+      "undo": "Vrati",
+      "nameIt": "Imenuj",
+      "cancel": "Otkaži",
+      "done": "Gotovo",
+      "saveChanges": "Sačuvaj izmjene"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -74,7 +80,13 @@
       "copied": "Kopirano u međuspremnik",
       "copiedValue": "Vrijednost kopirana",
       "copiedSummary": "Sažetak kopiran",
-      "linkCopied": "Link kopiran"
+      "linkCopied": "Link kopiran",
+      "linkPricingApplied": "Primijenjena cijena iz linka",
+      "savedRemoved": "Uklonjeno iz sačuvanih",
+      "savedRemovedMany": "{count, plural, one {# izračun uklonjen} few {# izračuna uklonjena} other {# izračuna uklonjeno}}",
+      "restored": "Vraćeno",
+      "duplicated": "Kopija napravljena",
+      "savedUpdated": "Sačuvani izračun ažuriran"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -335,12 +347,53 @@
       "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "subtitleEmpty": "sačuvani izračuni",
       "empty": "još ništa nije sačuvano — pritisnite Sačuvaj na izračunu",
-      "addToCompare": "Dodaj za poređenje"
+      "addToCompare": "Dodaj za poređenje",
+      "openAria": "Otvori {name} u kalkulatoru",
+      "selectAria": "Označi {name}",
+      "usedCount": "{count, plural, one {korišteno # put} few {korišteno # puta} other {korišteno # puta}}",
+      "repriced": "bilo {amount}",
+      "repricedHint": "Obračunato po današnjoj cijeni — ovo je iznos u trenutku čuvanja",
+      "pin": "Zakači na vrh",
+      "unpin": "Otkači",
+      "duplicate": "Dupliraj",
+      "edit": "Naziv, bilješke i oznake",
+      "details": "Prikaži detalje",
+      "noBreakdown": "nema živog pregleda za ovu stavku",
+      "searchPlaceholder": "Traži naziv, oznaku, profil…",
+      "sortLabel": "Sortiraj",
+      "sort": {
+        "recent": "Najnovije",
+        "used": "Najkorištenije",
+        "lastUsed": "Nedavno korišteno",
+        "name": "Naziv"
+      },
+      "view": {
+        "grid": "Prikaz kartica",
+        "table": "Kompaktni prikaz"
+      },
+      "select": "Označi",
+      "clearTags": "Očisti oznake",
+      "selectedCount": "{count, plural, one {# označen} few {# označena} other {# označeno}}",
+      "matchCount": "prikazano {count} od {total}",
+      "emptyTitle": "Još ništa nije sačuvano",
+      "emptyBody": "Pritisnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje — s crtežom, težinom i današnjom cijenom.",
+      "emptyBodyMobile": "Dodirnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje.",
+      "noMatchTitle": "Nema rezultata",
+      "noMatchBody": "Ništa ovdje ne odgovara toj pretrazi ili oznaci.",
+      "clearFilters": "Očisti filtere",
+      "editTitle": "Uredi sačuvani izračun",
+      "fieldName": "Naziv",
+      "fieldNotes": "Bilješke",
+      "fieldTags": "Oznake",
+      "notesPlaceholder": "Za šta je ovo?",
+      "tagsPlaceholder": "kapija, radionica, hitno",
+      "tagsHint": "Odvojeno zarezom, najviše {max}."
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
       "subtitleEmpty": "grupišite izračune u poslove",
       "empty": "još nema projekata — kliknite Novi projekat ili + Projekat na rezultatu",
+      "emptyTitle": "Još nema projekata",
       "itemCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
       "emptyProjectHint": "prazno — dodajte izračun iz desnog panela",
       "removeFromProject": "Ukloni iz projekta"

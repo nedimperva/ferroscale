@@ -1,6 +1,15 @@
+import { createContext, useContext } from "react";
 import type { CommandParseResult, DimensionKey } from "@ferroscale/metal-core";
 import { getStandardProfileSpecRecord, toMillimeters } from "@ferroscale/metal-core";
 import { CommandGlyph } from "./command-glyph";
+
+/**
+ * Off in `thumb` mode: the shape is drawn, the dimension lines and leader
+ * labels are not. One geometry source, two sizes — a saved card shows the same
+ * real section as the breakdown, just without millimetre callouts that would
+ * be unreadable at 64px.
+ */
+const DimensionsShown = createContext(true);
 
 /**
  * A scaled, fully-dimensioned cross-section of the current profile — the flat
@@ -220,6 +229,7 @@ function DimTop({ x1, x2, shapeY, value }: { x1: number; x2: number; shapeY: num
   // Hug the shape rather than pinning to the canvas top, so thin sections
   // (plates) don't grow absurdly long extension lines.
   const y = Math.max(M.t - 16, shapeY - 18);
+  if (!useContext(DimensionsShown)) return null;
   return (
     <g stroke={DIM} strokeWidth={1}>
       <line x1={x1} y1={shapeY - 3} x2={x1} y2={y - 2} />
@@ -235,6 +245,7 @@ function DimTop({ x1, x2, shapeY, value }: { x1: number; x2: number; shapeY: num
 /** Vertical overall dimension to the left of the shape. */
 function DimLeft({ y1, y2, shapeX, value }: { y1: number; y2: number; shapeX: number; value: string }) {
   const x = M.l - 20;
+  if (!useContext(DimensionsShown)) return null;
   return (
     <g stroke={DIM} strokeWidth={1}>
       <line x1={shapeX - 3} y1={y1} x2={x + 2} y2={y1} />
@@ -264,6 +275,7 @@ function Leader({ fx, fy, lx, ly, value }: { fx: number; fy: number; lx: number;
 function Leaders({ shapeX1, items }: { shapeX1: number; items: { value: string; fx: number; fy: number }[] }) {
   const lx = Math.min(shapeX1 + 18, VB_W - 44);
   const startY = M.t + 6;
+  if (!useContext(DimensionsShown)) return null;
   return (
     <>
       {items.map((it, i) => (
@@ -449,21 +461,27 @@ function renderSection(sec: Section): React.ReactNode {
 export function ProfileDrawing({
   p,
   className,
+  variant = "full",
 }: {
   p: CommandParseResult;
   className?: string;
+  /** `thumb` drops the dimension callouts and the entrance animation — for
+   *  card-sized renders where only the silhouette reads. */
+  variant?: "full" | "thumb";
 }) {
   const sec = p.valid ? resolveSection(p) : null;
+  const thumb = variant === "thumb";
+  const appear = thumb ? "" : "fs-appear";
 
   if (!sec) {
     // Expanded/corrugated or incomplete geometry — keep the recognisable glyph.
     return (
       <div
         key={p.alias?.fam ?? "none"}
-        className={`fs-appear ${className ?? ""}`}
+        className={`${appear} ${className ?? ""}`}
         style={{ color: "var(--accent)" }}
       >
-        {p.alias ? <CommandGlyph fam={p.alias.fam} size={64} /> : null}
+        {p.alias ? <CommandGlyph fam={p.alias.fam} size={thumb ? 30 : 64} /> : null}
       </div>
     );
   }
@@ -471,13 +489,19 @@ export function ProfileDrawing({
   return (
     // Keyed by drawing type so switching profile shape replays the entrance,
     // while size tweaks on the same shape update in place.
-    <figure key={sec.kind} className={`fs-appear ${className ?? ""}`} style={{ margin: 0, width: "100%" }}>
+    <figure
+      key={sec.kind}
+      className={`${appear} ${thumb ? "fs-thumb" : ""} ${className ?? ""}`}
+      style={{ margin: 0, width: "100%" }}
+    >
       <svg
-        viewBox={`0 0 ${VB_W} ${VB_H}`}
+        // Thumbs crop to the content box — the margins only exist to hold
+        // dimension lines, which a thumb doesn't draw.
+        viewBox={thumb ? `${M.l - 4} ${M.t - 4} ${CW + 8} ${CH + 8}` : `0 0 ${VB_W} ${VB_H}`}
         width="100%"
         role="img"
         aria-label={p.name ?? undefined}
-        style={{ display: "block", maxWidth: 340, margin: "0 auto" }}
+        style={{ display: "block", maxWidth: thumb ? undefined : 340, margin: "0 auto" }}
       >
         <defs>
           <marker
@@ -492,7 +516,7 @@ export function ProfileDrawing({
             <path d="M0,0 L8,4 L0,8 Z" fill={DIM} />
           </marker>
         </defs>
-        {renderSection(sec)}
+        <DimensionsShown.Provider value={!thumb}>{renderSection(sec)}</DimensionsShown.Provider>
       </svg>
     </figure>
   );

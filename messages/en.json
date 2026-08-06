@@ -61,7 +61,13 @@
       "openArrow": "Open ->",
       "copyValue": "Copy value",
       "copySummary": "Copy summary",
-      "shareLink": "Share link"
+      "shareLink": "Share link",
+      "saved": "Saved",
+      "undo": "Undo",
+      "nameIt": "Name it",
+      "cancel": "Cancel",
+      "done": "Done",
+      "saveChanges": "Save changes"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -74,7 +80,13 @@
       "copied": "Copied to clipboard",
       "copiedValue": "Value copied",
       "copiedSummary": "Summary copied",
-      "linkCopied": "Link copied"
+      "linkCopied": "Link copied",
+      "linkPricingApplied": "Pricing from the link applied",
+      "savedRemoved": "Removed from saved",
+      "savedRemovedMany": "{count, plural, one {# calculation removed} other {# calculations removed}}",
+      "restored": "Restored",
+      "duplicated": "Copy created",
+      "savedUpdated": "Saved calculation updated"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -335,12 +347,53 @@
       "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
       "subtitleEmpty": "bookmarked calculations",
       "empty": "nothing saved yet — press Save on a calculation",
-      "addToCompare": "Add to compare"
+      "addToCompare": "Add to compare",
+      "openAria": "Open {name} in the calculator",
+      "selectAria": "Select {name}",
+      "usedCount": "{count, plural, one {used # time} other {used # times}}",
+      "repriced": "was {amount}",
+      "repricedHint": "Priced at today's rate — this is what it cost when saved",
+      "pin": "Pin to top",
+      "unpin": "Unpin",
+      "duplicate": "Duplicate",
+      "edit": "Rename, notes and tags",
+      "details": "Show details",
+      "noBreakdown": "no live breakdown for this entry",
+      "searchPlaceholder": "Search name, tag, profile…",
+      "sortLabel": "Sort",
+      "sort": {
+        "recent": "Newest",
+        "used": "Most used",
+        "lastUsed": "Recently used",
+        "name": "Name"
+      },
+      "view": {
+        "grid": "Card view",
+        "table": "Compact view"
+      },
+      "select": "Select",
+      "clearTags": "Clear tags",
+      "selectedCount": "{count, plural, one {# selected} other {# selected}}",
+      "matchCount": "{count} of {total} shown",
+      "emptyTitle": "Nothing saved yet",
+      "emptyBody": "Press Save on any result to keep it here — with its drawing, weight and today's price.",
+      "emptyBodyMobile": "Tap Save on any result to keep it here.",
+      "noMatchTitle": "No matches",
+      "noMatchBody": "Nothing here matches that search or tag.",
+      "clearFilters": "Clear filters",
+      "editTitle": "Edit saved calculation",
+      "fieldName": "Name",
+      "fieldNotes": "Notes",
+      "fieldTags": "Tags",
+      "notesPlaceholder": "What is this for?",
+      "tagsPlaceholder": "gate, shop, urgent",
+      "tagsHint": "Comma-separated, up to {max}."
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# active} other {# active}}",
       "subtitleEmpty": "group calcs into jobs",
       "empty": "no projects yet — hit New project, or + Project on a result",
+      "emptyTitle": "No projects yet",
       "itemCount": "{count, plural, one {# item} other {# items}}",
       "emptyProjectHint": "empty — add a calc from the right rail",
       "removeFromProject": "Remove from project"

@@ -346,6 +346,17 @@ details[open] .chevron-icon {
   }
 }
 
+/* Card-sized profile drawings. The section geometry is shared with the full
+   breakdown drawing, so the outline arrives sized for a 340px canvas — scaled
+   into a 46px thumbnail that hairline all but vanishes. non-scaling-stroke
+   pins the outline to device pixels instead, so the silhouette reads at any
+   size. A descendant rule is what it takes to beat the SVG presentation
+   attributes on the shapes themselves. */
+.fs-thumb :is(path, rect, circle, line) {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.6px;
+}
+
 /* Keep details open on lg with Tailwind open attribute workaround */
 @media (min-width: 1024px) {
   details.lg\:open {

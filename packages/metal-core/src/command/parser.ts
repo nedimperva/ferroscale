@@ -149,7 +149,16 @@ export function dimsToSizeText(
 export function inputToQuery(
   input: CalculationInput,
   defaultUnit: LengthUnit,
-  options: { defaultGradeId?: string; defaultPricing?: CommandPricing } = {},
+  options: {
+    defaultGradeId?: string;
+    defaultPricing?: CommandPricing;
+    /**
+     * Drop the inline `@rate/unit` token even when the stored input priced at
+     * something else. Saved entries use this: their geometry is the identity,
+     * the rate is always today's, so the restored line matches the live card.
+     */
+    omitPrice?: boolean;
+  } = {},
 ): string {
   const alias = findAliasByProfileId(input.profileId);
   if (!alias) return "";
@@ -196,7 +205,7 @@ export function inputToQuery(
   }
 
   let priceToken = "";
-  const defaultPricing = options.defaultPricing;
+  const defaultPricing = options.omitPrice ? undefined : options.defaultPricing;
   if (
     defaultPricing
     && (

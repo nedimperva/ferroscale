@@ -118,9 +118,20 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "saved" && (
         <DeskSavedView
           saved={props.saved}
-          onPick={(entry) => pickInput(entry.input)}
-          onAddCompare={(entry) => props.onAddCompare(entry.input, entry.result)}
+          settings={props.parserSettings}
+          defaultUnit={props.defaultUnit}
+          mode={props.mode}
+          onPick={(entry) => {
+            props.onLoadSaved(entry);
+            gotoCalc();
+          }}
+          onAddCompare={props.onAddCompareSaved}
           onRemove={props.onRemoveSaved}
+          onRemoveMany={props.onRemoveSavedMany}
+          onDuplicate={props.onDuplicateSaved}
+          onTogglePin={props.onTogglePinSaved}
+          onEdit={props.onEditSaved}
+          onNew={startNewCalc}
         />
       )}
       {view === "projects" && (
