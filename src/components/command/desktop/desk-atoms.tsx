@@ -88,9 +88,20 @@ export function Kbd({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SectionLabel({ children }: { children: React.ReactNode }) {
+/**
+ * The 10px tracked micro-label above a group of controls. Every desktop view
+ * had written its own copy of this span; there is one now, so the app's
+ * smallest type is a single edit rather than a search.
+ */
+export function SectionLabel({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1.2 }}>
+    <span className={`fs-track-label text-[10px] font-bold text-muted ${className}`}>
       {children}
     </span>
   );

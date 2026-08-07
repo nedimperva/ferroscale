@@ -57,7 +57,7 @@ function Seg({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ padding: "13px 0" }}>
-      <div className="text-[10px] font-bold text-muted mb-[9px]" style={{ letterSpacing: 1.2 }}>
+      <div className="fs-track-label text-[10px] font-bold text-muted mb-[9px]">
         {label}
       </div>
       {children}

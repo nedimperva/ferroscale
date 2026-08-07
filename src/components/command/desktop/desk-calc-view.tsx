@@ -100,9 +100,7 @@ function StatTile({
 }) {
   return (
     <div>
-      <div className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1 }}>
-        {label}
-      </div>
+      <SectionLabel className="fs-track-wide block">{label}</SectionLabel>
       <div
         className="font-mono font-extrabold mt-1"
         style={{ fontSize: 26, color: accent ?? "var(--foreground)" }}
@@ -498,8 +496,7 @@ export function DeskCalcView({
         <div className="mt-3">
           <div className="flex items-center gap-3 flex-wrap mb-2">
             <div
-              className="text-[10px] font-bold text-muted uppercase"
-              style={{ letterSpacing: 1.2 }}
+              className="fs-track-label text-[10px] font-bold text-muted uppercase"
             >
               {paletteOpen ? t("palette.hint") : formatCommandHint(t, sug.hint)}
             </div>
@@ -1079,8 +1076,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
   return (
     <>
       <div
-        className="text-[10px] font-bold text-muted mb-3 flex-shrink-0"
-        style={{ letterSpacing: 1.2 }}
+        className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0"
       >
         {t("desktop.breakdown")}
       </div>
@@ -1096,7 +1092,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
             className="min-w-0 flex-shrink-0"
             style={{ paddingBottom: 12, borderBottom: "1px solid var(--border-faint)" }}
           >
-            <div className="font-extrabold text-[17px] text-foreground" style={{ letterSpacing: -0.2 }}>
+            <div className="fs-track-tight font-extrabold text-[17px] text-foreground">
               {formatCommandParseName(t, p)}
             </div>
             <div className="font-mono text-[11px] text-muted mt-0.5">

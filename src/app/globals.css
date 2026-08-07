@@ -393,6 +393,14 @@ details[open] .chevron-icon {
 code,
 kbd,
 samp,
+/* ── letter-spacing scale ──────────────────────────────────────────────────
+   Tracking was an inline number on a dozen elements, which made "loosen the
+   small caps a touch" a find-and-replace instead of an edit. Two named steps
+   cover every repeated use: labels open up, headings close in. */
+.fs-track-label { letter-spacing: 1.2px; }
+.fs-track-wide  { letter-spacing: 1px; }
+.fs-track-tight { letter-spacing: -0.2px; }
+
 .fs-display-num {
   font-variant-numeric: tabular-nums;
 }

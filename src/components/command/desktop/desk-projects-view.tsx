@@ -133,8 +133,7 @@ export function DeskProjectsView({
                         <DeskIcon name="projects" />
                       </span>
                       <span
-                        className="flex-1 font-extrabold text-[15.5px] text-foreground truncate"
-                        style={{ letterSpacing: -0.2 }}
+                        className="fs-track-tight flex-1 font-extrabold text-[15.5px] text-foreground truncate"
                       >
                         {project.name}
                       </span>
