@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.15.0] - 2026-08-07
+
+### Added
+
+- **The `>` command palette.** Typing `>` turns the command line into an action list: navigate to saved / projects / compare / settings, save / compare / copy / share the current line, open the reference, flip the theme — and search **your own saved entries and projects by name**, picking one to load it straight into the bar. ↑/↓ move, Enter runs, Escape backs out; actions that need a finished calculation are shown greyed rather than hidden, so the line explains itself
+- Ranking is prefix > word start > substring, so `>sav` puts **Save this line** above **Go to saved** above a saved entry that merely contains the letters. Every word of the term has to match, so a second word narrows instead of widening
+- A `>` line is treated as a command, not a calculation: it isn't tokenized into chips and the parser's "didn't understand that" never fires on it
+
+### Note
+
+The palette is a keyboard feature and the phone keypad has no `>` key, so on phone it is reachable only via a shared link. The phone's own navigation already covers the same ground in one tap.
+
+---
+
 ## [3.14.0] - 2026-08-07
 
 ### Added

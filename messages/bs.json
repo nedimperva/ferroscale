@@ -85,7 +85,8 @@
         "grade": "Kvalitet materijala",
         "price": "Cijena samo za ovu liniju",
         "target": "Obrnuti račun: koliko čini 500 kg (ili =250eur)",
-        "item": "Još jedna stavka u istoj liniji"
+        "item": "Još jedna stavka u istoj liniji",
+        "palette": "Komande: idite bilo gdje, pokrenite bilo šta, otvorite sačuvanu stavku po imenu"
       },
       "shortcut": {
         "enter": "Preuzmi prijedlog ili zabilježi gotovu liniju",

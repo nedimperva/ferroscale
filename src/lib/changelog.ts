@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.15.0",
+    date: "2026-08-07",
+    added: [
+      "Type > and the command line becomes a command palette. Go to saved, projects, compare or settings; save, compare, copy or share the current line; open the reference or flip the theme — and search your own saved entries and projects by name to load one straight into the bar. Arrows move, Enter runs, Escape backs out",
+    ],
+    added_bs: [
+      "Ukucajte > i komandna linija postaje komandna paleta. Idite na sačuvano, projekte, poređenje ili postavke; sačuvajte, uporedite, kopirajte ili podijelite trenutnu liniju; otvorite pregled ili promijenite temu — i pretražite vlastite sačuvane stavke i projekte po imenu da biste ih učitali direktno u traku. Strelice biraju, Enter pokreće, Escape izlazi",
+    ],
+  },
+  {
     version: "3.14.0",
     date: "2026-08-07",
     added: [

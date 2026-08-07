@@ -65,6 +65,33 @@ test.describe("Command bar", () => {
     await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
   });
 
+  test("> opens the command palette and runs what you pick", async ({ page }) => {
+    await page.goto("/en");
+    const input = page.getByLabel("FerroScale Command query");
+    await input.click();
+    await page.keyboard.press("ControlOrMeta+k");
+    await input.pressSequentially(">");
+
+    const palette = page.getByRole("listbox", { name: "Command palette" });
+    await expect(palette).toBeVisible();
+
+    // Typing narrows it, arrows move the selection, Enter runs it.
+    await input.pressSequentially("settings");
+    await expect(palette.getByRole("option")).toHaveCount(1);
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("pricing · units · appearance")).toBeVisible();
+  });
+
+  test("a command line is not reported as a broken calculation", async ({ page }) => {
+    await page.goto("/en");
+    const input = page.getByLabel("FerroScale Command query");
+    await input.click();
+    await page.keyboard.press("ControlOrMeta+k");
+    await input.pressSequentially(">zzz");
+    await expect(page.getByText("No matching command")).toBeVisible();
+    await expect(page.getByText(/Didn't understand/)).toHaveCount(0);
+  });
+
   test("an unrecognized token shows a parse issue", async ({ page }) => {
     await page.goto("/en");
     const input = page.getByLabel("FerroScale Command query");
