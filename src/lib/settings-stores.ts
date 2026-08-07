@@ -4,7 +4,7 @@
  * updates are read-modify-write so geometry fields survive untouched.
  */
 
-import { createBoolStore, createStringStore } from "@/lib/external-stores";
+import { createBoolStore, createNumberStore, createStringStore } from "@/lib/external-stores";
 import {
   INPUT_STORAGE_KEY,
   getDefaultInput,
@@ -17,6 +17,15 @@ import type { CommandPricing } from "@ferroscale/metal-core";
 export const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
 /** Keypad/action vibration on phones that support it. */
 export const hapticsStore = createBoolStore("ferroscale-haptics", true);
+/**
+ * Margin applied on top of cost to get a sell price. 0 keeps the app a cost
+ * calculator; anything above turns a result into an offer.
+ */
+export const marginPercentStore = createNumberStore(
+  "ferroscale-margin-percent",
+  0,
+  (value) => Math.min(500, Math.max(0, value)),
+);
 export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
 export type { CommandPricing };

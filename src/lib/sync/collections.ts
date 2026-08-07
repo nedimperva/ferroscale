@@ -7,6 +7,7 @@ import type { CompareItem } from "@/hooks/useCompare";
 import type { DimensionPreset } from "@/hooks/usePresets";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
 import { notifySyncedCollectionDirty } from "./registry";
 import type { SyncEntityCollectionKey, SyncListCollectionKey, SyncEntityRecord } from "./types";
@@ -223,6 +224,41 @@ export function persistCompareItems(items: CompareItem[], options?: PersistOptio
   persistToStorage(SYNC_STORAGE_KEYS.compare, items);
   writeListUpdatedAt("compare", updatedAt);
   maybeNotify("compare", options?.markDirty ?? true);
+}
+
+/** Price-book rows: one rate per material grade, in the pricing block's unit. */
+export function normalizePriceBook(raw: unknown[]): PriceBookEntry[] {
+  const seen = new Set<string>();
+  const out: PriceBookEntry[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue;
+    const candidate = row as Partial<PriceBookEntry>;
+    const gradeId = typeof candidate.gradeId === "string" ? candidate.gradeId.trim() : "";
+    const unitPrice = Number(candidate.unitPrice);
+    if (!gradeId || seen.has(gradeId)) continue;
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) continue;
+    seen.add(gradeId);
+    out.push({ gradeId, unitPrice });
+  }
+  return out;
+}
+
+export function loadPriceBook(): PriceBookEntry[] {
+  return normalizePriceBook(loadArrayFromStorage<unknown>(SYNC_STORAGE_KEYS.priceBook));
+}
+
+export function getPriceBookUpdatedAt(): string {
+  return readListUpdatedAt("priceBook");
+}
+
+export function persistPriceBook(items: PriceBookEntry[], options?: PersistOptions): void {
+  const updatedAt = options?.updatedAt ?? nowIso();
+  persistToStorage(SYNC_STORAGE_KEYS.priceBook, items);
+  writeListUpdatedAt("priceBook", updatedAt);
+  // A remote pull writes here without going through the hook — tell the UI
+  // store its cache is stale.
+  if (options?.markDirty === false) invalidatePriceBookCache();
+  maybeNotify("priceBook", options?.markDirty ?? true);
 }
 
 export function loadQuickHistory(): string[] {

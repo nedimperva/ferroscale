@@ -48,6 +48,30 @@ export function createStringStore<T extends string>(key: string, defaultValue: T
   return { subscribe, getSnapshot, getServerSnapshot, set };
 }
 
+export function createNumberStore(key: string, defaultValue: number, clamp?: (v: number) => number) {
+  let _listeners: Array<() => void> = [];
+  function subscribe(cb: () => void) {
+    _listeners = [..._listeners, cb];
+    return () => { _listeners = _listeners.filter((l) => l !== cb); };
+  }
+  function getSnapshot(): number {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return defaultValue;
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? (clamp ? clamp(parsed) : parsed) : defaultValue;
+    } catch { return defaultValue; }
+  }
+  function getServerSnapshot(): number { return defaultValue; }
+  function set(value: number) {
+    if (!Number.isFinite(value)) return;
+    const next = clamp ? clamp(value) : value;
+    try { localStorage.setItem(key, String(next)); } catch { /* noop */ }
+    for (const l of _listeners) l();
+  }
+  return { subscribe, getSnapshot, getServerSnapshot, set };
+}
+
 export function createJsonStore<T>(key: string, defaultValue: T) {
   let _listeners: Array<() => void> = [];
   let _cachedRaw: string | null = null;

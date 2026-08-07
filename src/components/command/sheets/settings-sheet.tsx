@@ -4,7 +4,7 @@ import { useCallback, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
-import { hapticsStore, type SharedCalcSettings } from "@/lib/settings-stores";
+import { hapticsStore, marginPercentStore, type SharedCalcSettings } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -14,6 +14,8 @@ import {
 import { SheetShell } from "./sheet-shell";
 import { SyncSection } from "./sync-section";
 import { InstallAppSection } from "../install-section";
+import { PriceBookSection } from "../price-book-section";
+import { usePriceBook } from "@/hooks/usePriceBook";
 
 function SettingsRow({
   label,
@@ -214,6 +216,12 @@ export function CommandSettingsSheet({
 }: CommandSettingsSheetProps) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
+  const priceBook = usePriceBook();
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
   const haptics = useSyncExternalStore(
     hapticsStore.subscribe,
     hapticsStore.getSnapshot,
@@ -233,6 +241,8 @@ export function CommandSettingsSheet({
     onToggleTheme,
     haptics,
     onSetHaptics: hapticsStore.set,
+    marginPercent,
+    onSetMarginPercent: marginPercentStore.set,
   });
   return (
     <SheetShell title={t("sheets.settings")} onClose={onClose}>
@@ -247,6 +257,9 @@ export function CommandSettingsSheet({
       <p className="text-[11px] text-muted mt-1 px-1">
         {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
       </p>
+      <div className="mt-4 rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4 py-3">
+        <PriceBookSection compact shared={shared} priceBook={priceBook} />
+      </div>
       <InstallAppSection />
       <CommandDocsSection />
       <SyncSection />

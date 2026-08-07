@@ -83,6 +83,8 @@ export interface SettingsModelArgs {
   onToggleTheme: () => void;
   haptics: boolean;
   onSetHaptics: (value: boolean) => void;
+  marginPercent: number;
+  onSetMarginPercent: (value: number) => void;
 }
 
 export function buildSettingsFields({
@@ -99,6 +101,8 @@ export function buildSettingsFields({
   onToggleTheme,
   haptics,
   onSetHaptics,
+  marginPercent,
+  onSetMarginPercent,
 }: SettingsModelArgs): SettingsField[] {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   return [
@@ -180,6 +184,18 @@ export function buildSettingsFields({
       step: 1,
       min: 0,
       max: 100,
+    },
+    {
+      kind: "number",
+      id: "marginPercent",
+      label: t("settings.margin"),
+      deskLabel: t("settings.marginUpper"),
+      value: marginPercent,
+      onChange: onSetMarginPercent,
+      suffix: "%",
+      step: 1,
+      min: 0,
+      max: 500,
     },
     {
       kind: "choice",

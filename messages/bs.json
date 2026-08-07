@@ -42,6 +42,16 @@
     "installButton": "Instaliraj aplikaciju"
   },
   "command": {
+    "priceBook": {
+      "title": "Cjenovnik",
+      "subtitle": "cijena po kvalitetu · {unit}",
+      "empty": "Svi kvaliteti koriste podrazumijevanu cijenu ({rate}). Dodajte kvalitet da ga naplatite drugačije — nehrđajući nije isto što i čelik.",
+      "addGrade": "+ Dodaj kvalitet",
+      "pickGrade": "Izaberite kvalitet…",
+      "addAria": "Kvalitet za dodavanje u cjenovnik",
+      "rateAria": "Cijena za {grade}",
+      "removeAria": "Ukloni {grade} iz cjenovnika"
+    },
     "keyHints": {
       "complete": "dopuni",
       "insert": "ubaci",
@@ -123,7 +133,10 @@
       "savedRemovedMany": "{count, plural, one {# izračun uklonjen} few {# izračuna uklonjena} other {# izračuna uklonjeno}}",
       "restored": "Vraćeno",
       "duplicated": "Kopija napravljena",
-      "savedUpdated": "Sačuvani izračun ažuriran"
+      "savedUpdated": "Sačuvani izračun ažuriran",
+      "sessionEmpty": "Na traci sesije još nema ničega",
+      "sessionSaved": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano u {project}",
+      "sessionProjectName": "Sesija {date}"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -216,6 +229,7 @@
       "waste": "Otpad +{percent}%",
       "vat": "PDV {percent}%",
       "totalCost": "Ukupna cijena",
+      "sellPrice": "Prodajna cijena (+{percent}%)",
       "pcs": "kom",
       "geometry": "Geometrija",
       "pricing": "Cijene",
@@ -253,6 +267,8 @@
       "languageUpper": "JEZIK",
       "haptics": "Vibracija",
       "hapticsUpper": "VIBRACIJA",
+      "margin": "Marža",
+      "marginUpper": "MARŽA NA CIJENU",
       "locales": {
         "en": "Engleski",
         "bs": "Bosanski"
@@ -356,6 +372,7 @@
       "breakdown": "DETALJI",
       "breakdownEmpty": "detalji rezultata se prikazuju dok kucate",
       "totalCostLabel": "UKUPNA CIJENA",
+      "saveSessionAsProject": "SAČUVAJ KAO PROJEKAT",
       "perPieceLabel": "PO KOMADU"
     },
     "suggest": {

@@ -485,6 +485,11 @@ export interface UseProjectsReturn {
   deleteProject: (id: string) => void;
   duplicateProject: (id: string) => Project | null;
   addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
+  /** Bulk add in one state update — see the note on the implementation. */
+  addCalculations: (
+    projectId: string,
+    entries: Array<{ input: CalculationInput; result: CalculationResult }>,
+  ) => void;
   addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
   removeCalculation: (projectId: string, calcId: string) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
@@ -619,6 +624,50 @@ export function useProjects(): UseProjectsReturn {
         }),
       );
       return added;
+    },
+    [setProjects],
+  );
+
+  /**
+   * Add several calculations in one state update.
+   *
+   * `addCalculation` reports success through a flag its updater sets, which
+   * only reads back correctly for a single call — in a loop every call after
+   * the first is queued, so the flag lies. Bulk work goes through here: one
+   * updater, one pass, fingerprint-deduped against the project and itself.
+   */
+  const addCalculations = useCallback(
+    (
+      projectId: string,
+      entries: Array<{ input: CalculationInput; result: CalculationResult }>,
+    ): void => {
+      if (entries.length === 0) return;
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== projectId || p.deletedAt) return p;
+          const seen = new Set(p.calculations.map((c) => fingerprint(c.result)));
+          const next: ProjectCalculation[] = [];
+          for (const entry of entries) {
+            if (p.calculations.length + next.length >= MAX_CALCS_PER_PROJECT) break;
+            const fp = fingerprint(entry.result);
+            if (seen.has(fp)) continue;
+            seen.add(fp);
+            next.push({
+              id: crypto.randomUUID(),
+              timestamp: new Date().toISOString(),
+              input: entry.input,
+              result: entry.result,
+              normalizedProfile: normalizeProfileSnapshot(entry.input),
+            });
+          }
+          if (next.length === 0) return p;
+          return {
+            ...p,
+            updatedAt: new Date().toISOString(),
+            calculations: [...p.calculations, ...next],
+          };
+        }),
+      );
     },
     [setProjects],
   );
@@ -760,6 +809,7 @@ export function useProjects(): UseProjectsReturn {
     deleteProject,
     duplicateProject,
     addCalculation,
+    addCalculations,
     addTemplateCalculation,
     removeCalculation,
     updateCalculationNote,

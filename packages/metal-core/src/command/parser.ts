@@ -826,9 +826,15 @@ export function cmdParse(
   const typedGrade = gradeId ? findGradeById(gradeId) : null;
   const effectiveGrade = typedGrade ?? findGradeById(settings.defaultGradeId);
   const effectiveGradeId = effectiveGrade?.id ?? settings.defaultGradeId;
+  // Rate resolution, in order: an inline `@rate/unit` on this line beats
+  // everything; then this grade's own rate from the price book (stainless is
+  // not priced like S235); then the single default rate.
+  const bookRate = settings.gradeRates?.[effectiveGradeId];
   const effectivePricing: CommandPricing = pricingOverride
     ? { ...settings.pricing, ...pricingOverride }
-    : settings.pricing;
+    : bookRate != null && Number.isFinite(bookRate) && bookRate >= 0
+      ? { ...settings.pricing, unitPrice: bookRate }
+      : settings.pricing;
   const realQty = qty == null ? 1 : qty;
   const hasSize = !!size && /\d/.test(size);
 

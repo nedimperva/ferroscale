@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
@@ -7,6 +8,7 @@ import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { SheetShell } from "./sheet-shell";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 function SheetRow({
   label,
@@ -64,7 +66,12 @@ export function CommandResultBreakdown({
   columns = 1,
 }: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
   const t = useTranslations("command");
-  const rows = buildBreakdownRows(p, t);
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const rows = buildBreakdownRows(p, t, { marginPercent });
   if (!rows) {
     return null;
   }

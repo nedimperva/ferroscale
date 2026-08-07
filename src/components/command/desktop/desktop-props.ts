@@ -32,6 +32,8 @@ export interface CommandDesktopProps {
   sessionTape: string[];
   onRemoveTapeEntry: (q: string) => void;
   onClearTape: () => void;
+  /** Turn everything on the tape into a project, in one action. */
+  onSaveSessionAsProject: () => void;
   saved: SavedEntry[];
   compareItems: CompareItem[];
   projects: Project[];

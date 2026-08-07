@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
@@ -8,6 +8,7 @@ import { ProfileDrawing } from "../profile-drawing";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { DeskIcon } from "../desktop/desk-atoms";
 import type { SavedCardModel } from "./saved-model";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 export interface SavedCardActions {
   onOpen: () => void;
@@ -167,7 +168,12 @@ export function SavedCard({
     day: "numeric",
     month: "short",
   });
-  const breakdown = model.parsed ? buildBreakdownRows(model.parsed, t) : null;
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const breakdown = model.parsed ? buildBreakdownRows(model.parsed, t, { marginPercent }) : null;
 
   return (
     <div

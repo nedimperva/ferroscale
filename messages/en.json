@@ -42,6 +42,16 @@
     "installButton": "Install app"
   },
   "command": {
+    "priceBook": {
+      "title": "Price book",
+      "subtitle": "rate per grade · {unit}",
+      "empty": "Every grade uses the default rate ({rate}). Add a grade to price it differently — stainless is not steel.",
+      "addGrade": "+ Price a grade",
+      "pickGrade": "Choose a grade…",
+      "addAria": "Grade to add to the price book",
+      "rateAria": "Rate for {grade}",
+      "removeAria": "Remove {grade} from the price book"
+    },
     "keyHints": {
       "complete": "complete",
       "insert": "insert",
@@ -123,7 +133,10 @@
       "savedRemovedMany": "{count, plural, one {# calculation removed} other {# calculations removed}}",
       "restored": "Restored",
       "duplicated": "Copy created",
-      "savedUpdated": "Saved calculation updated"
+      "savedUpdated": "Saved calculation updated",
+      "sessionEmpty": "Nothing on the session tape yet",
+      "sessionSaved": "{count, plural, one {# line} other {# lines}} saved to {project}",
+      "sessionProjectName": "Session {date}"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -216,6 +229,7 @@
       "waste": "Waste +{percent}%",
       "vat": "VAT {percent}%",
       "totalCost": "Total cost",
+      "sellPrice": "Sell price (+{percent}%)",
       "pcs": "pcs",
       "geometry": "Geometry",
       "pricing": "Pricing",
@@ -253,6 +267,8 @@
       "languageUpper": "LANGUAGE",
       "haptics": "Vibration",
       "hapticsUpper": "VIBRATION",
+      "margin": "Margin",
+      "marginUpper": "MARGIN ON COST",
       "locales": {
         "en": "English",
         "bs": "Bosnian"
@@ -356,6 +372,7 @@
       "breakdown": "BREAKDOWN",
       "breakdownEmpty": "the full breakdown appears as you type",
       "totalCostLabel": "TOTAL COST",
+      "saveSessionAsProject": "SAVE AS PROJECT",
       "perPieceLabel": "PER PIECE"
     },
     "suggest": {

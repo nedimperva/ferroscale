@@ -7,18 +7,22 @@ import type { SavedEntry } from "@/hooks/useSaved";
 import { sha256Text } from "./crypto";
 import {
   getCompareUpdatedAt,
+  getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
   loadPresets,
+  loadPriceBook,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
   normalizeCompareItems,
   normalizePresets,
+  normalizePriceBook,
   normalizeProjects,
   normalizeSavedEntries,
   persistCompareItems,
   persistPresets,
+  persistPriceBook,
   persistProjects,
   persistQuickHistory,
   persistSavedEntries,
@@ -31,6 +35,7 @@ import type {
   SyncEntityRecord,
   SyncListPayload,
   SyncLocalRecord,
+  SyncListCollectionKey,
   SyncRecordIndex,
   SyncRecordKind,
 } from "./types";
@@ -61,8 +66,10 @@ function mergeEntityItem<T extends SyncEntityRecord>(items: T[], incoming: T) {
   return next.sort((left, right) => getEntityVersion(right).localeCompare(getEntityVersion(left)));
 }
 
-function singletonUpdatedAt(key: "compare" | "quickHistory") {
-  return key === "compare" ? getCompareUpdatedAt() : getQuickHistoryUpdatedAt();
+function singletonUpdatedAt(key: SyncListCollectionKey) {
+  if (key === "compare") return getCompareUpdatedAt();
+  if (key === "priceBook") return getPriceBookUpdatedAt();
+  return getQuickHistoryUpdatedAt();
 }
 
 function buildEntityRecord<T extends SyncEntityRecord>(kind: SyncRecordKind, entityId: string, item: T) {
@@ -75,7 +82,7 @@ function buildEntityRecord<T extends SyncEntityRecord>(kind: SyncRecordKind, ent
   };
 }
 
-function buildListRecord<T>(kind: "compare" | "quickHistory", items: T[]): Omit<SyncLocalRecord, "contentHash"> {
+function buildListRecord<T>(kind: SyncListCollectionKey, items: T[]): Omit<SyncLocalRecord, "contentHash"> {
   const payload: SyncListPayload<T> = {
     updatedAt: singletonUpdatedAt(kind),
     items,
@@ -120,6 +127,7 @@ export async function buildLocalSyncRecords(deviceId: string) {
     ...loadProjects().map((item) => buildEntityRecord("project", item.id, item)),
     ...loadPresets().map((item) => buildEntityRecord("preset", item.id, item)),
     buildListRecord("compare", loadCompareItems()),
+    buildListRecord("priceBook", loadPriceBook()),
     buildListRecord("quickHistory", loadQuickHistory()),
   ];
 
@@ -192,7 +200,7 @@ export function markSyncPushResults(records: SyncLocalRecord[], uploaded: Array<
 
 function resolveRecordUpdatedAt(kind: SyncRecordKind, payload: string) {
   if (kind === "bootstrap") return "1970-01-01T00:00:00.000Z";
-  if (kind === "compare" || kind === "quickHistory") {
+  if (kind === "compare" || kind === "quickHistory" || kind === "priceBook") {
     return (JSON.parse(payload) as SyncListPayload<unknown>).updatedAt;
   }
   return (JSON.parse(payload) as SyncEntityRecord).updatedAt;
@@ -204,14 +212,17 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[]) {
   let presets = loadPresets();
   let compare = loadCompareItems();
   let quickHistory = loadQuickHistory();
+  let priceBook = loadPriceBook();
   let compareUpdatedAt = getCompareUpdatedAt();
   let quickHistoryUpdatedAt = getQuickHistoryUpdatedAt();
+  let priceBookUpdatedAt = getPriceBookUpdatedAt();
 
   let savedChanged = false;
   let projectsChanged = false;
   let presetsChanged = false;
   let compareChanged = false;
   let quickHistoryChanged = false;
+  let priceBookChanged = false;
 
   for (const record of records) {
     if (record.removed || !record.payload) continue;
@@ -261,6 +272,15 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[]) {
         }
         break;
       }
+      case "priceBook": {
+        const payload = JSON.parse(record.payload) as SyncListPayload<unknown>;
+        if (payload.updatedAt > priceBookUpdatedAt) {
+          priceBook = normalizePriceBook(payload.items);
+          priceBookUpdatedAt = payload.updatedAt;
+          priceBookChanged = true;
+        }
+        break;
+      }
     }
   }
 
@@ -269,4 +289,5 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[]) {
   if (presetsChanged) persistPresets(presets, { markDirty: false });
   if (compareChanged) persistCompareItems(compare, { markDirty: false, updatedAt: compareUpdatedAt });
   if (quickHistoryChanged) persistQuickHistory(quickHistory, { markDirty: false, updatedAt: quickHistoryUpdatedAt });
+  if (priceBookChanged) persistPriceBook(priceBook, { markDirty: false, updatedAt: priceBookUpdatedAt });
 }

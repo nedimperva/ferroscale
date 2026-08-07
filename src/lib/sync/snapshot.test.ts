@@ -99,6 +99,10 @@ describe("mergeSnapshots", () => {
           updatedAt: "2026-03-31T10:00:00.000Z",
           items: ["lhs"],
         },
+        priceBook: {
+          updatedAt: "2026-03-31T10:00:00.000Z",
+          items: [{ gradeId: "stainless-304", unitPrice: 5 }],
+        },
       },
     };
 
@@ -132,6 +136,10 @@ describe("mergeSnapshots", () => {
           updatedAt: "2026-03-31T09:00:00.000Z",
           items: ["rhs"],
         },
+        priceBook: {
+          updatedAt: "2026-03-31T12:00:00.000Z",
+          items: [{ gradeId: "stainless-304", unitPrice: 6 }],
+        },
       },
     };
 
@@ -141,5 +149,9 @@ describe("mergeSnapshots", () => {
     expect(merged.collections.saved.items[0]?.name).toBe("Remote");
     expect(merged.collections.compare.items[0]).toEqual({ id: "cmp-remote" });
     expect(merged.collections.quickHistory.items).toEqual(["lhs"]);
+    // The price book is a list payload too: newest side wins wholesale.
+    expect(merged.collections.priceBook.items).toEqual([
+      { gradeId: "stainless-304", unitPrice: 6 },
+    ]);
   });
 });

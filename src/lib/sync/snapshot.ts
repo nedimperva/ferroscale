@@ -1,13 +1,16 @@
 import {
   getCompareUpdatedAt,
+  getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
   loadPresets,
+  loadPriceBook,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
   persistCompareItems,
   persistPresets,
+  persistPriceBook,
   persistProjects,
   persistQuickHistory,
   persistSavedEntries,
@@ -87,6 +90,10 @@ export function buildLocalSyncSnapshot(deviceId: string): SyncSnapshotV1 {
         updatedAt: getQuickHistoryUpdatedAt(),
         items: loadQuickHistory(),
       },
+      priceBook: {
+        updatedAt: getPriceBookUpdatedAt(),
+        items: loadPriceBook(),
+      },
     },
   };
 }
@@ -102,6 +109,7 @@ export function mergeSnapshots(local: SyncSnapshotV1, remote: SyncSnapshotV1, de
       presets: mergeEntityPayload(local.collections.presets, remote.collections.presets),
       compare: mergeListPayload(local.collections.compare, remote.collections.compare),
       quickHistory: mergeListPayload(local.collections.quickHistory, remote.collections.quickHistory),
+      priceBook: mergeListPayload(local.collections.priceBook, remote.collections.priceBook),
     },
   };
 }
@@ -117,6 +125,10 @@ export function applySnapshotToLocal(snapshot: SyncSnapshotV1): void {
   persistQuickHistory(snapshot.collections.quickHistory.items, {
     markDirty: false,
     updatedAt: snapshot.collections.quickHistory.updatedAt,
+  });
+  persistPriceBook(snapshot.collections.priceBook?.items ?? [], {
+    markDirty: false,
+    updatedAt: snapshot.collections.priceBook?.updatedAt ?? new Date(0).toISOString(),
   });
 }
 

@@ -548,3 +548,43 @@ describe("cmdParse issues", () => {
     expect(p.issues[0]?.message.length).toBeGreaterThan(0);
   });
 });
+
+describe("price book (per-grade rates)", () => {
+  const withBook = (gradeRates: Record<string, number>) =>
+    mkSettings({ gradeRates });
+
+  it("prices a grade with its own rate instead of the single default", () => {
+    const settings = withBook({ "stainless-304": 5 });
+    const stainless = cmdParse("rnd20 6m 304", settings);
+    const steel = cmdParse("rnd20 6m s235", settings);
+
+    expect(stainless.calc!.input.unitPrice).toBe(5);
+    expect(steel.calc!.input.unitPrice).toBe(settings.pricing.unitPrice);
+    // Same geometry, four times the rate → the money differs, the mass doesn't.
+    expect(stainless.totalKg).toBeCloseTo(steel.totalKg! * (7900 / 7850), 0);
+    expect(stainless.totalAmount!).toBeGreaterThan(steel.totalAmount!);
+  });
+
+  it("applies the book to the default grade too", () => {
+    const settings = withBook({ "steel-s235jr": 0.8 });
+    expect(cmdParse("hea120 6m", settings).calc!.input.unitPrice).toBe(0.8);
+  });
+
+  it("lets an inline rate win over the book", () => {
+    const settings = withBook({ "stainless-304": 5 });
+    expect(cmdParse("rnd20 6m 304 @9/kg", settings).calc!.input.unitPrice).toBe(9);
+  });
+
+  it("ignores nonsense entries rather than pricing at zero by accident", () => {
+    const settings = withBook({ "stainless-304": Number.NaN });
+    expect(cmdParse("rnd20 6m 304", settings).calc!.input.unitPrice).toBe(
+      settings.pricing.unitPrice,
+    );
+  });
+
+  it("leaves every other line alone when the book is empty", () => {
+    const plain = cmdParse("hea120 6m x2", mkSettings());
+    const booked = cmdParse("hea120 6m x2", withBook({}));
+    expect(booked.totalAmount).toBe(plain.totalAmount);
+  });
+});

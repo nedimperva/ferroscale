@@ -2,12 +2,13 @@ import type { CompareItem } from "@/hooks/useCompare";
 import type { DimensionPreset } from "@/hooks/usePresets";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
+import type { PriceBookEntry } from "@/hooks/usePriceBook";
 import { GOOGLE_SYNC_PROVIDER_ID } from "./keys";
 
 export type SyncProviderId = typeof GOOGLE_SYNC_PROVIDER_ID;
 
 export type SyncEntityCollectionKey = "saved" | "projects" | "presets";
-export type SyncListCollectionKey = "compare" | "quickHistory";
+export type SyncListCollectionKey = "compare" | "quickHistory" | "priceBook";
 export type SyncedCollectionKey = SyncEntityCollectionKey | SyncListCollectionKey;
 
 export interface SyncEntityRecord {
@@ -35,6 +36,7 @@ export interface SyncSnapshotV1 {
     presets: SyncEntityPayload<DimensionPreset>;
     compare: SyncListPayload<CompareItem>;
     quickHistory: SyncListPayload<string>;
+    priceBook: SyncListPayload<PriceBookEntry>;
   };
 }
 
@@ -76,7 +78,14 @@ export type SyncAuthState = "disconnected" | "awaiting_browser" | "connected" | 
 
 export type SyncRunStatus = "idle" | "pending" | "syncing" | "synced" | "error";
 
-export type SyncRecordKind = "bootstrap" | "saved" | "project" | "preset" | "compare" | "quickHistory";
+export type SyncRecordKind =
+  | "bootstrap"
+  | "saved"
+  | "project"
+  | "preset"
+  | "compare"
+  | "quickHistory"
+  | "priceBook";
 
 export interface SyncSessionDescriptor {
   provider: "google";

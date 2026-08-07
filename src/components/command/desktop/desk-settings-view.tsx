@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 import { CommandDocsSection, useCommandLocaleSwitch } from "../sheets/settings-sheet";
 import { SyncSection } from "../sheets/sync-section";
 import { InstallAppSection } from "../install-section";
-import { hapticsStore, type SharedCalcSettings } from "@/lib/settings-stores";
+import { PriceBookSection } from "../price-book-section";
+import { usePriceBook } from "@/hooks/usePriceBook";
+import { hapticsStore, marginPercentStore, type SharedCalcSettings } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -195,6 +197,12 @@ export function DeskSettingsView({
 }) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
+  const priceBook = usePriceBook();
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
   const haptics = useSyncExternalStore(
     hapticsStore.subscribe,
     hapticsStore.getSnapshot,
@@ -214,6 +222,8 @@ export function DeskSettingsView({
     onToggleTheme,
     haptics,
     onSetHaptics: hapticsStore.set,
+    marginPercent,
+    onSetMarginPercent: marginPercentStore.set,
   });
 
   return (
@@ -244,6 +254,16 @@ export function DeskSettingsView({
           <p className="text-[11px] text-muted mt-3 px-1">
             {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
           </p>
+          <div
+            className="rounded-2xl"
+            style={{
+              border: "1px solid var(--border-faint)",
+              background: "var(--surface)",
+              padding: "18px 20px",
+            }}
+          >
+            <PriceBookSection shared={shared} priceBook={priceBook} />
+          </div>
           <InstallAppSection />
           <SyncSection />
           </div>

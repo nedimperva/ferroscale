@@ -21,7 +21,8 @@ export type BreakdownRowId =
   | "subtotal"
   | "waste"
   | "vat"
-  | "totalCost";
+  | "totalCost"
+  | "sellPrice";
 
 export interface BreakdownRow {
   id: BreakdownRowId;
@@ -34,9 +35,20 @@ export interface BreakdownRows {
   pricing: BreakdownRow[];
 }
 
+export interface BreakdownOptions {
+  /** Margin on top of cost; 0 (the default) leaves the sell row out entirely. */
+  marginPercent?: number;
+}
+
+/** Cost plus margin — what you'd quote, not what it costs you. */
+export function sellPrice(cost: number, marginPercent: number): number {
+  return cost * (1 + marginPercent / 100);
+}
+
 export function buildBreakdownRows(
   p: CommandParseResult,
   t: CommandT,
+  options: BreakdownOptions = {},
 ): BreakdownRows | null {
   if (!p.calc || p.kgm == null) return null;
   const r = p.calc.result;
@@ -86,6 +98,13 @@ export function buildBreakdownRows(
         }]
       : []),
     { id: "totalCost", label: t("result.totalCost"), value: `${sym} ${fsMoney(r.grandTotalAmount)}` },
+    ...(options.marginPercent && options.marginPercent > 0
+      ? [{
+          id: "sellPrice" as const,
+          label: t("result.sellPrice", { percent: options.marginPercent }),
+          value: `${sym} ${fsMoney(sellPrice(r.grandTotalAmount, options.marginPercent))}`,
+        }]
+      : []),
   ];
 
   return { geometry, pricing };

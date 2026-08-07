@@ -9,6 +9,7 @@ import type { SavedEntry } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
+import { usePriceBook } from "@/hooks/usePriceBook";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import { cmdSuggest, cmdApplyInsert } from "@ferroscale/metal-core";
@@ -123,8 +124,9 @@ export function CommandShell() {
     clearAll: clearCompare,
     isDuplicate: isInCompare,
   } = useCompare();
-  const { projects, createProject, addCalculation, removeCalculation } = useProjects();
+  const { projects, createProject, addCalculation, addCalculations, removeCalculation } = useProjects();
   const { presetsForProfile } = usePresets();
+  const priceBook = usePriceBook();
 
   const [query, setQuery] = useState(DEMO_QUERY);
   // The URL only mirrors the query once the user has replaced the demo query
@@ -168,8 +170,9 @@ export function CommandShell() {
       },
       defaultGradeId: shared.defaultGradeId,
       defaultLengthUnit: defaultUnit,
+      gradeRates: priceBook.rates,
     }),
-    [shared, defaultUnit],
+    [shared, defaultUnit, priceBook.rates],
   );
 
   // Once the user leaves the demo query, mirror the query into the URL so the
@@ -512,6 +515,32 @@ export function CommandShell() {
     setProjectCalc(p.calc);
   }, [p.calc]);
 
+  /**
+   * Turn the session tape into a project in one gesture. The tape already
+   * carries a running total; moving six lines into a project used to be six
+   * rounds of recall → open picker → pick.
+   */
+  const saveSessionAsProject = useCallback(() => {
+    const lines = quickHistory
+      .map((entry) => cmdParse(entry, parserSettings))
+      .filter((rp) => rp.calc != null);
+    if (lines.length === 0) {
+      showToast(t("toast.sessionEmpty"));
+      return;
+    }
+    const name = t("toast.sessionProjectName", {
+      date: new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+    });
+    const project = createProject(name);
+    // Oldest first, so the project reads in the order the work happened.
+    const entries = [...lines]
+      .reverse()
+      .map((line) => ({ input: line.calc!.input, result: line.calc!.result }));
+    addCalculations(project.id, entries);
+    haptic("commit");
+    showToast(t("toast.sessionSaved", { count: entries.length, project: name }));
+  }, [quickHistory, parserSettings, createProject, addCalculations, showToast, t]);
+
   const newCalc = useCallback(() => {
     // A valid query cleared via ⌘K / CLEAR still lands on the session tape,
     // so starting a new line never loses the previous number.
@@ -719,6 +748,7 @@ export function CommandShell() {
             setModeOverride(null);
           }}
           sessionTape={quickHistory.slice(0, 8)}
+          onSaveSessionAsProject={saveSessionAsProject}
           onRemoveTapeEntry={removeHistoryEntry}
           onClearTape={clearHistory}
           saved={savedEntries}

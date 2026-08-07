@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
@@ -25,6 +25,7 @@ import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { PricingBadge } from "../command-atoms";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -105,6 +106,7 @@ export function DeskCalcView({
   sessionTape,
   onRemoveTapeEntry,
   onClearTape,
+  onSaveSessionAsProject,
   onSave,
   currentSaved,
   onOpenHelp,
@@ -702,8 +704,18 @@ export function DeskCalcView({
               {tapeRows.length > 0 && (
                 <button
                   type="button"
+                  onClick={onSaveSessionAsProject}
+                  className="ml-auto bg-transparent border-0 text-[10px] font-bold cursor-pointer"
+                  style={{ letterSpacing: 0.4, color: "var(--accent-text)" }}
+                >
+                  {t("desktop.saveSessionAsProject")}
+                </button>
+              )}
+              {tapeRows.length > 0 && (
+                <button
+                  type="button"
                   onClick={onClearTape}
-                  className="ml-auto bg-transparent border-0 text-muted-faint text-[10px] font-bold cursor-pointer hover:text-foreground"
+                  className="bg-transparent border-0 text-muted-faint text-[10px] font-bold cursor-pointer hover:text-foreground"
                   style={{ letterSpacing: 0.4 }}
                 >
                   {t("common.clear")}
@@ -870,7 +882,12 @@ const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?
 function DeskBreakdown({ p }: { p: CommandParseResult }) {
   const t = useTranslations("command");
   const r = p.calc?.result;
-  const rows = p.valid ? buildBreakdownRows(p, t) : null;
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const rows = p.valid ? buildBreakdownRows(p, t, { marginPercent }) : null;
   // The expanded right column keeps a tighter subset: density lives in the
   // header, and per-piece price / subtotal stay sheet-only.
   const geometry = rows?.geometry.filter((row) => row.id !== "density") ?? [];

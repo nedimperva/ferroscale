@@ -59,6 +59,14 @@ export interface CommandParserSettings {
   defaultGradeId: string;
   /** Unit applied to bare-number length tokens (from defaultUnitStore). */
   defaultLengthUnit: LengthUnit;
+  /**
+   * Price book: rate per material grade id, in the pricing block's own unit
+   * and basis. A grade listed here prices with its own rate instead of the
+   * single default — the difference between steel and stainless is a factor
+   * of four, so one global €/kg is wrong for anyone working across materials.
+   * An inline `@rate/unit` token still wins over both.
+   */
+  gradeRates?: Record<string, number>;
 }
 
 /** Full engine artifacts for a valid query — consumed by save/compare/project. */
