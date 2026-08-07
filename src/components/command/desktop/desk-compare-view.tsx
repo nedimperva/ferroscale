@@ -227,7 +227,7 @@ export function DeskCompareView({
                   <div key={c.item.id} style={valueCell(i)}>
                     <div className="flex items-baseline gap-1.5">
                       <span
-                        className="font-extrabold text-[22px]"
+                        className="font-mono font-extrabold text-[22px]"
                         style={{
                           letterSpacing: -0.8,
                           color: best ? "var(--green-text)" : "var(--foreground)",

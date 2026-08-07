@@ -13,6 +13,8 @@ import type { Project } from "@/hooks/useProjects";
 export type DeskView = "calc" | "saved" | "projects" | "compare" | "settings";
 
 export interface CommandDesktopProps {
+  /** Below 1024: one column, no side rail, tighter chrome. */
+  compact: boolean;
   dark: boolean;
   onToggleTheme: () => void;
   query: string;

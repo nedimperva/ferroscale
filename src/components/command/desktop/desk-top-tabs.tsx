@@ -26,13 +26,13 @@ function TopTab({
       style={{
         padding: "7px 14px",
         background: active ? "var(--surface)" : "transparent",
-        color: active ? "var(--accent-text)" : "var(--muted)",
+        color: active ? "var(--foreground)" : "var(--muted)",
         fontSize: 13,
         fontWeight: active ? 700 : 600,
         boxShadow: active ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
       }}
     >
-      <span className="flex" style={{ color: active ? "var(--accent)" : "var(--muted)" }}>
+      <span className="flex" style={{ color: active ? "var(--foreground-secondary)" : "var(--muted)" }}>
         {icon}
       </span>
       {label}
@@ -84,6 +84,7 @@ function TopIconBtn({
  * live in the header so the calculator/dashboard can fill the full width.
  */
 export function DeskTopTabs({
+  compact,
   dark,
   view,
   setView,
@@ -91,6 +92,7 @@ export function DeskTopTabs({
   onNew,
   onToggleTheme,
 }: {
+  compact: boolean;
   dark: boolean;
   view: DeskView;
   setView: (v: DeskView) => void;
@@ -101,9 +103,9 @@ export function DeskTopTabs({
   const t = useTranslations("command");
   return (
     <div
-      className="flex items-center gap-6 flex-shrink-0"
+      className={`flex items-center flex-shrink-0 ${compact ? "gap-3" : "gap-6"}`}
       style={{
-        padding: "14px 28px",
+        padding: compact ? "10px 16px" : "14px 28px",
         borderBottom: "1px solid var(--border-faint)",
         background: "var(--surface-raised)",
       }}
@@ -118,7 +120,9 @@ export function DeskTopTabs({
             style={{ width: 11, height: 11, background: "var(--accent-contrast)", borderRadius: 3 }}
           />
         </div>
-        <span className="font-extrabold text-base tracking-tight text-foreground">FerroScale</span>
+        {!compact && (
+          <span className="font-extrabold text-base tracking-tight text-foreground">FerroScale</span>
+        )}
       </div>
 
       {/* workspace tabs */}
@@ -161,7 +165,7 @@ export function DeskTopTabs({
         <button
           type="button"
           onClick={onNew}
-          className="flex items-center gap-[7px] rounded-[9px] cursor-pointer font-semibold text-xs text-muted"
+          className={`items-center gap-[7px] rounded-[9px] cursor-pointer font-semibold text-xs text-muted ${compact ? "hidden" : "flex"}`}
           style={{
             padding: "6px 12px",
             border: "1px solid var(--border-faint)",

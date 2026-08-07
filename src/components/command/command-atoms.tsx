@@ -45,7 +45,7 @@ export function CommandToast({
     >
       {toast && (
       <div
-        className="flex items-center gap-2 px-[18px] py-[11px] rounded-2xl font-bold text-sm pointer-events-auto"
+        className="fs-rise flex items-center gap-2 px-[18px] py-[11px] rounded-2xl font-bold text-sm pointer-events-auto"
         style={{
           background: "var(--foreground)",
           color: "var(--background)",

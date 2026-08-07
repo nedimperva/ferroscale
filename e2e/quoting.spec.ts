@@ -16,8 +16,7 @@ async function typeQuery(page: Page, query: string) {
 
 const openSettings = (page: Page) => page.getByRole("button", { name: "Settings" }).click();
 /** The breakdown's Rate row — what the line was actually priced at. */
-const rateRow = (page: Page) =>
-  page.locator("div", { has: page.getByText("Rate", { exact: true }) }).last().locator("span").last();
+const rateRow = (page: Page) => page.locator('[data-row="rate"] span').last();
 const gotoCalculator = (page: Page) => page.getByRole("button", { name: "Calculator" }).click();
 
 test.describe("Price book", () => {

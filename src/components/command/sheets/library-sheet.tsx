@@ -239,7 +239,7 @@ function LibraryTabPill({
       onClick={onClick}
       className={`flex-1 h-9 rounded-lg text-[11px] font-bold uppercase tracking-[1px] flex items-center justify-center gap-1.5 ${
         active
-          ? "bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]"
+          ? "bg-[var(--surface)] text-foreground border border-[var(--border-strong)]"
           : "bg-[var(--surface-raised)] text-muted border border-border-faint"
       }`}
     >

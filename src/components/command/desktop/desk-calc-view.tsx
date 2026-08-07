@@ -23,7 +23,7 @@ import { resolveCommandKey } from "../command-keys";
 import { CommandKeyHints } from "../command-key-hints";
 import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
-import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
+import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { PricingBadge } from "../command-atoms";
 import { marginPercentStore } from "@/lib/settings-stores";
 
@@ -94,6 +94,7 @@ function StatTile({
 }
 
 export function DeskCalcView({
+  compact,
   dark,
   query,
   setQuery,
@@ -188,7 +189,7 @@ export function DeskCalcView({
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       {/* ───────── command line — full width ───────── */}
-      <div className="flex-shrink-0" style={{ padding: "22px 28px 0" }}>
+      <div className="flex-shrink-0" style={{ padding: compact ? "14px 16px 0" : "22px 28px 0" }}>
         <label
           className="flex items-center gap-2 flex-wrap rounded-2xl cursor-text"
           style={{
@@ -393,7 +394,7 @@ export function DeskCalcView({
                     focusInputAtEnd();
                   }
                 }}
-                className="flex items-center gap-[7px] rounded-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+                className="fs-pop flex items-center gap-[7px] rounded-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
                 style={{
                   padding: it.sub ? "7px 13px" : "8px 14px",
                   border: it.kind === "save" ? "none" : "1px solid var(--border-faint)",
@@ -403,7 +404,7 @@ export function DeskCalcView({
                 }}
               >
                 {it.fam && (
-                  <span className="flex" style={{ color: "var(--accent)" }}>
+                  <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
                     <CommandGlyph fam={it.fam} size={16} />
                   </span>
                 )}
@@ -441,19 +442,14 @@ export function DeskCalcView({
       </div>
 
       {/* ───────── dashboard grid ───────── */}
-      <div className="flex flex-1 min-h-0 gap-[18px]" style={{ padding: "18px 28px 28px" }}>
+      <div
+        className={`flex flex-1 min-h-0 ${compact ? "flex-col overflow-y-auto" : ""} gap-[18px]`}
+        style={{ padding: compact ? "14px 16px 20px" : "18px 28px 28px" }}
+      >
         {/* LEFT column — result + session tape */}
         <div className="flex flex-col gap-4 min-w-0" style={{ flex: 1.55 }}>
           {/* RESULT PANEL */}
-          <div
-            className="flex-shrink-0 flex flex-col rounded-[18px]"
-            style={{
-              border: "1px solid var(--border-faint)",
-              background: "var(--surface)",
-              boxShadow: "var(--panel-shadow-soft)",
-              padding: "22px 26px",
-            }}
-          >
+          <DeskPanel className="flex-shrink-0 flex flex-col" padding="22px 26px">
             <div className="flex items-center gap-3">
               <div
                 className="inline-flex gap-1 rounded-[11px]"
@@ -511,9 +507,10 @@ export function DeskCalcView({
                   </span>
                 )}
                 <span
+                  className="fs-display-num"
                   style={{
                     fontWeight: 800,
-                    fontSize: "clamp(64px, 6vw, 104px)",
+                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(64px, 6vw, 104px)",
                     lineHeight: 0.82,
                     letterSpacing: -5,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
@@ -550,7 +547,7 @@ export function DeskCalcView({
                   </span>
                 ) : p.issues.length > 0 ? (
                   <span
-                    className="font-mono text-[14px] flex items-center gap-2 flex-wrap"
+                    className="fs-drop font-mono text-[14px] flex items-center gap-2 flex-wrap"
                     style={{ color: "var(--amber-text)" }}
                     role="status"
                   >
@@ -684,17 +681,13 @@ export function DeskCalcView({
                 </PanelIconBtn>
               </div>
             </div>
-          </div>
+          </DeskPanel>
 
           {/* SESSION TAPE — fills remaining height */}
-          <div
-            className="flex-1 min-h-0 flex flex-col rounded-2xl"
-            style={{
-              border: "1px solid var(--border-faint)",
-              background: "var(--surface)",
-              boxShadow: "var(--panel-shadow-soft)",
-              padding: "14px 18px",
-            }}
+          <DeskPanel
+            className={`flex flex-col ${compact ? "flex-shrink-0" : "flex-1 min-h-0"}`}
+            radius={16}
+            padding="14px 18px"
           >
             <div className="flex items-baseline gap-2.5 mb-1.5 flex-shrink-0">
               <SectionLabel>{t("desktop.session")}</SectionLabel>
@@ -731,11 +724,11 @@ export function DeskCalcView({
               </div>
             ) : (
               <>
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className={compact ? "" : "flex-1 min-h-0 overflow-y-auto"}>
                   {tapeRows.map(({ q, rp }, i) => (
                     <div
                       key={`${q}-${i}`}
-                      className="group flex items-center gap-3"
+                      className="fs-rise group flex items-center gap-3"
                       style={{ padding: "8px 0", borderTop: "1px solid var(--border-faint)" }}
                     >
                       <button
@@ -811,24 +804,21 @@ export function DeskCalcView({
                 </div>
               </>
             )}
-          </div>
+          </DeskPanel>
         </div>
 
         {/* RIGHT column — expanded breakdown */}
-        <div
-          className="flex flex-col min-h-0 overflow-y-auto rounded-[18px]"
+        <DeskPanel
+          className={`flex flex-col ${compact ? "flex-shrink-0" : "min-h-0 overflow-y-auto"}`}
+          padding="20px 22px"
           style={{
-            flex: 1,
-            minWidth: 300,
-            maxWidth: 400,
-            border: "1px solid var(--border-faint)",
-            background: "var(--surface)",
-            boxShadow: "var(--panel-shadow-soft)",
-            padding: "20px 22px",
+            flex: compact ? "0 0 auto" : 1,
+            minWidth: compact ? 0 : 300,
+            maxWidth: compact ? "100%" : 400,
           }}
         >
           <DeskBreakdown p={p} />
-        </div>
+        </DeskPanel>
       </div>
     </div>
   );
@@ -837,18 +827,25 @@ export function DeskCalcView({
 /* ───────────────────────── breakdown card ───────────────────────── */
 
 function Line({
+  id,
   label,
   value,
   strong,
   accent,
 }: {
+  /** Stable hook for tests and debugging — the row's meaning, not its position. */
+  id?: string;
   label: string;
   value: string;
   strong?: boolean;
   accent?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3" style={{ padding: "9px 0" }}>
+    <div
+      data-row={id}
+      className="flex items-baseline justify-between gap-3"
+      style={{ padding: "9px 0" }}
+    >
       <span
         className="whitespace-nowrap"
         style={{
@@ -924,7 +921,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
           <div style={{ paddingTop: 6 }}>
             {geometry.map((row) => (
               <div key={row.id}>
-                <Line label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+                <Line id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
                 {row.id === "pieces" && (
                   <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
                 )}
@@ -932,7 +929,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
             ))}
             <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
             {pricing.map((row) => (
-              <Line key={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+              <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
             ))}
           </div>
         </>

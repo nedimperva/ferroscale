@@ -17,6 +17,22 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.11.0",
+    date: "2026-08-07",
+    changed: [
+      "Tablets and half-width windows get the real workspace. Between the phone and the desktop there used to be a 560-pixel card floating on a background — no session tape, no library, no breakdown, which is exactly an iPad in portrait. That whole in-between is now the workspace itself, laid out in one column for the width it has",
+      "Figures line up everywhere: every number in the app now uses tabular figures, so a value no longer shifts sideways as it counts up or a digit changes",
+      "The orange is used more sparingly — it now means the primary action and the weight metric, and no longer doubles as the selected tab, the profile icons and everything else at once",
+      "Movement now means one thing: chips pop in, tape lines rise, views cross-fade, warnings drop in. All of it disappears when your system asks for reduced motion",
+    ],
+    changed_bs: [
+      "Tableti i prozori pola širine dobijaju pravi radni prostor. Između telefona i desktopa je ranije bila kartica od 560 piksela na pozadini — bez trake sesije, biblioteke i pregleda, što je tačno iPad u portretu. Taj međuprostor je sada sam radni prostor, složen u jednu kolonu za širinu koju ima",
+      "Brojevi se poravnavaju svuda: sve cifre u aplikaciji koriste tabelarne brojke, pa vrijednost više ne pomjera položaj dok se odbrojava ili dok se cifra mijenja",
+      "Narandžasta se koristi štedljivije — sada znači glavnu akciju i masu, a više nije istovremeno i izabrana kartica, ikone profila i sve ostalo",
+      "Pokret sada znači jedno: čipovi iskaču, linije trake se podižu, prikazi se pretapaju, upozorenja se spuštaju. Sve nestaje kada sistem zatraži smanjeno kretanje",
+    ],
+  },
+  {
     version: "3.10.0",
     date: "2026-08-07",
     added: [

@@ -37,9 +37,6 @@ import {
   formatCommandSuggestionLabel,
   buildCommandSummary,
 } from "./command-copy";
-import { GhostField } from "./ghost-field";
-import { resolveCommandKey } from "./command-keys";
-import { CommandKeyHints } from "./command-key-hints";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
@@ -64,7 +61,6 @@ import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
-const DESKTOP_CARD_W = 560;
 // Trailing space so the demo query renders fully chipped on first load.
 const DEMO_QUERY = "hea120 6m x2 s235 ";
 /** Set after the first visit, so the demo query greets newcomers only. */
@@ -153,11 +149,10 @@ export function CommandShell() {
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   const [isWideViewport, setIsWideViewport] = useState(false);
+  /** Workspace, but narrow: one column, breakdown folded away. */
+  const [isCompactDesktop, setIsCompactDesktop] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
-  // Medium-desktop ↑/↓ history recall (draft holds the in-progress query).
-  const historyIdxRef = useRef(-1);
-  const draftRef = useRef("");
 
   const parserSettings: CommandParserSettings = useMemo(
     () => ({
@@ -192,15 +187,20 @@ export function CommandShell() {
     return () => window.clearTimeout(id);
   }, [query, shared]);
 
-  // Three viewports:
-  //  · phone (<640) → fullscreen with on-screen keypad
-  //  · medium desktop (640-1023) → centered command card, real input
-  //  · wide desktop (≥1024) → two-pane workspace, Library always visible
+  // Two shells, not three:
+  //  · phone (<640) → fullscreen with the on-screen keypad and sheets
+  //  · everything else (≥640) → the workspace, single-column below 1024
+  //
+  // 640–1023 used to get a 560px card floating on a background — no session
+  // tape, no library, no breakdown — which is exactly an iPad in portrait and
+  // a half-width laptop window. It now gets the real thing, laid out for the
+  // width it has.
   useEffect(() => {
     const fit = () => {
       const w = window.innerWidth;
       setIsPhoneViewport(w < 640);
-      setIsWideViewport(w >= 1024);
+      setIsWideViewport(w >= 640);
+      setIsCompactDesktop(w < 1024);
     };
     fit();
     window.addEventListener("resize", fit);
@@ -635,25 +635,6 @@ export function CommandShell() {
     });
   }, []);
 
-  // Medium desktop: ⌘K / Ctrl K refocuses the query input. Escape-to-close
-  // lives inside SheetShell itself (works on every viewport, with the focus
-  // trap guaranteeing the sheet owns the keyboard).
-  useEffect(() => {
-    if (isPhoneViewport) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (
-        !isWideViewport &&
-        (event.metaKey || event.ctrlKey) &&
-        event.key.toLowerCase() === "k"
-      ) {
-        event.preventDefault();
-        focusInput();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [focusInput, isPhoneViewport, isWideViewport]);
-
   // Hero metric counts up when the query settles. The number is animated in the
   // target's display unit (kg or t) so the tween never crosses a unit boundary;
   // the unit/symbol beside it stays driven by the real value. Weight always
@@ -754,6 +735,7 @@ export function CommandShell() {
       >
         <PwaRegister />
         <CommandDesktop
+          compact={isCompactDesktop}
           dark={dark}
           onToggleTheme={cycleTheme}
           query={query}
@@ -815,54 +797,22 @@ export function CommandShell() {
     );
   }
 
-  const outerClass = "fixed inset-0 flex items-center justify-center overflow-hidden";
-  const outerBg = isPhoneViewport ? screenBg : "var(--background)";
-
+  // ── Phone (<640): fullscreen shell with the on-screen keypad ──
   return (
     <div
-      className={outerClass}
-      style={{
-        background: outerBg,
-        transition: "background 220ms ease",
-      }}
+      className="fixed inset-0 flex items-center justify-center overflow-hidden"
+      style={{ background: screenBg, transition: "background 220ms ease" }}
     >
       <PwaRegister />
       <div
         className="relative flex flex-col overflow-hidden text-foreground"
-        style={
-          isPhoneViewport
-            ? {
-                width: "100%",
-                height: "100dvh",
-                background: screenBg,
-              }
-            : {
-                width: DESKTOP_CARD_W,
-                maxWidth: "calc(100vw - 32px)",
-                maxHeight: "calc(100vh - 32px)",
-                background: screenBg,
-                borderRadius: 20,
-                border: "1px solid var(--border-faint)",
-                boxShadow:
-                  "0 1px 2px rgba(0,0,0,0.06), 0 24px 60px -20px rgba(0,0,0,0.35)",
-              }
-        }
+        style={{ width: "100%", height: "100dvh", background: screenBg }}
       >
-        <div
-          className={
-            isPhoneViewport
-              ? "flex min-h-0 flex-1 flex-col overflow-hidden"
-              : "contents"
-          }
-        >
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* Safe-top spacer — honours real device safe-area on mobile, narrow gap on desktop */}
           <div
             className="flex-shrink-0"
-            style={
-              isPhoneViewport
-                ? { paddingTop: "env(safe-area-inset-top, 12px)", height: "auto", minHeight: 12 }
-                : { height: 12 }
-            }
+            style={{ paddingTop: "env(safe-area-inset-top, 12px)", height: "auto", minHeight: 12 }}
           />
 
           {/* TOP BAR */}
@@ -967,7 +917,7 @@ export function CommandShell() {
                   </span>
                 )}
                 <span
-                  className="leading-[0.82] tracking-[-2.6px]"
+                  className="leading-[0.82] tracking-[-2.6px] fs-display-num"
                   style={{
                     fontSize: 68,
                     fontWeight: HERO_FONT_WEIGHT,
@@ -1013,7 +963,7 @@ export function CommandShell() {
                 </span>
               ) : p.issues.length > 0 ? (
                 <span
-                  className="font-mono text-[12px] flex items-center gap-2 flex-wrap"
+                  className="fs-drop font-mono text-[12px] flex items-center gap-2 flex-wrap"
                   style={{ color: "var(--amber-text)" }}
                   role="status"
                 >
@@ -1029,7 +979,7 @@ export function CommandShell() {
                             p.issues[0].suggestion!,
                           ),
                         );
-                        if (!isPhoneViewport) focusInputAtEnd();
+                        // no-op on phone: the keypad owns the caret
                       }}
                       className="rounded-full font-bold"
                       style={{
@@ -1084,7 +1034,7 @@ export function CommandShell() {
             onOpen={() => p.valid && setSheet("result")}
           />
 
-          {isPhoneViewport && <div className="flex-1 min-h-[6px]" />}
+          <div className="flex-1 min-h-[6px]" />
 
           {/* SUGGESTION BAR */}
           <div className="pb-1.5">
@@ -1121,9 +1071,6 @@ export function CommandShell() {
                   tabIndex={-1}
                   onClick={() => {
                     onSuggest(it);
-                    // After picking, return focus to the input so the user can
-                    // keep typing immediately.
-                    if (!isPhoneViewport) focusInput();
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
@@ -1148,7 +1095,7 @@ export function CommandShell() {
                       focusInput();
                     }
                   }}
-                  className="flex-shrink-0 flex items-center gap-1.5 rounded-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
+                  className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
                   style={{
                     padding: it.sub ? "7px 12px" : "8px 13px",
                     border:
@@ -1167,7 +1114,7 @@ export function CommandShell() {
                   }}
                 >
                   {it.fam && (
-                    <span style={{ color: "var(--accent)" }}>
+                    <span style={{ color: "var(--foreground-secondary)" }}>
                       <CommandGlyph fam={it.fam} size={17} />
                     </span>
                   )}
@@ -1202,7 +1149,7 @@ export function CommandShell() {
           </div>
 
           {/* QUERY AREA */}
-          {isPhoneViewport ? (
+          {/* QUERY LINE — chips plus the caret; the keypad below types into it */}
             <div className="px-[14px] pb-2">
               <div
                 className="flex items-center gap-1.5 flex-wrap rounded-[15px] px-3 py-2.5"
@@ -1260,165 +1207,12 @@ export function CommandShell() {
                 />
               </div>
             </div>
-          ) : (
-            <div className="px-4 pb-4 flex-shrink-0">
-              {queryTokens.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2 px-0.5">
-                  {queryTokens.map((tok, i) => (
-                    <TokenChip
-                      key={`${tok}-${i}`}
-                      tok={tok}
-                      kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                      onEdit={() => {
-                        editTokenAt(i);
-                        focusInputAtEnd();
-                      }}
-                      onRemove={() => {
-                        removeTokenAt(i);
-                        focusInputAtEnd();
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-              <label
-                className="flex items-center gap-2 rounded-[15px] px-3 py-2.5 cursor-text"
-                style={{
-                  minHeight: 50,
-                  border: "1.5px solid var(--accent-border)",
-                  background: "var(--surface)",
-                  boxShadow: dark
-                    ? "0 0 0 3px rgba(240,121,63,0.13)"
-                    : "0 0 0 3px rgba(196,71,26,0.10)",
-                }}
-              >
-                <span
-                  className="font-mono text-base font-bold"
-                  style={{ color: "var(--accent)" }}
-                  aria-hidden="true"
-                >
-                  ›
-                </span>
-                <GhostField
-                  ref={inputRef}
-                  type="text"
-                  ghost={ghost}
-                  value={query}
-                  onChange={(e) => {
-                    historyIdxRef.current = -1;
-                    setQuery(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    // Same resolver the desktop workspace uses — one rule set
-                    // for the whole app (see command-keys.ts).
-                    const action = resolveCommandKey({
-                      key: e.key,
-                      code: e.code,
-                      metaKey: e.metaKey,
-                      ctrlKey: e.ctrlKey,
-                      altKey: e.altKey,
-                      shiftKey: e.shiftKey,
-                      partial: partialToken ?? "",
-                      hasGhost: !!ghost,
-                      valid: p.valid,
-                      caretAtEnd:
-                        e.currentTarget.selectionStart === e.currentTarget.value.length,
-                      // This surface keeps the whole query in the input, so
-                      // there are no chips to pull back with backspace.
-                      caretAtStart: false,
-                      caretCollapsed:
-                        e.currentTarget.selectionStart === e.currentTarget.selectionEnd,
-                      suggestionCount: sug.items.length,
-                      chipCount: 0,
-                      historyLength: quickHistory.length,
-                      browsingHistory: historyIdxRef.current >= 0,
-                    });
-                    if (!action) return;
-                    e.preventDefault();
-                    switch (action.type) {
-                      case "advance": {
-                        const pending = sug.items.find((it) => it.kind !== "save");
-                        if (!p.valid && pending) onSuggest(pending);
-                        else if (p.valid) logToSession();
-                        return;
-                      }
-                      case "acceptGhost":
-                        acceptGhost();
-                        return;
-                      case "insertSuggestion":
-                        onSuggest(sug.items[action.index]);
-                        focusInputAtEnd();
-                        return;
-                      case "save":
-                        doSave();
-                        return;
-                      case "compare":
-                        doCompare();
-                        return;
-                      case "help":
-                        setSheet("help");
-                        return;
-                      case "clear":
-                        newCalc();
-                        return;
-                      case "historyPrev": {
-                        if (historyIdxRef.current === -1) draftRef.current = query;
-                        historyIdxRef.current = Math.min(
-                          historyIdxRef.current + 1,
-                          quickHistory.length - 1,
-                        );
-                        setQuery(quickHistory[historyIdxRef.current] + " ");
-                        focusInputAtEnd();
-                        return;
-                      }
-                      case "historyNext": {
-                        const nextIdx = historyIdxRef.current - 1;
-                        historyIdxRef.current = nextIdx;
-                        setQuery(
-                          nextIdx < 0 ? draftRef.current : quickHistory[nextIdx] + " ",
-                        );
-                        focusInputAtEnd();
-                        return;
-                      }
-                      case "focusChips":
-                        firstSuggestionRef.current?.focus();
-                        return;
-                      case "editLastChip":
-                        return;
-                    }
-                  }}
-                  autoFocus
-                  autoCapitalize="off"
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder={t("query.placeholder")}
-                  aria-label={t("query.aria")}
-                  wrapperClassName="flex-1"
-                  inputClassName="bg-transparent outline-none font-mono text-sm text-foreground placeholder:text-muted-faint"
-                  mirrorClassName="font-mono text-sm"
-                />
-                <kbd className="text-[10px] font-mono font-semibold text-muted-faint px-1.5 py-0.5 rounded border border-border-faint">
-                  ⌘K
-                </kbd>
-              </label>
-              <div className="mt-2 px-0.5">
-                <CommandKeyHints
-                  compact
-                  valid={p.valid}
-                  hasGhost={!!ghost}
-                  suggestionCount={sug.items.length}
-                  historyLength={quickHistory.length}
-                  onOpenHelp={() => setSheet("help")}
-                />
-              </div>
-            </div>
-          )}
         </div>
 
           {/* Recents: the phone had no history recall at all — ↑/↓ is a
               desktop-only affordance — so the last few lines sit one tap away
               above the keypad. */}
-          {isPhoneViewport && quickHistory.length > 0 && (
+          {quickHistory.length > 0 && (
             <div
               className="flex gap-1.5 px-[14px] pb-1.5 flex-shrink-0"
               style={{ overflowX: "auto" }}
@@ -1448,8 +1242,8 @@ export function CommandShell() {
             </div>
           )}
 
-          {/* On-screen keypad: phone only */}
-          {isPhoneViewport && (
+          {/* On-screen keypad */}
+          {(
             <CommandKeypad
               onKey={onKey}
               onPriceUnit={onPriceUnit}
@@ -1538,7 +1332,7 @@ export function CommandShell() {
           )}
 
           {/* TOAST */}
-          <CommandToast toast={toast} bottom={isPhoneViewport ? 120 : 20} dark={dark} />
+          <CommandToast toast={toast} bottom={120} dark={dark} />
           <ResultAnnouncer text={liveResultText} />
       </div>
     </div>

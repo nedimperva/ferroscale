@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.11.0] - 2026-08-07
+
+### Changed
+
+- **The 640–1023 range gets the real workspace.** It used to be a fixed 560px card floating on a background — no session tape, no library, no breakdown — which is exactly an iPad in portrait and a half-width laptop window. Everything ≥640 now runs the workspace, in a single-column form below 1024: full-width command line, result panel, tape, then the breakdown stacked beneath, with the wordmark and the ⌘K button dropped from the header for room. Sheets are phone-only from here on, and the shell lost ~200 lines of now-unreachable medium-viewport code
+- **One numeric typography rule.** Tabular figures for every number in the app (mono data and the sans display metric alike), so a value never shifts sideways while it counts up or a digit changes. Compare's headline weight moved to mono with everything else
+- **Accent discipline.** `--accent` was doing six jobs; it now means the primary action and the weight metric. Selected workspace tabs, library tabs, density controls and profile glyphs use neutral surfaces and text — the raised surface and its shadow already said "selected"
+- **A shared motion vocabulary** (`fsPop` / `fsRise` / `fsFade` / `fsDrop`): chips pop in, tape lines rise, views cross-fade on tab change, the parse warning drops in, toasts arrive rather than blink. One rule set, all of it off under `prefers-reduced-motion`
+- The workspace panel treatment (border, surface, shadow, radius) is a `DeskPanel` atom instead of the same inline block written out in every view
+
+---
+
 ## [3.10.0] - 2026-08-07
 
 ### Added

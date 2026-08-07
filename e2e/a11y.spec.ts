@@ -56,20 +56,30 @@ test.describe("axe scans", () => {
     await scan(page, "wide /en saved edit sheet");
   });
 
-  test.describe("medium viewport", () => {
+  test.describe("compact workspace (640–1023)", () => {
     test.use({ viewport: { width: 800, height: 900 } });
 
-    test("command card", async ({ page }) => {
+    test("single-column dashboard", async ({ page }) => {
       await page.goto("/en");
       await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
-      await scan(page, "medium /en");
+      await scan(page, "compact /en");
+    });
+  });
+
+  test.describe("phone", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("keypad shell", async ({ page }) => {
+      await page.goto("/en");
+      await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+      await scan(page, "phone /en");
     });
 
     test("settings sheet open", async ({ page }) => {
       await page.goto("/en");
       await page.getByRole("button", { name: "Settings" }).click();
       await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
-      await scan(page, "medium /en + settings sheet");
+      await scan(page, "phone /en + settings sheet");
     });
   });
 });

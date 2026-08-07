@@ -346,6 +346,57 @@ details[open] .chevron-icon {
   }
 }
 
+/* ── Motion vocabulary ────────────────────────────────────────────────────
+   One small set, used everywhere, so movement means the same thing wherever
+   it appears: something arrived (fsPop / fsRise), a view changed (fsFade), a
+   warning appeared (fsDrop). All of it collapses under reduced motion. */
+@keyframes fsPop {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fsRise {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fsFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fsDrop {
+  from { transform: translateY(-4px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.fs-pop { animation: fsPop var(--motion-fast) ease-out both; }
+.fs-rise { animation: fsRise var(--motion-medium) ease-out both; }
+.fs-fade { animation: fsFade var(--motion-medium) ease-out both; }
+.fs-drop { animation: fsDrop var(--motion-fast) ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-pop,
+  .fs-rise,
+  .fs-fade,
+  .fs-drop {
+    animation: none;
+  }
+}
+
+/* ── Numbers ──────────────────────────────────────────────────────────────
+   One rule for the whole app: figures line up. Everything numeric is either a
+   display metric (the hero — sans, tight tracking) or data (mono), and both
+   get tabular figures so a value never shifts sideways as it counts up or a
+   digit changes. */
+.font-mono,
+code,
+kbd,
+samp,
+.fs-display-num {
+  font-variant-numeric: tabular-nums;
+}
+
 /* The printable quote. It lives in the normal DOM (so it needs no route, no
    dependency and no network) and is revealed only when printing — which is
    also how every OS produces a PDF. */

@@ -44,10 +44,10 @@ test.describe("Command bar", () => {
   });
 });
 
-// Medium viewport (640–1023) — the centered command card where the bottom
-// sheets (Settings, Library, Result) render.
-test.describe("Sheet dialogs (medium viewport)", () => {
-  test.use({ viewport: { width: 800, height: 900 } });
+// Phone (<640) — the one surface that still uses bottom sheets for Settings,
+// Library and Result. Everything wider gets the workspace.
+test.describe("Sheet dialogs (phone viewport)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
 
   test("the settings sheet is a modal dialog: named, focused, Escape closes", async ({ page }) => {
     await page.goto("/en");

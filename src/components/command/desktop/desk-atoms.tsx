@@ -37,6 +37,41 @@ export function DeskBtn({
   );
 }
 
+/**
+ * The workspace panel: one border, one surface, one shadow. It was written
+ * out by hand in every desktop view, so a change to the app's panel look was
+ * a find-and-replace instead of an edit.
+ */
+export function DeskPanel({
+  children,
+  className = "",
+  padding,
+  radius = 18,
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  padding?: string | number;
+  radius?: number;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={className}
+      style={{
+        border: "1px solid var(--border-faint)",
+        background: "var(--surface)",
+        boxShadow: "var(--panel-shadow-soft)",
+        borderRadius: radius,
+        padding,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <span

@@ -96,6 +96,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       <DeskTopTabs
+        compact={props.compact}
         dark={props.dark}
         view={view}
         setView={setView}
@@ -103,6 +104,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
         onNew={startNewCalc}
         onToggleTheme={props.onToggleTheme}
       />
+      {/* Keyed by view so switching tabs cross-fades instead of snapping. */}
+      <div key={view} className="fs-fade flex flex-1 min-h-0 flex-col">
       {view === "calc" && (
         <DeskCalcView {...props} inputRef={inputRef} gotoCompare={() => setView("compare")} />
       )}
@@ -156,6 +159,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
           onToggleTheme={props.onToggleTheme}
         />
       )}
+      </div>
     </div>
   );
 }

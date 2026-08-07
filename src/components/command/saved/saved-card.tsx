@@ -189,7 +189,7 @@ export function SavedCard({
 
   return (
     <div
-      className="group flex flex-col rounded-2xl transition-shadow"
+      className="fs-rise group flex flex-col rounded-2xl transition-shadow"
       style={{
         border: `1px solid ${actions.selected ? "var(--accent-border)" : "var(--border-faint)"}`,
         background: "var(--surface)",

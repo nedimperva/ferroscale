@@ -119,7 +119,7 @@ export function SavedToolbar({
                 style={{
                   width: 30,
                   background: density === kind ? "var(--surface-inset)" : "transparent",
-                  color: density === kind ? "var(--accent-text)" : "var(--muted)",
+                  color: density === kind ? "var(--foreground)" : "var(--muted)",
                 }}
               >
                 <DensityIcon kind={kind} />
