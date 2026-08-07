@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.13.0",
+    date: "2026-08-07",
+    changed: [
+      "Your typing habits now follow you between devices. The suggestions that learn what you actually type used to start from nothing on every device; with sync on, the sizes, lengths and recent lines you built up on one are ranked on all of them. Each device keeps its own tally and the app adds them together, so nothing is ever counted twice",
+    ],
+    changed_bs: [
+      "Vaše navike kucanja sada vas prate između uređaja. Prijedlozi koji uče šta stvarno kucate ranije su kretali od nule na svakom uređaju; sa uključenom sinhronizacijom, dimenzije, dužine i nedavne linije koje ste izgradili na jednom rangiraju se na svima. Svaki uređaj vodi vlastiti zbir, a aplikacija ih sabira, pa se ništa nikada ne broji dvaput",
+    ],
+  },
+  {
     version: "3.12.0",
     date: "2026-08-07",
     added: [

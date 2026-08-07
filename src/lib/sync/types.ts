@@ -9,7 +9,16 @@ export type SyncProviderId = typeof GOOGLE_SYNC_PROVIDER_ID;
 
 export type SyncEntityCollectionKey = "saved" | "projects" | "presets";
 export type SyncListCollectionKey = "compare" | "quickHistory" | "priceBook";
-export type SyncedCollectionKey = SyncEntityCollectionKey | SyncListCollectionKey;
+/**
+ * Collections that neither replace wholesale nor key by entity: usage stats
+ * are a grow-only counter per device, so every device owns one record and the
+ * reader sums them.
+ */
+export type SyncMergeCollectionKey = "usage";
+export type SyncedCollectionKey =
+  | SyncEntityCollectionKey
+  | SyncListCollectionKey
+  | SyncMergeCollectionKey;
 
 export interface SyncEntityRecord {
   id: string;
@@ -24,6 +33,13 @@ export interface SyncEntityPayload<T extends SyncEntityRecord> {
 export interface SyncListPayload<T> {
   updatedAt: string;
   items: T[];
+}
+
+/** One device's typing habits. `stats` is usage-stats.ts's own shape. */
+export interface SyncUsagePayload {
+  deviceId: string;
+  updatedAt: string;
+  stats: unknown;
 }
 
 export interface SyncSnapshotV1 {
@@ -85,7 +101,8 @@ export type SyncRecordKind =
   | "preset"
   | "compare"
   | "quickHistory"
-  | "priceBook";
+  | "priceBook"
+  | "usage";
 
 export interface SyncSessionDescriptor {
   provider: "google";

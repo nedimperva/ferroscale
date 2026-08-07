@@ -27,6 +27,11 @@ import {
   persistQuickHistory,
   persistSavedEntries,
 } from "./collections";
+import {
+  getUsageUpdatedAt,
+  loadOwnUsageStats,
+  mergeRemoteUsageStats,
+} from "@/lib/usage-stats";
 import { BOOTSTRAP_RECORD_KEY, SYNC_SCHEMA_VERSION } from "./keys";
 import { loadSyncRecordIndex, saveSyncRecordIndex } from "./metadata";
 import type {
@@ -38,6 +43,7 @@ import type {
   SyncListCollectionKey,
   SyncRecordIndex,
   SyncRecordKind,
+  SyncUsagePayload,
 } from "./types";
 
 function isoOrEpoch(value: string | undefined) {
@@ -97,6 +103,25 @@ function buildListRecord<T>(kind: SyncListCollectionKey, items: T[]): Omit<SyncL
   };
 }
 
+/**
+ * One record per device, never a shared total: a device pushes only what it
+ * learned itself, so pulling its own numbers back can never add them twice.
+ */
+function buildUsageRecord(deviceId: string): Omit<SyncLocalRecord, "contentHash"> {
+  const payload: SyncUsagePayload = {
+    deviceId,
+    updatedAt: getUsageUpdatedAt(),
+    stats: loadOwnUsageStats(),
+  };
+  return {
+    recordKey: `usage:${deviceId}`,
+    kind: "usage",
+    entityId: deviceId,
+    updatedAt: payload.updatedAt,
+    payload: JSON.stringify(payload),
+  };
+}
+
 async function finalizeRecords(
   drafts: Array<Omit<SyncLocalRecord, "contentHash">>,
   index: SyncRecordIndex,
@@ -129,6 +154,7 @@ export async function buildLocalSyncRecords(deviceId: string) {
     buildListRecord("compare", loadCompareItems()),
     buildListRecord("priceBook", loadPriceBook()),
     buildListRecord("quickHistory", loadQuickHistory()),
+    buildUsageRecord(deviceId),
   ];
 
   return finalizeRecords(drafts, index);
@@ -203,10 +229,13 @@ function resolveRecordUpdatedAt(kind: SyncRecordKind, payload: string) {
   if (kind === "compare" || kind === "quickHistory" || kind === "priceBook") {
     return (JSON.parse(payload) as SyncListPayload<unknown>).updatedAt;
   }
+  if (kind === "usage") {
+    return (JSON.parse(payload) as SyncUsagePayload).updatedAt;
+  }
   return (JSON.parse(payload) as SyncEntityRecord).updatedAt;
 }
 
-export function applyRemoteSyncRecords(records: AppliedSyncRecord[]) {
+export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId?: string) {
   let saved = loadSavedEntries();
   let projects = loadProjects();
   let presets = loadPresets();
@@ -278,6 +307,15 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[]) {
           priceBook = normalizePriceBook(payload.items);
           priceBookUpdatedAt = payload.updatedAt;
           priceBookChanged = true;
+        }
+        break;
+      }
+      case "usage": {
+        // Every device keeps its own record; our own comes back on a pull and
+        // is skipped, because local storage is already the authority on it.
+        const payload = JSON.parse(record.payload) as SyncUsagePayload;
+        if (payload.deviceId && payload.deviceId !== ownDeviceId) {
+          mergeRemoteUsageStats(payload.deviceId, payload.updatedAt, payload.stats);
         }
         break;
       }

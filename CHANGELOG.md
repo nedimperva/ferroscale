@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.13.0] - 2026-08-07
+
+### Changed
+
+- **Typing habits sync.** Usage stats — the per-family tallies that rank sizes, lengths, quantities and grades in the suggestion bar, plus the recent-query list — were local-only, so every device started from zero. They now travel with the rest of the encrypted snapshot as a **grow-only counter per device**: each device pushes `usage:<deviceId>` holding only what it learned itself, its own record is skipped when it comes back on a pull, and the suggestion source sums every device's tally at read time (counts add, timestamps take the later of the two). A shared running total would have double-counted on every round trip — five uses here plus the five just pulled back reading as ten — which is what the per-device split exists to prevent. A single-device user's ordering is unchanged: with no peers the merge is skipped outright
+- The shell now subscribes to a usage version store instead of holding its own counter, so a sync pull that brings another device's habits in refreshes the suggestions without a reload
+
+---
+
 ## [3.12.0] - 2026-08-07
 
 ### Added

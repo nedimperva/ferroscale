@@ -301,7 +301,7 @@ export function useGoogleDriveSync() {
             syncError: null,
           });
           const decrypted = await decryptPulledRecords(pull.records, passphrase);
-          applyRemoteSyncRecords(decrypted);
+          applyRemoteSyncRecords(decrypted, current.deviceId);
           savePulledRecordsToIndex(decrypted);
         }
 

@@ -26,6 +26,9 @@ export const SYNC_STORAGE_KEYS = {
   compare: "ferroscale-compare-v2",
   quickHistory: "ferroscale-quick-history",
   priceBook: "ferroscale-price-book-v1",
+  // Typing habits. Synced per device (see usage-stats.ts), so this key holds
+  // this device's own tally only.
+  usage: "ferroscale-usage-v1",
 } as const;
 
 export const GOOGLE_SYNC_PROVIDER_ID = "google-drive";

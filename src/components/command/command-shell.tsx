@@ -56,7 +56,7 @@ import {
   readSharedQuery,
   sharedPricingDiffers,
 } from "@/lib/command/share";
-import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
+import { buildUsageSource, recordCommandUsage, usageStatsVersionStore } from "@/lib/usage-stats";
 import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
@@ -217,10 +217,18 @@ export function CommandShell() {
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
   // habits first — no Save required. The pristine demo query never counts.
-  const [usageVersion, setUsageVersion] = useState(0);
+  // Zero on the server and on the first client paint, then whatever the store
+  // holds — which also moves when a sync pull brings another device's habits
+  // in, so suggestions pick those up without a reload.
+  const usageVersion = useSyncExternalStore(
+    usageStatsVersionStore.subscribe,
+    usageStatsVersionStore.getSnapshot,
+    usageStatsVersionStore.getServerSnapshot,
+  );
+  const [usageHydrated, setUsageHydrated] = useState(false);
   useEffect(() => {
-    // Hydrate persisted habits once on the client.
-    setUsageVersion((v) => v + 1); // eslint-disable-line react-hooks/set-state-in-effect
+    // Persisted habits are only readable once we're on the client.
+    setUsageHydrated(true); // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
   useEffect(() => {
     if (!p.valid) return;
@@ -237,14 +245,15 @@ export function CommandShell() {
           })) ||
         query.trim();
       recordCommandUsage(p, canonical);
-      setUsageVersion((v) => v + 1);
     }, 2500);
     return () => window.clearTimeout(id);
   }, [p, query, defaultUnit, shared]);
-  const usageSource = useMemo(
-    () => (usageVersion > 0 ? buildUsageSource() : undefined),
-    [usageVersion],
-  );
+  const usageSource = useMemo(() => {
+    // usageVersion is the invalidation signal, not an input: recording a query
+    // or pulling a peer's habits bumps it, and the source rebuilds from storage.
+    void usageVersion;
+    return usageHydrated ? buildUsageSource() : undefined;
+  }, [usageHydrated, usageVersion]);
 
   // `p` is handed over so the suggestion engine doesn't parse the same query
   // a second time on every keystroke.
