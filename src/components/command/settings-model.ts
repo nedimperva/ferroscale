@@ -85,6 +85,8 @@ export interface SettingsModelArgs {
   onSetHaptics: (value: boolean) => void;
   marginPercent: number;
   onSetMarginPercent: (value: number) => void;
+  massTolerancePercent: number;
+  onSetMassTolerancePercent: (value: number) => void;
 }
 
 export function buildSettingsFields({
@@ -103,6 +105,8 @@ export function buildSettingsFields({
   onSetHaptics,
   marginPercent,
   onSetMarginPercent,
+  massTolerancePercent,
+  onSetMassTolerancePercent,
 }: SettingsModelArgs): SettingsField[] {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   return [
@@ -196,6 +200,18 @@ export function buildSettingsFields({
       step: 1,
       min: 0,
       max: 500,
+    },
+    {
+      kind: "number",
+      id: "massTolerancePercent",
+      label: t("settings.massTolerance"),
+      deskLabel: t("settings.massToleranceUpper"),
+      value: massTolerancePercent,
+      onChange: onSetMassTolerancePercent,
+      suffix: "%",
+      step: 0.5,
+      min: 0,
+      max: 20,
     },
     {
       kind: "choice",

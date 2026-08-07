@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.16.0",
+    date: "2026-08-07",
+    added: [
+      "Arithmetic in a token: hea120 6m-50mm x2+3. A cut list arrives as \"the six-metre stock less the joint\", not as round numbers, so the bar does the subtraction instead of you",
+      "Paste a cut list straight in. One row per part becomes one item per part, tabs and semicolons and all — the whole list prices at once",
+      "Mass tolerance: set a ±% in Settings and every result gains the band it may actually be delivered within, alongside the theoretical mass",
+    ],
+    added_bs: [
+      "Računanje u tokenu: hea120 6m-50mm x2+3. Lista rezanja dolazi kao \"šestometarska šipka minus spoj\", a ne kao okrugli brojevi, pa traka oduzima umjesto vas",
+      "Zalijepite listu rezanja direktno. Jedan red po dijelu postaje jedna stavka po dijelu, sa tabovima i tačka-zarezima — cijela lista se obračuna odjednom",
+      "Tolerancija mase: postavite ±% u postavkama i svaki rezultat dobija opseg u kojem može stvarno biti isporučen, uz teoretsku masu",
+    ],
+  },
+  {
     version: "3.15.0",
     date: "2026-08-07",
     added: [

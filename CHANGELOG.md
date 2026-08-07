@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.16.0] - 2026-08-07
+
+### Added
+
+- **Arithmetic tokens** — `hea120 6m-50mm x2+3`. Only `+` and `-`, evaluated left to right: this is shorthand for a measurement, not an expression language. Terms without a unit inherit the *first term's* rather than the global default, so `6m-50-50` is three metre terms and can't silently mix scales, and the answer is reported in the first term's unit because that's the one you were thinking in. The `+` collides with the item separator, and the collision is settled by shape — a `+` glued between a character and a digit is arithmetic, anything else separates items, since a new item always opens with a profile alias. An expression that doesn't come to a usable amount (`50mm-6m`, `x2-2`) is reported rather than ignored
+- **Paste a cut list.** One row per part becomes one item per part, now that a line can hold several. Tabs, semicolons and commas collapse to spaces, and an over-long paste is capped rather than building a query nobody can read
+- **Mass tolerance.** Set a ±% in Settings and every result carries the band it may actually be delivered within — in the breakdown on every viewport, and under the hero when weight is the headline metric. Rolled steel is sold by theoretical mass and delivered within a tolerance, so a buyer working to a budget wants the worst case too
+
+### Changed
+
+- Letter-spacing and the 10px micro-label moved out of inline styles into named tokens and a shared atom, so the app's smallest type is one edit rather than a search across five views
+
+### Note
+
+The mass tolerance is **your own figure, not a cited standard**. EN mass tolerances differ per product standard and some (EN 10029 plate) derive from a thickness class rather than being a single percentage, so the app deliberately does not put a standard's name next to a number it hasn't been given. Wiring a per-family EN table is a data task, not a code one.
+
+---
+
 ## [3.15.0] - 2026-08-07
 
 ### Added

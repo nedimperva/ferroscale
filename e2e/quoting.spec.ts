@@ -55,6 +55,30 @@ test.describe("Price book", () => {
   });
 });
 
+test.describe("Mass tolerance", () => {
+  test("a band appears under the weight once a tolerance is set", async ({ page }) => {
+    await page.goto("/en");
+    await openSettings(page);
+    await page.getByLabel("MASS TOLERANCE").fill("4");
+
+    await gotoCalculator(page);
+    await typeQuery(page, "hea120 6m x2 ");
+    // The breakdown carries the range on every viewport...
+    await expect(page.getByText(/Mass band ±4%/)).toBeVisible();
+    await expect(page.getByText("229.15 – 248.25 kg")).toBeVisible();
+
+    // ...and the hero gains the band when weight is the headline metric.
+    await page.getByRole("button", { name: "WEIGHT" }).click();
+    await expect(page.getByText(/±4% · 229\.15 – 248\.25 kg/)).toBeVisible();
+  });
+
+  test("no band at all until one is asked for", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 ");
+    await expect(page.getByText(/Mass band/)).toHaveCount(0);
+  });
+});
+
 test.describe("Margin", () => {
   test("adds a sell price to the breakdown without touching cost", async ({ page }) => {
     await page.goto("/en");

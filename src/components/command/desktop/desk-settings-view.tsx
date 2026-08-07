@@ -7,7 +7,12 @@ import { SyncSection } from "../sheets/sync-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
-import { hapticsStore, marginPercentStore, type SharedCalcSettings } from "@/lib/settings-stores";
+import {
+  hapticsStore,
+  marginPercentStore,
+  massTolerancePercentStore,
+  type SharedCalcSettings,
+} from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -203,6 +208,11 @@ export function DeskSettingsView({
     marginPercentStore.getSnapshot,
     marginPercentStore.getServerSnapshot,
   );
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
   const haptics = useSyncExternalStore(
     hapticsStore.subscribe,
     hapticsStore.getSnapshot,
@@ -224,6 +234,8 @@ export function DeskSettingsView({
     onSetHaptics: hapticsStore.set,
     marginPercent,
     onSetMarginPercent: marginPercentStore.set,
+    massTolerancePercent,
+    onSetMassTolerancePercent: massTolerancePercentStore.set,
   });
 
   return (

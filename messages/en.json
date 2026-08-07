@@ -280,7 +280,8 @@
       "geometry": "Geometry",
       "pricing": "Pricing",
       "unitPrice": "Unit price",
-      "grade": "Grade"
+      "grade": "Grade",
+      "massBand": "Mass band {percent}"
     },
     "settings": {
       "mainResult": "Main result",
@@ -319,7 +320,9 @@
         "en": "English",
         "bs": "Bosnian"
       },
-      "appearance": "APPEARANCE"
+      "appearance": "APPEARANCE",
+      "massTolerance": "Mass tolerance",
+      "massToleranceUpper": "MASS TOLERANCE"
     },
     "docs": {
       "label": "Guide",

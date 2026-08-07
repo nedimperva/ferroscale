@@ -280,7 +280,8 @@
       "geometry": "Geometrija",
       "pricing": "Cijene",
       "unitPrice": "Jedinična cijena",
-      "grade": "Kvalitet"
+      "grade": "Kvalitet",
+      "massBand": "Opseg mase {percent}"
     },
     "settings": {
       "mainResult": "Glavni rezultat",
@@ -319,7 +320,9 @@
         "en": "Engleski",
         "bs": "Bosanski"
       },
-      "appearance": "IZGLED"
+      "appearance": "IZGLED",
+      "massTolerance": "Tolerancija mase",
+      "massToleranceUpper": "TOLERANCIJA MASE"
     },
     "docs": {
       "label": "Vodič",

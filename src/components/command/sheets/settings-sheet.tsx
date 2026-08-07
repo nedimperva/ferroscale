@@ -4,7 +4,12 @@ import { useCallback, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
-import { hapticsStore, marginPercentStore, type SharedCalcSettings } from "@/lib/settings-stores";
+import {
+  hapticsStore,
+  marginPercentStore,
+  massTolerancePercentStore,
+  type SharedCalcSettings,
+} from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -222,6 +227,11 @@ export function CommandSettingsSheet({
     marginPercentStore.getSnapshot,
     marginPercentStore.getServerSnapshot,
   );
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
   const haptics = useSyncExternalStore(
     hapticsStore.subscribe,
     hapticsStore.getSnapshot,
@@ -243,6 +253,8 @@ export function CommandSettingsSheet({
     onSetHaptics: hapticsStore.set,
     marginPercent,
     onSetMarginPercent: marginPercentStore.set,
+    massTolerancePercent,
+    onSetMassTolerancePercent: massTolerancePercentStore.set,
   });
   return (
     <SheetShell title={t("sheets.settings")} onClose={onClose}>

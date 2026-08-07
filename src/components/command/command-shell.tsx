@@ -22,6 +22,7 @@ import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   defaultUnitStore,
+  massTolerancePercentStore,
   sharedCalcSettingsStore,
   weightAsMainStore,
 } from "@/lib/settings-stores";
@@ -47,6 +48,7 @@ import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
 import { LineItems } from "./line-items";
 import { CommandPalette } from "./command-palette";
+import { massBand } from "./mass-band";
 import {
   buildPaletteActions,
   filterPalette,
@@ -156,6 +158,11 @@ export function CommandShell() {
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
   /** Which Library tab the next open lands on — the palette navigates here. */
   const [libraryTab, setLibraryTab] = useState<"saved" | "compare" | "projects" | null>(null);
@@ -811,6 +818,8 @@ export function CommandShell() {
     ? (isW ? line.totalKg : line.totalAmount) ?? null
     : (isW ? p.totalKg : p.totalAmount) ?? null;
   const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
+  // The band belongs to the weight, so it only shows when weight is the hero.
+  const band = isW ? massBand(heroTarget, massTolerancePercent) : null;
   const heroVal =
     heroAnim == null
       ? "—"
@@ -1102,6 +1111,13 @@ export function CommandShell() {
                     style={{ color: "var(--accent)" }}
                   >
                     {fsWeightUnit()}
+                  </span>
+                )}
+                {band && (
+                  <span
+                    className="fs-track-wide font-mono text-[11px] text-muted self-end pb-2 ml-1"
+                    >
+                    {band.percentLabel}
                   </span>
                 )}
                 {p.valid && (

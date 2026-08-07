@@ -26,6 +26,22 @@ export const marginPercentStore = createNumberStore(
   0,
   (value) => Math.min(500, Math.max(0, value)),
 );
+/**
+ * Mass tolerance, as ±%. Rolled steel is sold by theoretical mass but delivered
+ * within a band, so a buyer working to a budget wants the worst case, not the
+ * nominal. 0 (the default) hides the band entirely.
+ *
+ * This is the user's own figure, not a standard: the EN mass tolerances differ
+ * per product standard, and some (EN 10029 plate) derive from a thickness class
+ * rather than being one percentage. Wiring a per-family table in here is a data
+ * task — see docs/REVIEW_2026-08.md §4.8 — and until it is done with a source
+ * in hand the app must not put a standard's name next to a number.
+ */
+export const massTolerancePercentStore = createNumberStore(
+  "ferroscale-mass-tolerance-percent",
+  0,
+  (value) => Math.min(20, Math.max(0, value)),
+);
 export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
 export type { CommandPricing };

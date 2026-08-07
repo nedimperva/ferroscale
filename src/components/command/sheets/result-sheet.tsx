@@ -8,7 +8,7 @@ import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { SheetShell } from "./sheet-shell";
-import { marginPercentStore } from "@/lib/settings-stores";
+import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
 function SheetRow({
   label,
@@ -71,7 +71,12 @@ export function CommandResultBreakdown({
     marginPercentStore.getSnapshot,
     marginPercentStore.getServerSnapshot,
   );
-  const rows = buildBreakdownRows(p, t, { marginPercent });
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
+  const rows = buildBreakdownRows(p, t, { marginPercent, massTolerancePercent });
   if (!rows) {
     return null;
   }

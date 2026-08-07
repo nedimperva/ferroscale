@@ -27,6 +27,7 @@ import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./d
 import { PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { LineItems } from "../line-items";
+import { massBand } from "../mass-band";
 import { CommandPalette } from "../command-palette";
 import {
   buildPaletteActions,
@@ -43,7 +44,7 @@ import {
   pullLastChip,
   removeLineToken,
 } from "../line-edit";
-import { marginPercentStore } from "@/lib/settings-stores";
+import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -183,6 +184,11 @@ export function DeskCalcView({
   /* ── the `>` palette ───────────────────────────────────────────────────── */
 
   const paletteOpen = paletteMode;
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
   const [paletteIndex, setPaletteIndex] = useState(0);
 
   const navigatePalette = useCallback(
@@ -277,6 +283,8 @@ export function DeskCalcView({
     ? (isW ? line.totalKg : line.totalAmount) ?? null
     : (isW ? p.totalKg : p.totalAmount) ?? null;
   const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
+  // The band belongs to the weight, so it only shows when weight is the hero.
+  const band = isW ? massBand(heroTarget, massTolerancePercent) : null;
   const heroVal =
     heroAnim == null
       ? "—"
@@ -695,6 +703,13 @@ export function DeskCalcView({
                   </span>
                 )}
               </div>
+              {band && (
+                <div
+                  className="fs-track-wide font-mono text-[12px] text-muted mt-2"
+                >
+                  {band.percentLabel} · {band.rangeLabel}
+                </div>
+              )}
               {/* descriptive / issue / hint line */}
               <div className="mt-[18px] min-h-[20px]">
                 {paletteOpen ? null : line.multi ? (
@@ -1066,7 +1081,12 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
     marginPercentStore.getSnapshot,
     marginPercentStore.getServerSnapshot,
   );
-  const rows = p.valid ? buildBreakdownRows(p, t, { marginPercent }) : null;
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
+  const rows = p.valid ? buildBreakdownRows(p, t, { marginPercent, massTolerancePercent }) : null;
   // The expanded right column keeps a tighter subset: density lives in the
   // header, and per-piece price / subtotal stay sheet-only.
   const geometry = rows?.geometry.filter((row) => row.id !== "density") ?? [];
