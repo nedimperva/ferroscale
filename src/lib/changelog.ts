@@ -17,6 +17,30 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.10.0",
+    date: "2026-08-07",
+    added: [
+      "Price book: give each material grade its own rate. Stainless costs about four times mild steel per kilo, and one global €/kg quietly got one of them wrong — now a grade you have priced uses its own rate, an inline @2.50/kg still wins for a single line, and anything you leave out keeps the default",
+      "Margin: set a percentage on top of cost and every breakdown gains a sell-price line, so a result becomes an offer",
+      "Save the whole session as a project in one press — the tape already added up, now it can become a job",
+      "Saved entries can hold several parts. Add the line in the bar to any saved entry and it becomes an assembly — a gate frame, a railing bay — with its parts listed and its weight and price summed",
+      "Print a quote from any project (or save it as PDF): header, line items, weights, totals and margin, with no app furniture around it — and it works offline",
+    ],
+    changed: [
+      "Adding several calculations to a project at once now adds all of them; the old path reported success for the first and silently dropped the rest",
+    ],
+    added_bs: [
+      "Cjenovnik: dajte svakom kvalitetu materijala vlastitu cijenu. Nehrđajući košta oko četiri puta više od običnog čelika po kilogramu, a jedna globalna €/kg cijena je tiho griješila kod jednog od njih — sada kvalitet koji ste unijeli koristi vlastitu cijenu, @2.50/kg i dalje pobjeđuje za pojedinačnu liniju, a sve što izostavite koristi podrazumijevanu",
+      "Marža: postavite postotak na cijenu koštanja i svaki pregled dobija liniju prodajne cijene, pa rezultat postaje ponuda",
+      "Sačuvajte cijelu sesiju kao projekat jednim pritiskom — traka je već sabirala, sada može postati posao",
+      "Sačuvane stavke mogu sadržavati više dijelova. Dodajte liniju iz trake bilo kojoj sačuvanoj stavci i ona postaje sklop — okvir kapije, polje ograde — s popisom dijelova i zbrojenom masom i cijenom",
+      "Štampajte ponudu iz bilo kojeg projekta (ili je sačuvajte kao PDF): zaglavlje, stavke, mase, ukupno i marža, bez ostatka aplikacije — i radi offline",
+    ],
+    changed_bs: [
+      "Dodavanje više izračuna u projekat odjednom sada dodaje sve; stari način je prijavljivao uspjeh za prvi, a ostale tiho izostavljao",
+    ],
+  },
+  {
     version: "3.9.0",
     date: "2026-08-07",
     added: [

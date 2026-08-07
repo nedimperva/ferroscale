@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.10.0] - 2026-08-07
+
+### Added
+
+- **Price book — a rate per material grade.** Pricing was a single €/kg for every material, and stainless runs about four times mild steel, so anyone working across materials was quoting one of them wrong unless they retyped `@` on every line. Rates resolve inline `@2.50/kg` > the grade's book rate > the single default, so an empty book behaves exactly as before. Editable in Settings on every viewport, and synced like every other collection
+- **Margin.** One percentage adds a **sell price** row wherever a breakdown appears — result, saved card, printed quote — without touching the cost figures themselves
+- **Session → project in one press.** The tape already showed a running total; now it can become a job
+- **Assemblies.** A saved entry can hold several parts: add the line in the bar to any entry and the card becomes a bill of materials, with its parts listed and its weight and price **summed**. The storage model always supported this; nothing surfaced it
+- **Printable quote.** Any project prints (or saves as PDF) as a clean document — header, line items, lengths, weights, totals, margin, and a note that the weights are theoretical. Client-side, zero dependencies, works offline
+
+### Changed
+
+- `addCalculations` adds several calculations to a project in one state update. The existing `addCalculation` reports success through a flag its updater sets, which only reads back correctly for the first call in a batch — a loop reported success once and silently dropped the rest
+
+---
+
 ## [3.9.0] - 2026-08-07
 
 ### Added

@@ -12,6 +12,9 @@ import { marginPercentStore } from "@/lib/settings-stores";
 
 export interface SavedCardActions {
   onOpen: () => void;
+  /** Add the line currently in the bar to this entry as another part. */
+  onAddPart?: () => void;
+  onRemovePart?: (partId: string) => void;
   onCompare: () => void;
   onDuplicate: () => void;
   onTogglePin: () => void;
@@ -36,6 +39,15 @@ function PinIcon({ filled }: { filled: boolean }) {
       aria-hidden="true"
     >
       <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+    </svg>
+  );
+}
+
+function StackIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l9 5-9 5-9-5z" />
+      <path d="M3 13l9 5 9-5" />
     </svg>
   );
 }
@@ -215,7 +227,11 @@ export function SavedCard({
               </span>
             </span>
             <span className="block font-mono text-[11.5px] text-muted mt-0.5 truncate">
-              {named ? `${model.specLabel} · ${model.detailLine}` : model.detailLine}
+              {model.isAssembly
+                ? t("saved.partCount", { count: model.parts.length })
+                : named
+                  ? `${model.specLabel} · ${model.detailLine}`
+                  : model.detailLine}
             </span>
           </span>
         </button>
@@ -291,6 +307,11 @@ export function SavedCard({
           <CardAction label={t("saved.addToCompare")} onClick={actions.onCompare}>
             <DeskIcon name="compare" />
           </CardAction>
+          {actions.onAddPart && (
+            <CardAction label={t("saved.addPart")} onClick={actions.onAddPart}>
+              <StackIcon />
+            </CardAction>
+          )}
           <CardAction label={t("saved.duplicate")} onClick={actions.onDuplicate}>
             <CopyIcon />
           </CardAction>
@@ -340,7 +361,46 @@ export function SavedCard({
               ))}
             </div>
           )}
-          {breakdown ? (
+          {model.isAssembly && (
+            <div className="mb-3">
+              <div className="text-[9.5px] font-bold text-muted uppercase mb-1" style={{ letterSpacing: 1 }}>
+                {t("saved.parts")}
+              </div>
+              {model.parts.map((part) => (
+                <div
+                  key={part.id}
+                  className="flex items-baseline gap-2"
+                  style={{ padding: "5px 0", borderTop: "1px solid var(--border-faint)" }}
+                >
+                  <span className="font-bold text-[12.5px] text-foreground truncate">
+                    {part.specLabel}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted truncate">
+                    {part.detailLine}
+                  </span>
+                  <span className="ml-auto font-mono text-[11.5px] font-semibold text-foreground-secondary whitespace-nowrap">
+                    {fsWeight(part.totalKg)} {fsWeightUnit()}
+                  </span>
+                  <span className="font-mono text-[11.5px] text-muted whitespace-nowrap" style={{ width: 76, textAlign: "right" }}>
+                    {part.totalAmount != null ? `${sym} ${fsMoney(part.totalAmount)}` : "—"}
+                  </span>
+                  {actions.onRemovePart && model.parts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => actions.onRemovePart?.(part.id)}
+                      aria-label={t("saved.removePart", { name: part.specLabel })}
+                      className="w-6 h-6 rounded-md flex items-center justify-center text-muted-faint hover:text-foreground flex-shrink-0"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {!model.isAssembly && breakdown ? (
             <div className="grid gap-x-5" style={{ gridTemplateColumns: "1fr 1fr" }}>
               {[...breakdown.geometry, ...breakdown.pricing].map((row) => (
                 <div key={row.id} className="flex items-baseline justify-between gap-2" style={{ padding: "3px 0" }}>
@@ -351,7 +411,7 @@ export function SavedCard({
                 </div>
               ))}
             </div>
-          ) : (
+          ) : model.isAssembly ? null : (
             <p className="font-mono text-[11px] text-muted-faint">{t("saved.noBreakdown")}</p>
           )}
         </div>

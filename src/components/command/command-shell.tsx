@@ -113,6 +113,8 @@ export function CommandShell() {
     removeSavedMany,
     restoreSaved,
     duplicateSaved,
+    addPartToSaved,
+    removePartFromSaved,
     toggleSavedPinned,
     updateSaved,
     markSavedUsed,
@@ -410,6 +412,26 @@ export function CommandShell() {
     pushHistory,
   ]);
 
+  /**
+   * Fold the line currently in the bar into a saved entry as another part.
+   * A saved entry with several parts is a bill of materials — a gate frame, a
+   * railing bay — which the storage model always supported and nothing surfaced.
+   */
+  const addCurrentAsPart = useCallback(
+    (entry: SavedEntry) => {
+      if (!p.calc) {
+        showToast(t("toast.addLength"));
+        return;
+      }
+      const partName = formatCommandParseName(t, p) ?? p.calc.result.profileLabel;
+      if (addPartToSaved(entry.id, p.calc.input, p.calc.result, partName)) {
+        haptic("commit");
+        showToast(t("toast.partAdded", { name: entry.name }));
+      }
+    },
+    [p, addPartToSaved, showToast, t],
+  );
+
   const duplicateSavedEntry = useCallback(
     (entry: SavedEntry) => {
       duplicateSaved(entry.id);
@@ -697,6 +719,10 @@ export function CommandShell() {
     onDuplicateSaved: duplicateSavedEntry,
     onTogglePinSaved: (entry: SavedEntry) => toggleSavedPinned(entry.id),
     onEditSaved: (entry: SavedEntry) => setEditingSavedId(entry.id),
+    onAddPartSaved: p.calc ? addCurrentAsPart : undefined,
+    onRemovePartSaved: (entry: SavedEntry, partId: string) => {
+      removePartFromSaved(entry.id, partId);
+    },
   };
   const helpSheet = effectiveSheet === "help" ? (
     <CommandHelpSheet

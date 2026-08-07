@@ -42,6 +42,14 @@
     "installButton": "Install app"
   },
   "command": {
+    "quote": {
+      "title": "Quote",
+      "item": "Item",
+      "total": "Total",
+      "print": "Print or save as PDF",
+      "printAria": "Print a quote for {name}",
+      "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated."
+    },
     "priceBook": {
       "title": "Price book",
       "subtitle": "rate per grade · {unit}",
@@ -136,7 +144,8 @@
       "savedUpdated": "Saved calculation updated",
       "sessionEmpty": "Nothing on the session tape yet",
       "sessionSaved": "{count, plural, one {# line} other {# lines}} saved to {project}",
-      "sessionProjectName": "Session {date}"
+      "sessionProjectName": "Session {date}",
+      "partAdded": "Added as a part of {name}"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -423,6 +432,10 @@
       "edit": "Rename, notes and tags",
       "details": "Show details",
       "noBreakdown": "no live breakdown for this entry",
+      "partCount": "{count, plural, one {# part} other {# parts}}",
+      "parts": "Parts",
+      "addPart": "Add the current line as a part",
+      "removePart": "Remove {name} from this assembly",
       "searchPlaceholder": "Search name, tag, profile…",
       "sortLabel": "Sort",
       "sort": {

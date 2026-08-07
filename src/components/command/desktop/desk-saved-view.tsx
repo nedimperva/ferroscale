@@ -30,6 +30,8 @@ export function DeskSavedView({
   onDuplicate,
   onTogglePin,
   onEdit,
+  onAddPart,
+  onRemovePart,
   onNew,
 }: {
   saved: SavedEntry[];
@@ -43,6 +45,8 @@ export function DeskSavedView({
   onDuplicate: (entry: SavedEntry) => void;
   onTogglePin: (entry: SavedEntry) => void;
   onEdit: (entry: SavedEntry) => void;
+  onAddPart?: (entry: SavedEntry) => void;
+  onRemovePart: (entry: SavedEntry, partId: string) => void;
   onNew: () => void;
 }) {
   const t = useTranslations("command");
@@ -78,6 +82,8 @@ export function DeskSavedView({
     onDuplicate: () => onDuplicate(entry),
     onTogglePin: () => onTogglePin(entry),
     onEdit: () => onEdit(entry),
+    onAddPart: onAddPart ? () => onAddPart(entry) : undefined,
+    onRemovePart: (partId: string) => onRemovePart(entry, partId),
     onRemove: () => onRemove(entry),
     selected: selecting ? selected.includes(entry.id) : undefined,
     onToggleSelect: selecting

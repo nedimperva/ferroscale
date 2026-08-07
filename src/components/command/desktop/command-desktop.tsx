@@ -131,6 +131,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
           onDuplicate={props.onDuplicateSaved}
           onTogglePin={props.onTogglePinSaved}
           onEdit={props.onEditSaved}
+          onAddPart={props.onAddPartSaved}
+          onRemovePart={props.onRemovePartSaved}
           onNew={startNewCalc}
         />
       )}

@@ -40,6 +40,8 @@ interface CommandLibrarySheetProps {
   onDuplicateSaved: (entry: SavedEntry) => void;
   onTogglePinSaved: (entry: SavedEntry) => void;
   onEditSaved: (entry: SavedEntry) => void;
+  onAddPartSaved?: (entry: SavedEntry) => void;
+  onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
   onCreateProject: (name: string) => void;
@@ -73,6 +75,8 @@ export function CommandLibraryWorkspace({
   onDuplicateSaved,
   onTogglePinSaved,
   onEditSaved,
+  onAddPartSaved,
+  onRemovePartSaved,
   onRemoveCompare,
   onClearCompare,
   onCreateProject,
@@ -131,6 +135,8 @@ export function CommandLibraryWorkspace({
           onDuplicate={onDuplicateSaved}
           onTogglePin={onTogglePinSaved}
           onEdit={onEditSaved}
+          onAddPart={onAddPartSaved}
+          onRemovePart={onRemovePartSaved}
         />
       )}
       {tab === "compare" && (
@@ -337,6 +343,8 @@ function SavedTabContent({
   onDuplicate,
   onTogglePin,
   onEdit,
+  onAddPart,
+  onRemovePart,
 }: {
   saved: SavedEntry[];
   settings: CommandParserSettings;
@@ -348,6 +356,8 @@ function SavedTabContent({
   onDuplicate: (entry: SavedEntry) => void;
   onTogglePin: (entry: SavedEntry) => void;
   onEdit: (entry: SavedEntry) => void;
+  onAddPart?: (entry: SavedEntry) => void;
+  onRemovePart: (entry: SavedEntry, partId: string) => void;
 }) {
   const t = useTranslations("command");
   const [query, setQuery] = useState<SavedToolbarState>({
@@ -401,6 +411,8 @@ function SavedTabContent({
               onDuplicate: () => onDuplicate(model.entry),
               onTogglePin: () => onTogglePin(model.entry),
               onEdit: () => onEdit(model.entry),
+              onAddPart: onAddPart ? () => onAddPart(model.entry) : undefined,
+              onRemovePart: (partId: string) => onRemovePart(model.entry, partId),
               onRemove: () => onRemove(model.entry),
             }}
           />

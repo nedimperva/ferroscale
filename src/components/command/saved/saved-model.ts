@@ -42,10 +42,48 @@ export interface SavedCardModel {
   storedAmount: number;
   storedRate: number;
   repriced: boolean;
+  /**
+   * An entry can hold several parts — a gate frame, a railing bay. When it
+   * does, the headline figures are the sum and these are the lines behind it.
+   */
+  parts: SavedPartModel[];
+  isAssembly: boolean;
 }
 
 function formatLengthM(mm: number): string {
   return Number((mm / 1000).toFixed(3)).toString();
+}
+
+/** One part of a multi-part entry, re-priced at today's rate like the whole. */
+export interface SavedPartModel {
+  id: string;
+  name: string;
+  specLabel: string;
+  detailLine: string;
+  totalKg: number;
+  totalAmount: number | null;
+}
+
+function partModel(
+  part: SavedEntry["parts"][number],
+  settings: CommandParserSettings,
+  defaultUnit: LengthUnit,
+): SavedPartModel {
+  const query = inputToQuery(part.input, defaultUnit, {
+    defaultGradeId: settings.defaultGradeId,
+    omitPrice: true,
+  });
+  const parsed = query ? cmdParse(`${query} `, settings) : null;
+  const live = parsed?.valid ? parsed : null;
+  const r = part.result;
+  return {
+    id: part.id,
+    name: part.name,
+    specLabel: live?.name ?? part.normalizedProfile?.shortLabel ?? r.profileLabel,
+    detailLine: `${live?.lengthM ?? formatLengthM(r.lengthMm)} m × ${live?.realQty ?? r.quantity}`,
+    totalKg: live?.totalKg ?? r.totalWeightKg,
+    totalAmount: live?.totalAmount ?? null,
+  };
 }
 
 export function buildSavedCardModel(
@@ -66,16 +104,36 @@ export function buildSavedCardModel(
   const specLabel =
     live?.name ?? entry.normalizedProfile?.shortLabel ?? r.profileLabel;
   const grade = live?.gradeLabel ?? r.gradeLabel;
-  const detailLine = [
-    `${live?.lengthM ?? formatLengthM(r.lengthMm)} m × ${live?.realQty ?? r.quantity}`,
-    grade,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // An assembly's headline is its parts, not one part's dimensions.
+  const detailLine =
+    entry.parts.length > 1
+      ? ""
+      : [
+          `${live?.lengthM ?? formatLengthM(r.lengthMm)} m × ${live?.realQty ?? r.quantity}`,
+          grade,
+        ]
+          .filter(Boolean)
+          .join(" · ");
 
   const storedRate = entry.input.unitPrice;
   const rate = settings.pricing.unitPrice;
-  const totalAmount = live?.totalAmount ?? null;
+
+  // Multi-part entries are the sum of their parts; single-part entries are
+  // exactly the one line, so both paths go through the same arithmetic.
+  const parts = entry.parts.map((part) => partModel(part, settings, defaultUnit));
+  const isAssembly = parts.length > 1;
+  const totalAmount = isAssembly
+    ? parts.reduce<number | null>(
+        (sum, part) => (sum == null || part.totalAmount == null ? null : sum + part.totalAmount),
+        0,
+      )
+    : live?.totalAmount ?? null;
+  const totalKg = isAssembly
+    ? parts.reduce((sum, part) => sum + part.totalKg, 0)
+    : live?.totalKg ?? r.totalWeightKg;
+  const storedAmount = isAssembly
+    ? entry.parts.reduce((sum, part) => sum + part.result.grandTotalAmount, 0)
+    : r.grandTotalAmount;
 
   return {
     entry,
@@ -84,18 +142,20 @@ export function buildSavedCardModel(
     fam: familyForInput(entry.input),
     specLabel,
     detailLine,
-    totalKg: live?.totalKg ?? r.totalWeightKg,
+    totalKg,
     totalAmount,
-    perPieceKg: live?.perPieceKg ?? r.unitWeightKg,
-    kgm: live?.kgm ?? null,
+    perPieceKg: isAssembly ? null : live?.perPieceKg ?? r.unitWeightKg,
+    // Per-metre weight is a property of one profile, not of an assembly.
+    kgm: isAssembly ? null : live?.kgm ?? null,
     currencySymbol: CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€",
     rate,
     rateUnit: settings.pricing.priceUnit === "piece" ? "pc" : settings.pricing.priceUnit,
-    storedAmount: r.grandTotalAmount,
+    storedAmount,
     storedRate,
+    parts,
+    isAssembly,
     // Only claim a re-price when the money actually moved — a currency or
     // basis change with the same number would otherwise read as a false alarm.
-    repriced:
-      totalAmount != null && Math.abs(totalAmount - r.grandTotalAmount) >= 0.005,
+    repriced: totalAmount != null && Math.abs(totalAmount - storedAmount) >= 0.005,
   };
 }

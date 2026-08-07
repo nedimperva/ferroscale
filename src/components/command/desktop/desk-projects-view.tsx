@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
@@ -9,6 +10,8 @@ import type { Project } from "@/hooks/useProjects";
 import { DeskTopbar } from "./desk-sidebar";
 import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
 import { familyForInput } from "../command-copy";
+import { ProjectQuote } from "../project-quote";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 export function DeskProjectsView({
   projects,
@@ -23,6 +26,31 @@ export function DeskProjectsView({
 }) {
   const t = useTranslations("command");
   const [creating, setCreating] = useState(false);
+  // Which project the print sheet holds; printing is synchronous, so the node
+  // only has to exist for the duration of the call.
+  const [printing, setPrinting] = useState<Project | null>(null);
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+
+  const printQuote = (project: Project) => {
+    setPrinting(project);
+    // Let React paint the quote before handing the page to the print dialog.
+    // The node stays mounted until printing ends — `window.print()` blocks in
+    // most browsers, but not all, and unmounting mid-print prints nothing.
+    requestAnimationFrame(() => {
+      const done = () => {
+        window.removeEventListener("afterprint", done);
+        setPrinting(null);
+      };
+      window.addEventListener("afterprint", done);
+      window.print();
+      // Fallback for browsers that neither block nor fire afterprint.
+      window.setTimeout(done, 2000);
+    });
+  };
   const [newName, setNewName] = useState("");
 
   const submit = () => {
@@ -113,6 +141,27 @@ export function DeskProjectsView({
                       <span className="font-mono text-[10.5px] text-muted">
                         {t("projects.itemCount", { count: calcs.length })}
                       </span>
+                      {calcs.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => printQuote(project)}
+                          title={t("quote.print")}
+                          aria-label={t("quote.printAria", { name: project.name })}
+                          className="flex items-center justify-center rounded-[9px] cursor-pointer text-foreground-secondary flex-shrink-0"
+                          style={{
+                            width: 28,
+                            height: 28,
+                            border: "1px solid var(--border-faint)",
+                            background: "var(--surface-raised)",
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <path d="M6 9V3h12v6" />
+                            <path d="M6 18H4a2 2 0 01-2-2v-4a2 2 0 012-2h16a2 2 0 012 2v4a2 2 0 01-2 2h-2" />
+                            <path d="M6 14h12v7H6z" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                     <div className="flex gap-3.5 mt-2.5">
                       <span
@@ -178,6 +227,15 @@ export function DeskProjectsView({
           </div>
         )}
       </div>
+      {/* Portalled to <body> so the print stylesheet can hide the app around
+          it — the workspace is a fixed-position tree the quote can't live in. */}
+      {printing &&
+        createPortal(
+          <div className="fs-print">
+            <ProjectQuote project={printing} marginPercent={marginPercent} />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

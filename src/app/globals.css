@@ -346,6 +346,36 @@ details[open] .chevron-icon {
   }
 }
 
+/* The printable quote. It lives in the normal DOM (so it needs no route, no
+   dependency and no network) and is revealed only when printing — which is
+   also how every OS produces a PDF. */
+.fs-print {
+  display: none;
+}
+
+@media print {
+  /* visibility, not display: it inherits, so the quote surfaces no matter how
+     deep the app's fixed-position shell nests around it. */
+  body {
+    visibility: hidden;
+    background: #fff;
+  }
+  .fs-print,
+  .fs-print * {
+    visibility: visible;
+  }
+  .fs-print {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
+
 /* Card-sized profile drawings. The section geometry is shared with the full
    breakdown drawing, so the outline arrives sized for a 340px canvas — scaled
    into a 46px thumbnail that hairline all but vanishes. non-scaling-stroke

@@ -64,4 +64,7 @@ export interface CommandDesktopProps {
   onDuplicateSaved: (entry: SavedEntry) => void;
   onTogglePinSaved: (entry: SavedEntry) => void;
   onEditSaved: (entry: SavedEntry) => void;
+  /** Undefined while the bar has no complete calculation to fold in. */
+  onAddPartSaved?: (entry: SavedEntry) => void;
+  onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
 }

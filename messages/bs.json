@@ -42,6 +42,14 @@
     "installButton": "Instaliraj aplikaciju"
   },
   "command": {
+    "quote": {
+      "title": "Ponuda",
+      "item": "Stavka",
+      "total": "Ukupno",
+      "print": "Štampaj ili sačuvaj kao PDF",
+      "printAria": "Štampaj ponudu za {name}",
+      "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno."
+    },
     "priceBook": {
       "title": "Cjenovnik",
       "subtitle": "cijena po kvalitetu · {unit}",
@@ -136,7 +144,8 @@
       "savedUpdated": "Sačuvani izračun ažuriran",
       "sessionEmpty": "Na traci sesije još nema ničega",
       "sessionSaved": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano u {project}",
-      "sessionProjectName": "Sesija {date}"
+      "sessionProjectName": "Sesija {date}",
+      "partAdded": "Dodano kao dio sklopa {name}"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -423,6 +432,10 @@
       "edit": "Naziv, bilješke i oznake",
       "details": "Prikaži detalje",
       "noBreakdown": "nema živog pregleda za ovu stavku",
+      "partCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+      "parts": "Dijelovi",
+      "addPart": "Dodaj trenutnu liniju kao dio",
+      "removePart": "Ukloni {name} iz ovog sklopa",
       "searchPlaceholder": "Traži naziv, oznaku, profil…",
       "sortLabel": "Sortiraj",
       "sort": {

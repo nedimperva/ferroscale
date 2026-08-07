@@ -90,3 +90,58 @@ test.describe("Session", () => {
     await expect(page.getByText(/^[2-9] items$/)).toBeVisible();
   });
 });
+
+test.describe("Assemblies", () => {
+  test("a saved entry can hold several parts and sums them", async ({ page }) => {
+    await page.goto("/en");
+
+    // Save the first line, then fold a second one into it as a part.
+    await typeQuery(page, "hea120 6m x2 ");
+    await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+
+    await typeQuery(page, "shs40x40x3 4m x10 ");
+    await page.getByRole("button", { name: /^Saved\s*1$/ }).click();
+    await page.getByRole("button", { name: "Add the current line as a part" }).click();
+
+    // The card is now an assembly: two parts, summed.
+    await expect(page.getByText("2 parts")).toBeVisible();
+    await page.getByRole("button", { name: "Show details" }).click();
+    await expect(page.getByText("Parts", { exact: true })).toBeVisible();
+    await expect(page.getByText("SHS 40×40×3").first()).toBeVisible();
+    // 238.7 kg + 139.42 kg = 378.12 kg
+    await expect(page.getByText("378.12 kg").first()).toBeVisible();
+  });
+});
+
+test.describe("Printable quote", () => {
+  test("prints the project's lines, priced with the margin", async ({ page }) => {
+    await page.goto("/en");
+    for (const query of ["hea120 6m x2 ", "shs40x40x3 4m x10 "]) {
+      await typeQuery(page, query);
+      await page.keyboard.press("Enter");
+    }
+    await page.getByRole("button", { name: "SAVE AS PROJECT" }).click();
+
+    await openSettings(page);
+    await page.getByLabel("MARGIN ON COST").fill("15");
+
+    await page.getByRole("button", { name: /^Projects/ }).click();
+    // Stub the print dialog: what matters is the document it would print.
+    await page.evaluate(() => {
+      window.print = () => {};
+    });
+    await page.getByRole("button", { name: /^Print a quote for/ }).click();
+
+    const quote = page.locator(".fs-print");
+    await expect(quote).toContainText("Quote");
+    await expect(quote).toContainText("HEA 120");
+    await expect(quote).toContainText("SHS 40x40x3");
+    // 286.44 + 167.30 = 453.74 cost → 521.80 with 15% margin.
+    await expect(quote).toContainText("€ 521.80");
+
+    // Under print media the app is hidden and only the quote remains.
+    await page.emulateMedia({ media: "print" });
+    await expect(quote).toBeVisible();
+    await expect(page.getByRole("button", { name: "Calculator" })).toBeHidden();
+  });
+});
