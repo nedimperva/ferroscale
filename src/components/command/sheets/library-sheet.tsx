@@ -46,6 +46,8 @@ interface CommandLibrarySheetProps {
   onClearCompare: () => void;
   onCreateProject: (name: string) => void;
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  /** Open on a named tab (the `>` palette navigates here); null picks one. */
+  initialTab?: LibraryTab | null;
 }
 
 export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
@@ -81,18 +83,20 @@ export function CommandLibraryWorkspace({
   onClearCompare,
   onCreateProject,
   onRemoveProjectCalc,
+  initialTab,
 }: CommandLibraryWorkspaceProps) {
   const t = useTranslations("command");
-  // Initial tab — pick the first non-empty section, else Saved.
-  const initialTab: LibraryTab =
-    saved.length > 0
+  // Asked for a tab (palette navigation), else the first non-empty section.
+  const openOn: LibraryTab =
+    initialTab ??
+    (saved.length > 0
       ? "saved"
       : compareItems.length > 0
         ? "compare"
         : projects.length > 0
           ? "projects"
-          : "saved";
-  const [tab, setTab] = useState<LibraryTab>(initialTab);
+          : "saved");
+  const [tab, setTab] = useState<LibraryTab>(openOn);
 
   return (
     <>

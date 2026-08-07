@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useRef, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { cmdParse, cmdClassifyToken } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
@@ -22,11 +22,20 @@ import { GhostField } from "../ghost-field";
 import { resolveCommandKey } from "../command-keys";
 import { CommandKeyHints } from "../command-key-hints";
 import { groupedSuggestions } from "../suggestion-groups";
-import type { CommandDesktopProps } from "./desktop-props";
+import type { CommandDesktopProps, DeskView } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { LineItems } from "../line-items";
+import { CommandPalette } from "../command-palette";
+import {
+  buildPaletteActions,
+  filterPalette,
+  isPaletteQuery,
+  paletteTerm,
+  type PaletteItem,
+  type PaletteTarget,
+} from "../palette";
 import {
   editLineToken,
   lineChipPrefix,
@@ -39,6 +48,8 @@ import { marginPercentStore } from "@/lib/settings-stores";
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
   gotoCompare: () => void;
+  /** Jump between workspace views — the `>` palette navigates with this. */
+  onGotoView: (view: DeskView) => void;
 };
 
 /** Small square icon button used in the result panel's action cluster. */
@@ -128,7 +139,12 @@ export function DeskCalcView({
   onSuggest,
   onCompareCurrent,
   onAddToProject,
+  onToggleTheme,
+  saved,
+  projects,
+  onLoadSaved,
   inputRef,
+  onGotoView,
 }: DeskCalcViewProps) {
   const t = useTranslations("command");
   const isW = mode === "weight";
@@ -141,10 +157,19 @@ export function DeskCalcView({
 
   // Chips are grouped per `+`-joined item; the trailing piece (no whitespace
   // after it) is still being typed and lives in the real input.
-  const chips = useMemo(() => lineChips(query), [query]);
+  // A `>` line is a command, not a calculation: it isn't tokenized into chips,
+  // it sits in the input whole, and the parser's opinion of it is ignored.
+  const paletteMode = isPaletteQuery(query);
+  const chips = useMemo(
+    () => (paletteMode ? { groups: [], partial: query } : lineChips(query)),
+    [paletteMode, query],
+  );
   const partial = chips.partial;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
-  const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
+  const chipPrefix = useMemo(
+    () => (paletteMode ? "" : lineChipPrefix(query)),
+    [paletteMode, query],
+  );
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
 
@@ -156,6 +181,84 @@ export function DeskCalcView({
       el.setSelectionRange(el.value.length, el.value.length);
     });
   }, [inputRef]);
+
+  /* ── the `>` palette ───────────────────────────────────────────────────── */
+
+  const paletteOpen = paletteMode;
+  const [paletteIndex, setPaletteIndex] = useState(0);
+
+  const navigatePalette = useCallback(
+    (target: PaletteTarget) => {
+      onGotoView(target === "calc" ? "calc" : target);
+    },
+    [onGotoView],
+  );
+
+  const paletteItems = useMemo<PaletteItem[]>(() => {
+    if (!paletteOpen) return [];
+    const actions = buildPaletteActions(t, {
+      navigate: navigatePalette,
+      onNew,
+      onSave,
+      onCompare: onCompareCurrent,
+      onCopySummary,
+      onShareLink,
+      onOpenHelp,
+      onToggleTheme,
+      hasResult: p.valid,
+    });
+    // The user's own things come after the verbs: an entry only outranks an
+    // action when its name is the better match for what was typed.
+    const entries = saved.map<PaletteItem>((entry) => ({
+      id: `saved:${entry.id}`,
+      label: entry.name,
+      sub: entry.result.profileLabel,
+      kind: "saved",
+      run: () => onLoadSaved(entry),
+    }));
+    const projectItems = projects.map<PaletteItem>((project) => ({
+      id: `project:${project.id}`,
+      label: project.name,
+      sub: t("library.calcCount", { count: project.calculations.length }),
+      kind: "project",
+      run: () => onGotoView("projects"),
+    }));
+    return [...actions, ...entries, ...projectItems];
+  }, [
+    paletteOpen,
+    t,
+    navigatePalette,
+    onNew,
+    onSave,
+    onCompareCurrent,
+    onCopySummary,
+    onShareLink,
+    onOpenHelp,
+    onToggleTheme,
+    p.valid,
+    saved,
+    projects,
+    onLoadSaved,
+    onGotoView,
+  ]);
+
+  const paletteResults = useMemo(
+    () => filterPalette(paletteItems, paletteTerm(query)),
+    [paletteItems, query],
+  );
+  // Derived rather than stored: typing narrows the list under the cursor, and
+  // an index left pointing past the end would select nothing.
+  const paletteActiveIndex = Math.min(paletteIndex, Math.max(0, paletteResults.length - 1));
+
+  const runPaletteItem = useCallback(
+    (item: PaletteItem) => {
+      if (item.disabled) return;
+      setQuery("");
+      focusInputAtEnd();
+      item.run();
+    },
+    [setQuery, focusInputAtEnd],
+  );
 
   const removeTokenAt = (item: number, idx: number) => {
     setQuery(removeLineToken(query, item, idx));
@@ -252,6 +355,32 @@ export function DeskCalcView({
               setQuery(chipPrefix + e.target.value);
             }}
             onKeyDown={(e) => {
+              // Palette mode owns the arrows and Enter: the list is the whole
+              // interface while it's open, so the calculator's key map — which
+              // means chips, history and logging — must not fire underneath it.
+              if (paletteOpen) {
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                  e.preventDefault();
+                  const step = e.key === "ArrowDown" ? 1 : -1;
+                  const count = paletteResults.length;
+                  if (count > 0) {
+                    setPaletteIndex(((paletteActiveIndex + step) % count + count) % count);
+                  }
+                  return;
+                }
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  const item = paletteResults[paletteActiveIndex];
+                  if (item) runPaletteItem(item);
+                  return;
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setQuery("");
+                  return;
+                }
+                return;
+              }
               const action = resolveCommandKey({
                 key: e.key,
                 code: e.code,
@@ -362,7 +491,7 @@ export function DeskCalcView({
               className="text-[10px] font-bold text-muted uppercase"
               style={{ letterSpacing: 1.2 }}
             >
-              {formatCommandHint(t, sug.hint)}
+              {paletteOpen ? t("palette.hint") : formatCommandHint(t, sug.hint)}
             </div>
             <span className="ml-auto">
               <CommandKeyHints
@@ -374,6 +503,16 @@ export function DeskCalcView({
               />
             </span>
           </div>
+          {paletteOpen ? (
+            <div style={{ maxHeight: 260, overflowY: "auto" }}>
+              <CommandPalette
+                items={paletteResults}
+                activeIndex={paletteActiveIndex}
+                onRun={runPaletteItem}
+                onHover={setPaletteIndex}
+              />
+            </div>
+          ) : (
           <div className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
             {groupedSuggestions(sug.items).map((group) => (
               <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
@@ -462,6 +601,7 @@ export function DeskCalcView({
               </div>
             ))}
           </div>
+          )}
         </div>
       </div>
 
@@ -550,7 +690,7 @@ export function DeskCalcView({
               </div>
               {/* descriptive / issue / hint line */}
               <div className="mt-[18px] min-h-[20px]">
-                {line.multi ? (
+                {paletteOpen ? null : line.multi ? (
                   <LineItems line={line} />
                 ) : p.valid && p.kgm != null ? (
                   <span className="font-mono text-[14px] text-muted flex items-center gap-1.5 flex-wrap">

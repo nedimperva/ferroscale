@@ -46,6 +46,15 @@ import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
 import { LineItems } from "./line-items";
+import { CommandPalette } from "./command-palette";
+import {
+  buildPaletteActions,
+  filterPalette,
+  isPaletteQuery,
+  paletteTerm,
+  type PaletteItem,
+  type PaletteTarget,
+} from "./palette";
 import {
   activeItemText,
   applyToActiveItem,
@@ -148,6 +157,8 @@ export function CommandShell() {
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
+  /** Which Library tab the next open lands on — the palette navigates here. */
+  const [libraryTab, setLibraryTab] = useState<"saved" | "compare" | "projects" | null>(null);
   const [toast, setToast] = useState<CommandToastState | null>(null);
   // Query history — persisted (and Drive-synced) via the quickHistory
   // collection. Backs the desktop session tape and recency suggestions.
@@ -676,9 +687,6 @@ export function CommandShell() {
       }),
     );
   }, []);
-  const onEnter = useCallback(() => {
-    logToSession();
-  }, [logToSession]);
 
   const cycleTheme = useCallback(() => {
     setTheme(dark ? "light" : "dark");
@@ -688,6 +696,99 @@ export function CommandShell() {
     inputRef.current?.focus();
     inputRef.current?.select();
   }, []);
+
+  /* ── the `>` palette ─────────────────────────────────────────────────── */
+
+  const paletteOpen = isPaletteQuery(query);
+  const [paletteIndex, setPaletteIndex] = useState(0);
+
+  const navigatePalette = useCallback((target: PaletteTarget) => {
+    if (target === "settings") {
+      setSheet("settings");
+      return;
+    }
+    if (target === "calc") {
+      setSheet(null);
+      return;
+    }
+    // Saved, compare and projects are the Library sheet's three tabs on phone.
+    setLibraryTab(target);
+    setSheet("library");
+  }, []);
+
+  const paletteItems = useMemo<PaletteItem[]>(() => {
+    if (!paletteOpen) return [];
+    const actions = buildPaletteActions(t, {
+      navigate: navigatePalette,
+      onNew: newCalc,
+      onSave: doSave,
+      onCompare: doCompare,
+      onCopySummary: copySummary,
+      onShareLink: shareLink,
+      onOpenHelp: () => setSheet("help"),
+      onToggleTheme: cycleTheme,
+      hasResult: p.valid,
+    });
+    // The user's own things come after the verbs: an entry only outranks an
+    // action when its name is the better match for what was typed.
+    const entries: PaletteItem[] = savedEntries.map((entry) => ({
+      id: `saved:${entry.id}`,
+      label: entry.name,
+      sub: entry.result.profileLabel,
+      kind: "saved",
+      run: () => loadSavedEntry(entry),
+    }));
+    const projectItems: PaletteItem[] = projects.map((project) => ({
+      id: `project:${project.id}`,
+      label: project.name,
+      sub: t("library.calcCount", { count: project.calculations.length }),
+      kind: "project",
+      run: () => navigatePalette("projects"),
+    }));
+    return [...actions, ...entries, ...projectItems];
+  }, [
+    paletteOpen,
+    t,
+    navigatePalette,
+    newCalc,
+    doSave,
+    doCompare,
+    copySummary,
+    shareLink,
+    cycleTheme,
+    p.valid,
+    savedEntries,
+    projects,
+    loadSavedEntry,
+  ]);
+
+  const paletteResults = useMemo(
+    () => filterPalette(paletteItems, paletteTerm(query)),
+    [paletteItems, query],
+  );
+  // Derived rather than stored: typing narrows the list under the cursor, and
+  // an index left pointing past the end would select nothing.
+  const paletteActiveIndex = Math.min(paletteIndex, Math.max(0, paletteResults.length - 1));
+
+  /** Run a row and drop back to the calculator with an empty line. */
+  const runPaletteItem = useCallback(
+    (item: PaletteItem) => {
+      if (item.disabled) return;
+      setQuery("");
+      item.run();
+    },
+    [],
+  );
+
+  /** The keypad's ↵: run the selected command in palette mode, else log. */
+  const onEnter = useCallback(() => {
+    if (paletteOpen) {
+      const item = paletteResults[paletteActiveIndex];
+      if (item) runPaletteItem(item);
+      return;
+    }
+    logToSession();
+  }, [paletteOpen, paletteResults, paletteActiveIndex, runPaletteItem, logToSession]);
 
   // Focus with the caret at the end (after chip edit/remove) — select-all
   // would make the next keystroke wipe the whole query.
@@ -734,7 +835,12 @@ export function CommandShell() {
   // Chips are grouped by item, so a `+`-joined line renders as the two (or
   // more) calculations it is. While the query doesn't end in whitespace the
   // last piece is still being typed — rendered as plain text at the cursor.
-  const chips = useMemo(() => lineChips(query), [query]);
+  // A `>` line is a command, not a calculation: it isn't tokenized into chips,
+  // it sits at the caret whole, and the parser's opinion of it is ignored.
+  const chips = useMemo(
+    () => (paletteOpen ? { groups: [], partial: query } : lineChips(query)),
+    [paletteOpen, query],
+  );
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   // Faint completion drawn after the caret (profile letters / recent prefix).
@@ -1007,7 +1113,7 @@ export function CommandShell() {
             </button>
 
             <div className="flex items-center gap-2.5 mt-3 pb-3.5 border-b border-border-faint">
-              {line.multi ? (
+              {paletteOpen ? null : line.multi ? (
                 <LineItems line={line} compact />
               ) : p.valid && p.kgm != null ? (
                 <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
@@ -1115,7 +1221,7 @@ export function CommandShell() {
           <div className="pb-1.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
               <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
-                {formatCommandHint(t, sug.hint)}
+                {paletteOpen ? t("palette.hint") : formatCommandHint(t, sug.hint)}
               </span>
               {query !== "" && (
                 <button
@@ -1130,6 +1236,17 @@ export function CommandShell() {
               )}
             </div>
             <div className="relative">
+            {paletteOpen ? (
+              <div className="px-[18px] pb-0.5" style={{ maxHeight: 220, overflowY: "auto" }}>
+                <CommandPalette
+                  items={paletteResults}
+                  activeIndex={paletteActiveIndex}
+                  onRun={runPaletteItem}
+                  onHover={setPaletteIndex}
+                  compact
+                />
+              </div>
+            ) : (
             <div
               // Two rows of wrapped chips rather than one long swipe: standard
               // sizes are a grid in the head, not a queue.
@@ -1212,6 +1329,7 @@ export function CommandShell() {
                 </button>
               ))}
             </div>
+            )}
             {/* Bottom fade hints that more chips are below the fold */}
             <div
               aria-hidden="true"
@@ -1393,13 +1511,19 @@ export function CommandShell() {
           )}
           {effectiveSheet === "library" && (
             <CommandLibrarySheet
+              // Remount on tab change so the sheet's own tab state re-seeds.
+              key={libraryTab ?? "auto"}
+              initialTab={libraryTab}
               settings={parserSettings}
               defaultUnit={defaultUnit}
               mode={mode}
               saved={savedEntries}
               compareItems={compareItems}
               projects={projects}
-              onClose={() => setSheet(null)}
+              onClose={() => {
+                setSheet(null);
+                setLibraryTab(null);
+              }}
               onLoadInput={loadInput}
               {...savedHandlers}
               onRemoveCompare={removeCompareItem}

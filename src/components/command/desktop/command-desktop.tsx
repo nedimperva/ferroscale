@@ -107,7 +107,12 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {/* Keyed by view so switching tabs cross-fades instead of snapping. */}
       <div key={view} className="fs-fade flex flex-1 min-h-0 flex-col">
       {view === "calc" && (
-        <DeskCalcView {...props} inputRef={inputRef} gotoCompare={() => setView("compare")} />
+        <DeskCalcView
+          {...props}
+          inputRef={inputRef}
+          gotoCompare={() => setView("compare")}
+          onGotoView={setView}
+        />
       )}
       {view === "compare" && (
         <DeskCompareView
