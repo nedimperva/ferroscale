@@ -219,7 +219,8 @@
       "over": "{over} više"
     },
     "line": {
-      "items": "Stavke linije"
+      "items": "Stavke linije",
+      "total": "UKUPNO LINIJA"
     },
     "palette": {
       "aria": "Komandna paleta",

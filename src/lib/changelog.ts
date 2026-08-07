@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.16.2",
+    date: "2026-08-07",
+    fixed: [
+      "Copying a line with several items now copies all of them and the line total. It was copying only the item under the cursor, which is a quiet way to paste the wrong number into an email",
+      "The Save button no longer shows a line with several items as already saved when one of its parts happens to be. Saving one always creates a new assembly, so the button now looks like what it does",
+      "Suggestions now learn from every item on a line, not only the last one",
+    ],
+    fixed_bs: [
+      "Kopiranje linije sa više stavki sada kopira sve njih i ukupan zbir. Ranije je kopiralo samo stavku pod kursorom, što je tih način da se u email zalijepi pogrešan broj",
+      "Dugme Sačuvaj više ne prikazuje liniju sa više stavki kao već sačuvanu kada je jedan njen dio sačuvan. Čuvanje takve linije uvijek pravi novi sklop, pa dugme sada izgleda kao ono što radi",
+      "Prijedlozi sada uče iz svake stavke na liniji, a ne samo iz posljednje",
+    ],
+  },
+  {
     version: "3.16.1",
     date: "2026-08-07",
     fixed: [

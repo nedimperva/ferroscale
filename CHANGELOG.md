@@ -5,6 +5,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.16.2] - 2026-08-07
+
+### Fixed
+
+- **Copy summary covered only the item under the caret on a multi-item line.** Copying a two-item quote and pasting it into an email sent one item's numbers under the whole line's framing. It now writes every item, then the line total — and withholds that total while any item is still incomplete, because a partial sum labelled "the total" is worse than no total
+- **The Save button contradicted itself on a multi-item line.** Its filled/outlined state came from matching the *active item* against the library, while pressing it creates a new assembly; a line whose last part happened to be saved showed as saved and then saved again. State and behaviour now share one guard
+- **Usage learning only saw the last item of a multi-item line**, so a two-part line taught the suggestion ranking about half of what was typed
+
+---
+
 ## [3.16.1] - 2026-08-07
 
 ### Fixed

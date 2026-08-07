@@ -219,7 +219,8 @@
       "over": "{over} over"
     },
     "line": {
-      "items": "Line items"
+      "items": "Line items",
+      "total": "LINE TOTAL"
     },
     "palette": {
       "aria": "Command palette",

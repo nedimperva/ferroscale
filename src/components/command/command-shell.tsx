@@ -274,17 +274,23 @@ export function CommandShell() {
       // Record the canonical query, not the raw text: this drops half-typed
       // trailing tokens (a lone "@", an incomplete grade) so mid-edit pauses
       // don't each leave their own near-duplicate recent.
-      const canonical =
-        (p.calc &&
-          inputToQuery(p.calc.input, defaultUnit, {
-            defaultGradeId: shared.defaultGradeId,
-            defaultPricing: shared,
-          })) ||
-        query.trim();
-      recordCommandUsage(p, canonical);
+      // Every item counts, not just the one under the caret: a two-part line
+      // is two things the user typed, and habits that learned only the last of
+      // them would rank the wrong sizes first.
+      for (const item of line.items) {
+        const parse = item.parse;
+        const canonical =
+          (parse.calc &&
+            inputToQuery(parse.calc.input, defaultUnit, {
+              defaultGradeId: shared.defaultGradeId,
+              defaultPricing: shared,
+            })) ||
+          item.text.trim();
+        recordCommandUsage(parse, canonical);
+      }
     }, 2500);
     return () => window.clearTimeout(id);
-  }, [p, query, defaultUnit, shared]);
+  }, [p, line, query, defaultUnit, shared]);
   const usageSource = useMemo(() => {
     // usageVersion is the invalidation signal, not an input: recording a query
     // or pulling a peer's habits bumps it, and the source rebuilds from storage.
@@ -387,11 +393,11 @@ export function CommandShell() {
   // Desktop's single Copy action: a clean, paste-ready text summary of the
   // live result (replaces the old copy-query / copy-value pair).
   const copySummary = useCallback(() => {
-    const summary = buildCommandSummary(t, p);
+    const summary = buildCommandSummary(t, p, line);
     if (!summary) return;
     navigator.clipboard?.writeText(summary).catch(() => {});
     showToast(t("toast.copiedSummary"));
-  }, [t, p, showToast]);
+  }, [t, p, line, showToast]);
 
   const shareLink = useCallback(() => {
     if (!p.valid) return;
@@ -407,7 +413,10 @@ export function CommandShell() {
   // The bookmark state of the line currently in the bar — drives the Save
   // button's filled/outlined look, so "is this one saved?" is answerable
   // without opening the library.
-  const currentSavedEntry = p.calc ? getSavedEntry(p.calc.result) : undefined;
+  // Same guard as doSave: a multi-item line saves as a new assembly every
+  // time, so matching it against one of its own parts would show "saved" on a
+  // button that is about to create something.
+  const currentSavedEntry = !line.multi && p.calc ? getSavedEntry(p.calc.result) : undefined;
 
   /** Delete with a 5-second Undo — the tombstone is reversible until then. */
   const removeSavedEntry = useCallback(
