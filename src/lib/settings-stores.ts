@@ -15,6 +15,8 @@ import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { CommandPricing } from "@ferroscale/metal-core";
 
 export const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
+/** Keypad/action vibration on phones that support it. */
+export const hapticsStore = createBoolStore("ferroscale-haptics", true);
 export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
 
 export type { CommandPricing };

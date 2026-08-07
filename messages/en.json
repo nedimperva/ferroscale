@@ -42,6 +42,43 @@
     "installButton": "Install app"
   },
   "command": {
+    "keyHints": {
+      "complete": "complete",
+      "insert": "insert",
+      "log": "log",
+      "pick": "pick",
+      "save": "save",
+      "recall": "recall",
+      "shortcuts": "shortcuts"
+    },
+    "help": {
+      "title": "Command reference",
+      "exampleHint": "Tap to try this line",
+      "grammar": "Grammar",
+      "shortcuts": "Shortcuts",
+      "profiles": "Profiles",
+      "grades": "Grades",
+      "moreGrades": "…and more",
+      "orderNote": "Order doesn't matter, and spaces are optional — hea120 6m x2 and x2 6m hea 120 read the same.",
+      "token": {
+        "profile": "Profile and size",
+        "length": "Length (mm, cm, m, in, ft)",
+        "quantity": "Quantity",
+        "grade": "Material grade",
+        "price": "Rate for this line only"
+      },
+      "shortcut": {
+        "enter": "Take the suggestion, or log the finished line",
+        "tab": "Accept the inline completion",
+        "digits": "Insert the 1st–9th chip",
+        "history": "Walk back and forth through earlier lines",
+        "save": "Save (press again to unsave)",
+        "compare": "Add to compare",
+        "new": "New calculation",
+        "clear": "Clear the line",
+        "backspace": "On an empty line, pull the last chip back"
+      }
+    },
     "common": {
       "project": "project",
       "clear": "CLEAR",
@@ -117,7 +154,9 @@
       "addLength": "Add a length to compute",
       "closeUnitPicker": "Close unit picker",
       "priceUnitPicker": "Price unit",
-      "lengthUnitPicker": "Length unit"
+      "lengthUnitPicker": "Length unit",
+      "backspace": "Backspace",
+      "backspaceHold": "Hold to delete the whole token"
     },
     "token": {
       "edit": "Edit {token}",
@@ -212,6 +251,8 @@
       "defaultGradeUpper": "DEFAULT GRADE",
       "lengthUnitFallback": "LENGTH UNIT FALLBACK",
       "languageUpper": "LANGUAGE",
+      "haptics": "Vibration",
+      "hapticsUpper": "VIBRATION",
       "locales": {
         "en": "English",
         "bs": "Bosnian"
@@ -325,7 +366,13 @@
       "pieces": "Pieces",
       "gradeOptional": "Grade (optional)",
       "ready": "Ready",
-      "saveCalculation": "Save calculation"
+      "saveCalculation": "Save calculation",
+      "refine": "Refine",
+      "group": {
+        "usage": "Yours",
+        "preset": "Presets",
+        "standard": "Standard"
+      }
     },
     "compare": {
       "approxBase": "≈ base",

@@ -115,6 +115,70 @@ describe("command bar", () => {
     await waitFor(() => expect(h.input().value).toBe("s235"));
   });
 
+  it("picks the nth suggestion with ⌥N without leaving the input", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "he");
+
+    // The second chip in the profile row (HEB), by position.
+    await h.user.keyboard("{Alt>}{2}{/Alt}");
+    await waitFor(() => expect(currentQuery(h)).toContain("heb"));
+    expect(document.activeElement).toBe(h.input());
+  });
+
+  it("offers variations once the line is complete, and applies one in place", async () => {
+    const h = await renderCommandShell();
+    // The demo query is a finished calculation: hea120 6m x2 s235.
+    const double = await screen.findByRole("button", { name: /× 4/ });
+    await h.user.click(double);
+
+    await waitFor(() => expect(currentQuery(h)).toContain("x4"));
+    // Everything else stayed put — that's what makes it a refinement.
+    expect(currentQuery(h)).toContain("hea120");
+    expect(currentQuery(h)).toContain("6m");
+    expect(currentQuery(h)).toContain("s235");
+    expect(currentQuery(h)).not.toContain("x2");
+  });
+
+  it("⌘S saves the line and the button reports it", async () => {
+    const h = await renderCommandShell();
+    h.input().focus();
+    await h.user.keyboard("{Meta>}s{/Meta}");
+    // The result panel's Save toggle flips (the "Saved" tab shares its name,
+    // so match the one that reports pressed state).
+    await waitFor(() =>
+      expect(
+        screen
+          .getAllByRole("button", { name: "Saved" })
+          .some((el) => el.getAttribute("aria-pressed") === "true"),
+      ).toBe(true),
+    );
+    expect(screen.getByRole("button", { name: "Name it" })).toBeDefined();
+  });
+
+  it("? opens the command reference", async () => {
+    const h = await renderCommandShell();
+    h.input().focus();
+    await h.user.keyboard("?");
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: "Command reference" })).toBeDefined(),
+    );
+    // Every shortcut the resolver implements is documented there.
+    expect(screen.getByText("Accept the inline completion")).toBeDefined();
+  });
+
+  it("shows what Enter means right now", async () => {
+    const h = await renderCommandShell();
+    // Demo query is valid → Enter logs.
+    expect(screen.getByText("log")).toBeDefined();
+
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "hea");
+    await waitFor(() => expect(screen.getByText("insert")).toBeDefined());
+  });
+
   it("surfaces a did-you-mean correction for a typo", async () => {
     const h = await renderCommandShell();
     await h.user.click(h.input());

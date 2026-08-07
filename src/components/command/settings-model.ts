@@ -81,6 +81,8 @@ export interface SettingsModelArgs {
   setLocale: (locale: AppLocale) => void;
   dark: boolean;
   onToggleTheme: () => void;
+  haptics: boolean;
+  onSetHaptics: (value: boolean) => void;
 }
 
 export function buildSettingsFields({
@@ -95,6 +97,8 @@ export function buildSettingsFields({
   setLocale,
   dark,
   onToggleTheme,
+  haptics,
+  onSetHaptics,
 }: SettingsModelArgs): SettingsField[] {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   return [
@@ -211,6 +215,18 @@ export function buildSettingsFields({
         label: t(`settings.locales.${l}`),
       })),
       onSelect: (v) => setLocale(v as AppLocale),
+    },
+    {
+      kind: "choice",
+      id: "haptics",
+      label: t("settings.haptics"),
+      deskLabel: t("settings.hapticsUpper"),
+      value: haptics ? "on" : "off",
+      options: [
+        { value: "on", label: t("common.on") },
+        { value: "off", label: t("common.off") },
+      ],
+      onSelect: (v) => onSetHaptics(v === "on"),
     },
     {
       kind: "choice",

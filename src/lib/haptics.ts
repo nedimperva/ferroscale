@@ -1,41 +1,32 @@
-// src/lib/haptics.ts
+import { hapticsStore } from "@/lib/settings-stores";
 
 /**
- * Triggers device haptic feedback if supported by the browser/OS.
- * Mostly works on Chrome for Android. iOS Safari generally ignores this
- * unless it's a very specific user interaction or wrapped in a native app container.
+ * Short vibrations for the on-screen keypad and the actions around it. A
+ * custom keyboard without haptics feels emulated; with them it feels like the
+ * phone's own. Feature-detected (iOS Safari has no Vibration API), and off
+ * whenever the user has switched it off in Settings.
  */
-export function triggerHaptic(type: "light" | "medium" | "heavy" | "success" | "warning" | "error" = "light") {
-    if (typeof window === "undefined" || !navigator.vibrate) return;
 
-    try {
-        switch (type) {
-            case "light":
-                navigator.vibrate(20);
-                break;
-            case "medium":
-                navigator.vibrate(40);
-                break;
-            case "heavy":
-                navigator.vibrate(60);
-                break;
-            case "success":
-                // Two short pulses
-                navigator.vibrate([20, 50, 20]);
-                break;
-            case "warning":
-                // One medium, one long
-                navigator.vibrate([30, 50, 50]);
-                break;
-            case "error":
-                // Three short pulses
-                navigator.vibrate([20, 30, 20, 30, 20]);
-                break;
-            default:
-                navigator.vibrate(20);
-        }
-    } catch (e) {
-        // Ignore errors (e.g. if the user hasn't interacted with the page yet)
-        console.debug("Haptic feedback failed", e);
-    }
+type HapticKind =
+  /** A key, a chip insert — the smallest possible tick. */
+  | "tap"
+  /** A committed action: saved, logged to the tape. */
+  | "commit"
+  /** Something didn't parse. */
+  | "warn";
+
+const PATTERNS: Record<HapticKind, number | number[]> = {
+  tap: 8,
+  commit: [12, 30, 12],
+  warn: 24,
+};
+
+export function haptic(kind: HapticKind): void {
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+  if (!hapticsStore.getSnapshot()) return;
+  try {
+    navigator.vibrate(PATTERNS[kind]);
+  } catch {
+    /* a browser that rejects the pattern is not worth reporting */
+  }
 }

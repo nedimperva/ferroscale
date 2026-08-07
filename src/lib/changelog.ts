@@ -17,6 +17,46 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.9.0",
+    date: "2026-08-07",
+    added: [
+      "A finished calculation now offers variations instead of a single Save chip: twice the pieces, the other stock lengths, the neighbouring sizes, another grade — each showing what it would come to before you pick it",
+      "Press ⌥1–9 to insert the numbered suggestion without leaving the line, and see the number on each chip",
+      "A hint strip under the command line names the keys that work right now, and ? opens a full command reference with the grammar, every shortcut, and tappable examples",
+      "⌘S saves the current line (press again to unsave) and ⌘↵ adds it to compare",
+      "The phone keypad's backspace now deletes a whole token when held, so a size like 40x40x3 goes in one gesture",
+      "Recent lines sit above the phone keypad — history recall was desktop-only until now",
+      "Vibration feedback on the phone keypad and on saves, with an on/off switch in Settings",
+    ],
+    changed: [
+      "Enter has one meaning everywhere: take the pending suggestion, or log the finished line. The hint strip says which one it is at that moment",
+      "Suggestions are grouped — yours, your presets, then standard — so the ranking is visible and not just true",
+      "Returning to the app puts your last line back in the bar instead of the demo query; a first visit still gets the demo",
+      "Suggestion chips on the phone wrap to a second row instead of hiding behind a sideways scroll",
+    ],
+    fixed: [
+      "Typing was doing far more work than it needed: per-metre weights for suggestion chips are now cached and the query is parsed once per keystroke instead of twice",
+    ],
+    added_bs: [
+      "Gotov izračun sada nudi varijante umjesto jednog dugmeta Sačuvaj: dvostruko komada, druge standardne dužine, susjedne veličine, drugi kvalitet — svaka pokazuje rezultat prije nego što je izaberete",
+      "Pritisnite ⌥1–9 da ubacite numerisani prijedlog bez napuštanja linije; broj je prikazan na svakom čipu",
+      "Traka ispod komandne linije imenuje tipke koje trenutno rade, a ? otvara potpuni pregled komandi s gramatikom, svim prečicama i primjerima na dodir",
+      "⌘S čuva trenutnu liniju (ponovni pritisak uklanja), a ⌘↵ je dodaje u poređenje",
+      "Tipka za brisanje na mobilnoj tastaturi sada briše cijeli token kada je zadržite, pa dimenzija poput 40x40x3 nestaje jednim potezom",
+      "Nedavne linije stoje iznad mobilne tastature — do sada je vraćanje historije bilo samo na desktopu",
+      "Vibracija pri kucanju na tastaturi i pri čuvanju, s prekidačem u Postavkama",
+    ],
+    changed_bs: [
+      "Enter svuda znači jedno: preuzmi prijedlog koji čeka ili zabilježi gotovu liniju. Traka s prečicama govori šta je to u tom trenutku",
+      "Prijedlozi su grupisani — vaše, vaši predlošci, pa standardno — pa je redoslijed vidljiv, a ne samo tačan",
+      "Povratak u aplikaciju vraća vašu zadnju liniju u traku umjesto demo upita; prva posjeta i dalje dobija demo",
+      "Čipovi prijedloga na telefonu prelaze u drugi red umjesto da se kriju iza bočnog pomjeranja",
+    ],
+    fixed_bs: [
+      "Kucanje je radilo mnogo više posla nego što treba: težine po metru za čipove se sada keširaju, a upit se parsira jednom po pritisku tipke umjesto dvaput",
+    ],
+  },
+  {
     version: "3.8.0",
     date: "2026-08-06",
     added: [

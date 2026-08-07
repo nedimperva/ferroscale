@@ -5,6 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.9.0] - 2026-08-07
+
+### Added
+
+- **A finished line offers variations, not just Save.** The moment a query is complete used to show exactly one chip ("Save calculation") — the highest-intent moment in the app spent on a single button. It now offers one-tap refinements: **twice the pieces**, the **other stock lengths**, the **neighbouring catalog sizes**, **another grade** — each with the resulting total (`× 4 · 477 kg`) or per-metre weight under it, so you can weigh the option before taking it. Picking one swaps that token in place and leaves the rest of the line alone
+- **⌥1–9 inserts the numbered suggestion** without leaving the input, and each chip carries its number so the shortcut is learnable by looking
+- **A key-hint strip** under the command line naming the keys that work right now, and **`?`** opens a full command reference: the grammar, every shortcut, tappable profile aliases and grades — generated from the alias table, so it can't drift from what the parser accepts
+- **⌘S** saves the current line (again to unsave), **⌘↵** adds it to compare
+- **Hold backspace on the phone keypad to delete a whole token** — a size like `40x40x3` in one gesture instead of seven
+- **Recents above the phone keypad.** ↑/↓ recall was desktop-only; the last few lines are now one tap away on mobile
+- **Vibration feedback** on the keypad and on committed actions, with an on/off switch in Settings
+
+### Changed
+
+- **Enter has one meaning everywhere**: take the pending suggestion, else log the finished line. It previously meant different things on different surfaces with nothing on screen saying which — the hint strip now shows *insert* or *log* as it changes
+- **Suggestions are grouped** — Yours, Presets, Standard — so the frequency ranking is visible rather than merely applied
+- **Returning users start on their last line** instead of the demo query (a first visit still gets the demo)
+- Phone suggestion chips **wrap to a second row** instead of hiding behind a sideways scroll
+- Key routing moved into one pure resolver (`command-keys.ts`) shared by every surface, replacing two drifting copies
+
+### Fixed
+
+- Typing did roughly twice the work it needed: the suggestion engine re-parsed the query the shell had already parsed, and re-derived per-metre weights for every candidate size on every keystroke. The parse is now handed over and the weights are cached
+
+---
+
 ## [3.8.0] - 2026-08-06
 
 ### Added

@@ -1,10 +1,11 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { CommandDocsSection, useCommandLocaleSwitch } from "../sheets/settings-sheet";
 import { SyncSection } from "../sheets/sync-section";
 import { InstallAppSection } from "../install-section";
-import type { SharedCalcSettings } from "@/lib/settings-stores";
+import { hapticsStore, type SharedCalcSettings } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -194,6 +195,11 @@ export function DeskSettingsView({
 }) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
+  const haptics = useSyncExternalStore(
+    hapticsStore.subscribe,
+    hapticsStore.getSnapshot,
+    hapticsStore.getServerSnapshot,
+  );
   const fields = buildSettingsFields({
     t,
     shared,
@@ -206,6 +212,8 @@ export function DeskSettingsView({
     setLocale,
     dark,
     onToggleTheme,
+    haptics,
+    onSetHaptics: hapticsStore.set,
   });
 
   return (

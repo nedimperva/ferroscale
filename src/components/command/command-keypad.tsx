@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { haptic } from "@/lib/haptics";
 
 interface CommandKeypadProps {
   onKey: (ch: string) => void;
@@ -9,6 +10,8 @@ interface CommandKeypadProps {
   /** Insert a price token with an explicitly chosen unit (long-press picker). */
   onPriceUnitPick: (unit: string) => void;
   onBack: () => void;
+  /** Hold on backspace: drop the whole token, not one character of it. */
+  onBackToken: () => void;
   onEnter: () => void;
   priceUnitLabel: string;
   valid: boolean;
@@ -58,11 +61,72 @@ function Key({ label, onPress, flex = 1, variant = "default", mono, big }: KeyPr
   return (
     <button
       type="button"
-      onClick={onPress}
+      onClick={() => {
+        haptic("tap");
+        onPress();
+      }}
       style={{ flex }}
       className={`${KEY_BASE} ${variantClass(variant)} ${mono ? "font-mono" : ""} ${big ? "text-lg" : "text-[15px]"}`}
     >
       {label}
+    </button>
+  );
+}
+
+/**
+ * Backspace: tap deletes a character, hold deletes the whole token. Deleting
+ * `40x40x3` one keystroke at a time was the keypad's worst moment.
+ */
+function BackspaceKey({
+  onBack,
+  onBackToken,
+  label,
+  holdLabel,
+}: {
+  onBack: () => void;
+  onBackToken: () => void;
+  label: string;
+  holdLabel: string;
+}) {
+  const timerRef = useRef<number | null>(null);
+  const longFiredRef = useRef(false);
+
+  const clearTimer = () => {
+    if (timerRef.current != null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={holdLabel}
+      onClick={() => {
+        if (longFiredRef.current) {
+          longFiredRef.current = false;
+          return;
+        }
+        haptic("tap");
+        onBack();
+      }}
+      onPointerDown={() => {
+        longFiredRef.current = false;
+        timerRef.current = window.setTimeout(() => {
+          longFiredRef.current = true;
+          haptic("commit");
+          onBackToken();
+        }, LONG_PRESS_MS);
+      }}
+      onPointerUp={clearTimer}
+      onPointerLeave={clearTimer}
+      onPointerCancel={clearTimer}
+      onContextMenu={(e) => e.preventDefault()}
+      style={{ flex: 1.3 }}
+      className={`${KEY_BASE} ${variantClass("dim")} text-[15px]`}
+    >
+      ⌫
     </button>
   );
 }
@@ -133,6 +197,7 @@ function HoldPickerKey({
                 role="menuitem"
                 onClick={() => {
                   setOpen(false);
+                  haptic("tap");
                   onPick(choice.ins);
                 }}
                 className="h-10 px-3.5 rounded-[9px] font-mono text-[14px] font-bold text-foreground bg-[var(--surface-raised)] border border-border-faint"
@@ -157,6 +222,7 @@ function HoldPickerKey({
           longFiredRef.current = false;
           timerRef.current = window.setTimeout(() => {
             longFiredRef.current = true;
+            haptic("commit");
             setOpen(true);
           }, LONG_PRESS_MS);
         }}
@@ -177,6 +243,7 @@ export function CommandKeypad({
   onPriceUnit,
   onPriceUnitPick,
   onBack,
+  onBackToken,
   onEnter,
   priceUnitLabel,
   valid,
@@ -203,11 +270,17 @@ export function CommandKeypad({
           ))}
         </div>
         <div className="flex gap-1.5">
-          <Key label="×" mono big onPress={() => onKey("×")} flex={1.3} />
+          {/* Shows × but types x — the canonical quantity token. */}
+          <Key label="×" mono big onPress={() => onKey("x")} flex={1.3} />
           {ROW_BOT.map((k) => (
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
-          <Key label="⌫" variant="dim" onPress={onBack} flex={1.3} />
+          <BackspaceKey
+            onBack={onBack}
+            onBackToken={onBackToken}
+            label={t("keypad.backspace")}
+            holdLabel={t("keypad.backspaceHold")}
+          />
         </div>
         <div className="flex gap-1.5">
           <Key label="." mono big onPress={() => onKey(".")} flex={0.8} />

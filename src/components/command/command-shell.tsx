@@ -37,6 +37,9 @@ import {
   buildCommandSummary,
 } from "./command-copy";
 import { GhostField } from "./ghost-field";
+import { resolveCommandKey } from "./command-keys";
+import { CommandKeyHints } from "./command-key-hints";
+import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
@@ -55,12 +58,23 @@ import {
   sharedPricingDiffers,
 } from "@/lib/command/share";
 import { buildUsageSource, recordCommandUsage } from "@/lib/usage-stats";
+import { loadQuickHistory } from "@/lib/sync/collections";
+import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 const HERO_FONT_WEIGHT = 800;
 const DESKTOP_CARD_W = 560;
 // Trailing space so the demo query renders fully chipped on first load.
 const DEMO_QUERY = "hea120 6m x2 s235 ";
+/** Set after the first visit, so the demo query greets newcomers only. */
+const ONBOARDED_KEY = "ferroscale-onboarded";
+
+/** The newest line this device ran — read straight from storage because the
+ *  history hook hydrates a tick later than the first paint. */
+function loadLastQuery(): string | null {
+  const [newest] = loadQuickHistory();
+  return newest?.trim() || null;
+}
 
 function formatPriceTokenValue(value: number) {
   if (!Number.isFinite(value)) return "0";
@@ -119,7 +133,7 @@ export function CommandShell() {
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
   const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
-  const [sheet, setSheet] = useState<null | "result" | "settings" | "library">(null);
+  const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
   const [toast, setToast] = useState<CommandToastState | null>(null);
   // Query history — persisted (and Drive-synced) via the quickHistory
   // collection. Backs the desktop session tape and recency suggestions.
@@ -225,9 +239,11 @@ export function CommandShell() {
     [usageVersion],
   );
 
+  // `p` is handed over so the suggestion engine doesn't parse the same query
+  // a second time on every keystroke.
   const sug = useMemo(
-    () => cmdSuggest(query, parserSettings, presetsForProfile, usageSource),
-    [query, parserSettings, presetsForProfile, usageSource],
+    () => cmdSuggest(query, parserSettings, presetsForProfile, usageSource, p),
+    [query, parserSettings, presetsForProfile, usageSource, p],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
@@ -268,8 +284,25 @@ export function CommandShell() {
     } catch { /* noop */ }
     // A shared ?q= link beats the demo query. Trailing space → fully chipped.
     const sharedQuery = readSharedQuery(window.location.search);
-    if (!sharedQuery) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!sharedQuery) {
+      // Returning visit: start on the line this user last ran, not on the demo
+      // query they've now seen a hundred times. Selected, so one keystroke
+      // replaces it — and the demo still greets a first visit.
+      if (window.localStorage.getItem(ONBOARDED_KEY)) {
+        const last = loadLastQuery();
+        if (last) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setQuery(`${last} `);
+          touchedRef.current = true;
+          requestAnimationFrame(() => inputRef.current?.select());
+        }
+      } else {
+        try {
+          window.localStorage.setItem(ONBOARDED_KEY, "1");
+        } catch { /* noop */ }
+      }
+      return;
+    }
     setQuery(`${sharedQuery} `);
     touchedRef.current = true;
     // A link carries the sender's rate context. Apply it (otherwise the same
@@ -356,6 +389,7 @@ export function CommandShell() {
     // repeating them in the title only bought truncation. Rename to override.
     const autoName = formatCommandParseName(t, p) ?? p.name ?? p.calc.result.profileLabel;
     const entry = saveCalculation(p.calc.input, p.calc.result, autoName);
+    haptic("commit");
     pushHistory(query);
     showActionToast(t("toast.saved"), {
       label: t("common.nameIt"),
@@ -401,9 +435,11 @@ export function CommandShell() {
   // Saved library is the explicit Save action (doSave) alone.
   const logToSession = useCallback(() => {
     if (!p.valid) {
+      haptic("warn");
       showToast(t("toast.addLength"));
       return;
     }
+    haptic("commit");
     pushHistory(query);
     showToast(t("toast.addedToSession"));
   }, [p.valid, query, pushHistory, showToast, t]);
@@ -515,6 +551,15 @@ export function CommandShell() {
   const onBack = useCallback(() => {
     setQuery((q) => q.slice(0, -1));
   }, []);
+  /** Hold-backspace: drop the last whole token (`40x40x3` in one gesture). */
+  const onBackToken = useCallback(() => {
+    setQuery((q) => {
+      const tokens = cmdTokenize(q);
+      if (tokens.length === 0) return "";
+      const rest = tokens.slice(0, -1);
+      return rest.length ? `${rest.join(" ")} ` : "";
+    });
+  }, []);
   const onEnter = useCallback(() => {
     logToSession();
   }, [logToSession]);
@@ -624,6 +669,16 @@ export function CommandShell() {
     onTogglePinSaved: (entry: SavedEntry) => toggleSavedPinned(entry.id),
     onEditSaved: (entry: SavedEntry) => setEditingSavedId(entry.id),
   };
+  const helpSheet = effectiveSheet === "help" ? (
+    <CommandHelpSheet
+      onClose={() => setSheet(null)}
+      onTryExample={(example) => {
+        setQuery(`${example} `);
+        setSheet(null);
+        if (!isPhoneViewport) focusInputAtEnd();
+      }}
+    />
+  ) : null;
   const savedEditSheet = editingEntry ? (
     <SavedEditSheet
       entry={editingEntry}
@@ -684,9 +739,11 @@ export function CommandShell() {
           onCreateProject={createProject}
           onRemoveProjectCalc={removeCalculation}
           currentSaved={!!currentSavedEntry}
+          onOpenHelp={() => setSheet("help")}
           onRemoveSavedMany={removeSavedEntries}
           {...savedHandlers}
         />
+        {helpSheet}
         {savedEditSheet}
         {projectCalc && (
           <CommandProjectPickerSheet
@@ -993,8 +1050,10 @@ export function CommandShell() {
             </div>
             <div className="relative">
             <div
-              className="flex gap-1.5 px-[18px] pb-0.5"
-              style={{ overflowX: "auto" }}
+              // Two rows of wrapped chips rather than one long swipe: standard
+              // sizes are a grid in the head, not a queue.
+              className="flex gap-1.5 px-[18px] pb-0.5 flex-wrap content-start"
+              style={{ maxHeight: 96, overflowY: "auto" }}
             >
               {sug.items.map((it, i) => (
                 <button
@@ -1075,12 +1134,12 @@ export function CommandShell() {
                 </button>
               ))}
             </div>
-            {/* Right-edge fade hints that the chip row scrolls */}
+            {/* Bottom fade hints that more chips are below the fold */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 w-7"
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-4"
               style={{
-                background: `linear-gradient(to right, transparent, ${screenBg})`,
+                background: `linear-gradient(to bottom, transparent, ${screenBg})`,
               }}
             />
             </div>
@@ -1194,63 +1253,82 @@ export function CommandShell() {
                     setQuery(e.target.value);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      if (p.valid) {
-                        e.preventDefault();
-                        logToSession();
+                    // Same resolver the desktop workspace uses — one rule set
+                    // for the whole app (see command-keys.ts).
+                    const action = resolveCommandKey({
+                      key: e.key,
+                      code: e.code,
+                      metaKey: e.metaKey,
+                      ctrlKey: e.ctrlKey,
+                      altKey: e.altKey,
+                      shiftKey: e.shiftKey,
+                      partial: partialToken ?? "",
+                      hasGhost: !!ghost,
+                      valid: p.valid,
+                      caretAtEnd:
+                        e.currentTarget.selectionStart === e.currentTarget.value.length,
+                      // This surface keeps the whole query in the input, so
+                      // there are no chips to pull back with backspace.
+                      caretAtStart: false,
+                      caretCollapsed:
+                        e.currentTarget.selectionStart === e.currentTarget.selectionEnd,
+                      suggestionCount: sug.items.length,
+                      chipCount: 0,
+                      historyLength: quickHistory.length,
+                      browsingHistory: historyIdxRef.current >= 0,
+                    });
+                    if (!action) return;
+                    e.preventDefault();
+                    switch (action.type) {
+                      case "advance": {
+                        const pending = sug.items.find((it) => it.kind !== "save");
+                        if (!p.valid && pending) onSuggest(pending);
+                        else if (p.valid) logToSession();
                         return;
                       }
-                      // Mid-query: insert the first matching suggestion chip
-                      // (skip the "Save calculation" chip in the Ready stage).
-                      const first = sug.items.find((it) => it.kind !== "save");
-                      if (first) {
-                        e.preventDefault();
-                        onSuggest(first);
-                      }
-                      return;
-                    }
-                    // Accept the ghost completion (Tab, or → at the caret end).
-                    if (e.key === "Tab" && ghost) {
-                      e.preventDefault();
-                      acceptGhost();
-                      return;
-                    }
-                    if (
-                      e.key === "ArrowRight" &&
-                      ghost &&
-                      e.currentTarget.selectionStart === e.currentTarget.value.length &&
-                      e.currentTarget.selectionStart === e.currentTarget.selectionEnd
-                    ) {
-                      e.preventDefault();
-                      acceptGhost();
-                      return;
-                    }
-                    // ↑ recalls older queries; ↓ walks back toward the draft.
-                    if (e.key === "ArrowUp" && quickHistory.length > 0) {
-                      e.preventDefault();
-                      if (historyIdxRef.current === -1) draftRef.current = query;
-                      historyIdxRef.current = Math.min(
-                        historyIdxRef.current + 1,
-                        quickHistory.length - 1,
-                      );
-                      setQuery(quickHistory[historyIdxRef.current] + " ");
-                      focusInputAtEnd();
-                      return;
-                    }
-                    if (e.key === "ArrowDown") {
-                      if (historyIdxRef.current >= 0) {
-                        e.preventDefault();
-                        const nextIdx = historyIdxRef.current - 1;
-                        historyIdxRef.current = nextIdx;
-                        setQuery(nextIdx < 0 ? draftRef.current : quickHistory[nextIdx] + " ");
+                      case "acceptGhost":
+                        acceptGhost();
+                        return;
+                      case "insertSuggestion":
+                        onSuggest(sug.items[action.index]);
+                        focusInputAtEnd();
+                        return;
+                      case "save":
+                        doSave();
+                        return;
+                      case "compare":
+                        doCompare();
+                        return;
+                      case "help":
+                        setSheet("help");
+                        return;
+                      case "clear":
+                        newCalc();
+                        return;
+                      case "historyPrev": {
+                        if (historyIdxRef.current === -1) draftRef.current = query;
+                        historyIdxRef.current = Math.min(
+                          historyIdxRef.current + 1,
+                          quickHistory.length - 1,
+                        );
+                        setQuery(quickHistory[historyIdxRef.current] + " ");
                         focusInputAtEnd();
                         return;
                       }
-                      // Not browsing history → open chip navigation.
-                      if (sug.items.length > 0) {
-                        e.preventDefault();
-                        firstSuggestionRef.current?.focus();
+                      case "historyNext": {
+                        const nextIdx = historyIdxRef.current - 1;
+                        historyIdxRef.current = nextIdx;
+                        setQuery(
+                          nextIdx < 0 ? draftRef.current : quickHistory[nextIdx] + " ",
+                        );
+                        focusInputAtEnd();
+                        return;
                       }
+                      case "focusChips":
+                        firstSuggestionRef.current?.focus();
+                        return;
+                      case "editLastChip":
+                        return;
                     }
                   }}
                   autoFocus
@@ -1267,9 +1345,52 @@ export function CommandShell() {
                   ⌘K
                 </kbd>
               </label>
+              <div className="mt-2 px-0.5">
+                <CommandKeyHints
+                  compact
+                  valid={p.valid}
+                  hasGhost={!!ghost}
+                  suggestionCount={sug.items.length}
+                  historyLength={quickHistory.length}
+                  onOpenHelp={() => setSheet("help")}
+                />
+              </div>
             </div>
           )}
         </div>
+
+          {/* Recents: the phone had no history recall at all — ↑/↓ is a
+              desktop-only affordance — so the last few lines sit one tap away
+              above the keypad. */}
+          {isPhoneViewport && quickHistory.length > 0 && (
+            <div
+              className="flex gap-1.5 px-[14px] pb-1.5 flex-shrink-0"
+              style={{ overflowX: "auto" }}
+            >
+              <span className="flex items-center text-[9.5px] font-bold tracking-wider text-muted-faint uppercase flex-shrink-0 pr-0.5">
+                {t("suggest.group.usage")}
+              </span>
+              {quickHistory.slice(0, 4).map((entry) => (
+                <button
+                  key={entry}
+                  type="button"
+                  onClick={() => {
+                    haptic("tap");
+                    setQuery(`${entry} `);
+                  }}
+                  className="flex-shrink-0 rounded-full font-mono text-[11.5px] font-semibold"
+                  style={{
+                    padding: "5px 11px",
+                    border: "1px solid var(--border-faint)",
+                    background: "var(--surface)",
+                    color: "var(--foreground-secondary)",
+                  }}
+                >
+                  {entry}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* On-screen keypad: phone only */}
           {isPhoneViewport && (
@@ -1278,6 +1399,7 @@ export function CommandShell() {
               onPriceUnit={onPriceUnit}
               onPriceUnitPick={insertPriceToken}
               onBack={onBack}
+              onBackToken={onBackToken}
               onEnter={onEnter}
               priceUnitLabel={priceUnitLabel}
               valid={p.valid}
@@ -1348,6 +1470,7 @@ export function CommandShell() {
               onRemoveProjectCalc={removeCalculation}
             />
           )}
+          {helpSheet}
           {savedEditSheet}
           {projectCalc && (
             <CommandProjectPickerSheet

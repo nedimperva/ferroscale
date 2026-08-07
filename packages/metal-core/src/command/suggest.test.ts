@@ -223,3 +223,80 @@ describe("cmdSuggest usage ranking", () => {
     expect(labels.length).toBeGreaterThan(5);
   });
 });
+
+describe("refine stage (a finished query)", () => {
+  const DONE = "hea120 6m x2 s235 ";
+
+  it("offers variations instead of a lone Save chip", () => {
+    const s = cmdSuggest(DONE, SETTINGS);
+    expect(s.hint).toBe("Refine");
+    expect(s.items.length).toBeGreaterThan(1);
+    // Save stays available, but last — the moment belongs to "what if".
+    expect(s.items[s.items.length - 1]).toMatchObject({ kind: "save" });
+    expect(s.items.filter((i) => i.kind === "refine").length).toBeGreaterThan(2);
+  });
+
+  it("suggests more pieces and other stock lengths, each with its total", () => {
+    const s = cmdSuggest(DONE, SETTINGS);
+    const qty = s.items.find((i) => i.replaceKind === "qty");
+    expect(qty).toMatchObject({ label: "× 4", ins: "x4" });
+    // 19.9 kg/m × 6 m × 4 ≈ 477 kg
+    expect(qty?.sub).toMatch(/^4\d\d kg$/);
+
+    const lengths = s.items.filter((i) => i.replaceKind === "len");
+    expect(lengths.map((i) => i.ins)).not.toContain("6m");
+    expect(lengths[0].sub).toMatch(/kg$/);
+  });
+
+  it("offers the neighbouring catalog sizes with their kg/m", () => {
+    const s = cmdSuggest(DONE, SETTINGS);
+    const sizes = s.items.filter((i) => i.replaceKind === "size");
+    expect(sizes.map((i) => i.ins)).toEqual(["hea140", "hea100"]);
+    expect(sizes[0].sub).toMatch(/kg\/m$/);
+  });
+
+  it("offers a different grade, preferring one this family actually uses", () => {
+    const plain = cmdSuggest(DONE, SETTINGS).items.find((i) => i.replaceKind === "grade");
+    expect(plain?.ins).toBeDefined();
+    expect(plain?.label).not.toBe("S235");
+
+    const usage = usageStub({ topGradeIds: (fam) => (fam === "beam" ? ["stainless-304"] : []) });
+    const learned = cmdSuggest(DONE, SETTINGS, undefined, usage).items.find(
+      (i) => i.replaceKind === "grade",
+    );
+    expect(learned).toMatchObject({ label: "304" });
+  });
+
+  it("never suggests the values the query already has", () => {
+    const s = cmdSuggest(DONE, SETTINGS);
+    expect(s.items.every((i) => i.ins !== "x2")).toBe(true);
+    expect(s.items.every((i) => i.ins !== "6m")).toBe(true);
+    expect(s.items.every((i) => i.ins !== "hea120")).toBe(true);
+  });
+
+  it("skips the length variations for sheet-like families", () => {
+    const s = cmdSuggest("plt1500x3000x3 x2 s235 ", SETTINGS);
+    expect(s.items.some((i) => i.replaceKind === "len")).toBe(false);
+    expect(s.items.some((i) => i.replaceKind === "qty")).toBe(true);
+  });
+});
+
+describe("cmdApplyInsert with refine items", () => {
+  const apply = (query: string, replaceKind: "qty" | "len" | "grade" | "size", ins: string) =>
+    cmdApplyInsert(query, { label: ins, ins, kind: "refine", replaceKind });
+
+  it("swaps the token that plays the role and leaves the rest alone", () => {
+    expect(apply("hea120 6m x2 s235 ", "qty", "x4")).toBe("hea120 6m x4 s235 ");
+    expect(apply("hea120 6m x2 s235 ", "len", "12m")).toBe("hea120 12m x2 s235 ");
+    expect(apply("hea120 6m x2 s235 ", "grade", "304")).toBe("hea120 6m x2 304 ");
+    expect(apply("hea120 6m x2 s235 ", "size", "hea140")).toBe("hea140 6m x2 s235 ");
+  });
+
+  it("appends when the query has no token of that kind yet", () => {
+    expect(apply("hea120 6m x2 ", "grade", "s355")).toBe("hea120 6m x2 s355 ");
+  });
+
+  it("keeps working regardless of token order", () => {
+    expect(apply("x2 hea120 6m ", "qty", "x5")).toBe("x5 hea120 6m ");
+  });
+});

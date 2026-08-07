@@ -42,6 +42,43 @@
     "installButton": "Instaliraj aplikaciju"
   },
   "command": {
+    "keyHints": {
+      "complete": "dopuni",
+      "insert": "ubaci",
+      "log": "zabilježi",
+      "pick": "izaberi",
+      "save": "sačuvaj",
+      "recall": "vrati",
+      "shortcuts": "prečice"
+    },
+    "help": {
+      "title": "Pregled komandi",
+      "exampleHint": "Dodirnite da isprobate ovu liniju",
+      "grammar": "Gramatika",
+      "shortcuts": "Prečice",
+      "profiles": "Profili",
+      "grades": "Kvaliteti",
+      "moreGrades": "…i još",
+      "orderNote": "Redoslijed nije bitan, a razmaci nisu obavezni — hea120 6m x2 i x2 6m hea 120 znače isto.",
+      "token": {
+        "profile": "Profil i veličina",
+        "length": "Dužina (mm, cm, m, in, ft)",
+        "quantity": "Količina",
+        "grade": "Kvalitet materijala",
+        "price": "Cijena samo za ovu liniju"
+      },
+      "shortcut": {
+        "enter": "Preuzmi prijedlog ili zabilježi gotovu liniju",
+        "tab": "Prihvati dopunu u liniji",
+        "digits": "Ubaci 1.–9. čip",
+        "history": "Krećite se kroz ranije linije",
+        "save": "Sačuvaj (ponovni pritisak uklanja)",
+        "compare": "Dodaj za poređenje",
+        "new": "Novi izračun",
+        "clear": "Očisti liniju",
+        "backspace": "Na praznoj liniji vraća zadnji čip"
+      }
+    },
     "common": {
       "project": "projekat",
       "clear": "OBRIŠI",
@@ -117,7 +154,9 @@
       "addLength": "Dodajte dužinu za izračun",
       "closeUnitPicker": "Zatvori izbor jedinice",
       "priceUnitPicker": "Jedinica cijene",
-      "lengthUnitPicker": "Jedinica dužine"
+      "lengthUnitPicker": "Jedinica dužine",
+      "backspace": "Brisanje",
+      "backspaceHold": "Zadržite da obrišete cijeli token"
     },
     "token": {
       "edit": "Uredi {token}",
@@ -212,6 +251,8 @@
       "defaultGradeUpper": "PODRAZUMIJEVANI KVALITET",
       "lengthUnitFallback": "REZERVNA JEDINICA DUŽINE",
       "languageUpper": "JEZIK",
+      "haptics": "Vibracija",
+      "hapticsUpper": "VIBRACIJA",
       "locales": {
         "en": "Engleski",
         "bs": "Bosanski"
@@ -325,7 +366,13 @@
       "pieces": "Komadi",
       "gradeOptional": "Kvalitet (opcionalno)",
       "ready": "Spremno",
-      "saveCalculation": "Sačuvaj izračun"
+      "saveCalculation": "Sačuvaj izračun",
+      "refine": "Doradi",
+      "group": {
+        "usage": "Vaše",
+        "preset": "Predlošci",
+        "standard": "Standardno"
+      }
     },
     "compare": {
       "approxBase": "≈ osnova",

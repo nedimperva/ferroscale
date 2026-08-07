@@ -135,11 +135,17 @@ export interface CommandParseIssue {
 
 export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "price" | "unknown";
 
+/**
+ * Where a suggestion came from, so the UI can group the row: the user's own
+ * habits first, then their saved presets, then the curated catalog.
+ */
+export type CommandSuggestionGroup = "usage" | "preset" | "standard";
+
 export interface CommandSuggestionItem {
   label: string;
   sub?: string;
   fam?: CommandFamily;
-  kind: "profile" | "size" | "length" | "qty" | "grade" | "save" | "recent";
+  kind: "profile" | "size" | "length" | "qty" | "grade" | "save" | "recent" | "refine";
   ins: string;
   /** Replace the trailing partial token on insert. */
   replaceLast?: boolean;
@@ -147,6 +153,14 @@ export interface CommandSuggestionItem {
   appendProfile?: boolean;
   /** Insert with a leading space if needed. */
   space?: boolean;
+  group?: CommandSuggestionGroup;
+  /**
+   * Refine only: swap the existing token of this kind for `ins` (appending
+   * when the query has none). This is what turns a finished query into a
+   * one-tap variation — "same bar, twelve metres" — instead of a retype.
+   * `size` rewrites the profile token's size suffix.
+   */
+  replaceKind?: CommandTokenKind | "size";
 }
 
 export interface CommandSuggestion {

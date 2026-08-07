@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
-import type { SharedCalcSettings } from "@/lib/settings-stores";
+import { hapticsStore, type SharedCalcSettings } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -214,6 +214,11 @@ export function CommandSettingsSheet({
 }: CommandSettingsSheetProps) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
+  const haptics = useSyncExternalStore(
+    hapticsStore.subscribe,
+    hapticsStore.getSnapshot,
+    hapticsStore.getServerSnapshot,
+  );
   const fields = buildSettingsFields({
     t,
     shared,
@@ -226,6 +231,8 @@ export function CommandSettingsSheet({
     setLocale,
     dark,
     onToggleTheme,
+    haptics,
+    onSetHaptics: hapticsStore.set,
   });
   return (
     <SheetShell title={t("sheets.settings")} onClose={onClose}>

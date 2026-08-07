@@ -19,6 +19,9 @@ import {
   formatCommandSuggestionLabel,
 } from "../command-copy";
 import { GhostField } from "../ghost-field";
+import { resolveCommandKey } from "../command-keys";
+import { CommandKeyHints } from "../command-key-hints";
+import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { PricingBadge } from "../command-atoms";
@@ -104,6 +107,7 @@ export function DeskCalcView({
   onClearTape,
   onSave,
   currentSaved,
+  onOpenHelp,
   onLogSession,
   onCopySummary,
   onShareLink,
@@ -221,82 +225,82 @@ export function DeskCalcView({
               setQuery(chipPrefix + e.target.value);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                if (p.valid) {
-                  e.preventDefault();
-                  onLogSession();
+              const action = resolveCommandKey({
+                key: e.key,
+                code: e.code,
+                metaKey: e.metaKey,
+                ctrlKey: e.ctrlKey,
+                altKey: e.altKey,
+                shiftKey: e.shiftKey,
+                partial,
+                hasGhost: !!ghost,
+                valid: p.valid,
+                caretAtEnd:
+                  e.currentTarget.selectionStart === e.currentTarget.value.length,
+                caretAtStart: e.currentTarget.selectionStart === 0,
+                caretCollapsed:
+                  e.currentTarget.selectionStart === e.currentTarget.selectionEnd,
+                suggestionCount: sug.items.length,
+                chipCount: chipTokens.length,
+                historyLength: sessionTape.length,
+                browsingHistory: historyIdxRef.current >= 0,
+              });
+              if (!action) return;
+              e.preventDefault();
+              switch (action.type) {
+                case "advance": {
+                  // One rule: take what's pending, else log the finished line.
+                  const pending = sug.items.find((it) => it.kind !== "save");
+                  if (!p.valid && pending) {
+                    onSuggest(pending);
+                  } else if (p.valid) {
+                    onLogSession();
+                  }
                   return;
                 }
-                // Mid-query: insert the first matching suggestion chip
-                // (skip the "Save calculation" chip in the Ready stage).
-                const first = sug.items.find((it) => it.kind !== "save");
-                if (first) {
-                  e.preventDefault();
-                  onSuggest(first);
+                case "acceptGhost":
+                  onSuggest(sug.items[0]);
+                  return;
+                case "insertSuggestion":
+                  onSuggest(sug.items[action.index]);
+                  focusInputAtEnd();
+                  return;
+                case "save":
+                  onSave();
+                  return;
+                case "compare":
+                  onCompareCurrent();
+                  return;
+                case "help":
+                  onOpenHelp();
+                  return;
+                case "clear":
+                  onNew();
+                  return;
+                case "historyPrev": {
+                  if (historyIdxRef.current === -1) draftRef.current = query;
+                  historyIdxRef.current = Math.min(
+                    historyIdxRef.current + 1,
+                    sessionTape.length - 1,
+                  );
+                  setQuery(sessionTape[historyIdxRef.current] + " ");
+                  focusInputAtEnd();
+                  return;
                 }
-                return;
-              }
-              // Accept the ghost completion (Tab, or → at the caret's end).
-              if (e.key === "Tab" && ghost) {
-                e.preventDefault();
-                onSuggest(sug.items[0]);
-                return;
-              }
-              if (
-                e.key === "ArrowRight" &&
-                ghost &&
-                e.currentTarget.selectionStart === e.currentTarget.value.length &&
-                e.currentTarget.selectionStart === e.currentTarget.selectionEnd
-              ) {
-                e.preventDefault();
-                onSuggest(sug.items[0]);
-                return;
-              }
-              if (e.key === "Escape") {
-                e.preventDefault();
-                onNew();
-                return;
-              }
-              // ↑ recalls older tape entries; ↓ walks back toward the draft.
-              if (e.key === "ArrowUp" && sessionTape.length > 0) {
-                e.preventDefault();
-                if (historyIdxRef.current === -1) draftRef.current = query;
-                historyIdxRef.current = Math.min(
-                  historyIdxRef.current + 1,
-                  sessionTape.length - 1,
-                );
-                setQuery(sessionTape[historyIdxRef.current] + " ");
-                focusInputAtEnd();
-                return;
-              }
-              if (e.key === "ArrowDown") {
-                if (historyIdxRef.current >= 0) {
-                  e.preventDefault();
+                case "historyNext": {
                   const nextIdx = historyIdxRef.current - 1;
                   historyIdxRef.current = nextIdx;
                   setQuery(nextIdx < 0 ? draftRef.current : sessionTape[nextIdx] + " ");
                   focusInputAtEnd();
                   return;
                 }
-                // Not browsing history → open chip navigation.
-                if (sug.items.length > 0) {
-                  e.preventDefault();
+                case "focusChips":
                   firstSuggestionRef.current?.focus();
-                }
-                return;
-              }
-              // Empty partial + backspace pulls the last chip back into
-              // the input for editing.
-              if (
-                e.key === "Backspace" &&
-                partial === "" &&
-                chipTokens.length > 0 &&
-                e.currentTarget.selectionStart === 0
-              ) {
-                e.preventDefault();
-                setQuery(chipTokens.join(" "));
-                focusInputAtEnd();
-                return;
+                  return;
+                case "editLastChip":
+                  setQuery(chipTokens.join(" "));
+                  focusInputAtEnd();
+                  return;
               }
             }}
             autoFocus
@@ -326,14 +330,35 @@ export function DeskCalcView({
 
         {/* SUGGESTIONS */}
         <div className="mt-3">
-          <div
-            className="text-[10px] font-bold text-muted mb-2 uppercase"
-            style={{ letterSpacing: 1.2 }}
-          >
-            {formatCommandHint(t, sug.hint)}
+          <div className="flex items-center gap-3 flex-wrap mb-2">
+            <div
+              className="text-[10px] font-bold text-muted uppercase"
+              style={{ letterSpacing: 1.2 }}
+            >
+              {formatCommandHint(t, sug.hint)}
+            </div>
+            <span className="ml-auto">
+              <CommandKeyHints
+                valid={p.valid}
+                hasGhost={!!ghost}
+                suggestionCount={sug.items.length}
+                historyLength={sessionTape.length}
+                onOpenHelp={onOpenHelp}
+              />
+            </span>
           </div>
-          <div className="flex gap-[7px] flex-wrap">
-            {sug.items.map((it, i) => (
+          <div className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
+            {groupedSuggestions(sug.items).map((group) => (
+              <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
+                {group.group && (
+                  <span
+                    className="text-[9.5px] font-bold text-muted-faint uppercase"
+                    style={{ letterSpacing: 1 }}
+                  >
+                    {t(`suggest.group.${group.group}`)}
+                  </span>
+                )}
+                {group.items.map(({ item: it, index: i }) => (
               <button
                 key={i}
                 ref={i === 0 ? firstSuggestionRef : undefined}
@@ -394,7 +419,20 @@ export function DeskCalcView({
                     <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
                   )}
                 </span>
+                {/* The ⌥-digit that picks this chip, so the shortcut is
+                    learnable by looking rather than by being told. */}
+                {i < 9 && it.kind !== "save" && (
+                  <span
+                    className="font-mono text-[9.5px] font-bold"
+                    style={{ color: "var(--muted-faint)" }}
+                    aria-hidden="true"
+                  >
+                    {i + 1}
+                  </span>
+                )}
               </button>
+                ))}
+              </div>
             ))}
           </div>
         </div>

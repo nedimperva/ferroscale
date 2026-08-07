@@ -53,6 +53,8 @@ export interface CommandDesktopProps {
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
   /** True when the line in the bar is already bookmarked (Save is a toggle). */
   currentSaved: boolean;
+  /** Open the grammar + shortcuts cheat sheet (the `?` key). */
+  onOpenHelp: () => void;
   onLoadSaved: (entry: SavedEntry) => void;
   onRemoveSaved: (entry: SavedEntry) => void;
   onRemoveSavedMany: (entries: SavedEntry[]) => void;
