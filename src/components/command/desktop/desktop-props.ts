@@ -1,4 +1,5 @@
 import type {
+  CommandLine,
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestion,
@@ -19,7 +20,10 @@ export interface CommandDesktopProps {
   onToggleTheme: () => void;
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
+  /** The item under the caret — everything acts on this. */
   p: CommandParseResult;
+  /** The whole `+`-joined line; identical to `[p]` when there is one item. */
+  line: CommandLine;
   sug: CommandSuggestion;
   sym: string;
   mode: "weight" | "price";

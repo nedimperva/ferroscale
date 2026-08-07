@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.14.0] - 2026-08-07
+
+### Added
+
+- **Multi-item lines.** `hea120 6m x2 + ipe200 4m x3` is now one line holding two calculations. The grammar itself does not change — each `+`-joined segment is parsed by the ordinary parser, so order tolerance, glue splitting, per-item grades, per-item `@` rates and per-item `=` targets all work per item for free, and a one-item line is byte-for-byte what it always was. `+` is safe as the separator because nothing else in the grammar uses it: sizes join with `x`, rates with `@`, targets with `=`
+- The hero shows the **line total**, and the equation line is replaced by one row per item — what each is, what each weighs, what each costs — because a sum with no breakdown is a number you cannot check
+- Chips are grouped per item with the separator drawn between the groups. **Every edit is scoped to its own item**: removing a token from the first item cannot reflow the second, and pulling a token back for editing cannot teleport it across a `+` into a different calculation
+- **Saving a multi-item line makes one assembly**, one part per item, instead of separate entries — the saved model already held parts, this is what fills them. Save stays a toggle for single lines only; an assembly is a new object each time
+- **Logging drops one tape line per item**, so a multi-item line still adds up on the tape and still becomes a project
+- A `+ item` chip in the refine row starts the second item, and the grammar reference lists the separator alongside the other tokens
+
+---
+
 ## [3.13.0] - 2026-08-07
 
 ### Changed

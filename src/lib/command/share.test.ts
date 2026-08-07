@@ -32,6 +32,18 @@ describe("readSharedQuery", () => {
   });
 });
 
+describe("multi-item share links", () => {
+  it("survives the round trip with its separators intact", () => {
+    // `+` means a space in a query string, so a literal one has to be escaped.
+    // URLSearchParams does that on the way out and undoes it on the way in —
+    // this is the test that keeps a multi-item link from arriving as one item.
+    const query = "hea120 6m x2 + ipe200 4m x3";
+    const url = buildShareUrl(query, LOC);
+    expect(url).toContain("%2B");
+    expect(readSharedQuery(url.slice(url.indexOf("?")))).toBe(query);
+  });
+});
+
 describe("buildShareUrl", () => {
   it("encodes the query on the current pathname (locale preserved)", () => {
     expect(buildShareUrl("hea120 6m x2 s235", LOC)).toBe(

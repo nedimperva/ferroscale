@@ -37,6 +37,34 @@ test.describe("Command bar", () => {
     await expect(page.getByText(/over/).first()).toBeVisible();
   });
 
+  test("a + joins two items, sums them, and lists both", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // Both items are chipped, either side of the separator.
+    await expect(page.getByText("hea120", { exact: true })).toBeVisible();
+    await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
+
+    // The item list replaces the single-item equation line...
+    const items = page.getByRole("list", { name: "Line items" });
+    await expect(items.getByRole("listitem")).toHaveCount(2);
+
+    // ...and the hero is the sum of the two, not either one alone.
+    const hero = page.locator(".fs-display-num").first();
+    await expect(hero).not.toHaveText("—");
+    const total = Number((await hero.innerText()).replace(/[^0-9.]/g, ""));
+    expect(total).toBeGreaterThan(300);
+  });
+
+  test("editing one item leaves the other alone", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
+    // Removing the second item's quantity must not touch the first item's.
+    await page.getByRole("button", { name: "Remove x3" }).click();
+    await expect(page.getByText("x2", { exact: true })).toBeVisible();
+    await expect(page.getByText("x3", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("hea120", { exact: true })).toBeVisible();
+    await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
+  });
+
   test("an unrecognized token shows a parse issue", async ({ page }) => {
     await page.goto("/en");
     const input = page.getByLabel("FerroScale Command query");

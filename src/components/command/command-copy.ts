@@ -114,6 +114,7 @@ export function formatCommandSuggestionLabel(
   item: CommandSuggestionItem,
 ): string {
   if (item.kind === "save") return t("suggest.saveCalculation");
+  if (item.kind === "item") return t("suggest.addItem");
   if (item.kind === "profile") return formatProfileLabel(t, item.label);
   return item.label;
 }

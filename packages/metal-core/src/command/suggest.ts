@@ -453,6 +453,9 @@ export function cmdSuggest(
     hint: "Refine",
     items: [
       ...refineSuggestions(p, settings, usage),
+      // Sentinels the host acts on rather than inserting: starting a second
+      // item is a line-level edit, and saving isn't an edit at all.
+      { label: "+ item", ins: "__additem", kind: "item" },
       { label: "Save calculation", ins: "__save", kind: "save" },
     ],
   };
@@ -461,7 +464,8 @@ export function cmdSuggest(
 const QTY_TOKEN_RE = /^x\d+$/;
 
 export function cmdApplyInsert(query: string, item: CommandSuggestionItem): string {
-  if (item.kind === "save") return query;
+  // Host-handled sentinels never rewrite the text themselves.
+  if (item.kind === "save" || item.kind === "item") return query;
   // Refine: swap the token that plays this role, keeping every other token
   // where it is. Appends when the query doesn't have one yet (a grade, say).
   if (item.replaceKind) {

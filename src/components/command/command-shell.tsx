@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -12,7 +12,12 @@ import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
-import { cmdSuggest, cmdApplyInsert } from "@ferroscale/metal-core";
+import {
+  cmdSuggest,
+  cmdApplyInsert,
+  cmdAppendLineItem,
+  cmdParseLine,
+} from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
@@ -40,6 +45,14 @@ import {
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
+import { LineItems } from "./line-items";
+import {
+  activeItemText,
+  applyToActiveItem,
+  editLineToken,
+  lineChips,
+  removeLineToken,
+} from "./line-edit";
 import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
@@ -208,11 +221,17 @@ export function CommandShell() {
     return () => window.removeEventListener("resize", fit);
   }, []);
 
-  const p: CommandParseResult = useMemo(
-    () => cmdParse(query, parserSettings),
+  // A line can hold several `+`-joined items. `p` is the one being typed —
+  // every existing behaviour (chips, suggestions, save, compare) acts on it,
+  // and a one-item line is exactly what it always was.
+  const line = useMemo(
+    () => cmdParseLine(query, parserSettings),
     [query, parserSettings],
   );
+  const p: CommandParseResult = line.items[line.activeIndex].parse;
   const targetNote = commandTargetNote(p);
+  /** The item under the caret, as the suggestion engine should see it. */
+  const activeQuery = useMemo(() => activeItemText(query), [query]);
 
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
@@ -258,8 +277,8 @@ export function CommandShell() {
   // `p` is handed over so the suggestion engine doesn't parse the same query
   // a second time on every keystroke.
   const sug = useMemo(
-    () => cmdSuggest(query, parserSettings, presetsForProfile, usageSource, p),
-    [query, parserSettings, presetsForProfile, usageSource, p],
+    () => cmdSuggest(activeQuery, parserSettings, presetsForProfile, usageSource, p),
+    [activeQuery, parserSettings, presetsForProfile, usageSource, p],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
@@ -396,7 +415,10 @@ export function CommandShell() {
       showToast(t("toast.addLength"));
       return;
     }
-    const existing = getSavedEntry(p.calc.result);
+    // Save is a toggle for a single line. A multi-item line is a new object
+    // every time — matching it against one of its own parts would un-save that
+    // part instead of saving the assembly.
+    const existing = line.multi ? null : getSavedEntry(p.calc.result);
     if (existing) {
       removeSavedEntry(existing);
       return;
@@ -404,21 +426,41 @@ export function CommandShell() {
     // The name is just the spec — the card renders length/qty/grade itself, so
     // repeating them in the title only bought truncation. Rename to override.
     const autoName = formatCommandParseName(t, p) ?? p.name ?? p.calc.result.profileLabel;
-    const entry = saveCalculation(p.calc.input, p.calc.result, autoName);
+    // A line of several items is an assembly — a gate frame, a railing bay —
+    // so it saves as one entry with a part per item, which is exactly what the
+    // saved model already holds.
+    const parts = line.multi
+      ? line.items
+          .map((item) => item.parse)
+          .filter((parse) => parse.calc)
+          .map((parse) => ({
+            name: formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
+            input: parse.calc!.input,
+            result: parse.calc!.result,
+          }))
+      : undefined;
+    const entry = saveCalculation(
+      p.calc.input,
+      p.calc.result,
+      line.multi ? t("saved.assemblyName", { count: line.items.length }) : autoName,
+      undefined,
+      undefined,
+      parts,
+    );
     haptic("commit");
-    pushHistory(query);
+    for (const item of line.items) pushHistory(item.text.trim());
     showActionToast(t("toast.saved"), {
       label: t("common.nameIt"),
       onAction: () => setEditingSavedId(entry.id),
     });
   }, [
     p,
+    line,
     getSavedEntry,
     removeSavedEntry,
     saveCalculation,
     showToast,
     showActionToast,
-    query,
     t,
     pushHistory,
   ]);
@@ -470,15 +512,21 @@ export function CommandShell() {
   // Enter only logs the line onto the session tape — bookmarking into the
   // Saved library is the explicit Save action (doSave) alone.
   const logToSession = useCallback(() => {
-    if (!p.valid) {
+    if (!line.valid) {
       haptic("warn");
       showToast(t("toast.addLength"));
       return;
     }
     haptic("commit");
-    pushHistory(query);
-    showToast(t("toast.addedToSession"));
-  }, [p.valid, query, pushHistory, showToast, t]);
+    // The tape is a list of calculations, so a line of several lands as
+    // several — that is what makes it add up and become a project.
+    for (const item of line.items) pushHistory(item.text.trim());
+    showToast(
+      line.multi
+        ? t("toast.addedItemsToSession", { count: line.items.length })
+        : t("toast.addedToSession"),
+    );
+  }, [line, pushHistory, showToast, t]);
 
   const loadInput = useCallback(
     (input: CalculationInput) => {
@@ -587,7 +635,11 @@ export function CommandShell() {
         doSave();
         return;
       }
-      setQuery((q) => cmdApplyInsert(q, item));
+      if (item.kind === "item") {
+        setQuery((q) => cmdAppendLineItem(q));
+        return;
+      }
+      setQuery((q) => applyToActiveItem(q, (text) => cmdApplyInsert(text, item)));
     },
     [doSave],
   );
@@ -615,12 +667,14 @@ export function CommandShell() {
   }, []);
   /** Hold-backspace: drop the last whole token (`40x40x3` in one gesture). */
   const onBackToken = useCallback(() => {
-    setQuery((q) => {
-      const tokens = cmdTokenize(q);
-      if (tokens.length === 0) return "";
-      const rest = tokens.slice(0, -1);
-      return rest.length ? `${rest.join(" ")} ` : "";
-    });
+    setQuery((q) =>
+      applyToActiveItem(q, (text) => {
+        const tokens = cmdTokenize(text);
+        if (tokens.length === 0) return "";
+        const rest = tokens.slice(0, -1);
+        return rest.length ? `${rest.join(" ")} ` : "";
+      }),
+    );
   }, []);
   const onEnter = useCallback(() => {
     logToSession();
@@ -650,7 +704,11 @@ export function CommandShell() {
   // target's display unit (kg or t) so the tween never crosses a unit boundary;
   // the unit/symbol beside it stays driven by the real value. Weight always
   // counts up in exact kilograms (no tonne conversion).
-  const heroTarget = isW ? p.totalKg ?? null : p.totalAmount ?? null;
+  // A multi-item line's hero is the line, not the item under the caret — the
+  // sum is the number the user came for.
+  const heroTarget = line.multi
+    ? (isW ? line.totalKg : line.totalAmount) ?? null
+    : (isW ? p.totalKg : p.totalAmount) ?? null;
   const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
   const heroVal =
     heroAnim == null
@@ -673,30 +731,24 @@ export function CommandShell() {
 
   // Tokens come from the same tokenizer the parser uses, so glued input
   // ("hea1006m") displays as the pieces it is parsed as.
-  const queryTokens = useMemo(() => cmdTokenize(query), [query]);
-  // While the query doesn't end in whitespace the last piece is still being
-  // typed — the phone view renders it as plain text at the cursor, not a chip.
-  const partialToken = !/\s$/.test(query) && queryTokens.length > 0
-    ? queryTokens[queryTokens.length - 1]
-    : null;
-  const chipTokens = partialToken ? queryTokens.slice(0, -1) : queryTokens;
+  // Chips are grouped by item, so a `+`-joined line renders as the two (or
+  // more) calculations it is. While the query doesn't end in whitespace the
+  // last piece is still being typed — rendered as plain text at the cursor.
+  const chips = useMemo(() => lineChips(query), [query]);
+  const partialToken = chips.partial || null;
+  const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   // Faint completion drawn after the caret (profile letters / recent prefix).
   const ghost = computeGhost(partialToken ?? "", sug);
   const acceptGhost = () => {
     if (ghost && sug.items[0]) onSuggest(sug.items[0]);
   };
-  const removeTokenAt = (idx: number) => {
-    const rest = queryTokens.filter((_, i) => i !== idx);
-    // Preserve a trailing space so the remaining tokens stay chips and an
-    // in-progress partial stays a partial.
-    const trailing = rest.length > 0 && /\s$/.test(query) ? " " : "";
-    setQuery(rest.join(" ") + trailing);
+  const removeTokenAt = (item: number, idx: number) => {
+    setQuery(removeLineToken(query, item, idx));
   };
-  // Pull a token back to the end of the query as the editable trailing
-  // partial (parser is order-tolerant, so reordering is safe).
-  const editTokenAt = (idx: number) => {
-    const others = queryTokens.filter((_, i) => i !== idx);
-    setQuery(others.join(" ") + (others.length ? " " : "") + queryTokens[idx]);
+  // Pull a token back to the end of its own item as the editable partial (the
+  // parser is order-tolerant within an item, so the reordering is free).
+  const editTokenAt = (item: number, idx: number) => {
+    setQuery(editLineToken(query, item, idx));
   };
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
@@ -752,6 +804,7 @@ export function CommandShell() {
           query={query}
           setQuery={setQuery}
           p={p}
+          line={line}
           sug={sug}
           sym={sym}
           mode={mode}
@@ -954,7 +1007,9 @@ export function CommandShell() {
             </button>
 
             <div className="flex items-center gap-2.5 mt-3 pb-3.5 border-b border-border-faint">
-              {p.valid && p.kgm != null ? (
+              {line.multi ? (
+                <LineItems line={line} compact />
+              ) : p.valid && p.kgm != null ? (
                 <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
                   <span>
                     <span className="text-foreground-secondary">
@@ -1188,19 +1243,32 @@ export function CommandShell() {
                 >
                   ›
                 </span>
-                {queryTokens.length === 0 && (
+                {chipCount === 0 && !partialToken && (
                   <span className="font-mono text-sm text-muted-faint">
                     {t("query.placeholder")}
                   </span>
                 )}
-                {chipTokens.map((tok, i) => (
-                  <TokenChip
-                    key={`${tok}-${i}`}
-                    tok={tok}
-                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                    onEdit={() => editTokenAt(i)}
-                    onRemove={() => removeTokenAt(i)}
-                  />
+                {chips.groups.map((group) => (
+                  <Fragment key={group.item}>
+                    {group.item > 0 && (
+                      <span
+                        className="font-mono text-sm font-bold px-0.5"
+                        style={{ color: "var(--muted-faint)" }}
+                        aria-hidden="true"
+                      >
+                        +
+                      </span>
+                    )}
+                    {group.tokens.map((tok, i) => (
+                      <TokenChip
+                        key={`${tok}-${i}`}
+                        tok={tok}
+                        kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                        onEdit={() => editTokenAt(group.item, i)}
+                        onRemove={() => removeTokenAt(group.item, i)}
+                      />
+                    ))}
+                  </Fragment>
                 ))}
                 {partialToken && (
                   <span className="font-mono text-sm font-semibold text-foreground">

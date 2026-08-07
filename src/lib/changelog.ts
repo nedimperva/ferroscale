@@ -17,6 +17,18 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.14.0",
+    date: "2026-08-07",
+    added: [
+      "One line, several items. Type hea120 6m x2 + ipe200 4m x3 and the bar prices both: each item is listed with its own weight and price, and the big number is the sum. Every item keeps its own grade, rate and target — the grammar is just repeated after the plus",
+      "A multi-item line saves as one assembly rather than as separate entries, and logging it drops one line per item onto the session tape, so it still adds up and can still become a project",
+    ],
+    added_bs: [
+      "Jedna linija, više stavki. Ukucajte hea120 6m x2 + ipe200 4m x3 i traka računa obje: svaka stavka je izlistana sa vlastitom masom i cijenom, a veliki broj je zbir. Svaka stavka zadržava vlastiti kvalitet, cijenu i cilj — gramatika se samo ponavlja iza plusa",
+      "Linija sa više stavki se čuva kao jedan sklop, a ne kao odvojene stavke, a upisivanje u sesiju dodaje po jednu liniju za svaku stavku, pa se i dalje sabira i i dalje može postati projekat",
+    ],
+  },
+  {
     version: "3.13.0",
     date: "2026-08-07",
     changed: [

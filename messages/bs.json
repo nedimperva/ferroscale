@@ -84,7 +84,8 @@
         "quantity": "Količina",
         "grade": "Kvalitet materijala",
         "price": "Cijena samo za ovu liniju",
-        "target": "Obrnuti račun: koliko čini 500 kg (ili =250eur)"
+        "target": "Obrnuti račun: koliko čini 500 kg (ili =250eur)",
+        "item": "Još jedna stavka u istoj liniji"
       },
       "shortcut": {
         "enter": "Preuzmi prijedlog ili zabilježi gotovu liniju",
@@ -146,7 +147,8 @@
       "sessionEmpty": "Na traci sesije još nema ničega",
       "sessionSaved": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano u {project}",
       "sessionProjectName": "Sesija {date}",
-      "partAdded": "Dodano kao dio sklopa {name}"
+      "partAdded": "Dodano kao dio sklopa {name}",
+      "addedItemsToSession": "{count} stavki dodano u sesiju"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -213,6 +215,9 @@
       "solvedQty": "komada za {target}",
       "solvedLength": "dužina za {target}",
       "over": "{over} više"
+    },
+    "line": {
+      "items": "Stavke linije"
     },
     "hint": {
       "addLength": "dodajte dužinu ->",
@@ -404,7 +409,8 @@
         "usage": "Vaše",
         "preset": "Predlošci",
         "standard": "Standardno"
-      }
+      },
+      "addItem": "+ stavka"
     },
     "compare": {
       "approxBase": "≈ osnova",
@@ -470,7 +476,8 @@
       "fieldTags": "Oznake",
       "notesPlaceholder": "Za šta je ovo?",
       "tagsPlaceholder": "kapija, radionica, hitno",
-      "tagsHint": "Odvojeno zarezom, najviše {max}."
+      "tagsHint": "Odvojeno zarezom, najviše {max}.",
+      "assemblyName": "Sklop ({count} dijelova)"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",

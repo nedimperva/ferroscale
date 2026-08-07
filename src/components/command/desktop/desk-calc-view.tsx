@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
+import { cmdParse, cmdClassifyToken } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { CommandParseResult } from "@ferroscale/metal-core";
@@ -26,6 +26,14 @@ import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
+import { LineItems } from "../line-items";
+import {
+  editLineToken,
+  lineChipPrefix,
+  lineChips,
+  pullLastChip,
+  removeLineToken,
+} from "../line-edit";
 import { marginPercentStore } from "@/lib/settings-stores";
 
 type DeskCalcViewProps = CommandDesktopProps & {
@@ -100,6 +108,7 @@ export function DeskCalcView({
   query,
   setQuery,
   p,
+  line,
   sug,
   sym,
   mode,
@@ -130,13 +139,12 @@ export function DeskCalcView({
   const historyIdxRef = useRef(-1);
   const draftRef = useRef("");
 
-  const queryTokens = useMemo(() => cmdTokenize(query), [query]);
-  // The trailing piece (no whitespace after it) is still being typed — it
-  // lives in the real input; the completed tokens render as chips before it.
-  const hasPartial = !/\s$/.test(query) && queryTokens.length > 0;
-  const chipTokens = hasPartial ? queryTokens.slice(0, -1) : queryTokens;
-  const partial = hasPartial ? queryTokens[queryTokens.length - 1] : "";
-  const chipPrefix = chipTokens.length > 0 ? chipTokens.join(" ") + " " : "";
+  // Chips are grouped per `+`-joined item; the trailing piece (no whitespace
+  // after it) is still being typed and lives in the real input.
+  const chips = useMemo(() => lineChips(query), [query]);
+  const partial = chips.partial;
+  const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
+  const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
 
@@ -149,23 +157,24 @@ export function DeskCalcView({
     });
   }, [inputRef]);
 
-  const removeTokenAt = (idx: number) => {
-    const rest = queryTokens.filter((_, i) => i !== idx);
-    const trailing = rest.length > 0 && /\s$/.test(query) ? " " : "";
-    setQuery(rest.join(" ") + trailing);
+  const removeTokenAt = (item: number, idx: number) => {
+    setQuery(removeLineToken(query, item, idx));
     focusInputAtEnd();
   };
-  // Pull a token back to the end of the query as the editable trailing
-  // partial (parser is order-tolerant, so reordering is safe).
-  const editTokenAt = (idx: number) => {
-    const others = queryTokens.filter((_, i) => i !== idx);
-    setQuery(others.join(" ") + (others.length ? " " : "") + queryTokens[idx]);
+  // Pull a token back to the end of its own item as the editable trailing
+  // partial (the parser is order-tolerant within an item, so this is free).
+  const editTokenAt = (item: number, idx: number) => {
+    setQuery(editLineToken(query, item, idx));
     focusInputAtEnd();
   };
 
   // Hero metric counts up when the query settles (see useCountUp). Weight
   // always counts up in exact kilograms (no tonne conversion).
-  const heroTarget = isW ? p.totalKg ?? null : p.totalAmount ?? null;
+  // A multi-item line's hero is the line, not the item under the caret — the
+  // sum is the number the user came for.
+  const heroTarget = line.multi
+    ? (isW ? line.totalKg : line.totalAmount) ?? null
+    : (isW ? p.totalKg : p.totalAmount) ?? null;
   const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
   const heroVal =
     heroAnim == null
@@ -211,14 +220,27 @@ export function DeskCalcView({
           >
             ›
           </span>
-          {chipTokens.map((tok, i) => (
-            <DeskTokenChip
-              key={`${tok}-${i}`}
-              tok={tok}
-              kindClass={KIND_BG[cmdClassifyToken(tok)]}
-              onEdit={() => editTokenAt(i)}
-              onRemove={() => removeTokenAt(i)}
-            />
+          {chips.groups.map((group) => (
+            <Fragment key={group.item}>
+              {group.item > 0 && (
+                <span
+                  className="font-mono text-[17px] font-bold px-0.5"
+                  style={{ color: "var(--muted-faint)" }}
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              )}
+              {group.tokens.map((tok, i) => (
+                <DeskTokenChip
+                  key={`${tok}-${i}`}
+                  tok={tok}
+                  kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                  onEdit={() => editTokenAt(group.item, i)}
+                  onRemove={() => removeTokenAt(group.item, i)}
+                />
+              ))}
+            </Fragment>
           ))}
           <GhostField
             ref={inputRef}
@@ -246,7 +268,7 @@ export function DeskCalcView({
                 caretCollapsed:
                   e.currentTarget.selectionStart === e.currentTarget.selectionEnd,
                 suggestionCount: sug.items.length,
-                chipCount: chipTokens.length,
+                chipCount,
                 historyLength: sessionTape.length,
                 browsingHistory: historyIdxRef.current >= 0,
               });
@@ -303,7 +325,7 @@ export function DeskCalcView({
                   firstSuggestionRef.current?.focus();
                   return;
                 case "editLastChip":
-                  setQuery(chipTokens.join(" "));
+                  setQuery(pullLastChip(query));
                   focusInputAtEnd();
                   return;
               }
@@ -312,7 +334,7 @@ export function DeskCalcView({
             autoCapitalize="off"
             autoComplete="off"
             spellCheck={false}
-            placeholder={queryTokens.length === 0 ? t("query.placeholderExample") : ""}
+            placeholder={chipCount === 0 && !partial ? t("query.placeholderExample") : ""}
             aria-label={t("query.aria")}
             wrapperClassName="flex-1 min-w-[120px]"
             inputClassName="bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint"
@@ -528,7 +550,9 @@ export function DeskCalcView({
               </div>
               {/* descriptive / issue / hint line */}
               <div className="mt-[18px] min-h-[20px]">
-                {p.valid && p.kgm != null ? (
+                {line.multi ? (
+                  <LineItems line={line} />
+                ) : p.valid && p.kgm != null ? (
                   <span className="font-mono text-[14px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
                       <span className="text-foreground-secondary">{p.kgm.toFixed(2)}</span> kg/m ×{" "}

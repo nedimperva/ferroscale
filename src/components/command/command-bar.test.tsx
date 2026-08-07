@@ -218,3 +218,50 @@ describe("target queries in the bar", () => {
     expect(h.queryAllByText(/pieces for/)).toHaveLength(0);
   });
 });
+
+describe("multi-item lines", () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("the refine bar offers a second item, and typing continues into it", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    // The refine chips only appear once every stage is filled — profile, size,
+    // length, quantity, grade.
+    await h.user.type(h.input(), "hea120 6m x2 s355 ");
+
+    const addItem = await h.findByRole("button", { name: /\+ item/ });
+    await h.user.click(addItem);
+    // The separator is decoration between chip groups, not a chip of its own,
+    // so the proof it landed is that what follows parses as a second item.
+    await h.user.type(h.input(), "ipe200 4m ");
+    await waitFor(() => {
+      expect(h.getAllByRole("listitem").length).toBeGreaterThanOrEqual(2);
+    });
+    // Both items are chipped and neither has swallowed the other's tokens.
+    expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
+    expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
+  });
+
+  it("saves a multi-item line as one assembly, not two entries", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "hea120 6m x2 + ipe200 4m x3 ");
+
+    await h.user.keyboard("{Control>}s{/Control}");
+    // One entry, not one per item — the tab count is the assertion that matters.
+    const savedTab = await h.findByRole("button", { name: /^Saved\s*1$/ });
+    await h.user.click(savedTab);
+    await waitFor(() => {
+      expect(h.getAllByText(/Assembly \(2 parts\)/).length).toBeGreaterThan(0);
+    });
+  });
+});

@@ -178,7 +178,17 @@ export interface CommandSuggestionItem {
   label: string;
   sub?: string;
   fam?: CommandFamily;
-  kind: "profile" | "size" | "length" | "qty" | "grade" | "save" | "recent" | "refine";
+  kind:
+    | "profile"
+    | "size"
+    | "length"
+    | "qty"
+    | "grade"
+    | "save"
+    | "recent"
+    | "refine"
+    /** Start a second `+`-joined item on the line. */
+    | "item";
   ins: string;
   /** Replace the trailing partial token on insert. */
   replaceLast?: boolean;
