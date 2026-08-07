@@ -7,6 +7,8 @@ import type {
   PriceBasis,
   PriceUnit,
 } from "../calculator/types";
+import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./arith";
+import type { LengthExpression } from "./arith";
 import { getProfileById } from "../datasets/profiles";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
@@ -34,6 +36,8 @@ import type {
 const LENGTH_RE = /^(\d+(?:\.\d+)?)(mm|cm|m|in|ft)$/;
 const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
 const QTY_RE = /^[x×*](\d+)$/;
+/** Arithmetic that starts with a quantity marker is a quantity, not a length. */
+const QTY_EXPR_LEAD = /^[x×*]/;
 const PRICE_RE = /^@?(\d+(?:[.,]\d+)?)\/(kg|lb|m|ft|pc|pcs|piece)$/;
 const PRICE_VALUE_ONLY_RE = /^@(\d+(?:[.,]\d+)?)$/;
 /**
@@ -566,6 +570,7 @@ function splitGluedToken(token: string): string[] {
   const lower = token.toLowerCase();
   // Already a single recognized token — keep whole.
   if (
+    isArithmeticToken(lower) ||
     LENGTH_RE.test(lower) ||
     QTY_RE.test(lower) ||
     parsePriceToken(lower) ||
@@ -810,6 +815,33 @@ export function cmdParse(
     const price = parsePriceToken(tk);
     if (price) {
       pricingOverride = { ...(pricingOverride ?? {}), ...price };
+      continue;
+    }
+    // Arithmetic first: `6m-50mm` would otherwise fall through to the
+    // unknown-token branch, and `6m` alone still matches the plain form below.
+    const expr: LengthExpression | null =
+      lengthM == null ? parseLengthExpression(tk, settings.defaultLengthUnit) : null;
+    if (expr) {
+      lengthUnit = expr.unit;
+      lengthM = expr.mm / 1000;
+      lengthRaw = fromMillimeters(expr.mm, expr.unit);
+      lengthExplicit = expr.explicit;
+      continue;
+    }
+    const qtyExpr: number | null = qty == null ? parseQtyExpression(tk) : null;
+    if (qtyExpr != null) {
+      qty = qtyExpr;
+      continue;
+    }
+    // Arithmetic shaped but not evaluable — `50mm-6m` cuts away more than
+    // there is, `x2-2` orders nothing. Say so rather than ignoring the token
+    // and quietly pricing the line as if it had never been typed.
+    if (isArithmeticToken(tk) && committed) {
+      issues.push({
+        code: "invalidExpression",
+        token: tk,
+        message: `"${tk}" doesn't come to a usable amount.`,
+      });
       continue;
     }
     const lm = tk.match(LENGTH_RE);
@@ -1076,6 +1108,9 @@ export function cmdParse(
 export function cmdClassifyToken(tok: string): CommandTokenKind {
   const x = tok.toLowerCase();
   if (TARGET_RE.test(x)) return "target";
+  // `6m-50mm` reads as a length, `x2+3` as a quantity — the arithmetic is a
+  // way of writing the value, not a different kind of thing.
+  if (isArithmeticToken(x)) return QTY_EXPR_LEAD.test(x) ? "qty" : "len";
   if (new RegExp(`^(${COMMAND_ALIAS_RE})`).test(x)) return "profile";
   if (QTY_RE.test(x)) return "qty";
   if (parsePriceToken(x)) return "price";

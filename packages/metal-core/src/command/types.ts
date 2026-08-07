@@ -118,6 +118,7 @@ export type CommandParseIssueCode =
   | "unknownToken"
   | "unknownSize"
   | "invalidQty"
+  | "invalidExpression"
   | "invalidGeometry";
 
 /**

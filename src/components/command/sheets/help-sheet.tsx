@@ -32,6 +32,7 @@ const GRAMMAR: { token: string; key: string }[] = [
   { token: "@2.50/kg", key: "price" },
   { token: "=500kg", key: "target" },
   { token: "+ ipe200 4m", key: "item" },
+  { token: "6m-50mm", key: "arith" },
   { token: ">", key: "palette" },
 ];
 

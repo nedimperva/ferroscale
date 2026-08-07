@@ -8,8 +8,10 @@ import type { CommandParseIssue, CommandParseResult, CommandParserSettings } fro
  * (order tolerance, glue splitting, targets, price overrides) working per item
  * for free, and makes a one-item line indistinguishable from what it was.
  *
- * `+` is safe as the separator because nothing else in the grammar uses it:
- * sizes join with `x`, rates with `@`, targets with `=`.
+ * `+` is safe as the separator because nothing else in the grammar uses it as
+ * a joiner: sizes join with `x`, rates with `@`, targets with `=`. The one
+ * overlap is arithmetic (`x2+3`), settled by shape rather than guesswork —
+ * see `isArithmeticPlus`.
  */
 
 export const COMMAND_ITEM_SEPARATOR = "+";
@@ -55,12 +57,29 @@ interface RawSegment {
  * string — including whatever whitespace surrounded the separator — so an edit
  * to one item can be spliced back without disturbing the others.
  */
+/**
+ * A `+` glued between a character and a digit is arithmetic (`x2+3`), not a
+ * separator. A new item always opens with a profile alias — a letter — so
+ * "digit on the right" is enough to tell the two apart, and any whitespace at
+ * all (`6m + ipe200`) means the separator regardless.
+ */
+function isArithmeticPlus(raw: string, index: number): boolean {
+  const before = raw[index - 1];
+  const after = raw[index + 1];
+  if (!before || !after) return false;
+  if (/\s/.test(before) || /\s/.test(after)) return false;
+  return /\d/.test(after);
+}
+
 export function cmdSplitLine(query: string): RawSegment[] {
   const raw = query ?? "";
   const out: RawSegment[] = [];
   let start = 0;
   for (let i = 0; i <= raw.length; i++) {
-    if (i < raw.length && raw[i] !== COMMAND_ITEM_SEPARATOR) continue;
+    if (i < raw.length) {
+      if (raw[i] !== COMMAND_ITEM_SEPARATOR) continue;
+      if (isArithmeticPlus(raw, i)) continue;
+    }
     out.push({ text: raw.slice(start, i), start, end: i });
     start = i + 1;
   }

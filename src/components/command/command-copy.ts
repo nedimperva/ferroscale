@@ -79,6 +79,8 @@ export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): strin
       });
     case "invalidQty":
       return t("issues.invalidQty");
+    case "invalidExpression":
+      return t("issues.invalidExpression", { token: issue.token });
     case "invalidGeometry":
       // Engine validation messages are not localized yet — show them as-is.
       return issue.message;
