@@ -92,6 +92,31 @@ test.describe("Command bar", () => {
     await expect(page.getByText(/Didn't understand/)).toHaveCount(0);
   });
 
+  test("pasting a cut list turns each row into an item", async ({ page }) => {
+    await page.goto("/en");
+    const input = page.getByLabel("FerroScale Command query");
+    await input.click();
+    await page.keyboard.press("ControlOrMeta+k");
+
+    // Paste two rows the way a spreadsheet hands them over.
+    await input.evaluate((el: HTMLInputElement) => {
+      const data = new DataTransfer();
+      data.setData("text", "hea120 6m x2\nipe200 4m x3");
+      el.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true }));
+    });
+
+    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+  });
+
+  test("arithmetic in a token prices the cut length", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m-50mm+x2");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await expect(page.getByText("6m-50mm", { exact: true })).toBeVisible();
+    // 5.95 m, not 6 — the equation line shows the length actually used.
+    await expect(page.getByText(/5\.95/).first()).toBeVisible();
+  });
+
   test("an unrecognized token shows a parse issue", async ({ page }) => {
     await page.goto("/en");
     const input = page.getByLabel("FerroScale Command query");

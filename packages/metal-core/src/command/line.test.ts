@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   cmdAppendLineItem,
+  cmdParsePastedList,
   cmdParseLine,
   cmdReplaceLineItem,
   cmdSplitLine,
@@ -127,5 +128,41 @@ describe("editing a line", () => {
 
   it("won't start a second item on an empty line", () => {
     expect(cmdAppendLineItem("   ")).toBe("");
+  });
+});
+
+describe("cmdParsePastedList", () => {
+  it("turns one row per part into one item per part", () => {
+    const pasted = "hea120 6m x2\nipe200 4m x3";
+    expect(cmdParsePastedList(pasted)).toBe("hea120 6m x2 + ipe200 4m x3 ");
+  });
+
+  it("collapses spreadsheet column separators to spaces", () => {
+    expect(cmdParsePastedList("hea120\t6m\tx2\nipe200;4m;x3")).toBe(
+      "hea120 6m x2 + ipe200 4m x3 ",
+    );
+  });
+
+  it("drops blank rows", () => {
+    expect(cmdParsePastedList("hea120 6m\n\n  \nipe200 4m\n")).toBe("hea120 6m + ipe200 4m ");
+  });
+
+  it("leaves an ordinary one-line paste alone", () => {
+    expect(cmdParsePastedList("hea120 6m x2")).toBeNull();
+    expect(cmdParsePastedList("")).toBeNull();
+    expect(cmdParsePastedList("hea120 6m\n")).toBeNull();
+  });
+
+  it("caps a mis-paste rather than building an unreadable line", () => {
+    const rows = Array.from({ length: 50 }, (_, i) => `hea120 ${i + 1}m`).join("\n");
+    const line = cmdParsePastedList(rows)!;
+    expect(line.split(" + ")).toHaveLength(20);
+  });
+
+  it("produces a line the parser reads back as the rows that went in", () => {
+    const line = cmdParsePastedList("hea120 6m x2\nipe200 4m x3")!;
+    const parsed = cmdParseLine(line, mkSettings());
+    expect(parsed.items).toHaveLength(2);
+    expect(parsed.valid).toBe(true);
   });
 });

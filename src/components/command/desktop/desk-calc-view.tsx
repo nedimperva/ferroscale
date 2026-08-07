@@ -2,7 +2,7 @@
 
 import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { cmdParse, cmdClassifyToken } from "@ferroscale/metal-core";
+import { cmdParse, cmdClassifyToken, cmdParsePastedList } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { CommandParseResult } from "@ferroscale/metal-core";
@@ -348,6 +348,16 @@ export function DeskCalcView({
           <GhostField
             ref={inputRef}
             type="text"
+            onPaste={(e) => {
+              // A cut list pasted from a sheet or an email is one part per row
+              // — which is one item per row here, so it becomes the line the
+              // user would have typed instead of an unparseable blob.
+              const list = cmdParsePastedList(e.clipboardData.getData("text"));
+              if (!list) return;
+              e.preventDefault();
+              setQuery(list);
+              focusInputAtEnd();
+            }}
             ghost={ghost}
             value={partial}
             onChange={(e) => {

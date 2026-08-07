@@ -137,6 +137,31 @@ export function cmdReplaceLineItem(query: string, index: number, text: string): 
 }
 
 /**
+ * Turn pasted text into a line. A cut list lives in a spreadsheet or an email
+ * as one part per row, which is exactly one item per row here — so pasting it
+ * should produce the line the user would otherwise have typed, not a single
+ * unparseable blob.
+ *
+ * Rows are joined with the separator; blank rows and anything a spreadsheet
+ * puts between columns (tabs, semicolons, commas) collapse to spaces, since
+ * the grammar is order-tolerant and reads `HEA120 6m 2` the same either way.
+ * Returns null when there is nothing multi-row about the text, so an ordinary
+ * paste stays an ordinary paste.
+ */
+export const MAX_PASTED_ITEMS = 20;
+
+export function cmdParsePastedList(text: string): string | null {
+  const rows = (text ?? "")
+    .split(/\r?\n/)
+    .map((row) => row.replace(/[\t;,]+/g, " ").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  if (rows.length < 2) return null;
+  // A paste far longer than a line anyone would work with is a mis-paste; take
+  // the first rows rather than building a query nobody can read or edit.
+  return `${rows.slice(0, MAX_PASTED_ITEMS).join(` ${COMMAND_ITEM_SEPARATOR} `)} `;
+}
+
+/**
  * Append an empty item and return the query to type into. The trailing space
  * is what lets the parser treat the previous item as finished.
  */
