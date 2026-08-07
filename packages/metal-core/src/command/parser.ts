@@ -27,6 +27,7 @@ import type {
   CommandParseResult,
   CommandParserSettings,
   CommandPricing,
+  CommandTarget,
   CommandTokenKind,
 } from "./types";
 
@@ -35,6 +36,40 @@ const BARE_NUMBER_RE = /^\d+(?:\.\d+)?$/;
 const QTY_RE = /^[x×*](\d+)$/;
 const PRICE_RE = /^@?(\d+(?:[.,]\d+)?)\/(kg|lb|m|ft|pc|pcs|piece)$/;
 const PRICE_VALUE_ONLY_RE = /^@(\d+(?:[.,]\d+)?)$/;
+/**
+ * A target instead of an input: `=500kg`, `=1t`, `=250eur`, `=250€`.
+ * The bar normally answers "what does this weigh?"; this asks the question
+ * the other way round — "how much of it makes 500 kg?" — which is how buying
+ * actually works.
+ */
+const TARGET_RE = /^=(\d+(?:[.,]\d+)?)\s*(kg|t|lb|[a-z]{3}|€|\$|£)$/i;
+
+const TARGET_WEIGHT_KG: Record<string, number> = { kg: 1, t: 1000, lb: 0.45359237 };
+const CURRENCY_SYMBOL_UNITS = new Set(["€", "$", "£"]);
+
+interface ParsedTargetToken {
+  raw: string;
+  kind: "weight" | "money";
+  /** Kilograms for a weight target, currency units for a money target. */
+  value: number;
+}
+
+function parseTargetToken(token: string, currency: string): ParsedTargetToken | null {
+  const match = token.match(TARGET_RE);
+  if (!match) return null;
+  const value = parseFloat(match[1].replace(",", "."));
+  if (!Number.isFinite(value) || value <= 0) return null;
+  const unit = match[2].toLowerCase();
+
+  const weightFactor = TARGET_WEIGHT_KG[unit];
+  if (weightFactor) return { raw: token, kind: "weight", value: value * weightFactor };
+
+  // Money: the user's own currency code, or any of the common symbols.
+  if (CURRENCY_SYMBOL_UNITS.has(match[2]) || unit === currency.toLowerCase()) {
+    return { raw: token, kind: "money", value };
+  }
+  return null;
+}
 
 const PRICE_UNIT_BASIS: Record<PriceUnit, PriceBasis> = {
   kg: "weight",
@@ -747,6 +782,7 @@ export function cmdParse(
   let lengthUnit: LengthUnit = settings.defaultLengthUnit;
   let lengthExplicit = false;
   let qty: number | null = null;
+  let targetToken: ParsedTargetToken | null = null;
   let gradeId: string | null = null;
   let pricingOverride: Partial<CommandPricing> | null = null;
   const issues: CommandParseIssue[] = [];
@@ -765,6 +801,11 @@ export function cmdParse(
           continue;
         }
       }
+    }
+    const tgt = parseTargetToken(tk, settings.pricing.currency);
+    if (tgt && !targetToken) {
+      targetToken = tgt;
+      continue;
     }
     const price = parsePriceToken(tk);
     if (price) {
@@ -835,7 +876,7 @@ export function cmdParse(
     : bookRate != null && Number.isFinite(bookRate) && bookRate >= 0
       ? { ...settings.pricing, unitPrice: bookRate }
       : settings.pricing;
-  const realQty = qty == null ? 1 : qty;
+  let realQty = qty == null ? 1 : qty;
   const hasSize = !!size && /\d/.test(size);
 
   // Sheet-like families carry length inside the size token (w × l × t).
@@ -886,6 +927,71 @@ export function cmdParse(
     }
   };
 
+  // ── Target queries: solve for whatever the line left open ────────────────
+  // Both weight and money are linear in length and in quantity, so probing the
+  // engine is enough — no iteration, no approximation. Probing also means the
+  // solver inherits waste, VAT and price basis for free instead of restating
+  // the pricing rules here and drifting from them.
+  let target: CommandTarget | null = null;
+  const wanted = targetToken;
+  if (wanted && alias && hasSize) {
+    const probe = (lengthMm: number, pieces: number): number | null => {
+      const input = buildCalculationInput(
+        alias,
+        size,
+        lengthMm,
+        pieces,
+        effectiveGradeId,
+        effectivePricing,
+      );
+      const response = input ? calculateMetal(input) : null;
+      if (!input || !response?.ok) return null;
+      return wanted.kind === "weight"
+        ? response.result.totalWeightKg
+        : response.result.grandTotalAmount;
+    };
+    const startTarget = (solvedFor: CommandTarget["solvedFor"]): CommandTarget => ({
+      raw: wanted.raw,
+      kind: wanted.kind,
+      value: wanted.value,
+      solvedFor,
+      achievedKg: null,
+      achievedAmount: null,
+    });
+
+    if (lengthM != null) {
+      // A length is fixed, so the answer is pieces — whole bars, rounded up,
+      // because half a bar isn't something you can buy.
+      const perPiece = probe(lengthM * 1000, 1);
+      if (perPiece != null && perPiece > 0) {
+        qty = Math.max(1, Math.ceil(wanted.value / perPiece));
+        realQty = qty;
+        target = startTarget("qty");
+      }
+    } else {
+      // No length: solve for it, split across the pieces asked for. Two probes
+      // give the slope per metre and any fixed part (a per-piece price doesn't
+      // move with length at all — that case can't be solved, so it isn't).
+      const atOne = probe(1000, realQty);
+      const atTwo = probe(2000, realQty);
+      if (atOne != null && atTwo != null) {
+        const perMetre = atTwo - atOne;
+        const fixed = atOne - perMetre;
+        if (perMetre > 0) {
+          const metres = (wanted.value - fixed) / perMetre;
+          // Rounded to the millimetre — the unit the whole app cuts in.
+          const roundedM = Math.round(metres * 1000) / 1000;
+          if (roundedM > 0) {
+            lengthM = roundedM;
+            lengthRaw = fromMillimeters(roundedM * 1000, lengthUnit);
+            lengthExplicit = false;
+            target = startTarget("length");
+          }
+        }
+      }
+    }
+  }
+
   if (alias && hasSize && lengthM != null) {
     const input = buildCalculationInput(
       alias,
@@ -900,6 +1006,12 @@ export function cmdParse(
       calc = { input, result: response.result };
       kgm = response.result.unitWeightKg / lengthM;
       density = response.result.densityKgPerM3;
+      if (target) {
+        // What the rounded solution actually comes to — stated, not hidden,
+        // because whole bars almost always overshoot the target.
+        target.achievedKg = response.result.totalWeightKg;
+        target.achievedAmount = response.result.grandTotalAmount;
+      }
     } else {
       reportGeometry(input, response);
     }
@@ -950,6 +1062,7 @@ export function cmdParse(
     valid: calc != null,
     issues,
     pricing: effectivePricing,
+    target,
     priceOverride: pricingOverride
       ? {
           unitPrice: effectivePricing.unitPrice,
@@ -962,6 +1075,7 @@ export function cmdParse(
 
 export function cmdClassifyToken(tok: string): CommandTokenKind {
   const x = tok.toLowerCase();
+  if (TARGET_RE.test(x)) return "target";
   if (new RegExp(`^(${COMMAND_ALIAS_RE})`).test(x)) return "profile";
   if (QTY_RE.test(x)) return "qty";
   if (parsePriceToken(x)) return "price";

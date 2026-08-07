@@ -39,7 +39,8 @@ import {
 } from "./command-copy";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
-import { CommandToast, PricingBadge, ResultAnnouncer } from "./command-atoms";
+import { commandTargetNote } from "./target-note";
+import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./desktop/command-desktop";
@@ -211,6 +212,7 @@ export function CommandShell() {
     () => cmdParse(query, parserSettings),
     [query, parserSettings],
   );
+  const targetNote = commandTargetNote(p);
 
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
@@ -954,6 +956,15 @@ export function CommandShell() {
                     m × <span className="text-foreground-secondary">{p.realQty}</span>
                     {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                   </span>
+                  {targetNote && (
+                    <TargetBadge>
+                      {t(
+                        `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                        { target: targetNote.target },
+                      )}
+                      {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
+                    </TargetBadge>
+                  )}
                   {!isW && p.pricing.wastePercent > 0 && (
                     <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
                   )}

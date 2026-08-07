@@ -24,7 +24,8 @@ import { CommandKeyHints } from "../command-key-hints";
 import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
-import { PricingBadge } from "../command-atoms";
+import { PricingBadge, TargetBadge } from "../command-atoms";
+import { commandTargetNote } from "../target-note";
 import { marginPercentStore } from "@/lib/settings-stores";
 
 type DeskCalcViewProps = CommandDesktopProps & {
@@ -122,6 +123,7 @@ export function DeskCalcView({
 }: DeskCalcViewProps) {
   const t = useTranslations("command");
   const isW = mode === "weight";
+  const targetNote = commandTargetNote(p);
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
   // ↑/↓ recall through the session tape; draft holds the in-progress query so
   // ↓ past the newest entry restores it.
@@ -534,6 +536,15 @@ export function DeskCalcView({
                       <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                     </span>
+                    {targetNote && (
+                      <TargetBadge>
+                        {t(
+                          `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                          { target: targetNote.target },
+                        )}
+                        {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
+                      </TargetBadge>
+                    )}
                     {!isW && p.pricing.wastePercent > 0 && (
                       <PricingBadge>
                         {t("pricingBadge.waste", { percent: p.pricing.wastePercent })}

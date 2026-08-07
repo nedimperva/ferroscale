@@ -83,7 +83,8 @@
         "length": "Dužina (mm, cm, m, in, ft)",
         "quantity": "Količina",
         "grade": "Kvalitet materijala",
-        "price": "Cijena samo za ovu liniju"
+        "price": "Cijena samo za ovu liniju",
+        "target": "Obrnuti račun: koliko čini 500 kg (ili =250eur)"
       },
       "shortcut": {
         "enter": "Preuzmi prijedlog ili zabilježi gotovu liniju",
@@ -207,6 +208,11 @@
     "pricingBadge": {
       "waste": "+{percent}% otpad",
       "vat": "+PDV {percent}%"
+    },
+    "target": {
+      "solvedQty": "komada za {target}",
+      "solvedLength": "dužina za {target}",
+      "over": "{over} više"
     },
     "hint": {
       "addLength": "dodajte dužinu ->",

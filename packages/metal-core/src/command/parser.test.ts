@@ -588,3 +588,92 @@ describe("price book (per-grade rates)", () => {
     expect(booked.totalAmount).toBe(plain.totalAmount);
   });
 });
+
+describe("target queries", () => {
+  it("solves for whole pieces when the length is fixed", () => {
+    const p = cmdParse("hea120 6m =500kg", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.target).not.toBeNull();
+    expect(p.target!.solvedFor).toBe("qty");
+    expect(p.target!.kind).toBe("weight");
+    expect(p.target!.value).toBe(500);
+    // Pieces are whole and round up — you can't buy 8.3 bars.
+    expect(Number.isInteger(p.realQty)).toBe(true);
+    expect(p.target!.achievedKg!).toBeGreaterThanOrEqual(500);
+    // ...and one piece fewer would fall short, so it rounded up and no further.
+    expect(p.target!.achievedKg! - p.perPieceKg!).toBeLessThan(500);
+  });
+
+  it("solves for the length when a quantity is fixed instead", () => {
+    const p = cmdParse("hea120 x10 =500kg", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.target!.solvedFor).toBe("length");
+    expect(p.realQty).toBe(10);
+    expect(p.lengthM).not.toBeNull();
+    // Lengths land on a whole millimetre, so ten pieces can drift a gram or two.
+    expect(p.target!.achievedKg!).toBeCloseTo(500, 0);
+  });
+
+  it("with neither length nor quantity, solves the length of a single piece", () => {
+    const p = cmdParse("hea120 =500kg", mkSettings());
+    expect(p.target!.solvedFor).toBe("length");
+    expect(p.realQty).toBe(1);
+    expect(p.target!.achievedKg!).toBeCloseTo(500, 0);
+  });
+
+  it("reads tonnes and pounds", () => {
+    expect(cmdParse("hea120 6m =1t", mkSettings()).target!.value).toBe(1000);
+    expect(cmdParse("hea120 6m =1000lb", mkSettings()).target!.value).toBeCloseTo(453.59, 2);
+  });
+
+  it("hits a money target in the configured currency", () => {
+    const p = cmdParse("hea120 6m =250eur", mkSettings());
+    expect(p.target!.kind).toBe("money");
+    expect(p.target!.solvedFor).toBe("qty");
+    expect(p.target!.achievedAmount!).toBeGreaterThanOrEqual(250);
+    expect(p.target!.achievedAmount).toBe(p.totalAmount);
+  });
+
+  it("accepts a currency symbol whatever the configured currency is", () => {
+    const p = cmdParse("hea120 6m =250€", mkSettings());
+    expect(p.target!.kind).toBe("money");
+    expect(p.target!.value).toBe(250);
+  });
+
+  it("counts waste and VAT toward a money target", () => {
+    const plain = cmdParse("hea120 6m =2000eur", mkSettings());
+    const taxed = cmdParse(
+      "hea120 6m =2000eur",
+      mkSettings({
+        pricing: { ...PRICING, wastePercent: 10, includeVat: true, vatPercent: 20 },
+      }),
+    );
+    // Same target, dearer pieces → fewer of them.
+    expect(taxed.realQty).toBeLessThan(plain.realQty);
+    expect(taxed.target!.achievedAmount!).toBeGreaterThanOrEqual(2000);
+  });
+
+  it("leaves a per-piece price alone rather than solving an unsolvable length", () => {
+    const p = cmdParse("hea120 @40/pc =200eur", mkSettings());
+    expect(p.target).toBeNull();
+    expect(p.lengthM).toBeNull();
+  });
+
+  it("ignores a target with nothing to solve for", () => {
+    const bare = cmdParse("=500kg", mkSettings());
+    expect(bare.target).toBeNull();
+    expect(bare.valid).toBe(false);
+    expect(bare.issues).toEqual([]);
+  });
+
+  it("classifies the token so the UI can colour it", () => {
+    expect(cmdClassifyToken("=500kg")).toBe("target");
+    expect(cmdClassifyToken("=1t")).toBe("target");
+    expect(cmdClassifyToken("=250€")).toBe("target");
+    expect(cmdClassifyToken("=abc")).toBe("unknown");
+  });
+
+  it("stays out of the way of ordinary queries", () => {
+    expect(cmdParse("hea120 6m x2", mkSettings()).target).toBeNull();
+  });
+});

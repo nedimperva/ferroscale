@@ -28,6 +28,15 @@ test.describe("Command bar", () => {
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   });
 
+  test("a target query solves for pieces and shows the overshoot", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m+%3D500kg");
+    await expect(page.getByText("=500kg", { exact: true })).toBeVisible();
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await expect(page.getByText(/pieces for 500 kg/)).toBeVisible();
+    // Whole bars overshoot: the badge says by how much.
+    await expect(page.getByText(/over/).first()).toBeVisible();
+  });
+
   test("an unrecognized token shows a parse issue", async ({ page }) => {
     await page.goto("/en");
     const input = page.getByLabel("FerroScale Command query");

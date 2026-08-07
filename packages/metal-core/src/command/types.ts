@@ -104,6 +104,8 @@ export interface CommandParseResult {
   issues: CommandParseIssue[];
   /** Echo of the pricing settings used (for sheet display). */
   pricing: CommandPricing;
+  /** Non-null when the query asked for a target instead of an input. */
+  target: CommandTarget | null;
   /** Non-null when the query contains an inline price token. */
   priceOverride: {
     unitPrice: number;
@@ -141,7 +143,30 @@ export interface CommandParseIssue {
   suggestion?: string;
 }
 
-export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "price" | "unknown";
+export type CommandTokenKind =
+  | "profile"
+  | "len"
+  | "qty"
+  | "grade"
+  | "price"
+  | "target"
+  | "unknown";
+
+/**
+ * A query that asked the question backwards: "=500kg" means *how much of this
+ * makes 500 kg*, and the parser solves for whichever of length or quantity the
+ * line left open. Pieces round up — you buy whole bars — so `achieved*` is
+ * what the solution actually comes to, which is ≥ the target.
+ */
+export interface CommandTarget {
+  raw: string;
+  kind: "weight" | "money";
+  /** Kilograms for a weight target, currency units for a money target. */
+  value: number;
+  solvedFor: "qty" | "length";
+  achievedKg: number | null;
+  achievedAmount: number | null;
+}
 
 /**
  * Where a suggestion came from, so the UI can group the row: the user's own

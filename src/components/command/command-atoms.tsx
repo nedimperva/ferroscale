@@ -12,6 +12,18 @@ export function PricingBadge({ children }: { children: React.ReactNode }) {
 }
 
 /**
+ * Purple counterpart for a target query ("=500 kg"), so the line reads as an
+ * answer to a question rather than as another input.
+ */
+export function TargetBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--purple-surface)] text-[var(--purple-text)] whitespace-nowrap">
+      {children}
+    </span>
+  );
+}
+
+/**
  * What a toast shows: a line of text, and optionally one action the user can
  * take about what just happened (Undo a delete, name a save). Actions are why
  * the toast is pointer-enabled — the card itself, not the wrapper.

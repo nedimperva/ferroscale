@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.12.0] - 2026-08-07
+
+### Added
+
+- **Target queries — the question asked backwards.** `hea120 6m =500kg` answers *how many of these make 500 kg*, `hea120 x10 =500kg` answers *how long ten of them have to be*, and `=250eur` does the same against money instead of mass. Weight targets read `kg`, `t` and `lb`; money targets take the configured currency code or a `€`/`$`/`£` symbol. The solver probes the engine rather than restating the pricing rules, so waste, VAT and price basis are all counted in, and a per-piece rate — which doesn't move with length — is left unsolved instead of answered wrongly. Pieces round **up**, because you buy whole bars, and a purple badge on the equation line states the target and how far over it the answer lands. The token is part of the grammar reference and travels in `?q=` links and copied summaries like any other
+
+---
+
 ## [3.11.0] - 2026-08-07
 
 ### Changed

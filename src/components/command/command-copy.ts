@@ -5,6 +5,7 @@ import {
   fsWeight,
   fsWeightUnit,
 } from "@ferroscale/metal-core";
+import { commandTargetNote, formatTargetNote } from "./target-note";
 import type {
   CommandAlias,
   CommandFamily,
@@ -166,7 +167,15 @@ export function buildCommandSummary(
   const grade = p.gradeLabel ?? r.gradeLabel;
 
   const header = grade ? `${name} · ${grade}` : name;
-  const meta = `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${p.kgm.toFixed(2)} kg/m`;
+  const targetNote = commandTargetNote(p);
+  const meta = [
+    `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${p.kgm.toFixed(2)} kg/m`,
+    // A target line is the whole point of the calculation — a summary that
+    // dropped it would read as if the quantity had been chosen by hand.
+    targetNote ? formatTargetNote(targetNote, t) : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const rows: Array<[string, string]> = [];
   if (p.totalKg != null) {
@@ -182,7 +191,9 @@ export function buildCommandSummary(
 
   const labelWidth = rows.reduce((w, [label]) => Math.max(w, label.length), 0);
   const body = rows.map(([label, value]) => `${label.padEnd(labelWidth + 3)}${value}`).join("\n");
-  const divider = "─".repeat(Math.max(header.length, meta.length));
+  const divider = "─".repeat(
+    Math.max(header.length, ...meta.split("\n").map((line) => line.length)),
+  );
 
   return `${header}\n${meta}\n${divider}\n${body}`;
 }

@@ -83,7 +83,8 @@
         "length": "Length (mm, cm, m, in, ft)",
         "quantity": "Quantity",
         "grade": "Material grade",
-        "price": "Rate for this line only"
+        "price": "Rate for this line only",
+        "target": "Solve backwards: how much makes 500 kg (or =250eur)"
       },
       "shortcut": {
         "enter": "Take the suggestion, or log the finished line",
@@ -207,6 +208,11 @@
     "pricingBadge": {
       "waste": "+{percent}% waste",
       "vat": "+VAT {percent}%"
+    },
+    "target": {
+      "solvedQty": "pieces for {target}",
+      "solvedLength": "length for {target}",
+      "over": "{over} over"
     },
     "hint": {
       "addLength": "add a length ->",

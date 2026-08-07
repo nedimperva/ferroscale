@@ -189,3 +189,32 @@ describe("command bar", () => {
     await waitFor(() => expect(currentQuery(h)).toContain("hea120"));
   });
 });
+
+describe("target queries in the bar", () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it("solves for pieces and says how far over the target it lands", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "hea120 6m =500kg ");
+
+    await waitFor(() => {
+      expect(h.getAllByText(/pieces for 500 kg/).length).toBeGreaterThan(0);
+    });
+    // The equation line reflects the solved quantity, not the typed one.
+    expect(h.getAllByText(/over/).length).toBeGreaterThan(0);
+  });
+
+  it("leaves ordinary queries without a target badge", async () => {
+    const h = await renderCommandShell();
+    expect(h.queryAllByText(/pieces for/)).toHaveLength(0);
+  });
+});

@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.12.0",
+    date: "2026-08-07",
+    added: [
+      "Ask the question backwards. Type =500kg (or =1t, =250eur) after a profile and the bar solves for what you left out: how many pieces of that bar make 500 kg, or how long one has to be. Pieces come whole and round up, and the badge says how far over the target the answer lands",
+    ],
+    added_bs: [
+      "Postavite pitanje obrnuto. Ukucajte =500kg (ili =1t, =250eur) iza profila i traka rješava ono što ste izostavili: koliko komada te šipke čini 500 kg, ili koliko jedna mora biti duga. Komadi su cijeli i zaokružuju se naviše, a oznaka kaže koliko rezultat prelazi cilj",
+    ],
+  },
+  {
     version: "3.11.0",
     date: "2026-08-07",
     changed: [

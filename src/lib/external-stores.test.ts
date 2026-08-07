@@ -85,7 +85,7 @@ describe("createStringStore", () => {
   });
 
   it("sets value and notifies subscribers", () => {
-    const store = createStringStore("set-str", "initial");
+    const store = createStringStore<string>("set-str", "initial");
     const listener = vi.fn();
     store.subscribe(listener);
 
