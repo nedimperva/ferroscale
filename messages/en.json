@@ -219,6 +219,29 @@
     "line": {
       "items": "Line items"
     },
+    "palette": {
+      "aria": "Command palette",
+      "empty": "No matching command",
+      "hint": "Commands",
+      "kind": {
+        "action": "action",
+        "saved": "saved",
+        "project": "project"
+      },
+      "action": {
+        "newCalc": "New calculation",
+        "save": "Save this line",
+        "compare": "Add to compare",
+        "copySummary": "Copy summary",
+        "shareLink": "Copy share link",
+        "goSaved": "Go to saved",
+        "goProjects": "Go to projects",
+        "goCompare": "Go to compare",
+        "goSettings": "Go to settings",
+        "help": "Command reference",
+        "toggleTheme": "Toggle theme"
+      }
+    },
     "hint": {
       "addLength": "add a length ->",
       "addSize": "add a size ->",

@@ -219,6 +219,29 @@
     "line": {
       "items": "Stavke linije"
     },
+    "palette": {
+      "aria": "Komandna paleta",
+      "empty": "Nema odgovarajuće komande",
+      "hint": "Komande",
+      "kind": {
+        "action": "akcija",
+        "saved": "sačuvano",
+        "project": "projekat"
+      },
+      "action": {
+        "newCalc": "Novi proračun",
+        "save": "Sačuvaj ovu liniju",
+        "compare": "Dodaj u poređenje",
+        "copySummary": "Kopiraj sažetak",
+        "shareLink": "Kopiraj link za dijeljenje",
+        "goSaved": "Idi na sačuvano",
+        "goProjects": "Idi na projekte",
+        "goCompare": "Idi na poređenje",
+        "goSettings": "Idi na postavke",
+        "help": "Pregled komandi",
+        "toggleTheme": "Promijeni temu"
+      }
+    },
     "hint": {
       "addLength": "dodajte dužinu ->",
       "addSize": "dodajte dimenziju ->",
