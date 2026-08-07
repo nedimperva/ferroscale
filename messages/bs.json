@@ -422,7 +422,8 @@
       "breakdownEmpty": "detalji rezultata se prikazuju dok kucate",
       "totalCostLabel": "UKUPNA CIJENA",
       "saveSessionAsProject": "SAČUVAJ KAO PROJEKAT",
-      "perPieceLabel": "PO KOMADU"
+      "perPieceLabel": "PO KOMADU",
+      "breakdownItem": "Pregled · stavka {index} od {count}"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",

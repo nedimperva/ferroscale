@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.16.1] - 2026-08-07
+
+### Fixed
+
+- **Pasting a cut list no longer discards the line you had already typed.** The rows are appended as further items instead of replacing the query — a destructive edit with no undo, and "I meant to add these" is by far the likelier intent
+- **The breakdown now says which item it describes on a multi-item line.** kg/m and per-piece weight don't sum, so the breakdown is always about one calculation; shown unlabelled beneath a hero holding the *line's* total, its figures read as contradicting it (±4% of 268 kg under a hero band of ±4% of 507 kg). Both surfaces now title it "Breakdown · item 2 of 2" when the line has more than one
+
+---
+
 ## [3.16.0] - 2026-08-07
 
 ### Added

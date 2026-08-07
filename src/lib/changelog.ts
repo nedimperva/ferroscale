@@ -17,6 +17,18 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.16.1",
+    date: "2026-08-07",
+    fixed: [
+      "Pasting a cut list onto a line you had already typed no longer throws that line away — the pasted parts are added to it",
+      "On a line with several items, the breakdown now says which item it is describing. It was showing one item's figures under the hero's total for the whole line, which read as though the two disagreed",
+    ],
+    fixed_bs: [
+      "Lijepljenje liste rezanja na liniju koju ste već ukucali više ne briše tu liniju — zalijepljeni dijelovi se dodaju na nju",
+      "Na liniji sa više stavki pregled sada kaže koju stavku opisuje. Ranije je prikazivao brojeve jedne stavke ispod ukupnog zbira cijele linije, što je izgledalo kao da se ne slažu",
+    ],
+  },
+  {
     version: "3.16.0",
     date: "2026-08-07",
     added: [

@@ -162,6 +162,23 @@ export function cmdParsePastedList(text: string): string | null {
 }
 
 /**
+ * Paste a cut list into whatever is already on the line. Returns null when the
+ * text isn't a multi-row list, so an ordinary paste stays an ordinary paste and
+ * the browser handles it.
+ *
+ * The rows are appended rather than substituted: a paste that silently threw
+ * away a line the user had already typed would be a destructive edit with no
+ * undo, and "I meant to add these" is by far the likelier intent.
+ */
+export function cmdPasteIntoLine(query: string, text: string): string | null {
+  const list = cmdParsePastedList(text);
+  if (!list) return null;
+  const existing = (query ?? "").trim();
+  if (!existing) return list;
+  return `${existing} ${COMMAND_ITEM_SEPARATOR} ${list}`;
+}
+
+/**
  * Append an empty item and return the query to type into. The trailing space
  * is what lets the parser treat the previous item as finished.
  */

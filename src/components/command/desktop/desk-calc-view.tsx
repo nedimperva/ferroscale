@@ -2,10 +2,10 @@
 
 import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { cmdParse, cmdClassifyToken, cmdParsePastedList } from "@ferroscale/metal-core";
+import { cmdParse, cmdClassifyToken, cmdPasteIntoLine } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { useCountUp } from "@/hooks/useCountUp";
-import type { CommandParseResult } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
@@ -358,10 +358,12 @@ export function DeskCalcView({
               // A cut list pasted from a sheet or an email is one part per row
               // — which is one item per row here, so it becomes the line the
               // user would have typed instead of an unparseable blob.
-              const list = cmdParsePastedList(e.clipboardData.getData("text"));
-              if (!list) return;
+              // Appended, not substituted: throwing away a line the user
+              // had already typed would be a destructive edit with no undo.
+              const next = cmdPasteIntoLine(query, e.clipboardData.getData("text"));
+              if (!next) return;
               e.preventDefault();
-              setQuery(list);
+              setQuery(next);
               focusInputAtEnd();
             }}
             ghost={ghost}
@@ -1014,7 +1016,7 @@ export function DeskCalcView({
             maxWidth: compact ? "100%" : 400,
           }}
         >
-          <DeskBreakdown p={p} />
+          <DeskBreakdown p={p} line={line} />
         </DeskPanel>
       </div>
     </div>
@@ -1073,7 +1075,7 @@ const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?
   totalCost: { strong: true, accent: "var(--blue-strong)" },
 };
 
-function DeskBreakdown({ p }: { p: CommandParseResult }) {
+function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }) {
   const t = useTranslations("command");
   const r = p.calc?.result;
   const marginPercent = useSyncExternalStore(
@@ -1098,7 +1100,15 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
       <div
         className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0"
       >
-        {t("desktop.breakdown")}
+        {/* The breakdown describes one calculation — kg/m and per-piece weight
+            don't sum — so on a multi-item line it has to say which one, or its
+            numbers read as contradicting the hero's total. */}
+        {line.multi
+          ? t("desktop.breakdownItem", {
+              index: line.activeIndex + 1,
+              count: line.items.length,
+            })
+          : t("desktop.breakdown")}
       </div>
       {rows && r ? (
         <>

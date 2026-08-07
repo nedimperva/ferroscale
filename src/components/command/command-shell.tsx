@@ -1482,6 +1482,7 @@ export function CommandShell() {
           {effectiveSheet === "result" && p.valid && (
             <CommandResultSheet
               p={p}
+              line={line}
               onClose={() => setSheet(null)}
               onSave={doSave}
               isSaved={!!currentSavedEntry}

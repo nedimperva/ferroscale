@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import type { CommandParseResult } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
@@ -39,6 +39,8 @@ function SheetRow({
 
 interface CommandResultSheetProps {
   p: CommandParseResult;
+  /** The whole line, so a multi-item breakdown can say which item it is. */
+  line?: CommandLine;
   onClose: () => void;
   onSave: () => void;
   /** Whether this exact calculation is already bookmarked (Save toggles). */
@@ -189,6 +191,7 @@ export function CommandResultBreakdown({
 
 export function CommandResultSheet({
   onClose,
+  line,
   ...rest
 }: CommandResultSheetProps) {
   const t = useTranslations("command");
@@ -196,7 +199,19 @@ export function CommandResultSheet({
     return null;
   }
   return (
-    <SheetShell title={t("sheets.resultBreakdown")} onClose={onClose}>
+    <SheetShell
+      title={
+        // kg/m and per-piece weight don't sum, so the breakdown is always one
+        // calculation — on a multi-item line it has to say which.
+        line && line.multi
+          ? t("desktop.breakdownItem", {
+              index: line.activeIndex + 1,
+              count: line.items.length,
+            })
+          : t("sheets.resultBreakdown")
+      }
+      onClose={onClose}
+    >
       <CommandResultBreakdown {...rest} />
     </SheetShell>
   );

@@ -109,6 +109,34 @@ test.describe("Command bar", () => {
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   });
 
+  test("pasting adds to the line instead of wiping what was typed", async ({ page }) => {
+    await page.goto("/en");
+    const input = page.getByLabel("FerroScale Command query");
+    await input.click();
+    await page.keyboard.press("ControlOrMeta+k");
+    await input.pressSequentially("hea120 6m x2 ");
+
+    await input.evaluate((el: HTMLInputElement) => {
+      const data = new DataTransfer();
+      data.setData("text", "ipe200 4m x3\nrnd20 3m");
+      el.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true }));
+    });
+
+    // Three items: the one that was typed, plus the two pasted.
+    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(3);
+    await expect(page.getByText("hea120", { exact: true })).toBeVisible();
+  });
+
+  test("the breakdown says which item it describes on a multi-item line", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
+    // The hero totals the line while the breakdown describes one calculation,
+    // so the breakdown has to name it or the two read as contradicting.
+    await expect(page.getByText("Breakdown · item 2 of 2")).toBeVisible();
+
+    await page.goto("/en?q=hea120+6m+x2");
+    await expect(page.getByText(/Breakdown · item/)).toHaveCount(0);
+  });
+
   test("arithmetic in a token prices the cut length", async ({ page }) => {
     await page.goto("/en?q=hea120+6m-50mm+x2");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();

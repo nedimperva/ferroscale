@@ -422,7 +422,8 @@
       "breakdownEmpty": "the full breakdown appears as you type",
       "totalCostLabel": "TOTAL COST",
       "saveSessionAsProject": "SAVE AS PROJECT",
-      "perPieceLabel": "PER PIECE"
+      "perPieceLabel": "PER PIECE",
+      "breakdownItem": "Breakdown · item {index} of {count}"
     },
     "suggest": {
       "standardSize": "standard size",

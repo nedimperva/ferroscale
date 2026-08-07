@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   cmdAppendLineItem,
   cmdParsePastedList,
+  cmdPasteIntoLine,
   cmdParseLine,
   cmdReplaceLineItem,
   cmdSplitLine,
@@ -163,6 +164,36 @@ describe("cmdParsePastedList", () => {
     const line = cmdParsePastedList("hea120 6m x2\nipe200 4m x3")!;
     const parsed = cmdParseLine(line, mkSettings());
     expect(parsed.items).toHaveLength(2);
+    expect(parsed.valid).toBe(true);
+  });
+});
+
+describe("cmdPasteIntoLine", () => {
+  it("adds the pasted rows to what's already there", () => {
+    expect(cmdPasteIntoLine("hea120 6m x2 ", "ipe200 4m\nrnd20 3m")).toBe(
+      "hea120 6m x2 + ipe200 4m + rnd20 3m ",
+    );
+  });
+
+  it("is the whole line when there was nothing on it", () => {
+    expect(cmdPasteIntoLine("", "ipe200 4m\nrnd20 3m")).toBe("ipe200 4m + rnd20 3m ");
+    expect(cmdPasteIntoLine("   ", "ipe200 4m\nrnd20 3m")).toBe("ipe200 4m + rnd20 3m ");
+  });
+
+  it("leaves an ordinary paste to the browser", () => {
+    expect(cmdPasteIntoLine("hea120 ", "6m")).toBeNull();
+  });
+
+  it("never discards a line the user had already typed", () => {
+    const typed = "hea120 6m x2 s355 ";
+    const next = cmdPasteIntoLine(typed, "ipe200 4m\nrnd20 3m")!;
+    expect(next.startsWith(typed.trim())).toBe(true);
+  });
+
+  it("produces a line the parser reads as every item together", () => {
+    const next = cmdPasteIntoLine("hea120 6m ", "ipe200 4m\nrnd20 3m")!;
+    const parsed = cmdParseLine(next, mkSettings());
+    expect(parsed.items).toHaveLength(3);
     expect(parsed.valid).toBe(true);
   });
 });
