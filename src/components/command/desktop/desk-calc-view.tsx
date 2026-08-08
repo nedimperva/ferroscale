@@ -2,7 +2,12 @@
 
 import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { cmdParse, cmdClassifyToken, cmdPasteIntoLine } from "@ferroscale/metal-core";
+import {
+  cmdAppendLineItem,
+  cmdParse,
+  cmdClassifyToken,
+  cmdPasteIntoLine,
+} from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { useCountUp } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
@@ -89,28 +94,53 @@ function PanelIconBtn({
   );
 }
 
-/** A single labelled stat tile in the result panel footer. */
-function StatTile({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: string;
-}) {
+/**
+ * The fold's four-cell glance row. Values are pulled from the shared breakdown
+ * builder rather than recomputed, so the grid and the breakdown panel below it
+ * can never disagree about the same number.
+ */
+function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
+  const t = useTranslations("command");
+  const cells: { label: string; value: string }[] = [
+    {
+      label: t("result.massPerMetre"),
+      value: p.valid && p.kgm != null ? `${p.kgm.toFixed(2)} kg/m` : "—",
+    },
+    {
+      label: t("desktop.perPieceLabel"),
+      value:
+        p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—",
+    },
+    {
+      label: t("result.totalWeight"),
+      value: p.valid && p.totalKg != null ? `${fsWeight(p.totalKg)} ${fsWeightUnit()}` : "—",
+    },
+    {
+      label: t("desktop.totalCostLabel"),
+      value: p.valid && p.totalAmount != null ? `${sym} ${fsMoney(p.totalAmount)}` : "—",
+    },
+  ];
+
   return (
-    <div>
-      <SectionLabel className="fs-track-wide block">{label}</SectionLabel>
-      <div
-        className="font-mono font-extrabold mt-1"
-        style={{ fontSize: 26, color: accent ?? "var(--foreground)" }}
-      >
-        {value}
-      </div>
+    <div className="grid flex-1 gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+      {cells.map((cell) => (
+        <div
+          key={cell.label}
+          className="rounded-[13px] border border-border-faint"
+          style={{ padding: "12px 14px", background: "var(--surface-raised)" }}
+        >
+          <div className="fs-track-wide text-[9.5px] font-bold uppercase text-muted">
+            {cell.label}
+          </div>
+          <div className="font-mono text-[17px] font-bold mt-1 whitespace-nowrap">
+            {cell.value}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
+
 
 export function DeskCalcView({
   compact,
@@ -789,21 +819,7 @@ export function DeskCalcView({
               className="flex items-end gap-6 flex-wrap"
               style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}
             >
-              <StatTile
-                label={t("desktop.totalCostLabel")}
-                value={
-                  p.valid && p.totalAmount != null ? `${sym} ${fsMoney(p.totalAmount)}` : "—"
-                }
-                accent="var(--blue-strong)"
-              />
-              <StatTile
-                label={t("desktop.perPieceLabel")}
-                value={
-                  p.valid && p.perPieceKg != null
-                    ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
-                    : "—"
-                }
-              />
+              <FoldCells p={p} sym={sym} />
               <div className="ml-auto flex items-center gap-2">
                 {/* Save is a toggle: filled bookmark = this exact line is in
                     the library, press again to remove it. */}
@@ -853,6 +869,21 @@ export function DeskCalcView({
                 >
                   <DeskIcon name="compare" />
                   {t("common.compare")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuery((q) => cmdAppendLineItem(q))}
+                  disabled={!p.valid}
+                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap text-muted"
+                  style={{
+                    padding: "9px 14px",
+                    border: "1px dashed var(--border-strong)",
+                    background: "transparent",
+                    cursor: p.valid ? "pointer" : "default",
+                    opacity: p.valid ? 1 : 0.45,
+                  }}
+                >
+                  {t("desktop.anotherItem")}
                 </button>
                 <PanelIconBtn
                   onClick={onCopySummary}

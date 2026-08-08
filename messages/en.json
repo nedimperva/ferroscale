@@ -432,7 +432,8 @@
       "perPieceLabel": "PER PIECE",
       "breakdownItem": "Breakdown · item {index} of {count}",
       "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
-      "saveAsProject": "Save as project"
+      "saveAsProject": "Save as project",
+      "anotherItem": "+ another item"
     },
     "suggest": {
       "standardSize": "standard size",

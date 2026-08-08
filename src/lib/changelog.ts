@@ -17,6 +17,22 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.17.0",
+    date: "2026-08-08",
+    changed: [
+      "The phone screen is rebuilt to the new design: the weight/price switch is now two small pills in the hero's label row, and the two-stat card became a single line — per piece, the other total, and Breakdown to open the full figures. Save, Compare and Share sit under the number instead of hiding in the sheet",
+      "The phone finally has a session: a ribbon under the hero shows the running total with a + to add the current line, and the library gained a SESSION tab listing every logged line with its totals and Save as project",
+      "A > key on the keypad opens the command palette — until now it was keyboard-only, so phones had no way to reach it",
+      "The desktop result gained a four-cell glance row and a + another item action",
+    ],
+    changed_bs: [
+      "Ekran telefona je prerađen prema novom dizajnu: prekidač masa/cijena su sada dvije male pilule u redu oznake, a kartica sa dvije statistike postala je jedna linija — po komadu, drugi zbir i Pregled za pune brojke. Sačuvaj, Uporedi i Podijeli stoje ispod broja umjesto da se kriju u listu",
+      "Telefon konačno ima sesiju: traka ispod glavnog broja prikazuje tekući zbir sa + za dodavanje trenutne linije, a biblioteka je dobila karticu SESIJA sa svim upisanim linijama, zbirovima i opcijom Sačuvaj kao projekat",
+      "Tipka > na tastaturi otvara komandnu paletu — do sada je bila samo za tastaturu, pa telefoni nisu imali pristup",
+      "Desktop rezultat je dobio red od četiri ćelije i akciju + još jedna stavka",
+    ],
+  },
+  {
     version: "3.16.2",
     date: "2026-08-07",
     fixed: [

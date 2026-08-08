@@ -162,6 +162,19 @@ export function DeskTopTabs({
 
       {/* right actions */}
       <div className="ml-auto flex items-center gap-2.5">
+        {/* Not a button — the palette opens by typing `>` in the command line.
+            This is the only place that says so. */}
+        <span
+          className={`items-center gap-[7px] rounded-[9px] font-semibold text-[11.5px] text-muted ${compact ? "hidden" : "flex"}`}
+          style={{
+            padding: "6px 12px",
+            border: "1px solid var(--border-faint)",
+            background: "var(--surface)",
+          }}
+        >
+          <Kbd>&gt;</Kbd>
+          {t("palette.hint").toLowerCase()}
+        </span>
         <button
           type="button"
           onClick={onNew}

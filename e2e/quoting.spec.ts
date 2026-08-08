@@ -55,6 +55,28 @@ test.describe("Price book", () => {
   });
 });
 
+test.describe("Desktop fold", () => {
+  test("the glance row shows four cells that agree with the breakdown", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 ");
+    // kg/m appears in the glance row and again in the breakdown — same number.
+    await expect(page.getByText("19.89 kg/m").first()).toBeVisible();
+    await expect(page.getByText("238.7 kg").first()).toBeVisible();
+  });
+
+  test("+ another item starts a second item from the desktop action row", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 ");
+    await page.getByRole("button", { name: "+ another item" }).click();
+    // Not typeQuery: that helper presses ⌘K first, which would clear the line
+    // the button just extended.
+    await page
+      .getByLabel("FerroScale Command query")
+      .pressSequentially("ipe200 4m x3 ", { delay: 5 });
+    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+  });
+});
+
 test.describe("Mass tolerance", () => {
   test("a band appears under the weight once a tolerance is set", async ({ page }) => {
     await page.goto("/en");

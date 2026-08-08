@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.17.0] - 2026-08-08
+
+Implements the Ferroscale Mobile and Desktop **Fold** designs.
+
+### Changed
+
+- **The phone hero is rebuilt.** The WEIGHT/PRICE switch moves into the hero's label row as two small pills instead of occupying a full-width row, and the 109px two-stat card becomes a 34px strip — per piece, the other headline metric, and `Breakdown ›` as the route into the result sheet. A Save / Compare / Share row sits under the number; previously those actions only existed inside the sheet. Hero block: 270px → 221px
+- **The phone has a session surface at last.** A dashed ribbon under the hero carries the running total, `Open ›`, and a `+` that logs the current line; the library sheet gains **SESSION** as a fourth tab (the mockup draws three — PROJECTS stays per the brief) listing every logged line with its own totals, plus the total and **Save as project** the desktop rail has had since 3.10.0. The old four-chip recents strip it replaces had no totals and no way to remove a line
+- **A `>` key on the keypad.** The palette shipped in 3.15.0 keyboard-driven, and the phone keypad cannot type `>` — so phones had no route to it at all. This closes that
+- **Desktop:** the two loose stat tiles become the fold's four-cell glance row, fed from the same builder as the breakdown panel so the two can't disagree; the action row gains **+ another item**; the top bar gains a `>` **commands** hint, which is the only place that says how the palette opens
+
+### Added
+
+- A `+` beside the phone's Save / Compare / Share. The mockup omits it, but without it a phone could only *view* a multi-item line, never start one
+
+### Notes
+
+At 390×844 the fold measures 221px hero + 54px ribbon + 132px suggestions + 62px query line + 224px keypad, with ~70px of flexible gap — and three e2e now hold the property that the document never scrolls at that size.
+
+Settings are unchanged: the mockup shows five rows, but price book, margin, mass tolerance, default grade, default unit, language and haptics all stay.
+
+---
+
 ## [3.16.2] - 2026-08-07
 
 ### Fixed

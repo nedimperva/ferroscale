@@ -432,7 +432,8 @@
       "perPieceLabel": "PO KOMADU",
       "breakdownItem": "Pregled · stavka {index} od {count}",
       "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
-      "saveAsProject": "Sačuvaj kao projekat"
+      "saveAsProject": "Sačuvaj kao projekat",
+      "anotherItem": "+ još jedna stavka"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
