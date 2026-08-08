@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.17.1",
+    date: "2026-08-08",
+    fixed: [
+      "On a phone, a long line pushed the command input and the bottom row of keys off the screen. The chip box now stops at two rows and follows the cursor, so the line you are typing and the keys you type it with are always visible",
+      "The keypad ended flush with the bottom of the screen, so on phones with a home indicator the bottom row sat underneath it. It now keeps clear",
+      "Everything on the phone is a little tighter — smaller keys, a slightly smaller headline number, less padding — so the whole screen fits on shorter phones too",
+    ],
+    fixed_bs: [
+      "Na telefonu je duga linija gurala polje za unos i donji red tipki van ekrana. Okvir sa čipovima sada staje na dva reda i prati kursor, pa su linija koju kucate i tipke kojima je kucate uvijek vidljivi",
+      "Tastatura je završavala tačno na dnu ekrana, pa je na telefonima sa home indikatorom donji red bio ispod njega. Sada ostavlja razmak",
+      "Sve na telefonu je nešto zbijenije — manje tipke, malo manji glavni broj, manje razmaka — pa cijeli ekran stane i na kraće telefone",
+    ],
+  },
+  {
     version: "3.17.0",
     date: "2026-08-08",
     changed: [

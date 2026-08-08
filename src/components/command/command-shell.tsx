@@ -186,6 +186,8 @@ export function CommandShell() {
   /** Workspace, but narrow: one column, breakdown folded away. */
   const [isCompactDesktop, setIsCompactDesktop] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  /** The phone's chip box — kept scrolled to the caret as the line grows. */
+  const queryLineRef = useRef<HTMLDivElement | null>(null);
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
 
   const parserSettings: CommandParserSettings = useMemo(
@@ -252,6 +254,13 @@ export function CommandShell() {
   const targetNote = commandTargetNote(p);
   /** The item under the caret, as the suggestion engine should see it. */
   const activeQuery = useMemo(() => activeItemText(query), [query]);
+
+  // The caret lives at the end of the line, so a capped chip box has to follow
+  // it down as tokens are added — otherwise typing walks off the visible area.
+  useEffect(() => {
+    const el = queryLineRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [query]);
 
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
@@ -1065,7 +1074,7 @@ export function CommandShell() {
           </div>
 
           {/* HERO */}
-          <div className="px-[18px] pt-1.5">
+          <div className="px-[18px] pt-1.5 flex-shrink-0">
             {/* The mode switch rides in the hero's label row rather than taking
                 a full-width row of its own — the fold's single biggest saving. */}
             <div className="flex items-center justify-between mb-0.5">
@@ -1131,7 +1140,7 @@ export function CommandShell() {
                 <span
                   className="leading-[0.88] tracking-[-2.4px] fs-display-num"
                   style={{
-                    fontSize: 64,
+                    fontSize: 56,
                     fontWeight: HERO_FONT_WEIGHT,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
                   }}
@@ -1140,7 +1149,7 @@ export function CommandShell() {
                 </span>
                 {isW && p.totalKg != null && (
                   <span
-                    className="text-[25px] font-bold"
+                    className="text-[22px] font-bold"
                     style={{ color: "var(--accent)" }}
                   >
                     {fsWeightUnit()}
@@ -1283,8 +1292,8 @@ export function CommandShell() {
                 aria-label={t("suggest.addItem")}
                 className="flex items-center justify-center rounded-[11px] text-[16px] font-bold leading-none"
                 style={{
-                  width: 38,
-                  height: 38,
+                  width: 34,
+                  height: 34,
                   border: "1px dashed var(--border-strong)",
                   background: "transparent",
                   color: "var(--muted)",
@@ -1300,8 +1309,8 @@ export function CommandShell() {
               library, with + to add the current line. Recents moved into the
               library's session tab; this is what the phone gets instead. */}
           <div
-            className="flex items-center gap-2.5 mx-[18px] mt-3 rounded-[13px] flex-shrink-0"
-            style={{ padding: "10px 12px", border: "1px dashed var(--border-strong)" }}
+            className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-[13px] flex-shrink-0"
+            style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
           >
             <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap">
               {t("desktop.session")}
@@ -1331,8 +1340,8 @@ export function CommandShell() {
               aria-label={t("aria.addToSession")}
               className="flex items-center justify-center rounded-[9px] text-[16px] font-bold leading-none"
               style={{
-                width: 30,
-                height: 30,
+                width: 28,
+                height: 28,
                 border: "1px solid var(--accent-border)",
                 background: "var(--accent-surface)",
                 color: "var(--accent-text)",
@@ -1475,9 +1484,17 @@ export function CommandShell() {
           {/* QUERY LINE — chips plus the caret; the keypad below types into it */}
             <div className="px-[14px] pb-2">
               <div
+                ref={queryLineRef}
+                data-query-line=""
+                // Capped at two rows and scrolled to the caret. Uncapped, a
+                // long line grew to four rows and pushed the keypad's bottom
+                // row off the screen — the input and its keys are the two
+                // things that must always be visible.
                 className="flex items-center gap-1.5 flex-wrap rounded-[15px] px-3 py-2.5"
                 style={{
                   minHeight: 50,
+                  maxHeight: 92,
+                  overflowY: "auto",
                   border: "1.5px solid var(--accent-border)",
                   background: "var(--surface)",
                   boxShadow: dark
@@ -1762,7 +1779,7 @@ function MetricStrip({
       disabled={!p.valid}
       className="flex items-center gap-3 w-full mt-2.5 rounded-xl text-left border border-border-faint"
       style={{
-        padding: "9px 12px",
+        padding: "7px 11px",
         background: "var(--surface-raised)",
         cursor: p.valid ? "pointer" : "default",
       }}
@@ -1798,7 +1815,7 @@ function ActionBtn({
       onClick={onClick}
       className="flex flex-1 items-center justify-center gap-1.5 rounded-[11px] text-[12px] font-bold"
       style={{
-        height: 38,
+        height: 34,
         letterSpacing: 0.4,
         border: `1px solid ${primary ? "var(--accent-border)" : "var(--border-faint)"}`,
         background: primary ? "var(--accent-surface)" : "var(--surface)",

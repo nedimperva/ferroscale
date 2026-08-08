@@ -193,6 +193,27 @@ test.describe("Phone fold (390x844)", () => {
     expect(box!.height).toBeLessThan(80);
   });
 
+  test("a long line never pushes the input or the keys off screen", async ({ page }) => {
+    // Uncapped, this line's chips wrapped to four rows and shoved the keypad's
+    // bottom row — the ↵ and the unit keys — below the fold.
+    const long = "hea120 6m x2 s355 @2.50/kg + ipe200 4m x3 s235 + rnd20 3m x5";
+    for (const height of [844, 700, 667]) {
+      await page.setViewportSize({ width: 390, height });
+      await page.goto(`/en?q=${encodeURIComponent(long)}`);
+      await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+
+      const enter = await page.getByRole("button", { name: "↵" }).boundingBox();
+      expect(enter, `↵ missing at ${height}`).not.toBeNull();
+      // Fully inside the viewport, with room for a home indicator.
+      expect(enter!.y + enter!.height, `↵ clipped at ${height}`).toBeLessThanOrEqual(height);
+
+      const line = page.locator("[data-query-line]");
+      const box = await line.boundingBox();
+      expect(box!.height, `query line unbounded at ${height}`).toBeLessThanOrEqual(96);
+      expect(box!.y + box!.height, `query line clipped at ${height}`).toBeLessThan(height);
+    }
+  });
+
   test("the palette key is the phone's way into commands", async ({ page }) => {
     await page.goto("/en");
     await page.getByRole("button", { name: "Command palette" }).click();

@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.17.1] - 2026-08-08
+
+### Fixed
+
+- **A long line pushed the input and the keypad's bottom row off the screen.** The chip box was `flex-wrap` with no ceiling, so `hea120 6m x2 s355 @2.50/kg + ipe200 4m x3 s235 + rnd20 3m x5` grew to four rows and shoved the `↵`, unit and rate keys below the fold. It now caps at two rows and scrolls to follow the caret, since the caret sits at the end of the line and typing would otherwise walk off the visible area
+- **The keypad ended flush with the viewport edge**, so on a device with a home indicator the bottom row sat under it. It now pads by `env(safe-area-inset-bottom)` with an 8px floor
+- **The hero could be squeezed.** It had no `flex-shrink-0`, so on a short viewport it compressed and clipped its own contents instead of letting the flexible gap give
+
+### Changed
+
+- A general tightening on the phone: keypad keys 40px → 36px with tighter row gaps, hero number 64px → 56px, and less padding on the metric strip, action row and session ribbon. The fold now fits a 667px-tall screen with room, not just the 844 it was drawn for
+
+### Notes
+
+Three of these were found by screenshotting the fold rather than by the tests, which is why there are now e2e asserting that at 844, 700 and 667 the `↵` key is fully inside the viewport and the chip box never exceeds 96px.
+
+---
+
 ## [3.17.0] - 2026-08-08
 
 Implements the Ferroscale Mobile and Desktop **Fold** designs.

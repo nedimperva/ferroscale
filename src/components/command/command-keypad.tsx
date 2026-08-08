@@ -38,7 +38,7 @@ const PRICE_UNIT_CHOICES = [
 const LONG_PRESS_MS = 450;
 
 const KEY_BASE =
-  "min-w-0 h-10 rounded-[10px] flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
+  "min-w-0 h-9 rounded-[10px] flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
 
 function variantClass(variant: "default" | "accent" | "dim"): string {
   if (variant === "accent") {
@@ -257,25 +257,26 @@ export function CommandKeypad({
   const t = useTranslations("command");
   return (
     <div
-      className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-[10px]"
+      className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-2"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
     >
-      <div className="flex flex-col gap-1.5">
-        <div className="flex gap-1.5">
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-1">
           {ROW_NUM.map((k) => (
             <Key key={k} label={k} mono onPress={() => onKey(k)} />
           ))}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1">
           {ROW_TOP.map((k) => (
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
         </div>
-        <div className="flex gap-1.5 px-4">
+        <div className="flex gap-1 px-4">
           {ROW_MID.map((k) => (
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1">
           {/* Shows × but types x — the canonical quantity token. */}
           <Key label="×" mono big onPress={() => onKey("x")} flex={1.3} />
           {ROW_BOT.map((k) => (
@@ -288,7 +289,7 @@ export function CommandKeypad({
             holdLabel={t("keypad.backspaceHold")}
           />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1">
           <Key label="." mono big onPress={() => onKey(".")} flex={0.8} />
           {/* The palette shipped in 3.15.0 keyboard-only; the phone keypad has
               no way to type `>`, so it had no way in at all until this key. */}
