@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { haptic } from "@/lib/haptics";
 
 interface CommandKeypadProps {
+  /** Opens the `>` palette — the phone's only route to it. */
+  onPalette: () => void;
   onKey: (ch: string) => void;
   onPriceUnit: () => void;
   /** Insert a price token with an explicitly chosen unit (long-press picker). */
@@ -55,9 +57,11 @@ interface KeyProps {
   variant?: "default" | "accent" | "dim";
   mono?: boolean;
   big?: boolean;
+  /** Needed when the glyph isn't a readable name (the `>` palette key). */
+  ariaLabel?: string;
 }
 
-function Key({ label, onPress, flex = 1, variant = "default", mono, big }: KeyProps) {
+function Key({ label, onPress, flex = 1, variant = "default", mono, big, ariaLabel }: KeyProps) {
   return (
     <button
       type="button"
@@ -66,6 +70,7 @@ function Key({ label, onPress, flex = 1, variant = "default", mono, big }: KeyPr
         onPress();
       }}
       style={{ flex }}
+      aria-label={ariaLabel}
       className={`${KEY_BASE} ${variantClass(variant)} ${mono ? "font-mono" : ""} ${big ? "text-lg" : "text-[15px]"}`}
     >
       {label}
@@ -240,6 +245,7 @@ function HoldPickerKey({
 
 export function CommandKeypad({
   onKey,
+  onPalette,
   onPriceUnit,
   onPriceUnitPick,
   onBack,
@@ -284,7 +290,18 @@ export function CommandKeypad({
         </div>
         <div className="flex gap-1.5">
           <Key label="." mono big onPress={() => onKey(".")} flex={0.8} />
-          <Key label={t("keypad.space")} variant="dim" onPress={() => onKey(" ")} flex={2.5} />
+          {/* The palette shipped in 3.15.0 keyboard-only; the phone keypad has
+              no way to type `>`, so it had no way in at all until this key. */}
+          <Key
+            label=">"
+            mono
+            big
+            variant="accent"
+            onPress={onPalette}
+            flex={0.9}
+            ariaLabel={t("palette.aria")}
+          />
+          <Key label={t("keypad.space")} variant="dim" onPress={() => onKey(" ")} flex={2} />
           {/* Tap = mm; hold to pick mm / cm / m. */}
           <HoldPickerKey
             label="mm ▾"

@@ -163,6 +163,33 @@ test.describe("Command bar", () => {
 
 // Phone (<640) — the one surface that still uses bottom sheets for Settings,
 // Library and Result. Everything wider gets the workspace.
+test.describe("Phone fold (390x844)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("the whole screen fits without scrolling", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    const fits = await page.evaluate(
+      () => document.documentElement.scrollHeight <= window.innerHeight,
+    );
+    expect(fits).toBe(true);
+  });
+
+  test("the fold carries hero, session ribbon, query line and keypad at once", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await expect(page.getByText("Breakdown", { exact: false }).first()).toBeVisible();
+    await expect(page.getByText("SESSION", { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: "Command palette" })).toBeVisible();
+  });
+
+  test("the palette key is the phone's way into commands", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "Command palette" }).click();
+    await expect(page.getByRole("listbox", { name: "Command palette" })).toBeVisible();
+  });
+});
+
 test.describe("Sheet dialogs (phone viewport)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 

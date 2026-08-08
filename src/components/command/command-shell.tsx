@@ -53,6 +53,7 @@ import {
   filterPalette,
   isPaletteQuery,
   paletteTerm,
+  PALETTE_PREFIX,
   type PaletteItem,
   type PaletteTarget,
 } from "./palette";
@@ -1269,6 +1270,29 @@ export function CommandShell() {
               </ActionBtn>
               <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
               <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
+              {/* The fold doesn't draw this, but without it the phone can only
+                  view a multi-item line, never start one — the palette is a
+                  long way round for something the desktop does in one press. */}
+              <button
+                type="button"
+                onClick={() => {
+                  haptic("tap");
+                  setQuery((q) => cmdAppendLineItem(q));
+                }}
+                disabled={!p.valid}
+                aria-label={t("suggest.addItem")}
+                className="flex items-center justify-center rounded-[11px] text-[16px] font-bold leading-none"
+                style={{
+                  width: 38,
+                  height: 38,
+                  border: "1px dashed var(--border-strong)",
+                  background: "transparent",
+                  color: "var(--muted)",
+                  opacity: p.valid ? 1 : 0.4,
+                }}
+              >
+                +
+              </button>
             </div>
           </div>
 
@@ -1522,6 +1546,10 @@ export function CommandShell() {
           {(
             <CommandKeypad
               onKey={onKey}
+              onPalette={() => {
+                haptic("tap");
+                setQuery(PALETTE_PREFIX);
+              }}
               onPriceUnit={onPriceUnit}
               onPriceUnitPick={insertPriceToken}
               onBack={onBack}
