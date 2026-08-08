@@ -127,7 +127,8 @@
       "cancel": "Cancel",
       "done": "Done",
       "saveChanges": "Save changes",
-      "share": "Share"
+      "share": "Share",
+      "open": "Open"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -156,7 +157,8 @@
     "aria": {
       "toggleTheme": "Toggle theme",
       "closeSheet": "Close sheet",
-      "liveResult": "Result: {value}"
+      "liveResult": "Result: {value}",
+      "addToSession": "Add this line to the session"
     },
     "nav": {
       "workspace": "WORKSPACE",
@@ -406,7 +408,8 @@
       "calcCount": "{count, plural, one {# calc} other {# calcs}}",
       "noCalculationsYet": "No calculations yet.",
       "noProjectsCreateAbove": "No projects yet. Create one above to get started.",
-      "newProject": "New project"
+      "newProject": "New project",
+      "total": "Total"
     },
     "desktop": {
       "calcLive": "{name} · live",
@@ -427,7 +430,9 @@
       "totalCostLabel": "TOTAL COST",
       "saveSessionAsProject": "SAVE AS PROJECT",
       "perPieceLabel": "PER PIECE",
-      "breakdownItem": "Breakdown · item {index} of {count}"
+      "breakdownItem": "Breakdown · item {index} of {count}",
+      "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
+      "saveAsProject": "Save as project"
     },
     "suggest": {
       "standardSize": "standard size",

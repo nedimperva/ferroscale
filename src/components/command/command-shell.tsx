@@ -164,7 +164,9 @@ export function CommandShell() {
   );
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
   /** Which Library tab the next open lands on — the palette navigates here. */
-  const [libraryTab, setLibraryTab] = useState<"saved" | "compare" | "projects" | null>(null);
+  const [libraryTab, setLibraryTab] = useState<
+    "session" | "saved" | "compare" | "projects" | null
+  >(null);
   const [toast, setToast] = useState<CommandToastState | null>(null);
   // Query history — persisted (and Drive-synced) via the quickHistory
   // collection. Backs the desktop session tape and recency suggestions.
@@ -714,6 +716,19 @@ export function CommandShell() {
 
   /* ── the `>` palette ─────────────────────────────────────────────────── */
 
+  // The session's running totals — the desktop rail has shown these since
+  // 3.10.0; the phone had no session surface at all until the fold.
+  const sessionSummary = useMemo(() => {
+    const rows = quickHistory
+      .map((entry) => cmdParse(entry, parserSettings))
+      .filter((parsed) => parsed.valid);
+    return {
+      count: rows.length,
+      kg: rows.reduce((sum, r) => sum + (r.totalKg ?? 0), 0),
+      amount: rows.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0),
+    };
+  }, [quickHistory, parserSettings]);
+
   const paletteOpen = isPaletteQuery(query);
   const [paletteIndex, setPaletteIndex] = useState(0);
 
@@ -1257,6 +1272,52 @@ export function CommandShell() {
             </div>
           </div>
 
+          {/* SESSION RIBBON — the tape's running total, one tap from the
+              library, with + to add the current line. Recents moved into the
+              library's session tab; this is what the phone gets instead. */}
+          <div
+            className="flex items-center gap-2.5 mx-[18px] mt-3 rounded-[13px] flex-shrink-0"
+            style={{ padding: "10px 12px", border: "1px dashed var(--border-strong)" }}
+          >
+            <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap">
+              {t("desktop.session")}
+            </span>
+            <span className="font-mono text-[13px] font-bold whitespace-nowrap">
+              {sessionSummary.count > 0
+                ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                : "—"}
+            </span>
+            <span className="font-mono text-[11.5px] text-muted whitespace-nowrap">
+              {sessionSummary.count > 0 ? `${sym}${fsMoney(sessionSummary.amount)}` : ""}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setLibraryTab("session");
+                setSheet("library");
+              }}
+              className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint"
+              style={{ padding: "4px 6px" }}
+            >
+              {t("common.open")} ›
+            </button>
+            <button
+              type="button"
+              onClick={logToSession}
+              aria-label={t("aria.addToSession")}
+              className="flex items-center justify-center rounded-[9px] text-[16px] font-bold leading-none"
+              style={{
+                width: 30,
+                height: 30,
+                border: "1px solid var(--accent-border)",
+                background: "var(--accent-surface)",
+                color: "var(--accent-text)",
+              }}
+            >
+              +
+            </button>
+          </div>
+
           <div className="flex-1 min-h-[6px]" />
 
           {/* SUGGESTION BAR */}
@@ -1457,39 +1518,6 @@ export function CommandShell() {
             </div>
         </div>
 
-          {/* Recents: the phone had no history recall at all — ↑/↓ is a
-              desktop-only affordance — so the last few lines sit one tap away
-              above the keypad. */}
-          {quickHistory.length > 0 && (
-            <div
-              className="flex gap-1.5 px-[14px] pb-1.5 flex-shrink-0"
-              style={{ overflowX: "auto" }}
-            >
-              <span className="flex items-center text-[9.5px] font-bold tracking-wider text-muted-faint uppercase flex-shrink-0 pr-0.5">
-                {t("suggest.group.usage")}
-              </span>
-              {quickHistory.slice(0, 4).map((entry) => (
-                <button
-                  key={entry}
-                  type="button"
-                  onClick={() => {
-                    haptic("tap");
-                    setQuery(`${entry} `);
-                  }}
-                  className="flex-shrink-0 rounded-full font-mono text-[11.5px] font-semibold"
-                  style={{
-                    padding: "5px 11px",
-                    border: "1px solid var(--border-faint)",
-                    background: "var(--surface)",
-                    color: "var(--foreground-secondary)",
-                  }}
-                >
-                  {entry}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* On-screen keypad */}
           {(
             <CommandKeypad
@@ -1567,6 +1595,14 @@ export function CommandShell() {
                 setSheet(null);
                 setLibraryTab(null);
               }}
+              sessionTape={quickHistory}
+              onLoadQuery={(entry) => {
+                setQuery(`${entry} `);
+                setSheet(null);
+                setLibraryTab(null);
+              }}
+              onRemoveTapeEntry={removeHistoryEntry}
+              onSaveSessionAsProject={saveSessionAsProject}
               onLoadInput={loadInput}
               {...savedHandlers}
               onRemoveCompare={removeCompareItem}

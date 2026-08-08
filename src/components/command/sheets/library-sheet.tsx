@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
 import { collectSavedTags, filterSortSaved } from "@/lib/saved/query";
@@ -22,7 +22,7 @@ import { SheetShell } from "./sheet-shell";
  *  Library sheet: Saved · Compare · Projects
  * ────────────────────────────────────────────────────────────── */
 
-type LibraryTab = "saved" | "compare" | "projects";
+type LibraryTab = "session" | "saved" | "compare" | "projects";
 
 interface CommandLibrarySheetProps {
   settings: CommandParserSettings;
@@ -46,6 +46,11 @@ interface CommandLibrarySheetProps {
   onClearCompare: () => void;
   onCreateProject: (name: string) => void;
   onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  /** The session tape, newest first — the phone's only view of it. */
+  sessionTape: string[];
+  onLoadQuery: (query: string) => void;
+  onRemoveTapeEntry: (query: string) => void;
+  onSaveSessionAsProject: () => void;
   /** Open on a named tab (the `>` palette navigates here); null picks one. */
   initialTab?: LibraryTab | null;
 }
@@ -83,6 +88,10 @@ export function CommandLibraryWorkspace({
   onClearCompare,
   onCreateProject,
   onRemoveProjectCalc,
+  sessionTape,
+  onLoadQuery,
+  onRemoveTapeEntry,
+  onSaveSessionAsProject,
   initialTab,
 }: CommandLibraryWorkspaceProps) {
   const t = useTranslations("command");
@@ -101,6 +110,14 @@ export function CommandLibraryWorkspace({
   return (
     <>
       <div className="flex gap-1 mb-3" role="tablist">
+        <LibraryTabPill
+          active={tab === "session"}
+          count={sessionTape.length}
+          onClick={() => setTab("session")}
+          icon={<TabIconSession />}
+        >
+          {t("desktop.session")}
+        </LibraryTabPill>
         <LibraryTabPill
           active={tab === "saved"}
           count={saved.length}
@@ -127,6 +144,16 @@ export function CommandLibraryWorkspace({
         </LibraryTabPill>
       </div>
 
+      {tab === "session" && (
+        <SessionTabContent
+          tape={sessionTape}
+          settings={settings}
+          mode={mode}
+          onLoad={onLoadQuery}
+          onRemove={onRemoveTapeEntry}
+          onSaveAsProject={onSaveSessionAsProject}
+        />
+      )}
       {tab === "saved" && (
         <SavedTabContent
           saved={saved}
@@ -164,6 +191,24 @@ export function CommandLibraryWorkspace({
         />
       )}
     </>
+  );
+}
+
+function TabIconSession() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16M4 12h16M4 18h10" />
+    </svg>
   );
 }
 
@@ -688,3 +733,104 @@ function ProjectsTabContent({
 
 /* ─────────────────── Helpers ─────────────────── */
 
+
+/**
+ * The session tape on the phone. The desktop has had a rail for this since
+ * 3.10.0; the phone could only add to the session, never look at it — which
+ * made the running total on the ribbon a number with nothing behind it.
+ */
+function SessionTabContent({
+  tape,
+  settings,
+  mode,
+  onLoad,
+  onRemove,
+  onSaveAsProject,
+}: {
+  tape: string[];
+  settings: CommandParserSettings;
+  mode: "weight" | "price";
+  onLoad: (query: string) => void;
+  onRemove: (query: string) => void;
+  onSaveAsProject: () => void;
+}) {
+  const t = useTranslations("command");
+  const sym = CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€";
+  const rows = tape
+    .map((query) => ({ query, parsed: cmdParse(query, settings) }))
+    .filter((row) => row.parsed.valid);
+  const totalKg = rows.reduce((sum, r) => sum + (r.parsed.totalKg ?? 0), 0);
+  const totalAmount = rows.reduce((sum, r) => sum + (r.parsed.totalAmount ?? 0), 0);
+
+  if (rows.length === 0) {
+    return (
+      <div
+        className="rounded-2xl text-center text-[13px] text-muted"
+        style={{ padding: "26px 14px", border: "1px dashed var(--border-strong)", lineHeight: 1.5 }}
+      >
+        {t("desktop.sessionEmpty")}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      {rows.map((row) => (
+        <div
+          key={row.query}
+          className="flex items-center gap-2.5 rounded-[13px] border border-border-faint bg-[var(--surface)]"
+          style={{ padding: "12px 13px" }}
+        >
+          <button
+            type="button"
+            onClick={() => onLoad(row.query)}
+            className="flex-1 min-w-0 text-left bg-transparent border-0 p-0"
+          >
+            <div className="font-mono text-[13px] font-bold truncate">{row.query}</div>
+            <div className="font-mono text-[11.5px] text-muted mt-0.5">
+              {row.parsed.totalKg != null ? `${fsWeight(row.parsed.totalKg)} ${fsWeightUnit()}` : "—"}
+              {row.parsed.totalAmount != null ? ` · ${sym}${fsMoney(row.parsed.totalAmount)}` : ""}
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => onRemove(row.query)}
+            aria-label={t("common.remove")}
+            className="flex items-center justify-center rounded-[9px] border border-border-faint text-muted text-[14px] leading-none"
+            style={{ width: 30, height: 30, background: "var(--surface-raised)" }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+
+      <div
+        className="flex items-center gap-2.5 rounded-[13px]"
+        style={{ padding: "12px 13px", background: "var(--surface-inset)" }}
+      >
+        <span className="fs-track-wide text-[11px] font-bold uppercase text-muted">
+          {t("library.total")}
+        </span>
+        <span className="ml-auto font-mono text-[14px] font-bold">
+          {mode === "weight"
+            ? `${fsWeight(totalKg)} ${fsWeightUnit()}`
+            : `${sym}${fsMoney(totalAmount)}`}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        onClick={onSaveAsProject}
+        className="rounded-[11px] text-[12.5px] font-bold"
+        style={{
+          height: 40,
+          border: "1px solid var(--accent-border)",
+          background: "var(--accent-surface)",
+          color: "var(--accent-text)",
+        }}
+      >
+        {t("desktop.saveAsProject")}
+      </button>
+    </div>
+  );
+}

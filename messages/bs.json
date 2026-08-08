@@ -127,7 +127,8 @@
       "cancel": "Otkaži",
       "done": "Gotovo",
       "saveChanges": "Sačuvaj izmjene",
-      "share": "Podijeli"
+      "share": "Podijeli",
+      "open": "Otvori"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -156,7 +157,8 @@
     "aria": {
       "toggleTheme": "Promijeni temu",
       "closeSheet": "Zatvori panel",
-      "liveResult": "Rezultat: {value}"
+      "liveResult": "Rezultat: {value}",
+      "addToSession": "Dodaj ovu liniju u sesiju"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",
@@ -406,7 +408,8 @@
       "calcCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "noCalculationsYet": "Još nema izračuna.",
       "noProjectsCreateAbove": "Još nema projekata. Kreirajte jedan iznad za početak.",
-      "newProject": "Novi projekat"
+      "newProject": "Novi projekat",
+      "total": "Ukupno"
     },
     "desktop": {
       "calcLive": "{name} · uživo",
@@ -427,7 +430,9 @@
       "totalCostLabel": "UKUPNA CIJENA",
       "saveSessionAsProject": "SAČUVAJ KAO PROJEKAT",
       "perPieceLabel": "PO KOMADU",
-      "breakdownItem": "Pregled · stavka {index} od {count}"
+      "breakdownItem": "Pregled · stavka {index} od {count}",
+      "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
+      "saveAsProject": "Sačuvaj kao projekat"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
