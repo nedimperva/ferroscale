@@ -126,7 +126,8 @@
       "nameIt": "Imenuj",
       "cancel": "Otkaži",
       "done": "Gotovo",
-      "saveChanges": "Sačuvaj izmjene"
+      "saveChanges": "Sačuvaj izmjene",
+      "share": "Podijeli"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -196,7 +197,9 @@
       "profile": "profil",
       "size": "dimenzija",
       "length": "dužina",
-      "grade": "kvalitet"
+      "grade": "kvalitet",
+      "perPieceSuffix": "/kom",
+      "breakdown": "Pregled"
     },
     "profiles": {
       "round": "Okruglo",

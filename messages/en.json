@@ -126,7 +126,8 @@
       "nameIt": "Name it",
       "cancel": "Cancel",
       "done": "Done",
-      "saveChanges": "Save changes"
+      "saveChanges": "Save changes",
+      "share": "Share"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -196,7 +197,9 @@
       "profile": "profile",
       "size": "size",
       "length": "length",
-      "grade": "grade"
+      "grade": "grade",
+      "perPieceSuffix": "/pc",
+      "breakdown": "Breakdown"
     },
     "profiles": {
       "round": "Round",

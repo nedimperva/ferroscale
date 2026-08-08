@@ -36,7 +36,6 @@ import { CommandGlyph } from "./command-glyph";
 import {
   applyIssueSuggestion,
   computeGhost,
-  formatCommandAliasName,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
@@ -1051,38 +1050,47 @@ export function CommandShell() {
 
           {/* HERO */}
           <div className="px-[18px] pt-1.5">
-            <div className="flex gap-1.5 mb-3">
-              {(["weight", "price"] as const).map((m) => {
-                const active = mode === m;
-                const isWeight = m === "weight";
-                return (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setModeOverride(m)}
-                    className="flex-1 py-2 rounded-[11px] text-[11px] font-bold tracking-[1.4px]"
-                    style={{
-                      border: active
-                        ? `1px solid ${
-                            isWeight ? "var(--accent-border)" : "var(--blue-border)"
-                          }`
-                        : "1px solid var(--border-faint)",
-                      background: active
-                        ? isWeight
-                          ? "var(--accent-surface)"
-                          : "var(--blue-surface)"
-                        : "transparent",
-                      color: active
-                        ? isWeight
-                          ? "var(--accent-text)"
-                          : "var(--blue-text)"
-                        : "var(--muted)",
-                    }}
-                  >
-                    {(m === "weight" ? t("settings.weight") : t("settings.price")).toUpperCase()}
-                  </button>
-                );
-              })}
+            {/* The mode switch rides in the hero's label row rather than taking
+                a full-width row of its own — the fold's single biggest saving. */}
+            <div className="flex items-center justify-between mb-0.5">
+              {/* Names the metric rather than the mode — the highlighted pill
+                  already says which mode is on. */}
+              <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+                {isW ? t("preview.totalWeight") : t("preview.totalCost")}
+              </span>
+              <div className="flex gap-1">
+                {(["weight", "price"] as const).map((m) => {
+                  const active = mode === m;
+                  const isWeight = m === "weight";
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setModeOverride(m)}
+                      aria-pressed={active}
+                      className="fs-track-label rounded-[9px] text-[10.5px] font-bold"
+                      style={{
+                        padding: "4px 12px",
+                        border: active
+                          ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
+                          : "1px solid var(--border-faint)",
+                        background: active
+                          ? isWeight
+                            ? "var(--accent-surface)"
+                            : "var(--blue-surface)"
+                          : "transparent",
+                        color: active
+                          ? isWeight
+                            ? "var(--accent-text)"
+                            : "var(--blue-text)"
+                          : "var(--muted)",
+                      }}
+                    >
+                      {isWeight ? fsWeightUnit().toUpperCase() : sym}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <button
@@ -1105,9 +1113,9 @@ export function CommandShell() {
                   </span>
                 )}
                 <span
-                  className="leading-[0.82] tracking-[-2.6px] fs-display-num"
+                  className="leading-[0.88] tracking-[-2.4px] fs-display-num"
                   style={{
-                    fontSize: 68,
+                    fontSize: 64,
                     fontWeight: HERO_FONT_WEIGHT,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
                   }}
@@ -1116,7 +1124,7 @@ export function CommandShell() {
                 </span>
                 {isW && p.totalKg != null && (
                   <span
-                    className="text-[26px] font-bold"
+                    className="text-[25px] font-bold"
                     style={{ color: "var(--accent)" }}
                   >
                     {fsWeightUnit()}
@@ -1137,7 +1145,7 @@ export function CommandShell() {
               </div>
             </button>
 
-            <div className="flex items-center gap-2.5 mt-3 pb-3.5 border-b border-border-faint">
+            <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
               {paletteOpen ? null : line.multi ? (
                 <LineItems line={line} compact />
               ) : p.valid && p.kgm != null ? (
@@ -1229,16 +1237,25 @@ export function CommandShell() {
                 </span>
               </span>
             </div>
-          </div>
 
-          {/* MIDDLE — preview card (always visible so the layout stays stable).
-              Recents live in the bookmark sheet only. */}
-          <PreviewCard
-            p={p}
-            isWeight={isW}
-            sym={sym}
-            onOpen={() => p.valid && setSheet("result")}
-          />
+            <MetricStrip
+              p={p}
+              isWeight={isW}
+              sym={sym}
+              onOpen={() => p.valid && setSheet("result")}
+            />
+
+            <div className="flex gap-1.5 mt-2">
+              <ActionBtn onClick={doSave} primary={!!currentSavedEntry}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={currentSavedEntry ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                </svg>
+                {currentSavedEntry ? t("common.saved") : t("common.save")}
+              </ActionBtn>
+              <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
+              <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
+            </div>
+          </div>
 
           <div className="flex-1 min-h-[6px]" />
 
@@ -1642,37 +1659,14 @@ function Chev() {
   );
 }
 
-function ChipBadge({
-  on,
-  fam,
-  children,
-}: {
-  on: boolean;
-  fam?: import("@ferroscale/metal-core").CommandFamily;
-  children: React.ReactNode;
-}) {
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-mono text-[11.5px] font-semibold whitespace-nowrap"
-      style={{
-        background: on ? "var(--surface-inset)" : "transparent",
-        color: on ? "var(--foreground-secondary)" : "var(--muted-faint)",
-        border: on
-          ? "1px solid transparent"
-          : "1px dashed var(--border-strong)",
-      }}
-    >
-      {fam && on ? (
-        <span style={{ color: "var(--accent)" }}>
-          <CommandGlyph fam={fam} size={14} />
-        </span>
-      ) : null}
-      {children}
-    </span>
-  );
-}
 
-function PreviewCard({
+/**
+ * The fold's one-line answer to "show me more": per-piece and the other
+ * headline metric side by side, with the whole strip acting as the way into
+ * the full breakdown. It replaces a 109px two-stat card with a 34px row —
+ * the single biggest saving on the phone after the mode pills.
+ */
+function MetricStrip({
   p,
   isWeight,
   sym,
@@ -1684,68 +1678,67 @@ function PreviewCard({
   onOpen: () => void;
 }) {
   const t = useTranslations("command");
+  const dim = { color: "var(--muted-faint)" };
+  const perPiece =
+    p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—";
+  const second =
+    p.valid && p.totalKg != null && p.totalAmount != null
+      ? isWeight
+        ? `${sym} ${fsMoney(p.totalAmount)}`
+        : `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
+      : "—";
+
   return (
     <button
       type="button"
       onClick={onOpen}
       disabled={!p.valid}
-      className="mx-[18px] mt-3.5 rounded-2xl border border-border-faint bg-[var(--surface)] p-3 text-left block w-[calc(100%-36px)]"
+      className="flex items-center gap-3 w-full mt-2.5 rounded-xl text-left border border-border-faint"
       style={{
-        boxShadow: "var(--panel-shadow-soft)",
+        padding: "9px 12px",
+        background: "var(--surface-raised)",
         cursor: p.valid ? "pointer" : "default",
       }}
     >
-      <div className="flex gap-3.5">
-        <div className="flex-1">
-          <div className="text-[9.5px] font-bold tracking-wider text-muted uppercase">
-            {t("preview.perPiece")}
-          </div>
-          <div
-            className="font-mono text-[17px] font-bold mt-1"
-            style={{
-              color: p.valid ? "var(--foreground)" : "var(--muted-faint)",
-            }}
-          >
-            {p.valid && p.perPieceKg != null
-              ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
-              : "—"}
-          </div>
-        </div>
-        <div className="w-px bg-border-faint" />
-        <div className="flex-1">
-          <div className="text-[9.5px] font-bold tracking-wider text-muted uppercase">
-            {isWeight ? t("preview.totalCost") : t("preview.totalWeight")}
-          </div>
-          <div
-            className="font-mono text-[17px] font-bold mt-1"
-            style={{
-              color: p.valid ? "var(--foreground)" : "var(--muted-faint)",
-            }}
-          >
-            {p.valid && p.totalKg != null && p.totalAmount != null
-              ? isWeight
-                ? `${sym} ${fsMoney(p.totalAmount)}`
-                : `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
-              : "—"}
-          </div>
-        </div>
-        {p.valid && (
-          <span className="self-center text-muted-faint">
-            <Chev />
-          </span>
-        )}
-      </div>
-      <div className="flex gap-1.5 mt-3 flex-wrap">
-        <ChipBadge on={!!p.alias} fam={p.alias?.fam}>
-          {p.alias ? formatCommandAliasName(t, p.alias) : t("preview.profile")}
-        </ChipBadge>
-        <ChipBadge on={p.hasSize}>{p.hasSize ? p.size.replace(/x/g, "×") : t("preview.size")}</ChipBadge>
-        <ChipBadge on={p.lengthM != null}>
-          {p.lengthM != null ? `${p.lengthRaw}${p.lengthUnit}` : t("preview.length")}
-        </ChipBadge>
-        <ChipBadge on={p.qty != null}>{`× ${p.realQty}`}</ChipBadge>
-        <ChipBadge on={!!p.gradeLabel}>{p.gradeLabel ?? t("preview.grade")}</ChipBadge>
-      </div>
+      <span className="font-mono text-[12.5px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
+        {perPiece}
+        <span className="text-muted">{t("preview.perPieceSuffix")}</span>
+      </span>
+      <span className="w-px h-3.5 bg-border-faint" />
+      <span className="font-mono text-[12.5px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
+        {second}
+      </span>
+      <span className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint whitespace-nowrap">
+        {t("preview.breakdown")} ›
+      </span>
+    </button>
+  );
+}
+
+/** One of the three equal actions under the hero (Save / Compare / Share). */
+function ActionBtn({
+  onClick,
+  primary,
+  children,
+}: {
+  onClick: () => void;
+  primary?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-[11px] text-[12px] font-bold"
+      style={{
+        height: 38,
+        letterSpacing: 0.4,
+        border: `1px solid ${primary ? "var(--accent-border)" : "var(--border-faint)"}`,
+        background: primary ? "var(--accent-surface)" : "var(--surface)",
+        color: primary ? "var(--accent-text)" : "var(--foreground-secondary)",
+      }}
+    >
+      {children}
     </button>
   );
 }
