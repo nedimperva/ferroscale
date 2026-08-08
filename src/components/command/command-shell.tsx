@@ -1375,10 +1375,13 @@ export function CommandShell() {
               </div>
             ) : (
             <div
-              // Two rows of wrapped chips rather than one long swipe: standard
-              // sizes are a grid in the head, not a queue.
-              className="flex gap-1.5 px-[18px] pb-0.5 flex-wrap content-start"
-              style={{ maxHeight: 96, overflowY: "auto" }}
+              // One row that scrolls sideways, per the fold. Wrapping to two
+              // rows made the strip's height depend on how many chips the stage
+              // happened to produce, and the second row was clipped by the
+              // query line — the layout has no vertical give to lend it.
+              data-suggestion-strip=""
+              className="flex gap-1.5 px-[18px] pb-0.5"
+              style={{ overflowX: "auto", overflowY: "hidden" }}
             >
               {sug.items.map((it, i) => (
                 <button

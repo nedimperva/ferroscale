@@ -183,6 +183,16 @@ test.describe("Phone fold (390x844)", () => {
     await expect(page.getByRole("button", { name: "Command palette" })).toBeVisible();
   });
 
+  test("the suggestion strip stays one row, whatever the stage offers", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // Wrapping to a second row made the strip's height depend on the chip
+    // count, and the overflow was clipped by the query line beneath it.
+    const strip = page.locator("[data-suggestion-strip]");
+    const box = await strip.boundingBox();
+    expect(box!.height).toBeLessThan(80);
+  });
+
   test("the palette key is the phone's way into commands", async ({ page }) => {
     await page.goto("/en");
     await page.getByRole("button", { name: "Command palette" }).click();
