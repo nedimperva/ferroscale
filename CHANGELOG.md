@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.17.2] - 2026-08-08
+
+### Fixed
+
+- **Logging a line pushed the whole screen down.** The session ribbon showed weight *and* money side by side, and once both had digits the `Open ›` label wrapped — taking the row from 48px to 72px and shifting everything below it. The ribbon now shows the total in whichever unit the hero is in, followed by the line count, and holds one height whether the session is empty or full. Truncating a money figure mid-digit was the first fix and a worse one: the full split is a tap away in the session tab
+
+### Notes
+
+Pinned by an e2e that measures the ribbon empty and populated and asserts both its height and its y-position are unchanged — the symptom was everything *below* moving, so position is the thing worth asserting.
+
+---
+
 ## [3.17.1] - 2026-08-08
 
 ### Fixed

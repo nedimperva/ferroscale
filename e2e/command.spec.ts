@@ -214,6 +214,28 @@ test.describe("Phone fold (390x844)", () => {
     }
   });
 
+  test("filling the session doesn't move anything", async ({ page }) => {
+    const ribbon = () => page.getByText("SESSION", { exact: true }).locator("..");
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    const empty = await ribbon().boundingBox();
+
+    // The row grew from 48px to 72px once it had numbers in it: "Open ›" wrapped
+    // to a second line, and everything below shifted down with it.
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["ipe200 4m x3", "rnd20 3m x5", "shs40x40x3 6m x8", "hea120 6m x2"]),
+      );
+    });
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    const full = await ribbon().boundingBox();
+
+    expect(full!.height).toBe(empty!.height);
+    expect(full!.y).toBe(empty!.y);
+  });
+
   test("the palette key is the phone's way into commands", async ({ page }) => {
     await page.goto("/en");
     await page.getByRole("button", { name: "Command palette" }).click();

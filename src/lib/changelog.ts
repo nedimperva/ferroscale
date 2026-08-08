@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.17.2",
+    date: "2026-08-08",
+    fixed: [
+      "Adding a line to the session no longer nudges the whole screen down. The session row was growing a second line as soon as it had numbers to show; it now shows the total in whichever unit the big number is in, plus how many lines it came from, and keeps one fixed height whether the session is empty or full",
+    ],
+    fixed_bs: [
+      "Dodavanje linije u sesiju više ne pomjera cijeli ekran nadolje. Red sesije je dobijao drugi red čim je imao brojeve za prikazati; sada prikazuje zbir u jedinici u kojoj je i veliki broj, uz broj linija, i zadržava istu visinu bez obzira je li sesija prazna ili puna",
+    ],
+  },
+  {
     version: "3.17.1",
     date: "2026-08-08",
     fixed: [

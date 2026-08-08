@@ -1312,16 +1312,25 @@ export function CommandShell() {
             className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-[13px] flex-shrink-0"
             style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
           >
-            <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap">
+            <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
               {t("desktop.session")}
             </span>
-            <span className="font-mono text-[13px] font-bold whitespace-nowrap">
-              {sessionSummary.count > 0
-                ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
-                : "—"}
+            {/* The total in whichever unit the hero is showing, then how many
+                lines it came from. Showing weight and money side by side made
+                the row two lines tall as soon as the session had anything in
+                it, and truncating a number mid-digit is worse than omitting it
+                — the full breakdown is one tap away in the session tab. */}
+            <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
+              {sessionSummary.count === 0
+                ? "—"
+                : isW
+                  ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                  : `${sym}${fsMoney(sessionSummary.amount)}`}
             </span>
-            <span className="font-mono text-[11.5px] text-muted whitespace-nowrap">
-              {sessionSummary.count > 0 ? `${sym}${fsMoney(sessionSummary.amount)}` : ""}
+            <span className="font-mono text-[11.5px] text-muted truncate min-w-0">
+              {sessionSummary.count > 0
+                ? t("library.calcCount", { count: sessionSummary.count })
+                : ""}
             </span>
             <button
               type="button"
@@ -1329,7 +1338,7 @@ export function CommandShell() {
                 setLibraryTab("session");
                 setSheet("library");
               }}
-              className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint"
+              className="fs-track-wide ml-auto flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase text-muted-faint"
               style={{ padding: "4px 6px" }}
             >
               {t("common.open")} ›
