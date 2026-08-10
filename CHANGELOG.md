@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.17.3] - 2026-08-08
+
+Both found by screenshotting surfaces the tests were passing on.
+
+### Fixed
+
+- **The desktop glance row was clipped to nothing.** The four-cell grid shared a flex row with the action cluster, which crushed each cell to **21px against the 91–114px its value needed** — every figure cut mid-number. The fold stacks these; they now sit on their own full-width row with the actions beneath. The e2e passed because `getByText("19.89 kg/m")` matches text that is in the DOM but invisible
+- **The fourth library tab ran off a 390px screen.** `PROJECTS` was cut in half. Tuning the font down until English fitted was the first fix and the wrong one — Bosnian's `POREĐENJE` is longer than `COMPARE`, so it would have broken on the next locale. The pills are sized to their own labels now and the row scrolls
+
+---
+
 ## [3.17.2] - 2026-08-08
 
 ### Fixed

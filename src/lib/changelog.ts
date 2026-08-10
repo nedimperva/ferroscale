@@ -17,6 +17,18 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.17.3",
+    date: "2026-08-08",
+    fixed: [
+      "The four figures above the desktop breakdown were squeezed to a sliver and cut off mid-number. They now sit on their own row at full width",
+      "The fourth library tab ran off the edge of a phone screen. The tabs are sized to their own labels now and the row scrolls, so no label is ever cut — in any language",
+    ],
+    fixed_bs: [
+      "Četiri brojke iznad desktop pregleda bile su stisnute i odsječene usred broja. Sada stoje u vlastitom redu pune širine",
+      "Četvrta kartica biblioteke izlazila je van ivice ekrana telefona. Kartice su sada širine vlastitog naziva a red se pomjera, pa nijedan naziv nije odsječen — ni na jednom jeziku",
+    ],
+  },
+  {
     version: "3.17.2",
     date: "2026-08-08",
     fixed: [

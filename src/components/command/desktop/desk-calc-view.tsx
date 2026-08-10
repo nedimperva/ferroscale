@@ -122,7 +122,7 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
   ];
 
   return (
-    <div className="grid flex-1 gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+    <div className="grid w-full gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
       {cells.map((cell) => (
         <div
           key={cell.label}
@@ -132,7 +132,7 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
           <div className="fs-track-wide text-[9.5px] font-bold uppercase text-muted">
             {cell.label}
           </div>
-          <div className="font-mono text-[17px] font-bold mt-1 whitespace-nowrap">
+          <div className="font-mono text-[17px] font-bold mt-1 truncate">
             {cell.value}
           </div>
         </div>
@@ -814,12 +814,13 @@ export function DeskCalcView({
               </div>
             </div>
 
-            {/* stats + actions */}
-            <div
-              className="flex items-end gap-6 flex-wrap"
-              style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}
-            >
+            {/* stats, then actions — stacked, as the fold has them. Sharing a
+                flex row with the action cluster crushed the grid to 21px per
+                cell and clipped every value mid-number. */}
+            <div style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}>
               <FoldCells p={p} sym={sym} />
+            </div>
+            <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
               <div className="ml-auto flex items-center gap-2">
                 {/* Save is a toggle: filled bookmark = this exact line is in
                     the library, press again to remove it. */}

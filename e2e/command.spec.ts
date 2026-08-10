@@ -236,6 +236,20 @@ test.describe("Phone fold (390x844)", () => {
     expect(full!.y).toBe(empty!.y);
   });
 
+  test("every library tab label is readable, not clipped", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Library" }).click();
+    const clipped = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('[role="tab"] span:not([aria-hidden])'))
+        .filter((el) => el.scrollWidth > el.clientWidth + 1)
+        .map((el) => el.textContent),
+    );
+    // Four tabs sharing 390px clipped PROJECTS. Sizing to content and letting
+    // the row scroll is the only version that survives a longer locale.
+    expect(clipped).toEqual([]);
+  });
+
   test("the palette key is the phone's way into commands", async ({ page }) => {
     await page.goto("/en");
     await page.getByRole("button", { name: "Command palette" }).click();

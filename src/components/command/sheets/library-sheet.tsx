@@ -109,7 +109,11 @@ export function CommandLibraryWorkspace({
 
   return (
     <>
-      <div className="flex gap-1 mb-3" role="tablist">
+      <div
+        className="flex gap-1 mb-3 overflow-x-auto"
+        style={{ scrollbarWidth: "none" }}
+        role="tablist"
+      >
         <LibraryTabPill
           active={tab === "session"}
           count={sessionTape.length}
@@ -286,7 +290,10 @@ function LibraryTabPill({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`flex-1 h-9 rounded-lg text-[11px] font-bold uppercase tracking-[1px] flex items-center justify-center gap-1.5 ${
+      // Sized to its own label, in a row that scrolls. Four equal shares of
+      // 390px meant tuning the font down until "PROJECTS" fitted — which would
+      // have broken the moment a locale used a longer word (bs: "POREĐENJE").
+      className={`flex-shrink-0 h-9 rounded-lg px-3 text-[10.5px] font-bold uppercase tracking-[0.5px] flex items-center justify-center gap-1.5 ${
         active
           ? "bg-[var(--surface)] text-foreground border border-[var(--border-strong)]"
           : "bg-[var(--surface-raised)] text-muted border border-border-faint"
@@ -295,7 +302,7 @@ function LibraryTabPill({
       <span className="flex items-center justify-center" aria-hidden="true">
         {icon}
       </span>
-      {children}
+      <span className="whitespace-nowrap">{children}</span>
       {count > 0 && (
         <span className="opacity-70 font-mono text-[10px]">{count}</span>
       )}
