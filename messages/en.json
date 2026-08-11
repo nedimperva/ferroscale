@@ -86,7 +86,6 @@
         "price": "Rate for this line only",
         "target": "Solve backwards: how much makes 500 kg (or =250eur)",
         "item": "Another item on the same line",
-        "palette": "Commands: go anywhere, run anything, open a saved entry by name",
         "arith": "Arithmetic in a token — also x2+3"
       },
       "shortcut": {
@@ -226,29 +225,6 @@
     "line": {
       "items": "Line items",
       "total": "LINE TOTAL"
-    },
-    "palette": {
-      "aria": "Command palette",
-      "empty": "No matching command",
-      "hint": "Commands",
-      "kind": {
-        "action": "action",
-        "saved": "saved",
-        "project": "project"
-      },
-      "action": {
-        "newCalc": "New calculation",
-        "save": "Save this line",
-        "compare": "Add to compare",
-        "copySummary": "Copy summary",
-        "shareLink": "Copy share link",
-        "goSaved": "Go to saved",
-        "goProjects": "Go to projects",
-        "goCompare": "Go to compare",
-        "goSettings": "Go to settings",
-        "help": "Command reference",
-        "toggleTheme": "Toggle theme"
-      }
     },
     "hint": {
       "addLength": "add a length ->",

@@ -1,6 +1,6 @@
 {
   "name": "ferroscale",
-  "version": "3.17.4",
+  "version": "3.18.0",
   "private": true,
   "workspaces": [
     "packages/*"

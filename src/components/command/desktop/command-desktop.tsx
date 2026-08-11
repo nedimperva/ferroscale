@@ -111,7 +111,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
           {...props}
           inputRef={inputRef}
           gotoCompare={() => setView("compare")}
-          onGotoView={setView}
         />
       )}
       {view === "compare" && (

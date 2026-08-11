@@ -33,7 +33,6 @@ const GRAMMAR: { token: string; key: string }[] = [
   { token: "=500kg", key: "target" },
   { token: "+ ipe200 4m", key: "item" },
   { token: "6m-50mm", key: "arith" },
-  { token: ">", key: "palette" },
 ];
 
 function Row({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {

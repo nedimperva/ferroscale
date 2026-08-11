@@ -17,6 +17,22 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.18.0",
+    date: "2026-08-11",
+    changed: [
+      "The > command palette is gone, on phone and on desktop. The > key has left the keypad — the space bar takes its width — and the desktop top bar no longer carries the > hint. Everything the palette could reach is still one tap or one shortcut away: the tabs and the library sheet for getting somewhere, the action row for save, compare and share",
+    ],
+    fixed: [
+      "On phone the keypad rested on a band of empty screen instead of the bottom edge. The shell measured its column in dvh inside a fixed full-screen frame, and on a device where those two differ the leftover showed as a strip beneath the keys. The column now fills the frame exactly, so the bottom row of keys sits on the edge of the screen",
+    ],
+    changed_bs: [
+      "Komandna paleta > je uklonjena, i na telefonu i na desktopu. Tipka > je nestala s tastature — razmaknica je preuzela njenu širinu — a gornja traka na desktopu više ne prikazuje > napomenu. Sve što je paleta nudila i dalje je jedan dodir ili jedna prečica daleko: kartice i biblioteka za navigaciju, red akcija za čuvanje, poređenje i dijeljenje",
+    ],
+    fixed_bs: [
+      "Na telefonu je tastatura stajala na traci praznog ekrana umjesto na donjoj ivici. Ljuska je mjerila svoju kolonu u dvh unutar fiksnog okvira preko cijelog ekrana, a na uređaju gdje se to dvoje razlikuje ostatak se vidio kao traka ispod tipki. Kolona sada tačno popunjava okvir, pa donji red tipki stoji na ivici ekrana",
+    ],
+  },
+  {
     version: "3.17.4",
     date: "2026-08-08",
     fixed: [

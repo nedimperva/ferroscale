@@ -46,17 +46,7 @@ import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
 import { LineItems } from "./line-items";
-import { CommandPalette } from "./command-palette";
 import { massBand } from "./mass-band";
-import {
-  buildPaletteActions,
-  filterPalette,
-  isPaletteQuery,
-  paletteTerm,
-  PALETTE_PREFIX,
-  type PaletteItem,
-  type PaletteTarget,
-} from "./palette";
 import {
   activeItemText,
   applyToActiveItem,
@@ -724,8 +714,6 @@ export function CommandShell() {
     inputRef.current?.select();
   }, []);
 
-  /* ── the `>` palette ─────────────────────────────────────────────────── */
-
   // The session's running totals — the desktop rail has shown these since
   // 3.10.0; the phone had no session surface at all until the fold.
   const sessionSummary = useMemo(() => {
@@ -739,96 +727,8 @@ export function CommandShell() {
     };
   }, [quickHistory, parserSettings]);
 
-  const paletteOpen = isPaletteQuery(query);
-  const [paletteIndex, setPaletteIndex] = useState(0);
-
-  const navigatePalette = useCallback((target: PaletteTarget) => {
-    if (target === "settings") {
-      setSheet("settings");
-      return;
-    }
-    if (target === "calc") {
-      setSheet(null);
-      return;
-    }
-    // Saved, compare and projects are the Library sheet's three tabs on phone.
-    setLibraryTab(target);
-    setSheet("library");
-  }, []);
-
-  const paletteItems = useMemo<PaletteItem[]>(() => {
-    if (!paletteOpen) return [];
-    const actions = buildPaletteActions(t, {
-      navigate: navigatePalette,
-      onNew: newCalc,
-      onSave: doSave,
-      onCompare: doCompare,
-      onCopySummary: copySummary,
-      onShareLink: shareLink,
-      onOpenHelp: () => setSheet("help"),
-      onToggleTheme: cycleTheme,
-      hasResult: p.valid,
-    });
-    // The user's own things come after the verbs: an entry only outranks an
-    // action when its name is the better match for what was typed.
-    const entries: PaletteItem[] = savedEntries.map((entry) => ({
-      id: `saved:${entry.id}`,
-      label: entry.name,
-      sub: entry.result.profileLabel,
-      kind: "saved",
-      run: () => loadSavedEntry(entry),
-    }));
-    const projectItems: PaletteItem[] = projects.map((project) => ({
-      id: `project:${project.id}`,
-      label: project.name,
-      sub: t("library.calcCount", { count: project.calculations.length }),
-      kind: "project",
-      run: () => navigatePalette("projects"),
-    }));
-    return [...actions, ...entries, ...projectItems];
-  }, [
-    paletteOpen,
-    t,
-    navigatePalette,
-    newCalc,
-    doSave,
-    doCompare,
-    copySummary,
-    shareLink,
-    cycleTheme,
-    p.valid,
-    savedEntries,
-    projects,
-    loadSavedEntry,
-  ]);
-
-  const paletteResults = useMemo(
-    () => filterPalette(paletteItems, paletteTerm(query)),
-    [paletteItems, query],
-  );
-  // Derived rather than stored: typing narrows the list under the cursor, and
-  // an index left pointing past the end would select nothing.
-  const paletteActiveIndex = Math.min(paletteIndex, Math.max(0, paletteResults.length - 1));
-
-  /** Run a row and drop back to the calculator with an empty line. */
-  const runPaletteItem = useCallback(
-    (item: PaletteItem) => {
-      if (item.disabled) return;
-      setQuery("");
-      item.run();
-    },
-    [],
-  );
-
-  /** The keypad's ↵: run the selected command in palette mode, else log. */
-  const onEnter = useCallback(() => {
-    if (paletteOpen) {
-      const item = paletteResults[paletteActiveIndex];
-      if (item) runPaletteItem(item);
-      return;
-    }
-    logToSession();
-  }, [paletteOpen, paletteResults, paletteActiveIndex, runPaletteItem, logToSession]);
+  /** The keypad's ↵. */
+  const onEnter = logToSession;
 
   // Focus with the caret at the end (after chip edit/remove) — select-all
   // would make the next keystroke wipe the whole query.
@@ -877,12 +777,7 @@ export function CommandShell() {
   // Chips are grouped by item, so a `+`-joined line renders as the two (or
   // more) calculations it is. While the query doesn't end in whitespace the
   // last piece is still being typed — rendered as plain text at the cursor.
-  // A `>` line is a command, not a calculation: it isn't tokenized into chips,
-  // it sits at the caret whole, and the parser's opinion of it is ignored.
-  const chips = useMemo(
-    () => (paletteOpen ? { groups: [], partial: query } : lineChips(query)),
-    [paletteOpen, query],
-  );
+  const chips = useMemo(() => lineChips(query), [query]);
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   // Faint completion drawn after the caret (profile letters / recent prefix).
@@ -1012,13 +907,17 @@ export function CommandShell() {
   // ── Phone (<640): fullscreen shell with the on-screen keypad ──
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center overflow-hidden"
+      className="fixed inset-0 flex overflow-hidden"
       style={{ background: screenBg, transition: "background 220ms ease" }}
     >
       <PwaRegister />
+      {/* Fills the fixed parent exactly. It used to be `height: 100dvh`, which
+          on iOS resolves differently from the fixed element's own box — the
+          shorter of the two left a band of screen background below the keypad
+          instead of the keys sitting flush on the bottom edge. */}
       <div
         className="relative flex flex-col overflow-hidden text-foreground"
-        style={{ width: "100%", height: "100dvh", background: screenBg }}
+        style={{ width: "100%", height: "100%", background: screenBg }}
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* Safe-top spacer — honours real device safe-area on mobile, narrow gap on desktop */}
@@ -1171,7 +1070,7 @@ export function CommandShell() {
             </button>
 
             <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
-              {paletteOpen ? null : line.multi ? (
+              {line.multi ? (
                 <LineItems line={line} compact />
               ) : p.valid && p.kgm != null ? (
                 <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
@@ -1280,8 +1179,7 @@ export function CommandShell() {
               <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
               <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
               {/* The fold doesn't draw this, but without it the phone can only
-                  view a multi-item line, never start one — the palette is a
-                  long way round for something the desktop does in one press. */}
+                  view a multi-item line, never start one. */}
               <button
                 type="button"
                 onClick={() => {
@@ -1366,7 +1264,7 @@ export function CommandShell() {
           <div className="pb-1.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
               <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
-                {paletteOpen ? t("palette.hint") : formatCommandHint(t, sug.hint)}
+                {formatCommandHint(t, sug.hint)}
               </span>
               {query !== "" && (
                 <button
@@ -1381,17 +1279,6 @@ export function CommandShell() {
               )}
             </div>
             <div className="relative">
-            {paletteOpen ? (
-              <div className="px-[18px] pb-0.5" style={{ maxHeight: 220, overflowY: "auto" }}>
-                <CommandPalette
-                  items={paletteResults}
-                  activeIndex={paletteActiveIndex}
-                  onRun={runPaletteItem}
-                  onHover={setPaletteIndex}
-                  compact
-                />
-              </div>
-            ) : (
             <div
               // One row that scrolls sideways, per the fold. Wrapping to two
               // rows made the strip's height depend on how many chips the stage
@@ -1477,7 +1364,6 @@ export function CommandShell() {
                 </button>
               ))}
             </div>
-            )}
             {/* Bottom fade hints that more chips are below the fold */}
             <div
               aria-hidden="true"
@@ -1572,22 +1458,16 @@ export function CommandShell() {
         </div>
 
           {/* On-screen keypad */}
-          {(
-            <CommandKeypad
-              onKey={onKey}
-              onPalette={() => {
-                haptic("tap");
-                setQuery(PALETTE_PREFIX);
-              }}
-              onPriceUnit={onPriceUnit}
-              onPriceUnitPick={insertPriceToken}
-              onBack={onBack}
-              onBackToken={onBackToken}
-              onEnter={onEnter}
-              priceUnitLabel={priceUnitLabel}
-              valid={p.valid}
-            />
-          )}
+          <CommandKeypad
+            onKey={onKey}
+            onPriceUnit={onPriceUnit}
+            onPriceUnitPick={insertPriceToken}
+            onBack={onBack}
+            onBackToken={onBackToken}
+            onEnter={onEnter}
+            priceUnitLabel={priceUnitLabel}
+            valid={p.valid}
+          />
 
           {/* SHEETS */}
           {effectiveSheet === "result" && p.valid && (

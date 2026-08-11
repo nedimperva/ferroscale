@@ -86,7 +86,6 @@
         "price": "Cijena samo za ovu liniju",
         "target": "Obrnuti račun: koliko čini 500 kg (ili =250eur)",
         "item": "Još jedna stavka u istoj liniji",
-        "palette": "Komande: idite bilo gdje, pokrenite bilo šta, otvorite sačuvanu stavku po imenu",
         "arith": "Računanje u tokenu — takođe x2+3"
       },
       "shortcut": {
@@ -226,29 +225,6 @@
     "line": {
       "items": "Stavke linije",
       "total": "UKUPNO LINIJA"
-    },
-    "palette": {
-      "aria": "Komandna paleta",
-      "empty": "Nema odgovarajuće komande",
-      "hint": "Komande",
-      "kind": {
-        "action": "akcija",
-        "saved": "sačuvano",
-        "project": "projekat"
-      },
-      "action": {
-        "newCalc": "Novi proračun",
-        "save": "Sačuvaj ovu liniju",
-        "compare": "Dodaj u poređenje",
-        "copySummary": "Kopiraj sažetak",
-        "shareLink": "Kopiraj link za dijeljenje",
-        "goSaved": "Idi na sačuvano",
-        "goProjects": "Idi na projekte",
-        "goCompare": "Idi na poređenje",
-        "goSettings": "Idi na postavke",
-        "help": "Pregled komandi",
-        "toggleTheme": "Promijeni temu"
-      }
     },
     "hint": {
       "addLength": "dodajte dužinu ->",
