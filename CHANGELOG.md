@@ -5,6 +5,244 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.17.4] - 2026-08-08
+
+### Fixed
+
+- **The session rail broke numbers in half.** Its weight and money columns were fixed at 82px and 92px, so the moment a value outgrew them the unit wrapped to its own line — `KM 1,396.41` became `KM` above `1,396.41`, with empty space beside it. Reported on **BAM**, whose `KM` is two characters where `€` is one, which is why it showed up there first and not in testing. The columns are now a *minimum* width with `white-space: nowrap`: they still line up, they grow with the number, and the unit can never leave it. The same fixed-width trap in the saved card's two figures is fixed with it
+
+### Changed
+
+- **The phone library tabs show only the open tab's name**; the rest are their icon and count. Four labelled tabs never fitted 390px — the previous attempt let the row scroll, which pushed PROJECTS out of sight. This keeps all four visible and, because only one label is ever rendered, the row is the same width in every language
+
+---
+
+## [3.17.3] - 2026-08-08
+
+Both found by screenshotting surfaces the tests were passing on.
+
+### Fixed
+
+- **The desktop glance row was clipped to nothing.** The four-cell grid shared a flex row with the action cluster, which crushed each cell to **21px against the 91–114px its value needed** — every figure cut mid-number. The fold stacks these; they now sit on their own full-width row with the actions beneath. The e2e passed because `getByText("19.89 kg/m")` matches text that is in the DOM but invisible
+- **The fourth library tab ran off a 390px screen.** `PROJECTS` was cut in half. Tuning the font down until English fitted was the first fix and the wrong one — Bosnian's `POREĐENJE` is longer than `COMPARE`, so it would have broken on the next locale. The pills are sized to their own labels now and the row scrolls
+
+---
+
+## [3.17.2] - 2026-08-08
+
+### Fixed
+
+- **Logging a line pushed the whole screen down.** The session ribbon showed weight *and* money side by side, and once both had digits the `Open ›` label wrapped — taking the row from 48px to 72px and shifting everything below it. The ribbon now shows the total in whichever unit the hero is in, followed by the line count, and holds one height whether the session is empty or full. Truncating a money figure mid-digit was the first fix and a worse one: the full split is a tap away in the session tab
+
+### Notes
+
+Pinned by an e2e that measures the ribbon empty and populated and asserts both its height and its y-position are unchanged — the symptom was everything *below* moving, so position is the thing worth asserting.
+
+---
+
+## [3.17.1] - 2026-08-08
+
+### Fixed
+
+- **A long line pushed the input and the keypad's bottom row off the screen.** The chip box was `flex-wrap` with no ceiling, so `hea120 6m x2 s355 @2.50/kg + ipe200 4m x3 s235 + rnd20 3m x5` grew to four rows and shoved the `↵`, unit and rate keys below the fold. It now caps at two rows and scrolls to follow the caret, since the caret sits at the end of the line and typing would otherwise walk off the visible area
+- **The keypad ended flush with the viewport edge**, so on a device with a home indicator the bottom row sat under it. It now pads by `env(safe-area-inset-bottom)` with an 8px floor
+- **The hero could be squeezed.** It had no `flex-shrink-0`, so on a short viewport it compressed and clipped its own contents instead of letting the flexible gap give
+
+### Changed
+
+- A general tightening on the phone: keypad keys 40px → 36px with tighter row gaps, hero number 64px → 56px, and less padding on the metric strip, action row and session ribbon. The fold now fits a 667px-tall screen with room, not just the 844 it was drawn for
+
+### Notes
+
+Three of these were found by screenshotting the fold rather than by the tests, which is why there are now e2e asserting that at 844, 700 and 667 the `↵` key is fully inside the viewport and the chip box never exceeds 96px.
+
+---
+
+## [3.17.0] - 2026-08-08
+
+Implements the Ferroscale Mobile and Desktop **Fold** designs.
+
+### Changed
+
+- **The phone hero is rebuilt.** The WEIGHT/PRICE switch moves into the hero's label row as two small pills instead of occupying a full-width row, and the 109px two-stat card becomes a 34px strip — per piece, the other headline metric, and `Breakdown ›` as the route into the result sheet. A Save / Compare / Share row sits under the number; previously those actions only existed inside the sheet. Hero block: 270px → 221px
+- **The phone has a session surface at last.** A dashed ribbon under the hero carries the running total, `Open ›`, and a `+` that logs the current line; the library sheet gains **SESSION** as a fourth tab (the mockup draws three — PROJECTS stays per the brief) listing every logged line with its own totals, plus the total and **Save as project** the desktop rail has had since 3.10.0. The old four-chip recents strip it replaces had no totals and no way to remove a line
+- **A `>` key on the keypad.** The palette shipped in 3.15.0 keyboard-driven, and the phone keypad cannot type `>` — so phones had no route to it at all. This closes that
+- **Desktop:** the two loose stat tiles become the fold's four-cell glance row, fed from the same builder as the breakdown panel so the two can't disagree; the action row gains **+ another item**; the top bar gains a `>` **commands** hint, which is the only place that says how the palette opens
+
+### Added
+
+- A `+` beside the phone's Save / Compare / Share. The mockup omits it, but without it a phone could only *view* a multi-item line, never start one
+
+### Notes
+
+At 390×844 the fold measures 221px hero + 54px ribbon + 132px suggestions + 62px query line + 224px keypad, with ~70px of flexible gap — and three e2e now hold the property that the document never scrolls at that size.
+
+Settings are unchanged: the mockup shows five rows, but price book, margin, mass tolerance, default grade, default unit, language and haptics all stay.
+
+---
+
+## [3.16.2] - 2026-08-07
+
+### Fixed
+
+- **Copy summary covered only the item under the caret on a multi-item line.** Copying a two-item quote and pasting it into an email sent one item's numbers under the whole line's framing. It now writes every item, then the line total — and withholds that total while any item is still incomplete, because a partial sum labelled "the total" is worse than no total
+- **The Save button contradicted itself on a multi-item line.** Its filled/outlined state came from matching the *active item* against the library, while pressing it creates a new assembly; a line whose last part happened to be saved showed as saved and then saved again. State and behaviour now share one guard
+- **Usage learning only saw the last item of a multi-item line**, so a two-part line taught the suggestion ranking about half of what was typed
+
+---
+
+## [3.16.1] - 2026-08-07
+
+### Fixed
+
+- **Pasting a cut list no longer discards the line you had already typed.** The rows are appended as further items instead of replacing the query — a destructive edit with no undo, and "I meant to add these" is by far the likelier intent
+- **The breakdown now says which item it describes on a multi-item line.** kg/m and per-piece weight don't sum, so the breakdown is always about one calculation; shown unlabelled beneath a hero holding the *line's* total, its figures read as contradicting it (±4% of 268 kg under a hero band of ±4% of 507 kg). Both surfaces now title it "Breakdown · item 2 of 2" when the line has more than one
+
+---
+
+## [3.16.0] - 2026-08-07
+
+### Added
+
+- **Arithmetic tokens** — `hea120 6m-50mm x2+3`. Only `+` and `-`, evaluated left to right: this is shorthand for a measurement, not an expression language. Terms without a unit inherit the *first term's* rather than the global default, so `6m-50-50` is three metre terms and can't silently mix scales, and the answer is reported in the first term's unit because that's the one you were thinking in. The `+` collides with the item separator, and the collision is settled by shape — a `+` glued between a character and a digit is arithmetic, anything else separates items, since a new item always opens with a profile alias. An expression that doesn't come to a usable amount (`50mm-6m`, `x2-2`) is reported rather than ignored
+- **Paste a cut list.** One row per part becomes one item per part, now that a line can hold several. Tabs, semicolons and commas collapse to spaces, and an over-long paste is capped rather than building a query nobody can read
+- **Mass tolerance.** Set a ±% in Settings and every result carries the band it may actually be delivered within — in the breakdown on every viewport, and under the hero when weight is the headline metric. Rolled steel is sold by theoretical mass and delivered within a tolerance, so a buyer working to a budget wants the worst case too
+
+### Changed
+
+- Letter-spacing and the 10px micro-label moved out of inline styles into named tokens and a shared atom, so the app's smallest type is one edit rather than a search across five views
+
+### Note
+
+The mass tolerance is **your own figure, not a cited standard**. EN mass tolerances differ per product standard and some (EN 10029 plate) derive from a thickness class rather than being a single percentage, so the app deliberately does not put a standard's name next to a number it hasn't been given. Wiring a per-family EN table is a data task, not a code one.
+
+---
+
+## [3.15.0] - 2026-08-07
+
+### Added
+
+- **The `>` command palette.** Typing `>` turns the command line into an action list: navigate to saved / projects / compare / settings, save / compare / copy / share the current line, open the reference, flip the theme — and search **your own saved entries and projects by name**, picking one to load it straight into the bar. ↑/↓ move, Enter runs, Escape backs out; actions that need a finished calculation are shown greyed rather than hidden, so the line explains itself
+- Ranking is prefix > word start > substring, so `>sav` puts **Save this line** above **Go to saved** above a saved entry that merely contains the letters. Every word of the term has to match, so a second word narrows instead of widening
+- A `>` line is treated as a command, not a calculation: it isn't tokenized into chips and the parser's "didn't understand that" never fires on it
+
+### Note
+
+The palette is a keyboard feature and the phone keypad has no `>` key, so on phone it is reachable only via a shared link. The phone's own navigation already covers the same ground in one tap.
+
+---
+
+## [3.14.0] - 2026-08-07
+
+### Added
+
+- **Multi-item lines.** `hea120 6m x2 + ipe200 4m x3` is now one line holding two calculations. The grammar itself does not change — each `+`-joined segment is parsed by the ordinary parser, so order tolerance, glue splitting, per-item grades, per-item `@` rates and per-item `=` targets all work per item for free, and a one-item line is byte-for-byte what it always was. `+` is safe as the separator because nothing else in the grammar uses it: sizes join with `x`, rates with `@`, targets with `=`
+- The hero shows the **line total**, and the equation line is replaced by one row per item — what each is, what each weighs, what each costs — because a sum with no breakdown is a number you cannot check
+- Chips are grouped per item with the separator drawn between the groups. **Every edit is scoped to its own item**: removing a token from the first item cannot reflow the second, and pulling a token back for editing cannot teleport it across a `+` into a different calculation
+- **Saving a multi-item line makes one assembly**, one part per item, instead of separate entries — the saved model already held parts, this is what fills them. Save stays a toggle for single lines only; an assembly is a new object each time
+- **Logging drops one tape line per item**, so a multi-item line still adds up on the tape and still becomes a project
+- A `+ item` chip in the refine row starts the second item, and the grammar reference lists the separator alongside the other tokens
+
+---
+
+## [3.13.0] - 2026-08-07
+
+### Changed
+
+- **Typing habits sync.** Usage stats — the per-family tallies that rank sizes, lengths, quantities and grades in the suggestion bar, plus the recent-query list — were local-only, so every device started from zero. They now travel with the rest of the encrypted snapshot as a **grow-only counter per device**: each device pushes `usage:<deviceId>` holding only what it learned itself, its own record is skipped when it comes back on a pull, and the suggestion source sums every device's tally at read time (counts add, timestamps take the later of the two). A shared running total would have double-counted on every round trip — five uses here plus the five just pulled back reading as ten — which is what the per-device split exists to prevent. A single-device user's ordering is unchanged: with no peers the merge is skipped outright
+- The shell now subscribes to a usage version store instead of holding its own counter, so a sync pull that brings another device's habits in refreshes the suggestions without a reload
+
+---
+
+## [3.12.0] - 2026-08-07
+
+### Added
+
+- **Target queries — the question asked backwards.** `hea120 6m =500kg` answers *how many of these make 500 kg*, `hea120 x10 =500kg` answers *how long ten of them have to be*, and `=250eur` does the same against money instead of mass. Weight targets read `kg`, `t` and `lb`; money targets take the configured currency code or a `€`/`$`/`£` symbol. The solver probes the engine rather than restating the pricing rules, so waste, VAT and price basis are all counted in, and a per-piece rate — which doesn't move with length — is left unsolved instead of answered wrongly. Pieces round **up**, because you buy whole bars, and a purple badge on the equation line states the target and how far over it the answer lands. The token is part of the grammar reference and travels in `?q=` links and copied summaries like any other
+
+---
+
+## [3.11.0] - 2026-08-07
+
+### Changed
+
+- **The 640–1023 range gets the real workspace.** It used to be a fixed 560px card floating on a background — no session tape, no library, no breakdown — which is exactly an iPad in portrait and a half-width laptop window. Everything ≥640 now runs the workspace, in a single-column form below 1024: full-width command line, result panel, tape, then the breakdown stacked beneath, with the wordmark and the ⌘K button dropped from the header for room. Sheets are phone-only from here on, and the shell lost ~200 lines of now-unreachable medium-viewport code
+- **One numeric typography rule.** Tabular figures for every number in the app (mono data and the sans display metric alike), so a value never shifts sideways while it counts up or a digit changes. Compare's headline weight moved to mono with everything else
+- **Accent discipline.** `--accent` was doing six jobs; it now means the primary action and the weight metric. Selected workspace tabs, library tabs, density controls and profile glyphs use neutral surfaces and text — the raised surface and its shadow already said "selected"
+- **A shared motion vocabulary** (`fsPop` / `fsRise` / `fsFade` / `fsDrop`): chips pop in, tape lines rise, views cross-fade on tab change, the parse warning drops in, toasts arrive rather than blink. One rule set, all of it off under `prefers-reduced-motion`
+- The workspace panel treatment (border, surface, shadow, radius) is a `DeskPanel` atom instead of the same inline block written out in every view
+
+---
+
+## [3.10.0] - 2026-08-07
+
+### Added
+
+- **Price book — a rate per material grade.** Pricing was a single €/kg for every material, and stainless runs about four times mild steel, so anyone working across materials was quoting one of them wrong unless they retyped `@` on every line. Rates resolve inline `@2.50/kg` > the grade's book rate > the single default, so an empty book behaves exactly as before. Editable in Settings on every viewport, and synced like every other collection
+- **Margin.** One percentage adds a **sell price** row wherever a breakdown appears — result, saved card, printed quote — without touching the cost figures themselves
+- **Session → project in one press.** The tape already showed a running total; now it can become a job
+- **Assemblies.** A saved entry can hold several parts: add the line in the bar to any entry and the card becomes a bill of materials, with its parts listed and its weight and price **summed**. The storage model always supported this; nothing surfaced it
+- **Printable quote.** Any project prints (or saves as PDF) as a clean document — header, line items, lengths, weights, totals, margin, and a note that the weights are theoretical. Client-side, zero dependencies, works offline
+
+### Changed
+
+- `addCalculations` adds several calculations to a project in one state update. The existing `addCalculation` reports success through a flag its updater sets, which only reads back correctly for the first call in a batch — a loop reported success once and silently dropped the rest
+
+---
+
+## [3.9.0] - 2026-08-07
+
+### Added
+
+- **A finished line offers variations, not just Save.** The moment a query is complete used to show exactly one chip ("Save calculation") — the highest-intent moment in the app spent on a single button. It now offers one-tap refinements: **twice the pieces**, the **other stock lengths**, the **neighbouring catalog sizes**, **another grade** — each with the resulting total (`× 4 · 477 kg`) or per-metre weight under it, so you can weigh the option before taking it. Picking one swaps that token in place and leaves the rest of the line alone
+- **⌥1–9 inserts the numbered suggestion** without leaving the input, and each chip carries its number so the shortcut is learnable by looking
+- **A key-hint strip** under the command line naming the keys that work right now, and **`?`** opens a full command reference: the grammar, every shortcut, tappable profile aliases and grades — generated from the alias table, so it can't drift from what the parser accepts
+- **⌘S** saves the current line (again to unsave), **⌘↵** adds it to compare
+- **Hold backspace on the phone keypad to delete a whole token** — a size like `40x40x3` in one gesture instead of seven
+- **Recents above the phone keypad.** ↑/↓ recall was desktop-only; the last few lines are now one tap away on mobile
+- **Vibration feedback** on the keypad and on committed actions, with an on/off switch in Settings
+
+### Changed
+
+- **Enter has one meaning everywhere**: take the pending suggestion, else log the finished line. It previously meant different things on different surfaces with nothing on screen saying which — the hint strip now shows *insert* or *log* as it changes
+- **Suggestions are grouped** — Yours, Presets, Standard — so the frequency ranking is visible rather than merely applied
+- **Returning users start on their last line** instead of the demo query (a first visit still gets the demo)
+- Phone suggestion chips **wrap to a second row** instead of hiding behind a sideways scroll
+- Key routing moved into one pure resolver (`command-keys.ts`) shared by every surface, replacing two drifting copies
+
+### Fixed
+
+- Typing did roughly twice the work it needed: the suggestion engine re-parsed the query the shell had already parsed, and re-derived per-metre weights for every candidate size on every keystroke. The parse is now handed over and the weights are cached
+
+---
+
+## [3.8.0] - 2026-08-06
+
+### Added
+
+- **Saved calculations are real cards.** Each one shows the **actual cross-section** of its profile (the same drawing the breakdown uses, scaled to card size), the spec — `6 m × 2 · S235` — under the title, both totals with the mode-leading metric dominant, and mass per metre / weight per piece alongside. An expander opens the full breakdown, notes and tags in place
+- **Search, sort, tag and pin.** Filter saved work by name, note, tag, profile or grade (multi-word, any order); sort by newest, most used, recently used or name; pin the ones you reach for daily to the top of every sort
+- **Name, notes and tags** on any saved calculation, plus a **Name it** action on the save confirmation — the one moment you still have the job in your head
+- **Duplicate** a saved calculation to tweak a copy without touching the original
+- **Bulk selection**: select several entries to compare or delete them in one go; **card / compact** view toggle for large libraries
+- **Undo** on deleting a saved calculation (single or bulk), from the toast that confirms it
+- **Save is a toggle.** The button shows a filled bookmark when the line in the bar is already saved; pressing it again removes it
+
+### Changed
+
+- **Saved entries are priced at today's rate, and say so.** A saved calculation stores geometry as its identity; the money is recomputed from your current pricing every time it renders, with the rate stated on the card (`@ €1.20/kg`). When today's rate moves the total, the card shows a `was €1,193.51` badge instead of quietly displaying a stale figure. Opening one restores it at today's rate too, so the command line matches the card
+- **Opening a saved calculation counts as a use** — `useCount` / `lastUsedAt` are recorded, which is what makes "most used" and "recently used" sorting meaningful
+- **Share links carry pricing.** `?q=` links now also encode the sender's rate, rate unit, basis, currency, waste and VAT, so a shared calculation shows the same price to whoever opens it; applying a link's pricing is announced rather than silent
+- **One empty state** across Saved, Projects, Compare and the library sheets — icon, title, sentence, and the action (or shortcut) that fills it
+- Saved-entry identity ignores price, so re-saving a restored entry after a rate change no longer creates a duplicate
+
+### Fixed
+
+- Saving an already-saved calculation reported "Saved" while doing nothing — the button now reflects the real state, and pressing it removes the entry
+- A saved card's price and the price of the line it restored could disagree whenever the stored rate differed from the current default
+
+---
+
 ## [3.7.0] - 2026-07-20
 
 ### Added

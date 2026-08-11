@@ -153,7 +153,7 @@ export function DeskCompareView({
             >
               {/* header row */}
               <div style={{ padding: "14px 16px" }}>
-                <span className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1.2 }}>
+                <span className="fs-track-label text-[10px] font-bold text-muted">
                   {t("compare.profile")}
                 </span>
               </div>
@@ -171,8 +171,7 @@ export function DeskCompareView({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div
-                        className="font-extrabold text-[14.5px] text-foreground truncate"
-                        style={{ letterSpacing: -0.2 }}
+                        className="fs-track-tight font-extrabold text-[14.5px] text-foreground truncate"
                       >
                         {c.name}
                       </div>
@@ -227,7 +226,7 @@ export function DeskCompareView({
                   <div key={c.item.id} style={valueCell(i)}>
                     <div className="flex items-baseline gap-1.5">
                       <span
-                        className="font-extrabold text-[22px]"
+                        className="font-mono font-extrabold text-[22px]"
                         style={{
                           letterSpacing: -0.8,
                           color: best ? "var(--green-text)" : "var(--foreground)",

@@ -1,10 +1,18 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { CommandDocsSection, useCommandLocaleSwitch } from "../sheets/settings-sheet";
 import { SyncSection } from "../sheets/sync-section";
 import { InstallAppSection } from "../install-section";
-import type { SharedCalcSettings } from "@/lib/settings-stores";
+import { PriceBookSection } from "../price-book-section";
+import { usePriceBook } from "@/hooks/usePriceBook";
+import {
+  hapticsStore,
+  marginPercentStore,
+  massTolerancePercentStore,
+  type SharedCalcSettings,
+} from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
@@ -54,7 +62,7 @@ function Seg({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ padding: "13px 0" }}>
-      <div className="text-[10px] font-bold text-muted mb-[9px]" style={{ letterSpacing: 1.2 }}>
+      <div className="fs-track-label text-[10px] font-bold text-muted mb-[9px]">
         {label}
       </div>
       {children}
@@ -194,6 +202,22 @@ export function DeskSettingsView({
 }) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
+  const priceBook = usePriceBook();
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
+  const haptics = useSyncExternalStore(
+    hapticsStore.subscribe,
+    hapticsStore.getSnapshot,
+    hapticsStore.getServerSnapshot,
+  );
   const fields = buildSettingsFields({
     t,
     shared,
@@ -206,6 +230,12 @@ export function DeskSettingsView({
     setLocale,
     dark,
     onToggleTheme,
+    haptics,
+    onSetHaptics: hapticsStore.set,
+    marginPercent,
+    onSetMarginPercent: marginPercentStore.set,
+    massTolerancePercent,
+    onSetMassTolerancePercent: massTolerancePercentStore.set,
   });
 
   return (
@@ -236,6 +266,16 @@ export function DeskSettingsView({
           <p className="text-[11px] text-muted mt-3 px-1">
             {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
           </p>
+          <div
+            className="rounded-2xl"
+            style={{
+              border: "1px solid var(--border-faint)",
+              background: "var(--surface)",
+              padding: "18px 20px",
+            }}
+          >
+            <PriceBookSection shared={shared} priceBook={priceBook} />
+          </div>
           <InstallAppSection />
           <SyncSection />
           </div>

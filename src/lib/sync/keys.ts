@@ -15,6 +15,7 @@ export const SYNC_AUTH_RESULT_STORAGE_KEY = "ferroscale-sync-auth-result";
 export const SYNC_COLLECTION_UPDATED_AT_KEYS = {
   compare: "ferroscale-sync-compare-updated-at-v1",
   quickHistory: "ferroscale-sync-quick-history-updated-at-v1",
+  priceBook: "ferroscale-sync-price-book-updated-at-v1",
 } as const;
 
 export const SYNC_STORAGE_KEYS = {
@@ -24,6 +25,10 @@ export const SYNC_STORAGE_KEYS = {
   presets: "ferroscale-presets-v1",
   compare: "ferroscale-compare-v2",
   quickHistory: "ferroscale-quick-history",
+  priceBook: "ferroscale-price-book-v1",
+  // Typing habits. Synced per device (see usage-stats.ts), so this key holds
+  // this device's own tally only.
+  usage: "ferroscale-usage-v1",
 } as const;
 
 export const GOOGLE_SYNC_PROVIDER_ID = "google-drive";

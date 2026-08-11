@@ -37,6 +37,41 @@ export function DeskBtn({
   );
 }
 
+/**
+ * The workspace panel: one border, one surface, one shadow. It was written
+ * out by hand in every desktop view, so a change to the app's panel look was
+ * a find-and-replace instead of an edit.
+ */
+export function DeskPanel({
+  children,
+  className = "",
+  padding,
+  radius = 18,
+  style,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  padding?: string | number;
+  radius?: number;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={className}
+      style={{
+        border: "1px solid var(--border-faint)",
+        background: "var(--surface)",
+        boxShadow: "var(--panel-shadow-soft)",
+        borderRadius: radius,
+        padding,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <span
@@ -53,9 +88,20 @@ export function Kbd({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SectionLabel({ children }: { children: React.ReactNode }) {
+/**
+ * The 10px tracked micro-label above a group of controls. Every desktop view
+ * had written its own copy of this span; there is one now, so the app's
+ * smallest type is a single edit rather than a search.
+ */
+export function SectionLabel({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1.2 }}>
+    <span className={`fs-track-label text-[10px] font-bold text-muted ${className}`}>
       {children}
     </span>
   );

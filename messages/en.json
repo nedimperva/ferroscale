@@ -42,6 +42,65 @@
     "installButton": "Install app"
   },
   "command": {
+    "quote": {
+      "title": "Quote",
+      "item": "Item",
+      "total": "Total",
+      "print": "Print or save as PDF",
+      "printAria": "Print a quote for {name}",
+      "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated."
+    },
+    "priceBook": {
+      "title": "Price book",
+      "subtitle": "rate per grade · {unit}",
+      "empty": "Every grade uses the default rate ({rate}). Add a grade to price it differently — stainless is not steel.",
+      "addGrade": "+ Price a grade",
+      "pickGrade": "Choose a grade…",
+      "addAria": "Grade to add to the price book",
+      "rateAria": "Rate for {grade}",
+      "removeAria": "Remove {grade} from the price book"
+    },
+    "keyHints": {
+      "complete": "complete",
+      "insert": "insert",
+      "log": "log",
+      "pick": "pick",
+      "save": "save",
+      "recall": "recall",
+      "shortcuts": "shortcuts"
+    },
+    "help": {
+      "title": "Command reference",
+      "exampleHint": "Tap to try this line",
+      "grammar": "Grammar",
+      "shortcuts": "Shortcuts",
+      "profiles": "Profiles",
+      "grades": "Grades",
+      "moreGrades": "…and more",
+      "orderNote": "Order doesn't matter, and spaces are optional — hea120 6m x2 and x2 6m hea 120 read the same.",
+      "token": {
+        "profile": "Profile and size",
+        "length": "Length (mm, cm, m, in, ft)",
+        "quantity": "Quantity",
+        "grade": "Material grade",
+        "price": "Rate for this line only",
+        "target": "Solve backwards: how much makes 500 kg (or =250eur)",
+        "item": "Another item on the same line",
+        "palette": "Commands: go anywhere, run anything, open a saved entry by name",
+        "arith": "Arithmetic in a token — also x2+3"
+      },
+      "shortcut": {
+        "enter": "Take the suggestion, or log the finished line",
+        "tab": "Accept the inline completion",
+        "digits": "Insert the 1st–9th chip",
+        "history": "Walk back and forth through earlier lines",
+        "save": "Save (press again to unsave)",
+        "compare": "Add to compare",
+        "new": "New calculation",
+        "clear": "Clear the line",
+        "backspace": "On an empty line, pull the last chip back"
+      }
+    },
     "common": {
       "project": "project",
       "clear": "CLEAR",
@@ -61,7 +120,15 @@
       "openArrow": "Open ->",
       "copyValue": "Copy value",
       "copySummary": "Copy summary",
-      "shareLink": "Share link"
+      "shareLink": "Share link",
+      "saved": "Saved",
+      "undo": "Undo",
+      "nameIt": "Name it",
+      "cancel": "Cancel",
+      "done": "Done",
+      "saveChanges": "Save changes",
+      "share": "Share",
+      "open": "Open"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -74,12 +141,24 @@
       "copied": "Copied to clipboard",
       "copiedValue": "Value copied",
       "copiedSummary": "Summary copied",
-      "linkCopied": "Link copied"
+      "linkCopied": "Link copied",
+      "linkPricingApplied": "Pricing from the link applied",
+      "savedRemoved": "Removed from saved",
+      "savedRemovedMany": "{count, plural, one {# calculation removed} other {# calculations removed}}",
+      "restored": "Restored",
+      "duplicated": "Copy created",
+      "savedUpdated": "Saved calculation updated",
+      "sessionEmpty": "Nothing on the session tape yet",
+      "sessionSaved": "{count, plural, one {# line} other {# lines}} saved to {project}",
+      "sessionProjectName": "Session {date}",
+      "partAdded": "Added as a part of {name}",
+      "addedItemsToSession": "{count} items added to session"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
       "closeSheet": "Close sheet",
-      "liveResult": "Result: {value}"
+      "liveResult": "Result: {value}",
+      "addToSession": "Add this line to the session"
     },
     "nav": {
       "workspace": "WORKSPACE",
@@ -105,7 +184,9 @@
       "addLength": "Add a length to compute",
       "closeUnitPicker": "Close unit picker",
       "priceUnitPicker": "Price unit",
-      "lengthUnitPicker": "Length unit"
+      "lengthUnitPicker": "Length unit",
+      "backspace": "Backspace",
+      "backspaceHold": "Hold to delete the whole token"
     },
     "token": {
       "edit": "Edit {token}",
@@ -118,7 +199,9 @@
       "profile": "profile",
       "size": "size",
       "length": "length",
-      "grade": "grade"
+      "grade": "grade",
+      "perPieceSuffix": "/pc",
+      "breakdown": "Breakdown"
     },
     "profiles": {
       "round": "Round",
@@ -135,6 +218,38 @@
       "waste": "+{percent}% waste",
       "vat": "+VAT {percent}%"
     },
+    "target": {
+      "solvedQty": "pieces for {target}",
+      "solvedLength": "length for {target}",
+      "over": "{over} over"
+    },
+    "line": {
+      "items": "Line items",
+      "total": "LINE TOTAL"
+    },
+    "palette": {
+      "aria": "Command palette",
+      "empty": "No matching command",
+      "hint": "Commands",
+      "kind": {
+        "action": "action",
+        "saved": "saved",
+        "project": "project"
+      },
+      "action": {
+        "newCalc": "New calculation",
+        "save": "Save this line",
+        "compare": "Add to compare",
+        "copySummary": "Copy summary",
+        "shareLink": "Copy share link",
+        "goSaved": "Go to saved",
+        "goProjects": "Go to projects",
+        "goCompare": "Go to compare",
+        "goSettings": "Go to settings",
+        "help": "Command reference",
+        "toggleTheme": "Toggle theme"
+      }
+    },
     "hint": {
       "addLength": "add a length ->",
       "addSize": "add a size ->",
@@ -144,6 +259,7 @@
       "unknownToken": "Didn't understand \"{token}\"",
       "unknownSize": "No {profile} size \"{size}\"",
       "invalidQty": "Quantity must be at least 1",
+      "invalidExpression": "That leaves nothing: \"{token}\"",
       "didYouMean": "Did you mean {suggestion}?"
     },
     "sheets": {
@@ -165,11 +281,13 @@
       "waste": "Waste +{percent}%",
       "vat": "VAT {percent}%",
       "totalCost": "Total cost",
+      "sellPrice": "Sell price (+{percent}%)",
       "pcs": "pcs",
       "geometry": "Geometry",
       "pricing": "Pricing",
       "unitPrice": "Unit price",
-      "grade": "Grade"
+      "grade": "Grade",
+      "massBand": "Mass band {percent}"
     },
     "settings": {
       "mainResult": "Main result",
@@ -200,11 +318,17 @@
       "defaultGradeUpper": "DEFAULT GRADE",
       "lengthUnitFallback": "LENGTH UNIT FALLBACK",
       "languageUpper": "LANGUAGE",
+      "haptics": "Vibration",
+      "hapticsUpper": "VIBRATION",
+      "margin": "Margin",
+      "marginUpper": "MARGIN ON COST",
       "locales": {
         "en": "English",
         "bs": "Bosnian"
       },
-      "appearance": "APPEARANCE"
+      "appearance": "APPEARANCE",
+      "massTolerance": "Mass tolerance",
+      "massToleranceUpper": "MASS TOLERANCE"
     },
     "docs": {
       "label": "Guide",
@@ -271,7 +395,7 @@
       "syncing": "Syncing...",
       "syncNow": "Sync now",
       "disconnect": "Disconnect",
-      "description": "Sync your saved entries, projects, compare, and presets to Google Drive — end-to-end encrypted with your own passphrase.",
+      "description": "Sync your saved entries, projects, compare, presets, price book and typing habits to Google Drive — end-to-end encrypted with your own passphrase.",
       "connecting": "Connecting...",
       "connectGoogleDrive": "Connect Google Drive"
     },
@@ -284,7 +408,8 @@
       "calcCount": "{count, plural, one {# calc} other {# calcs}}",
       "noCalculationsYet": "No calculations yet.",
       "noProjectsCreateAbove": "No projects yet. Create one above to get started.",
-      "newProject": "New project"
+      "newProject": "New project",
+      "total": "Total"
     },
     "desktop": {
       "calcLive": "{name} · live",
@@ -303,7 +428,12 @@
       "breakdown": "BREAKDOWN",
       "breakdownEmpty": "the full breakdown appears as you type",
       "totalCostLabel": "TOTAL COST",
-      "perPieceLabel": "PER PIECE"
+      "saveSessionAsProject": "SAVE AS PROJECT",
+      "perPieceLabel": "PER PIECE",
+      "breakdownItem": "Breakdown · item {index} of {count}",
+      "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
+      "saveAsProject": "Save as project",
+      "anotherItem": "+ another item"
     },
     "suggest": {
       "standardSize": "standard size",
@@ -313,7 +443,14 @@
       "pieces": "Pieces",
       "gradeOptional": "Grade (optional)",
       "ready": "Ready",
-      "saveCalculation": "Save calculation"
+      "saveCalculation": "Save calculation",
+      "refine": "Refine",
+      "group": {
+        "usage": "Yours",
+        "preset": "Presets",
+        "standard": "Standard"
+      },
+      "addItem": "+ item"
     },
     "compare": {
       "approxBase": "≈ base",
@@ -335,12 +472,58 @@
       "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
       "subtitleEmpty": "bookmarked calculations",
       "empty": "nothing saved yet — press Save on a calculation",
-      "addToCompare": "Add to compare"
+      "addToCompare": "Add to compare",
+      "openAria": "Open {name} in the calculator",
+      "selectAria": "Select {name}",
+      "usedCount": "{count, plural, one {used # time} other {used # times}}",
+      "repriced": "was {amount}",
+      "repricedHint": "Priced at today's rate — this is what it cost when saved",
+      "pin": "Pin to top",
+      "unpin": "Unpin",
+      "duplicate": "Duplicate",
+      "edit": "Rename, notes and tags",
+      "details": "Show details",
+      "noBreakdown": "no live breakdown for this entry",
+      "partCount": "{count, plural, one {# part} other {# parts}}",
+      "parts": "Parts",
+      "addPart": "Add the current line as a part",
+      "removePart": "Remove {name} from this assembly",
+      "searchPlaceholder": "Search name, tag, profile…",
+      "sortLabel": "Sort",
+      "sort": {
+        "recent": "Newest",
+        "used": "Most used",
+        "lastUsed": "Recently used",
+        "name": "Name"
+      },
+      "view": {
+        "grid": "Card view",
+        "table": "Compact view"
+      },
+      "select": "Select",
+      "clearTags": "Clear tags",
+      "selectedCount": "{count, plural, one {# selected} other {# selected}}",
+      "matchCount": "{count} of {total} shown",
+      "emptyTitle": "Nothing saved yet",
+      "emptyBody": "Press Save on any result to keep it here — with its drawing, weight and today's price.",
+      "emptyBodyMobile": "Tap Save on any result to keep it here.",
+      "noMatchTitle": "No matches",
+      "noMatchBody": "Nothing here matches that search or tag.",
+      "clearFilters": "Clear filters",
+      "editTitle": "Edit saved calculation",
+      "fieldName": "Name",
+      "fieldNotes": "Notes",
+      "fieldTags": "Tags",
+      "notesPlaceholder": "What is this for?",
+      "tagsPlaceholder": "gate, shop, urgent",
+      "tagsHint": "Comma-separated, up to {max}.",
+      "assemblyName": "Assembly ({count} parts)"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# active} other {# active}}",
       "subtitleEmpty": "group calcs into jobs",
       "empty": "no projects yet — hit New project, or + Project on a result",
+      "emptyTitle": "No projects yet",
       "itemCount": "{count, plural, one {# item} other {# items}}",
       "emptyProjectHint": "empty — add a calc from the right rail",
       "removeFromProject": "Remove from project"

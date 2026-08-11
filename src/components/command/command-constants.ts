@@ -23,5 +23,6 @@ export const KIND_BG: Record<CommandTokenKind, string> = {
   qty: "bg-[var(--green-surface)] text-[var(--green-text)]",
   grade: "bg-[var(--surface-inset)] text-foreground-secondary",
   price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
+  target: "bg-[var(--purple-surface)] text-[var(--purple-text)]",
   unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
 };

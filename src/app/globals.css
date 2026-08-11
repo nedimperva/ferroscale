@@ -346,6 +346,106 @@ details[open] .chevron-icon {
   }
 }
 
+/* ── Motion vocabulary ────────────────────────────────────────────────────
+   One small set, used everywhere, so movement means the same thing wherever
+   it appears: something arrived (fsPop / fsRise), a view changed (fsFade), a
+   warning appeared (fsDrop). All of it collapses under reduced motion. */
+@keyframes fsPop {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fsRise {
+  from { transform: translateY(6px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fsFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fsDrop {
+  from { transform: translateY(-4px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.fs-pop { animation: fsPop var(--motion-fast) ease-out both; }
+.fs-rise { animation: fsRise var(--motion-medium) ease-out both; }
+.fs-fade { animation: fsFade var(--motion-medium) ease-out both; }
+.fs-drop { animation: fsDrop var(--motion-fast) ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-pop,
+  .fs-rise,
+  .fs-fade,
+  .fs-drop {
+    animation: none;
+  }
+}
+
+/* ── Numbers ──────────────────────────────────────────────────────────────
+   One rule for the whole app: figures line up. Everything numeric is either a
+   display metric (the hero — sans, tight tracking) or data (mono), and both
+   get tabular figures so a value never shifts sideways as it counts up or a
+   digit changes. */
+.font-mono,
+code,
+kbd,
+samp,
+/* ── letter-spacing scale ──────────────────────────────────────────────────
+   Tracking was an inline number on a dozen elements, which made "loosen the
+   small caps a touch" a find-and-replace instead of an edit. Two named steps
+   cover every repeated use: labels open up, headings close in. */
+.fs-track-label { letter-spacing: 1.2px; }
+.fs-track-wide  { letter-spacing: 1px; }
+.fs-track-tight { letter-spacing: -0.2px; }
+
+.fs-display-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The printable quote. It lives in the normal DOM (so it needs no route, no
+   dependency and no network) and is revealed only when printing — which is
+   also how every OS produces a PDF. */
+.fs-print {
+  display: none;
+}
+
+@media print {
+  /* visibility, not display: it inherits, so the quote surfaces no matter how
+     deep the app's fixed-position shell nests around it. */
+  body {
+    visibility: hidden;
+    background: #fff;
+  }
+  .fs-print,
+  .fs-print * {
+    visibility: visible;
+  }
+  .fs-print {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
+
+/* Card-sized profile drawings. The section geometry is shared with the full
+   breakdown drawing, so the outline arrives sized for a 340px canvas — scaled
+   into a 46px thumbnail that hairline all but vanishes. non-scaling-stroke
+   pins the outline to device pixels instead, so the silhouette reads at any
+   size. A descendant rule is what it takes to beat the SVG presentation
+   attributes on the shapes themselves. */
+.fs-thumb :is(path, rect, circle, line) {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.6px;
+}
+
 /* Keep details open on lg with Tailwind open attribute workaround */
 @media (min-width: 1024px) {
   details.lg\:open {

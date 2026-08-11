@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { cmdParse, cmdClassifyToken, cmdTokenize } from "@ferroscale/metal-core";
+import {
+  cmdAppendLineItem,
+  cmdParse,
+  cmdClassifyToken,
+  cmdPasteIntoLine,
+} from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { useCountUp } from "@/hooks/useCountUp";
-import type { CommandParseResult } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
@@ -19,13 +24,38 @@ import {
   formatCommandSuggestionLabel,
 } from "../command-copy";
 import { GhostField } from "../ghost-field";
-import type { CommandDesktopProps } from "./desktop-props";
-import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
-import { PricingBadge } from "../command-atoms";
+import { resolveCommandKey } from "../command-keys";
+import { CommandKeyHints } from "../command-key-hints";
+import { groupedSuggestions } from "../suggestion-groups";
+import type { CommandDesktopProps, DeskView } from "./desktop-props";
+import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
+import { PricingBadge, TargetBadge } from "../command-atoms";
+import { commandTargetNote } from "../target-note";
+import { LineItems } from "../line-items";
+import { massBand } from "../mass-band";
+import { CommandPalette } from "../command-palette";
+import {
+  buildPaletteActions,
+  filterPalette,
+  isPaletteQuery,
+  paletteTerm,
+  type PaletteItem,
+  type PaletteTarget,
+} from "../palette";
+import {
+  editLineToken,
+  lineChipPrefix,
+  lineChips,
+  pullLastChip,
+  removeLineToken,
+} from "../line-edit";
+import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
   gotoCompare: () => void;
+  /** Jump between workspace views — the `>` palette navigates with this. */
+  onGotoView: (view: DeskView) => void;
 };
 
 /** Small square icon button used in the result panel's action cluster. */
@@ -64,36 +94,61 @@ function PanelIconBtn({
   );
 }
 
-/** A single labelled stat tile in the result panel footer. */
-function StatTile({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: string;
-}) {
+/**
+ * The fold's four-cell glance row. Values are pulled from the shared breakdown
+ * builder rather than recomputed, so the grid and the breakdown panel below it
+ * can never disagree about the same number.
+ */
+function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
+  const t = useTranslations("command");
+  const cells: { label: string; value: string }[] = [
+    {
+      label: t("result.massPerMetre"),
+      value: p.valid && p.kgm != null ? `${p.kgm.toFixed(2)} kg/m` : "—",
+    },
+    {
+      label: t("desktop.perPieceLabel"),
+      value:
+        p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—",
+    },
+    {
+      label: t("result.totalWeight"),
+      value: p.valid && p.totalKg != null ? `${fsWeight(p.totalKg)} ${fsWeightUnit()}` : "—",
+    },
+    {
+      label: t("desktop.totalCostLabel"),
+      value: p.valid && p.totalAmount != null ? `${sym} ${fsMoney(p.totalAmount)}` : "—",
+    },
+  ];
+
   return (
-    <div>
-      <div className="text-[10px] font-bold text-muted" style={{ letterSpacing: 1 }}>
-        {label}
-      </div>
-      <div
-        className="font-mono font-extrabold mt-1"
-        style={{ fontSize: 26, color: accent ?? "var(--foreground)" }}
-      >
-        {value}
-      </div>
+    <div className="grid w-full gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+      {cells.map((cell) => (
+        <div
+          key={cell.label}
+          className="rounded-[13px] border border-border-faint"
+          style={{ padding: "12px 14px", background: "var(--surface-raised)" }}
+        >
+          <div className="fs-track-wide text-[9.5px] font-bold uppercase text-muted">
+            {cell.label}
+          </div>
+          <div className="font-mono text-[17px] font-bold mt-1 truncate">
+            {cell.value}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
+
 export function DeskCalcView({
+  compact,
   dark,
   query,
   setQuery,
   p,
+  line,
   sug,
   sym,
   mode,
@@ -102,7 +157,10 @@ export function DeskCalcView({
   sessionTape,
   onRemoveTapeEntry,
   onClearTape,
+  onSaveSessionAsProject,
   onSave,
+  currentSaved,
+  onOpenHelp,
   onLogSession,
   onCopySummary,
   onShareLink,
@@ -110,23 +168,37 @@ export function DeskCalcView({
   onSuggest,
   onCompareCurrent,
   onAddToProject,
+  onToggleTheme,
+  saved,
+  projects,
+  onLoadSaved,
   inputRef,
+  onGotoView,
 }: DeskCalcViewProps) {
   const t = useTranslations("command");
   const isW = mode === "weight";
+  const targetNote = commandTargetNote(p);
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
   // ↑/↓ recall through the session tape; draft holds the in-progress query so
   // ↓ past the newest entry restores it.
   const historyIdxRef = useRef(-1);
   const draftRef = useRef("");
 
-  const queryTokens = useMemo(() => cmdTokenize(query), [query]);
-  // The trailing piece (no whitespace after it) is still being typed — it
-  // lives in the real input; the completed tokens render as chips before it.
-  const hasPartial = !/\s$/.test(query) && queryTokens.length > 0;
-  const chipTokens = hasPartial ? queryTokens.slice(0, -1) : queryTokens;
-  const partial = hasPartial ? queryTokens[queryTokens.length - 1] : "";
-  const chipPrefix = chipTokens.length > 0 ? chipTokens.join(" ") + " " : "";
+  // Chips are grouped per `+`-joined item; the trailing piece (no whitespace
+  // after it) is still being typed and lives in the real input.
+  // A `>` line is a command, not a calculation: it isn't tokenized into chips,
+  // it sits in the input whole, and the parser's opinion of it is ignored.
+  const paletteMode = isPaletteQuery(query);
+  const chips = useMemo(
+    () => (paletteMode ? { groups: [], partial: query } : lineChips(query)),
+    [paletteMode, query],
+  );
+  const partial = chips.partial;
+  const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
+  const chipPrefix = useMemo(
+    () => (paletteMode ? "" : lineChipPrefix(query)),
+    [paletteMode, query],
+  );
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
 
@@ -139,24 +211,110 @@ export function DeskCalcView({
     });
   }, [inputRef]);
 
-  const removeTokenAt = (idx: number) => {
-    const rest = queryTokens.filter((_, i) => i !== idx);
-    const trailing = rest.length > 0 && /\s$/.test(query) ? " " : "";
-    setQuery(rest.join(" ") + trailing);
+  /* ── the `>` palette ───────────────────────────────────────────────────── */
+
+  const paletteOpen = paletteMode;
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
+  const [paletteIndex, setPaletteIndex] = useState(0);
+
+  const navigatePalette = useCallback(
+    (target: PaletteTarget) => {
+      onGotoView(target === "calc" ? "calc" : target);
+    },
+    [onGotoView],
+  );
+
+  const paletteItems = useMemo<PaletteItem[]>(() => {
+    if (!paletteOpen) return [];
+    const actions = buildPaletteActions(t, {
+      navigate: navigatePalette,
+      onNew,
+      onSave,
+      onCompare: onCompareCurrent,
+      onCopySummary,
+      onShareLink,
+      onOpenHelp,
+      onToggleTheme,
+      hasResult: p.valid,
+    });
+    // The user's own things come after the verbs: an entry only outranks an
+    // action when its name is the better match for what was typed.
+    const entries = saved.map<PaletteItem>((entry) => ({
+      id: `saved:${entry.id}`,
+      label: entry.name,
+      sub: entry.result.profileLabel,
+      kind: "saved",
+      run: () => onLoadSaved(entry),
+    }));
+    const projectItems = projects.map<PaletteItem>((project) => ({
+      id: `project:${project.id}`,
+      label: project.name,
+      sub: t("library.calcCount", { count: project.calculations.length }),
+      kind: "project",
+      run: () => onGotoView("projects"),
+    }));
+    return [...actions, ...entries, ...projectItems];
+  }, [
+    paletteOpen,
+    t,
+    navigatePalette,
+    onNew,
+    onSave,
+    onCompareCurrent,
+    onCopySummary,
+    onShareLink,
+    onOpenHelp,
+    onToggleTheme,
+    p.valid,
+    saved,
+    projects,
+    onLoadSaved,
+    onGotoView,
+  ]);
+
+  const paletteResults = useMemo(
+    () => filterPalette(paletteItems, paletteTerm(query)),
+    [paletteItems, query],
+  );
+  // Derived rather than stored: typing narrows the list under the cursor, and
+  // an index left pointing past the end would select nothing.
+  const paletteActiveIndex = Math.min(paletteIndex, Math.max(0, paletteResults.length - 1));
+
+  const runPaletteItem = useCallback(
+    (item: PaletteItem) => {
+      if (item.disabled) return;
+      setQuery("");
+      focusInputAtEnd();
+      item.run();
+    },
+    [setQuery, focusInputAtEnd],
+  );
+
+  const removeTokenAt = (item: number, idx: number) => {
+    setQuery(removeLineToken(query, item, idx));
     focusInputAtEnd();
   };
-  // Pull a token back to the end of the query as the editable trailing
-  // partial (parser is order-tolerant, so reordering is safe).
-  const editTokenAt = (idx: number) => {
-    const others = queryTokens.filter((_, i) => i !== idx);
-    setQuery(others.join(" ") + (others.length ? " " : "") + queryTokens[idx]);
+  // Pull a token back to the end of its own item as the editable trailing
+  // partial (the parser is order-tolerant within an item, so this is free).
+  const editTokenAt = (item: number, idx: number) => {
+    setQuery(editLineToken(query, item, idx));
     focusInputAtEnd();
   };
 
   // Hero metric counts up when the query settles (see useCountUp). Weight
   // always counts up in exact kilograms (no tonne conversion).
-  const heroTarget = isW ? p.totalKg ?? null : p.totalAmount ?? null;
+  // A multi-item line's hero is the line, not the item under the caret — the
+  // sum is the number the user came for.
+  const heroTarget = line.multi
+    ? (isW ? line.totalKg : line.totalAmount) ?? null
+    : (isW ? p.totalKg : p.totalAmount) ?? null;
   const heroAnim = useCountUp(heroTarget, isW ? "w-kg" : "price");
+  // The band belongs to the weight, so it only shows when weight is the hero.
+  const band = isW ? massBand(heroTarget, massTolerancePercent) : null;
   const heroVal =
     heroAnim == null
       ? "—"
@@ -181,7 +339,7 @@ export function DeskCalcView({
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       {/* ───────── command line — full width ───────── */}
-      <div className="flex-shrink-0" style={{ padding: "22px 28px 0" }}>
+      <div className="flex-shrink-0" style={{ padding: compact ? "14px 16px 0" : "22px 28px 0" }}>
         <label
           className="flex items-center gap-2 flex-wrap rounded-2xl cursor-text"
           style={{
@@ -201,18 +359,43 @@ export function DeskCalcView({
           >
             ›
           </span>
-          {chipTokens.map((tok, i) => (
-            <DeskTokenChip
-              key={`${tok}-${i}`}
-              tok={tok}
-              kindClass={KIND_BG[cmdClassifyToken(tok)]}
-              onEdit={() => editTokenAt(i)}
-              onRemove={() => removeTokenAt(i)}
-            />
+          {chips.groups.map((group) => (
+            <Fragment key={group.item}>
+              {group.item > 0 && (
+                <span
+                  className="font-mono text-[17px] font-bold px-0.5"
+                  style={{ color: "var(--muted-faint)" }}
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              )}
+              {group.tokens.map((tok, i) => (
+                <DeskTokenChip
+                  key={`${tok}-${i}`}
+                  tok={tok}
+                  kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                  onEdit={() => editTokenAt(group.item, i)}
+                  onRemove={() => removeTokenAt(group.item, i)}
+                />
+              ))}
+            </Fragment>
           ))}
           <GhostField
             ref={inputRef}
             type="text"
+            onPaste={(e) => {
+              // A cut list pasted from a sheet or an email is one part per row
+              // — which is one item per row here, so it becomes the line the
+              // user would have typed instead of an unparseable blob.
+              // Appended, not substituted: throwing away a line the user
+              // had already typed would be a destructive edit with no undo.
+              const next = cmdPasteIntoLine(query, e.clipboardData.getData("text"));
+              if (!next) return;
+              e.preventDefault();
+              setQuery(next);
+              focusInputAtEnd();
+            }}
             ghost={ghost}
             value={partial}
             onChange={(e) => {
@@ -220,89 +403,115 @@ export function DeskCalcView({
               setQuery(chipPrefix + e.target.value);
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                if (p.valid) {
+              // Palette mode owns the arrows and Enter: the list is the whole
+              // interface while it's open, so the calculator's key map — which
+              // means chips, history and logging — must not fire underneath it.
+              if (paletteOpen) {
+                if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                   e.preventDefault();
-                  onLogSession();
+                  const step = e.key === "ArrowDown" ? 1 : -1;
+                  const count = paletteResults.length;
+                  if (count > 0) {
+                    setPaletteIndex(((paletteActiveIndex + step) % count + count) % count);
+                  }
                   return;
                 }
-                // Mid-query: insert the first matching suggestion chip
-                // (skip the "Save calculation" chip in the Ready stage).
-                const first = sug.items.find((it) => it.kind !== "save");
-                if (first) {
+                if (e.key === "Enter") {
                   e.preventDefault();
-                  onSuggest(first);
+                  const item = paletteResults[paletteActiveIndex];
+                  if (item) runPaletteItem(item);
+                  return;
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setQuery("");
+                  return;
                 }
                 return;
               }
-              // Accept the ghost completion (Tab, or → at the caret's end).
-              if (e.key === "Tab" && ghost) {
-                e.preventDefault();
-                onSuggest(sug.items[0]);
-                return;
-              }
-              if (
-                e.key === "ArrowRight" &&
-                ghost &&
-                e.currentTarget.selectionStart === e.currentTarget.value.length &&
-                e.currentTarget.selectionStart === e.currentTarget.selectionEnd
-              ) {
-                e.preventDefault();
-                onSuggest(sug.items[0]);
-                return;
-              }
-              if (e.key === "Escape") {
-                e.preventDefault();
-                onNew();
-                return;
-              }
-              // ↑ recalls older tape entries; ↓ walks back toward the draft.
-              if (e.key === "ArrowUp" && sessionTape.length > 0) {
-                e.preventDefault();
-                if (historyIdxRef.current === -1) draftRef.current = query;
-                historyIdxRef.current = Math.min(
-                  historyIdxRef.current + 1,
-                  sessionTape.length - 1,
-                );
-                setQuery(sessionTape[historyIdxRef.current] + " ");
-                focusInputAtEnd();
-                return;
-              }
-              if (e.key === "ArrowDown") {
-                if (historyIdxRef.current >= 0) {
-                  e.preventDefault();
+              const action = resolveCommandKey({
+                key: e.key,
+                code: e.code,
+                metaKey: e.metaKey,
+                ctrlKey: e.ctrlKey,
+                altKey: e.altKey,
+                shiftKey: e.shiftKey,
+                partial,
+                hasGhost: !!ghost,
+                valid: p.valid,
+                caretAtEnd:
+                  e.currentTarget.selectionStart === e.currentTarget.value.length,
+                caretAtStart: e.currentTarget.selectionStart === 0,
+                caretCollapsed:
+                  e.currentTarget.selectionStart === e.currentTarget.selectionEnd,
+                suggestionCount: sug.items.length,
+                chipCount,
+                historyLength: sessionTape.length,
+                browsingHistory: historyIdxRef.current >= 0,
+              });
+              if (!action) return;
+              e.preventDefault();
+              switch (action.type) {
+                case "advance": {
+                  // One rule: take what's pending, else log the finished line.
+                  const pending = sug.items.find((it) => it.kind !== "save");
+                  if (!p.valid && pending) {
+                    onSuggest(pending);
+                  } else if (p.valid) {
+                    onLogSession();
+                  }
+                  return;
+                }
+                case "acceptGhost":
+                  onSuggest(sug.items[0]);
+                  return;
+                case "insertSuggestion":
+                  onSuggest(sug.items[action.index]);
+                  focusInputAtEnd();
+                  return;
+                case "save":
+                  onSave();
+                  return;
+                case "compare":
+                  onCompareCurrent();
+                  return;
+                case "help":
+                  onOpenHelp();
+                  return;
+                case "clear":
+                  onNew();
+                  return;
+                case "historyPrev": {
+                  if (historyIdxRef.current === -1) draftRef.current = query;
+                  historyIdxRef.current = Math.min(
+                    historyIdxRef.current + 1,
+                    sessionTape.length - 1,
+                  );
+                  setQuery(sessionTape[historyIdxRef.current] + " ");
+                  focusInputAtEnd();
+                  return;
+                }
+                case "historyNext": {
                   const nextIdx = historyIdxRef.current - 1;
                   historyIdxRef.current = nextIdx;
                   setQuery(nextIdx < 0 ? draftRef.current : sessionTape[nextIdx] + " ");
                   focusInputAtEnd();
                   return;
                 }
-                // Not browsing history → open chip navigation.
-                if (sug.items.length > 0) {
-                  e.preventDefault();
+                case "focusChips":
                   firstSuggestionRef.current?.focus();
-                }
-                return;
-              }
-              // Empty partial + backspace pulls the last chip back into
-              // the input for editing.
-              if (
-                e.key === "Backspace" &&
-                partial === "" &&
-                chipTokens.length > 0 &&
-                e.currentTarget.selectionStart === 0
-              ) {
-                e.preventDefault();
-                setQuery(chipTokens.join(" "));
-                focusInputAtEnd();
-                return;
+                  return;
+                case "editLastChip":
+                  setQuery(pullLastChip(query));
+                  focusInputAtEnd();
+                  return;
               }
             }}
             autoFocus
             autoCapitalize="off"
             autoComplete="off"
             spellCheck={false}
-            placeholder={queryTokens.length === 0 ? t("query.placeholderExample") : ""}
+            placeholder={chipCount === 0 && !partial ? t("query.placeholderExample") : ""}
             aria-label={t("query.aria")}
             wrapperClassName="flex-1 min-w-[120px]"
             inputClassName="bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint"
@@ -325,14 +534,44 @@ export function DeskCalcView({
 
         {/* SUGGESTIONS */}
         <div className="mt-3">
-          <div
-            className="text-[10px] font-bold text-muted mb-2 uppercase"
-            style={{ letterSpacing: 1.2 }}
-          >
-            {formatCommandHint(t, sug.hint)}
+          <div className="flex items-center gap-3 flex-wrap mb-2">
+            <div
+              className="fs-track-label text-[10px] font-bold text-muted uppercase"
+            >
+              {paletteOpen ? t("palette.hint") : formatCommandHint(t, sug.hint)}
+            </div>
+            <span className="ml-auto">
+              <CommandKeyHints
+                valid={p.valid}
+                hasGhost={!!ghost}
+                suggestionCount={sug.items.length}
+                historyLength={sessionTape.length}
+                onOpenHelp={onOpenHelp}
+              />
+            </span>
           </div>
-          <div className="flex gap-[7px] flex-wrap">
-            {sug.items.map((it, i) => (
+          {paletteOpen ? (
+            <div style={{ maxHeight: 260, overflowY: "auto" }}>
+              <CommandPalette
+                items={paletteResults}
+                activeIndex={paletteActiveIndex}
+                onRun={runPaletteItem}
+                onHover={setPaletteIndex}
+              />
+            </div>
+          ) : (
+          <div className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
+            {groupedSuggestions(sug.items).map((group) => (
+              <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
+                {group.group && (
+                  <span
+                    className="text-[9.5px] font-bold text-muted-faint uppercase"
+                    style={{ letterSpacing: 1 }}
+                  >
+                    {t(`suggest.group.${group.group}`)}
+                  </span>
+                )}
+                {group.items.map(({ item: it, index: i }) => (
               <button
                 key={i}
                 ref={i === 0 ? firstSuggestionRef : undefined}
@@ -365,7 +604,7 @@ export function DeskCalcView({
                     focusInputAtEnd();
                   }
                 }}
-                className="flex items-center gap-[7px] rounded-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+                className="fs-pop flex items-center gap-[7px] rounded-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
                 style={{
                   padding: it.sub ? "7px 13px" : "8px 14px",
                   border: it.kind === "save" ? "none" : "1px solid var(--border-faint)",
@@ -375,7 +614,7 @@ export function DeskCalcView({
                 }}
               >
                 {it.fam && (
-                  <span className="flex" style={{ color: "var(--accent)" }}>
+                  <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
                     <CommandGlyph fam={it.fam} size={16} />
                   </span>
                 )}
@@ -393,26 +632,35 @@ export function DeskCalcView({
                     <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
                   )}
                 </span>
+                {/* The ⌥-digit that picks this chip, so the shortcut is
+                    learnable by looking rather than by being told. */}
+                {i < 9 && it.kind !== "save" && (
+                  <span
+                    className="font-mono text-[9.5px] font-bold"
+                    style={{ color: "var(--muted-faint)" }}
+                    aria-hidden="true"
+                  >
+                    {i + 1}
+                  </span>
+                )}
               </button>
+                ))}
+              </div>
             ))}
           </div>
+          )}
         </div>
       </div>
 
       {/* ───────── dashboard grid ───────── */}
-      <div className="flex flex-1 min-h-0 gap-[18px]" style={{ padding: "18px 28px 28px" }}>
+      <div
+        className={`flex flex-1 min-h-0 ${compact ? "flex-col overflow-y-auto" : ""} gap-[18px]`}
+        style={{ padding: compact ? "14px 16px 20px" : "18px 28px 28px" }}
+      >
         {/* LEFT column — result + session tape */}
         <div className="flex flex-col gap-4 min-w-0" style={{ flex: 1.55 }}>
           {/* RESULT PANEL */}
-          <div
-            className="flex-shrink-0 flex flex-col rounded-[18px]"
-            style={{
-              border: "1px solid var(--border-faint)",
-              background: "var(--surface)",
-              boxShadow: "var(--panel-shadow-soft)",
-              padding: "22px 26px",
-            }}
-          >
+          <DeskPanel className="flex-shrink-0 flex flex-col" padding="22px 26px">
             <div className="flex items-center gap-3">
               <div
                 className="inline-flex gap-1 rounded-[11px]"
@@ -470,9 +718,10 @@ export function DeskCalcView({
                   </span>
                 )}
                 <span
+                  className="fs-display-num"
                   style={{
                     fontWeight: 800,
-                    fontSize: "clamp(64px, 6vw, 104px)",
+                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(64px, 6vw, 104px)",
                     lineHeight: 0.82,
                     letterSpacing: -5,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
@@ -486,9 +735,18 @@ export function DeskCalcView({
                   </span>
                 )}
               </div>
+              {band && (
+                <div
+                  className="fs-track-wide font-mono text-[12px] text-muted mt-2"
+                >
+                  {band.percentLabel} · {band.rangeLabel}
+                </div>
+              )}
               {/* descriptive / issue / hint line */}
               <div className="mt-[18px] min-h-[20px]">
-                {p.valid && p.kgm != null ? (
+                {paletteOpen ? null : line.multi ? (
+                  <LineItems line={line} />
+                ) : p.valid && p.kgm != null ? (
                   <span className="font-mono text-[14px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
                       <span className="text-foreground-secondary">{p.kgm.toFixed(2)}</span> kg/m ×{" "}
@@ -496,6 +754,15 @@ export function DeskCalcView({
                       <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                     </span>
+                    {targetNote && (
+                      <TargetBadge>
+                        {t(
+                          `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                          { target: targetNote.target },
+                        )}
+                        {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
+                      </TargetBadge>
+                    )}
                     {!isW && p.pricing.wastePercent > 0 && (
                       <PricingBadge>
                         {t("pricingBadge.waste", { percent: p.pricing.wastePercent })}
@@ -509,7 +776,7 @@ export function DeskCalcView({
                   </span>
                 ) : p.issues.length > 0 ? (
                   <span
-                    className="font-mono text-[14px] flex items-center gap-2 flex-wrap"
+                    className="fs-drop font-mono text-[14px] flex items-center gap-2 flex-wrap"
                     style={{ color: "var(--amber-text)" }}
                     role="status"
                   >
@@ -547,37 +814,28 @@ export function DeskCalcView({
               </div>
             </div>
 
-            {/* stats + actions */}
-            <div
-              className="flex items-end gap-6 flex-wrap"
-              style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}
-            >
-              <StatTile
-                label={t("desktop.totalCostLabel")}
-                value={
-                  p.valid && p.totalAmount != null ? `${sym} ${fsMoney(p.totalAmount)}` : "—"
-                }
-                accent="var(--blue-strong)"
-              />
-              <StatTile
-                label={t("desktop.perPieceLabel")}
-                value={
-                  p.valid && p.perPieceKg != null
-                    ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
-                    : "—"
-                }
-              />
+            {/* stats, then actions — stacked, as the fold has them. Sharing a
+                flex row with the action cluster crushed the grid to 21px per
+                cell and clipped every value mid-number. */}
+            <div style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}>
+              <FoldCells p={p} sym={sym} />
+            </div>
+            <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
               <div className="ml-auto flex items-center gap-2">
+                {/* Save is a toggle: filled bookmark = this exact line is in
+                    the library, press again to remove it. */}
                 <button
                   type="button"
                   onClick={onSave}
                   disabled={!p.valid}
+                  aria-pressed={currentSaved}
+                  title={currentSaved ? t("common.saved") : t("common.save")}
                   className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap"
                   style={{
                     padding: "9px 16px",
-                    border: "none",
-                    background: "var(--accent)",
-                    color: "var(--accent-contrast)",
+                    border: currentSaved ? "1px solid var(--accent-border)" : "none",
+                    background: currentSaved ? "var(--accent-surface)" : "var(--accent)",
+                    color: currentSaved ? "var(--accent-text)" : "var(--accent-contrast)",
                     cursor: p.valid ? "pointer" : "default",
                     opacity: p.valid ? 1 : 0.45,
                   }}
@@ -586,15 +844,15 @@ export function DeskCalcView({
                     width="15"
                     height="15"
                     viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="var(--accent-contrast)"
+                    fill={currentSaved ? "currentColor" : "none"}
+                    stroke={currentSaved ? "currentColor" : "var(--accent-contrast)"}
                     strokeWidth={2}
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
                     <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                   </svg>
-                  {t("common.save")}
+                  {currentSaved ? t("common.saved") : t("common.save")}
                 </button>
                 <button
                   type="button"
@@ -612,6 +870,21 @@ export function DeskCalcView({
                 >
                   <DeskIcon name="compare" />
                   {t("common.compare")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuery((q) => cmdAppendLineItem(q))}
+                  disabled={!p.valid}
+                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap text-muted"
+                  style={{
+                    padding: "9px 14px",
+                    border: "1px dashed var(--border-strong)",
+                    background: "transparent",
+                    cursor: p.valid ? "pointer" : "default",
+                    opacity: p.valid ? 1 : 0.45,
+                  }}
+                >
+                  {t("desktop.anotherItem")}
                 </button>
                 <PanelIconBtn
                   onClick={onCopySummary}
@@ -639,17 +912,13 @@ export function DeskCalcView({
                 </PanelIconBtn>
               </div>
             </div>
-          </div>
+          </DeskPanel>
 
           {/* SESSION TAPE — fills remaining height */}
-          <div
-            className="flex-1 min-h-0 flex flex-col rounded-2xl"
-            style={{
-              border: "1px solid var(--border-faint)",
-              background: "var(--surface)",
-              boxShadow: "var(--panel-shadow-soft)",
-              padding: "14px 18px",
-            }}
+          <DeskPanel
+            className={`flex flex-col ${compact ? "flex-shrink-0" : "flex-1 min-h-0"}`}
+            radius={16}
+            padding="14px 18px"
           >
             <div className="flex items-baseline gap-2.5 mb-1.5 flex-shrink-0">
               <SectionLabel>{t("desktop.session")}</SectionLabel>
@@ -659,8 +928,18 @@ export function DeskCalcView({
               {tapeRows.length > 0 && (
                 <button
                   type="button"
+                  onClick={onSaveSessionAsProject}
+                  className="ml-auto bg-transparent border-0 text-[10px] font-bold cursor-pointer"
+                  style={{ letterSpacing: 0.4, color: "var(--accent-text)" }}
+                >
+                  {t("desktop.saveSessionAsProject")}
+                </button>
+              )}
+              {tapeRows.length > 0 && (
+                <button
+                  type="button"
                   onClick={onClearTape}
-                  className="ml-auto bg-transparent border-0 text-muted-faint text-[10px] font-bold cursor-pointer hover:text-foreground"
+                  className="bg-transparent border-0 text-muted-faint text-[10px] font-bold cursor-pointer hover:text-foreground"
                   style={{ letterSpacing: 0.4 }}
                 >
                   {t("common.clear")}
@@ -676,11 +955,11 @@ export function DeskCalcView({
               </div>
             ) : (
               <>
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <div className={compact ? "" : "flex-1 min-h-0 overflow-y-auto"}>
                   {tapeRows.map(({ q, rp }, i) => (
                     <div
                       key={`${q}-${i}`}
-                      className="group flex items-center gap-3"
+                      className="fs-rise group flex items-center gap-3"
                       style={{ padding: "8px 0", borderTop: "1px solid var(--border-faint)" }}
                     >
                       <button
@@ -701,14 +980,14 @@ export function DeskCalcView({
                           {rp.lengthM} m × {rp.realQty}
                         </span>
                         <span
-                          className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0"
-                          style={{ width: 82 }}
+                          className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0 whitespace-nowrap"
+                          style={{ minWidth: 82 }}
                         >
                           {fsWeight(rp.totalKg!)} {fsWeightUnit()}
                         </span>
                         <span
-                          className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0"
-                          style={{ width: 92 }}
+                          className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0 whitespace-nowrap"
+                          style={{ minWidth: 92 }}
                         >
                           {sym} {fsMoney(rp.totalAmount!)}
                         </span>
@@ -740,14 +1019,14 @@ export function DeskCalcView({
                     {t("desktop.runningTotal", { count: tapeRows.length })}
                   </span>
                   <span
-                    className="font-mono text-[13.5px] font-extrabold text-right"
-                    style={{ width: 82, color: "var(--accent)" }}
+                    className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
+                    style={{ minWidth: 82, color: "var(--accent)" }}
                   >
                     {fsWeight(sumKg)} {fsWeightUnit()}
                   </span>
                   <span
-                    className="font-mono text-[13.5px] font-extrabold text-right"
-                    style={{ width: 92, color: "var(--blue-strong)" }}
+                    className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
+                    style={{ minWidth: 92, color: "var(--blue-strong)" }}
                   >
                     {sym} {fsMoney(sumAmount)}
                   </span>
@@ -756,24 +1035,21 @@ export function DeskCalcView({
                 </div>
               </>
             )}
-          </div>
+          </DeskPanel>
         </div>
 
         {/* RIGHT column — expanded breakdown */}
-        <div
-          className="flex flex-col min-h-0 overflow-y-auto rounded-[18px]"
+        <DeskPanel
+          className={`flex flex-col ${compact ? "flex-shrink-0" : "min-h-0 overflow-y-auto"}`}
+          padding="20px 22px"
           style={{
-            flex: 1,
-            minWidth: 300,
-            maxWidth: 400,
-            border: "1px solid var(--border-faint)",
-            background: "var(--surface)",
-            boxShadow: "var(--panel-shadow-soft)",
-            padding: "20px 22px",
+            flex: compact ? "0 0 auto" : 1,
+            minWidth: compact ? 0 : 300,
+            maxWidth: compact ? "100%" : 400,
           }}
         >
-          <DeskBreakdown p={p} />
-        </div>
+          <DeskBreakdown p={p} line={line} />
+        </DeskPanel>
       </div>
     </div>
   );
@@ -782,18 +1058,25 @@ export function DeskCalcView({
 /* ───────────────────────── breakdown card ───────────────────────── */
 
 function Line({
+  id,
   label,
   value,
   strong,
   accent,
 }: {
+  /** Stable hook for tests and debugging — the row's meaning, not its position. */
+  id?: string;
   label: string;
   value: string;
   strong?: boolean;
   accent?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3" style={{ padding: "9px 0" }}>
+    <div
+      data-row={id}
+      className="flex items-baseline justify-between gap-3"
+      style={{ padding: "9px 0" }}
+    >
       <span
         className="whitespace-nowrap"
         style={{
@@ -824,10 +1107,20 @@ const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?
   totalCost: { strong: true, accent: "var(--blue-strong)" },
 };
 
-function DeskBreakdown({ p }: { p: CommandParseResult }) {
+function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }) {
   const t = useTranslations("command");
   const r = p.calc?.result;
-  const rows = p.valid ? buildBreakdownRows(p, t) : null;
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
+  const rows = p.valid ? buildBreakdownRows(p, t, { marginPercent, massTolerancePercent }) : null;
   // The expanded right column keeps a tighter subset: density lives in the
   // header, and per-piece price / subtotal stay sheet-only.
   const geometry = rows?.geometry.filter((row) => row.id !== "density") ?? [];
@@ -837,10 +1130,17 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
   return (
     <>
       <div
-        className="text-[10px] font-bold text-muted mb-3 flex-shrink-0"
-        style={{ letterSpacing: 1.2 }}
+        className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0"
       >
-        {t("desktop.breakdown")}
+        {/* The breakdown describes one calculation — kg/m and per-piece weight
+            don't sum — so on a multi-item line it has to say which one, or its
+            numbers read as contradicting the hero's total. */}
+        {line.multi
+          ? t("desktop.breakdownItem", {
+              index: line.activeIndex + 1,
+              count: line.items.length,
+            })
+          : t("desktop.breakdown")}
       </div>
       {rows && r ? (
         <>
@@ -854,7 +1154,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
             className="min-w-0 flex-shrink-0"
             style={{ paddingBottom: 12, borderBottom: "1px solid var(--border-faint)" }}
           >
-            <div className="font-extrabold text-[17px] text-foreground" style={{ letterSpacing: -0.2 }}>
+            <div className="fs-track-tight font-extrabold text-[17px] text-foreground">
               {formatCommandParseName(t, p)}
             </div>
             <div className="font-mono text-[11px] text-muted mt-0.5">
@@ -864,7 +1164,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
           <div style={{ paddingTop: 6 }}>
             {geometry.map((row) => (
               <div key={row.id}>
-                <Line label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+                <Line id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
                 {row.id === "pieces" && (
                   <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
                 )}
@@ -872,7 +1172,7 @@ function DeskBreakdown({ p }: { p: CommandParseResult }) {
             ))}
             <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
             {pricing.map((row) => (
-              <Line key={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+              <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
             ))}
           </div>
         </>

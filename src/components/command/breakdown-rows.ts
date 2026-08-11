@@ -1,5 +1,6 @@
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParseResult } from "@ferroscale/metal-core";
+import { massBand } from "./mass-band";
 
 /**
  * The single source of truth for the result-breakdown content. Both renderers
@@ -15,13 +16,15 @@ export type BreakdownRowId =
   | "pieces"
   | "perPieceWeight"
   | "totalWeight"
+  | "massBand"
   | "density"
   | "rate"
   | "perPiecePrice"
   | "subtotal"
   | "waste"
   | "vat"
-  | "totalCost";
+  | "totalCost"
+  | "sellPrice";
 
 export interface BreakdownRow {
   id: BreakdownRowId;
@@ -34,9 +37,22 @@ export interface BreakdownRows {
   pricing: BreakdownRow[];
 }
 
+export interface BreakdownOptions {
+  /** Margin on top of cost; 0 (the default) leaves the sell row out entirely. */
+  marginPercent?: number;
+  /** Mass tolerance ±%; 0 (the default) leaves the band row out entirely. */
+  massTolerancePercent?: number;
+}
+
+/** Cost plus margin — what you'd quote, not what it costs you. */
+export function sellPrice(cost: number, marginPercent: number): number {
+  return cost * (1 + marginPercent / 100);
+}
+
 export function buildBreakdownRows(
   p: CommandParseResult,
   t: CommandT,
+  options: BreakdownOptions = {},
 ): BreakdownRows | null {
   if (!p.calc || p.kgm == null) return null;
   const r = p.calc.result;
@@ -58,6 +74,16 @@ export function buildBreakdownRows(
     },
     { id: "density", label: t("result.density"), value: `${r.densityKgPerM3} kg/m³` },
   ];
+
+  // Theoretical mass is what the formula gives; the band is what may arrive.
+  const band = massBand(r.totalWeightKg, options.massTolerancePercent ?? 0);
+  if (band) {
+    geometry.splice(geometry.findIndex((row) => row.id === "totalWeight") + 1, 0, {
+      id: "massBand",
+      label: t("result.massBand", { percent: band.percentLabel }),
+      value: band.rangeLabel,
+    });
+  }
 
   const pricing: BreakdownRow[] = [
     {
@@ -86,6 +112,13 @@ export function buildBreakdownRows(
         }]
       : []),
     { id: "totalCost", label: t("result.totalCost"), value: `${sym} ${fsMoney(r.grandTotalAmount)}` },
+    ...(options.marginPercent && options.marginPercent > 0
+      ? [{
+          id: "sellPrice" as const,
+          label: t("result.sellPrice", { percent: options.marginPercent }),
+          value: `${sym} ${fsMoney(sellPrice(r.grandTotalAmount, options.marginPercent))}`,
+        }]
+      : []),
   ];
 
   return { geometry, pricing };

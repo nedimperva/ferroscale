@@ -1,12 +1,14 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import type { CommandParseResult } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { SheetShell } from "./sheet-shell";
+import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
 function SheetRow({
   label,
@@ -37,8 +39,12 @@ function SheetRow({
 
 interface CommandResultSheetProps {
   p: CommandParseResult;
+  /** The whole line, so a multi-item breakdown can say which item it is. */
+  line?: CommandLine;
   onClose: () => void;
   onSave: () => void;
+  /** Whether this exact calculation is already bookmarked (Save toggles). */
+  isSaved: boolean;
   onCopy: () => void;
   onCopyValue: () => void;
   onShareLink: () => void;
@@ -52,6 +58,7 @@ interface CommandResultSheetProps {
 export function CommandResultBreakdown({
   p,
   onSave,
+  isSaved,
   onCopy,
   onCopyValue,
   onShareLink,
@@ -61,7 +68,17 @@ export function CommandResultBreakdown({
   columns = 1,
 }: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
   const t = useTranslations("command");
-  const rows = buildBreakdownRows(p, t);
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
+  const rows = buildBreakdownRows(p, t, { marginPercent, massTolerancePercent });
   if (!rows) {
     return null;
   }
@@ -131,9 +148,19 @@ export function CommandResultBreakdown({
         <button
           type="button"
           onClick={onSave}
-          className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
+          aria-pressed={isSaved}
+          className="flex-1 h-11 rounded-xl font-bold text-sm"
+          style={
+            isSaved
+              ? {
+                  background: "var(--accent-surface)",
+                  color: "var(--accent-text)",
+                  border: "1px solid var(--accent-border)",
+                }
+              : { background: "var(--accent)", color: "var(--accent-contrast)" }
+          }
         >
-          {t("common.save")}
+          {isSaved ? t("common.saved") : t("common.save")}
         </button>
         <button type="button" onClick={onCopy} className={secondaryBtn}>
           {t("common.copy")}
@@ -164,6 +191,7 @@ export function CommandResultBreakdown({
 
 export function CommandResultSheet({
   onClose,
+  line,
   ...rest
 }: CommandResultSheetProps) {
   const t = useTranslations("command");
@@ -171,7 +199,19 @@ export function CommandResultSheet({
     return null;
   }
   return (
-    <SheetShell title={t("sheets.resultBreakdown")} onClose={onClose}>
+    <SheetShell
+      title={
+        // kg/m and per-piece weight don't sum, so the breakdown is always one
+        // calculation — on a multi-item line it has to say which.
+        line && line.multi
+          ? t("desktop.breakdownItem", {
+              index: line.activeIndex + 1,
+              count: line.items.length,
+            })
+          : t("sheets.resultBreakdown")
+      }
+      onClose={onClose}
+    >
       <CommandResultBreakdown {...rest} />
     </SheetShell>
   );

@@ -5,8 +5,10 @@ import {
   fsWeight,
   fsWeightUnit,
 } from "@ferroscale/metal-core";
+import { commandTargetNote, formatTargetNote } from "./target-note";
 import type {
   CommandAlias,
+  CommandLine,
   CommandFamily,
   CommandParseIssue,
   CommandParseResult,
@@ -78,6 +80,8 @@ export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): strin
       });
     case "invalidQty":
       return t("issues.invalidQty");
+    case "invalidExpression":
+      return t("issues.invalidExpression", { token: issue.token });
     case "invalidGeometry":
       // Engine validation messages are not localized yet — show them as-is.
       return issue.message;
@@ -113,6 +117,7 @@ export function formatCommandSuggestionLabel(
   item: CommandSuggestionItem,
 ): string {
   if (item.kind === "save") return t("suggest.saveCalculation");
+  if (item.kind === "item") return t("suggest.addItem");
   if (item.kind === "profile") return formatProfileLabel(t, item.label);
   return item.label;
 }
@@ -158,7 +163,11 @@ export function formatCommandParseName(
 export function buildCommandSummary(
   t: CommandT,
   p: CommandParseResult,
+  line?: CommandLine,
 ): string | null {
+  // A line of several items copies as all of them. Pasting one item of a
+  // two-item quote into an email is a quiet way to send the wrong number.
+  if (line && line.multi) return buildMultiItemSummary(t, line);
   if (!p.valid || !p.calc || p.kgm == null) return null;
   const r = p.calc.result;
   const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
@@ -166,7 +175,15 @@ export function buildCommandSummary(
   const grade = p.gradeLabel ?? r.gradeLabel;
 
   const header = grade ? `${name} · ${grade}` : name;
-  const meta = `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${p.kgm.toFixed(2)} kg/m`;
+  const targetNote = commandTargetNote(p);
+  const meta = [
+    `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${p.kgm.toFixed(2)} kg/m`,
+    // A target line is the whole point of the calculation — a summary that
+    // dropped it would read as if the quantity had been chosen by hand.
+    targetNote ? formatTargetNote(targetNote, t) : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   const rows: Array<[string, string]> = [];
   if (p.totalKg != null) {
@@ -182,9 +199,37 @@ export function buildCommandSummary(
 
   const labelWidth = rows.reduce((w, [label]) => Math.max(w, label.length), 0);
   const body = rows.map(([label, value]) => `${label.padEnd(labelWidth + 3)}${value}`).join("\n");
-  const divider = "─".repeat(Math.max(header.length, meta.length));
+  const divider = "─".repeat(
+    Math.max(header.length, ...meta.split("\n").map((line) => line.length)),
+  );
 
   return `${header}\n${meta}\n${divider}\n${body}`;
+}
+
+/**
+ * Every item, then the line's totals. Each block is the single-item summary,
+ * so the two forms can't drift apart in wording or in rounding.
+ */
+function buildMultiItemSummary(t: CommandT, line: CommandLine): string | null {
+  const blocks = line.items
+    .map((item) => buildCommandSummary(t, item.parse))
+    .filter((block): block is string => block != null);
+  if (blocks.length === 0) return null;
+
+  const sym = CURRENCY_SYMBOLS[line.items[0].parse.pricing.currency] ?? "€";
+  const totals: string[] = [];
+  if (line.totalKg != null) {
+    totals.push(`${t("result.totalWeight")}   ${fsWeight(line.totalKg)} ${fsWeightUnit()}`);
+  }
+  if (line.totalAmount != null) {
+    totals.push(`${t("result.totalCost")}   ${sym} ${fsMoney(line.totalAmount)}`);
+  }
+  // Only claim a line total when every item contributed one; a partial sum
+  // presented as "the total" is worse than no total at all.
+  const footer = totals.length > 0 && line.valid
+    ? `\n\n${"═".repeat(28)}\n${t("line.total")}\n${totals.join("\n")}`
+    : "";
+  return `${blocks.join("\n\n")}${footer}`;
 }
 
 function formatProfileLabel(t: CommandT, label: string): string {

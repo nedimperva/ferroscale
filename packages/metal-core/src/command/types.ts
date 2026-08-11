@@ -59,6 +59,14 @@ export interface CommandParserSettings {
   defaultGradeId: string;
   /** Unit applied to bare-number length tokens (from defaultUnitStore). */
   defaultLengthUnit: LengthUnit;
+  /**
+   * Price book: rate per material grade id, in the pricing block's own unit
+   * and basis. A grade listed here prices with its own rate instead of the
+   * single default — the difference between steel and stainless is a factor
+   * of four, so one global €/kg is wrong for anyone working across materials.
+   * An inline `@rate/unit` token still wins over both.
+   */
+  gradeRates?: Record<string, number>;
 }
 
 /** Full engine artifacts for a valid query — consumed by save/compare/project. */
@@ -96,6 +104,8 @@ export interface CommandParseResult {
   issues: CommandParseIssue[];
   /** Echo of the pricing settings used (for sheet display). */
   pricing: CommandPricing;
+  /** Non-null when the query asked for a target instead of an input. */
+  target: CommandTarget | null;
   /** Non-null when the query contains an inline price token. */
   priceOverride: {
     unitPrice: number;
@@ -108,6 +118,7 @@ export type CommandParseIssueCode =
   | "unknownToken"
   | "unknownSize"
   | "invalidQty"
+  | "invalidExpression"
   | "invalidGeometry";
 
 /**
@@ -133,13 +144,52 @@ export interface CommandParseIssue {
   suggestion?: string;
 }
 
-export type CommandTokenKind = "profile" | "len" | "qty" | "grade" | "price" | "unknown";
+export type CommandTokenKind =
+  | "profile"
+  | "len"
+  | "qty"
+  | "grade"
+  | "price"
+  | "target"
+  | "unknown";
+
+/**
+ * A query that asked the question backwards: "=500kg" means *how much of this
+ * makes 500 kg*, and the parser solves for whichever of length or quantity the
+ * line left open. Pieces round up — you buy whole bars — so `achieved*` is
+ * what the solution actually comes to, which is ≥ the target.
+ */
+export interface CommandTarget {
+  raw: string;
+  kind: "weight" | "money";
+  /** Kilograms for a weight target, currency units for a money target. */
+  value: number;
+  solvedFor: "qty" | "length";
+  achievedKg: number | null;
+  achievedAmount: number | null;
+}
+
+/**
+ * Where a suggestion came from, so the UI can group the row: the user's own
+ * habits first, then their saved presets, then the curated catalog.
+ */
+export type CommandSuggestionGroup = "usage" | "preset" | "standard";
 
 export interface CommandSuggestionItem {
   label: string;
   sub?: string;
   fam?: CommandFamily;
-  kind: "profile" | "size" | "length" | "qty" | "grade" | "save" | "recent";
+  kind:
+    | "profile"
+    | "size"
+    | "length"
+    | "qty"
+    | "grade"
+    | "save"
+    | "recent"
+    | "refine"
+    /** Start a second `+`-joined item on the line. */
+    | "item";
   ins: string;
   /** Replace the trailing partial token on insert. */
   replaceLast?: boolean;
@@ -147,6 +197,14 @@ export interface CommandSuggestionItem {
   appendProfile?: boolean;
   /** Insert with a leading space if needed. */
   space?: boolean;
+  group?: CommandSuggestionGroup;
+  /**
+   * Refine only: swap the existing token of this kind for `ins` (appending
+   * when the query has none). This is what turns a finished query into a
+   * one-tap variation — "same bar, twelve metres" — instead of a retype.
+   * `size` rewrites the profile token's size suffix.
+   */
+  replaceKind?: CommandTokenKind | "size";
 }
 
 export interface CommandSuggestion {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fingerprint } from "./fingerprint";
+import { fingerprint, savedFingerprint } from "./fingerprint";
 import type { CalculationResult } from "./types";
 
 const makeResult = (overrides: Partial<CalculationResult> = {}): CalculationResult => ({
@@ -61,5 +61,29 @@ describe("fingerprint", () => {
     expect(fp).toContain("S275JR");
     expect(fp).toContain("42.5");
     expect(fp).toContain("22.4");
+  });
+});
+
+describe("savedFingerprint", () => {
+  it("ignores price — the same bar at a new rate is still the same saved entry", () => {
+    const a = makeResult({ grandTotalAmount: 100 });
+    const b = makeResult({ grandTotalAmount: 250 });
+    expect(savedFingerprint(a)).toBe(savedFingerprint(b));
+  });
+
+  it("still separates different geometry, grade or quantity", () => {
+    const base = makeResult({ lengthMm: 6000, quantity: 2, totalWeightKg: 238.7 });
+    expect(savedFingerprint(base)).not.toBe(
+      savedFingerprint(makeResult({ lengthMm: 6000, quantity: 2, totalWeightKg: 120 })),
+    );
+    expect(savedFingerprint(base)).not.toBe(
+      savedFingerprint(makeResult({ lengthMm: 6000, quantity: 4, totalWeightKg: 238.7 })),
+    );
+    expect(savedFingerprint(base)).not.toBe(
+      savedFingerprint(makeResult({ lengthMm: 3000, quantity: 2, totalWeightKg: 238.7 })),
+    );
+    expect(savedFingerprint(base)).not.toBe(
+      savedFingerprint(makeResult({ lengthMm: 6000, quantity: 2, totalWeightKg: 238.7, gradeLabel: "S355JR" })),
+    );
   });
 });

@@ -42,6 +42,65 @@
     "installButton": "Instaliraj aplikaciju"
   },
   "command": {
+    "quote": {
+      "title": "Ponuda",
+      "item": "Stavka",
+      "total": "Ukupno",
+      "print": "Štampaj ili sačuvaj kao PDF",
+      "printAria": "Štampaj ponudu za {name}",
+      "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno."
+    },
+    "priceBook": {
+      "title": "Cjenovnik",
+      "subtitle": "cijena po kvalitetu · {unit}",
+      "empty": "Svi kvaliteti koriste podrazumijevanu cijenu ({rate}). Dodajte kvalitet da ga naplatite drugačije — nehrđajući nije isto što i čelik.",
+      "addGrade": "+ Dodaj kvalitet",
+      "pickGrade": "Izaberite kvalitet…",
+      "addAria": "Kvalitet za dodavanje u cjenovnik",
+      "rateAria": "Cijena za {grade}",
+      "removeAria": "Ukloni {grade} iz cjenovnika"
+    },
+    "keyHints": {
+      "complete": "dopuni",
+      "insert": "ubaci",
+      "log": "zabilježi",
+      "pick": "izaberi",
+      "save": "sačuvaj",
+      "recall": "vrati",
+      "shortcuts": "prečice"
+    },
+    "help": {
+      "title": "Pregled komandi",
+      "exampleHint": "Dodirnite da isprobate ovu liniju",
+      "grammar": "Gramatika",
+      "shortcuts": "Prečice",
+      "profiles": "Profili",
+      "grades": "Kvaliteti",
+      "moreGrades": "…i još",
+      "orderNote": "Redoslijed nije bitan, a razmaci nisu obavezni — hea120 6m x2 i x2 6m hea 120 znače isto.",
+      "token": {
+        "profile": "Profil i veličina",
+        "length": "Dužina (mm, cm, m, in, ft)",
+        "quantity": "Količina",
+        "grade": "Kvalitet materijala",
+        "price": "Cijena samo za ovu liniju",
+        "target": "Obrnuti račun: koliko čini 500 kg (ili =250eur)",
+        "item": "Još jedna stavka u istoj liniji",
+        "palette": "Komande: idite bilo gdje, pokrenite bilo šta, otvorite sačuvanu stavku po imenu",
+        "arith": "Računanje u tokenu — takođe x2+3"
+      },
+      "shortcut": {
+        "enter": "Preuzmi prijedlog ili zabilježi gotovu liniju",
+        "tab": "Prihvati dopunu u liniji",
+        "digits": "Ubaci 1.–9. čip",
+        "history": "Krećite se kroz ranije linije",
+        "save": "Sačuvaj (ponovni pritisak uklanja)",
+        "compare": "Dodaj za poređenje",
+        "new": "Novi izračun",
+        "clear": "Očisti liniju",
+        "backspace": "Na praznoj liniji vraća zadnji čip"
+      }
+    },
     "common": {
       "project": "projekat",
       "clear": "OBRIŠI",
@@ -61,7 +120,15 @@
       "openArrow": "Otvori ->",
       "copyValue": "Kopiraj vrijednost",
       "copySummary": "Kopiraj sažetak",
-      "shareLink": "Podijeli link"
+      "shareLink": "Podijeli link",
+      "saved": "Sačuvano",
+      "undo": "Vrati",
+      "nameIt": "Imenuj",
+      "cancel": "Otkaži",
+      "done": "Gotovo",
+      "saveChanges": "Sačuvaj izmjene",
+      "share": "Podijeli",
+      "open": "Otvori"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -74,12 +141,24 @@
       "copied": "Kopirano u međuspremnik",
       "copiedValue": "Vrijednost kopirana",
       "copiedSummary": "Sažetak kopiran",
-      "linkCopied": "Link kopiran"
+      "linkCopied": "Link kopiran",
+      "linkPricingApplied": "Primijenjena cijena iz linka",
+      "savedRemoved": "Uklonjeno iz sačuvanih",
+      "savedRemovedMany": "{count, plural, one {# izračun uklonjen} few {# izračuna uklonjena} other {# izračuna uklonjeno}}",
+      "restored": "Vraćeno",
+      "duplicated": "Kopija napravljena",
+      "savedUpdated": "Sačuvani izračun ažuriran",
+      "sessionEmpty": "Na traci sesije još nema ničega",
+      "sessionSaved": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano u {project}",
+      "sessionProjectName": "Sesija {date}",
+      "partAdded": "Dodano kao dio sklopa {name}",
+      "addedItemsToSession": "{count} stavki dodano u sesiju"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
       "closeSheet": "Zatvori panel",
-      "liveResult": "Rezultat: {value}"
+      "liveResult": "Rezultat: {value}",
+      "addToSession": "Dodaj ovu liniju u sesiju"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",
@@ -105,7 +184,9 @@
       "addLength": "Dodajte dužinu za izračun",
       "closeUnitPicker": "Zatvori izbor jedinice",
       "priceUnitPicker": "Jedinica cijene",
-      "lengthUnitPicker": "Jedinica dužine"
+      "lengthUnitPicker": "Jedinica dužine",
+      "backspace": "Brisanje",
+      "backspaceHold": "Zadržite da obrišete cijeli token"
     },
     "token": {
       "edit": "Uredi {token}",
@@ -118,7 +199,9 @@
       "profile": "profil",
       "size": "dimenzija",
       "length": "dužina",
-      "grade": "kvalitet"
+      "grade": "kvalitet",
+      "perPieceSuffix": "/kom",
+      "breakdown": "Pregled"
     },
     "profiles": {
       "round": "Okruglo",
@@ -135,6 +218,38 @@
       "waste": "+{percent}% otpad",
       "vat": "+PDV {percent}%"
     },
+    "target": {
+      "solvedQty": "komada za {target}",
+      "solvedLength": "dužina za {target}",
+      "over": "{over} više"
+    },
+    "line": {
+      "items": "Stavke linije",
+      "total": "UKUPNO LINIJA"
+    },
+    "palette": {
+      "aria": "Komandna paleta",
+      "empty": "Nema odgovarajuće komande",
+      "hint": "Komande",
+      "kind": {
+        "action": "akcija",
+        "saved": "sačuvano",
+        "project": "projekat"
+      },
+      "action": {
+        "newCalc": "Novi proračun",
+        "save": "Sačuvaj ovu liniju",
+        "compare": "Dodaj u poređenje",
+        "copySummary": "Kopiraj sažetak",
+        "shareLink": "Kopiraj link za dijeljenje",
+        "goSaved": "Idi na sačuvano",
+        "goProjects": "Idi na projekte",
+        "goCompare": "Idi na poređenje",
+        "goSettings": "Idi na postavke",
+        "help": "Pregled komandi",
+        "toggleTheme": "Promijeni temu"
+      }
+    },
     "hint": {
       "addLength": "dodajte dužinu ->",
       "addSize": "dodajte dimenziju ->",
@@ -144,6 +259,7 @@
       "unknownToken": "Nije prepoznato \"{token}\"",
       "unknownSize": "Ne postoji {profile} veličina \"{size}\"",
       "invalidQty": "Količina mora biti najmanje 1",
+      "invalidExpression": "To ne ostavlja ništa: \"{token}\"",
       "didYouMean": "Jeste li mislili {suggestion}?"
     },
     "sheets": {
@@ -165,11 +281,13 @@
       "waste": "Otpad +{percent}%",
       "vat": "PDV {percent}%",
       "totalCost": "Ukupna cijena",
+      "sellPrice": "Prodajna cijena (+{percent}%)",
       "pcs": "kom",
       "geometry": "Geometrija",
       "pricing": "Cijene",
       "unitPrice": "Jedinična cijena",
-      "grade": "Kvalitet"
+      "grade": "Kvalitet",
+      "massBand": "Opseg mase {percent}"
     },
     "settings": {
       "mainResult": "Glavni rezultat",
@@ -200,11 +318,17 @@
       "defaultGradeUpper": "PODRAZUMIJEVANI KVALITET",
       "lengthUnitFallback": "REZERVNA JEDINICA DUŽINE",
       "languageUpper": "JEZIK",
+      "haptics": "Vibracija",
+      "hapticsUpper": "VIBRACIJA",
+      "margin": "Marža",
+      "marginUpper": "MARŽA NA CIJENU",
       "locales": {
         "en": "Engleski",
         "bs": "Bosanski"
       },
-      "appearance": "IZGLED"
+      "appearance": "IZGLED",
+      "massTolerance": "Tolerancija mase",
+      "massToleranceUpper": "TOLERANCIJA MASE"
     },
     "docs": {
       "label": "Vodič",
@@ -271,7 +395,7 @@
       "syncing": "Sinhronizujem...",
       "syncNow": "Sinhronizuj sada",
       "disconnect": "Prekini vezu",
-      "description": "Sinhronizujte sačuvane stavke, projekte, poređenja i presete na Google Drive — šifrovano vašom lozinkom.",
+      "description": "Sinhronizujte sačuvane stavke, projekte, poređenje, predloške, cjenovnik i navike kucanja na Google Drive — end-to-end šifrovano vašom lozinkom.",
       "connecting": "Povezujem...",
       "connectGoogleDrive": "Poveži Google Drive"
     },
@@ -284,7 +408,8 @@
       "calcCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "noCalculationsYet": "Još nema izračuna.",
       "noProjectsCreateAbove": "Još nema projekata. Kreirajte jedan iznad za početak.",
-      "newProject": "Novi projekat"
+      "newProject": "Novi projekat",
+      "total": "Ukupno"
     },
     "desktop": {
       "calcLive": "{name} · uživo",
@@ -303,7 +428,12 @@
       "breakdown": "DETALJI",
       "breakdownEmpty": "detalji rezultata se prikazuju dok kucate",
       "totalCostLabel": "UKUPNA CIJENA",
-      "perPieceLabel": "PO KOMADU"
+      "saveSessionAsProject": "SAČUVAJ KAO PROJEKAT",
+      "perPieceLabel": "PO KOMADU",
+      "breakdownItem": "Pregled · stavka {index} od {count}",
+      "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
+      "saveAsProject": "Sačuvaj kao projekat",
+      "anotherItem": "+ još jedna stavka"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
@@ -313,7 +443,14 @@
       "pieces": "Komadi",
       "gradeOptional": "Kvalitet (opcionalno)",
       "ready": "Spremno",
-      "saveCalculation": "Sačuvaj izračun"
+      "saveCalculation": "Sačuvaj izračun",
+      "refine": "Doradi",
+      "group": {
+        "usage": "Vaše",
+        "preset": "Predlošci",
+        "standard": "Standardno"
+      },
+      "addItem": "+ stavka"
     },
     "compare": {
       "approxBase": "≈ osnova",
@@ -335,12 +472,58 @@
       "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "subtitleEmpty": "sačuvani izračuni",
       "empty": "još ništa nije sačuvano — pritisnite Sačuvaj na izračunu",
-      "addToCompare": "Dodaj za poređenje"
+      "addToCompare": "Dodaj za poređenje",
+      "openAria": "Otvori {name} u kalkulatoru",
+      "selectAria": "Označi {name}",
+      "usedCount": "{count, plural, one {korišteno # put} few {korišteno # puta} other {korišteno # puta}}",
+      "repriced": "bilo {amount}",
+      "repricedHint": "Obračunato po današnjoj cijeni — ovo je iznos u trenutku čuvanja",
+      "pin": "Zakači na vrh",
+      "unpin": "Otkači",
+      "duplicate": "Dupliraj",
+      "edit": "Naziv, bilješke i oznake",
+      "details": "Prikaži detalje",
+      "noBreakdown": "nema živog pregleda za ovu stavku",
+      "partCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+      "parts": "Dijelovi",
+      "addPart": "Dodaj trenutnu liniju kao dio",
+      "removePart": "Ukloni {name} iz ovog sklopa",
+      "searchPlaceholder": "Traži naziv, oznaku, profil…",
+      "sortLabel": "Sortiraj",
+      "sort": {
+        "recent": "Najnovije",
+        "used": "Najkorištenije",
+        "lastUsed": "Nedavno korišteno",
+        "name": "Naziv"
+      },
+      "view": {
+        "grid": "Prikaz kartica",
+        "table": "Kompaktni prikaz"
+      },
+      "select": "Označi",
+      "clearTags": "Očisti oznake",
+      "selectedCount": "{count, plural, one {# označen} few {# označena} other {# označeno}}",
+      "matchCount": "prikazano {count} od {total}",
+      "emptyTitle": "Još ništa nije sačuvano",
+      "emptyBody": "Pritisnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje — s crtežom, težinom i današnjom cijenom.",
+      "emptyBodyMobile": "Dodirnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje.",
+      "noMatchTitle": "Nema rezultata",
+      "noMatchBody": "Ništa ovdje ne odgovara toj pretrazi ili oznaci.",
+      "clearFilters": "Očisti filtere",
+      "editTitle": "Uredi sačuvani izračun",
+      "fieldName": "Naziv",
+      "fieldNotes": "Bilješke",
+      "fieldTags": "Oznake",
+      "notesPlaceholder": "Za šta je ovo?",
+      "tagsPlaceholder": "kapija, radionica, hitno",
+      "tagsHint": "Odvojeno zarezom, najviše {max}.",
+      "assemblyName": "Sklop ({count} dijelova)"
     },
     "projects": {
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
       "subtitleEmpty": "grupišite izračune u poslove",
       "empty": "još nema projekata — kliknite Novi projekat ili + Projekat na rezultatu",
+      "emptyTitle": "Još nema projekata",
       "itemCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
       "emptyProjectHint": "prazno — dodajte izračun iz desnog panela",
       "removeFromProject": "Ukloni iz projekta"

@@ -1,6 +1,6 @@
 {
   "name": "ferroscale",
-  "version": "3.7.0",
+  "version": "3.17.4",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -28,11 +28,15 @@
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "jsdom": "^30.0.1",
     "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "5.9.3",

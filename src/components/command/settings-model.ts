@@ -81,6 +81,12 @@ export interface SettingsModelArgs {
   setLocale: (locale: AppLocale) => void;
   dark: boolean;
   onToggleTheme: () => void;
+  haptics: boolean;
+  onSetHaptics: (value: boolean) => void;
+  marginPercent: number;
+  onSetMarginPercent: (value: number) => void;
+  massTolerancePercent: number;
+  onSetMassTolerancePercent: (value: number) => void;
 }
 
 export function buildSettingsFields({
@@ -95,6 +101,12 @@ export function buildSettingsFields({
   setLocale,
   dark,
   onToggleTheme,
+  haptics,
+  onSetHaptics,
+  marginPercent,
+  onSetMarginPercent,
+  massTolerancePercent,
+  onSetMassTolerancePercent,
 }: SettingsModelArgs): SettingsField[] {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   return [
@@ -178,6 +190,30 @@ export function buildSettingsFields({
       max: 100,
     },
     {
+      kind: "number",
+      id: "marginPercent",
+      label: t("settings.margin"),
+      deskLabel: t("settings.marginUpper"),
+      value: marginPercent,
+      onChange: onSetMarginPercent,
+      suffix: "%",
+      step: 1,
+      min: 0,
+      max: 500,
+    },
+    {
+      kind: "number",
+      id: "massTolerancePercent",
+      label: t("settings.massTolerance"),
+      deskLabel: t("settings.massToleranceUpper"),
+      value: massTolerancePercent,
+      onChange: onSetMassTolerancePercent,
+      suffix: "%",
+      step: 0.5,
+      min: 0,
+      max: 20,
+    },
+    {
       kind: "choice",
       id: "defaultGrade",
       label: t("settings.defaultGrade"),
@@ -211,6 +247,18 @@ export function buildSettingsFields({
         label: t(`settings.locales.${l}`),
       })),
       onSelect: (v) => setLocale(v as AppLocale),
+    },
+    {
+      kind: "choice",
+      id: "haptics",
+      label: t("settings.haptics"),
+      deskLabel: t("settings.hapticsUpper"),
+      value: haptics ? "on" : "off",
+      options: [
+        { value: "on", label: t("common.on") },
+        { value: "off", label: t("common.off") },
+      ],
+      onSelect: (v) => onSetHaptics(v === "on"),
     },
     {
       kind: "choice",

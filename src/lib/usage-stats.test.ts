@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { cmdParse } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
-import { buildUsageSource, recordCommandUsage } from "./usage-stats";
+import {
+  buildUsageSource,
+  mergeRemoteUsageStats,
+  recordCommandUsage,
+  usageStatsVersionStore,
+  USAGE_PEERS_STORAGE_KEY,
+  USAGE_STORAGE_KEY,
+} from "./usage-stats";
 
 const mockStorage = new Map<string, string>();
 
@@ -118,5 +125,81 @@ describe("recordCommandUsage / buildUsageSource", () => {
     record("hea120 6m x2 s355");
     record("hea120 6m");
     expect(buildUsageSource().recentQueries()).toEqual(["hea120 6m"]);
+  });
+});
+
+describe("habits across devices", () => {
+  it("sums a peer's counts and keeps the later touch", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-01T10:00:00Z"));
+    record("shs40x40x3 6m");
+
+    mergeRemoteUsageStats("device-b", "2026-07-02T10:00:00.000Z", {
+      queries: [{ q: "shs45x45x4 6m", n: 4, t: Date.parse("2026-07-02T10:00:00Z") }],
+      buckets: {
+        "size:shs": { "45x45x4": { n: 4, t: Date.parse("2026-07-02T10:00:00Z") } },
+      },
+    });
+
+    const usage = buildUsageSource();
+    // Four uses on the other device beat the one here.
+    expect(usage.topSizes("shs")).toEqual(["45x45x4", "40x40x3"]);
+    // ...and its recent line is offered here too, newest first.
+    expect(usage.recentQueries()).toEqual(["shs45x45x4 6m", "shs40x40x3 6m"]);
+  });
+
+  it("adds one device's tally to another's for the same value", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-01T10:00:00Z"));
+    record("shs40x40x3 6m");
+    mergeRemoteUsageStats("device-b", "2026-07-01T11:00:00.000Z", {
+      queries: [],
+      buckets: { "size:shs": { "40x40x3": { n: 6, t: Date.parse("2026-07-01T11:00:00Z") } } },
+    });
+
+    const own = JSON.parse(localStorage.getItem(USAGE_STORAGE_KEY) || "{}");
+    // The device's own record still holds only what it learned itself — that's
+    // what keeps a pull from counting the same use twice.
+    expect(own.buckets["size:shs"]["40x40x3"].n).toBe(1);
+    // The reader sees the sum.
+    expect(buildUsageSource().topSizes("shs")).toEqual(["40x40x3"]);
+  });
+
+  it("ignores a peer record that is not newer than the one already held", () => {
+    const first = mergeRemoteUsageStats("device-b", "2026-07-02T10:00:00.000Z", {
+      queries: [],
+      buckets: { "size:shs": { "45x45x4": { n: 4, t: 1 } } },
+    });
+    const second = mergeRemoteUsageStats("device-b", "2026-07-02T10:00:00.000Z", {
+      queries: [],
+      buckets: { "size:shs": { "45x45x4": { n: 99, t: 1 } } },
+    });
+    expect(first).toBe(true);
+    expect(second).toBe(false);
+    expect(buildUsageSource().topSizes("shs")).toEqual(["45x45x4"]);
+  });
+
+  it("rejects a malformed peer payload rather than poisoning the source", () => {
+    expect(mergeRemoteUsageStats("device-b", "2026-07-02T10:00:00.000Z", null)).toBe(false);
+    expect(mergeRemoteUsageStats("", "2026-07-02T10:00:00.000Z", { queries: [], buckets: {} })).toBe(
+      false,
+    );
+    expect(localStorage.getItem(USAGE_PEERS_STORAGE_KEY)).toBeNull();
+  });
+
+  it("leaves a single-device user's ordering exactly as it was", () => {
+    record("hea120 6m");
+    record("ipe200 4m");
+    expect(buildUsageSource().recentQueries()).toEqual(["ipe200 4m", "hea120 6m"]);
+  });
+
+  it("bumps the version store so readers rebuild", () => {
+    const before = usageStatsVersionStore.getSnapshot();
+    record("hea120 6m");
+    expect(usageStatsVersionStore.getSnapshot()).toBeGreaterThan(before);
+
+    const afterRecord = usageStatsVersionStore.getSnapshot();
+    mergeRemoteUsageStats("device-b", "2026-07-02T10:00:00.000Z", { queries: [], buckets: {} });
+    expect(usageStatsVersionStore.getSnapshot()).toBeGreaterThan(afterRecord);
   });
 });

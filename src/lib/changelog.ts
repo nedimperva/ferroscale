@@ -17,6 +17,308 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.17.4",
+    date: "2026-08-08",
+    fixed: [
+      "In the session list, a longer number pushed the unit onto its own line — KM 1,396.41 broke in half — even with plenty of room beside it. The columns were a fixed width; they now grow with the number and never break it",
+    ],
+    changed: [
+      "The library sheet on phone now shows the name of the open tab only; the others are their icon and count. All four fit on one row again, in any language",
+    ],
+    fixed_bs: [
+      "U listi sesije je duži broj gurao jedinicu u novi red — KM 1.396,41 bi se prelomio napola — iako je bilo dovoljno mjesta pored. Kolone su bile fiksne širine; sada rastu s brojem i nikada ga ne lome",
+    ],
+    changed_bs: [
+      "Biblioteka na telefonu sada prikazuje naziv samo otvorene kartice; ostale su ikona i broj. Sve četiri opet stanu u jedan red, na svakom jeziku",
+    ],
+  },
+  {
+    version: "3.17.3",
+    date: "2026-08-08",
+    fixed: [
+      "The four figures above the desktop breakdown were squeezed to a sliver and cut off mid-number. They now sit on their own row at full width",
+      "The fourth library tab ran off the edge of a phone screen. The tabs are sized to their own labels now and the row scrolls, so no label is ever cut — in any language",
+    ],
+    fixed_bs: [
+      "Četiri brojke iznad desktop pregleda bile su stisnute i odsječene usred broja. Sada stoje u vlastitom redu pune širine",
+      "Četvrta kartica biblioteke izlazila je van ivice ekrana telefona. Kartice su sada širine vlastitog naziva a red se pomjera, pa nijedan naziv nije odsječen — ni na jednom jeziku",
+    ],
+  },
+  {
+    version: "3.17.2",
+    date: "2026-08-08",
+    fixed: [
+      "Adding a line to the session no longer nudges the whole screen down. The session row was growing a second line as soon as it had numbers to show; it now shows the total in whichever unit the big number is in, plus how many lines it came from, and keeps one fixed height whether the session is empty or full",
+    ],
+    fixed_bs: [
+      "Dodavanje linije u sesiju više ne pomjera cijeli ekran nadolje. Red sesije je dobijao drugi red čim je imao brojeve za prikazati; sada prikazuje zbir u jedinici u kojoj je i veliki broj, uz broj linija, i zadržava istu visinu bez obzira je li sesija prazna ili puna",
+    ],
+  },
+  {
+    version: "3.17.1",
+    date: "2026-08-08",
+    fixed: [
+      "On a phone, a long line pushed the command input and the bottom row of keys off the screen. The chip box now stops at two rows and follows the cursor, so the line you are typing and the keys you type it with are always visible",
+      "The keypad ended flush with the bottom of the screen, so on phones with a home indicator the bottom row sat underneath it. It now keeps clear",
+      "Everything on the phone is a little tighter — smaller keys, a slightly smaller headline number, less padding — so the whole screen fits on shorter phones too",
+    ],
+    fixed_bs: [
+      "Na telefonu je duga linija gurala polje za unos i donji red tipki van ekrana. Okvir sa čipovima sada staje na dva reda i prati kursor, pa su linija koju kucate i tipke kojima je kucate uvijek vidljivi",
+      "Tastatura je završavala tačno na dnu ekrana, pa je na telefonima sa home indikatorom donji red bio ispod njega. Sada ostavlja razmak",
+      "Sve na telefonu je nešto zbijenije — manje tipke, malo manji glavni broj, manje razmaka — pa cijeli ekran stane i na kraće telefone",
+    ],
+  },
+  {
+    version: "3.17.0",
+    date: "2026-08-08",
+    changed: [
+      "The phone screen is rebuilt to the new design: the weight/price switch is now two small pills in the hero's label row, and the two-stat card became a single line — per piece, the other total, and Breakdown to open the full figures. Save, Compare and Share sit under the number instead of hiding in the sheet",
+      "The phone finally has a session: a ribbon under the hero shows the running total with a + to add the current line, and the library gained a SESSION tab listing every logged line with its totals and Save as project",
+      "A > key on the keypad opens the command palette — until now it was keyboard-only, so phones had no way to reach it",
+      "The desktop result gained a four-cell glance row and a + another item action",
+    ],
+    changed_bs: [
+      "Ekran telefona je prerađen prema novom dizajnu: prekidač masa/cijena su sada dvije male pilule u redu oznake, a kartica sa dvije statistike postala je jedna linija — po komadu, drugi zbir i Pregled za pune brojke. Sačuvaj, Uporedi i Podijeli stoje ispod broja umjesto da se kriju u listu",
+      "Telefon konačno ima sesiju: traka ispod glavnog broja prikazuje tekući zbir sa + za dodavanje trenutne linije, a biblioteka je dobila karticu SESIJA sa svim upisanim linijama, zbirovima i opcijom Sačuvaj kao projekat",
+      "Tipka > na tastaturi otvara komandnu paletu — do sada je bila samo za tastaturu, pa telefoni nisu imali pristup",
+      "Desktop rezultat je dobio red od četiri ćelije i akciju + još jedna stavka",
+    ],
+  },
+  {
+    version: "3.16.2",
+    date: "2026-08-07",
+    fixed: [
+      "Copying a line with several items now copies all of them and the line total. It was copying only the item under the cursor, which is a quiet way to paste the wrong number into an email",
+      "The Save button no longer shows a line with several items as already saved when one of its parts happens to be. Saving one always creates a new assembly, so the button now looks like what it does",
+      "Suggestions now learn from every item on a line, not only the last one",
+    ],
+    fixed_bs: [
+      "Kopiranje linije sa više stavki sada kopira sve njih i ukupan zbir. Ranije je kopiralo samo stavku pod kursorom, što je tih način da se u email zalijepi pogrešan broj",
+      "Dugme Sačuvaj više ne prikazuje liniju sa više stavki kao već sačuvanu kada je jedan njen dio sačuvan. Čuvanje takve linije uvijek pravi novi sklop, pa dugme sada izgleda kao ono što radi",
+      "Prijedlozi sada uče iz svake stavke na liniji, a ne samo iz posljednje",
+    ],
+  },
+  {
+    version: "3.16.1",
+    date: "2026-08-07",
+    fixed: [
+      "Pasting a cut list onto a line you had already typed no longer throws that line away — the pasted parts are added to it",
+      "On a line with several items, the breakdown now says which item it is describing. It was showing one item's figures under the hero's total for the whole line, which read as though the two disagreed",
+    ],
+    fixed_bs: [
+      "Lijepljenje liste rezanja na liniju koju ste već ukucali više ne briše tu liniju — zalijepljeni dijelovi se dodaju na nju",
+      "Na liniji sa više stavki pregled sada kaže koju stavku opisuje. Ranije je prikazivao brojeve jedne stavke ispod ukupnog zbira cijele linije, što je izgledalo kao da se ne slažu",
+    ],
+  },
+  {
+    version: "3.16.0",
+    date: "2026-08-07",
+    added: [
+      "Arithmetic in a token: hea120 6m-50mm x2+3. A cut list arrives as \"the six-metre stock less the joint\", not as round numbers, so the bar does the subtraction instead of you",
+      "Paste a cut list straight in. One row per part becomes one item per part, tabs and semicolons and all — the whole list prices at once",
+      "Mass tolerance: set a ±% in Settings and every result gains the band it may actually be delivered within, alongside the theoretical mass",
+    ],
+    added_bs: [
+      "Računanje u tokenu: hea120 6m-50mm x2+3. Lista rezanja dolazi kao \"šestometarska šipka minus spoj\", a ne kao okrugli brojevi, pa traka oduzima umjesto vas",
+      "Zalijepite listu rezanja direktno. Jedan red po dijelu postaje jedna stavka po dijelu, sa tabovima i tačka-zarezima — cijela lista se obračuna odjednom",
+      "Tolerancija mase: postavite ±% u postavkama i svaki rezultat dobija opseg u kojem može stvarno biti isporučen, uz teoretsku masu",
+    ],
+  },
+  {
+    version: "3.15.0",
+    date: "2026-08-07",
+    added: [
+      "Type > and the command line becomes a command palette. Go to saved, projects, compare or settings; save, compare, copy or share the current line; open the reference or flip the theme — and search your own saved entries and projects by name to load one straight into the bar. Arrows move, Enter runs, Escape backs out",
+    ],
+    added_bs: [
+      "Ukucajte > i komandna linija postaje komandna paleta. Idite na sačuvano, projekte, poređenje ili postavke; sačuvajte, uporedite, kopirajte ili podijelite trenutnu liniju; otvorite pregled ili promijenite temu — i pretražite vlastite sačuvane stavke i projekte po imenu da biste ih učitali direktno u traku. Strelice biraju, Enter pokreće, Escape izlazi",
+    ],
+  },
+  {
+    version: "3.14.0",
+    date: "2026-08-07",
+    added: [
+      "One line, several items. Type hea120 6m x2 + ipe200 4m x3 and the bar prices both: each item is listed with its own weight and price, and the big number is the sum. Every item keeps its own grade, rate and target — the grammar is just repeated after the plus",
+      "A multi-item line saves as one assembly rather than as separate entries, and logging it drops one line per item onto the session tape, so it still adds up and can still become a project",
+    ],
+    added_bs: [
+      "Jedna linija, više stavki. Ukucajte hea120 6m x2 + ipe200 4m x3 i traka računa obje: svaka stavka je izlistana sa vlastitom masom i cijenom, a veliki broj je zbir. Svaka stavka zadržava vlastiti kvalitet, cijenu i cilj — gramatika se samo ponavlja iza plusa",
+      "Linija sa više stavki se čuva kao jedan sklop, a ne kao odvojene stavke, a upisivanje u sesiju dodaje po jednu liniju za svaku stavku, pa se i dalje sabira i i dalje može postati projekat",
+    ],
+  },
+  {
+    version: "3.13.0",
+    date: "2026-08-07",
+    changed: [
+      "Your typing habits now follow you between devices. The suggestions that learn what you actually type used to start from nothing on every device; with sync on, the sizes, lengths and recent lines you built up on one are ranked on all of them. Each device keeps its own tally and the app adds them together, so nothing is ever counted twice",
+    ],
+    changed_bs: [
+      "Vaše navike kucanja sada vas prate između uređaja. Prijedlozi koji uče šta stvarno kucate ranije su kretali od nule na svakom uređaju; sa uključenom sinhronizacijom, dimenzije, dužine i nedavne linije koje ste izgradili na jednom rangiraju se na svima. Svaki uređaj vodi vlastiti zbir, a aplikacija ih sabira, pa se ništa nikada ne broji dvaput",
+    ],
+  },
+  {
+    version: "3.12.0",
+    date: "2026-08-07",
+    added: [
+      "Ask the question backwards. Type =500kg (or =1t, =250eur) after a profile and the bar solves for what you left out: how many pieces of that bar make 500 kg, or how long one has to be. Pieces come whole and round up, and the badge says how far over the target the answer lands",
+    ],
+    added_bs: [
+      "Postavite pitanje obrnuto. Ukucajte =500kg (ili =1t, =250eur) iza profila i traka rješava ono što ste izostavili: koliko komada te šipke čini 500 kg, ili koliko jedna mora biti duga. Komadi su cijeli i zaokružuju se naviše, a oznaka kaže koliko rezultat prelazi cilj",
+    ],
+  },
+  {
+    version: "3.11.0",
+    date: "2026-08-07",
+    changed: [
+      "Tablets and half-width windows get the real workspace. Between the phone and the desktop there used to be a 560-pixel card floating on a background — no session tape, no library, no breakdown, which is exactly an iPad in portrait. That whole in-between is now the workspace itself, laid out in one column for the width it has",
+      "Figures line up everywhere: every number in the app now uses tabular figures, so a value no longer shifts sideways as it counts up or a digit changes",
+      "The orange is used more sparingly — it now means the primary action and the weight metric, and no longer doubles as the selected tab, the profile icons and everything else at once",
+      "Movement now means one thing: chips pop in, tape lines rise, views cross-fade, warnings drop in. All of it disappears when your system asks for reduced motion",
+    ],
+    changed_bs: [
+      "Tableti i prozori pola širine dobijaju pravi radni prostor. Između telefona i desktopa je ranije bila kartica od 560 piksela na pozadini — bez trake sesije, biblioteke i pregleda, što je tačno iPad u portretu. Taj međuprostor je sada sam radni prostor, složen u jednu kolonu za širinu koju ima",
+      "Brojevi se poravnavaju svuda: sve cifre u aplikaciji koriste tabelarne brojke, pa vrijednost više ne pomjera položaj dok se odbrojava ili dok se cifra mijenja",
+      "Narandžasta se koristi štedljivije — sada znači glavnu akciju i masu, a više nije istovremeno i izabrana kartica, ikone profila i sve ostalo",
+      "Pokret sada znači jedno: čipovi iskaču, linije trake se podižu, prikazi se pretapaju, upozorenja se spuštaju. Sve nestaje kada sistem zatraži smanjeno kretanje",
+    ],
+  },
+  {
+    version: "3.10.0",
+    date: "2026-08-07",
+    added: [
+      "Price book: give each material grade its own rate. Stainless costs about four times mild steel per kilo, and one global €/kg quietly got one of them wrong — now a grade you have priced uses its own rate, an inline @2.50/kg still wins for a single line, and anything you leave out keeps the default",
+      "Margin: set a percentage on top of cost and every breakdown gains a sell-price line, so a result becomes an offer",
+      "Save the whole session as a project in one press — the tape already added up, now it can become a job",
+      "Saved entries can hold several parts. Add the line in the bar to any saved entry and it becomes an assembly — a gate frame, a railing bay — with its parts listed and its weight and price summed",
+      "Print a quote from any project (or save it as PDF): header, line items, weights, totals and margin, with no app furniture around it — and it works offline",
+    ],
+    changed: [
+      "Adding several calculations to a project at once now adds all of them; the old path reported success for the first and silently dropped the rest",
+    ],
+    added_bs: [
+      "Cjenovnik: dajte svakom kvalitetu materijala vlastitu cijenu. Nehrđajući košta oko četiri puta više od običnog čelika po kilogramu, a jedna globalna €/kg cijena je tiho griješila kod jednog od njih — sada kvalitet koji ste unijeli koristi vlastitu cijenu, @2.50/kg i dalje pobjeđuje za pojedinačnu liniju, a sve što izostavite koristi podrazumijevanu",
+      "Marža: postavite postotak na cijenu koštanja i svaki pregled dobija liniju prodajne cijene, pa rezultat postaje ponuda",
+      "Sačuvajte cijelu sesiju kao projekat jednim pritiskom — traka je već sabirala, sada može postati posao",
+      "Sačuvane stavke mogu sadržavati više dijelova. Dodajte liniju iz trake bilo kojoj sačuvanoj stavci i ona postaje sklop — okvir kapije, polje ograde — s popisom dijelova i zbrojenom masom i cijenom",
+      "Štampajte ponudu iz bilo kojeg projekta (ili je sačuvajte kao PDF): zaglavlje, stavke, mase, ukupno i marža, bez ostatka aplikacije — i radi offline",
+    ],
+    changed_bs: [
+      "Dodavanje više izračuna u projekat odjednom sada dodaje sve; stari način je prijavljivao uspjeh za prvi, a ostale tiho izostavljao",
+    ],
+  },
+  {
+    version: "3.9.0",
+    date: "2026-08-07",
+    added: [
+      "A finished calculation now offers variations instead of a single Save chip: twice the pieces, the other stock lengths, the neighbouring sizes, another grade — each showing what it would come to before you pick it",
+      "Press ⌥1–9 to insert the numbered suggestion without leaving the line, and see the number on each chip",
+      "A hint strip under the command line names the keys that work right now, and ? opens a full command reference with the grammar, every shortcut, and tappable examples",
+      "⌘S saves the current line (press again to unsave) and ⌘↵ adds it to compare",
+      "The phone keypad's backspace now deletes a whole token when held, so a size like 40x40x3 goes in one gesture",
+      "Recent lines sit above the phone keypad — history recall was desktop-only until now",
+      "Vibration feedback on the phone keypad and on saves, with an on/off switch in Settings",
+    ],
+    changed: [
+      "Enter has one meaning everywhere: take the pending suggestion, or log the finished line. The hint strip says which one it is at that moment",
+      "Suggestions are grouped — yours, your presets, then standard — so the ranking is visible and not just true",
+      "Returning to the app puts your last line back in the bar instead of the demo query; a first visit still gets the demo",
+      "Suggestion chips on the phone wrap to a second row instead of hiding behind a sideways scroll",
+    ],
+    fixed: [
+      "Typing was doing far more work than it needed: per-metre weights for suggestion chips are now cached and the query is parsed once per keystroke instead of twice",
+    ],
+    added_bs: [
+      "Gotov izračun sada nudi varijante umjesto jednog dugmeta Sačuvaj: dvostruko komada, druge standardne dužine, susjedne veličine, drugi kvalitet — svaka pokazuje rezultat prije nego što je izaberete",
+      "Pritisnite ⌥1–9 da ubacite numerisani prijedlog bez napuštanja linije; broj je prikazan na svakom čipu",
+      "Traka ispod komandne linije imenuje tipke koje trenutno rade, a ? otvara potpuni pregled komandi s gramatikom, svim prečicama i primjerima na dodir",
+      "⌘S čuva trenutnu liniju (ponovni pritisak uklanja), a ⌘↵ je dodaje u poređenje",
+      "Tipka za brisanje na mobilnoj tastaturi sada briše cijeli token kada je zadržite, pa dimenzija poput 40x40x3 nestaje jednim potezom",
+      "Nedavne linije stoje iznad mobilne tastature — do sada je vraćanje historije bilo samo na desktopu",
+      "Vibracija pri kucanju na tastaturi i pri čuvanju, s prekidačem u Postavkama",
+    ],
+    changed_bs: [
+      "Enter svuda znači jedno: preuzmi prijedlog koji čeka ili zabilježi gotovu liniju. Traka s prečicama govori šta je to u tom trenutku",
+      "Prijedlozi su grupisani — vaše, vaši predlošci, pa standardno — pa je redoslijed vidljiv, a ne samo tačan",
+      "Povratak u aplikaciju vraća vašu zadnju liniju u traku umjesto demo upita; prva posjeta i dalje dobija demo",
+      "Čipovi prijedloga na telefonu prelaze u drugi red umjesto da se kriju iza bočnog pomjeranja",
+    ],
+    fixed_bs: [
+      "Kucanje je radilo mnogo više posla nego što treba: težine po metru za čipove se sada keširaju, a upit se parsira jednom po pritisku tipke umjesto dvaput",
+    ],
+  },
+  {
+    version: "3.8.0",
+    date: "2026-08-06",
+    added: [
+      "Saved calculations are real cards now: each one shows the actual cross-section of its profile, the spec (length × pieces × grade) under the title, and both totals — with mass per metre and weight per piece alongside",
+      "Search, sort and tag your saved work: filter by name, note, tag, profile or grade, sort by newest, most used, recently used or name, and pin the ones you reach for daily to the top",
+      "Name, notes and tags on any saved calculation — and a 'name it' shortcut on the save confirmation, while you still have the job in mind",
+      "Duplicate a saved calculation to tweak a copy without losing the original",
+      "Select several saved calculations at once to compare or delete them together, and switch between card and compact views",
+      "Deleting a saved calculation can be undone from the confirmation that follows it",
+      "Save is now a toggle: the button shows a filled bookmark when the line in the bar is already saved, and pressing it again removes it",
+    ],
+    changed: [
+      "Saved calculations are always priced at your current rate, and each card states the rate it used. When today's rate moves the total, the card shows what it cost when you saved it instead of quietly showing a stale number",
+      "Opening a saved calculation counts as a use (so 'most used' means something) and restores it at today's rate, so the command line matches the card",
+      "Share links now carry the sender's rate, currency, waste and VAT, so a link shows the same price to whoever opens it — and says so when it changes your pricing",
+      "One shared empty state across Saved, Projects and Compare, each pointing at the action that fills it",
+    ],
+    fixed: [
+      "Saving a calculation that was already saved reported 'Saved' but did nothing — now the button reflects the real state and the action removes it",
+    ],
+    added_bs: [
+      "Sačuvani izračuni su sada prave kartice: svaka prikazuje stvarni presjek profila, specifikaciju (dužina × komadi × kvalitet) ispod naziva i oba iznosa — uz masu po metru i težinu po komadu",
+      "Pretraga, sortiranje i oznake za sačuvano: filtrirajte po nazivu, bilješci, oznaci, profilu ili kvalitetu, sortirajte po najnovijem, najkorištenijem, nedavno korištenom ili nazivu, i zakačite na vrh one koje koristite svaki dan",
+      "Naziv, bilješke i oznake na svakom sačuvanom izračunu — uz prečicu „Imenuj\" na potvrdi čuvanja, dok vam je posao još svjež",
+      "Duplirajte sačuvani izračun da mijenjate kopiju bez gubitka originala",
+      "Označite više sačuvanih izračuna odjednom za poređenje ili brisanje, i prebacujte se između prikaza kartica i kompaktnog prikaza",
+      "Brisanje sačuvanog izračuna može se vratiti sa potvrde koja slijedi",
+      "Sačuvaj je sada prekidač: dugme prikazuje ispunjenu oznaku kada je linija u traci već sačuvana, a ponovni pritisak je uklanja",
+    ],
+    changed_bs: [
+      "Sačuvani izračuni se uvijek obračunavaju po vašoj trenutnoj cijeni, a svaka kartica navodi cijenu koju je koristila. Kada današnja cijena promijeni iznos, kartica prikazuje koliko je koštalo u trenutku čuvanja umjesto da tiho pokazuje zastarjeli broj",
+      "Otvaranje sačuvanog izračuna se broji kao korištenje (da „najkorištenije\" nešto znači) i vraća ga po današnjoj cijeni, pa komandna linija odgovara kartici",
+      "Linkovi za dijeljenje sada nose cijenu, valutu, otpad i PDV pošiljaoca, pa link prikazuje istu cijenu svakome ko ga otvori — i to javi kada promijeni vaše postavke",
+      "Jedinstven prazan ekran u Sačuvano, Projekti i Poređenje, svaki upućuje na akciju koja ga popunjava",
+    ],
+    fixed_bs: [
+      "Čuvanje izračuna koji je već sačuvan javljalo je „Sačuvano\" ali nije radilo ništa — sada dugme odražava stvarno stanje, a akcija ga uklanja",
+    ],
+  },
+  {
+    version: "3.7.0",
+    date: "2026-07-20",
+    added: [
+      "The command bar types with you: a faint inline completion appears after the caret — press Tab or → to accept it",
+      "Did-you-mean fixes for a mistyped profile, grade or off-catalog size, offered as a one-tap correction and never applied automatically",
+      "Type it the way you'd say it: hea 120, 6 meters, 2 pieces / 2 kom all parse",
+      "↑/↓ query history on the desktop inputs",
+      "Dimensioned profile drawings on the result breakdown, with every dimension labelled in mm on the picture",
+      "The hero metric counts up when a query settles, and the profile drawing eases in when the shape changes",
+    ],
+    changed: [
+      "Size suggestion chips show the per-metre weight (e.g. 120 · 26.7 kg/m) so you can judge a size before picking it",
+    ],
+    fixed: [
+      "Recent queries no longer pile up near-duplicates while you build a single calculation — one calculation leaves one recent",
+    ],
+    added_bs: [
+      "Komandna traka kuca s vama: blijeda dopuna se pojavljuje iza kursora — pritisnite Tab ili → da je prihvatite",
+      "Prijedlozi ispravki za pogrešno otkucan profil, kvalitet ili veličinu van kataloga, ponuđeni jednim dodirom i nikad primijenjeni automatski",
+      "Kucajte kako biste rekli: hea 120, 6 meters, 2 pieces / 2 kom — sve se prepoznaje",
+      "Historija upita sa ↑/↓ na desktop poljima",
+      "Crteži presjeka s kotama na pregledu rezultata, sa svakom dimenzijom označenom u mm na slici",
+      "Glavni broj se odbrojava kada se upit smiri, a crtež profila se blago pojavljuje pri promjeni oblika",
+    ],
+    changed_bs: [
+      "Čipovi s veličinama prikazuju težinu po metru (npr. 120 · 26.7 kg/m) da možete procijeniti veličinu prije izbora",
+    ],
+    fixed_bs: [
+      "Nedavni upiti se više ne gomilaju kao skoro-duplikati dok gradite jedan izračun — jedan izračun ostavlja jedan unos",
+    ],
+  },
+  {
     version: "3.6.2",
     date: "2026-07-03",
     changed: [

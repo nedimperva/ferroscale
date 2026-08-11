@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
-import { fingerprint } from "@/lib/calculator/fingerprint";
+import { savedFingerprint } from "@/lib/calculator/fingerprint";
 import {
   createSavedPart,
   isActiveSyncEntity,
@@ -22,6 +22,8 @@ export interface SavedEntry {
   name: string;
   notes?: string;
   tags?: string[];
+  /** Pinned entries sort ahead of everything else, in every sort mode. */
+  pinned?: boolean;
   useCount: number;
   lastUsedAt?: string;
   updatedAt: string;
@@ -52,6 +54,7 @@ export interface TemplatePartDraft {
 
 export interface UseSavedReturn {
   saved: SavedEntry[];
+  /** Returns the created entry so callers can offer "name it" right after. */
   saveCalculation: (
     input: CalculationInput,
     result: CalculationResult,
@@ -59,9 +62,12 @@ export interface UseSavedReturn {
     notes?: string,
     tags?: string[],
     parts?: TemplatePartDraft[],
-  ) => void;
+  ) => SavedEntry;
   removeSaved: (id: string) => void;
   removeSavedMany: (ids: string[]) => void;
+  /** Undo a delete: clears the tombstone so sync keeps the entry alive. */
+  restoreSaved: (ids: string | string[]) => void;
+  toggleSavedPinned: (id: string) => void;
   duplicateSaved: (id: string) => void;
   duplicateSavedMany: (ids: string[]) => void;
   addPartToSaved: (
@@ -73,7 +79,10 @@ export interface UseSavedReturn {
   appendPartsToSaved: (id: string, parts: TemplatePartDraft[]) => boolean;
   removePartFromSaved: (id: string, partId: string) => boolean;
   reorderPartInSaved: (id: string, partId: string, direction: -1 | 1) => boolean;
-  updateSaved: (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => void;
+  updateSaved: (
+    id: string,
+    patch: { name?: string; notes?: string; tags?: string[]; pinned?: boolean },
+  ) => void;
   markSavedUsed: (id: string) => void;
   isSaved: (result: CalculationResult) => boolean;
   getSavedCount: (result: CalculationResult) => number;
@@ -138,6 +147,7 @@ export function useSaved(): UseSavedReturn {
         normalizedProfile: finalParts[0].normalizedProfile,
       };
       setSavedWithPersist((previous) => [entry, ...previous]);
+      return entry;
     },
     [setSavedWithPersist],
   );
@@ -159,6 +169,37 @@ export function useSaved(): UseSavedReturn {
       setSavedWithPersist((previous) =>
         previous.map((entry) => (
           idSet.has(entry.id) && !entry.deletedAt ? markEntityDeleted(entry, deletedAt) : entry
+        )),
+      );
+    },
+    [setSavedWithPersist],
+  );
+
+  const restoreSaved = useCallback(
+    (ids: string | string[]) => {
+      const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+      if (idSet.size === 0) return;
+      const updatedAt = new Date().toISOString();
+      setSavedWithPersist((previous) =>
+        previous.map((entry) => (
+          idSet.has(entry.id) && entry.deletedAt
+            // updatedAt must beat the tombstone or a merge would re-delete it.
+            ? { ...entry, deletedAt: undefined, updatedAt }
+            : entry
+        )),
+      );
+    },
+    [setSavedWithPersist],
+  );
+
+  const toggleSavedPinned = useCallback(
+    (id: string) => {
+      const updatedAt = new Date().toISOString();
+      setSavedWithPersist((previous) =>
+        previous.map((entry) => (
+          entry.id === id && !entry.deletedAt
+            ? { ...entry, pinned: !entry.pinned, updatedAt }
+            : entry
         )),
       );
     },
@@ -218,7 +259,10 @@ export function useSaved(): UseSavedReturn {
   );
 
   const updateSaved = useCallback(
-    (id: string, patch: { name?: string; notes?: string; tags?: string[] }) => {
+    (
+      id: string,
+      patch: { name?: string; notes?: string; tags?: string[]; pinned?: boolean },
+    ) => {
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) =>
@@ -226,6 +270,7 @@ export function useSaved(): UseSavedReturn {
             ? {
                 ...entry,
                 ...(patch.name !== undefined ? { name: patch.name.trim() || entry.name } : {}),
+                ...(patch.pinned !== undefined ? { pinned: patch.pinned } : {}),
                 ...(patch.notes !== undefined ? { notes: patch.notes.trim() || undefined } : {}),
                 ...(patch.tags !== undefined
                   ? {
@@ -360,24 +405,24 @@ export function useSaved(): UseSavedReturn {
 
   const isSaved = useCallback(
     (result: CalculationResult) => {
-      const fp = fingerprint(result);
-      return saved.some((entry) => fingerprint(entry.result) === fp);
+      const fp = savedFingerprint(result);
+      return saved.some((entry) => savedFingerprint(entry.result) === fp);
     },
     [saved],
   );
 
   const getSavedCount = useCallback(
     (result: CalculationResult) => {
-      const fp = fingerprint(result);
-      return saved.filter((entry) => fingerprint(entry.result) === fp).length;
+      const fp = savedFingerprint(result);
+      return saved.filter((entry) => savedFingerprint(entry.result) === fp).length;
     },
     [saved],
   );
 
   const getSavedEntry = useCallback(
     (result: CalculationResult) => {
-      const fp = fingerprint(result);
-      return saved.find((entry) => fingerprint(entry.result) === fp);
+      const fp = savedFingerprint(result);
+      return saved.find((entry) => savedFingerprint(entry.result) === fp);
     },
     [saved],
   );
@@ -387,6 +432,8 @@ export function useSaved(): UseSavedReturn {
     saveCalculation,
     removeSaved,
     removeSavedMany,
+    restoreSaved,
+    toggleSavedPinned,
     duplicateSaved,
     duplicateSavedMany,
     addPartToSaved,

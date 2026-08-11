@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Project } from "@/hooks/useProjects";
 import { SheetShell } from "./sheet-shell";
-import { EmptyState, FolderGlyph, LibraryRow, RowsCard } from "./library-sheet";
+import { EmptyState } from "../empty-state";
+import { FolderGlyph, LibraryRow, RowsCard } from "./library-sheet";
 
 /* ──────────────────────────────────────────────────────────────
  *  Project picker sheet — replaces SaveToProjectModal
@@ -56,7 +57,12 @@ export function CommandProjectPickerSheet({
         </button>
       </div>
       {projects.length === 0 ? (
-        <EmptyState>{t("library.noProjectsCreateAbove")}</EmptyState>
+        <EmptyState
+          compact
+          icon={<FolderGlyph />}
+          title={t("projects.emptyTitle")}
+          body={t("library.noProjectsCreateAbove")}
+        />
       ) : (
         <RowsCard>
           {projects.map((project) => {
