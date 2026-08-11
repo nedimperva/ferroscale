@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.17.4] - 2026-08-08
+
+### Fixed
+
+- **The session rail broke numbers in half.** Its weight and money columns were fixed at 82px and 92px, so the moment a value outgrew them the unit wrapped to its own line — `KM 1,396.41` became `KM` above `1,396.41`, with empty space beside it. Reported on **BAM**, whose `KM` is two characters where `€` is one, which is why it showed up there first and not in testing. The columns are now a *minimum* width with `white-space: nowrap`: they still line up, they grow with the number, and the unit can never leave it. The same fixed-width trap in the saved card's two figures is fixed with it
+
+### Changed
+
+- **The phone library tabs show only the open tab's name**; the rest are their icon and count. Four labelled tabs never fitted 390px — the previous attempt let the row scroll, which pushed PROJECTS out of sight. This keeps all four visible and, because only one label is ever rendered, the row is the same width in every language
+
+---
+
 ## [3.17.3] - 2026-08-08
 
 Both found by screenshotting surfaces the tests were passing on.

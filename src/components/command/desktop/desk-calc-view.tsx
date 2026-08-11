@@ -980,14 +980,14 @@ export function DeskCalcView({
                           {rp.lengthM} m × {rp.realQty}
                         </span>
                         <span
-                          className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0"
-                          style={{ width: 82 }}
+                          className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0 whitespace-nowrap"
+                          style={{ minWidth: 82 }}
                         >
                           {fsWeight(rp.totalKg!)} {fsWeightUnit()}
                         </span>
                         <span
-                          className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0"
-                          style={{ width: 92 }}
+                          className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0 whitespace-nowrap"
+                          style={{ minWidth: 92 }}
                         >
                           {sym} {fsMoney(rp.totalAmount!)}
                         </span>
@@ -1019,14 +1019,14 @@ export function DeskCalcView({
                     {t("desktop.runningTotal", { count: tapeRows.length })}
                   </span>
                   <span
-                    className="font-mono text-[13.5px] font-extrabold text-right"
-                    style={{ width: 82, color: "var(--accent)" }}
+                    className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
+                    style={{ minWidth: 82, color: "var(--accent)" }}
                   >
                     {fsWeight(sumKg)} {fsWeightUnit()}
                   </span>
                   <span
-                    className="font-mono text-[13.5px] font-extrabold text-right"
-                    style={{ width: 92, color: "var(--blue-strong)" }}
+                    className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
+                    style={{ minWidth: 92, color: "var(--blue-strong)" }}
                   >
                     {sym} {fsMoney(sumAmount)}
                   </span>

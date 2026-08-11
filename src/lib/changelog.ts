@@ -17,6 +17,22 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.17.4",
+    date: "2026-08-08",
+    fixed: [
+      "In the session list, a longer number pushed the unit onto its own line — KM 1,396.41 broke in half — even with plenty of room beside it. The columns were a fixed width; they now grow with the number and never break it",
+    ],
+    changed: [
+      "The library sheet on phone now shows the name of the open tab only; the others are their icon and count. All four fit on one row again, in any language",
+    ],
+    fixed_bs: [
+      "U listi sesije je duži broj gurao jedinicu u novi red — KM 1.396,41 bi se prelomio napola — iako je bilo dovoljno mjesta pored. Kolone su bile fiksne širine; sada rastu s brojem i nikada ga ne lome",
+    ],
+    changed_bs: [
+      "Biblioteka na telefonu sada prikazuje naziv samo otvorene kartice; ostale su ikona i broj. Sve četiri opet stanu u jedan red, na svakom jeziku",
+    ],
+  },
+  {
     version: "3.17.3",
     date: "2026-08-08",
     fixed: [

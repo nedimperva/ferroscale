@@ -109,43 +109,35 @@ export function CommandLibraryWorkspace({
 
   return (
     <>
-      <div
-        className="flex gap-1 mb-3 overflow-x-auto"
-        style={{ scrollbarWidth: "none" }}
-        role="tablist"
-      >
+      <div className="flex gap-1 mb-3" role="tablist">
         <LibraryTabPill
           active={tab === "session"}
           count={sessionTape.length}
           onClick={() => setTab("session")}
           icon={<TabIconSession />}
-        >
-          {t("desktop.session")}
-        </LibraryTabPill>
+          label={t("desktop.session")}
+        />
         <LibraryTabPill
           active={tab === "saved"}
           count={saved.length}
           onClick={() => setTab("saved")}
           icon={<TabIconSaved />}
-        >
-          {t("nav.saved")}
-        </LibraryTabPill>
+          label={t("nav.saved")}
+        />
         <LibraryTabPill
           active={tab === "compare"}
           count={compareItems.length}
           onClick={() => setTab("compare")}
           icon={<TabIconCompare />}
-        >
-          {t("nav.compare")}
-        </LibraryTabPill>
+          label={t("nav.compare")}
+        />
         <LibraryTabPill
           active={tab === "projects"}
           count={projects.length}
           onClick={() => setTab("projects")}
           icon={<TabIconProjects />}
-        >
-          {t("nav.projects")}
-        </LibraryTabPill>
+          label={t("nav.projects")}
+        />
       </div>
 
       {tab === "session" && (
@@ -276,13 +268,14 @@ function LibraryTabPill({
   count,
   onClick,
   icon,
-  children,
+  label,
 }: {
   active: boolean;
   count: number;
   onClick: () => void;
   icon: React.ReactNode;
-  children: React.ReactNode;
+  /** Shown only while this tab is open; otherwise it is the accessible name. */
+  label: string;
 }) {
   return (
     <button
@@ -290,19 +283,23 @@ function LibraryTabPill({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      // Sized to its own label, in a row that scrolls. Four equal shares of
-      // 390px meant tuning the font down until "PROJECTS" fitted — which would
-      // have broken the moment a locale used a longer word (bs: "POREĐENJE").
-      className={`flex-shrink-0 h-9 rounded-lg px-3 text-[10.5px] font-bold uppercase tracking-[0.5px] flex items-center justify-center gap-1.5 ${
+      // Only the open tab spends width on its name; the rest are their icon
+      // and their count. Four labelled tabs never fitted 390px, and sizing the
+      // font down to make them fit would break on a longer locale
+      // (bs: "POREĐENJE" > "COMPARE"). This way the row is the same width in
+      // every language.
+      title={label}
+      aria-label={active ? undefined : `${label}${count > 0 ? ` (${count})` : ""}`}
+      className={`h-9 rounded-lg flex items-center justify-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.5px] transition-[flex] ${
         active
-          ? "bg-[var(--surface)] text-foreground border border-[var(--border-strong)]"
-          : "bg-[var(--surface-raised)] text-muted border border-border-faint"
+          ? "flex-1 px-3 bg-[var(--surface)] text-foreground border border-[var(--border-strong)]"
+          : "flex-shrink-0 px-3 bg-[var(--surface-raised)] text-muted border border-border-faint"
       }`}
     >
       <span className="flex items-center justify-center" aria-hidden="true">
         {icon}
       </span>
-      <span className="whitespace-nowrap">{children}</span>
+      {active && <span className="whitespace-nowrap">{label}</span>}
       {count > 0 && (
         <span className="opacity-70 font-mono text-[10px]">{count}</span>
       )}

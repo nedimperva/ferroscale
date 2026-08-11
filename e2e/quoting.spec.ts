@@ -77,6 +77,37 @@ test.describe("Desktop fold", () => {
   });
 });
 
+test.describe("Session rail", () => {
+  test("a wider currency never wraps the unit off its number", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["hea120 6m x4", "hea120 6m x2"]),
+      );
+    });
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // KM (BAM) is two characters where € is one; the columns were fixed-width,
+    // so the unit dropped to a second line as soon as the value outgrew them.
+    await page.getByRole("button", { name: "Settings" }).click();
+    await page.getByRole("button", { name: "KM BAM" }).click();
+    await page.getByRole("button", { name: "Calculator" }).click();
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+
+    const wrapped = await page.evaluate(() => {
+      const bad: string[] = [];
+      document.querySelectorAll("span").forEach((el) => {
+        const text = (el.textContent || "").trim();
+        if (!/^KM\s|\bkg$/.test(text) || !el.className.includes("font-mono")) return;
+        const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 16;
+        if (el.getBoundingClientRect().height > lineHeight * 1.6) bad.push(text);
+      });
+      return bad;
+    });
+    expect(wrapped).toEqual([]);
+  });
+});
+
 test.describe("Mass tolerance", () => {
   test("a band appears under the weight once a tolerance is set", async ({ page }) => {
     await page.goto("/en");

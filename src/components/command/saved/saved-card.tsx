@@ -468,13 +468,13 @@ export function SavedTableRow({
         </span>
         <span
           className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
-          style={{ width: 92, color: "var(--accent-text)" }}
+          style={{ minWidth: 92, color: "var(--accent-text)" }}
         >
           {model.totalKg != null ? `${fsWeight(model.totalKg)} ${fsWeightUnit()}` : "—"}
         </span>
         <span
           className="font-mono text-[12.5px] font-semibold text-right flex-shrink-0"
-          style={{ width: 92, color: "var(--blue-text)" }}
+          style={{ minWidth: 92, color: "var(--blue-text)" }}
         >
           {model.totalAmount != null ? `${sym} ${fsMoney(model.totalAmount)}` : "—"}
         </span>
