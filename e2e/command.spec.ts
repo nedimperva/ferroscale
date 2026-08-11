@@ -65,33 +65,6 @@ test.describe("Command bar", () => {
     await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
   });
 
-  test("> opens the command palette and runs what you pick", async ({ page }) => {
-    await page.goto("/en");
-    const input = page.getByLabel("FerroScale Command query");
-    await input.click();
-    await page.keyboard.press("ControlOrMeta+k");
-    await input.pressSequentially(">");
-
-    const palette = page.getByRole("listbox", { name: "Command palette" });
-    await expect(palette).toBeVisible();
-
-    // Typing narrows it, arrows move the selection, Enter runs it.
-    await input.pressSequentially("settings");
-    await expect(palette.getByRole("option")).toHaveCount(1);
-    await page.keyboard.press("Enter");
-    await expect(page.getByText("pricing · units · appearance")).toBeVisible();
-  });
-
-  test("a command line is not reported as a broken calculation", async ({ page }) => {
-    await page.goto("/en");
-    const input = page.getByLabel("FerroScale Command query");
-    await input.click();
-    await page.keyboard.press("ControlOrMeta+k");
-    await input.pressSequentially(">zzz");
-    await expect(page.getByText("No matching command")).toBeVisible();
-    await expect(page.getByText(/Didn't understand/)).toHaveCount(0);
-  });
-
   test("pasting a cut list turns each row into an item", async ({ page }) => {
     await page.goto("/en");
     const input = page.getByLabel("FerroScale Command query");
@@ -180,7 +153,21 @@ test.describe("Phone fold (390x844)", () => {
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.getByText("Breakdown", { exact: false }).first()).toBeVisible();
     await expect(page.getByText("SESSION", { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Command palette" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Backspace" })).toBeVisible();
+  });
+
+  test("the keypad sits flush on the bottom edge, with no band of screen under it", async ({
+    page,
+  }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // The shell used to size its column with `100dvh` inside a `fixed inset-0`
+    // parent; where the two disagree the keys float above a strip of screen
+    // background instead of resting on the edge.
+    const keypad = page.getByRole("button", { name: "Backspace" }).locator("xpath=../../..");
+    const box = await keypad.boundingBox();
+    const viewportHeight = page.viewportSize()!.height;
+    expect(Math.abs(box!.y + box!.height - viewportHeight)).toBeLessThanOrEqual(1);
   });
 
   test("the suggestion strip stays one row, whatever the stage offers", async ({ page }) => {
@@ -248,12 +235,6 @@ test.describe("Phone fold (390x844)", () => {
     // Four tabs sharing 390px clipped PROJECTS. Sizing to content and letting
     // the row scroll is the only version that survives a longer locale.
     expect(clipped).toEqual([]);
-  });
-
-  test("the palette key is the phone's way into commands", async ({ page }) => {
-    await page.goto("/en");
-    await page.getByRole("button", { name: "Command palette" }).click();
-    await expect(page.getByRole("listbox", { name: "Command palette" })).toBeVisible();
   });
 });
 

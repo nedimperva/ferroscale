@@ -5,6 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.18.0] - 2026-08-11
+
+### Removed
+
+- **The `>` command palette**, on both surfaces. The accent `>` key is gone from the phone keypad and the space bar takes its width, so the bottom row keeps the sizes it had; the desktop top bar drops the `>` **commands** hint that was the only place explaining it. `palette.ts`, `command-palette.tsx` and their strings in both locales go with it, along with the palette branches in the phone shell and the desktop calc view — the command line is now only ever a calculation, so the chip tokenizer and the arrow/Enter key map no longer have a second mode to guard against. Navigation lives in the tabs and the library sheet; save, compare and share live in the action row
+
+### Fixed
+
+- **The phone keypad floated above a band of screen instead of resting on the bottom edge.** The shell's column was `height: 100dvh` inside a `position: fixed; inset: 0` parent — two different ways of asking for "the viewport" that iOS does not always resolve to the same number, and the shortfall painted as a strip of `screenBg` under the keys. The column is now `height: 100%`, which fills the fixed parent by definition
+
+### Notes
+
+Pinned by an e2e that measures the keypad's bottom edge against the viewport height. It passes on desktop Chromium either way — the two units agree there — so it is a regression guard for margins and padding creeping back in, not a reproduction of the iOS symptom.
+
+---
+
 ## [3.17.4] - 2026-08-08
 
 ### Fixed
