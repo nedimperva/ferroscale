@@ -40,10 +40,54 @@ export interface ProjectCalculation {
   quantityMultiplier?: number;
 }
 
+/**
+ * Where a job stands. `archived` is a filter, not a delete: an archived
+ * project keeps every item and still prints, it just leaves the active list
+ * and stops offering itself as a target for "add to project".
+ */
+export type ProjectStatus = "draft" | "quoted" | "archived";
+
+export const PROJECT_STATUSES: readonly ProjectStatus[] = ["draft", "quoted", "archived"];
+
+/**
+ * One line of a project's history. Kinds are i18n keys, not sentences, so the
+ * log reads in whatever language the app is in at the time it is *read* —
+ * storing rendered text would freeze it in the language it was written.
+ */
+export type ProjectActivityKind =
+  | "created"
+  | "renamed"
+  | "clientSet"
+  | "statusChanged"
+  | "dueDateSet"
+  | "itemAdded"
+  | "itemsAdded"
+  | "itemRemoved"
+  | "qtyChanged"
+  | "quotePrinted";
+
+export interface ProjectActivityEntry {
+  id: string;
+  at: string;
+  kind: ProjectActivityKind;
+  /** Subject of the event — a profile label, a project name, a count. */
+  detail?: string;
+  from?: string;
+  to?: string;
+}
+
 export interface Project {
   id: string;
   name: string;
   description?: string;
+  /** Who the job is for. Free text — it drives the client rail's grouping. */
+  client?: string;
+  /** Absent means `draft`; stored only once it moves off the default. */
+  status?: ProjectStatus;
+  /** ISO date (YYYY-MM-DD), not a timestamp — a due date has no clock. */
+  dueDate?: string;
+  /** Newest first, capped at MAX_ACTIVITY. */
+  activity?: ProjectActivityEntry[];
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
@@ -89,6 +133,31 @@ export interface ProjectCsvLabels {
 
 const MAX_PROJECTS = 20;
 const MAX_CALCS_PER_PROJECT = 50;
+/** The right rail shows a history, not an audit trail — old lines fall off. */
+const MAX_ACTIVITY = 40;
+
+export function projectStatus(project: Project): ProjectStatus {
+  return project.status ?? "draft";
+}
+
+export function isArchivedProject(project: Project): boolean {
+  return projectStatus(project) === "archived";
+}
+
+/** Prepend an event and re-stamp `updatedAt`. Pure — callers map over it. */
+function withActivity(
+  project: Project,
+  kind: ProjectActivityKind,
+  fields: Omit<ProjectActivityEntry, "id" | "at" | "kind"> = {},
+): Project {
+  const at = new Date().toISOString();
+  const entry: ProjectActivityEntry = { id: crypto.randomUUID(), at, kind, ...fields };
+  return {
+    ...project,
+    updatedAt: at,
+    activity: [entry, ...(project.activity ?? [])].slice(0, MAX_ACTIVITY),
+  };
+}
 
 const DEFAULT_PROJECT_CSV_LABELS: ProjectCsvLabels = {
   headers: [
@@ -482,7 +551,14 @@ export interface UseProjectsReturn {
   setActiveProjectId: (id: string | null) => void;
   createProject: (name: string) => Project;
   renameProject: (id: string, name: string) => void;
+  updateProjectMeta: (
+    id: string,
+    patch: { client?: string; status?: ProjectStatus; dueDate?: string },
+  ) => void;
+  logQuotePrinted: (id: string) => void;
   deleteProject: (id: string) => void;
+  /** Undo a delete — clears the tombstone so sync keeps the project alive. */
+  restoreProject: (id: string) => void;
   duplicateProject: (id: string) => Project | null;
   addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
   /** Bulk add in one state update — see the note on the implementation. */
@@ -492,6 +568,7 @@ export interface UseProjectsReturn {
   ) => void;
   addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
   removeCalculation: (projectId: string, calcId: string) => void;
+  updateCalculationQuantity: (projectId: string, calcId: string, quantity: number) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   updateProjectDescription: (id: string, description: string) => void;
   updateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => void;
@@ -529,6 +606,7 @@ export function useProjects(): UseProjectsReturn {
       createdAt: now,
       updatedAt: now,
       calculations: [],
+      activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
     };
     setProjects((prev) => {
       if (prev.filter((project) => !project.deletedAt).length >= MAX_PROJECTS) return prev;
@@ -539,11 +617,58 @@ export function useProjects(): UseProjectsReturn {
 
   const renameProject = useCallback((id: string, name: string) => {
     setProjects((prev) =>
-      prev.map((p) =>
-        p.id === id && !p.deletedAt
-          ? { ...p, name: name.trim() || p.name, updatedAt: new Date().toISOString() }
-          : p,
-      ),
+      prev.map((p) => {
+        if (p.id !== id || p.deletedAt) return p;
+        const next = name.trim();
+        if (!next || next === p.name) return p;
+        return withActivity({ ...p, name: next }, "renamed", { from: p.name, to: next });
+      }),
+    );
+  }, [setProjects]);
+
+  /**
+   * Client, status and due date in one call. Each changed field logs its own
+   * activity line, so the rail reads as a history rather than "project edited".
+   */
+  const updateProjectMeta = useCallback(
+    (id: string, patch: { client?: string; status?: ProjectStatus; dueDate?: string }) => {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== id || p.deletedAt) return p;
+          let next = p;
+          if (patch.client !== undefined) {
+            const client = patch.client.trim();
+            if (client !== (p.client ?? "")) {
+              next = withActivity({ ...next, client: client || undefined }, "clientSet", {
+                to: client || undefined,
+              });
+            }
+          }
+          if (patch.status !== undefined && patch.status !== projectStatus(p)) {
+            next = withActivity({ ...next, status: patch.status }, "statusChanged", {
+              from: projectStatus(p),
+              to: patch.status,
+            });
+          }
+          if (patch.dueDate !== undefined) {
+            const dueDate = patch.dueDate.trim();
+            if (dueDate !== (p.dueDate ?? "")) {
+              next = withActivity({ ...next, dueDate: dueDate || undefined }, "dueDateSet", {
+                to: dueDate || undefined,
+              });
+            }
+          }
+          return next;
+        }),
+      );
+    },
+    [setProjects],
+  );
+
+  /** Printing a quote is the one read that belongs in the history. */
+  const logQuotePrinted = useCallback((id: string) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === id && !p.deletedAt ? withActivity(p, "quotePrinted") : p)),
     );
   }, [setProjects]);
 
@@ -577,6 +702,22 @@ export function useProjects(): UseProjectsReturn {
     setActiveProjectId((current) => (current === id ? null : current));
   }, [setProjects]);
 
+  /**
+   * Undo a delete. The tombstone is what sync propagates, so restoring is
+   * clearing it — and `updatedAt` has to move, or a peer's delete wins the
+   * next merge and the project vanishes again.
+   */
+  const restoreProject = useCallback((id: string) => {
+    setProjects((prev) =>
+      prev.map((project) => {
+        if (project.id !== id || !project.deletedAt) return project;
+        const { deletedAt: _deletedAt, ...rest } = project;
+        void _deletedAt;
+        return { ...rest, updatedAt: new Date().toISOString() };
+      }),
+    );
+  }, [setProjects]);
+
   const duplicateProject = useCallback((id: string): Project | null => {
     let duplicate: Project | null = null;
     setProjects((prev) => {
@@ -591,6 +732,10 @@ export function useProjects(): UseProjectsReturn {
         createdAt: now,
         updatedAt: now,
         deletedAt: undefined,
+        // A copy is a new job: it inherits the items and the client, not the
+        // original's history or its quoted/archived state.
+        status: undefined,
+        activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
         calculations: original.calculations.map((c) => ({ ...c, id: crypto.randomUUID() })),
       };
       return [duplicate, ...prev];
@@ -616,11 +761,9 @@ export function useProjects(): UseProjectsReturn {
             result,
             normalizedProfile: normalizeProfileSnapshot(input),
           };
-          return {
-            ...p,
-            updatedAt: new Date().toISOString(),
-            calculations: [...p.calculations, calc],
-          };
+          return withActivity({ ...p, calculations: [...p.calculations, calc] }, "itemAdded", {
+            detail: calc.normalizedProfile.shortLabel,
+          });
         }),
       );
       return added;
@@ -661,11 +804,12 @@ export function useProjects(): UseProjectsReturn {
             });
           }
           if (next.length === 0) return p;
-          return {
-            ...p,
-            updatedAt: new Date().toISOString(),
-            calculations: [...p.calculations, ...next],
-          };
+          const withItems = { ...p, calculations: [...p.calculations, ...next] };
+          return next.length === 1
+            ? withActivity(withItems, "itemAdded", {
+                detail: next[0].normalizedProfile.shortLabel,
+              })
+            : withActivity(withItems, "itemsAdded", { detail: String(next.length) });
         }),
       );
     },
@@ -751,11 +895,9 @@ export function useProjects(): UseProjectsReturn {
             templateParts: recalculatedParts,
             quantityMultiplier: multiplier,
           };
-          return {
-            ...p,
-            updatedAt: new Date().toISOString(),
-            calculations: [...p.calculations, entry],
-          };
+          return withActivity({ ...p, calculations: [...p.calculations, entry] }, "itemAdded", {
+            detail: tplName,
+          });
         }),
       );
       return added;
@@ -767,14 +909,59 @@ export function useProjects(): UseProjectsReturn {
     setProjects((prev) =>
       prev.map((p) => {
         if (p.id !== projectId || p.deletedAt) return p;
-        return {
-          ...p,
-          updatedAt: new Date().toISOString(),
-          calculations: p.calculations.filter((c) => c.id !== calcId),
-        };
+        const removed = p.calculations.find((c) => c.id === calcId);
+        if (!removed) return p;
+        return withActivity(
+          { ...p, calculations: p.calculations.filter((c) => c.id !== calcId) },
+          "itemRemoved",
+          { detail: removed.templateName ?? removed.normalizedProfile.shortLabel },
+        );
       }),
     );
   }, [setProjects]);
+
+  /**
+   * Edit an item's piece count in place. The stored result is a snapshot, so
+   * the quantity is re-run through the engine rather than scaled — waste, VAT
+   * and rounding are not linear in quantity and scaling would drift.
+   *
+   * Template entries hold their own parts and an aggregate result; changing
+   * one number there would desync the two, so they are left to the calculator.
+   */
+  const updateCalculationQuantity = useCallback(
+    (projectId: string, calcId: string, quantity: number) => {
+      const qty = Math.max(1, Math.floor(quantity));
+      if (!Number.isFinite(qty)) return;
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== projectId || p.deletedAt) return p;
+          const target = p.calculations.find((c) => c.id === calcId);
+          if (!target || target.templateName) return p;
+          const previousQty = target.result.quantity;
+          if (previousQty === qty) return p;
+          const recalculated = calculateMetal({ ...target.input, quantity: qty });
+          if (!recalculated.ok) return p;
+          return withActivity(
+            {
+              ...p,
+              calculations: p.calculations.map((c) =>
+                c.id === calcId
+                  ? { ...c, input: { ...c.input, quantity: qty }, result: recalculated.result }
+                  : c,
+              ),
+            },
+            "qtyChanged",
+            {
+              detail: target.normalizedProfile.shortLabel,
+              from: String(previousQty),
+              to: String(qty),
+            },
+          );
+        }),
+      );
+    },
+    [setProjects],
+  );
 
   const updateCalculationNote = useCallback((projectId: string, calcId: string, note: string) => {
     setProjects((prev) =>
@@ -806,12 +993,16 @@ export function useProjects(): UseProjectsReturn {
     setActiveProjectId,
     createProject,
     renameProject,
+    updateProjectMeta,
+    logQuotePrinted,
     deleteProject,
+    restoreProject,
     duplicateProject,
     addCalculation,
     addCalculations,
     addTemplateCalculation,
     removeCalculation,
+    updateCalculationQuantity,
     updateCalculationNote,
     updateProjectDescription,
     updateProjectPaintingSettings,

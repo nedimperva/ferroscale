@@ -1513,8 +1513,6 @@ export function CommandShell() {
               defaultUnit={defaultUnit}
               onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
-              onToggleTheme={cycleTheme}
-              dark={dark}
             />
           )}
           {effectiveSheet === "library" && (

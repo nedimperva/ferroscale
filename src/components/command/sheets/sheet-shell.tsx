@@ -11,9 +11,11 @@ interface SheetShellProps {
   /** Cap the panel width and centre it — a three-field form has no business
    *  spanning a 1440px workspace. Full-bleed (the default) stays for lists. */
   maxWidth?: number;
+  /** A control that belongs to the sheet's title row (a search toggle). */
+  headerAction?: React.ReactNode;
 }
 
-export function SheetShell({ title, onClose, children, maxWidth }: SheetShellProps) {
+export function SheetShell({ title, onClose, children, maxWidth, headerAction }: SheetShellProps) {
   const t = useTranslations("command");
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -58,8 +60,10 @@ export function SheetShell({ title, onClose, children, maxWidth }: SheetShellPro
         <div className="flex flex-col items-center mb-2">
           <span className="w-9 h-1 rounded-full bg-border" />
         </div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between gap-3 mb-3">
           <h2 id={titleId} className="text-base font-bold text-foreground">{title}</h2>
+          <div className="ml-auto flex items-center gap-2.5">
+          {headerAction}
           <button
             type="button"
             onClick={onClose}
@@ -67,6 +71,7 @@ export function SheetShell({ title, onClose, children, maxWidth }: SheetShellPro
           >
             {t("common.close")}
           </button>
+          </div>
         </div>
         <div className="overflow-y-auto -mx-1 px-1">{children}</div>
       </div>

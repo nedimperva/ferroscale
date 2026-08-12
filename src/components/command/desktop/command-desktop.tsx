@@ -153,14 +153,12 @@ export function CommandDesktop(props: CommandDesktopProps) {
       )}
       {view === "settings" && (
         <DeskSettingsView
-          dark={props.dark}
           shared={props.shared}
           onUpdateShared={props.onUpdateShared}
           weightAsMain={props.weightAsMain}
           onSetWeightAsMain={props.onSetWeightAsMain}
           defaultUnit={props.defaultUnit}
           onSetDefaultUnit={props.onSetDefaultUnit}
-          onToggleTheme={props.onToggleTheme}
         />
       )}
       </div>
