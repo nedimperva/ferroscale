@@ -1291,7 +1291,7 @@ export function CommandShell() {
 
             <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
               {line.multi ? (
-                <LineItems line={line} compact />
+                <LineItems line={line} compact maxRows={3} />
               ) : p.valid && p.kgm != null ? (
                 <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
                   <span>

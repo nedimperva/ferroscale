@@ -215,6 +215,36 @@ test.describe("Phone fold (390x844)", () => {
     expect((await queryLine.boundingBox())!.height).toBeLessThanOrEqual(52);
   });
 
+  test("adding items never moves the controls under the hero", async ({ page }) => {
+    const items = [
+      "heb120 12m x1 s235",
+      "shs50x50x3 6m x2 s235",
+      "ipe200 12m x1 s235",
+      "rhs80x40x3 6m x1 s235",
+      "rnd20 6m x4 s235",
+      "flt50x5 6m x2 s235",
+      "upn100 6m x3 s235",
+      "chs48.3x3.2 6m x2 s235",
+    ];
+    const actionsTop = async (count: number) => {
+      await page.goto(`/en?q=${encodeURIComponent(items.slice(0, count).join(" + "))}`);
+      await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+      // The per-item list replaces the single equation line, which moves the
+      // actions down once. Measuring before it mounts reads the wrong layout.
+      await expect(page.getByRole("list", { name: /item/i })).toBeVisible();
+      // `Save calculation` is a suggestion chip on the same screen.
+      const save = page.getByRole("button", { name: "Save", exact: true });
+      return (await save.boundingBox())!.y;
+    };
+
+    // The per-item list grew ~21px a row, so a fifth calculation slid the
+    // buttons you had just been using down the screen. Past three rows it
+    // scrolls inside a fixed box instead.
+    const atThree = await actionsTop(3);
+    expect(await actionsTop(5)).toBe(atThree);
+    expect(await actionsTop(8)).toBe(atThree);
+  });
+
   test("a long line never pushes the input or the keys off screen", async ({ page }) => {
     // Uncapped, this line's chips wrapped to four rows and shoved the keypad's
     // bottom row — the ↵ and the unit keys — below the fold.

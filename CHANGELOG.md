@@ -79,6 +79,13 @@ tabs in the same places, on every viewport. Only what is *inside* them changed.
   clear the home indicator — a ~5pt pill sitting ~8pt up, not the full 34pt
   inset. The bottom row sits about 14px lower on a notched phone; the panel
   itself is still flush on the edge
+- **Every extra item pushed the phone's controls down the screen.** The
+  per-item list under the hero grew about 21px a row with nothing capping it,
+  so adding a fifth calculation slid the glance row, the actions and the
+  session strip down — moving buttons the user had just been using, and
+  heading for the keypad at around a dozen items. It shows three rows and
+  scrolls inside a fixed box now, faded at the cut, so the layout below it
+  stops moving after the third item
 - **A multi-item line was unreadable on the phone.** The chip box wrapped and
   capped at two rows, so four `+`-joined items overflowed it and rendered as
   sliced half-rows — chips cut in half at the top and bottom of the window.
