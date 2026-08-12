@@ -24,9 +24,19 @@ async function typeQuery(page: Page, query: string) {
 const saveButton = (page: Page) =>
   page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]"));
 
-/** The workspace tab, whose accessible name folds in the count ("Saved2"). */
+/** The workspace tab, whose accessible name folds in the count ("Parts2"). */
 const savedTab = (page: Page, count?: number) =>
-  page.getByRole("button", { name: new RegExp(`^Saved\\s*${count ?? ""}$`) });
+  page.getByRole("button", { name: new RegExp(`^Parts\\s*${count ?? ""}$`) });
+
+/** The Parts list opens as a table; the card grid is one toggle away. */
+async function showCards(page: Page) {
+  await page.getByRole("button", { name: "Card view" }).click();
+}
+
+/** A row's overflow menu, opened by the entry's own name. */
+async function openRowMenu(page: Page, name: string) {
+  await page.getByRole("button", { name, exact: true }).click();
+}
 
 /** Saved cards — the dev overlay also has an "Open …" button, so match the
  *  card's own label ending. */
@@ -66,6 +76,7 @@ test.describe("Saved library", () => {
     await saveButton(page).click();
 
     await savedTab(page, 1).click();
+    await showCards(page);
     const card = page.getByRole("button", { name: /^Open SHS 40×40×3/ });
     await expect(card).toBeVisible();
     // Spec line under the title, and the rate stated in the footer.
@@ -78,6 +89,7 @@ test.describe("Saved library", () => {
     await saveButton(page).click();
 
     await savedTab(page, 1).click();
+    await showCards(page);
     // Repriced at today's 1.20/kg (286.44), with the saved total called out.
     await expect(page.getByText("€ 286.44").first()).toBeVisible();
     await expect(page.getByText(/was € 1,193.51/)).toBeVisible();
@@ -106,21 +118,22 @@ test.describe("Saved library", () => {
     await saveButton(page).click();
     await savedTab(page, 1).click();
 
-    await page.getByRole("button", { name: "Rename, notes and tags" }).click();
+    await openRowMenu(page, "HEA 120");
+    await page.getByRole("menuitem", { name: "Rename, notes and tags" }).click();
     await page.getByLabel(/Name/).fill("Gate post");
     await page.getByRole("button", { name: "Save changes" }).click();
 
     const card = page.getByRole("button", { name: /^Open Gate post/ });
     await expect(card).toBeVisible();
-    // The name overrides the title, the spec stays on the line below it.
-    await expect(card).toContainText("HEA 120");
+    // The name overrides the title; the spec it restores stays on the row.
+    await expect(page.getByText("hea120 6000mm x2").first()).toBeVisible();
     await page.getByPlaceholder("Search name, tag, profile…").fill("gate");
     await expect(savedCards(page)).toHaveCount(1);
   });
 
   test("the empty state points at the shortcut that fills it", async ({ page }) => {
     await savedTab(page).click();
-    await expect(page.getByText("Nothing saved yet")).toBeVisible();
+    await expect(page.getByText("No parts yet")).toBeVisible();
     await expect(page.getByRole("button", { name: /New calculation/ })).toBeVisible();
   });
 });

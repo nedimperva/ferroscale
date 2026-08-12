@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
-import { collectSavedTags, filterSortSaved } from "@/lib/saved/query";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
@@ -14,10 +13,8 @@ import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 import { EmptyState } from "../empty-state";
-import { buildSavedCardModel } from "../saved/saved-model";
-import { SavedCard } from "../saved/saved-card";
-import { SavedToolbar, type SavedToolbarState } from "../saved/saved-toolbar";
 import { SheetShell } from "./sheet-shell";
+import { PartsView } from "../parts/parts-view";
 import { ProjectList } from "../projects/project-list";
 import { ProjectDetail } from "../projects/project-detail";
 import { ProjectQuote } from "../project-quote";
@@ -57,6 +54,7 @@ interface CommandLibrarySheetProps {
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (query: string) => void;
   onSaveSessionAsProject: () => void;
+  onClearHistory: () => void;
   /** Open on a named tab (the `>` palette navigates here); null picks one. */
   initialTab?: LibraryTab | null;
 }
@@ -97,6 +95,7 @@ export function CommandLibraryWorkspace({
   onLoadQuery,
   onRemoveTapeEntry,
   onSaveSessionAsProject,
+  onClearHistory,
   initialTab,
 }: CommandLibraryWorkspaceProps) {
   const t = useTranslations("command");
@@ -132,7 +131,7 @@ export function CommandLibraryWorkspace({
           count={saved.length}
           onClick={() => setTab("saved")}
           icon={<TabIconSaved />}
-          label={t("nav.saved")}
+          label={t("nav.parts")}
         />
         <LibraryTabPill
           active={tab === "compare"}
@@ -161,19 +160,26 @@ export function CommandLibraryWorkspace({
         />
       )}
       {tab === "saved" && (
-        <SavedTabContent
+        <PartsView
+          compact
           saved={saved}
+          history={sessionTape}
           settings={settings}
           defaultUnit={defaultUnit}
           mode={mode}
-          onLoad={onLoadSaved}
-          onRemove={onRemoveSaved}
-          onAddCompare={onAddCompareSaved}
-          onDuplicate={onDuplicateSaved}
-          onTogglePin={onTogglePinSaved}
-          onEdit={onEditSaved}
-          onAddPart={onAddPartSaved}
-          onRemovePart={onRemovePartSaved}
+          actions={{
+            onPick: onLoadSaved,
+            onAddCompare: onAddCompareSaved,
+            onRemove: onRemoveSaved,
+            onDuplicate: onDuplicateSaved,
+            onTogglePin: onTogglePinSaved,
+            onEdit: onEditSaved,
+            onAddPart: onAddPartSaved,
+            onRemovePart: onRemovePartSaved,
+            onLoadQuery,
+            onRemoveHistoryEntry: onRemoveTapeEntry,
+            onClearHistory: onClearHistory,
+          }}
         />
       )}
       {tab === "compare" && (
@@ -386,98 +392,6 @@ export function RowsCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden divide-y divide-border-faint">
       {children}
-    </div>
-  );
-}
-
-/* ─────────────────── Saved tab ─────────────────── */
-
-function SavedTabContent({
-  saved,
-  settings,
-  defaultUnit,
-  mode,
-  onLoad,
-  onRemove,
-  onAddCompare,
-  onDuplicate,
-  onTogglePin,
-  onEdit,
-  onAddPart,
-  onRemovePart,
-}: {
-  saved: SavedEntry[];
-  settings: CommandParserSettings;
-  defaultUnit: LengthUnit;
-  mode: "weight" | "price";
-  onLoad: (entry: SavedEntry) => void;
-  onRemove: (entry: SavedEntry) => void;
-  onAddCompare: (entry: SavedEntry) => void;
-  onDuplicate: (entry: SavedEntry) => void;
-  onTogglePin: (entry: SavedEntry) => void;
-  onEdit: (entry: SavedEntry) => void;
-  onAddPart?: (entry: SavedEntry) => void;
-  onRemovePart: (entry: SavedEntry, partId: string) => void;
-}) {
-  const t = useTranslations("command");
-  const [query, setQuery] = useState<SavedToolbarState>({
-    search: "",
-    sort: "recent",
-    tags: [],
-  });
-
-  const tags = useMemo(() => collectSavedTags(saved), [saved]);
-  const models = useMemo(
-    () =>
-      filterSortSaved(saved, query).map((entry) =>
-        buildSavedCardModel(entry, settings, defaultUnit),
-      ),
-    [saved, query, settings, defaultUnit],
-  );
-
-  if (saved.length === 0) {
-    return (
-      <EmptyState
-        compact
-        icon={<TabIconSaved />}
-        title={t("saved.emptyTitle")}
-        body={t("saved.emptyBodyMobile")}
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      {/* The filter row earns its space once there's enough to sift through. */}
-      {(saved.length > 3 || tags.length > 0) && (
-        <SavedToolbar
-          compact
-          state={query}
-          onChange={(patch) => setQuery((current) => ({ ...current, ...patch }))}
-          availableTags={tags}
-        />
-      )}
-      {models.length === 0 ? (
-        <EmptyState compact title={t("saved.noMatchTitle")} body={t("saved.noMatchBody")} />
-      ) : (
-        models.map((model) => (
-          <SavedCard
-            key={model.entry.id}
-            model={model}
-            mode={mode}
-            actions={{
-              onOpen: () => onLoad(model.entry),
-              onCompare: () => onAddCompare(model.entry),
-              onDuplicate: () => onDuplicate(model.entry),
-              onTogglePin: () => onTogglePin(model.entry),
-              onEdit: () => onEdit(model.entry),
-              onAddPart: onAddPart ? () => onAddPart(model.entry) : undefined,
-              onRemovePart: (partId: string) => onRemovePart(model.entry, partId),
-              onRemove: () => onRemove(model.entry),
-            }}
-          />
-        ))
-      )}
     </div>
   );
 }

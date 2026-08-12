@@ -170,7 +170,6 @@
     "nav": {
       "workspace": "WORKSPACE",
       "calculator": "Calculator",
-      "saved": "Saved",
       "projects": "Projects",
       "compare": "Compare",
       "settings": "Settings",
@@ -483,9 +482,6 @@
       "openInCalculator": "Open in calculator"
     },
     "saved": {
-      "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
-      "subtitleEmpty": "bookmarked calculations",
-      "empty": "nothing saved yet — press Save on a calculation",
       "addToCompare": "Add to compare",
       "openAria": "Open {name} in the calculator",
       "selectAria": "Select {name}",
@@ -517,10 +513,6 @@
       "select": "Select",
       "clearTags": "Clear tags",
       "selectedCount": "{count, plural, one {# selected} other {# selected}}",
-      "matchCount": "{count} of {total} shown",
-      "emptyTitle": "Nothing saved yet",
-      "emptyBody": "Press Save on any result to keep it here — with its drawing, weight and today's price.",
-      "emptyBodyMobile": "Tap Save on any result to keep it here.",
       "noMatchTitle": "No matches",
       "noMatchBody": "Nothing here matches that search or tag.",
       "clearFilters": "Clear filters",
@@ -657,7 +649,10 @@
       "emptyHistoryBody": "Every line you log with ↵ is kept here on this device.",
       "historySubtitle": "Lines you ran on this device, newest first — not saved anywhere else.",
       "clearHistory": "Clear history",
-      "removeFromHistory": "Remove {query} from history"
+      "removeFromHistory": "Remove {query} from history",
+      "showOther": "Show {label}",
+      "emptyPartsAllAssemblies": "Everything you have saved holds more than one line, so it lives under Assemblies.",
+      "emptyAssembliesHasParts": "Open a part and add the current line to it — two lines make an assembly."
     },
     "time": {
       "justNow": "just now",

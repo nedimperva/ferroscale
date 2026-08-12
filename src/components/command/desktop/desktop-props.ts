@@ -37,6 +37,9 @@ export interface CommandDesktopProps {
   weightAsMain: boolean;
   onSetWeightAsMain: (value: boolean) => void;
   sessionTape: string[];
+  /** The full command history — the Parts surface's History tab. */
+  history: string[];
+  onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (q: string) => void;
   onClearTape: () => void;
   /** Turn everything on the tape into a project, in one action. */

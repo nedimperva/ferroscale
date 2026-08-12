@@ -583,6 +583,12 @@ export function CommandShell() {
     [defaultUnit, shared],
   );
 
+  /** Put a history line back in the bar, fully chipped. */
+  const loadQuery = useCallback((entry: string) => {
+    setQuery(`${entry} `);
+    setSheet(null);
+  }, []);
+
   /**
    * Open a saved entry. Counts the use (so "most used" sorting means
    * something) and restores at today's rate — `omitPrice` keeps the bar
@@ -953,6 +959,8 @@ export function CommandShell() {
             setModeOverride(null);
           }}
           sessionTape={quickHistory.slice(0, 8)}
+          history={quickHistory}
+          onLoadQuery={loadQuery}
           onSaveSessionAsProject={saveSessionAsProject}
           onRemoveTapeEntry={removeHistoryEntry}
           onClearTape={clearHistory}
@@ -1622,11 +1630,11 @@ export function CommandShell() {
               }}
               sessionTape={quickHistory}
               onLoadQuery={(entry) => {
-                setQuery(`${entry} `);
-                setSheet(null);
+                loadQuery(entry);
                 setLibraryTab(null);
               }}
               onRemoveTapeEntry={removeHistoryEntry}
+              onClearHistory={clearHistory}
               onSaveSessionAsProject={saveSessionAsProject}
               onLoadInput={loadInput}
               {...savedHandlers}

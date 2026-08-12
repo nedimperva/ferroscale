@@ -170,7 +170,6 @@
     "nav": {
       "workspace": "RADNI PROSTOR",
       "calculator": "Kalkulator",
-      "saved": "Sačuvano",
       "projects": "Projekti",
       "compare": "Poređenje",
       "settings": "Postavke",
@@ -483,9 +482,6 @@
       "openInCalculator": "Otvori u kalkulatoru"
     },
     "saved": {
-      "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
-      "subtitleEmpty": "sačuvani izračuni",
-      "empty": "još ništa nije sačuvano — pritisnite Sačuvaj na izračunu",
       "addToCompare": "Dodaj za poređenje",
       "openAria": "Otvori {name} u kalkulatoru",
       "selectAria": "Označi {name}",
@@ -517,10 +513,6 @@
       "select": "Označi",
       "clearTags": "Očisti oznake",
       "selectedCount": "{count, plural, one {# označen} few {# označena} other {# označeno}}",
-      "matchCount": "prikazano {count} od {total}",
-      "emptyTitle": "Još ništa nije sačuvano",
-      "emptyBody": "Pritisnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje — s crtežom, težinom i današnjom cijenom.",
-      "emptyBodyMobile": "Dodirnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje.",
       "noMatchTitle": "Nema rezultata",
       "noMatchBody": "Ništa ovdje ne odgovara toj pretrazi ili oznaci.",
       "clearFilters": "Očisti filtere",
@@ -657,7 +649,10 @@
       "emptyHistoryBody": "Svaka stavka koju upišeš sa ↵ čuva se ovdje na ovom uređaju.",
       "historySubtitle": "Stavke koje si računao na ovom uređaju, najnovije prvo — nigdje drugo se ne čuvaju.",
       "clearHistory": "Očisti historiju",
-      "removeFromHistory": "Ukloni {query} iz historije"
+      "removeFromHistory": "Ukloni {query} iz historije",
+      "showOther": "Prikaži {label}",
+      "emptyPartsAllAssemblies": "Sve što si sačuvao ima više stavki, pa se nalazi pod Sklopovi.",
+      "emptyAssembliesHasParts": "Otvori dio i dodaj mu trenutnu stavku — dvije stavke čine sklop."
     },
     "time": {
       "justNow": "upravo sad",

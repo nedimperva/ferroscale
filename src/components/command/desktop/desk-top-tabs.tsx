@@ -140,7 +140,7 @@ export function DeskTopTabs({
         <TopTab
           active={view === "saved"}
           onClick={() => setView("saved")}
-          label={t("nav.saved")}
+          label={t("nav.parts")}
           icon={<DeskIcon name="saved" />}
           count={counts.saved}
         />

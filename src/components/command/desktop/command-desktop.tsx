@@ -10,7 +10,7 @@ import type { ProjectActions } from "../projects/project-actions";
 import { DeskTopTabs } from "./desk-top-tabs";
 import { DeskCalcView } from "./desk-calc-view";
 import { DeskCompareView } from "./desk-compare-view";
-import { DeskSavedView } from "./desk-saved-view";
+import { PartsView, type PartsActions } from "../parts/parts-view";
 import { DeskProjectsView } from "./desk-projects-view";
 import { DeskSettingsView } from "./desk-settings-view";
 
@@ -110,6 +110,28 @@ export function CommandDesktop(props: CommandDesktopProps) {
     },
   };
 
+  const partsActions: PartsActions = {
+    onPick: (entry) => {
+      props.onLoadSaved(entry);
+      gotoCalc();
+    },
+    onAddCompare: props.onAddCompareSaved,
+    onRemove: props.onRemoveSaved,
+    onRemoveMany: props.onRemoveSavedMany,
+    onDuplicate: props.onDuplicateSaved,
+    onTogglePin: props.onTogglePinSaved,
+    onEdit: props.onEditSaved,
+    onAddPart: props.onAddPartSaved,
+    onRemovePart: props.onRemovePartSaved,
+    onLoadQuery: (query) => {
+      props.onLoadQuery(query);
+      gotoCalc();
+    },
+    onRemoveHistoryEntry: props.onRemoveTapeEntry,
+    onClearHistory: props.onClearTape,
+    onNew: startNewCalc,
+  };
+
   const counts = {
     saved: props.saved.length,
     // Archived projects are not in the list the tab opens, so counting them
@@ -148,24 +170,13 @@ export function CommandDesktop(props: CommandDesktopProps) {
         />
       )}
       {view === "saved" && (
-        <DeskSavedView
+        <PartsView
           saved={props.saved}
+          history={props.history}
           settings={props.parserSettings}
           defaultUnit={props.defaultUnit}
           mode={props.mode}
-          onPick={(entry) => {
-            props.onLoadSaved(entry);
-            gotoCalc();
-          }}
-          onAddCompare={props.onAddCompareSaved}
-          onRemove={props.onRemoveSaved}
-          onRemoveMany={props.onRemoveSavedMany}
-          onDuplicate={props.onDuplicateSaved}
-          onTogglePin={props.onTogglePinSaved}
-          onEdit={props.onEditSaved}
-          onAddPart={props.onAddPartSaved}
-          onRemovePart={props.onRemovePartSaved}
-          onNew={startNewCalc}
+          actions={partsActions}
         />
       )}
       {view === "projects" && (
