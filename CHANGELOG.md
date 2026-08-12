@@ -5,6 +5,71 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.19.0] - 2026-08-12
+
+The three surfaces that were never really designed — Settings, Projects and
+Saved — rebuilt from the 2a–2e proposals. The navigation is untouched: the same
+tabs in the same places, on every viewport. Only what is *inside* them changed.
+
+### Added
+
+- **Projects have a client, a status and a due date**, and keep an activity log
+  of what happened to them. All four are optional fields on the existing synced
+  `Project`, so old data loads unchanged. The log stores event *kinds*, not
+  sentences, so it reads in whatever language it is read in
+- **A project detail page** — the screen the app did not have. Stat tiles
+  (items, weight, material cost, quoted with margin), an item table whose piece
+  counts are editable in place, project notes, and the activity rail. Reached by
+  drilling into the Projects tab, on the wide workspace and in the library sheet
+  alike; no new route and no new tab
+- **Project row actions**: rename inline, duplicate as a template, archive when
+  the job ships, delete with an undo toast. Archived projects move to their own
+  bucket instead of sitting in the active list, and stop offering themselves as
+  a target for "add to project"
+- **A client rail on the Projects list**, with search and sort. `lib/projects/query.ts`
+  holds the filtering, pure and tested
+- **Settings groups and a search box.** Pricing, Calculation, Units & format,
+  Appearance, Price book, Backup & sync, Help & about. Search crosses groups and
+  keeps each match under its own heading
+- **Every setting says what it does**, in a line under its name. A settings
+  screen that only lists names makes the reader guess
+- **Parts / Assemblies / History** as the shape of the old Saved library. The
+  split is the data's own — an entry with more than one part is an assembly.
+  Pinned parts lead the list as cards, every row leads with a Use button and
+  carries its use count, and History is the command history with Use, remove and
+  clear
+- **Theme is Light / Dark / Auto.** `useTheme` has stored `system` all along;
+  the settings surface simply never offered it
+
+### Changed
+
+- **Saved is called Parts**, on the tab, the page and the library sheet. It is
+  the name for what people keep in it: specs they re-run, not results they
+  happened to bookmark
+- **The rate's per-kg/per-m/per-piece basis moved into the rate row.** Splitting
+  one price across two settings rows asked the reader to join them up
+- **The phone settings sheet edits in place.** Grouped cards with the value on
+  the right; tapping a row opens its control underneath instead of pushing a
+  screen, so changing two numbers is two taps rather than four plus two backs
+- **Editing a project item's quantity re-runs the engine** rather than scaling
+  the stored result — waste, VAT and rounding are not linear in quantity
+
+### Fixed
+
+- **`normalizeProject` dropped fields it did not know about.** The whitelist in
+  `sync/collections.ts` is why a new project field would never have survived a
+  reload; it now carries client, status, due date and activity
+
+### Notes
+
+Attachments from proposal 2d are deliberately absent: the sync layer encrypts a
+whole snapshot into Drive appdata, and base64 blobs would ride along on every
+push. The "show tonnes above" setting is absent too — `fsWeightUnit()` was
+pinned to kilograms on purpose, and unpinning it is a metal-core change with its
+own blast radius, not a settings row.
+
+---
+
 ## [3.18.0] - 2026-08-11
 
 ### Removed
