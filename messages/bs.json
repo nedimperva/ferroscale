@@ -185,7 +185,8 @@
       "placeholder": "upišite ili dodirnite profil...",
       "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
       "aria": "FerroScale komandni upit",
-      "acceptGhost": "Dovrši: {text}"
+      "acceptGhost": "Dovrši: {text}",
+      "expandItem": "Stavka {index}, {name} — prikaži tokene"
     },
     "keypad": {
       "space": "razmak",

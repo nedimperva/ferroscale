@@ -185,7 +185,8 @@
       "placeholder": "type or tap a profile...",
       "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
       "aria": "FerroScale Command query",
-      "acceptGhost": "Complete: {text}"
+      "acceptGhost": "Complete: {text}",
+      "expandItem": "Item {index}, {name} — show its tokens"
     },
     "keypad": {
       "space": "space",

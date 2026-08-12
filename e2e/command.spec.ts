@@ -194,6 +194,27 @@ test.describe("Phone fold (390x844)", () => {
     expect(lineBox!.y - RING - (chipBox!.y + chipBox!.height)).toBeGreaterThanOrEqual(8);
   });
 
+  test("a multi-item line collapses to one row, and opens the item you tap", async ({ page }) => {
+    const line =
+      "heb120 12m x1 s235 + shs50x50x3 6m x2 s235 + ipe200 12m x1 s235 + rhs80x40x3 6m x1 s235";
+    await page.goto(`/en?q=${encodeURIComponent(line)}`);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+
+    // Four items' worth of chips used to overflow a capped, wrapping box and
+    // render as sliced half-rows. Only the item the caret is in is spelled
+    // out; the rest are one chip each, and the row never grows.
+    const queryLine = page.locator("[data-query-line]");
+    expect((await queryLine.boundingBox())!.height).toBeLessThanOrEqual(52);
+    await expect(queryLine.getByRole("button", { name: /^Item [123], / })).toHaveCount(3);
+    await expect(queryLine.getByRole("button", { name: "Edit rhs80x40x3" })).toBeVisible();
+
+    // Tapping a collapsed item opens it and folds the others away.
+    await queryLine.getByRole("button", { name: /^Item 1, / }).click();
+    await expect(queryLine.getByRole("button", { name: "Edit heb120" })).toBeVisible();
+    await expect(queryLine.getByRole("button", { name: /^Item 4, / })).toBeVisible();
+    expect((await queryLine.boundingBox())!.height).toBeLessThanOrEqual(52);
+  });
+
   test("a long line never pushes the input or the keys off screen", async ({ page }) => {
     // Uncapped, this line's chips wrapped to four rows and shoved the keypad's
     // bottom row — the ↵ and the unit keys — below the fold.

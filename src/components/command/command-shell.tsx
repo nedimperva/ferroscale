@@ -263,13 +263,6 @@ export function CommandShell() {
   /** The item under the caret, as the suggestion engine should see it. */
   const activeQuery = useMemo(() => activeItemText(query), [query]);
 
-  // The caret lives at the end of the line, so a capped chip box has to follow
-  // it down as tokens are added — otherwise typing walks off the visible area.
-  useEffect(() => {
-    const el = queryLineRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [query]);
-
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
   // habits first — no Save required. The pristine demo query never counts.
@@ -953,14 +946,64 @@ export function CommandShell() {
   const acceptGhost = () => {
     if (ghost && sug.items[0]) onSuggest(sug.items[0]);
   };
+  /**
+   * Which item shows its tokens on the phone. A `+`-joined line of four items
+   * is far more chips than a phone's query line can hold, and the old capped
+   * scroll window showed them sliced across half-rows. Only the item you are
+   * working on is spelled out; the rest are one chip each, and the hero above
+   * already lists every item with its weight and price.
+   *
+   * `null` means the item the caret is in — the last one — which is what any
+   * keystroke goes into. Tapping another item's chip parks the expansion there
+   * until the query changes for a reason other than editing that item.
+   */
+  const [expandedItem, setExpandedItem] = useState<number | null>(null);
+  const [expandSeed, setExpandSeed] = useState(query);
+  if (expandSeed !== query) {
+    setExpandSeed(query);
+    setExpandedItem(null);
+  }
+  const expandedIndex =
+    expandedItem != null && expandedItem < chips.groups.length
+      ? expandedItem
+      : chips.groups.length - 1;
+
+  /** An edit inside the open item is not a reason to close it. */
+  const keepExpanded = (item: number, next: string) => {
+    setQuery(next);
+    setExpandedItem(item);
+    setExpandSeed(next);
+  };
   const removeTokenAt = (item: number, idx: number) => {
-    setQuery(removeLineToken(query, item, idx));
+    keepExpanded(item, removeLineToken(query, item, idx));
   };
   // Pull a token back to the end of its own item as the editable partial (the
   // parser is order-tolerant within an item, so the reordering is free).
   const editTokenAt = (item: number, idx: number) => {
-    setQuery(editLineToken(query, item, idx));
+    keepExpanded(item, editLineToken(query, item, idx));
   };
+  // The caret lives at the end of the line, so the row has to follow it
+  // sideways as tokens are added — otherwise typing walks off the visible area.
+  useEffect(() => {
+    const el = queryLineRef.current;
+    if (!el) return;
+    // Opening an earlier item scrolls to that item; otherwise the caret is the
+    // last thing in the row, so the end of the scroll *is* the caret and the
+    // line follows what is being typed.
+    const opened = el.querySelector<HTMLElement>("[data-expanded-start]");
+    if (opened) {
+      el.scrollLeft += opened.getBoundingClientRect().left - el.getBoundingClientRect().left - 12;
+    } else {
+      el.scrollLeft = el.scrollWidth;
+    }
+  }, [query, expandedIndex]);
+
+  /** One chip standing in for a whole item, labelled as the hero numbers it. */
+  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
+    line.items[group.item]?.parse.name ||
+    group.tokens[0] ||
+    partialToken ||
+    String(group.item + 1);
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
   // Saved-library actions, identical on every viewport.
@@ -1563,15 +1606,17 @@ export function CommandShell() {
               <div
                 ref={queryLineRef}
                 data-query-line=""
-                // Capped at two rows and scrolled to the caret. Uncapped, a
-                // long line grew to four rows and pushed the keypad's bottom
-                // row off the screen — the input and its keys are the two
-                // things that must always be visible.
-                className="flex items-center gap-1.5 flex-wrap rounded-[15px] px-3 py-2.5"
+                // One row that scrolls sideways to the caret, never wrapping.
+                // Wrapping meant the line's height depended on the token count:
+                // capped, it sliced chips across half-rows; uncapped, a long
+                // line grew to four rows and pushed the keypad's bottom row off
+                // the screen. A fixed height keeps the input and its keys where
+                // they were, whatever the line holds.
+                className="flex items-center gap-1.5 flex-nowrap rounded-[15px] px-3 py-2.5"
                 style={{
-                  minHeight: 50,
-                  maxHeight: 92,
-                  overflowY: "auto",
+                  height: 50,
+                  overflowX: "auto",
+                  overflowY: "hidden",
                   border: "1.5px solid var(--accent-border)",
                   background: "var(--surface)",
                   boxShadow: dark
@@ -1580,13 +1625,13 @@ export function CommandShell() {
                 }}
               >
                 <span
-                  className="font-mono text-base font-bold mr-0.5"
+                  className="font-mono text-base font-bold mr-0.5 flex-shrink-0"
                   style={{ color: "var(--accent)" }}
                 >
                   ›
                 </span>
                 {chipCount === 0 && !partialToken && (
-                  <span className="font-mono text-sm text-muted-faint">
+                  <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">
                     {t("query.placeholder")}
                   </span>
                 )}
@@ -1601,19 +1646,44 @@ export function CommandShell() {
                         +
                       </span>
                     )}
-                    {group.tokens.map((tok, i) => (
-                      <TokenChip
-                        key={`${tok}-${i}`}
-                        tok={tok}
-                        kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                        onEdit={() => editTokenAt(group.item, i)}
-                        onRemove={() => removeTokenAt(group.item, i)}
-                      />
-                    ))}
+                    {group.item === expandedIndex ? (
+                      group.tokens.map((tok, i) => (
+                        <TokenChip
+                          key={`${tok}-${i}`}
+                          // Only an item opened by hand needs seeking to; the
+                          // last item is where the caret already is.
+                          anchor={i === 0 && group.item !== chips.groups.length - 1}
+                          tok={tok}
+                          kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                          onEdit={() => editTokenAt(group.item, i)}
+                          onRemove={() => removeTokenAt(group.item, i)}
+                        />
+                      ))
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedItem(group.item)}
+                        aria-label={t("query.expandItem", {
+                          index: group.item + 1,
+                          name: collapsedItemLabel(group),
+                        })}
+                        className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-sm font-semibold whitespace-nowrap"
+                        style={{
+                          padding: "5px 10px",
+                          border: "1px solid var(--border-faint)",
+                          background: "var(--surface-inset)",
+                          color: "var(--foreground-secondary)",
+                        }}
+                      >
+                        <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
+                        {collapsedItemLabel(group)}
+                        <span className="text-[10px] text-muted-faint">▸</span>
+                      </button>
+                    )}
                   </Fragment>
                 ))}
                 {partialToken && (
-                  <span className="font-mono text-sm font-semibold text-foreground">
+                  <span className="font-mono text-sm font-semibold text-foreground flex-shrink-0">
                     {partialToken}
                   </span>
                 )}
@@ -1622,14 +1692,14 @@ export function CommandShell() {
                     type="button"
                     onClick={acceptGhost}
                     aria-label={t("query.acceptGhost", { text: ghost.trim() })}
-                    className="font-mono text-sm font-semibold whitespace-pre"
+                    className="font-mono text-sm font-semibold whitespace-pre flex-shrink-0"
                     style={{ color: "var(--muted-faint)" }}
                   >
                     {ghost}
                   </button>
                 )}
                 <span
-                  className="w-0.5 h-5 rounded-sm"
+                  className="w-0.5 h-5 rounded-sm flex-shrink-0"
                   style={{
                     background: "var(--accent)",
                     animation: "fsBlink 1s steps(1) infinite",
@@ -1754,16 +1824,20 @@ function TokenChip({
   kindClass,
   onEdit,
   onRemove,
+  anchor,
 }: {
   tok: string;
   kindClass: string;
   onEdit: () => void;
   onRemove: () => void;
+  /** Marks the chip the query line scrolls to when an item is opened. */
+  anchor?: boolean;
 }) {
   const t = useTranslations("command");
   return (
     <span
-      className={`inline-flex items-stretch font-mono text-sm font-semibold rounded-md ${kindClass}`}
+      data-expanded-start={anchor ? "" : undefined}
+      className={`inline-flex items-stretch flex-shrink-0 font-mono text-sm font-semibold rounded-md ${kindClass}`}
     >
       <button
         type="button"

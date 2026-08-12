@@ -79,6 +79,13 @@ tabs in the same places, on every viewport. Only what is *inside* them changed.
   clear the home indicator — a ~5pt pill sitting ~8pt up, not the full 34pt
   inset. The bottom row sits about 14px lower on a notched phone; the panel
   itself is still flush on the edge
+- **A multi-item line was unreadable on the phone.** The chip box wrapped and
+  capped at two rows, so four `+`-joined items overflowed it and rendered as
+  sliced half-rows — chips cut in half at the top and bottom of the window.
+  The line is one row that scrolls sideways now, and only the item the caret
+  is in is spelled out; the others are one chip each ("2 SHS 50×50×3"),
+  numbered to match the hero list above, and tapping one opens it. The row's
+  height is fixed, so nothing can push the keypad off screen again
 - **The phone suggestion chips sat on the query line's focus ring.** The 6px
   gap cleared the input's border box but not the 3px glow drawn outside it, so
   the strip and the field read as one collided control. The clearance is
