@@ -281,7 +281,7 @@ export function DeskSettingsView({
         </nav>
 
         <div className="flex-1 min-w-0 overflow-y-auto" style={{ padding: "22px 32px 40px" }}>
-          <div style={{ maxWidth: 720 }}>
+          <div className="min-w-0">
             {searching ? (
               matches.length === 0 && panelMatches.length === 0 ? (
                 <EmptyState

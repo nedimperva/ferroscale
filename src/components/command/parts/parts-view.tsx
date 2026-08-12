@@ -45,6 +45,8 @@ export interface PartsActions {
   onEdit: (entry: SavedEntry) => void;
   onAddPart?: (entry: SavedEntry) => void;
   onRemovePart: (entry: SavedEntry, partId: string) => void;
+  /** Put this part (or the whole assembly) into a project. */
+  onAddToProject: (entry: SavedEntry) => void;
   onLoadQuery: (query: string) => void;
   onRemoveHistoryEntry: (query: string) => void;
   onClearHistory: () => void;
@@ -189,6 +191,11 @@ function PartsRow({
           id: "pin",
           label: entry.pinned ? t("saved.unpin") : t("saved.pin"),
           onSelect: () => actions.onTogglePin(entry),
+        },
+        {
+          id: "project",
+          label: t("common.addProjectLong"),
+          onSelect: () => actions.onAddToProject(entry),
         },
         { id: "compare", label: t("saved.addToCompare"), onSelect: () => actions.onAddCompare(entry) },
         { id: "edit", label: t("saved.edit"), onSelect: () => actions.onEdit(entry) },
@@ -499,6 +506,7 @@ export function PartsView({
   const cardActions = (entry: SavedEntry): SavedCardActions => ({
     onOpen: () => actions.onPick(entry),
     onCompare: () => actions.onAddCompare(entry),
+    onAddToProject: () => actions.onAddToProject(entry),
     onDuplicate: () => actions.onDuplicate(entry),
     onTogglePin: () => actions.onTogglePin(entry),
     onEdit: () => actions.onEdit(entry),
@@ -768,7 +776,7 @@ export function PartsView({
         className="flex items-start gap-4 flex-wrap flex-shrink-0"
         style={{ padding: "20px 32px 16px", borderBottom: "1px solid var(--border-faint)" }}
       >
-        <div className="min-w-0" style={{ maxWidth: 560 }}>
+        <div className="min-w-0" style={{ maxWidth: 620 }}>
           <div className="font-extrabold text-xl text-foreground" style={{ letterSpacing: -0.4 }}>
             {t("nav.parts")}
           </div>
@@ -777,7 +785,7 @@ export function PartsView({
         <div className="ml-auto">{tabs}</div>
       </div>
       <div className="flex-1 overflow-y-auto" style={{ padding: "20px 32px 32px" }}>
-        <div style={{ maxWidth: 1180 }}>{body}</div>
+        <div className="min-w-0">{body}</div>
       </div>
     </div>
   );

@@ -522,7 +522,7 @@ export function ProjectList({
         </nav>
 
         <div className="flex-1 min-w-0 overflow-y-auto" style={{ padding: "20px 32px 32px" }}>
-          <div style={{ maxWidth: 1100 }}>
+          <div className="min-w-0">
             {createRow}
             {table}
           </div>

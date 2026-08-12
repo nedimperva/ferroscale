@@ -46,6 +46,7 @@ interface CommandLibrarySheetProps {
   onEditSaved: (entry: SavedEntry) => void;
   onAddPartSaved?: (entry: SavedEntry) => void;
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
+  onAddSavedToProject: (entry: SavedEntry) => void;
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
   projectActions: ProjectActions;
@@ -88,6 +89,7 @@ export function CommandLibraryWorkspace({
   onEditSaved,
   onAddPartSaved,
   onRemovePartSaved,
+  onAddSavedToProject,
   onRemoveCompare,
   onClearCompare,
   projectActions,
@@ -176,6 +178,7 @@ export function CommandLibraryWorkspace({
             onEdit: onEditSaved,
             onAddPart: onAddPartSaved,
             onRemovePart: onRemovePartSaved,
+            onAddToProject: onAddSavedToProject,
             onLoadQuery,
             onRemoveHistoryEntry: onRemoveTapeEntry,
             onClearHistory: onClearHistory,

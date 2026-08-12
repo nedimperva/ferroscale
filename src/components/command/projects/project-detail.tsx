@@ -672,7 +672,7 @@ export function ProjectDetail({
           style={
             compact
               ? undefined
-              : { gridTemplateColumns: "minmax(0, 1fr) minmax(0, 320px)", maxWidth: 1180 }
+              : { gridTemplateColumns: "minmax(0, 1fr) minmax(0, 340px)" }
           }
         >
           <div className="flex flex-col gap-3 min-w-0">

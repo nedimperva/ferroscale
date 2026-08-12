@@ -123,6 +123,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
     onEdit: props.onEditSaved,
     onAddPart: props.onAddPartSaved,
     onRemovePart: props.onRemovePartSaved,
+    onAddToProject: props.onAddSavedToProject,
     onLoadQuery: (query) => {
       props.onLoadQuery(query);
       gotoCalc();

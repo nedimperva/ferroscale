@@ -75,7 +75,9 @@ export function projectItemRows(project: Project): ProjectItemRow[] {
       calc.templateName ?? calc.normalizedProfile?.shortLabel ?? calc.result.profileLabel,
     gradeLabel: calc.templateName ? "—" : (calc.result.gradeLabel ?? "—"),
     lengthLabel: calc.templateName ? "—" : formatLengthM(calc.result.lengthMm),
-    quantity: calc.result.quantity,
+    // A template's own result carries the first part's piece count; the number
+    // that means anything about the entry is how many of the assembly went in.
+    quantity: calc.templateName ? (calc.quantityMultiplier ?? 1) : calc.result.quantity,
     weightKg: calc.result.totalWeightKg,
     amount: calc.result.grandTotalAmount,
     isTemplate: Boolean(calc.templateName),

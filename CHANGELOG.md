@@ -53,12 +53,27 @@ tabs in the same places, on every viewport. Only what is *inside* them changed.
   screen, so changing two numbers is two taps rather than four plus two backs
 - **Editing a project item's quantity re-runs the engine** rather than scaling
   the stored result — waste, VAT and rounding are not linear in quantity
+- **A part or an assembly can go straight into a project** from its row menu.
+  It is re-priced at today's rate on the way in (the stored result is a
+  snapshot of the rate at save time), and an assembly lands as one named line
+  with its parts behind it rather than as loose items. A project template row
+  now reports how many of the assembly went in, not its first part's count
 
 ### Fixed
 
 - **`normalizeProject` dropped fields it did not know about.** The whitelist in
   `sync/collections.ts` is why a new project field would never have survived a
   reload; it now carries client, status, due date and activity
+- **Using a saved assembly restored only its first part.** The bar was rebuilt
+  from `entry.input`, which is part one; a three-part gate frame arrived as one
+  RHS with the rest silently gone. It now rebuilds the whole `+`-joined line
+- **The row menus were clipped by their own table.** The dropdown rendered
+  inside a panel with `overflow: hidden`, so the shorter the list, the less of
+  the menu you could see — on a one-row table, almost none of it. It is
+  portalled to `<body>` now, placed in viewport coordinates and flipped above
+  the row when it would run off the bottom
+- **The new surfaces were capped at 720–1180px** while the rest of the app
+  fills the workspace. They fill it too now
 
 ### Notes
 

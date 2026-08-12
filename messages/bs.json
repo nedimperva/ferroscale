@@ -135,7 +135,8 @@
       "back": "Nazad",
       "edit": "Uredi",
       "search": "Pretraži",
-      "more": "Više radnji"
+      "more": "Više radnji",
+      "addProjectLong": "Dodaj u projekat"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",

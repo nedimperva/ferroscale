@@ -16,6 +16,8 @@ export interface SavedCardActions {
   onAddPart?: () => void;
   onRemovePart?: (partId: string) => void;
   onCompare: () => void;
+  /** Put this part (or the whole assembly) into a project. */
+  onAddToProject?: () => void;
   onDuplicate: () => void;
   onTogglePin: () => void;
   onEdit: () => void;
@@ -308,6 +310,11 @@ export function SavedCard({
           <CardAction label={t("saved.addToCompare")} onClick={actions.onCompare}>
             <DeskIcon name="compare" />
           </CardAction>
+          {actions.onAddToProject && (
+            <CardAction label={t("common.addProjectLong")} onClick={actions.onAddToProject}>
+              <DeskIcon name="projects" />
+            </CardAction>
+          )}
           {actions.onAddPart && (
             <CardAction label={t("saved.addPart")} onClick={actions.onAddPart}>
               <StackIcon />

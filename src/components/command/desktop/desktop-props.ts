@@ -78,4 +78,6 @@ export interface CommandDesktopProps {
   /** Undefined while the bar has no complete calculation to fold in. */
   onAddPartSaved?: (entry: SavedEntry) => void;
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
+  /** Open the project picker for a saved part or assembly. */
+  onAddSavedToProject: (entry: SavedEntry) => void;
 }

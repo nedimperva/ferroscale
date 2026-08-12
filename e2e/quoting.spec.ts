@@ -198,6 +198,38 @@ test.describe("Assemblies", () => {
     // 238.7 kg + 139.42 kg = 378.12 kg
     await expect(page.getByText("378.12 kg").first()).toBeVisible();
   });
+
+  test("Use restores every part, not just the first", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 + ipe200 4m x3 ");
+    await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+
+    // The surface opens on Assemblies: it is the only tab with anything in it.
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: /^Load / }).first().click();
+
+    // Both items come back on the line — restoring only the entry's own input
+    // dropped everything after the first part.
+    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+  });
+
+  test("a saved part goes into a project from its row menu", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 ");
+    await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Add to project" }).click();
+
+    await page.getByPlaceholder("New project name...").fill("Mezzanine");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
+    await page.getByRole("button", { name: /^Open project Mezzanine/ }).click();
+    await expect(page.getByText("HEA 120").first()).toBeVisible();
+    await expect(page.getByText(/^1 item$/)).toBeVisible();
+  });
 });
 
 test.describe("Printable quote", () => {

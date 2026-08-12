@@ -135,7 +135,8 @@
       "back": "Back",
       "edit": "Edit",
       "search": "Search",
-      "more": "More actions"
+      "more": "More actions",
+      "addProjectLong": "Add to project"
     },
     "toast": {
       "addLength": "Add length to save",

@@ -7,7 +7,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { useSaved } from "@/hooks/useSaved";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
+import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
@@ -150,6 +150,7 @@ export function CommandShell() {
     duplicateProject,
     addCalculation,
     addCalculations,
+    addTemplateCalculation,
     removeCalculation,
     updateCalculationQuantity,
   } = useProjects();
@@ -183,6 +184,8 @@ export function CommandShell() {
     clear: clearHistory,
   } = useQuickHistory();
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
+  /** A saved part or assembly waiting for a project to be picked for it. */
+  const [projectEntry, setProjectEntry] = useState<SavedEntry | null>(null);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
@@ -589,29 +592,89 @@ export function CommandShell() {
     setSheet(null);
   }, []);
 
+  /** Every part of a saved entry as one `+`-joined command line. */
+  const savedEntryQuery = useCallback(
+    (entry: SavedEntry) =>
+      entry.parts
+        .map((part) =>
+          inputToQuery(part.input, defaultUnit, {
+            defaultGradeId: shared.defaultGradeId,
+            omitPrice: true,
+          }),
+        )
+        .filter(Boolean)
+        .join(" + "),
+    [defaultUnit, shared.defaultGradeId],
+  );
+
   /**
    * Open a saved entry. Counts the use (so "most used" sorting means
    * something) and restores at today's rate — `omitPrice` keeps the bar
    * showing the same money the card showed.
+   *
+   * An assembly restores as the whole line. Restoring only `entry.input` put
+   * one part of a three-part gate frame in the bar and dropped the rest, which
+   * looked like the assembly had been silently truncated.
    */
   const loadSavedEntry = useCallback(
     (entry: SavedEntry) => {
       markSavedUsed(entry.id);
-      const q = inputToQuery(entry.input, defaultUnit, {
-        defaultGradeId: shared.defaultGradeId,
-        omitPrice: true,
-      });
+      const q = savedEntryQuery(entry);
       if (q) setQuery(`${q} `);
       setSheet(null);
     },
-    [markSavedUsed, defaultUnit, shared.defaultGradeId],
+    [markSavedUsed, savedEntryQuery],
   );
 
+  /**
+   * A saved entry's parts, re-run at today's pricing. The stored results are
+   * a snapshot of the rate at save time; a project built from them would carry
+   * prices the rest of the app has already moved on from.
+   */
+  const repriceSavedEntry = useCallback(
+    (entry: SavedEntry) =>
+      entry.parts
+        .map((part) => {
+          const q = inputToQuery(part.input, defaultUnit, {
+            defaultGradeId: shared.defaultGradeId,
+            omitPrice: true,
+          });
+          const parsed = q ? cmdParse(`${q} `, parserSettings) : null;
+          if (!parsed?.calc) return null;
+          return {
+            id: part.id,
+            name: part.name,
+            input: parsed.calc.input,
+            result: parsed.calc.result,
+            normalizedProfile: part.normalizedProfile,
+          };
+        })
+        .filter((part): part is NonNullable<typeof part> => part != null),
+    [defaultUnit, shared.defaultGradeId, parserSettings],
+  );
+
+  /**
+   * Commit whatever the picker was opened for. A saved entry with one part is
+   * an ordinary item; an assembly goes in as a template entry so the project
+   * keeps it as one named line with its parts behind it, the way it was saved.
+   */
   const handlePickProject = useCallback(
     (projectId: string) => {
-      if (!projectCalc) return;
-      const ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
+      let ok = false;
+      if (projectEntry) {
+        const parts = repriceSavedEntry(projectEntry);
+        if (parts.length > 1) {
+          ok = addTemplateCalculation(projectId, projectEntry.name, parts, 1);
+        } else if (parts.length === 1) {
+          ok = addCalculation(projectId, parts[0].input, parts[0].result);
+        }
+      } else if (projectCalc) {
+        ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
+      } else {
+        return;
+      }
       setProjectCalc(null);
+      setProjectEntry(null);
       const project = projects.find((p) => p.id === projectId);
       showToast(
         ok
@@ -619,7 +682,16 @@ export function CommandShell() {
           : t("toast.projectFull"),
       );
     },
-    [projectCalc, addCalculation, projects, showToast, t],
+    [
+      projectCalc,
+      projectEntry,
+      repriceSavedEntry,
+      addCalculation,
+      addTemplateCalculation,
+      projects,
+      showToast,
+      t,
+    ],
   );
 
   const addCompareEntry = useCallback(
@@ -906,6 +978,10 @@ export function CommandShell() {
     onRemovePartSaved: (entry: SavedEntry, partId: string) => {
       removePartFromSaved(entry.id, partId);
     },
+    onAddSavedToProject: (entry: SavedEntry) => {
+      setSheet(null);
+      setProjectEntry(entry);
+    },
   };
   const helpSheet = effectiveSheet === "help" ? (
     <CommandHelpSheet
@@ -988,10 +1064,13 @@ export function CommandShell() {
         />
         {helpSheet}
         {savedEditSheet}
-        {projectCalc && (
+        {(projectCalc || projectEntry) && (
           <CommandProjectPickerSheet
-            projects={projects}
-            onClose={() => setProjectCalc(null)}
+            projects={projects.filter((project) => !isArchivedProject(project))}
+            onClose={() => {
+              setProjectCalc(null);
+              setProjectEntry(null);
+            }}
             onCreateProject={createProject}
             onPickProject={(project) => handlePickProject(project.id)}
           />
@@ -1645,10 +1724,13 @@ export function CommandShell() {
           )}
           {helpSheet}
           {savedEditSheet}
-          {projectCalc && (
+          {(projectCalc || projectEntry) && (
             <CommandProjectPickerSheet
-              projects={projects}
-              onClose={() => setProjectCalc(null)}
+              projects={projects.filter((project) => !isArchivedProject(project))}
+              onClose={() => {
+                setProjectCalc(null);
+                setProjectEntry(null);
+              }}
               onCreateProject={createProject}
               onPickProject={(project) => handlePickProject(project.id)}
             />
