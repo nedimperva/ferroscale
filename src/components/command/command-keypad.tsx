@@ -251,8 +251,14 @@ export function CommandKeypad({
   const t = useTranslations("command");
   return (
     <div
-      className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-2"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
+      className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-1.5"
+      // The keypad's background reaches the screen edge; only the keys have to
+      // clear the home indicator. Reserving the whole safe-area inset (34px on
+      // a notched iPhone) parked the bottom row well above the indicator and
+      // left a visible band of empty panel under it. The indicator itself is a
+      // ~5pt pill sitting ~8pt up, so ~14px of that inset is slack — take it
+      // back, and keep a floor for devices that report no inset at all.
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px) - 14px, 6px)" }}
     >
       <div className="flex flex-col gap-1">
         <div className="flex gap-1">

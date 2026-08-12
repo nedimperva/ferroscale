@@ -1438,7 +1438,10 @@ export function CommandShell() {
           <div className="flex-1 min-h-[6px]" />
 
           {/* SUGGESTION BAR */}
-          <div className="pb-1.5">
+          {/* The gap under the strip has to clear the query line's 3px focus
+              ring, not just its border box — at pb-1.5 the chips sat on the
+              glow and the two read as one collided control. */}
+          <div className="pb-2.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
               <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
                 {formatCommandHint(t, sug.hint)}
@@ -1462,7 +1465,9 @@ export function CommandShell() {
               // happened to produce, and the second row was clipped by the
               // query line — the layout has no vertical give to lend it.
               data-suggestion-strip=""
-              className="flex gap-1.5 px-[18px] pb-0.5"
+              // `overflowY: hidden` clips at the padding edge, so the chips
+              // need room below them or their own borders get shaved off.
+              className="flex gap-1.5 px-[18px] pb-1"
               style={{ overflowX: "auto", overflowY: "hidden" }}
             >
               {sug.items.map((it, i) => (

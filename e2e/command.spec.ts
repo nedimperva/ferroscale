@@ -180,6 +180,20 @@ test.describe("Phone fold (390x844)", () => {
     expect(box!.height).toBeLessThan(80);
   });
 
+  test("the suggestion chips clear the query line's focus ring", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // The query line draws a 3px ring outside its border box. At the old
+    // 6px gap the chips sat on that glow and the two read as one collided
+    // control, so the clearance is measured against the ring, not the box.
+    const RING = 3;
+    const chip = page.locator("[data-suggestion-strip] button").first();
+    const line = page.locator("[data-query-line]");
+    const chipBox = await chip.boundingBox();
+    const lineBox = await line.boundingBox();
+    expect(lineBox!.y - RING - (chipBox!.y + chipBox!.height)).toBeGreaterThanOrEqual(8);
+  });
+
   test("a long line never pushes the input or the keys off screen", async ({ page }) => {
     // Uncapped, this line's chips wrapped to four rows and shoved the keypad's
     // bottom row — the ↵ and the unit keys — below the fold.

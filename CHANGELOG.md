@@ -74,6 +74,16 @@ tabs in the same places, on every viewport. Only what is *inside* them changed.
   the row when it would run off the bottom
 - **The new surfaces were capped at 720–1180px** while the rest of the app
   fills the workspace. They fill it too now
+- **The phone keypad reserved the whole bottom safe-area inset below its keys.**
+  Its background already reaches the screen edge, so only the keys need to
+  clear the home indicator — a ~5pt pill sitting ~8pt up, not the full 34pt
+  inset. The bottom row sits about 14px lower on a notched phone; the panel
+  itself is still flush on the edge
+- **The phone suggestion chips sat on the query line's focus ring.** The 6px
+  gap cleared the input's border box but not the 3px glow drawn outside it, so
+  the strip and the field read as one collided control. The clearance is
+  measured against the ring now, and the strip stopped shaving the chips' own
+  bottom borders off against its `overflow: hidden` edge
 
 ### Notes
 
