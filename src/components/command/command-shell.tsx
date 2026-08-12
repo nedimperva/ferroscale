@@ -7,7 +7,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { useSaved } from "@/hooks/useSaved";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { useProjects } from "@/hooks/useProjects";
+import { MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
@@ -59,6 +59,7 @@ import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
+import type { ProjectActions } from "./projects/project-actions";
 import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
@@ -137,7 +138,21 @@ export function CommandShell() {
     clearAll: clearCompare,
     isDuplicate: isInCompare,
   } = useCompare();
-  const { projects, createProject, addCalculation, addCalculations, removeCalculation } = useProjects();
+  const {
+    projects,
+    createProject,
+    renameProject,
+    updateProjectMeta,
+    updateProjectDescription,
+    logQuotePrinted,
+    deleteProject,
+    restoreProject,
+    duplicateProject,
+    addCalculation,
+    addCalculations,
+    removeCalculation,
+    updateCalculationQuantity,
+  } = useProjects();
   const { presetsForProfile } = usePresets();
   const priceBook = usePriceBook();
 
@@ -618,6 +633,81 @@ export function CommandShell() {
     addCompareEntry(p.calc.input, p.calc.result);
   }, [p.calc, addCompareEntry]);
 
+  /**
+   * The Projects surface's whole vocabulary, assembled once. Deleting shows an
+   * undo toast rather than a confirm dialog: the tombstone is reversible and a
+   * modal for a project you can put back is a tax on the common case.
+   */
+  const projectActions: ProjectActions = useMemo(
+    () => ({
+      onCreate: (name: string) => {
+        if (projects.length >= MAX_PROJECTS) {
+          showToast(t("projects.full"));
+          return;
+        }
+        return createProject(name);
+      },
+      onRename: renameProject,
+      onUpdateMeta: (id, patch) => {
+        updateProjectMeta(id, patch);
+        if (patch.status === "archived") showToast(t("projects.archivedToast"));
+        else if (patch.status === "draft") showToast(t("projects.unarchivedToast"));
+      },
+      onUpdateNotes: updateProjectDescription,
+      onDuplicate: (id) => {
+        const copy = duplicateProject(id);
+        showToast(copy ? t("toast.duplicated") : t("projects.full"));
+      },
+      onDelete: (id) => {
+        deleteProject(id);
+        showActionToast(t("projects.deleted"), {
+          label: t("common.undo"),
+          onAction: () => {
+            restoreProject(id);
+            showToast(t("toast.restored"));
+          },
+        });
+      },
+      onRemoveItem: removeCalculation,
+      onSetItemQuantity: updateCalculationQuantity,
+      onOpenItem: loadInput,
+      onAddItem: (projectId: string) => {
+        if (!p.calc) {
+          showToast(t("toast.addLength"));
+          return false;
+        }
+        const ok = addCalculation(projectId, p.calc.input, p.calc.result);
+        const name = projects.find((project) => project.id === projectId)?.name;
+        showToast(
+          ok
+            ? t("toast.addedToProject", { project: name ?? t("common.project") })
+            : t("projects.itemsFull"),
+        );
+        return ok;
+      },
+      onPrintQuote: (project) => logQuotePrinted(project.id),
+    }),
+    [
+      projects,
+      createProject,
+      renameProject,
+      updateProjectMeta,
+      updateProjectDescription,
+      duplicateProject,
+      deleteProject,
+      restoreProject,
+      removeCalculation,
+      updateCalculationQuantity,
+      loadInput,
+      addCalculation,
+      logQuotePrinted,
+      p.calc,
+      showToast,
+      showActionToast,
+      t,
+    ],
+  );
+
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
@@ -882,7 +972,7 @@ export function CommandShell() {
           onAddToProject={openProjectModal}
           onLoadInput={loadInput}
           onCreateProject={createProject}
-          onRemoveProjectCalc={removeCalculation}
+          projectActions={projectActions}
           currentSaved={!!currentSavedEntry}
           onOpenHelp={() => setSheet("help")}
           onRemoveSavedMany={removeSavedEntries}
@@ -1542,8 +1632,7 @@ export function CommandShell() {
               {...savedHandlers}
               onRemoveCompare={removeCompareItem}
               onClearCompare={clearCompare}
-              onCreateProject={createProject}
-              onRemoveProjectCalc={removeCalculation}
+              projectActions={projectActions}
             />
           )}
           {helpSheet}

@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "@/i18n/navigation";
 import { getAppTabFromPathname } from "@/lib/app-shell";
+import { isArchivedProject } from "@/hooks/useProjects";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CommandDesktopProps, DeskView } from "./desktop-props";
+import type { ProjectActions } from "../projects/project-actions";
 import { DeskTopTabs } from "./desk-top-tabs";
 import { DeskCalcView } from "./desk-calc-view";
 import { DeskCompareView } from "./desk-compare-view";
@@ -29,6 +31,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
     }
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
+  /** Which project the Projects tab has drilled into (null = the list). */
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null);
 
   const focusInputAtEnd = useCallback(() => {
     const el = inputRef.current;
@@ -87,9 +91,30 @@ export function CommandDesktop(props: CommandDesktopProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [view, focusInputAtEnd, onNew]);
 
+  // Opening an item from a project puts it in the bar, which means leaving
+  // the detail page — the two surfaces are the same tab.
+  const projectActions: ProjectActions = {
+    ...props.projectActions,
+    onOpenItem: (input) => {
+      props.projectActions.onOpenItem(input);
+      gotoCalc();
+    },
+    onAddItem: (projectId) => {
+      const added = props.projectActions.onAddItem(projectId);
+      if (!added) gotoCalc();
+      return added;
+    },
+    onDelete: (id) => {
+      props.projectActions.onDelete(id);
+      setOpenProjectId((current) => (current === id ? null : current));
+    },
+  };
+
   const counts = {
     saved: props.saved.length,
-    projects: props.projects.length,
+    // Archived projects are not in the list the tab opens, so counting them
+    // in the badge would promise rows that are not there.
+    projects: props.projects.filter((project) => !isArchivedProject(project)).length,
     compare: props.compareItems.length,
   };
 
@@ -146,9 +171,9 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "projects" && (
         <DeskProjectsView
           projects={props.projects}
-          onPickItem={pickInput}
-          onCreateProject={props.onCreateProject}
-          onRemoveCalc={props.onRemoveProjectCalc}
+          actions={projectActions}
+          openProjectId={openProjectId}
+          onOpenProject={setOpenProjectId}
         />
       )}
       {view === "settings" && (

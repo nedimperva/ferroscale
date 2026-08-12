@@ -10,6 +10,7 @@ import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calc
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
+import type { ProjectActions } from "../projects/project-actions";
 
 export type DeskView = "calc" | "saved" | "projects" | "compare" | "settings";
 
@@ -58,7 +59,8 @@ export interface CommandDesktopProps {
   onAddToProject: () => void;
   onLoadInput: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
-  onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  /** Everything the Projects surface can do to a project. */
+  projectActions: ProjectActions;
   /** True when the line in the bar is already bookmarked (Save is a toggle). */
   currentSaved: boolean;
   /** Open the grammar + shortcuts cheat sheet (the `?` key). */

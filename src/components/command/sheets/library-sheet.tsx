@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
 import { collectSavedTags, filterSortSaved } from "@/lib/saved/query";
-import type { CalculationInput, CurrencyCode, LengthUnit } from "@/lib/calculator/types";
+import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
@@ -17,6 +18,12 @@ import { buildSavedCardModel } from "../saved/saved-model";
 import { SavedCard } from "../saved/saved-card";
 import { SavedToolbar, type SavedToolbarState } from "../saved/saved-toolbar";
 import { SheetShell } from "./sheet-shell";
+import { ProjectList } from "../projects/project-list";
+import { ProjectDetail } from "../projects/project-detail";
+import { ProjectQuote } from "../project-quote";
+import { useQuotePrinting } from "../projects/use-quote-printing";
+import type { ProjectActions } from "../projects/project-actions";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 /* ──────────────────────────────────────────────────────────────
  *  Library sheet: Saved · Compare · Projects
@@ -44,8 +51,7 @@ interface CommandLibrarySheetProps {
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
-  onCreateProject: (name: string) => void;
-  onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  projectActions: ProjectActions;
   /** The session tape, newest first — the phone's only view of it. */
   sessionTape: string[];
   onLoadQuery: (query: string) => void;
@@ -86,8 +92,7 @@ export function CommandLibraryWorkspace({
   onRemovePartSaved,
   onRemoveCompare,
   onClearCompare,
-  onCreateProject,
-  onRemoveProjectCalc,
+  projectActions,
   sessionTape,
   onLoadQuery,
   onRemoveTapeEntry,
@@ -95,6 +100,11 @@ export function CommandLibraryWorkspace({
   initialTab,
 }: CommandLibraryWorkspaceProps) {
   const t = useTranslations("command");
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
   // Asked for a tab (palette navigation), else the first non-empty section.
   const openOn: LibraryTab =
     initialTab ??
@@ -179,11 +189,8 @@ export function CommandLibraryWorkspace({
       {tab === "projects" && (
         <ProjectsTabContent
           projects={projects}
-          defaultUnit={defaultUnit}
-          defaultGradeId={settings.defaultGradeId}
-          onCreate={onCreateProject}
-          onLoadCalc={(calc) => onLoadInput(calc.input)}
-          onRemoveCalc={onRemoveProjectCalc}
+          actions={projectActions}
+          marginPercent={marginPercent}
         />
       )}
     </>
@@ -579,158 +586,59 @@ export function FolderGlyph({ size = 19 }: { size?: number }) {
   );
 }
 
+/**
+ * Projects on the phone: the same list (2c) and the same detail page (2d) the
+ * wide workspace shows, drilled into inside the sheet rather than pushed onto
+ * a stack — the sheet is one surface and the tabs above it stay put.
+ */
 function ProjectsTabContent({
   projects,
-  defaultUnit,
-  defaultGradeId,
-  onCreate,
-  onLoadCalc,
-  onRemoveCalc,
+  actions,
+  marginPercent,
 }: {
   projects: Project[];
-  defaultUnit: LengthUnit;
-  defaultGradeId: string;
-  onCreate: (name: string) => void;
-  onLoadCalc: (calc: Project["calculations"][number]) => void;
-  onRemoveCalc: (projectId: string, calcId: string) => void;
+  actions: ProjectActions;
+  marginPercent: number;
 }) {
-  const t = useTranslations("command");
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const { printing, printQuote } = useQuotePrinting(actions.onPrintQuote);
+  const open = openId ? (projects.find((project) => project.id === openId) ?? null) : null;
 
-  const submit = () => {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    onCreate(trimmed);
-    setNewName("");
+  const sheetActions: ProjectActions = {
+    ...actions,
+    onPrintQuote: printQuote,
+    onDelete: (id) => {
+      actions.onDelete(id);
+      setOpenId((current) => (current === id ? null : current));
+    },
   };
 
   return (
     <>
-      <div className="flex gap-2 mb-3">
-        <input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submit();
-          }}
-          placeholder={t("library.newProjectName")}
-          className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
-        />
-        <button
-          type="button"
-          onClick={submit}
-          disabled={!newName.trim()}
-          className="h-10 px-4 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {t("common.new")}
-        </button>
-      </div>
-
-      {projects.length === 0 ? (
-        <EmptyState
+      {open ? (
+        <ProjectDetail
           compact
-          icon={<TabIconProjects />}
-          title={t("projects.emptyTitle")}
-          body={t("library.emptyProjects")}
+          project={open}
+          actions={sheetActions}
+          marginPercent={marginPercent}
+          onBack={() => setOpenId(null)}
         />
       ) : (
-        <div className="space-y-2">
-          {projects.map((project) => {
-            const calcs = project.calculations;
-            const totalWeight = calcs.reduce(
-              (sum, c) => sum + (c.result.totalWeightKg ?? 0),
-              0,
-            );
-            const totalCost = calcs.reduce(
-              (sum, c) => sum + (c.result.grandTotalAmount ?? 0),
-              0,
-            );
-            const currency =
-              calcs[0]?.result.currency ?? ("EUR" as CurrencyCode);
-            const sym = CURRENCY_SYMBOLS[currency] ?? "€";
-            const isOpen = expanded === project.id;
-            return (
-              <div
-                key={project.id}
-                className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden"
-              >
-                <LibraryRow
-                  glyph={
-                    <span style={{ color: "var(--accent)" }}>
-                      <FolderGlyph />
-                    </span>
-                  }
-                  title={project.name}
-                  subtitle={
-                    calcs.length === 0
-                      ? t("library.emptyProject")
-                      : `${t("library.calcCount", { count: calcs.length })} · ${fsWeight(totalWeight)} ${fsWeightUnit()} · ${sym} ${fsMoney(totalCost)}`
-                  }
-                  onClick={() =>
-                    setExpanded(isOpen ? null : project.id)
-                  }
-                  trailing={
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`text-muted-faint transition-transform ${
-                        isOpen ? "rotate-90" : ""
-                      }`}
-                    >
-                      <path d="M9 18l6-6-6-6" />
-                    </svg>
-                  }
-                />
-                {isOpen && (
-                  <div className="border-t border-border-faint bg-[var(--surface-inset)]/40">
-                    {calcs.length === 0 ? (
-                      <div className="text-xs text-muted py-4 text-center">
-                        {t("library.noCalculationsYet")}
-                      </div>
-                    ) : (
-                      <div className="divide-y divide-border-faint">
-                        {calcs.map((calc) => {
-                          const fam = familyForInput(calc.input);
-                          return (
-                            <LibraryRow
-                              key={calc.id}
-                              indent
-                              glyph={
-                                fam ? (
-                                  <CommandGlyph fam={fam} size={15} />
-                                ) : null
-                              }
-                              title={
-                                calc.normalizedProfile?.shortLabel ??
-                                calc.result.profileLabel
-                              }
-                              subtitle={formatWeightPriceSubtitle(calc.result)}
-                              onClick={() => onLoadCalc(calc)}
-                              onRemove={() =>
-                                onRemoveCalc(project.id, calc.id)
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <ProjectList
+          compact
+          projects={projects}
+          marginPercent={marginPercent}
+          actions={sheetActions}
+          onOpenProject={setOpenId}
+        />
       )}
-      <span className="hidden" aria-hidden="true">
-        {defaultUnit}/{defaultGradeId}
-      </span>
+      {printing &&
+        createPortal(
+          <div className="fs-print">
+            <ProjectQuote project={printing} marginPercent={marginPercent} />
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

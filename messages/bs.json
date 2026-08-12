@@ -48,7 +48,8 @@
       "total": "Ukupno",
       "print": "Štampaj ili sačuvaj kao PDF",
       "printAria": "Štampaj ponudu za {name}",
-      "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno."
+      "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno.",
+      "short": "Ponuda"
     },
     "priceBook": {
       "title": "Cjenovnik",

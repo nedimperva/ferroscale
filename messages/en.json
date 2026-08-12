@@ -48,7 +48,8 @@
       "total": "Total",
       "print": "Print or save as PDF",
       "printAria": "Print a quote for {name}",
-      "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated."
+      "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated.",
+      "short": "Quote"
     },
     "priceBook": {
       "title": "Price book",

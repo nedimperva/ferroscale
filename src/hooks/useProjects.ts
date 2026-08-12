@@ -131,7 +131,8 @@ export interface ProjectCsvLabels {
   resolveProfileLabel?: (profileId: string, fallback: string) => string;
 }
 
-const MAX_PROJECTS = 20;
+/** A project list you can hold in your head; also the sync payload ceiling. */
+export const MAX_PROJECTS = 20;
 const MAX_CALCS_PER_PROJECT = 50;
 /** The right rail shows a history, not an audit trail — old lines fall off. */
 const MAX_ACTIVITY = 40;
