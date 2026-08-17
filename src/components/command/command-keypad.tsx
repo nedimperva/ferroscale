@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { haptic } from "@/lib/haptics";
 
+import type { CommandKeypadMode } from "./keypad-layout";
+
 interface CommandKeypadProps {
+  mode: CommandKeypadMode;
   onKey: (ch: string) => void;
   onPriceUnit: () => void;
   /** Insert a price token with an explicitly chosen unit (long-press picker). */
@@ -13,6 +16,16 @@ interface CommandKeypadProps {
   /** Hold on backspace: drop the whole token, not one character of it. */
   onBackToken: () => void;
   onEnter: () => void;
+  onNew: () => void;
+  onTweak: () => void;
+  onShare: () => void;
+  onLetters: () => void;
+  onNumbers: () => void;
+  onDone: () => void;
+  /** Show 123 on the letter pad — hidden while the next token is still a word. */
+  showNumbers: boolean;
+  /** Show Done on the number pad — only once the line already computes. */
+  showDone: boolean;
   priceUnitLabel: string;
   valid: boolean;
 }
@@ -36,7 +49,7 @@ const PRICE_UNIT_CHOICES = [
 const LONG_PRESS_MS = 450;
 
 const KEY_BASE =
-  "min-w-0 h-9 rounded-[10px] flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
+  "min-w-0 rounded-[10px] flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
 
 function variantClass(variant: "default" | "accent" | "dim"): string {
   if (variant === "accent") {
@@ -55,18 +68,34 @@ interface KeyProps {
   variant?: "default" | "accent" | "dim";
   mono?: boolean;
   big?: boolean;
+  tall?: boolean;
+  ariaLabel?: string;
 }
 
-function Key({ label, onPress, flex = 1, variant = "default", mono, big }: KeyProps) {
+function keyHeight(tall?: boolean): string {
+  return tall ? "h-11" : "h-9";
+}
+
+function Key({
+  label,
+  onPress,
+  flex = 1,
+  variant = "default",
+  mono,
+  big,
+  tall,
+  ariaLabel,
+}: KeyProps) {
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       onClick={() => {
         haptic("tap");
         onPress();
       }}
       style={{ flex }}
-      className={`${KEY_BASE} ${variantClass(variant)} ${mono ? "font-mono" : ""} ${big ? "text-lg" : "text-[15px]"}`}
+      className={`${KEY_BASE} ${keyHeight(tall)} ${variantClass(variant)} ${mono ? "font-mono" : ""} ${big ? "text-lg" : "text-[15px]"}`}
     >
       {label}
     </button>
@@ -82,11 +111,13 @@ function BackspaceKey({
   onBackToken,
   label,
   holdLabel,
+  tall,
 }: {
   onBack: () => void;
   onBackToken: () => void;
   label: string;
   holdLabel: string;
+  tall?: boolean;
 }) {
   const timerRef = useRef<number | null>(null);
   const longFiredRef = useRef(false);
@@ -124,7 +155,7 @@ function BackspaceKey({
       onPointerCancel={clearTimer}
       onContextMenu={(e) => e.preventDefault()}
       style={{ flex: 1.3 }}
-      className={`${KEY_BASE} ${variantClass("dim")} text-[15px]`}
+      className={`${KEY_BASE} ${keyHeight(tall)} ${variantClass("dim")} text-[15px]`}
     >
       ⌫
     </button>
@@ -151,6 +182,7 @@ function HoldPickerKey({
   align = "right",
   flex = 1,
   variant = "default",
+  tall,
 }: {
   label: string;
   onTap: () => void;
@@ -161,6 +193,7 @@ function HoldPickerKey({
   align?: "left" | "right";
   flex?: number;
   variant?: "default" | "dim";
+  tall?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -230,7 +263,7 @@ function HoldPickerKey({
         onPointerLeave={clearTimer}
         onPointerCancel={clearTimer}
         onContextMenu={(e) => e.preventDefault()}
-        className={`w-full ${KEY_BASE} ${variantClass(variant)} font-mono text-[15px]`}
+        className={`w-full ${KEY_BASE} ${keyHeight(tall)} ${variantClass(variant)} font-mono text-[15px]`}
       >
         {label}
       </button>
@@ -238,22 +271,163 @@ function HoldPickerKey({
   );
 }
 
+function KeypadChrome({
+  mode,
+  children,
+}: {
+  mode: CommandKeypadMode;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      data-keypad={mode}
+      className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-1.5"
+      // The keypad's background reaches the screen edge; only the keys have to
+      // clear the home indicator. Reserving the whole safe-area inset (34px on
+      // a notched iPhone) parked the bottom row well above the indicator and
+      // left a visible band of empty panel under it. The indicator itself is a
+      // ~5pt pill sitting ~8pt up, so ~14px of that inset is slack — take it
+      // back, and keep a floor for devices that report no inset at all.
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px) - 14px, 6px)" }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function CommandKeypad({
+  mode,
   onKey,
   onPriceUnit,
   onPriceUnitPick,
   onBack,
   onBackToken,
   onEnter,
+  onNew,
+  onTweak,
+  onShare,
+  onLetters,
+  onNumbers,
+  onDone,
+  showNumbers,
+  showDone,
   priceUnitLabel,
   valid,
 }: CommandKeypadProps) {
   const t = useTranslations("command");
+
+  if (mode === "actions") {
+    return (
+      <KeypadChrome mode={mode}>
+        <div className="flex gap-1.5">
+          <Key tall label={t("common.new")} variant="dim" onPress={onNew} />
+          <Key
+            tall
+            label={t("keypad.tweak")}
+            variant="accent"
+            onPress={onTweak}
+            ariaLabel={t("keypad.tweakAria")}
+          />
+          <Key tall label={t("common.share")} onPress={onShare} />
+        </div>
+      </KeypadChrome>
+    );
+  }
+
+  const insertUnit = (unit: string) => onKey(`${unit} `);
+
+  if (mode === "numpad") {
+    return (
+      <KeypadChrome mode={mode}>
+        <div className="flex items-center pb-1 pr-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              haptic("tap");
+              onLetters();
+            }}
+            className="rounded-[9px] border border-border-faint bg-[var(--surface)] px-2.5 py-1 text-[12px] font-bold text-muted"
+          >
+            {t("keypad.letters")}
+          </button>
+          {showDone && (
+            <button
+              type="button"
+              onClick={() => {
+                haptic("tap");
+                onDone();
+              }}
+              className="fs-track-wide ml-auto bg-transparent border-0 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--accent-text)]"
+            >
+              {t("common.done")}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-1">
+            <Key tall mono label="1" onPress={() => onKey("1")} />
+            <Key tall mono label="2" onPress={() => onKey("2")} />
+            <Key tall mono label="3" onPress={() => onKey("3")} />
+            <BackspaceKey
+              tall
+              onBack={onBack}
+              onBackToken={onBackToken}
+              label={t("keypad.backspace")}
+              holdLabel={t("keypad.backspaceHold")}
+            />
+          </div>
+          <div className="flex gap-1">
+            <Key tall mono label="4" onPress={() => onKey("4")} />
+            <Key tall mono label="5" onPress={() => onKey("5")} />
+            <Key tall mono label="6" onPress={() => onKey("6")} />
+            <Key tall mono big label="×" onPress={() => onKey("x")} />
+          </div>
+          <div className="flex gap-1">
+            <Key tall mono label="7" onPress={() => onKey("7")} />
+            <Key tall mono label="8" onPress={() => onKey("8")} />
+            <Key tall mono label="9" onPress={() => onKey("9")} />
+            <Key tall mono label="0" onPress={() => onKey("0")} />
+          </div>
+          <div className="flex gap-1">
+            <Key
+              tall
+              variant="dim"
+              label={t("keypad.space")}
+              onPress={() => onKey(" ")}
+              flex={2.2}
+            />
+            <Key tall mono big label="." onPress={() => onKey(".")} flex={0.8} />
+            <HoldPickerKey
+              tall
+              label="mm ▾"
+              onTap={() => insertUnit("mm")}
+              choices={LENGTH_UNIT_CHOICES}
+              onPick={insertUnit}
+              menuLabel={t("keypad.lengthUnitPicker")}
+              closeLabel={t("keypad.closeUnitPicker")}
+              align="left"
+            />
+            <HoldPickerKey
+              tall
+              label={`${priceUnitLabel} ▾`}
+              onTap={onPriceUnit}
+              choices={PRICE_UNIT_CHOICES}
+              onPick={onPriceUnitPick}
+              menuLabel={t("keypad.priceUnitPicker")}
+              closeLabel={t("keypad.closeUnitPicker")}
+              align="right"
+              variant="dim"
+            />
+            <Key tall variant="accent" label="↵" onPress={onEnter} />
+          </div>
+        </div>
+        {!valid && <span className="sr-only">{t("keypad.addLength")}</span>}
+      </KeypadChrome>
+    );
+  }
+
   return (
-    <div
-      className="flex-shrink-0 bg-[var(--surface-raised)] border-t border-border-faint px-[7px] pt-2"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 8px)" }}
-    >
+    <KeypadChrome mode={mode}>
       <div className="flex flex-col gap-1">
         <div className="flex gap-1">
           {ROW_NUM.map((k) => (
@@ -284,27 +458,31 @@ export function CommandKeypad({
           />
         </div>
         <div className="flex gap-1">
+          {showNumbers && (
+            <Key
+              variant="dim"
+              label={t("keypad.numbers")}
+              onPress={onNumbers}
+              flex={1.15}
+            />
+          )}
           <Key label="." mono big onPress={() => onKey(".")} flex={0.8} />
-          {/* Takes the width the `>` command key used to hold, so every other
-              key in the row keeps the size it had. */}
           <Key label={t("keypad.space")} variant="dim" onPress={() => onKey(" ")} flex={2.9} />
-          {/* Tap = mm; hold to pick mm / cm / m. */}
           <HoldPickerKey
             label="mm ▾"
-            onTap={() => onKey("mm")}
+            onTap={() => insertUnit("mm")}
             choices={LENGTH_UNIT_CHOICES}
-            onPick={(u) => onKey(u)}
+            onPick={insertUnit}
             menuLabel={t("keypad.lengthUnitPicker")}
             closeLabel={t("keypad.closeUnitPicker")}
             align="left"
             flex={1.35}
           />
-          {/* Tap = default rate token; hold to pick /kg /m /pc. */}
           <HoldPickerKey
             label={`${priceUnitLabel} ▾`}
             onTap={onPriceUnit}
             choices={PRICE_UNIT_CHOICES}
-            onPick={(u) => onPriceUnitPick(u)}
+            onPick={onPriceUnitPick}
             menuLabel={t("keypad.priceUnitPicker")}
             closeLabel={t("keypad.closeUnitPicker")}
             align="right"
@@ -314,9 +492,7 @@ export function CommandKeypad({
           <Key label="↵" variant="accent" onPress={onEnter} flex={1.4} />
         </div>
       </div>
-      {!valid && (
-        <span className="sr-only">{t("keypad.addLength")}</span>
-      )}
-    </div>
+      {!valid && <span className="sr-only">{t("keypad.addLength")}</span>}
+    </KeypadChrome>
   );
 }

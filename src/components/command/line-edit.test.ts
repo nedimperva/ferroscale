@@ -7,6 +7,7 @@ import {
   lineChips,
   pullLastChip,
   removeLineToken,
+  replaceLineToken,
 } from "./line-edit";
 
 describe("lineChips", () => {
@@ -53,6 +54,15 @@ describe("removeLineToken", () => {
 
   it("leaves the line alone for an item that isn't there", () => {
     expect(removeLineToken("hea120 6m", 3, 0)).toBe("hea120 6m");
+  });
+});
+
+describe("replaceLineToken", () => {
+  it("swaps a token in place without moving it to the caret", () => {
+    expect(replaceLineToken("hea120 6m x2 ", 0, 1, "7m")).toBe("hea120 7m x2 ");
+    expect(replaceLineToken("hea120 6m + ipe200 4m ", 1, 1, "5m")).toBe(
+      "hea120 6m + ipe200 5m ",
+    );
   });
 });
 

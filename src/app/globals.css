@@ -405,6 +405,49 @@ samp,
   font-variant-numeric: tabular-nums;
 }
 
+/* ── settings slider ───────────────────────────────────────────────────────
+   The one range input in the app (waste allowance). Browsers style ranges
+   from three different vendor pseudo-elements, none of which inherit, so the
+   track and thumb are spelled out here rather than in a component. */
+.fs-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+.fs-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-inset);
+}
+.fs-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-inset);
+}
+.fs-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+}
+.fs-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+}
+.fs-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* The printable quote. It lives in the normal DOM (so it needs no route, no
    dependency and no network) and is revealed only when printing — which is
    also how every OS produces a PDF. */

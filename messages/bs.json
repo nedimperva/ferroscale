@@ -48,7 +48,8 @@
       "total": "Ukupno",
       "print": "Štampaj ili sačuvaj kao PDF",
       "printAria": "Štampaj ponudu za {name}",
-      "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno."
+      "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno.",
+      "short": "Ponuda"
     },
     "priceBook": {
       "title": "Cjenovnik",
@@ -127,7 +128,15 @@
       "done": "Gotovo",
       "saveChanges": "Sačuvaj izmjene",
       "share": "Podijeli",
-      "open": "Otvori"
+      "open": "Otvori",
+      "rename": "Preimenuj",
+      "archive": "Arhiviraj",
+      "unarchive": "Vrati",
+      "back": "Nazad",
+      "edit": "Uredi",
+      "search": "Pretraži",
+      "more": "Više radnji",
+      "addProjectLong": "Dodaj u projekat"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -162,11 +171,11 @@
     "nav": {
       "workspace": "RADNI PROSTOR",
       "calculator": "Kalkulator",
-      "saved": "Sačuvano",
       "projects": "Projekti",
       "compare": "Poređenje",
       "settings": "Postavke",
-      "library": "Biblioteka"
+      "library": "Biblioteka",
+      "parts": "Dijelovi"
     },
     "status": {
       "live": "UŽIVO",
@@ -176,7 +185,8 @@
       "placeholder": "upišite ili dodirnite profil...",
       "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
       "aria": "FerroScale komandni upit",
-      "acceptGhost": "Dovrši: {text}"
+      "acceptGhost": "Dovrši: {text}",
+      "expandItem": "Stavka {index}, {name} — prikaži tokene"
     },
     "keypad": {
       "space": "razmak",
@@ -185,11 +195,19 @@
       "priceUnitPicker": "Jedinica cijene",
       "lengthUnitPicker": "Jedinica dužine",
       "backspace": "Brisanje",
-      "backspaceHold": "Zadržite da obrišete cijeli token"
+      "backspaceHold": "Zadržite da obrišete cijeli token",
+      "letters": "ABC",
+      "numbers": "123",
+      "tweak": "Mijenjaj",
+      "tweakAria": "Uredi dužinu, količinu ili cijenu"
     },
     "token": {
       "edit": "Uredi {token}",
-      "remove": "Ukloni {token}"
+      "remove": "Ukloni {token}",
+      "stepper": "Prilagodi {token}",
+      "stepUp": "Povećaj {token}",
+      "stepDown": "Smanji {token}",
+      "holdToStep": "Zadržite da pomaknete broj"
     },
     "preview": {
       "perPiece": "Po komadu",
@@ -263,7 +281,9 @@
       "pricing": "Cijene",
       "unitPrice": "Jedinična cijena",
       "grade": "Kvalitet",
-      "massBand": "Opseg mase {percent}"
+      "massBand": "Opseg mase {percent}",
+      "assembly": "Sklop · {count, plural, one {# dio} other {# dijela}}",
+      "assemblyParts": "Dijelovi sklopa"
     },
     "settings": {
       "mainResult": "Glavni rezultat",
@@ -273,7 +293,6 @@
       "priceBasis": "Osnova cijene",
       "length": "Dužina",
       "piece": "Komad",
-      "wastePercent": "Otpad %",
       "vat": "PDV",
       "defaultGrade": "Podrazumijevani kvalitet",
       "defaultUnit": "Podrazumijevana jedinica",
@@ -285,26 +304,56 @@
       "lightMode": "Svijetli način",
       "applyAcrossCommand": "Cijene, kvalitet i jedinice važe u cijelom Command prikazu.",
       "inlinePriceHint": "Podrazumijevanu cijenu možete prepisati sa {example}; na mobitelu unesite broj pa dodirnite tipku za cijenu.",
-      "subtitle": "cijene · jedinice · izgled",
-      "defaultResultUpper": "PODRAZUMIJEVANI REZULTAT",
-      "currencyUpper": "VALUTA",
-      "priceBasisUpper": "OSNOVA CIJENE",
       "unitPricePer": "JEDINIČNA CIJENA (PO {unit})",
-      "wastePercentUpper": "OTPAD %",
-      "defaultGradeUpper": "PODRAZUMIJEVANI KVALITET",
-      "lengthUnitFallback": "REZERVNA JEDINICA DUŽINE",
-      "languageUpper": "JEZIK",
+      "lengthUnitFallback": "Zadana jedinica dužine",
       "haptics": "Vibracija",
-      "hapticsUpper": "VIBRACIJA",
       "margin": "Marža",
-      "marginUpper": "MARŽA NA CIJENU",
       "locales": {
         "en": "Engleski",
         "bs": "Bosanski"
       },
-      "appearance": "IZGLED",
       "massTolerance": "Tolerancija mase",
-      "massToleranceUpper": "TOLERANCIJA MASE"
+      "deviceSubtitle": "primjenjuje se na svaki obračun na ovom uređaju",
+      "searchPlaceholder": "Pretraži postavke",
+      "searchAria": "Pretraži postavke",
+      "noMatchTitle": "Ništa ne odgovara",
+      "noMatchBody": "Probaj kraću riječ — pretraga gleda naziv i opis svake postavke.",
+      "groupsLabel": "Grupe",
+      "groups": {
+        "pricing": "Cijene",
+        "calculation": "Obračun",
+        "units": "Jedinice i format",
+        "appearance": "Izgled",
+        "priceBook": "Cjenovnik",
+        "sync": "Kopija i sinhronizacija",
+        "help": "Pomoć i o aplikaciji"
+      },
+      "groupHints": {
+        "pricing": "ono što kilograme pretvara u novac",
+        "calculation": "šta traka pretpostavi kad ne upišeš",
+        "units": "kako se čita goli broj",
+        "appearance": "jezik, tema i odziv",
+        "priceBook": "cijene koje čuvaš po kvalitetu",
+        "sync": "sigurnost podataka ovog uređaja",
+        "help": "sve što traka razumije"
+      },
+      "sheetGroupUnitsApp": "Jedinice i aplikacija",
+      "defaultRate": "Zadana cijena",
+      "defaultRateHint": "Po stavci se mijenja sa {example}",
+      "wasteAllowance": "Dodatak za otpad",
+      "wasteAllowanceHint": "Dodaje se svakoj stavci s cijenom",
+      "marginHint": "Vidi se na ponudi, nikad na kalkulatoru",
+      "vatOnHint": "Dodaje se na svaki ukupan iznos",
+      "vatOffHint": "Isključen — iznosi su neto",
+      "headlineNumber": "Glavni broj",
+      "headlineNumberHint": "Veliki broj na kalkulatoru",
+      "defaultGradeHint": "Koristi se kad stavka nema oznaku kvaliteta",
+      "massToleranceHint": "Crta ± raspon ispod rezultata",
+      "lengthUnitFallbackHint": "Goli broj se čita u ovoj jedinici",
+      "themeHint": "Auto prati postavku sistema",
+      "auto": "Auto",
+      "hapticsHint": "Odziv na dodir tastature",
+      "version": "Verzija {version}"
     },
     "docs": {
       "label": "Vodič",
@@ -445,9 +494,6 @@
       "openInCalculator": "Otvori u kalkulatoru"
     },
     "saved": {
-      "subtitleCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
-      "subtitleEmpty": "sačuvani izračuni",
-      "empty": "još ništa nije sačuvano — pritisnite Sačuvaj na izračunu",
       "addToCompare": "Dodaj za poređenje",
       "openAria": "Otvori {name} u kalkulatoru",
       "selectAria": "Označi {name}",
@@ -479,10 +525,6 @@
       "select": "Označi",
       "clearTags": "Očisti oznake",
       "selectedCount": "{count, plural, one {# označen} few {# označena} other {# označeno}}",
-      "matchCount": "prikazano {count} od {total}",
-      "emptyTitle": "Još ništa nije sačuvano",
-      "emptyBody": "Pritisnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje — s crtežom, težinom i današnjom cijenom.",
-      "emptyBodyMobile": "Dodirnite Sačuvaj na bilo kojem rezultatu da ga zadržite ovdje.",
       "noMatchTitle": "Nema rezultata",
       "noMatchBody": "Ništa ovdje ne odgovara toj pretrazi ili oznaci.",
       "clearFilters": "Očisti filtere",
@@ -502,7 +544,135 @@
       "emptyTitle": "Još nema projekata",
       "itemCount": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
       "emptyProjectHint": "prazno — dodajte izračun iz desnog panela",
-      "removeFromProject": "Ukloni iz projekta"
+      "removeFromProject": "Ukloni iz projekta",
+      "subtitleCounts": "{active} aktivnih · {archived} arhiviranih",
+      "searchPlaceholder": "Pretraži projekte",
+      "searchAria": "Pretraži projekte",
+      "clientsLabel": "Klijenti",
+      "allProjects": "Svi projekti",
+      "unassigned": "Bez klijenta",
+      "archived": "Arhivirano",
+      "columns": {
+        "project": "Projekat",
+        "client": "Klijent",
+        "items": "Stavke",
+        "weight": "Težina",
+        "value": "Vrijednost"
+      },
+      "updatedAgo": "ažurirano {ago}",
+      "emptyRow": "prazno — ništa nije dodano",
+      "openAria": "Otvori projekat {name}",
+      "sortLabel": "Sortiraj",
+      "sort": {
+        "updated": "Nedavno ažurirano",
+        "name": "Naziv",
+        "weight": "Najteže",
+        "value": "Najveća vrijednost",
+        "due": "Rok prvo"
+      },
+      "noMatchTitle": "Nema projekta",
+      "noMatchBody": "Pretraga gleda naziv projekta, klijenta i stavke unutra.",
+      "emptyArchivedTitle": "Arhiva je prazna",
+      "emptyArchivedBody": "Arhiviraj projekat kad posao ode i stiže ovdje.",
+      "status": {
+        "draft": "Nacrt",
+        "quoted": "Ponuđeno",
+        "archived": "Arhivirano"
+      },
+      "statusAria": "Status projekta {name}",
+      "backToProjects": "Projekti",
+      "addItem": "Dodaj stavku",
+      "stats": {
+        "items": "Stavke",
+        "weight": "Težina",
+        "materialCost": "Cijena materijala",
+        "quoted": "Ponuda +{margin}%"
+      },
+      "itemColumns": {
+        "item": "Stavka",
+        "grade": "Kvalitet",
+        "length": "Dužina",
+        "qty": "Kol.",
+        "cost": "Cijena"
+      },
+      "totalRow": "{count, plural, one {# stavka} other {# stavki}}",
+      "notesLabel": "Bilješke",
+      "moreDetails": "Bilješke i aktivnost",
+      "hideDetails": "Sakrij bilješke",
+      "notesPlaceholder": "Sve što radionica treba znati…",
+      "activityLabel": "Aktivnost",
+      "activity": {
+        "created": "Projekat kreiran",
+        "renamed": "Preimenovano u {to}",
+        "clientSet": "Klijent postavljen na {to}",
+        "clientCleared": "Klijent uklonjen",
+        "statusChanged": "Označeno kao {to}",
+        "dueDateSet": "Rok {to}",
+        "dueDateCleared": "Rok uklonjen",
+        "itemAdded": "{detail} dodano",
+        "itemsAdded": "{detail} stavki dodano",
+        "itemRemoved": "{detail} uklonjeno",
+        "qtyChanged": "{detail} kol. {from} → {to}",
+        "quotePrinted": "Ponuda štampana",
+        "empty": "Ovdje se još ništa nije desilo."
+      },
+      "clientLabel": "Klijent",
+      "clientPlaceholder": "Za koga je?",
+      "dueLabel": "Rok",
+      "dueOn": "rok {date}",
+      "createdOn": "kreirano {date}",
+      "editDetails": "Detalji projekta",
+      "qtyAria": "Komada — {name}",
+      "openInBar": "Otvori u kalkulatoru",
+      "duplicate": "Dupliciraj",
+      "duplicateHint": "Kopiraj projekat kao šablon",
+      "deleted": "Projekat obrisan",
+      "archivedToast": "Prebačeno u arhivu",
+      "unarchivedToast": "Vraćeno na aktivne",
+      "full": "20 projekata je maksimum — arhiviraj ili obriši jedan",
+      "itemsFull": "50 stavki je maksimum za jedan projekat",
+      "nothingToPrint": "Dodaj stavku prije štampanja ponude"
+    },
+    "parts": {
+      "subtitle": "Specifikacije koje često kucaš i sklopovi koje redovno praviš. Odaberi jedan i učitaće se u traku — količina i dužina ostaju izmjenjive.",
+      "tabs": {
+        "parts": "Dijelovi",
+        "assemblies": "Sklopovi",
+        "history": "Historija"
+      },
+      "pinnedLabel": "Zakačeno — uvijek prvo u prijedlozima",
+      "pinPlaceholder": "Zakači dio da ostane ovdje",
+      "allParts": "Svi dijelovi",
+      "allAssemblies": "Svi sklopovi",
+      "columns": {
+        "name": "Naziv",
+        "spec": "Specifikacija",
+        "kgm": "kg / m",
+        "used": "Korišteno",
+        "total": "Ukupno"
+      },
+      "use": "Koristi",
+      "useAria": "Učitaj {name} u traku",
+      "usedTimes": "{count}×",
+      "assemblyBadge": "sklop · {count} dijelova",
+      "emptyPartsTitle": "Još nema dijelova",
+      "emptyPartsBody": "Pritisni Sačuvaj na rezultatu i stiže ovdje, spreman za ponovo.",
+      "emptyAssembliesTitle": "Još nema sklopova",
+      "emptyAssembliesBody": "Dodaj drugu stavku sačuvanom dijelu i postaje sklop.",
+      "emptyHistoryTitle": "Historija je prazna",
+      "emptyHistoryBody": "Svaka stavka koju upišeš sa ↵ čuva se ovdje na ovom uređaju.",
+      "historySubtitle": "Stavke koje si računao na ovom uređaju, najnovije prvo — nigdje drugo se ne čuvaju.",
+      "clearHistory": "Očisti historiju",
+      "removeFromHistory": "Ukloni {query} iz historije",
+      "showOther": "Prikaži {label}",
+      "emptyPartsAllAssemblies": "Sve što si sačuvao ima više stavki, pa se nalazi pod Sklopovi.",
+      "emptyAssembliesHasParts": "Otvori dio i dodaj mu trenutnu stavku — dvije stavke čine sklop."
+    },
+    "time": {
+      "justNow": "upravo sad",
+      "minutes": "prije {count} min",
+      "hours": "prije {count} h",
+      "days": "{count, plural, one {prije # dan} other {prije # dana}}"
     }
   },
   "contact": {

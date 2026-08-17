@@ -16,6 +16,8 @@ export interface SavedCardActions {
   onAddPart?: () => void;
   onRemovePart?: (partId: string) => void;
   onCompare: () => void;
+  /** Put this part (or the whole assembly) into a project. */
+  onAddToProject?: () => void;
   onDuplicate: () => void;
   onTogglePin: () => void;
   onEdit: () => void;
@@ -25,7 +27,7 @@ export interface SavedCardActions {
   onToggleSelect?: () => void;
 }
 
-function PinIcon({ filled }: { filled: boolean }) {
+export function PinIcon({ filled }: { filled: boolean }) {
   return (
     <svg
       width="14"
@@ -128,7 +130,8 @@ function CardAction({
 }
 
 /** The thumbnail: the real cross-section when we can draw one, else the glyph. */
-function SavedThumb({ model, size = 46 }: { model: SavedCardModel; size?: number }) {
+/** The profile drawing that identifies an entry at a glance. */
+export function SavedThumb({ model, size = 46 }: { model: SavedCardModel; size?: number }) {
   return (
     <span
       className="flex items-center justify-center flex-shrink-0 rounded-[12px] overflow-hidden"
@@ -307,6 +310,11 @@ export function SavedCard({
           <CardAction label={t("saved.addToCompare")} onClick={actions.onCompare}>
             <DeskIcon name="compare" />
           </CardAction>
+          {actions.onAddToProject && (
+            <CardAction label={t("common.addProjectLong")} onClick={actions.onAddToProject}>
+              <DeskIcon name="projects" />
+            </CardAction>
+          )}
           {actions.onAddPart && (
             <CardAction label={t("saved.addPart")} onClick={actions.onAddPart}>
               <StackIcon />

@@ -258,10 +258,10 @@ describe("multi-item lines", () => {
 
     await h.user.keyboard("{Control>}s{/Control}");
     // One entry, not one per item — the tab count is the assertion that matters.
-    const savedTab = await h.findByRole("button", { name: /^Saved\s*1$/ });
-    await h.user.click(savedTab);
+    const partsTab = await h.findByRole("button", { name: /^Parts\s*1$/ });
+    await h.user.click(partsTab);
     await waitFor(() => {
-      expect(h.getAllByText(/Assembly \(2 parts\)/).length).toBeGreaterThan(0);
+      expect(h.getAllByText(/assembly · 2 parts/).length).toBeGreaterThan(0);
     });
   });
 });

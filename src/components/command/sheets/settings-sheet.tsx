@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
+import { useTheme } from "@/hooks/useTheme";
 import {
   hapticsStore,
   marginPercentStore,
@@ -13,55 +14,19 @@ import {
 import type { LengthUnit } from "@/lib/calculator/types";
 import {
   buildSettingsFields,
-  CHOICE_SELECT_THRESHOLD,
+  settingsFieldMatches,
+  settingsFieldValueLabel,
   type SettingsField,
+  type SettingsGroupId,
 } from "../settings-model";
+import { SettingsFieldControl, SettingsSeg, SettingsSwitch } from "../settings/settings-controls";
+import { SearchField } from "../search-field";
+import { EmptyState } from "../empty-state";
 import { SheetShell } from "./sheet-shell";
 import { SyncSection } from "./sync-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
-
-function SettingsRow({
-  label,
-  children,
-}: {
-  label: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3 border-b border-border-faint last:border-b-0">
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted whitespace-nowrap">
-        {label}
-      </span>
-      <div className="flex items-center gap-1.5 flex-wrap justify-end">{children}</div>
-    </div>
-  );
-}
-
-function SettingsPill({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`px-2.5 h-8 rounded-lg text-xs font-semibold border ${
-        active
-          ? "bg-[var(--accent-surface)] border-[var(--accent-border)] text-[var(--accent-text)]"
-          : "bg-[var(--surface)] border-border-faint text-foreground-secondary"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
 
 export function useCommandLocaleSwitch() {
   const locale = useLocale() as AppLocale;
@@ -123,76 +88,146 @@ export function CommandDocsSection({ className = "mt-4" }: { className?: string 
   );
 }
 
-const NUMBER_INPUT_CLASS =
-  "h-9 w-20 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground";
+/**
+ * The phone's Settings surface (2b): the same groups as the desktop pane, one
+ * card each, with the value on the right of every row. Rows edit in place —
+ * tapping one opens its control underneath rather than pushing a screen, so
+ * changing two numbers is two taps instead of four plus two backs.
+ *
+ * Rows whose control is already small and self-explanatory (a two- or
+ * three-way switch) skip the collapse and render inline: hiding a segmented
+ * control behind a tap would be ceremony, not economy.
+ */
 
-/** Renders one model field with the sheet's control language (pills/select/input). */
-function SheetField({ field }: { field: SettingsField }) {
-  const t = useTranslations("command");
-  if (field.kind === "choice") {
-    return (
-      <SettingsRow label={field.label}>
-        {field.options.length > CHOICE_SELECT_THRESHOLD ? (
-          <select
-            aria-label={field.label}
-            value={field.value}
-            onChange={(e) => field.onSelect(e.target.value)}
-            className="h-9 rounded-lg border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground"
-          >
-            {field.options.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.sub ? `${o.sub} · ${o.label}` : o.label}
-              </option>
-            ))}
-          </select>
-        ) : (
-          field.options.map((o) => (
-            <SettingsPill
-              key={o.value}
-              active={field.value === o.value}
-              onClick={() => field.onSelect(o.value)}
-            >
-              {o.label}
-            </SettingsPill>
-          ))
-        )}
-      </SettingsRow>
-    );
-  }
-  if (field.kind === "number") {
-    return (
-      <SettingsRow label={field.label}>
-        <input
-          aria-label={field.label}
-          type="number"
-          step={field.step}
-          min={field.min}
-          max={field.max}
-          value={field.value}
-          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-          className={NUMBER_INPUT_CLASS}
-        />
-      </SettingsRow>
-    );
-  }
+/** Sheet groups merge units into appearance — 2b's "Units & app". */
+const SHEET_GROUPS: Array<{ id: string; labelKey: string; groups: SettingsGroupId[] }> = [
+  { id: "pricing", labelKey: "settings.groups.pricing", groups: ["pricing"] },
+  { id: "calculation", labelKey: "settings.groups.calculation", groups: ["calculation"] },
+  { id: "unitsApp", labelKey: "settings.sheetGroupUnitsApp", groups: ["units", "appearance"] },
+];
+
+function isInlineField(field: SettingsField): boolean {
+  if (field.kind === "toggleNumber") return true;
+  return field.kind === "choice" && field.options.length <= 3 && !field.options.some((o) => o.sub);
+}
+
+function Chevron({ open }: { open: boolean }) {
   return (
-    <SettingsRow label={field.label}>
-      <SettingsPill active={field.on} onClick={() => field.onToggle(!field.on)}>
-        {field.on ? t("common.on") : t("common.off")}
-      </SettingsPill>
-      {field.on && (
-        <input
-          aria-label={field.label}
-          type="number"
-          step={field.step}
-          min={field.min}
-          max={field.max}
-          value={field.value}
-          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-          className={NUMBER_INPUT_CLASS}
-        />
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={`text-muted-faint transition-transform ${open ? "rotate-90" : ""}`}
+    >
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+function SheetFieldRow({
+  field,
+  open,
+  onToggleOpen,
+}: {
+  field: SettingsField;
+  open: boolean;
+  onToggleOpen: () => void;
+}) {
+  const t = useTranslations("command");
+
+  if (isInlineField(field)) {
+    return (
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className="min-w-0">
+          <div className="text-[14px] font-bold text-foreground">{field.label}</div>
+          {field.description && (
+            <div className="text-[11.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+          )}
+        </div>
+        <div className="flex-shrink-0">
+          {field.kind === "toggleNumber" ? (
+            <div className="flex items-center gap-2">
+              {field.on && (
+                <input
+                  aria-label={field.label}
+                  type="number"
+                  step={field.step}
+                  min={field.min}
+                  max={field.max}
+                  value={field.value}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  className="h-9 w-16 rounded-lg border border-border-faint bg-[var(--surface)] px-2.5 text-right font-mono text-sm text-foreground"
+                />
+              )}
+              <SettingsSwitch
+                on={field.on}
+                onChange={field.onToggle}
+                ariaLabel={`${field.label} — ${field.on ? t("common.on") : t("common.off")}`}
+              />
+            </div>
+          ) : field.kind === "choice" ? (
+            <SettingsSeg
+              compact
+              ariaLabel={field.label}
+              value={field.value}
+              options={field.options}
+              onChange={field.onSelect}
+            />
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggleOpen}
+        aria-expanded={open}
+        className="flex items-center justify-between gap-3 w-full px-4 py-3 text-left cursor-pointer"
+      >
+        <div className="min-w-0">
+          <div className="text-[14px] font-bold text-foreground">{field.label}</div>
+          {field.description && (
+            <div className="text-[11.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+          )}
+        </div>
+        <span className="flex items-center gap-1.5 flex-shrink-0">
+          <span className="font-mono text-[13px] font-bold text-foreground-secondary">
+            {settingsFieldValueLabel(field)}
+          </span>
+          <Chevron open={open} />
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-3.5 -mt-0.5 flex justify-end">
+          <SettingsFieldControl field={field} compact />
+        </div>
       )}
-    </SettingsRow>
+    </div>
+  );
+}
+
+function SheetCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] overflow-hidden divide-y divide-border-faint">
+      {children}
+    </div>
+  );
+}
+
+function SheetSectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fs-track-label text-[10px] font-bold text-muted uppercase mb-1.5 mt-4 px-1 first:mt-0">
+      {children}
+    </div>
   );
 }
 
@@ -204,8 +239,6 @@ interface CommandSettingsSheetProps {
   defaultUnit: LengthUnit;
   onSetDefaultUnit: (unit: LengthUnit) => void;
   onClose: () => void;
-  onToggleTheme: () => void;
-  dark: boolean;
 }
 
 export function CommandSettingsSheet({
@@ -216,12 +249,16 @@ export function CommandSettingsSheet({
   defaultUnit,
   onSetDefaultUnit,
   onClose,
-  onToggleTheme,
-  dark,
 }: CommandSettingsSheetProps) {
   const t = useTranslations("command");
   const { locale, setLocale } = useCommandLocaleSwitch();
+  const { theme, setTheme } = useTheme();
   const priceBook = usePriceBook();
+  const [openField, setOpenField] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showExtras, setShowExtras] = useState(false);
+
   const marginPercent = useSyncExternalStore(
     marginPercentStore.subscribe,
     marginPercentStore.getSnapshot,
@@ -237,6 +274,7 @@ export function CommandSettingsSheet({
     hapticsStore.getSnapshot,
     hapticsStore.getServerSnapshot,
   );
+
   const fields = buildSettingsFields({
     t,
     shared,
@@ -247,8 +285,8 @@ export function CommandSettingsSheet({
     onSetDefaultUnit,
     locale,
     setLocale,
-    dark,
-    onToggleTheme,
+    theme,
+    onSetTheme: setTheme,
     haptics,
     onSetHaptics: hapticsStore.set,
     marginPercent,
@@ -256,29 +294,115 @@ export function CommandSettingsSheet({
     massTolerancePercent,
     onSetMassTolerancePercent: massTolerancePercentStore.set,
   });
+
+  const filtering = search.trim().length > 0;
+  const visible = useMemo(
+    () => (filtering ? fields.filter((field) => settingsFieldMatches(field, search)) : fields),
+    [fields, search, filtering],
+  );
+
+  const row = (field: SettingsField) => (
+    <SheetFieldRow
+      key={field.id}
+      field={field}
+      open={openField === field.id}
+      onToggleOpen={() => setOpenField((current) => (current === field.id ? null : field.id))}
+    />
+  );
+
   return (
-    <SheetShell title={t("sheets.settings")} onClose={onClose}>
-      <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4">
-        {fields.map((field) => (
-          <SheetField key={field.id} field={field} />
-        ))}
-      </div>
-      <p className="text-[11px] text-muted mt-3 px-1">
-        {t("settings.applyAcrossCommand")}
-      </p>
-      <p className="text-[11px] text-muted mt-1 px-1">
-        {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
-      </p>
-      <div className="mt-4 rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4 py-3">
-        <PriceBookSection compact shared={shared} priceBook={priceBook} />
-      </div>
-      <InstallAppSection />
-      <CommandDocsSection />
-      <SyncSection />
+    <SheetShell
+      fullScreen
+      title={t("sheets.settings")}
+      onClose={onClose}
+      headerAction={
+        <button
+          type="button"
+          onClick={() => {
+            setSearching((on) => !on);
+            setSearch("");
+          }}
+          aria-label={t("settings.searchAria")}
+          aria-pressed={searching}
+          className="flex items-center justify-center rounded-[10px] cursor-pointer flex-shrink-0"
+          style={{
+            width: 32,
+            height: 32,
+            border: "1px solid var(--border-faint)",
+            background: searching ? "var(--accent-surface)" : "var(--surface-raised)",
+            color: searching ? "var(--accent-text)" : "var(--muted)",
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
+        </button>
+      }
+    >
+      {searching && (
+        <div className="mb-3">
+          <SearchField
+            autoFocus
+            compact
+            value={search}
+            onChange={setSearch}
+            placeholder={t("settings.searchPlaceholder")}
+            ariaLabel={t("settings.searchAria")}
+          />
+        </div>
+      )}
+
+      {filtering ? (
+        visible.length === 0 ? (
+          <EmptyState compact title={t("settings.noMatchTitle")} body={t("settings.noMatchBody")} />
+        ) : (
+          <SheetCard>{visible.map(row)}</SheetCard>
+        )
+      ) : (
+        SHEET_GROUPS.map((section) => {
+          const sectionFields = fields.filter((field) => section.groups.includes(field.group));
+          if (sectionFields.length === 0) return null;
+          return (
+            <div key={section.id}>
+              <SheetSectionLabel>{t(section.labelKey)}</SheetSectionLabel>
+              <SheetCard>{sectionFields.map(row)}</SheetCard>
+            </div>
+          );
+        })
+      )}
+
+      {!filtering && (
+        <>
+          <SheetSectionLabel>{t("settings.groups.priceBook")}</SheetSectionLabel>
+          <SheetCard>
+            <button
+              type="button"
+              onClick={() => setShowExtras((on) => !on)}
+              aria-expanded={showExtras}
+              className="flex items-center justify-between gap-3 w-full px-4 py-3 text-left cursor-pointer"
+            >
+              <span className="text-[14px] font-bold text-foreground">
+                {t("settings.groups.priceBook")} · {t("settings.groups.sync")}
+              </span>
+              <Chevron open={showExtras} />
+            </button>
+            {showExtras && (
+              <div className="px-4 py-3">
+                <PriceBookSection compact shared={shared} priceBook={priceBook} />
+                <InstallAppSection />
+                <SyncSection />
+              </div>
+            )}
+          </SheetCard>
+
+          <p className="text-[11px] text-muted mt-3 px-1">{t("settings.applyAcrossCommand")}</p>
+          <p className="text-[11px] text-muted mt-1 px-1">
+            {t("settings.inlinePriceHint", { example: `@${shared.unitPrice}/${shared.priceUnit}` })}
+          </p>
+          <CommandDocsSection />
+        </>
+      )}
     </SheetShell>
   );
 }
-
-/* ──────────────────────────────────────────────────────────────
- *  Sync section — Google Drive, in Command's voice
- * ────────────────────────────────────────────────────────────── */

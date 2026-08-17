@@ -7,7 +7,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { useSaved } from "@/hooks/useSaved";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { useProjects } from "@/hooks/useProjects";
+import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
@@ -16,6 +16,7 @@ import {
   cmdSuggest,
   cmdApplyInsert,
   cmdAppendLineItem,
+  cmdDetectStage,
   cmdParseLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
@@ -42,6 +43,7 @@ import {
   formatCommandSuggestionLabel,
   buildCommandSummary,
 } from "./command-copy";
+import { buildShareCardModel } from "./line-summary";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
@@ -53,12 +55,20 @@ import {
   editLineToken,
   lineChips,
   removeLineToken,
+  replaceLineToken,
 } from "./line-edit";
+import { TokenChip } from "./token-chip";
 import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
+import {
+  commandKeypadInsert,
+  commandKeypadLayout,
+  type CommandKeypadOverride,
+} from "./keypad-layout";
 import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
+import type { ProjectActions } from "./projects/project-actions";
 import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
@@ -70,6 +80,7 @@ import {
   readSharedQuery,
   sharedPricingDiffers,
 } from "@/lib/command/share";
+import { shareCalculation } from "@/lib/command/share-card";
 import { buildUsageSource, recordCommandUsage, usageStatsVersionStore } from "@/lib/usage-stats";
 import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
@@ -137,7 +148,22 @@ export function CommandShell() {
     clearAll: clearCompare,
     isDuplicate: isInCompare,
   } = useCompare();
-  const { projects, createProject, addCalculation, addCalculations, removeCalculation } = useProjects();
+  const {
+    projects,
+    createProject,
+    renameProject,
+    updateProjectMeta,
+    updateProjectDescription,
+    logQuotePrinted,
+    deleteProject,
+    restoreProject,
+    duplicateProject,
+    addCalculation,
+    addCalculations,
+    addTemplateCalculation,
+    removeCalculation,
+    updateCalculationQuantity,
+  } = useProjects();
   const { presetsForProfile } = usePresets();
   const priceBook = usePriceBook();
 
@@ -168,10 +194,14 @@ export function CommandShell() {
     clear: clearHistory,
   } = useQuickHistory();
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
+  /** A saved part or assembly waiting for a project to be picked for it. */
+  const [projectEntry, setProjectEntry] = useState<SavedEntry | null>(null);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  /** Letters / number pad chosen by hand. Cleared when the active item empties. */
+  const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
   const [isWideViewport, setIsWideViewport] = useState(false);
   /** Workspace, but narrow: one column, breakdown folded away. */
   const [isCompactDesktop, setIsCompactDesktop] = useState(false);
@@ -244,13 +274,6 @@ export function CommandShell() {
   const targetNote = commandTargetNote(p);
   /** The item under the caret, as the suggestion engine should see it. */
   const activeQuery = useMemo(() => activeItemText(query), [query]);
-
-  // The caret lives at the end of the line, so a capped chip box has to follow
-  // it down as tokens are added — otherwise typing walks off the visible area.
-  useEffect(() => {
-    const el = queryLineRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [query]);
 
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
@@ -403,13 +426,21 @@ export function CommandShell() {
   const shareLink = useCallback(() => {
     if (!p.valid) return;
     const url = buildShareUrl(query, window.location, shared);
-    if (isPhoneViewport && typeof navigator.share === "function") {
-      navigator.share({ url }).catch(() => {});
+    if (isPhoneViewport) {
+      const card = buildShareCardModel(t, p, line, query);
+      void shareCalculation({
+        summary: buildCommandSummary(t, p, line),
+        url,
+        title: card.title,
+        card,
+      }).then((how) => {
+        if (how === "copied") showToast(t("toast.copiedSummary"));
+      });
       return;
     }
     navigator.clipboard?.writeText(url).catch(() => {});
     showToast(t("toast.linkCopied"));
-  }, [p.valid, query, shared, isPhoneViewport, showToast, t]);
+  }, [p, line, query, shared, isPhoneViewport, showToast, t]);
 
   // The bookmark state of the line currently in the bar — drives the Save
   // button's filled/outlined look, so "is this one saved?" is answerable
@@ -568,29 +599,95 @@ export function CommandShell() {
     [defaultUnit, shared],
   );
 
+  /** Put a history line back in the bar, fully chipped. */
+  const loadQuery = useCallback((entry: string) => {
+    setQuery(`${entry} `);
+    setSheet(null);
+  }, []);
+
+  /** Every part of a saved entry as one `+`-joined command line. */
+  const savedEntryQuery = useCallback(
+    (entry: SavedEntry) =>
+      entry.parts
+        .map((part) =>
+          inputToQuery(part.input, defaultUnit, {
+            defaultGradeId: shared.defaultGradeId,
+            omitPrice: true,
+          }),
+        )
+        .filter(Boolean)
+        .join(" + "),
+    [defaultUnit, shared.defaultGradeId],
+  );
+
   /**
    * Open a saved entry. Counts the use (so "most used" sorting means
    * something) and restores at today's rate — `omitPrice` keeps the bar
    * showing the same money the card showed.
+   *
+   * An assembly restores as the whole line. Restoring only `entry.input` put
+   * one part of a three-part gate frame in the bar and dropped the rest, which
+   * looked like the assembly had been silently truncated.
    */
   const loadSavedEntry = useCallback(
     (entry: SavedEntry) => {
       markSavedUsed(entry.id);
-      const q = inputToQuery(entry.input, defaultUnit, {
-        defaultGradeId: shared.defaultGradeId,
-        omitPrice: true,
-      });
+      const q = savedEntryQuery(entry);
       if (q) setQuery(`${q} `);
       setSheet(null);
     },
-    [markSavedUsed, defaultUnit, shared.defaultGradeId],
+    [markSavedUsed, savedEntryQuery],
   );
 
+  /**
+   * A saved entry's parts, re-run at today's pricing. The stored results are
+   * a snapshot of the rate at save time; a project built from them would carry
+   * prices the rest of the app has already moved on from.
+   */
+  const repriceSavedEntry = useCallback(
+    (entry: SavedEntry) =>
+      entry.parts
+        .map((part) => {
+          const q = inputToQuery(part.input, defaultUnit, {
+            defaultGradeId: shared.defaultGradeId,
+            omitPrice: true,
+          });
+          const parsed = q ? cmdParse(`${q} `, parserSettings) : null;
+          if (!parsed?.calc) return null;
+          return {
+            id: part.id,
+            name: part.name,
+            input: parsed.calc.input,
+            result: parsed.calc.result,
+            normalizedProfile: part.normalizedProfile,
+          };
+        })
+        .filter((part): part is NonNullable<typeof part> => part != null),
+    [defaultUnit, shared.defaultGradeId, parserSettings],
+  );
+
+  /**
+   * Commit whatever the picker was opened for. A saved entry with one part is
+   * an ordinary item; an assembly goes in as a template entry so the project
+   * keeps it as one named line with its parts behind it, the way it was saved.
+   */
   const handlePickProject = useCallback(
     (projectId: string) => {
-      if (!projectCalc) return;
-      const ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
+      let ok = false;
+      if (projectEntry) {
+        const parts = repriceSavedEntry(projectEntry);
+        if (parts.length > 1) {
+          ok = addTemplateCalculation(projectId, projectEntry.name, parts, 1);
+        } else if (parts.length === 1) {
+          ok = addCalculation(projectId, parts[0].input, parts[0].result);
+        }
+      } else if (projectCalc) {
+        ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
+      } else {
+        return;
+      }
       setProjectCalc(null);
+      setProjectEntry(null);
       const project = projects.find((p) => p.id === projectId);
       showToast(
         ok
@@ -598,7 +695,16 @@ export function CommandShell() {
           : t("toast.projectFull"),
       );
     },
-    [projectCalc, addCalculation, projects, showToast, t],
+    [
+      projectCalc,
+      projectEntry,
+      repriceSavedEntry,
+      addCalculation,
+      addTemplateCalculation,
+      projects,
+      showToast,
+      t,
+    ],
   );
 
   const addCompareEntry = useCallback(
@@ -617,6 +723,81 @@ export function CommandShell() {
     if (!p.calc) return;
     addCompareEntry(p.calc.input, p.calc.result);
   }, [p.calc, addCompareEntry]);
+
+  /**
+   * The Projects surface's whole vocabulary, assembled once. Deleting shows an
+   * undo toast rather than a confirm dialog: the tombstone is reversible and a
+   * modal for a project you can put back is a tax on the common case.
+   */
+  const projectActions: ProjectActions = useMemo(
+    () => ({
+      onCreate: (name: string) => {
+        if (projects.length >= MAX_PROJECTS) {
+          showToast(t("projects.full"));
+          return;
+        }
+        return createProject(name);
+      },
+      onRename: renameProject,
+      onUpdateMeta: (id, patch) => {
+        updateProjectMeta(id, patch);
+        if (patch.status === "archived") showToast(t("projects.archivedToast"));
+        else if (patch.status === "draft") showToast(t("projects.unarchivedToast"));
+      },
+      onUpdateNotes: updateProjectDescription,
+      onDuplicate: (id) => {
+        const copy = duplicateProject(id);
+        showToast(copy ? t("toast.duplicated") : t("projects.full"));
+      },
+      onDelete: (id) => {
+        deleteProject(id);
+        showActionToast(t("projects.deleted"), {
+          label: t("common.undo"),
+          onAction: () => {
+            restoreProject(id);
+            showToast(t("toast.restored"));
+          },
+        });
+      },
+      onRemoveItem: removeCalculation,
+      onSetItemQuantity: updateCalculationQuantity,
+      onOpenItem: loadInput,
+      onAddItem: (projectId: string) => {
+        if (!p.calc) {
+          showToast(t("toast.addLength"));
+          return false;
+        }
+        const ok = addCalculation(projectId, p.calc.input, p.calc.result);
+        const name = projects.find((project) => project.id === projectId)?.name;
+        showToast(
+          ok
+            ? t("toast.addedToProject", { project: name ?? t("common.project") })
+            : t("projects.itemsFull"),
+        );
+        return ok;
+      },
+      onPrintQuote: (project) => logQuotePrinted(project.id),
+    }),
+    [
+      projects,
+      createProject,
+      renameProject,
+      updateProjectMeta,
+      updateProjectDescription,
+      duplicateProject,
+      deleteProject,
+      restoreProject,
+      removeCalculation,
+      updateCalculationQuantity,
+      loadInput,
+      addCalculation,
+      logQuotePrinted,
+      p.calc,
+      showToast,
+      showActionToast,
+      t,
+    ],
+  );
 
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
@@ -667,14 +848,19 @@ export function CommandShell() {
         setQuery((q) => cmdAppendLineItem(q));
         return;
       }
+      setKeypadOverride(null);
       setQuery((q) => applyToActiveItem(q, (text) => cmdApplyInsert(text, item)));
     },
     [doSave],
   );
 
   const onKey = useCallback((ch: string) => {
-    setQuery((q) => q + ch);
-  }, []);
+    setQuery((q) =>
+      applyToActiveItem(q, (text) =>
+        commandKeypadInsert(text, ch, cmdParse(text, parserSettings)),
+      ),
+    );
+  }, [parserSettings]);
   const insertPriceToken = useCallback(
     (unit: string) => {
       setQuery((q) => {
@@ -727,8 +913,16 @@ export function CommandShell() {
     };
   }, [quickHistory, parserSettings]);
 
-  /** The keypad's ↵. */
-  const onEnter = logToSession;
+  /** ↵ commits the open token (a space) so the next kind can start; if the
+   *  token is already committed, it logs the line to the session. */
+  const onEnter = useCallback(() => {
+    const text = activeItemText(query);
+    if (text.trim() !== "" && !/\s$/.test(text)) {
+      onKey(" ");
+      return;
+    }
+    logToSession();
+  }, [query, onKey, logToSession]);
 
   // Focus with the caret at the end (after chip edit/remove) — select-all
   // would make the next keystroke wipe the whole query.
@@ -780,19 +974,81 @@ export function CommandShell() {
   const chips = useMemo(() => lineChips(query), [query]);
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
+  if (activeQuery.trim() === "" && keypadOverride !== null) {
+    setKeypadOverride(null);
+  }
+  const keypadStage = cmdDetectStage(activeQuery, p);
+  const keypadMode = commandKeypadLayout(activeQuery, p, keypadOverride);
+  const keypadShowNumbers =
+    keypadMode === "letters" &&
+    (keypadOverride === "letters" ||
+      (keypadStage.stage !== "empty" && keypadStage.stage !== "profile"));
   // Faint completion drawn after the caret (profile letters / recent prefix).
   const ghost = computeGhost(partialToken ?? "", sug);
   const acceptGhost = () => {
     if (ghost && sug.items[0]) onSuggest(sug.items[0]);
   };
+  /**
+   * Which item shows its tokens on the phone. A `+`-joined line of four items
+   * is far more chips than a phone's query line can hold, and the old capped
+   * scroll window showed them sliced across half-rows. Only the item you are
+   * working on is spelled out; the rest are one chip each, and the hero above
+   * already lists every item with its weight and price.
+   *
+   * `null` means the item the caret is in — the last one — which is what any
+   * keystroke goes into. Tapping another item's chip parks the expansion there
+   * until the query changes for a reason other than editing that item.
+   */
+  const [expandedItem, setExpandedItem] = useState<number | null>(null);
+  const [expandSeed, setExpandSeed] = useState(query);
+  if (expandSeed !== query) {
+    setExpandSeed(query);
+    setExpandedItem(null);
+  }
+  const expandedIndex =
+    expandedItem != null && expandedItem < chips.groups.length
+      ? expandedItem
+      : chips.groups.length - 1;
+
+  /** An edit inside the open item is not a reason to close it. */
+  const keepExpanded = (item: number, next: string) => {
+    setQuery(next);
+    setExpandedItem(item);
+    setExpandSeed(next);
+  };
   const removeTokenAt = (item: number, idx: number) => {
-    setQuery(removeLineToken(query, item, idx));
+    keepExpanded(item, removeLineToken(query, item, idx));
+  };
+  const replaceTokenAt = (item: number, idx: number, next: string) => {
+    keepExpanded(item, replaceLineToken(query, item, idx, next));
   };
   // Pull a token back to the end of its own item as the editable partial (the
   // parser is order-tolerant within an item, so the reordering is free).
   const editTokenAt = (item: number, idx: number) => {
-    setQuery(editLineToken(query, item, idx));
+    keepExpanded(item, editLineToken(query, item, idx));
   };
+  // The caret lives at the end of the line, so the row has to follow it
+  // sideways as tokens are added — otherwise typing walks off the visible area.
+  useEffect(() => {
+    const el = queryLineRef.current;
+    if (!el) return;
+    // Opening an earlier item scrolls to that item; otherwise the caret is the
+    // last thing in the row, so the end of the scroll *is* the caret and the
+    // line follows what is being typed.
+    const opened = el.querySelector<HTMLElement>("[data-expanded-start]");
+    if (opened) {
+      el.scrollLeft += opened.getBoundingClientRect().left - el.getBoundingClientRect().left - 12;
+    } else {
+      el.scrollLeft = el.scrollWidth;
+    }
+  }, [query, expandedIndex]);
+
+  /** One chip standing in for a whole item, labelled as the hero numbers it. */
+  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
+    line.items[group.item]?.parse.name ||
+    group.tokens[0] ||
+    partialToken ||
+    String(group.item + 1);
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
   // Saved-library actions, identical on every viewport.
@@ -809,6 +1065,10 @@ export function CommandShell() {
     onAddPartSaved: p.calc ? addCurrentAsPart : undefined,
     onRemovePartSaved: (entry: SavedEntry, partId: string) => {
       removePartFromSaved(entry.id, partId);
+    },
+    onAddSavedToProject: (entry: SavedEntry) => {
+      setSheet(null);
+      setProjectEntry(entry);
     },
   };
   const helpSheet = effectiveSheet === "help" ? (
@@ -863,6 +1123,8 @@ export function CommandShell() {
             setModeOverride(null);
           }}
           sessionTape={quickHistory.slice(0, 8)}
+          history={quickHistory}
+          onLoadQuery={loadQuery}
           onSaveSessionAsProject={saveSessionAsProject}
           onRemoveTapeEntry={removeHistoryEntry}
           onClearTape={clearHistory}
@@ -882,7 +1144,7 @@ export function CommandShell() {
           onAddToProject={openProjectModal}
           onLoadInput={loadInput}
           onCreateProject={createProject}
-          onRemoveProjectCalc={removeCalculation}
+          projectActions={projectActions}
           currentSaved={!!currentSavedEntry}
           onOpenHelp={() => setSheet("help")}
           onRemoveSavedMany={removeSavedEntries}
@@ -890,10 +1152,13 @@ export function CommandShell() {
         />
         {helpSheet}
         {savedEditSheet}
-        {projectCalc && (
+        {(projectCalc || projectEntry) && (
           <CommandProjectPickerSheet
-            projects={projects}
-            onClose={() => setProjectCalc(null)}
+            projects={projects.filter((project) => !isArchivedProject(project))}
+            onClose={() => {
+              setProjectCalc(null);
+              setProjectEntry(null);
+            }}
             onCreateProject={createProject}
             onPickProject={(project) => handlePickProject(project.id)}
           />
@@ -1071,7 +1336,7 @@ export function CommandShell() {
 
             <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
               {line.multi ? (
-                <LineItems line={line} compact />
+                <LineItems line={line} compact maxRows={3} />
               ) : p.valid && p.kgm != null ? (
                 <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
                   <span>
@@ -1261,7 +1526,10 @@ export function CommandShell() {
           <div className="flex-1 min-h-[6px]" />
 
           {/* SUGGESTION BAR */}
-          <div className="pb-1.5">
+          {/* The gap under the strip has to clear the query line's 3px focus
+              ring, not just its border box — at pb-1.5 the chips sat on the
+              glow and the two read as one collided control. */}
+          <div className="pb-2.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
               <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
                 {formatCommandHint(t, sug.hint)}
@@ -1285,10 +1553,15 @@ export function CommandShell() {
               // happened to produce, and the second row was clipped by the
               // query line — the layout has no vertical give to lend it.
               data-suggestion-strip=""
-              className="flex gap-1.5 px-[18px] pb-0.5"
+              // `overflowY: hidden` clips at the padding edge, so the chips
+              // need room below them or their own borders get shaved off.
+              className="flex gap-1.5 px-[18px] pb-1"
               style={{ overflowX: "auto", overflowY: "hidden" }}
             >
-              {sug.items.map((it, i) => (
+              {(isPhoneViewport
+                ? sug.items.filter((it) => it.kind !== "save")
+                : sug.items
+              ).map((it, i) => (
                 <button
                   key={i}
                   ref={i === 0 ? firstSuggestionRef : undefined}
@@ -1381,15 +1654,20 @@ export function CommandShell() {
               <div
                 ref={queryLineRef}
                 data-query-line=""
-                // Capped at two rows and scrolled to the caret. Uncapped, a
-                // long line grew to four rows and pushed the keypad's bottom
-                // row off the screen — the input and its keys are the two
-                // things that must always be visible.
-                className="flex items-center gap-1.5 flex-wrap rounded-[15px] px-3 py-2.5"
+                onClick={() => {
+                  if (keypadMode === "actions") setKeypadOverride("numpad");
+                }}
+                // One row that scrolls sideways to the caret, never wrapping.
+                // Wrapping meant the line's height depended on the token count:
+                // capped, it sliced chips across half-rows; uncapped, a long
+                // line grew to four rows and pushed the keypad's bottom row off
+                // the screen. A fixed height keeps the input and its keys where
+                // they were, whatever the line holds.
+                className="flex items-center gap-1.5 flex-nowrap rounded-[15px] px-3 py-2.5"
                 style={{
-                  minHeight: 50,
-                  maxHeight: 92,
-                  overflowY: "auto",
+                  height: 50,
+                  overflowX: "auto",
+                  overflowY: "hidden",
                   border: "1.5px solid var(--accent-border)",
                   background: "var(--surface)",
                   boxShadow: dark
@@ -1398,13 +1676,13 @@ export function CommandShell() {
                 }}
               >
                 <span
-                  className="font-mono text-base font-bold mr-0.5"
+                  className="font-mono text-base font-bold mr-0.5 flex-shrink-0"
                   style={{ color: "var(--accent)" }}
                 >
                   ›
                 </span>
                 {chipCount === 0 && !partialToken && (
-                  <span className="font-mono text-sm text-muted-faint">
+                  <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">
                     {t("query.placeholder")}
                   </span>
                 )}
@@ -1419,19 +1697,45 @@ export function CommandShell() {
                         +
                       </span>
                     )}
-                    {group.tokens.map((tok, i) => (
-                      <TokenChip
-                        key={`${tok}-${i}`}
-                        tok={tok}
-                        kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                        onEdit={() => editTokenAt(group.item, i)}
-                        onRemove={() => removeTokenAt(group.item, i)}
-                      />
-                    ))}
+                    {group.item === expandedIndex ? (
+                      group.tokens.map((tok, i) => (
+                        <TokenChip
+                          key={`${tok}-${i}`}
+                          // Only an item opened by hand needs seeking to; the
+                          // last item is where the caret already is.
+                          anchor={i === 0 && group.item !== chips.groups.length - 1}
+                          tok={tok}
+                          kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                          onEdit={() => editTokenAt(group.item, i)}
+                          onRemove={() => removeTokenAt(group.item, i)}
+                          onReplace={(next) => replaceTokenAt(group.item, i, next)}
+                        />
+                      ))
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedItem(group.item)}
+                        aria-label={t("query.expandItem", {
+                          index: group.item + 1,
+                          name: collapsedItemLabel(group),
+                        })}
+                        className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-sm font-semibold whitespace-nowrap"
+                        style={{
+                          padding: "5px 10px",
+                          border: "1px solid var(--border-faint)",
+                          background: "var(--surface-inset)",
+                          color: "var(--foreground-secondary)",
+                        }}
+                      >
+                        <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
+                        {collapsedItemLabel(group)}
+                        <span className="text-[10px] text-muted-faint">▸</span>
+                      </button>
+                    )}
                   </Fragment>
                 ))}
                 {partialToken && (
-                  <span className="font-mono text-sm font-semibold text-foreground">
+                  <span className="font-mono text-sm font-semibold text-foreground flex-shrink-0">
                     {partialToken}
                   </span>
                 )}
@@ -1440,14 +1744,14 @@ export function CommandShell() {
                     type="button"
                     onClick={acceptGhost}
                     aria-label={t("query.acceptGhost", { text: ghost.trim() })}
-                    className="font-mono text-sm font-semibold whitespace-pre"
+                    className="font-mono text-sm font-semibold whitespace-pre flex-shrink-0"
                     style={{ color: "var(--muted-faint)" }}
                   >
                     {ghost}
                   </button>
                 )}
                 <span
-                  className="w-0.5 h-5 rounded-sm"
+                  className="w-0.5 h-5 rounded-sm flex-shrink-0"
                   style={{
                     background: "var(--accent)",
                     animation: "fsBlink 1s steps(1) infinite",
@@ -1459,12 +1763,24 @@ export function CommandShell() {
 
           {/* On-screen keypad */}
           <CommandKeypad
+            mode={keypadMode}
             onKey={onKey}
             onPriceUnit={onPriceUnit}
             onPriceUnitPick={insertPriceToken}
             onBack={onBack}
             onBackToken={onBackToken}
             onEnter={onEnter}
+            onNew={newCalc}
+            onTweak={() => setKeypadOverride("numpad")}
+            onShare={shareLink}
+            onLetters={() => setKeypadOverride("letters")}
+            onNumbers={() => setKeypadOverride("numpad")}
+            onDone={() => {
+              setQuery((q) => (/\s$/.test(q) || q.trim() === "" ? q : `${q} `));
+              setKeypadOverride(null);
+            }}
+            showNumbers={keypadShowNumbers}
+            showDone={keypadMode === "numpad" && p.valid}
             priceUnitLabel={priceUnitLabel}
             valid={p.valid}
           />
@@ -1485,6 +1801,10 @@ export function CommandShell() {
               onCopyValue={() => {
                 setSheet(null);
                 copyValue();
+              }}
+              onCopySummary={() => {
+                setSheet(null);
+                copySummary();
               }}
               onShareLink={() => {
                 setSheet(null);
@@ -1513,8 +1833,6 @@ export function CommandShell() {
               defaultUnit={defaultUnit}
               onSetDefaultUnit={defaultUnitStore.set}
               onClose={() => setSheet(null)}
-              onToggleTheme={cycleTheme}
-              dark={dark}
             />
           )}
           {effectiveSheet === "library" && (
@@ -1534,26 +1852,28 @@ export function CommandShell() {
               }}
               sessionTape={quickHistory}
               onLoadQuery={(entry) => {
-                setQuery(`${entry} `);
-                setSheet(null);
+                loadQuery(entry);
                 setLibraryTab(null);
               }}
               onRemoveTapeEntry={removeHistoryEntry}
+              onClearHistory={clearHistory}
               onSaveSessionAsProject={saveSessionAsProject}
               onLoadInput={loadInput}
               {...savedHandlers}
               onRemoveCompare={removeCompareItem}
               onClearCompare={clearCompare}
-              onCreateProject={createProject}
-              onRemoveProjectCalc={removeCalculation}
+              projectActions={projectActions}
             />
           )}
           {helpSheet}
           {savedEditSheet}
-          {projectCalc && (
+          {(projectCalc || projectEntry) && (
             <CommandProjectPickerSheet
-              projects={projects}
-              onClose={() => setProjectCalc(null)}
+              projects={projects.filter((project) => !isArchivedProject(project))}
+              onClose={() => {
+                setProjectCalc(null);
+                setProjectEntry(null);
+              }}
               onCreateProject={createProject}
               onPickProject={(project) => handlePickProject(project.id)}
             />
@@ -1564,42 +1884,6 @@ export function CommandShell() {
           <ResultAnnouncer text={liveResultText} />
       </div>
     </div>
-  );
-}
-
-function TokenChip({
-  tok,
-  kindClass,
-  onEdit,
-  onRemove,
-}: {
-  tok: string;
-  kindClass: string;
-  onEdit: () => void;
-  onRemove: () => void;
-}) {
-  const t = useTranslations("command");
-  return (
-    <span
-      className={`inline-flex items-stretch font-mono text-sm font-semibold rounded-md ${kindClass}`}
-    >
-      <button
-        type="button"
-        onClick={onEdit}
-        aria-label={t("token.edit", { token: tok })}
-        className="pl-2 pr-0.5 py-1.5 rounded-l-md"
-      >
-        {tok}
-      </button>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={t("token.remove", { token: tok })}
-        className="flex items-center justify-center w-7 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
-      >
-        ×
-      </button>
-    </span>
   );
 }
 

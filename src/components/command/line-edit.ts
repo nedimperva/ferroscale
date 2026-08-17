@@ -71,6 +71,19 @@ export function removeLineToken(query: string, item: number, token: number): str
   return withItemTokens(query, item, (tokens) => tokens.filter((_, i) => i !== token));
 }
 
+/** Swap one token in place — used by the chip stepper so a nudge does not
+ *  pull the token to the caret the way tap-to-edit does. */
+export function replaceLineToken(
+  query: string,
+  item: number,
+  token: number,
+  next: string,
+): string {
+  return withItemTokens(query, item, (tokens) =>
+    tokens.map((current, i) => (i === token ? next : current)),
+  );
+}
+
 /**
  * Pull a token back to the end of *its own item* as the editable partial. The
  * parser is order-tolerant within an item, so the reordering is free.

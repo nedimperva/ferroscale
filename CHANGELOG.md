@@ -5,6 +5,128 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.19.0] - 2026-08-12
+
+The three surfaces that were never really designed — Settings, Projects and
+Saved — rebuilt from the 2a–2e proposals. The navigation is untouched: the same
+tabs in the same places, on every viewport. Only what is *inside* them changed.
+
+### Added
+
+- **Projects have a client, a status and a due date**, and keep an activity log
+  of what happened to them. All four are optional fields on the existing synced
+  `Project`, so old data loads unchanged. The log stores event *kinds*, not
+  sentences, so it reads in whatever language it is read in
+- **A project detail page** — the screen the app did not have. Stat tiles
+  (items, weight, material cost, quoted with margin), an item table whose piece
+  counts are editable in place, project notes, and the activity rail. Reached by
+  drilling into the Projects tab, on the wide workspace and in the library sheet
+  alike; no new route and no new tab
+- **Project row actions**: rename inline, duplicate as a template, archive when
+  the job ships, delete with an undo toast. Archived projects move to their own
+  bucket instead of sitting in the active list, and stop offering themselves as
+  a target for "add to project"
+- **A client rail on the Projects list**, with search and sort. `lib/projects/query.ts`
+  holds the filtering, pure and tested
+- **Settings groups and a search box.** Pricing, Calculation, Units & format,
+  Appearance, Price book, Backup & sync, Help & about. Search crosses groups and
+  keeps each match under its own heading
+- **Every setting says what it does**, in a line under its name. A settings
+  screen that only lists names makes the reader guess
+- **Parts / Assemblies / History** as the shape of the old Saved library. The
+  split is the data's own — an entry with more than one part is an assembly.
+  Pinned parts lead the list as cards, every row leads with a Use button and
+  carries its use count, and History is the command history with Use, remove and
+  clear
+- **Theme is Light / Dark / Auto.** `useTheme` has stored `system` all along;
+  the settings surface simply never offered it
+
+### Changed
+
+- **Saved is called Parts**, on the tab, the page and the library sheet. It is
+  the name for what people keep in it: specs they re-run, not results they
+  happened to bookmark
+- **The rate's per-kg/per-m/per-piece basis moved into the rate row.** Splitting
+  one price across two settings rows asked the reader to join them up
+- **The phone settings sheet edits in place.** Grouped cards with the value on
+  the right; tapping a row opens its control underneath instead of pushing a
+  screen, so changing two numbers is two taps rather than four plus two backs
+- **Editing a project item's quantity re-runs the engine** rather than scaling
+  the stored result — waste, VAT and rounding are not linear in quantity
+- **A part or an assembly can go straight into a project** from its row menu.
+  It is re-priced at today's rate on the way in (the stored result is a
+  snapshot of the rate at save time), and an assembly lands as one named line
+  with its parts behind it rather than as loose items. A project template row
+  now reports how many of the assembly went in, not its first part's count
+- **The phone keypad follows the query.** Letters while you pick a profile or
+  type a grade; a number pad for size, length, quantity and rate; a short
+  New / Tweak / Share bar once the line computes. Tweak (or a tap on the query
+  line) brings the numbers back; ABC and 123 switch layouts; Done puts the bar
+  away. The number pad has a space key, and a finished size (`hea120`) plus
+  the next length digit land as two tokens, not `hea1206`
+- **Library and Settings fill the phone screen.** They had become real pages
+  stuffed into an 82% sheet; they are full-screen now, with a back chevron.
+  Result breakdown, project picker and edit-part stay a sheet
+- **Hold a length, quantity or rate chip to nudge it.** − / + rewrites just
+  that token, so `6m` becomes `7m` without deleting and retyping
+- **Share on the phone sends the number, not only a URL.** The formatted
+  summary goes as text, plus a PNG card when the OS will take a file, so the
+  figure can leave via WhatsApp. Copy as text is on the breakdown sheet too.
+  An assembly card lists every part under the line total, not only the last
+  name
+- **Breakdown of a `+`-joined line lists every part.** Tap a row to see that
+  part's drawing and figures; the heading is the assembly, not "item 3 of 3"
+
+### Fixed
+
+- **`normalizeProject` dropped fields it did not know about.** The whitelist in
+  `sync/collections.ts` is why a new project field would never have survived a
+  reload; it now carries client, status, due date and activity
+- **Using a saved assembly restored only its first part.** The bar was rebuilt
+  from `entry.input`, which is part one; a three-part gate frame arrived as one
+  RHS with the rest silently gone. It now rebuilds the whole `+`-joined line
+- **The row menus were clipped by their own table.** The dropdown rendered
+  inside a panel with `overflow: hidden`, so the shorter the list, the less of
+  the menu you could see — on a one-row table, almost none of it. It is
+  portalled to `<body>` now, placed in viewport coordinates and flipped above
+  the row when it would run off the bottom
+- **The new surfaces were capped at 720–1180px** while the rest of the app
+  fills the workspace. They fill it too now
+- **The phone keypad reserved the whole bottom safe-area inset below its keys.**
+  Its background already reaches the screen edge, so only the keys need to
+  clear the home indicator — a ~5pt pill sitting ~8pt up, not the full 34pt
+  inset. The bottom row sits about 14px lower on a notched phone; the panel
+  itself is still flush on the edge
+- **Every extra item pushed the phone's controls down the screen.** The
+  per-item list under the hero grew about 21px a row with nothing capping it,
+  so adding a fifth calculation slid the glance row, the actions and the
+  session strip down — moving buttons the user had just been using, and
+  heading for the keypad at around a dozen items. It shows three rows and
+  scrolls inside a fixed box now, faded at the cut, so the layout below it
+  stops moving after the third item
+- **A multi-item line was unreadable on the phone.** The chip box wrapped and
+  capped at two rows, so four `+`-joined items overflowed it and rendered as
+  sliced half-rows — chips cut in half at the top and bottom of the window.
+  The line is one row that scrolls sideways now, and only the item the caret
+  is in is spelled out; the others are one chip each ("2 SHS 50×50×3"),
+  numbered to match the hero list above, and tapping one opens it. The row's
+  height is fixed, so nothing can push the keypad off screen again
+- **The phone suggestion chips sat on the query line's focus ring.** The 6px
+  gap cleared the input's border box but not the 3px glow drawn outside it, so
+  the strip and the field read as one collided control. The clearance is
+  measured against the ring now, and the strip stopped shaving the chips' own
+  bottom borders off against its `overflow: hidden` edge
+
+### Notes
+
+Attachments from proposal 2d are deliberately absent: the sync layer encrypts a
+whole snapshot into Drive appdata, and base64 blobs would ride along on every
+push. The "show tonnes above" setting is absent too — `fsWeightUnit()` was
+pinned to kilograms on purpose, and unpinning it is a metal-core change with its
+own blast radius, not a settings row.
+
+---
+
 ## [3.18.0] - 2026-08-11
 
 ### Removed

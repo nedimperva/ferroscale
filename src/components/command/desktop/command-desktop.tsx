@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "@/i18n/navigation";
 import { getAppTabFromPathname } from "@/lib/app-shell";
+import { isArchivedProject } from "@/hooks/useProjects";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CommandDesktopProps, DeskView } from "./desktop-props";
+import type { ProjectActions } from "../projects/project-actions";
 import { DeskTopTabs } from "./desk-top-tabs";
 import { DeskCalcView } from "./desk-calc-view";
 import { DeskCompareView } from "./desk-compare-view";
-import { DeskSavedView } from "./desk-saved-view";
+import { PartsView, type PartsActions } from "../parts/parts-view";
 import { DeskProjectsView } from "./desk-projects-view";
 import { DeskSettingsView } from "./desk-settings-view";
 
@@ -29,6 +31,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
     }
   });
   const inputRef = useRef<HTMLInputElement | null>(null);
+  /** Which project the Projects tab has drilled into (null = the list). */
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null);
 
   const focusInputAtEnd = useCallback(() => {
     const el = inputRef.current;
@@ -87,9 +91,53 @@ export function CommandDesktop(props: CommandDesktopProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [view, focusInputAtEnd, onNew]);
 
+  // Opening an item from a project puts it in the bar, which means leaving
+  // the detail page — the two surfaces are the same tab.
+  const projectActions: ProjectActions = {
+    ...props.projectActions,
+    onOpenItem: (input) => {
+      props.projectActions.onOpenItem(input);
+      gotoCalc();
+    },
+    onAddItem: (projectId) => {
+      const added = props.projectActions.onAddItem(projectId);
+      if (!added) gotoCalc();
+      return added;
+    },
+    onDelete: (id) => {
+      props.projectActions.onDelete(id);
+      setOpenProjectId((current) => (current === id ? null : current));
+    },
+  };
+
+  const partsActions: PartsActions = {
+    onPick: (entry) => {
+      props.onLoadSaved(entry);
+      gotoCalc();
+    },
+    onAddCompare: props.onAddCompareSaved,
+    onRemove: props.onRemoveSaved,
+    onRemoveMany: props.onRemoveSavedMany,
+    onDuplicate: props.onDuplicateSaved,
+    onTogglePin: props.onTogglePinSaved,
+    onEdit: props.onEditSaved,
+    onAddPart: props.onAddPartSaved,
+    onRemovePart: props.onRemovePartSaved,
+    onAddToProject: props.onAddSavedToProject,
+    onLoadQuery: (query) => {
+      props.onLoadQuery(query);
+      gotoCalc();
+    },
+    onRemoveHistoryEntry: props.onRemoveTapeEntry,
+    onClearHistory: props.onClearTape,
+    onNew: startNewCalc,
+  };
+
   const counts = {
     saved: props.saved.length,
-    projects: props.projects.length,
+    // Archived projects are not in the list the tab opens, so counting them
+    // in the badge would promise rows that are not there.
+    projects: props.projects.filter((project) => !isArchivedProject(project)).length,
     compare: props.compareItems.length,
   };
 
@@ -123,44 +171,31 @@ export function CommandDesktop(props: CommandDesktopProps) {
         />
       )}
       {view === "saved" && (
-        <DeskSavedView
+        <PartsView
           saved={props.saved}
+          history={props.history}
           settings={props.parserSettings}
           defaultUnit={props.defaultUnit}
           mode={props.mode}
-          onPick={(entry) => {
-            props.onLoadSaved(entry);
-            gotoCalc();
-          }}
-          onAddCompare={props.onAddCompareSaved}
-          onRemove={props.onRemoveSaved}
-          onRemoveMany={props.onRemoveSavedMany}
-          onDuplicate={props.onDuplicateSaved}
-          onTogglePin={props.onTogglePinSaved}
-          onEdit={props.onEditSaved}
-          onAddPart={props.onAddPartSaved}
-          onRemovePart={props.onRemovePartSaved}
-          onNew={startNewCalc}
+          actions={partsActions}
         />
       )}
       {view === "projects" && (
         <DeskProjectsView
           projects={props.projects}
-          onPickItem={pickInput}
-          onCreateProject={props.onCreateProject}
-          onRemoveCalc={props.onRemoveProjectCalc}
+          actions={projectActions}
+          openProjectId={openProjectId}
+          onOpenProject={setOpenProjectId}
         />
       )}
       {view === "settings" && (
         <DeskSettingsView
-          dark={props.dark}
           shared={props.shared}
           onUpdateShared={props.onUpdateShared}
           weightAsMain={props.weightAsMain}
           onSetWeightAsMain={props.onSetWeightAsMain}
           defaultUnit={props.defaultUnit}
           onSetDefaultUnit={props.onSetDefaultUnit}
-          onToggleTheme={props.onToggleTheme}
         />
       )}
       </div>

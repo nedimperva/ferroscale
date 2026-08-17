@@ -15,6 +15,11 @@ async function typeQuery(page: Page, query: string) {
 }
 
 const openSettings = (page: Page) => page.getByRole("button", { name: "Settings" }).click();
+/** Settings is grouped now — the price book is its own pane in the rail. */
+async function openPriceBook(page: Page) {
+  await openSettings(page);
+  await page.getByRole("button", { name: "Price book" }).click();
+}
 /** The breakdown's Rate row — what the line was actually priced at. */
 const rateRow = (page: Page) => page.locator('[data-row="rate"] span').last();
 const gotoCalculator = (page: Page) => page.getByRole("button", { name: "Calculator" }).click();
@@ -27,7 +32,7 @@ test.describe("Price book", () => {
     await typeQuery(page, "rnd20 6m x2 304 ");
     await expect(rateRow(page)).toHaveText("€ 1.20/kg");
 
-    await openSettings(page);
+    await openPriceBook(page);
     await page.getByRole("button", { name: "+ Price a grade" }).click();
     await page.getByLabel("Grade to add to the price book").selectOption("stainless-304");
     await page.getByLabel("Rate for 304").fill("5");
@@ -43,7 +48,7 @@ test.describe("Price book", () => {
 
   test("an inline rate still beats the book", async ({ page }) => {
     await page.goto("/en");
-    await openSettings(page);
+    await openPriceBook(page);
     await page.getByRole("button", { name: "+ Price a grade" }).click();
     await page.getByLabel("Grade to add to the price book").selectOption("stainless-304");
     await page.getByLabel("Rate for 304").fill("5");
@@ -90,7 +95,7 @@ test.describe("Session rail", () => {
     // KM (BAM) is two characters where € is one; the columns were fixed-width,
     // so the unit dropped to a second line as soon as the value outgrew them.
     await page.getByRole("button", { name: "Settings" }).click();
-    await page.getByRole("button", { name: "KM BAM" }).click();
+    await page.getByRole("radio", { name: "BAM", exact: true }).click();
     await page.getByRole("button", { name: "Calculator" }).click();
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
 
@@ -112,7 +117,8 @@ test.describe("Mass tolerance", () => {
   test("a band appears under the weight once a tolerance is set", async ({ page }) => {
     await page.goto("/en");
     await openSettings(page);
-    await page.getByLabel("MASS TOLERANCE").fill("4");
+    await page.getByRole("button", { name: "Calculation" }).click();
+    await page.getByLabel("Mass tolerance", { exact: true }).fill("4");
 
     await gotoCalculator(page);
     await typeQuery(page, "hea120 6m x2 ");
@@ -139,7 +145,7 @@ test.describe("Margin", () => {
     await expect(page.getByText(/^Sell price/)).toHaveCount(0);
 
     await openSettings(page);
-    await page.getByLabel("MARGIN ON COST").fill("20");
+    await page.getByLabel("Margin", { exact: true }).fill("20");
     await gotoCalculator(page);
 
     await expect(page.getByText("Sell price (+20%)")).toBeVisible();
@@ -161,7 +167,7 @@ test.describe("Session", () => {
     await expect(page.getByText(/lines saved to Session/)).toBeVisible();
 
     await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
-    await expect(page.getByText(/^Session /)).toBeVisible();
+    await page.getByRole("button", { name: /^Open project Session / }).click();
     // Every logged line came across, in one gesture.
     await expect(page.getByText(/^[2-9] items$/)).toBeVisible();
   });
@@ -176,16 +182,53 @@ test.describe("Assemblies", () => {
     await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
 
     await typeQuery(page, "shs40x40x3 4m x10 ");
-    await page.getByRole("button", { name: /^Saved\s*1$/ }).click();
-    await page.getByRole("button", { name: "Add the current line as a part" }).click();
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Add the current line as a part" }).click();
 
-    // The card is now an assembly: two parts, summed.
-    await expect(page.getByText("2 parts")).toBeVisible();
+    // The row is now an assembly: two parts, summed — and it moved tabs, which
+    // the emptied Parts tab says out loud rather than showing a blank list.
+    await page.getByRole("button", { name: /^Show Assemblies/ }).click();
+    await expect(page.getByText("assembly · 2 parts")).toBeVisible();
+    await page.getByRole("button", { name: "Card view" }).click();
     await page.getByRole("button", { name: "Show details" }).click();
-    await expect(page.getByText("Parts", { exact: true })).toBeVisible();
+    // The parts list is open: each part can be taken back out of the assembly.
+    await expect(page.getByRole("button", { name: /from this assembly$/ })).toHaveCount(2);
     await expect(page.getByText("SHS 40×40×3").first()).toBeVisible();
     // 238.7 kg + 139.42 kg = 378.12 kg
     await expect(page.getByText("378.12 kg").first()).toBeVisible();
+  });
+
+  test("Use restores every part, not just the first", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 + ipe200 4m x3 ");
+    await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+
+    // The surface opens on Assemblies: it is the only tab with anything in it.
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: /^Load / }).first().click();
+
+    // Both items come back on the line — restoring only the entry's own input
+    // dropped everything after the first part.
+    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+  });
+
+  test("a saved part goes into a project from its row menu", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 ");
+    await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Add to project" }).click();
+
+    await page.getByPlaceholder("New project name...").fill("Mezzanine");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
+    await page.getByRole("button", { name: /^Open project Mezzanine/ }).click();
+    await expect(page.getByText("HEA 120").first()).toBeVisible();
+    await expect(page.getByText(/^1 item$/)).toBeVisible();
   });
 });
 
@@ -199,14 +242,15 @@ test.describe("Printable quote", () => {
     await page.getByRole("button", { name: "SAVE AS PROJECT" }).click();
 
     await openSettings(page);
-    await page.getByLabel("MARGIN ON COST").fill("15");
+    await page.getByLabel("Margin", { exact: true }).fill("15");
 
     await page.getByRole("button", { name: /^Projects/ }).click();
+    await page.getByRole("button", { name: /^Open project Session / }).click();
     // Stub the print dialog: what matters is the document it would print.
     await page.evaluate(() => {
       window.print = () => {};
     });
-    await page.getByRole("button", { name: /^Print a quote for/ }).click();
+    await page.getByRole("button", { name: "Quote", exact: true }).click();
 
     const quote = page.locator(".fs-print");
     await expect(quote).toContainText("Quote");

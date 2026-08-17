@@ -75,6 +75,10 @@ and exists only for metadata/URLs; `RouteAwareAppShell`
   (`advanced-calc-projects-v2`, max 20×50), `useCompare`, `usePresets`,
   `useQuickHistory` (`ferroscale-quick-history` — the session tape and
   recency suggestions, capped at 50).
+- **Adding a field to a synced entity takes two edits**: the type in its hook,
+  *and* `normalizeProject`/`normalizeSavedEntry` in `src/lib/sync/collections.ts`.
+  Those normalizers are whitelists — a field they do not name is dropped on
+  every load, so it will appear to work until the page reloads.
 - Sync layer: `src/lib/sync/` — schema-versioned snapshots
   (`SYNC_SCHEMA_VERSION`), AES-GCM encryption, dirty-tracking registry.
   Adding a synced collection touches `keys.ts`, `collections.ts`,
@@ -100,6 +104,26 @@ When adding a new profile:
    (without an alias, saved entries can't restore into the command line)
 5. Add engine test cases (the benchmark oracle in `engine.test.ts`
    re-implements each formula independently — keep it independent)
+
+### The three list surfaces
+
+Settings, Projects and Parts are each one component rendered twice: full on
+the wide workspace, `compact` inside the mobile library sheet. The desktop
+never has its own copy of a list, so a column means the same thing on both.
+
+- **Settings** — `settings-model.ts` is the single source of truth: each field
+  carries its `group`, its one-line `description` and its control shape.
+  Adding a setting is one entry there and no JSX. `settings/settings-controls.tsx`
+  owns the controls; `desk-settings-view.tsx` (group rail + panes) and
+  `sheets/settings-sheet.tsx` (grouped cards, editing in place) own only layout.
+- **Projects** — `lib/projects/query.ts` (pure, tested) filters and sorts;
+  `projects/project-list.tsx` and `projects/project-detail.tsx` render, and
+  the eleven callbacks travel as one `ProjectActions` bag. The list ↔ detail
+  drill-down is component state, not a route: the workspace tabs are the app's
+  only navigation.
+- **Parts** (the old Saved) — `parts/parts-view.tsx`. Parts vs Assemblies is
+  derived, not stored: an entry with `parts.length > 1` is an assembly.
+  History reads `useQuickHistory`.
 
 ### API routes
 

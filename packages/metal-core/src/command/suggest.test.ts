@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { cmdApplyInsert, cmdSuggest, presetToSizeText } from "./suggest";
+import { cmdApplyInsert, cmdDetectStage, cmdSuggest, presetToSizeText } from "./suggest";
+import { cmdParse } from "./parser";
 import { findAliasByKey } from "./aliases";
 import type { CommandParserSettings } from "./types";
 import type { CommandSizePreset } from "./types";
@@ -103,6 +104,22 @@ describe("cmdSuggest with presets", () => {
     expect(sug.hint).toBe("Grade (optional)");
     const s420 = sug.items.find((i) => i.label === "S420");
     expect(s420?.ins).toBe("s420");
+  });
+});
+
+describe("cmdDetectStage", () => {
+  it("walks empty → profile → size → length → qty → grade → done", () => {
+    expect(cmdDetectStage("", cmdParse("", SETTINGS)).stage).toBe("empty");
+    expect(cmdDetectStage("he", cmdParse("he", SETTINGS)).stage).toBe("profile");
+    expect(cmdDetectStage("hea ", cmdParse("hea ", SETTINGS)).stage).toBe("size");
+    expect(cmdDetectStage("hea120 ", cmdParse("hea120 ", SETTINGS)).stage).toBe("length");
+    expect(cmdDetectStage("hea120 6m ", cmdParse("hea120 6m ", SETTINGS)).stage).toBe("qty");
+    expect(cmdDetectStage("hea120 6m x2 ", cmdParse("hea120 6m x2 ", SETTINGS)).stage).toBe(
+      "grade",
+    );
+    expect(
+      cmdDetectStage("hea120 6m x2 s235 ", cmdParse("hea120 6m x2 s235 ", SETTINGS)).stage,
+    ).toBe("done");
   });
 });
 

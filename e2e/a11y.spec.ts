@@ -37,7 +37,7 @@ test.describe("axe scans", () => {
       .getByRole("button", { name: /^Saved?$/ })
       .and(page.locator("[aria-pressed]"))
       .click();
-    await page.getByRole("button", { name: /^Saved\s*1$/ }).click();
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
     await expect(page.getByRole("button", { name: /in the calculator$/ })).toBeVisible();
     await scan(page, "wide /en saved");
   });
@@ -50,8 +50,9 @@ test.describe("axe scans", () => {
       .getByRole("button", { name: /^Saved?$/ })
       .and(page.locator("[aria-pressed]"))
       .click();
-    await page.getByRole("button", { name: /^Saved\s*1$/ }).click();
-    await page.getByRole("button", { name: "Rename, notes and tags" }).click();
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Rename, notes and tags" }).click();
     await expect(page.getByRole("dialog", { name: "Edit saved calculation" })).toBeVisible();
     await scan(page, "wide /en saved edit sheet");
   });

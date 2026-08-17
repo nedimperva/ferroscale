@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { cmdParse, cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { buildCommandSummary } from "./command-copy";
+import { buildShareCardModel } from "./line-summary";
 
 const SETTINGS: CommandParserSettings = {
   pricing: {
@@ -59,5 +60,26 @@ describe("buildCommandSummary", () => {
     const line = cmdParseLine("hea120 6m x2", SETTINGS);
     const single = buildCommandSummary(t, line.items[0].parse);
     expect(buildCommandSummary(t, line.items[0].parse, line)).toBe(single);
+  });
+});
+
+describe("buildShareCardModel", () => {
+  it("uses the part name for a single item", () => {
+    const line = cmdParseLine("hea120 6m x2", SETTINGS);
+    const card = buildShareCardModel(t, line.items[0].parse, line, "hea120 6m x2");
+    expect(card.title).toContain("HEA 120");
+    expect(card.items).toEqual([]);
+    expect(card.weight).toContain("238.7");
+  });
+
+  it("lists every part of an assembly under the line total", () => {
+    const query = "hea120 6m x2 + ipe200 4m x3";
+    const line = cmdParseLine(query, SETTINGS);
+    const card = buildShareCardModel(t, line.items[line.activeIndex].parse, line, query);
+    expect(card.title).toBe("result.assembly");
+    expect(card.items).toHaveLength(2);
+    expect(card.items[0].label).toContain("HEA 120");
+    expect(card.items[1].label).toContain("IPE 200");
+    expect(card.weight).toContain("506.98");
   });
 });

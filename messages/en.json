@@ -48,7 +48,8 @@
       "total": "Total",
       "print": "Print or save as PDF",
       "printAria": "Print a quote for {name}",
-      "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated."
+      "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated.",
+      "short": "Quote"
     },
     "priceBook": {
       "title": "Price book",
@@ -127,7 +128,15 @@
       "done": "Done",
       "saveChanges": "Save changes",
       "share": "Share",
-      "open": "Open"
+      "open": "Open",
+      "rename": "Rename",
+      "archive": "Archive",
+      "unarchive": "Restore",
+      "back": "Back",
+      "edit": "Edit",
+      "search": "Search",
+      "more": "More actions",
+      "addProjectLong": "Add to project"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -162,11 +171,11 @@
     "nav": {
       "workspace": "WORKSPACE",
       "calculator": "Calculator",
-      "saved": "Saved",
       "projects": "Projects",
       "compare": "Compare",
       "settings": "Settings",
-      "library": "Library"
+      "library": "Library",
+      "parts": "Parts"
     },
     "status": {
       "live": "LIVE",
@@ -176,7 +185,8 @@
       "placeholder": "type or tap a profile...",
       "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
       "aria": "FerroScale Command query",
-      "acceptGhost": "Complete: {text}"
+      "acceptGhost": "Complete: {text}",
+      "expandItem": "Item {index}, {name} — show its tokens"
     },
     "keypad": {
       "space": "space",
@@ -185,11 +195,19 @@
       "priceUnitPicker": "Price unit",
       "lengthUnitPicker": "Length unit",
       "backspace": "Backspace",
-      "backspaceHold": "Hold to delete the whole token"
+      "backspaceHold": "Hold to delete the whole token",
+      "letters": "ABC",
+      "numbers": "123",
+      "tweak": "Tweak",
+      "tweakAria": "Edit length, quantity or rate"
     },
     "token": {
       "edit": "Edit {token}",
-      "remove": "Remove {token}"
+      "remove": "Remove {token}",
+      "stepper": "Adjust {token}",
+      "stepUp": "Increase {token}",
+      "stepDown": "Decrease {token}",
+      "holdToStep": "Hold to nudge the number"
     },
     "preview": {
       "perPiece": "Per piece",
@@ -263,7 +281,9 @@
       "pricing": "Pricing",
       "unitPrice": "Unit price",
       "grade": "Grade",
-      "massBand": "Mass band {percent}"
+      "massBand": "Mass band {percent}",
+      "assembly": "Assembly · {count, plural, one {# part} other {# parts}}",
+      "assemblyParts": "Assembly parts"
     },
     "settings": {
       "mainResult": "Main result",
@@ -273,7 +293,6 @@
       "priceBasis": "Price basis",
       "length": "Length",
       "piece": "Piece",
-      "wastePercent": "Waste %",
       "vat": "VAT",
       "defaultGrade": "Default grade",
       "defaultUnit": "Default unit",
@@ -285,26 +304,56 @@
       "lightMode": "Light mode",
       "applyAcrossCommand": "Pricing, grade, and unit settings apply across Command.",
       "inlinePriceHint": "Override the default rate with {example}; on mobile, type the number then tap the rate key.",
-      "subtitle": "pricing · units · appearance",
-      "defaultResultUpper": "DEFAULT RESULT",
-      "currencyUpper": "CURRENCY",
-      "priceBasisUpper": "PRICE BASIS",
       "unitPricePer": "UNIT PRICE (PER {unit})",
-      "wastePercentUpper": "WASTE %",
-      "defaultGradeUpper": "DEFAULT GRADE",
-      "lengthUnitFallback": "LENGTH UNIT FALLBACK",
-      "languageUpper": "LANGUAGE",
+      "lengthUnitFallback": "Length unit fallback",
       "haptics": "Vibration",
-      "hapticsUpper": "VIBRATION",
       "margin": "Margin",
-      "marginUpper": "MARGIN ON COST",
       "locales": {
         "en": "English",
         "bs": "Bosnian"
       },
-      "appearance": "APPEARANCE",
       "massTolerance": "Mass tolerance",
-      "massToleranceUpper": "MASS TOLERANCE"
+      "deviceSubtitle": "applies to every calculation on this device",
+      "searchPlaceholder": "Search settings",
+      "searchAria": "Search settings",
+      "noMatchTitle": "Nothing matches that",
+      "noMatchBody": "Try a shorter word — the search looks at every setting's name and description.",
+      "groupsLabel": "Groups",
+      "groups": {
+        "pricing": "Pricing",
+        "calculation": "Calculation",
+        "units": "Units & format",
+        "appearance": "Appearance",
+        "priceBook": "Price book",
+        "sync": "Backup & sync",
+        "help": "Help & about"
+      },
+      "groupHints": {
+        "pricing": "what turns kilograms into money",
+        "calculation": "what the bar assumes when you leave it out",
+        "units": "how a bare number is read",
+        "appearance": "language, theme and feedback",
+        "priceBook": "rates you keep per grade",
+        "sync": "keeping this device's data safe",
+        "help": "everything the bar understands"
+      },
+      "sheetGroupUnitsApp": "Units & app",
+      "defaultRate": "Default rate",
+      "defaultRateHint": "Overridden per line with {example}",
+      "wasteAllowance": "Waste allowance",
+      "wasteAllowanceHint": "Added to every priced line",
+      "marginHint": "Shown on quotes, never on the calculator",
+      "vatOnHint": "Added on top of every total",
+      "vatOffHint": "Off — totals are net",
+      "headlineNumber": "Headline number",
+      "headlineNumberHint": "The big figure on the calculator",
+      "defaultGradeHint": "Used when a line has no grade token",
+      "massToleranceHint": "Draws the ± band under the result",
+      "lengthUnitFallbackHint": "A bare number is read in this unit",
+      "themeHint": "Auto follows the system setting",
+      "auto": "Auto",
+      "hapticsHint": "Feedback on keypad taps",
+      "version": "Version {version}"
     },
     "docs": {
       "label": "Guide",
@@ -445,9 +494,6 @@
       "openInCalculator": "Open in calculator"
     },
     "saved": {
-      "subtitleCount": "{count, plural, one {# calculation} other {# calculations}}",
-      "subtitleEmpty": "bookmarked calculations",
-      "empty": "nothing saved yet — press Save on a calculation",
       "addToCompare": "Add to compare",
       "openAria": "Open {name} in the calculator",
       "selectAria": "Select {name}",
@@ -479,10 +525,6 @@
       "select": "Select",
       "clearTags": "Clear tags",
       "selectedCount": "{count, plural, one {# selected} other {# selected}}",
-      "matchCount": "{count} of {total} shown",
-      "emptyTitle": "Nothing saved yet",
-      "emptyBody": "Press Save on any result to keep it here — with its drawing, weight and today's price.",
-      "emptyBodyMobile": "Tap Save on any result to keep it here.",
       "noMatchTitle": "No matches",
       "noMatchBody": "Nothing here matches that search or tag.",
       "clearFilters": "Clear filters",
@@ -502,7 +544,135 @@
       "emptyTitle": "No projects yet",
       "itemCount": "{count, plural, one {# item} other {# items}}",
       "emptyProjectHint": "empty — add a calc from the right rail",
-      "removeFromProject": "Remove from project"
+      "removeFromProject": "Remove from project",
+      "subtitleCounts": "{active} active · {archived} archived",
+      "searchPlaceholder": "Search projects",
+      "searchAria": "Search projects",
+      "clientsLabel": "Clients",
+      "allProjects": "All projects",
+      "unassigned": "Unassigned",
+      "archived": "Archived",
+      "columns": {
+        "project": "Project",
+        "client": "Client",
+        "items": "Items",
+        "weight": "Weight",
+        "value": "Value"
+      },
+      "updatedAgo": "updated {ago}",
+      "emptyRow": "empty — nothing added yet",
+      "openAria": "Open project {name}",
+      "sortLabel": "Sort",
+      "sort": {
+        "updated": "Recently updated",
+        "name": "Name",
+        "weight": "Heaviest",
+        "value": "Highest value",
+        "due": "Due first"
+      },
+      "noMatchTitle": "No project matches",
+      "noMatchBody": "Search looks at the project name, its client and the items inside it.",
+      "emptyArchivedTitle": "Nothing archived",
+      "emptyArchivedBody": "Archive a project when the job ships and it moves here.",
+      "status": {
+        "draft": "Draft",
+        "quoted": "Quoted",
+        "archived": "Archived"
+      },
+      "statusAria": "Status of {name}",
+      "backToProjects": "Projects",
+      "addItem": "Add item",
+      "stats": {
+        "items": "Items",
+        "weight": "Weight",
+        "materialCost": "Material cost",
+        "quoted": "Quoted +{margin}%"
+      },
+      "itemColumns": {
+        "item": "Item",
+        "grade": "Grade",
+        "length": "Length",
+        "qty": "Qty",
+        "cost": "Cost"
+      },
+      "totalRow": "{count, plural, one {# item} other {# items}}",
+      "notesLabel": "Notes",
+      "moreDetails": "Notes & activity",
+      "hideDetails": "Hide notes",
+      "notesPlaceholder": "Anything the shop needs to know…",
+      "activityLabel": "Activity",
+      "activity": {
+        "created": "Project created",
+        "renamed": "Renamed to {to}",
+        "clientSet": "Client set to {to}",
+        "clientCleared": "Client cleared",
+        "statusChanged": "Marked {to}",
+        "dueDateSet": "Due {to}",
+        "dueDateCleared": "Due date cleared",
+        "itemAdded": "{detail} added",
+        "itemsAdded": "{detail} items added",
+        "itemRemoved": "{detail} removed",
+        "qtyChanged": "{detail} qty {from} → {to}",
+        "quotePrinted": "Quote printed",
+        "empty": "Nothing has happened here yet."
+      },
+      "clientLabel": "Client",
+      "clientPlaceholder": "Who is it for?",
+      "dueLabel": "Due date",
+      "dueOn": "due {date}",
+      "createdOn": "created {date}",
+      "editDetails": "Project details",
+      "qtyAria": "Pieces of {name}",
+      "openInBar": "Open in the calculator",
+      "duplicate": "Duplicate",
+      "duplicateHint": "Copy this project as a template",
+      "deleted": "Project deleted",
+      "archivedToast": "Moved to archived",
+      "unarchivedToast": "Back in the active list",
+      "full": "20 projects is the limit — archive or delete one first",
+      "itemsFull": "50 items is the limit for one project",
+      "nothingToPrint": "Add an item before printing a quote"
+    },
+    "parts": {
+      "subtitle": "Specs you type often and assemblies you build repeatedly. Pick one to load it into the bar — quantity and length stay editable.",
+      "tabs": {
+        "parts": "Parts",
+        "assemblies": "Assemblies",
+        "history": "History"
+      },
+      "pinnedLabel": "Pinned — always first in suggestions",
+      "pinPlaceholder": "Pin a part to keep it here",
+      "allParts": "All parts",
+      "allAssemblies": "All assemblies",
+      "columns": {
+        "name": "Name",
+        "spec": "Spec",
+        "kgm": "kg / m",
+        "used": "Used",
+        "total": "Total"
+      },
+      "use": "Use",
+      "useAria": "Load {name} into the bar",
+      "usedTimes": "{count}×",
+      "assemblyBadge": "assembly · {count} parts",
+      "emptyPartsTitle": "No parts yet",
+      "emptyPartsBody": "Press Save on a result and it lands here, ready to re-run.",
+      "emptyAssembliesTitle": "No assemblies yet",
+      "emptyAssembliesBody": "Add a second line to a saved part and it becomes an assembly.",
+      "emptyHistoryTitle": "Nothing in history",
+      "emptyHistoryBody": "Every line you log with ↵ is kept here on this device.",
+      "historySubtitle": "Lines you ran on this device, newest first — not saved anywhere else.",
+      "clearHistory": "Clear history",
+      "removeFromHistory": "Remove {query} from history",
+      "showOther": "Show {label}",
+      "emptyPartsAllAssemblies": "Everything you have saved holds more than one line, so it lives under Assemblies.",
+      "emptyAssembliesHasParts": "Open a part and add the current line to it — two lines make an assembly."
+    },
+    "time": {
+      "justNow": "just now",
+      "minutes": "{count} min ago",
+      "hours": "{count} h ago",
+      "days": "{count, plural, one {# day ago} other {# days ago}}"
     }
   },
   "contact": {

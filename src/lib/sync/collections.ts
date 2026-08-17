@@ -5,7 +5,7 @@ import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { DimensionPreset } from "@/hooks/usePresets";
-import type { Project } from "@/hooks/useProjects";
+import { PROJECT_STATUSES, type Project, type ProjectActivityEntry, type ProjectStatus } from "@/hooks/useProjects";
 import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
@@ -108,6 +108,21 @@ function normalizeProject(raw: unknown): Project | null {
     id: candidate.id,
     name: candidate.name,
     description: candidate.description?.trim() || undefined,
+    client: candidate.client?.trim() || undefined,
+    // A status written by a newer build (or corrupted on disk) falls back to
+    // the default rather than hiding the project in a bucket nothing lists.
+    status: PROJECT_STATUSES.includes(candidate.status as ProjectStatus)
+      ? candidate.status
+      : undefined,
+    dueDate: candidate.dueDate?.slice(0, 10) || undefined,
+    activity: Array.isArray(candidate.activity)
+      ? candidate.activity
+          .filter(
+            (entry): entry is ProjectActivityEntry =>
+              Boolean(entry) && typeof entry === "object" && Boolean(entry.id) && Boolean(entry.at),
+          )
+          .slice(0, 40)
+      : undefined,
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
     deletedAt: candidate.deletedAt,

@@ -10,6 +10,7 @@ import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calc
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
+import type { ProjectActions } from "../projects/project-actions";
 
 export type DeskView = "calc" | "saved" | "projects" | "compare" | "settings";
 
@@ -36,6 +37,9 @@ export interface CommandDesktopProps {
   weightAsMain: boolean;
   onSetWeightAsMain: (value: boolean) => void;
   sessionTape: string[];
+  /** The full command history — the Parts surface's History tab. */
+  history: string[];
+  onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (q: string) => void;
   onClearTape: () => void;
   /** Turn everything on the tape into a project, in one action. */
@@ -58,7 +62,8 @@ export interface CommandDesktopProps {
   onAddToProject: () => void;
   onLoadInput: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
-  onRemoveProjectCalc: (projectId: string, calcId: string) => void;
+  /** Everything the Projects surface can do to a project. */
+  projectActions: ProjectActions;
   /** True when the line in the bar is already bookmarked (Save is a toggle). */
   currentSaved: boolean;
   /** Open the grammar + shortcuts cheat sheet (the `?` key). */
@@ -73,4 +78,6 @@ export interface CommandDesktopProps {
   /** Undefined while the bar has no complete calculation to fold in. */
   onAddPartSaved?: (entry: SavedEntry) => void;
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
+  /** Open the project picker for a saved part or assembly. */
+  onAddSavedToProject: (entry: SavedEntry) => void;
 }
