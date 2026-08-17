@@ -7,6 +7,7 @@ import {
   lineChips,
   pullLastChip,
   removeLineToken,
+  replaceItemTokenKind,
   replaceLineToken,
 } from "./line-edit";
 
@@ -77,6 +78,14 @@ describe("editLineToken", () => {
 
   it("ignores a token index that isn't there", () => {
     expect(editLineToken("hea120 6m", 0, 9)).toBe("hea120 6m");
+  });
+});
+
+describe("replaceItemTokenKind", () => {
+  it("swaps the profile token of one item", () => {
+    expect(replaceItemTokenKind("hea120 6m x2 + ipe200 4m ", 0, "profile", "heb120")).toBe(
+      "heb120 6m x2 + ipe200 4m ",
+    );
   });
 });
 

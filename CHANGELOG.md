@@ -5,6 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.21.0] - 2026-08-17
+
+Paint on a project is coats, not one rate.
+
+### Changed
+
+- **Primer and finish can be different paints.** The project shows the surface of every item, then you add coats. Each coat has layers, coverage (m²/kg) and price per kg. Settings keeps the default rate a new coat starts with
+- **A multi-item line no longer repeats its parts under the hero.** The assembly list stays in the breakdown — tap a row there to aim the drawing
+
+---
+
+## [3.20.0] - 2026-08-17
+
+Nearby sizes on the result, painting and line notes on a project, and size chips that come from Parts.
+
+### Added
+
+- **Nearby sizes** under the breakdown. A tap on HEB 120 or HEA 140 rewrites just the section token, so comparing siblings does not mean retyping the line
+- **Painting and line notes on a project.** Rate, coverage and coats sit on the detail page; each item can carry a note. Both print on the quote
+
+### Changed
+
+- **Size chips labelled Parts come from saved parts.** The separate preset collection had a store and no UI. A part already is a size. Leftover synced presets still appear so old data is not dropped
+
+---
+
 ## [3.19.0] - 2026-08-12
 
 The three surfaces that were never really designed — Settings, Projects and

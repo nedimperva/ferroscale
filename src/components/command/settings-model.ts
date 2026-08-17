@@ -163,6 +163,10 @@ export interface SettingsModelArgs {
   onSetMarginPercent: (value: number) => void;
   massTolerancePercent: number;
   onSetMassTolerancePercent: (value: number) => void;
+  defaultPaintPrice: number;
+  onSetDefaultPaintPrice: (value: number) => void;
+  defaultPaintCoverage: number;
+  onSetDefaultPaintCoverage: (value: number) => void;
 }
 
 export function buildSettingsFields({
@@ -183,6 +187,10 @@ export function buildSettingsFields({
   onSetMarginPercent,
   massTolerancePercent,
   onSetMassTolerancePercent,
+  defaultPaintPrice,
+  onSetDefaultPaintPrice,
+  defaultPaintCoverage,
+  onSetDefaultPaintCoverage,
 }: SettingsModelArgs): SettingsField[] {
   const sym = CURRENCY_SYMBOLS[shared.currency] ?? "€";
   return [
@@ -251,6 +259,31 @@ export function buildSettingsFields({
       step: 1,
       min: 0,
       max: 500,
+    },
+    {
+      kind: "number",
+      id: "defaultPaintPrice",
+      group: "pricing",
+      label: t("settings.paintRate"),
+      description: t("settings.paintRateHint"),
+      value: defaultPaintPrice,
+      onChange: onSetDefaultPaintPrice,
+      prefix: sym,
+      suffix: "/kg",
+      step: 0.1,
+      min: 0,
+    },
+    {
+      kind: "number",
+      id: "defaultPaintCoverage",
+      group: "pricing",
+      label: t("settings.paintCoverage"),
+      description: t("settings.paintCoverageHint"),
+      value: defaultPaintCoverage,
+      onChange: onSetDefaultPaintCoverage,
+      suffix: "m²/kg",
+      step: 0.5,
+      min: 0.1,
     },
     {
       kind: "toggleNumber",

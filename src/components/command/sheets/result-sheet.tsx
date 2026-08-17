@@ -8,7 +8,9 @@ import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { AssemblyParts } from "../assembly-parts";
+import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { SheetShell } from "./sheet-shell";
+import { haptic } from "@/lib/haptics";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
 function SheetRow({
@@ -53,6 +55,8 @@ interface CommandResultSheetProps {
   onNew: () => void;
   onCompare: () => void;
   onAddToProject: () => void;
+  query: string;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
 /** Inline result body — used by the mobile result sheet AND by the wide-desktop
@@ -69,6 +73,8 @@ export function CommandResultBreakdown({
   onNew,
   onCompare,
   onAddToProject,
+  query,
+  setQuery,
   columns = 1,
 }: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
   const t = useTranslations("command");
@@ -164,6 +170,16 @@ export function CommandResultBreakdown({
           {pricingRows}
         </div>
       ))}
+      {focus.calc && (
+        <NearbySpecs
+          input={focus.calc.input}
+          onPick={(row) => {
+            if (!focus.calc) return;
+            haptic("commit");
+            setQuery(applyNearbySpec(query, picked, row, focus.calc.input));
+          }}
+        />
+      )}
       <div className="flex gap-2 mt-4">
         <button
           type="button"

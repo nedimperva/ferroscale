@@ -3,7 +3,7 @@ import type { CommandSuggestionGroup, CommandSuggestionItem } from "@ferroscale/
 /**
  * The chip row reads as one flat queue today, even though the items behind it
  * are three different things: what this user actually types, their saved
- * presets, and the catalog. Grouping them makes the row scannable — and makes
+ * parts, and the catalog. Grouping them makes the row scannable — and makes
  * "your sizes come first" visible rather than merely true.
  */
 

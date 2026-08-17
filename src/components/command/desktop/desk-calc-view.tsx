@@ -31,8 +31,8 @@ import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
-import { LineItems } from "../line-items";
 import { AssemblyParts } from "../assembly-parts";
+import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { massBand } from "../mass-band";
 import {
   editLineToken,
@@ -177,6 +177,16 @@ export function DeskCalcView({
   const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
+  // Which `+` item the glance row and the breakdown describe. Picked from
+  // the assembly list in the right rail, not repeated under the hero.
+  const [picked, setPicked] = useState(line.activeIndex);
+  const [pickedSeed, setPickedSeed] = useState(line.raw);
+  if (pickedSeed !== line.raw) {
+    setPickedSeed(line.raw);
+    setPicked(line.activeIndex);
+  }
+  const focusParse: CommandParseResult =
+    line.multi && line.items[picked]?.parse.valid ? line.items[picked].parse : p;
 
   const focusInputAtEnd = useCallback(() => {
     requestAnimationFrame(() => {
@@ -607,7 +617,9 @@ export function DeskCalcView({
               {/* descriptive / issue / hint line */}
               <div className="mt-[18px] min-h-[20px]">
                 {line.multi ? (
-                  <LineItems line={line} />
+                  <span className="font-mono text-[14px] text-muted">
+                    {t("result.assembly", { count: line.items.length })}
+                  </span>
                 ) : p.valid && p.kgm != null ? (
                   <span className="font-mono text-[14px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
@@ -680,7 +692,7 @@ export function DeskCalcView({
                 flex row with the action cluster crushed the grid to 21px per
                 cell and clipped every value mid-number. */}
             <div style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}>
-              <FoldCells p={p} sym={sym} />
+              <FoldCells p={focusParse} sym={sym} />
             </div>
             <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
               <div className="ml-auto flex items-center gap-2">
@@ -910,7 +922,14 @@ export function DeskCalcView({
             maxWidth: compact ? "100%" : 400,
           }}
         >
-          <DeskBreakdown p={p} line={line} />
+          <DeskBreakdown
+            p={focusParse}
+            line={line}
+            picked={picked}
+            onPick={setPicked}
+            query={query}
+            setQuery={setQuery}
+          />
         </DeskPanel>
       </div>
     </div>
@@ -969,16 +988,23 @@ const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?
   totalCost: { strong: true, accent: "var(--blue-strong)" },
 };
 
-function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }) {
+function DeskBreakdown({
+  p,
+  line,
+  picked,
+  onPick,
+  query,
+  setQuery,
+}: {
+  p: CommandParseResult;
+  line: CommandLine;
+  picked: number;
+  onPick: (index: number) => void;
+  query: string;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+}) {
   const t = useTranslations("command");
-  const [picked, setPicked] = useState(line.activeIndex);
-  const [seed, setSeed] = useState(line.raw);
-  if (seed !== line.raw) {
-    setSeed(line.raw);
-    setPicked(line.activeIndex);
-  }
-  const focus =
-    line.multi && line.items[picked]?.parse.valid ? line.items[picked].parse : p;
+  const focus = p;
   const r = focus.calc?.result;
   const marginPercent = useSyncExternalStore(
     marginPercentStore.subscribe,
@@ -991,16 +1017,17 @@ function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }
     massTolerancePercentStore.getServerSnapshot,
   );
   const rows = focus.valid ? buildBreakdownRows(focus, t, { marginPercent, massTolerancePercent }) : null;
-  // The expanded right column keeps a tighter subset: density lives in the
-  // header, and per-piece price / subtotal stay sheet-only.
-  const geometry = rows?.geometry.filter((row) => row.id !== "density") ?? [];
+  // The expanded right column keeps a tighter subset: kg/m is already in the
+  // glance row, density lives in the header, and per-piece price / subtotal
+  // stay sheet-only.
+  const geometry = rows?.geometry.filter((row) => row.id !== "density" && row.id !== "massPerMetre") ?? [];
   const pricing =
     rows?.pricing.filter((row) => row.id !== "perPiecePrice" && row.id !== "subtotal") ?? [];
 
   return (
     <>
       {line.multi ? (
-        <AssemblyParts line={line} selected={picked} onSelect={setPicked} />
+        <AssemblyParts line={line} selected={picked} onSelect={onPick} />
       ) : (
         <div className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
           {t("desktop.breakdown")}
@@ -1039,6 +1066,15 @@ function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }
               <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
             ))}
           </div>
+          {focus.calc && (
+            <NearbySpecs
+              input={focus.calc.input}
+              onPick={(row) => {
+                if (!focus.calc) return;
+                setQuery(applyNearbySpec(query, picked, row, focus.calc.input));
+              }}
+            />
+          )}
         </>
       ) : (
         <div

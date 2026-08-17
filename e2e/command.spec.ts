@@ -21,6 +21,14 @@ test.describe("Command bar", () => {
     await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
   });
 
+  test("a nearby size under the breakdown rewrites just the section", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m+x2");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Use HEB 120 instead" }).click();
+    await expect(page.getByText("heb120", { exact: true })).toBeVisible();
+    await expect(page.getByText("x2", { exact: true })).toBeVisible();
+  });
+
   test("a shared ?q= link hydrates the command line", async ({ page }) => {
     await page.goto("/en?q=ipe200+4m+x3");
     await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
@@ -45,7 +53,7 @@ test.describe("Command bar", () => {
     await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
 
     // The item list replaces the single-item equation line...
-    const items = page.getByRole("list", { name: "Line items" });
+    const items = page.getByRole("list", { name: "Assembly parts" });
     await expect(items.getByRole("listitem")).toHaveCount(2);
 
     // ...and the hero is the sum of the two, not either one alone.
@@ -78,7 +86,7 @@ test.describe("Command bar", () => {
       el.dispatchEvent(new ClipboardEvent("paste", { clipboardData: data, bubbles: true }));
     });
 
-    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
   });
 
@@ -96,15 +104,15 @@ test.describe("Command bar", () => {
     });
 
     // Three items: the one that was typed, plus the two pasted.
-    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(3);
+    await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(3);
     await expect(page.getByText("hea120", { exact: true })).toBeVisible();
   });
 
   test("the breakdown says which item it describes on a multi-item line", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
-    // The hero totals the line; the breakdown lists every part so the
-    // drawing and rows don't read as the sum.
+    // The hero totals the line; the assembly list in the breakdown picks a part.
     await expect(page.getByText("Assembly · 2 parts")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Assembly parts" })).toBeVisible();
 
     await page.goto("/en?q=hea120+6m+x2");
     await expect(page.getByText(/Assembly · \d+ parts/)).toHaveCount(0);

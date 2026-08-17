@@ -10,6 +10,7 @@ import { useCompare } from "@/hooks/useCompare";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
+import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
@@ -47,7 +48,6 @@ import { buildShareCardModel } from "./line-summary";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
-import { LineItems } from "./line-items";
 import { massBand } from "./mass-band";
 import {
   activeItemText,
@@ -163,8 +163,10 @@ export function CommandShell() {
     addTemplateCalculation,
     removeCalculation,
     updateCalculationQuantity,
+    updateCalculationNote,
+    updateProjectPaintCoats,
   } = useProjects();
-  const { presetsForProfile } = usePresets();
+  const { presets } = usePresets();
   const priceBook = usePriceBook();
 
   const [query, setQuery] = useState(DEMO_QUERY);
@@ -324,9 +326,15 @@ export function CommandShell() {
 
   // `p` is handed over so the suggestion engine doesn't parse the same query
   // a second time on every keystroke.
+  // Parts are the size presets. A leftover DimensionPreset collection still
+  // folds in so old synced data is not dropped; nothing new is written there.
+  const sizePresetsForProfile = useMemo(
+    () => buildSizePresetLookup(savedEntries, presets),
+    [savedEntries, presets],
+  );
   const sug = useMemo(
-    () => cmdSuggest(activeQuery, parserSettings, presetsForProfile, usageSource, p),
-    [activeQuery, parserSettings, presetsForProfile, usageSource, p],
+    () => cmdSuggest(activeQuery, parserSettings, sizePresetsForProfile, usageSource, p),
+    [activeQuery, parserSettings, sizePresetsForProfile, usageSource, p],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
@@ -761,6 +769,8 @@ export function CommandShell() {
       },
       onRemoveItem: removeCalculation,
       onSetItemQuantity: updateCalculationQuantity,
+      onSetItemNote: updateCalculationNote,
+      onSetPaintCoats: updateProjectPaintCoats,
       onOpenItem: loadInput,
       onAddItem: (projectId: string) => {
         if (!p.calc) {
@@ -789,6 +799,8 @@ export function CommandShell() {
       restoreProject,
       removeCalculation,
       updateCalculationQuantity,
+      updateCalculationNote,
+      updateProjectPaintCoats,
       loadInput,
       addCalculation,
       logQuotePrinted,
@@ -1336,7 +1348,9 @@ export function CommandShell() {
 
             <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
               {line.multi ? (
-                <LineItems line={line} compact maxRows={3} />
+                <span className="font-mono text-[12px] text-muted">
+                  {t("result.assembly", { count: line.items.length })}
+                </span>
               ) : p.valid && p.kgm != null ? (
                 <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
                   <span>
@@ -1790,6 +1804,8 @@ export function CommandShell() {
             <CommandResultSheet
               p={p}
               line={line}
+              query={query}
+              setQuery={setQuery}
               onClose={() => setSheet(null)}
               onSave={doSave}
               isSaved={!!currentSavedEntry}

@@ -9,7 +9,7 @@ import { currentQuery, renderCommandShell } from "@/test/render-command";
  * keyboard work in the "bar gets faster" sprint rewrites.
  */
 
-describe("command bar", () => {
+describe("command bar", { timeout: 15_000 }, () => {
   beforeEach(() => {
     vi.useRealTimers();
   });

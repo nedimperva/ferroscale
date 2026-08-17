@@ -49,7 +49,10 @@
       "print": "Štampaj ili sačuvaj kao PDF",
       "printAria": "Štampaj ponudu za {name}",
       "footnote": "Mase su teorijske, izračunate iz EN standardnih dimenzija i nominalnih gustoća. Cijene ne uključuju dostavu osim ako je navedeno.",
-      "short": "Ponuda"
+      "short": "Ponuda",
+      "material": "Materijal",
+      "painting": "Bojenje · {kg} kg · {coats, plural, one {# sloj} few {# sloja} other {# slojeva}}",
+      "paintCoat": "Boja · {name} ×{layers} · {kg} kg"
     },
     "priceBook": {
       "title": "Cjenovnik",
@@ -220,6 +223,10 @@
       "perPieceSuffix": "/kom",
       "breakdown": "Pregled"
     },
+    "nearby": {
+      "title": "Slične dimenzije",
+      "pickAria": "Koristi {label} umjesto toga"
+    },
     "profiles": {
       "round": "Okruglo",
       "squareBar": "Kvadratna šipka",
@@ -343,6 +350,10 @@
       "wasteAllowance": "Dodatak za otpad",
       "wasteAllowanceHint": "Dodaje se svakoj stavci s cijenom",
       "marginHint": "Vidi se na ponudi, nikad na kalkulatoru",
+      "paintRate": "Zadana cijena boje",
+      "paintRateHint": "Popunjava se kad dodaš sloj na projektu — tamo je možeš promijeniti",
+      "paintCoverage": "Zadana pokrivnost boje",
+      "paintCoverageHint": "Koliko kvadratnih metara pokrije jedan kilogram boje",
       "vatOnHint": "Dodaje se na svaki ukupan iznos",
       "vatOffHint": "Isključen — iznosi su neto",
       "headlineNumber": "Glavni broj",
@@ -420,7 +431,7 @@
       "syncing": "Sinhronizujem...",
       "syncNow": "Sinhronizuj sada",
       "disconnect": "Prekini vezu",
-      "description": "Sinhronizujte sačuvane stavke, projekte, poređenje, predloške, cjenovnik i navike kucanja na Google Drive — end-to-end šifrovano vašom lozinkom.",
+      "description": "Sinhronizujte dijelove, projekte, poređenje, cjenovnik i navike kucanja na Google Drive — end-to-end šifrovano vašom lozinkom.",
       "connecting": "Povezujem...",
       "connectGoogleDrive": "Poveži Google Drive"
     },
@@ -472,7 +483,7 @@
       "refine": "Doradi",
       "group": {
         "usage": "Vaše",
-        "preset": "Predlošci",
+        "preset": "Dijelovi",
         "standard": "Standardno"
       },
       "addItem": "+ stavka"
@@ -586,7 +597,8 @@
         "items": "Stavke",
         "weight": "Težina",
         "materialCost": "Cijena materijala",
-        "quoted": "Ponuda +{margin}%"
+        "quoted": "Ponuda +{margin}%",
+        "paint": "Boja"
       },
       "itemColumns": {
         "item": "Stavka",
@@ -597,8 +609,29 @@
       },
       "totalRow": "{count, plural, one {# stavka} other {# stavki}}",
       "notesLabel": "Bilješke",
-      "moreDetails": "Bilješke i aktivnost",
-      "hideDetails": "Sakrij bilješke",
+      "moreDetails": "Bilješke, boja i aktivnost",
+      "hideDetails": "Sakrij detalje",
+      "itemNotePlaceholder": "Bilješka",
+      "itemNoteAria": "Bilješka za {name}",
+      "paintingLabel": "Bojenje",
+      "paintingHint": "Površina je vanjska strana svake stavke. Svaki sloj ima svoju boju i cijenu.",
+      "paintNoSurface": "Ove stavke nemaju površinu za boju (nema vanjskog obima). Masa se i dalje računa; boja ostaje 0.",
+      "paintSurface": "Površina",
+      "paintPrice": "Cijena",
+      "paintPriceUnit": "/kg",
+      "paintCoverage": "Pokrivnost",
+      "paintCoverageUnit": "m²/kg",
+      "paintLayers": "Slojevi",
+      "paintPrimer": "Temelj",
+      "paintFinish": "Završni",
+      "paintCustom": "Sloj",
+      "paintAddPrimer": "+ Temelj",
+      "paintAddFinish": "+ Završni",
+      "paintAddCustom": "+ Još jedan sloj",
+      "paintRemove": "Ukloni {name}",
+      "paintTotal": "Ukupno boja",
+      "paintCoats": "Slojevi",
+      "paintCoatsUnit": "×",
       "notesPlaceholder": "Sve što radionica treba znati…",
       "activityLabel": "Aktivnost",
       "activity": {

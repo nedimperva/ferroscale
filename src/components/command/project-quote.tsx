@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CurrencyCode } from "@/lib/calculator/types";
-import type { Project } from "@/hooks/useProjects";
+import { computeAggregates, type Project } from "@/hooks/useProjects";
 import { sellPrice } from "./breakdown-rows";
 
 /**
@@ -29,7 +29,10 @@ export function ProjectQuote({
 
   const totalKg = calcs.reduce((sum, c) => sum + (c.result.totalWeightKg ?? 0), 0);
   const totalCost = calcs.reduce((sum, c) => sum + (c.result.grandTotalAmount ?? 0), 0);
-  const total = marginPercent > 0 ? sellPrice(totalCost, marginPercent) : totalCost;
+  const materialTotal = marginPercent > 0 ? sellPrice(totalCost, marginPercent) : totalCost;
+  const aggregates = computeAggregates(project);
+  const hasPainting = aggregates.paintCoatTotals.length > 0 && aggregates.totalPaintingCost > 0;
+  const total = materialTotal + (hasPainting ? aggregates.totalPaintingCost : 0);
 
   // Stored short labels tack the length on ("SHS 40x40x3 x L 4000 mm"); the
   // quote has a Length column, so the item column keeps just the profile.
@@ -56,6 +59,18 @@ export function ProjectQuote({
         </span>
       </header>
 
+      {(project.client || project.dueDate || project.description) && (
+        <p style={{ fontSize: 12, margin: "10px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
+          {[
+            project.client,
+            project.dueDate,
+            project.description,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
+
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginTop: 14 }}>
         <thead>
           <tr style={{ textAlign: "left" }}>
@@ -72,7 +87,12 @@ export function ProjectQuote({
             const r = calc.result;
             return (
               <tr key={calc.id}>
-                <td style={cell}>{itemLabel(calc.normalizedProfile?.shortLabel ?? r.profileLabel)}</td>
+                <td style={cell}>
+                  {itemLabel(calc.templateName ?? calc.normalizedProfile?.shortLabel ?? r.profileLabel)}
+                  {calc.note ? (
+                    <div style={{ fontSize: 10.5, opacity: 0.7, marginTop: 2 }}>{calc.note}</div>
+                  ) : null}
+                </td>
                 <td style={cell}>{r.gradeLabel}</td>
                 <td style={numeric}>{Number((r.lengthMm / 1000).toFixed(3))} m</td>
                 <td style={numeric}>{r.quantity}</td>
@@ -87,6 +107,44 @@ export function ProjectQuote({
           })}
         </tbody>
         <tfoot>
+          {hasPainting && (
+            <>
+              <tr>
+                <td style={cell} colSpan={4}>
+                  {t("quote.material")}
+                </td>
+                <td style={numeric}>
+                  {fsWeight(totalKg)} {fsWeightUnit()}
+                </td>
+                <td style={numeric}>
+                  {sym} {fsMoney(materialTotal)}
+                </td>
+              </tr>
+              {aggregates.paintCoatTotals.map((row) => {
+                const name =
+                  row.coat.kind === "primer"
+                    ? t("projects.paintPrimer")
+                    : row.coat.kind === "finish"
+                      ? t("projects.paintFinish")
+                      : row.coat.name?.trim() || t("projects.paintCustom");
+                return (
+                  <tr key={row.coat.id}>
+                    <td style={cell} colSpan={4}>
+                      {t("quote.paintCoat", {
+                        name,
+                        layers: row.coat.layers,
+                        kg: row.kg,
+                      })}
+                    </td>
+                    <td style={numeric} />
+                    <td style={numeric}>
+                      {sym} {fsMoney(row.cost)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </>
+          )}
           <tr style={{ fontWeight: 800 }}>
             <td style={cell} colSpan={4}>
               {t("quote.total")}

@@ -9,6 +9,8 @@ import {
   hapticsStore,
   marginPercentStore,
   massTolerancePercentStore,
+  defaultPaintPriceStore,
+  defaultPaintCoverageStore,
   type SharedCalcSettings,
 } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
@@ -269,6 +271,16 @@ export function CommandSettingsSheet({
     massTolerancePercentStore.getSnapshot,
     massTolerancePercentStore.getServerSnapshot,
   );
+  const defaultPaintPrice = useSyncExternalStore(
+    defaultPaintPriceStore.subscribe,
+    defaultPaintPriceStore.getSnapshot,
+    defaultPaintPriceStore.getServerSnapshot,
+  );
+  const defaultPaintCoverage = useSyncExternalStore(
+    defaultPaintCoverageStore.subscribe,
+    defaultPaintCoverageStore.getSnapshot,
+    defaultPaintCoverageStore.getServerSnapshot,
+  );
   const haptics = useSyncExternalStore(
     hapticsStore.subscribe,
     hapticsStore.getSnapshot,
@@ -293,6 +305,10 @@ export function CommandSettingsSheet({
     onSetMarginPercent: marginPercentStore.set,
     massTolerancePercent,
     onSetMassTolerancePercent: massTolerancePercentStore.set,
+    defaultPaintPrice,
+    onSetDefaultPaintPrice: defaultPaintPriceStore.set,
+    defaultPaintCoverage,
+    onSetDefaultPaintCoverage: defaultPaintCoverageStore.set,
   });
 
   const filtering = search.trim().length > 0;

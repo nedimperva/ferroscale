@@ -6,6 +6,7 @@ import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { DimensionPreset } from "@/hooks/usePresets";
 import { PROJECT_STATUSES, type Project, type ProjectActivityEntry, type ProjectStatus } from "@/hooks/useProjects";
+import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
@@ -127,9 +128,12 @@ function normalizeProject(raw: unknown): Project | null {
     updatedAt: candidate.updatedAt,
     deletedAt: candidate.deletedAt,
     calculations: candidate.calculations,
-    paintingPricePerKg: candidate.paintingPricePerKg,
-    paintingCoverageM2PerKg: candidate.paintingCoverageM2PerKg,
-    paintingCoats: candidate.paintingCoats,
+    paintCoats: normalizePaintCoats(candidate.paintCoats, {
+      paintingPricePerKg: (candidate as { paintingPricePerKg?: number }).paintingPricePerKg,
+      paintingCoverageM2PerKg: (candidate as { paintingCoverageM2PerKg?: number })
+        .paintingCoverageM2PerKg,
+      paintingCoats: (candidate as { paintingCoats?: number }).paintingCoats,
+    }),
   };
 }
 

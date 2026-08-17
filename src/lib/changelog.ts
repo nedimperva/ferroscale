@@ -17,6 +17,36 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.21.0",
+    date: "2026-08-17",
+    changed: [
+      "Project paint is a list of coats now. Surface comes from the items; add a primer and a finish with their own price per kg and coverage. Settings holds the default rate you start from",
+      "A multi-item line no longer repeats its parts under the hero. The assembly list stays in the breakdown — tap a row there to aim the drawing",
+    ],
+    changed_bs: [
+      "Boja na projektu je lista slojeva. Površina dolazi iz stavki; dodaj temelj i završni sloj sa svojom cijenom po kg i pokrivnošću. U postavkama je zadana cijena od koje krećeš",
+      "Linija s više stavki više ne ponavlja dijelove ispod heroja. Lista sklopa ostaje u pregledu — tamo dodirom biraš crtež",
+    ],
+  },
+  {
+    version: "3.20.0",
+    date: "2026-08-17",
+    added: [
+      "Nearby sizes under the breakdown — tap HEB 120 or HEA 140 to swap the section without retyping the line",
+      "Painting rate, coverage and coats on a project, plus a note on each line. Both print on the quote",
+    ],
+    changed: [
+      "Size chips labelled Parts come from saved parts (and leftover old presets). Saving a part is how you keep a shop size",
+    ],
+    added_bs: [
+      "Slične dimenzije ispod pregleda — dodirni HEB 120 ili HEA 140 da zamijeniš presjek bez ponovnog kucanja linije",
+      "Cijena boje, pokrivnost i slojevi na projektu, plus bilješka na svakoj stavci. Oboje ide na ponudu",
+    ],
+    changed_bs: [
+      "Čipovi dimenzija označeni Dijelovi dolaze iz sačuvanih dijelova (i starih predložaka). Čuvanje dijela je kako se pamti radionička dimenzija",
+    ],
+  },
+  {
     version: "3.19.0",
     date: "2026-08-12",
     added: [

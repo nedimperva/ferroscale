@@ -1,5 +1,6 @@
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { Project, ProjectStatus } from "@/hooks/useProjects";
+import type { ProjectPaintCoat } from "@/lib/projects/paint";
 
 /**
  * Everything the Projects surfaces can do to a project, in one bag. The list
@@ -20,6 +21,8 @@ export interface ProjectActions {
   onDelete: (id: string) => void;
   onRemoveItem: (projectId: string, calcId: string) => void;
   onSetItemQuantity: (projectId: string, calcId: string, quantity: number) => void;
+  onSetItemNote: (projectId: string, calcId: string, note: string) => void;
+  onSetPaintCoats: (id: string, coats: ProjectPaintCoat[]) => void;
   /** Load an item back into the command bar. */
   onOpenItem: (input: CalculationInput) => void;
   /**

@@ -58,6 +58,7 @@ export interface ProjectItemRow {
   quantity: number;
   weightKg: number;
   amount: number;
+  note?: string;
   /** Templates hold their own parts; their quantity is not editable here. */
   isTemplate: boolean;
 }
@@ -80,6 +81,7 @@ export function projectItemRows(project: Project): ProjectItemRow[] {
     quantity: calc.templateName ? (calc.quantityMultiplier ?? 1) : calc.result.quantity,
     weightKg: calc.result.totalWeightKg,
     amount: calc.result.grandTotalAmount,
+    note: calc.note,
     isTemplate: Boolean(calc.templateName),
   }));
 }
@@ -92,6 +94,13 @@ export interface ProjectSummary {
   totalCost: number;
   /** Material cost plus the margin the quote adds on top. */
   quotedTotal: number;
+  paintKgNeeded: number;
+  paintingCost: number;
+  totalSurfaceAreaM2: number;
+  paintCoatTotals: ReturnType<typeof computeAggregates>["paintCoatTotals"];
+  /** Quoted material plus painting, when a paint rate is set. */
+  quotedWithPaint: number;
+  hasPainting: boolean;
   currency: CurrencyCode;
   currencySymbol: string;
   isEmpty: boolean;
@@ -100,6 +109,7 @@ export interface ProjectSummary {
 export function projectSummary(project: Project, marginPercent: number): ProjectSummary {
   const aggregates = computeAggregates(project);
   const quotedTotal = Math.round(aggregates.totalCost * (1 + marginPercent / 100) * 100) / 100;
+  const hasPainting = (project.paintCoats?.length ?? 0) > 0;
   return {
     project,
     status: projectStatus(project),
@@ -107,6 +117,12 @@ export function projectSummary(project: Project, marginPercent: number): Project
     totalWeightKg: aggregates.totalWeightKg,
     totalCost: aggregates.totalCost,
     quotedTotal,
+    paintKgNeeded: aggregates.paintKgNeeded,
+    paintingCost: aggregates.totalPaintingCost,
+    totalSurfaceAreaM2: aggregates.totalSurfaceAreaM2,
+    paintCoatTotals: aggregates.paintCoatTotals,
+    quotedWithPaint: Math.round((quotedTotal + aggregates.totalPaintingCost) * 100) / 100,
+    hasPainting,
     currency: aggregates.currency,
     currencySymbol: CURRENCY_SYMBOLS[aggregates.currency] ?? "€",
     isEmpty: aggregates.count === 0,

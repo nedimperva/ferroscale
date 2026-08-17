@@ -49,7 +49,10 @@
       "print": "Print or save as PDF",
       "printAria": "Print a quote for {name}",
       "footnote": "Weights are theoretical, calculated from EN standard dimensions and nominal densities. Prices exclude delivery unless stated.",
-      "short": "Quote"
+      "short": "Quote",
+      "material": "Material",
+      "painting": "Painting · {kg} kg · {coats, plural, one {# coat} other {# coats}}",
+      "paintCoat": "Paint · {name} ×{layers} · {kg} kg"
     },
     "priceBook": {
       "title": "Price book",
@@ -220,6 +223,10 @@
       "perPieceSuffix": "/pc",
       "breakdown": "Breakdown"
     },
+    "nearby": {
+      "title": "Nearby sizes",
+      "pickAria": "Use {label} instead"
+    },
     "profiles": {
       "round": "Round",
       "squareBar": "Square bar",
@@ -343,6 +350,10 @@
       "wasteAllowance": "Waste allowance",
       "wasteAllowanceHint": "Added to every priced line",
       "marginHint": "Shown on quotes, never on the calculator",
+      "paintRate": "Default paint rate",
+      "paintRateHint": "Filled in when you add a coat on a project — you can change it there",
+      "paintCoverage": "Default paint coverage",
+      "paintCoverageHint": "How many square metres one kilogram of paint covers",
       "vatOnHint": "Added on top of every total",
       "vatOffHint": "Off — totals are net",
       "headlineNumber": "Headline number",
@@ -420,7 +431,7 @@
       "syncing": "Syncing...",
       "syncNow": "Sync now",
       "disconnect": "Disconnect",
-      "description": "Sync your saved entries, projects, compare, presets, price book and typing habits to Google Drive — end-to-end encrypted with your own passphrase.",
+      "description": "Sync your parts, projects, compare, price book and typing habits to Google Drive — end-to-end encrypted with your own passphrase.",
       "connecting": "Connecting...",
       "connectGoogleDrive": "Connect Google Drive"
     },
@@ -472,7 +483,7 @@
       "refine": "Refine",
       "group": {
         "usage": "Yours",
-        "preset": "Presets",
+        "preset": "Parts",
         "standard": "Standard"
       },
       "addItem": "+ item"
@@ -586,7 +597,8 @@
         "items": "Items",
         "weight": "Weight",
         "materialCost": "Material cost",
-        "quoted": "Quoted +{margin}%"
+        "quoted": "Quoted +{margin}%",
+        "paint": "Paint"
       },
       "itemColumns": {
         "item": "Item",
@@ -597,8 +609,29 @@
       },
       "totalRow": "{count, plural, one {# item} other {# items}}",
       "notesLabel": "Notes",
-      "moreDetails": "Notes & activity",
-      "hideDetails": "Hide notes",
+      "moreDetails": "Notes, paint & activity",
+      "hideDetails": "Hide details",
+      "itemNotePlaceholder": "Note",
+      "itemNoteAria": "Note for {name}",
+      "paintingLabel": "Painting",
+      "paintingHint": "Surface is the outside of every item. Each coat has its own paint and price.",
+      "paintNoSurface": "These items have no paint area (no outer perimeter). Weight still quotes; paint stays at 0.",
+      "paintSurface": "Surface",
+      "paintPrice": "Price",
+      "paintPriceUnit": "/kg",
+      "paintCoverage": "Coverage",
+      "paintCoverageUnit": "m²/kg",
+      "paintLayers": "Coats",
+      "paintPrimer": "Primer",
+      "paintFinish": "Finish",
+      "paintCustom": "Coat",
+      "paintAddPrimer": "+ Primer",
+      "paintAddFinish": "+ Finish",
+      "paintAddCustom": "+ Another coat",
+      "paintRemove": "Remove {name}",
+      "paintTotal": "Paint total",
+      "paintCoats": "Coats",
+      "paintCoatsUnit": "×",
       "notesPlaceholder": "Anything the shop needs to know…",
       "activityLabel": "Activity",
       "activity": {

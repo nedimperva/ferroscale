@@ -78,7 +78,7 @@ test.describe("Desktop fold", () => {
     await page
       .getByLabel("FerroScale Command query")
       .pressSequentially("ipe200 4m x3 ", { delay: 5 });
-    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
   });
 });
 
@@ -210,7 +210,7 @@ test.describe("Assemblies", () => {
 
     // Both items come back on the line — restoring only the entry's own input
     // dropped everything after the first part.
-    await expect(page.getByRole("list", { name: "Line items" }).getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
   });
 
   test("a saved part goes into a project from its row menu", async ({ page }) => {
@@ -229,6 +229,31 @@ test.describe("Assemblies", () => {
     await page.getByRole("button", { name: /^Open project Mezzanine/ }).click();
     await expect(page.getByText("HEA 120").first()).toBeVisible();
     await expect(page.getByText(/^1 item$/)).toBeVisible();
+  });
+
+  test("a paint rate and a line note sit on the project", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m x2 ");
+    await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Add to project" }).click();
+    await page.getByPlaceholder("New project name...").fill("Gate");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
+    await page.getByRole("button", { name: /^Open project Gate/ }).click();
+
+    await page.getByLabel("Note for HEA 120").fill("posts");
+    await page.getByRole("button", { name: "+ Finish" }).click();
+    await page.getByLabel("Price · Finish").fill("8");
+    await page.getByLabel("Price · Finish").blur();
+    await expect(page.getByLabel("Note for HEA 120")).toHaveValue("posts");
+    await expect(page.getByText(/^Paint$/)).toBeVisible();
+    await expect(page.getByText("Surface", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "+ Primer" }).click();
+    await expect(page.getByText("Primer", { exact: true })).toBeVisible();
   });
 });
 

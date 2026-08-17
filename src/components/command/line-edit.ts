@@ -1,4 +1,5 @@
-import { cmdSplitLine, cmdTokenize } from "@ferroscale/metal-core";
+import { cmdClassifyToken, cmdSplitLine, cmdTokenize } from "@ferroscale/metal-core";
+import type { CommandTokenKind } from "@ferroscale/metal-core";
 
 /**
  * Chip and caret editing for a line that may hold several `+`-joined items.
@@ -82,6 +83,21 @@ export function replaceLineToken(
   return withItemTokens(query, item, (tokens) =>
     tokens.map((current, i) => (i === token ? next : current)),
   );
+}
+
+/** Swap the token that plays this role in one item (profile, length, …). */
+export function replaceItemTokenKind(
+  query: string,
+  item: number,
+  kind: CommandTokenKind,
+  next: string,
+): string {
+  return withItemTokens(query, item, (tokens) => {
+    const index = tokens.findIndex((token) => cmdClassifyToken(token) === kind);
+    return index >= 0
+      ? tokens.map((token, i) => (i === index ? next : token))
+      : [...tokens, next];
+  });
 }
 
 /**

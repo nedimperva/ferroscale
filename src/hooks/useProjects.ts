@@ -12,6 +12,11 @@ import {
   markEntityDeleted,
   persistProjects,
 } from "@/lib/sync/collections";
+import {
+  projectSurfaceM2,
+  totalPaint,
+  type ProjectPaintCoat,
+} from "@/lib/projects/paint";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -92,12 +97,8 @@ export interface Project {
   updatedAt: string;
   deletedAt?: string;
   calculations: ProjectCalculation[];
-  /** Paint price per kg. */
-  paintingPricePerKg?: number;
-  /** Paint coverage rate in m² per kg (default 8). */
-  paintingCoverageM2PerKg?: number;
-  /** Number of paint coats (default 1). */
-  paintingCoats?: number;
+  /** One row per paint (primer, finish, extra). Surface comes from the items. */
+  paintCoats?: ProjectPaintCoat[];
 }
 
 export interface ProjectAggregates {
@@ -109,6 +110,7 @@ export interface ProjectAggregates {
   totalSurfaceAreaM2: number;
   paintKgNeeded: number;
   totalPaintingCost: number;
+  paintCoatTotals: ReturnType<typeof totalPaint>["coats"];
 }
 
 export interface ProjectCsvLabels {
@@ -186,32 +188,35 @@ const DEFAULT_PROJECT_CSV_LABELS: ProjectCsvLabels = {
 /*  Aggregation helper                                                */
 /* ------------------------------------------------------------------ */
 
-const DEFAULT_COVERAGE_M2_PER_KG = 8;
-
 export function computeAggregates(project: Project): ProjectAggregates {
+  const emptyPaint = { coats: [] as ReturnType<typeof totalPaint>["coats"], kg: 0, cost: 0 };
   if (project.calculations.length === 0) {
-    return { totalWeightKg: 0, totalCost: 0, costPerKg: 0, currency: "EUR", count: 0, totalSurfaceAreaM2: 0, paintKgNeeded: 0, totalPaintingCost: 0 };
+    return {
+      totalWeightKg: 0,
+      totalCost: 0,
+      costPerKg: 0,
+      currency: "EUR",
+      count: 0,
+      totalSurfaceAreaM2: 0,
+      paintKgNeeded: 0,
+      totalPaintingCost: 0,
+      paintCoatTotals: [],
+    };
   }
   let totalWeightKg = 0;
   let totalCost = 0;
-  let totalSurfaceAreaM2 = 0;
   const currency = project.calculations[0].result.currency;
   for (const calc of project.calculations) {
     totalWeightKg += calc.result.totalWeightKg;
     totalCost += calc.result.grandTotalAmount;
-    if (calc.result.surfaceAreaM2 != null) {
-      totalSurfaceAreaM2 += calc.result.surfaceAreaM2;
-    }
   }
   const roundedWeight = Math.round(totalWeightKg * 100) / 100;
   const roundedCost = Math.round(totalCost * 100) / 100;
   const costPerKg = roundedWeight > 0 ? Math.round((roundedCost / roundedWeight) * 100) / 100 : 0;
-  const roundedSurfaceArea = Math.round(totalSurfaceAreaM2 * 100) / 100;
-  const coverageRate = project.paintingCoverageM2PerKg ?? DEFAULT_COVERAGE_M2_PER_KG;
-  const coats = project.paintingCoats ?? 1;
-  const paintKgNeeded = coverageRate > 0 ? Math.round((roundedSurfaceArea * coats / coverageRate) * 100) / 100 : 0;
-  const pricePerKg = project.paintingPricePerKg ?? 0;
-  const totalPaintingCost = Math.round(paintKgNeeded * pricePerKg * 100) / 100;
+  const roundedSurfaceArea = projectSurfaceM2(project.calculations);
+  const paint = project.paintCoats?.length
+    ? totalPaint(roundedSurfaceArea, project.paintCoats)
+    : emptyPaint;
   return {
     totalWeightKg: roundedWeight,
     totalCost: roundedCost,
@@ -219,8 +224,9 @@ export function computeAggregates(project: Project): ProjectAggregates {
     currency,
     count: project.calculations.length,
     totalSurfaceAreaM2: roundedSurfaceArea,
-    paintKgNeeded,
-    totalPaintingCost,
+    paintKgNeeded: paint.kg,
+    totalPaintingCost: paint.cost,
+    paintCoatTotals: paint.coats,
   };
 }
 
@@ -572,7 +578,7 @@ export interface UseProjectsReturn {
   updateCalculationQuantity: (projectId: string, calcId: string, quantity: number) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
   updateProjectDescription: (id: string, description: string) => void;
-  updateProjectPaintingSettings: (id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => void;
+  updateProjectPaintCoats: (id: string, coats: ProjectPaintCoat[]) => void;
   /** Quick-add: shows a picker if multiple projects exist, otherwise adds to the only one. */
   projectCount: number;
 }
@@ -683,11 +689,11 @@ export function useProjects(): UseProjectsReturn {
     );
   }, [setProjects]);
 
-  const updateProjectPaintingSettings = useCallback((id: string, pricePerKg: number | undefined, coverageM2PerKg: number | undefined, coats?: number | undefined) => {
+  const updateProjectPaintCoats = useCallback((id: string, coats: ProjectPaintCoat[]) => {
     setProjects((prev) =>
       prev.map((p) =>
         p.id === id && !p.deletedAt
-          ? { ...p, paintingPricePerKg: pricePerKg, paintingCoverageM2PerKg: coverageM2PerKg, paintingCoats: coats, updatedAt: new Date().toISOString() }
+          ? { ...p, paintCoats: coats, updatedAt: new Date().toISOString() }
           : p,
       ),
     );
@@ -1006,7 +1012,7 @@ export function useProjects(): UseProjectsReturn {
     updateCalculationQuantity,
     updateCalculationNote,
     updateProjectDescription,
-    updateProjectPaintingSettings,
+    updateProjectPaintCoats,
     projectCount: projects.length,
   };
 }

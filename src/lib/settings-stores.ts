@@ -43,6 +43,17 @@ export const massTolerancePercentStore = createNumberStore(
   (value) => Math.min(20, Math.max(0, value)),
 );
 export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
+/** Shop default when adding a paint coat on a project. The project can override. */
+export const defaultPaintPriceStore = createNumberStore(
+  "ferroscale-paint-price",
+  8,
+  (value) => Math.min(10_000, Math.max(0, value)),
+);
+export const defaultPaintCoverageStore = createNumberStore(
+  "ferroscale-paint-coverage",
+  8,
+  (value) => Math.min(200, Math.max(0.1, value)),
+);
 
 export type { CommandPricing };
 

@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Legacy size-shortcut collection. New sizes are saved as Parts;
+ * `buildSizePresetLookup` still folds these in so leftover synced records
+ * are not dropped. Nothing new should be written here.
+ */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DimensionKey, ProfileId } from "@/lib/datasets/types";
 import {

@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { PROJECT_STATUSES, type Project, type ProjectStatus } from "@/hooks/useProjects";
+import {
+  createPaintCoat,
+  type PaintCoatKind,
+  type ProjectPaintCoat,
+} from "@/lib/projects/paint";
+import {
+  defaultPaintCoverageStore,
+  defaultPaintPriceStore,
+} from "@/lib/settings-stores";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
 import { RowMenu } from "../row-menu";
@@ -276,6 +285,273 @@ function QuantityCell({
   );
 }
 
+function ItemNote({
+  row,
+  projectId,
+  actions,
+}: {
+  row: ReturnType<typeof projectItemRows>[number];
+  projectId: string;
+  actions: ProjectActions;
+}) {
+  const t = useTranslations("command");
+  const [draft, setDraft] = useState(row.note ?? "");
+  const [seededFrom, setSeededFrom] = useState(row.note ?? "");
+  if (seededFrom !== (row.note ?? "")) {
+    setSeededFrom(row.note ?? "");
+    setDraft(row.note ?? "");
+  }
+
+  return (
+    <input
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => {
+        if (draft.trim() !== (row.note ?? "")) {
+          actions.onSetItemNote(projectId, row.id, draft);
+        }
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") setDraft(row.note ?? "");
+      }}
+      placeholder={t("projects.itemNotePlaceholder")}
+      aria-label={t("projects.itemNoteAria", { name: row.specLabel })}
+      className="w-full min-w-0 border-0 bg-transparent p-0 text-[12px] text-foreground-secondary placeholder:text-muted-faint outline-none"
+    />
+  );
+}
+
+function coatTitle(
+  coat: ProjectPaintCoat,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
+  if (coat.kind === "primer") return t("projects.paintPrimer");
+  if (coat.kind === "finish") return t("projects.paintFinish");
+  return coat.name?.trim() || t("projects.paintCustom");
+}
+
+function PaintNumber({
+  label,
+  ariaLabel,
+  value,
+  suffix,
+  prefix,
+  min,
+  step,
+  onCommit,
+}: {
+  label: string;
+  ariaLabel?: string;
+  value: number;
+  suffix?: string;
+  prefix?: string;
+  min?: number;
+  step?: string;
+  onCommit: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const [seed, setSeed] = useState(value);
+  if (seed !== value) {
+    setSeed(value);
+    setDraft(String(value));
+  }
+  const commit = () => {
+    const next = Number(draft);
+    if (!Number.isFinite(next) || next < (min ?? 0)) {
+      setDraft(String(value));
+      return;
+    }
+    onCommit(next);
+  };
+  return (
+    <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 72px" }}>
+      <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">{label}</span>
+      <span className="flex items-center gap-1 h-9 rounded-[11px] border border-border-faint bg-[var(--surface)] px-2.5">
+        {prefix && <span className="font-mono text-[11px] text-muted flex-shrink-0">{prefix}</span>}
+        <input
+          type="number"
+          min={min ?? 0}
+          step={step ?? "any"}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+          aria-label={ariaLabel ?? label}
+          className="min-w-0 flex-1 border-0 bg-transparent font-mono text-[13px] text-foreground outline-none"
+        />
+        {suffix && <span className="font-mono text-[11px] text-muted flex-shrink-0">{suffix}</span>}
+      </span>
+    </label>
+  );
+}
+
+function PaintingForm({
+  project,
+  actions,
+  surfaceM2,
+  coatTotals,
+  paintKg,
+  paintCost,
+  currencySymbol,
+}: {
+  project: Project;
+  actions: ProjectActions;
+  surfaceM2: number;
+  coatTotals: ReturnType<typeof projectSummary>["paintCoatTotals"];
+  paintKg: number;
+  paintCost: number;
+  currencySymbol: string;
+}) {
+  const t = useTranslations("command");
+  const defaultPrice = useSyncExternalStore(
+    defaultPaintPriceStore.subscribe,
+    defaultPaintPriceStore.getSnapshot,
+    defaultPaintPriceStore.getServerSnapshot,
+  );
+  const defaultCoverage = useSyncExternalStore(
+    defaultPaintCoverageStore.subscribe,
+    defaultPaintCoverageStore.getSnapshot,
+    defaultPaintCoverageStore.getServerSnapshot,
+  );
+  const coats = project.paintCoats ?? [];
+  const defaults = { pricePerKg: defaultPrice, coverageM2PerKg: defaultCoverage };
+  const hasKind = (kind: PaintCoatKind) => coats.some((coat) => coat.kind === kind);
+
+  const setCoats = (next: ProjectPaintCoat[]) => actions.onSetPaintCoats(project.id, next);
+  const add = (kind: PaintCoatKind) => setCoats([...coats, createPaintCoat(kind, defaults)]);
+  const patch = (id: string, next: Partial<ProjectPaintCoat>) =>
+    setCoats(coats.map((coat) => (coat.id === id ? { ...coat, ...next } : coat)));
+  const remove = (id: string) => setCoats(coats.filter((coat) => coat.id !== id));
+
+  const addBtn = (kind: PaintCoatKind, label: string, disabled?: boolean) => (
+    <button
+      type="button"
+      onClick={() => add(kind)}
+      disabled={disabled}
+      className="h-8 px-3 rounded-[10px] font-bold text-[12px] cursor-pointer disabled:opacity-40 disabled:cursor-default"
+      style={{
+        border: "1px dashed var(--border-strong)",
+        background: "transparent",
+        color: "var(--foreground-secondary)",
+      }}
+    >
+      {label}
+    </button>
+  );
+
+  return (
+    <section
+      className="rounded-[18px]"
+      style={{
+        border: "1px solid var(--border-faint)",
+        background: "var(--surface)",
+        padding: "13px 15px",
+      }}
+    >
+      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-1">
+        {t("projects.paintingLabel")}
+      </div>
+      <div className="flex items-baseline justify-between gap-3 mb-2">
+        <span className="text-[12.5px] text-muted">{t("projects.paintSurface")}</span>
+        <span className="font-mono text-[13px] font-bold text-foreground">
+          {surfaceM2.toFixed(2)} m²
+        </span>
+      </div>
+      <p className="text-[12px] text-muted mb-2.5 leading-snug">
+        {surfaceM2 > 0 ? t("projects.paintingHint") : t("projects.paintNoSurface")}
+      </p>
+
+      <div className="flex flex-col gap-2">
+        {coats.map((coat) => {
+          const total = coatTotals.find((row) => row.coat.id === coat.id);
+          const title = coatTitle(coat, t);
+          return (
+            <div
+              key={coat.id}
+              className="rounded-[14px] flex flex-col gap-2"
+              style={{
+                padding: "10px 11px",
+                border: "1px solid var(--border-faint)",
+                background: "var(--surface-raised)",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                {coat.kind === "custom" ? (
+                  <input
+                    value={coat.name ?? ""}
+                    onChange={(e) => patch(coat.id, { name: e.target.value })}
+                    placeholder={t("projects.paintCustom")}
+                    aria-label={t("projects.paintCustom")}
+                    className="min-w-0 flex-1 border-0 bg-transparent font-bold text-[13px] text-foreground outline-none"
+                  />
+                ) : (
+                  <span className="flex-1 font-bold text-[13px] text-foreground">{title}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => remove(coat.id)}
+                  aria-label={t("projects.paintRemove", { name: title })}
+                  className="border-0 bg-transparent p-0 cursor-pointer text-[12px] font-bold text-muted"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex items-end gap-2 flex-wrap">
+                <PaintNumber
+                  label={t("projects.paintLayers")}
+                  ariaLabel={`${t("projects.paintLayers")} · ${title}`}
+                  value={coat.layers}
+                  min={1}
+                  step="1"
+                  onCommit={(layers) => patch(coat.id, { layers: Math.max(1, Math.floor(layers)) })}
+                />
+                <PaintNumber
+                  label={t("projects.paintCoverage")}
+                  ariaLabel={`${t("projects.paintCoverage")} · ${title}`}
+                  value={coat.coverageM2PerKg}
+                  suffix={t("projects.paintCoverageUnit")}
+                  onCommit={(coverageM2PerKg) => patch(coat.id, { coverageM2PerKg })}
+                />
+                <PaintNumber
+                  label={t("projects.paintPrice")}
+                  ariaLabel={`${t("projects.paintPrice")} · ${title}`}
+                  value={coat.pricePerKg}
+                  prefix={currencySymbol}
+                  suffix={t("projects.paintPriceUnit")}
+                  onCommit={(pricePerKg) => patch(coat.id, { pricePerKg })}
+                />
+              </div>
+              {total && (
+                <div className="font-mono text-[11.5px] text-muted">
+                  {total.kg} kg · {currencySymbol} {fsMoney(total.cost)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap gap-2 mt-2.5">
+        {addBtn("primer", t("projects.paintAddPrimer"), hasKind("primer"))}
+        {addBtn("finish", t("projects.paintAddFinish"), hasKind("finish"))}
+        {addBtn("custom", t("projects.paintAddCustom"))}
+      </div>
+
+      {coats.length > 0 && (
+        <div className="flex items-baseline justify-between gap-3 mt-3 pt-2" style={{ borderTop: "1px solid var(--border-faint)" }}>
+          <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+            {t("projects.paintTotal")}
+          </span>
+          <span className="font-mono text-[13px] font-bold text-foreground">
+            {paintKg} kg · {currencySymbol} {fsMoney(paintCost)}
+          </span>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function ProjectDetail({
   project,
   actions,
@@ -387,14 +663,17 @@ export function ProjectDetail({
             </span>
           );
           const name = (
-            <button
-              type="button"
-              onClick={() => actions.onOpenItem(row.calc.input)}
-              title={t("projects.openInBar")}
-              className="flex-1 min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer font-bold text-[13.5px] text-foreground truncate"
-            >
-              {row.specLabel}
-            </button>
+            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+              <button
+                type="button"
+                onClick={() => actions.onOpenItem(row.calc.input)}
+                title={t("projects.openInBar")}
+                className="min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer font-bold text-[13.5px] text-foreground truncate"
+              >
+                {row.specLabel}
+              </button>
+              <ItemNote row={row} projectId={project.id} actions={actions} />
+            </div>
           );
           const menu = (
             <RowMenu
@@ -537,6 +816,16 @@ export function ProjectDetail({
           className="w-full resize-y rounded-[11px] border border-border-faint bg-[var(--surface-raised)] px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-faint outline-none"
         />
       </section>
+
+      <PaintingForm
+        project={project}
+        actions={actions}
+        surfaceM2={summary.totalSurfaceAreaM2}
+        coatTotals={summary.paintCoatTotals}
+        paintKg={summary.paintKgNeeded}
+        paintCost={summary.paintingCost}
+        currencySymbol={sym}
+      />
 
       <section
         className="rounded-[18px]"
@@ -699,8 +988,14 @@ export function ProjectDetail({
                 emphasis
                 tone="accent"
                 label={t("projects.stats.quoted", { margin: marginPercent })}
-                value={`${sym} ${fsMoney(summary.quotedTotal)}`}
+                value={`${sym} ${fsMoney(summary.hasPainting ? summary.quotedWithPaint : summary.quotedTotal)}`}
               />
+              {summary.hasPainting && (
+                <StatTile
+                  label={t("projects.stats.paint")}
+                  value={`${summary.paintKgNeeded} kg · ${sym} ${fsMoney(summary.paintingCost)}`}
+                />
+              )}
             </div>
             {itemsTable}
           </div>
