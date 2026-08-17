@@ -999,18 +999,12 @@ function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }
 
   return (
     <>
-      <div
-        className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0"
-      >
-        {/* The breakdown describes one calculation — kg/m and per-piece weight
-            don't sum — so on a multi-item line it has to say which one, or its
-            numbers read as contradicting the hero's total. */}
-        {line.multi
-          ? t("result.assembly", { count: line.items.length })
-          : t("desktop.breakdown")}
-      </div>
-      {line.multi && (
+      {line.multi ? (
         <AssemblyParts line={line} selected={picked} onSelect={setPicked} />
+      ) : (
+        <div className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
+          {t("desktop.breakdown")}
+        </div>
       )}
       {rows && r ? (
         <>

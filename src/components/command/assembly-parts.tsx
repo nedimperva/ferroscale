@@ -35,7 +35,7 @@ export function AssemblyParts({
       </div>
       <ol
         className="flex flex-col overflow-hidden rounded-2xl border border-border-faint bg-[var(--surface-raised)]"
-        aria-label={t("line.items")}
+        aria-label={t("result.assemblyParts")}
       >
         {rows.map((row, index) => {
           const active = index === selected;

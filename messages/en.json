@@ -282,7 +282,8 @@
       "unitPrice": "Unit price",
       "grade": "Grade",
       "massBand": "Mass band {percent}",
-      "assembly": "Assembly · {count, plural, one {# part} other {# parts}}"
+      "assembly": "Assembly · {count, plural, one {# part} other {# parts}}",
+      "assemblyParts": "Assembly parts"
     },
     "settings": {
       "mainResult": "Main result",

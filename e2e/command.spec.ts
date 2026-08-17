@@ -102,12 +102,12 @@ test.describe("Command bar", () => {
 
   test("the breakdown says which item it describes on a multi-item line", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
-    // The hero totals the line while the breakdown describes one calculation,
-    // so the breakdown has to name it or the two read as contradicting.
-    await expect(page.getByText("Breakdown · item 2 of 2")).toBeVisible();
+    // The hero totals the line; the breakdown lists every part so the
+    // drawing and rows don't read as the sum.
+    await expect(page.getByText("Assembly · 2 parts")).toBeVisible();
 
     await page.goto("/en?q=hea120+6m+x2");
-    await expect(page.getByText(/Breakdown · item/)).toHaveCount(0);
+    await expect(page.getByText(/Assembly · \d+ parts/)).toHaveCount(0);
   });
 
   test("arithmetic in a token prices the cut length", async ({ page }) => {
@@ -509,7 +509,7 @@ test.describe("Assembly breakdown (phone viewport)", () => {
     await page.getByRole("button", { name: /Breakdown/i }).first().click();
     const dialog = page.getByRole("dialog", { name: /Assembly/ });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("list", { name: "Line items" })).toBeVisible();
+    await expect(dialog.getByRole("list", { name: "Assembly parts" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /HEA 120/ })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /IPE 200/ })).toBeVisible();
     await dialog.getByRole("button", { name: /IPE 200/ }).click();
