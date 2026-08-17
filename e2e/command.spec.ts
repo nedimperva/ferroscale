@@ -153,7 +153,7 @@ test.describe("Phone fold (390x844)", () => {
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.getByText("Breakdown", { exact: false }).first()).toBeVisible();
     await expect(page.getByText("SESSION", { exact: true }).first()).toBeVisible();
-    await expect(page.getByRole("button", { name: "Backspace" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit length, quantity or rate" })).toBeVisible();
   });
 
   test("the keypad sits flush on the bottom edge, with no band of screen under it", async ({
@@ -164,7 +164,7 @@ test.describe("Phone fold (390x844)", () => {
     // The shell used to size its column with `100dvh` inside a `fixed inset-0`
     // parent; where the two disagree the keys float above a strip of screen
     // background instead of resting on the edge.
-    const keypad = page.getByRole("button", { name: "Backspace" }).locator("xpath=../../..");
+    const keypad = page.locator("[data-keypad]");
     const box = await keypad.boundingBox();
     const viewportHeight = page.viewportSize()!.height;
     expect(Math.abs(box!.y + box!.height - viewportHeight)).toBeLessThanOrEqual(1);
@@ -254,9 +254,17 @@ test.describe("Phone fold (390x844)", () => {
       await page.goto(`/en?q=${encodeURIComponent(long)}`);
       await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
 
+      const bar = page.locator("[data-keypad]");
+      await expect(bar).toHaveAttribute("data-keypad", "actions");
+      const boxBar = await bar.boundingBox();
+      expect(boxBar, `action bar missing at ${height}`).not.toBeNull();
+      expect(boxBar!.y + boxBar!.height, `action bar clipped at ${height}`).toBeLessThanOrEqual(
+        height,
+      );
+
+      await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
       const enter = await page.getByRole("button", { name: "↵" }).boundingBox();
       expect(enter, `↵ missing at ${height}`).not.toBeNull();
-      // Fully inside the viewport, with room for a home indicator.
       expect(enter!.y + enter!.height, `↵ clipped at ${height}`).toBeLessThanOrEqual(height);
 
       const line = page.locator("[data-query-line]");
@@ -342,8 +350,21 @@ test.describe("Sheet dialogs (phone viewport)", () => {
     await page.getByRole("button", { name: "Settings" }).click();
     const dialog = page.getByRole("dialog", { name: "Settings" });
     await expect(dialog).toBeVisible();
-    await page.getByRole("button", { name: "Close sheet" }).click();
+    await page.getByRole("button", { name: "Back", exact: true }).click();
     await expect(dialog).toBeHidden();
+  });
+
+  test("settings and library fill the phone screen", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "Settings" }).click();
+    const dialog = page.getByRole("dialog", { name: "Settings" });
+    const box = await dialog.boundingBox();
+    expect(box!.height).toBeGreaterThan(700);
+    await page.getByRole("button", { name: "Back", exact: true }).click();
+
+    await page.getByRole("button", { name: "Library" }).click();
+    const library = page.getByRole("dialog", { name: "Library" });
+    expect((await library.boundingBox())!.height).toBeGreaterThan(700);
   });
 });
 
@@ -362,13 +383,13 @@ test.describe("Keypad rate key (phone viewport)", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
   test("tap inserts the default price token", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto("/en?q=hea120");
     await page.getByRole("button", { name: /€\/kg/ }).click();
     await expect(page.getByText(/^1\.2\/kg$/).first()).toBeVisible();
   });
 
   test("hold opens the unit picker and inserts the chosen unit", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto("/en?q=hea120");
     const rateKey = page.getByRole("button", { name: /€\/kg/ });
     const box = await rateKey.boundingBox();
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
@@ -388,14 +409,14 @@ test.describe("Keypad length key (phone viewport)", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
   test("tap inserts mm as the default length unit", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto("/en?q=hea120");
     await page.getByRole("button", { name: "5", exact: true }).click();
     await page.getByRole("button", { name: /^mm ▾$/ }).click();
     await expect(page.getByText("5mm", { exact: true }).first()).toBeVisible();
   });
 
   test("hold opens the length picker and inserts the chosen unit", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto("/en?q=hea120");
     await page.getByRole("button", { name: "5", exact: true }).click();
     const lengthKey = page.getByRole("button", { name: /^mm ▾$/ });
     const box = await lengthKey.boundingBox();
@@ -409,5 +430,72 @@ test.describe("Keypad length key (phone viewport)", () => {
     await menu.getByRole("menuitem", { name: "cm", exact: true }).click();
     await expect(menu).toBeHidden();
     await expect(page.getByText("5cm", { exact: true }).first()).toBeVisible();
+  });
+});
+
+test.describe("Stage-aware keypad (phone viewport)", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test("a live line shows New / Tweak / Share, not the letter pad", async ({ page }) => {
+    await page.goto("/en");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "actions");
+    await expect(page.getByRole("button", { name: "New", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "q", exact: true })).toHaveCount(0);
+  });
+
+  test("Tweak opens the number pad; Done puts the bar back", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
+    await expect(page.getByRole("button", { name: "ABC" })).toBeVisible();
+    await page.getByRole("button", { name: "Done" }).click();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "actions");
+  });
+
+  test("New clears the line and brings the letter pad back", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "New", exact: true }).click();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
+    await expect(page.getByRole("button", { name: "q", exact: true })).toBeVisible();
+    await expect(page.getByText("WAITING")).toBeVisible();
+  });
+
+  test("a size-ready query opens on the number pad", async ({ page }) => {
+    await page.goto("/en?q=hea120");
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
+    await expect(page.getByRole("button", { name: "5", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "q", exact: true })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "space", exact: true })).toBeVisible();
+  });
+
+  test("a finished size and the next length stay two tokens", async ({ page }) => {
+    await page.goto("/en");
+    await page.getByRole("button", { name: "New", exact: true }).click();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
+    for (const key of ["h", "e", "a"]) {
+      await page.getByRole("button", { name: key, exact: true }).click();
+    }
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
+    for (const key of ["1", "2", "0", "6"]) {
+      await page.getByRole("button", { name: key, exact: true }).click();
+    }
+    const line = page.locator("[data-query-line]");
+    await expect(line.getByRole("button", { name: "Edit hea120" })).toBeVisible();
+    await expect(line.getByText("6", { exact: true })).toBeVisible();
+  });
+
+  test("holding a length chip opens a stepper", async ({ page }) => {
+    await page.goto("/en?q=hea120+6m+x2");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    const chip = page.getByRole("button", { name: "Edit 6m" });
+    const box = await chip.boundingBox();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(600);
+    await page.mouse.up();
+    await expect(page.getByRole("group", { name: "Adjust 6m" })).toBeVisible();
+    await page.getByRole("button", { name: "Increase 6m" }).click();
+    await expect(page.getByRole("button", { name: "Edit 7m" })).toBeVisible();
   });
 });

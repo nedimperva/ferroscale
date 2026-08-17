@@ -195,11 +195,19 @@
       "priceUnitPicker": "Jedinica cijene",
       "lengthUnitPicker": "Jedinica dužine",
       "backspace": "Brisanje",
-      "backspaceHold": "Zadržite da obrišete cijeli token"
+      "backspaceHold": "Zadržite da obrišete cijeli token",
+      "letters": "ABC",
+      "numbers": "123",
+      "tweak": "Mijenjaj",
+      "tweakAria": "Uredi dužinu, količinu ili cijenu"
     },
     "token": {
       "edit": "Uredi {token}",
-      "remove": "Ukloni {token}"
+      "remove": "Ukloni {token}",
+      "stepper": "Prilagodi {token}",
+      "stepUp": "Povećaj {token}",
+      "stepDown": "Smanji {token}",
+      "holdToStep": "Zadržite da pomaknete broj"
     },
     "preview": {
       "perPiece": "Po komadu",
@@ -587,6 +595,8 @@
       },
       "totalRow": "{count, plural, one {# stavka} other {# stavki}}",
       "notesLabel": "Bilješke",
+      "moreDetails": "Bilješke i aktivnost",
+      "hideDetails": "Sakrij bilješke",
       "notesPlaceholder": "Sve što radionica treba znati…",
       "activityLabel": "Aktivnost",
       "activity": {

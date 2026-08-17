@@ -195,11 +195,19 @@
       "priceUnitPicker": "Price unit",
       "lengthUnitPicker": "Length unit",
       "backspace": "Backspace",
-      "backspaceHold": "Hold to delete the whole token"
+      "backspaceHold": "Hold to delete the whole token",
+      "letters": "ABC",
+      "numbers": "123",
+      "tweak": "Tweak",
+      "tweakAria": "Edit length, quantity or rate"
     },
     "token": {
       "edit": "Edit {token}",
-      "remove": "Remove {token}"
+      "remove": "Remove {token}",
+      "stepper": "Adjust {token}",
+      "stepUp": "Increase {token}",
+      "stepDown": "Decrease {token}",
+      "holdToStep": "Hold to nudge the number"
     },
     "preview": {
       "perPiece": "Per piece",
@@ -587,6 +595,8 @@
       },
       "totalRow": "{count, plural, one {# item} other {# items}}",
       "notesLabel": "Notes",
+      "moreDetails": "Notes & activity",
+      "hideDetails": "Hide notes",
       "notesPlaceholder": "Anything the shop needs to know…",
       "activityLabel": "Activity",
       "activity": {

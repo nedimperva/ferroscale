@@ -63,7 +63,7 @@ interface CommandLibrarySheetProps {
 export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
   const t = useTranslations("command");
   return (
-    <SheetShell title={t("sheets.library")} onClose={props.onClose}>
+    <SheetShell fullScreen title={t("sheets.library")} onClose={props.onClose}>
       <CommandLibraryWorkspace {...props} />
     </SheetShell>
   );

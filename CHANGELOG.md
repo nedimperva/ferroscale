@@ -58,6 +58,20 @@ tabs in the same places, on every viewport. Only what is *inside* them changed.
   snapshot of the rate at save time), and an assembly lands as one named line
   with its parts behind it rather than as loose items. A project template row
   now reports how many of the assembly went in, not its first part's count
+- **The phone keypad follows the query.** Letters while you pick a profile or
+  type a grade; a number pad for size, length, quantity and rate; a short
+  New / Tweak / Share bar once the line computes. Tweak (or a tap on the query
+  line) brings the numbers back; ABC and 123 switch layouts; Done puts the bar
+  away. The number pad has a space key, and a finished size (`hea120`) plus
+  the next length digit land as two tokens, not `hea1206`
+- **Library and Settings fill the phone screen.** They had become real pages
+  stuffed into an 82% sheet; they are full-screen now, with a back chevron.
+  Result breakdown, project picker and edit-part stay a sheet
+- **Hold a length, quantity or rate chip to nudge it.** − / + rewrites just
+  that token, so `6m` becomes `7m` without deleting and retyping
+- **Share on the phone sends the number, not only a URL.** The formatted
+  summary goes as text, plus a PNG card when the OS will take a file, so the
+  figure can leave via WhatsApp. Copy as text is on the breakdown sheet too
 
 ### Fixed
 

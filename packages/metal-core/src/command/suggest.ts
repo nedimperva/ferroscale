@@ -18,9 +18,19 @@ import type {
   CommandSuggestionItem,
 } from "./types";
 
-type Stage = "empty" | "profile" | "size" | "length" | "qty" | "grade" | "done";
+export type CommandSuggestStage =
+  | "empty"
+  | "profile"
+  | "size"
+  | "length"
+  | "qty"
+  | "grade"
+  | "done";
 
-function detectStage(query: string, p: CommandParseResult): { stage: Stage; partial: string } {
+export function cmdDetectStage(
+  query: string,
+  p: CommandParseResult,
+): { stage: CommandSuggestStage; partial: string } {
   const endsSpace = query === "" || /\s$/.test(query);
   const partial = endsSpace ? "" : query.trim().split(/\s+/).pop() || "";
   if (query.trim() === "") return { stage: "empty", partial: "" };
@@ -277,7 +287,7 @@ export function cmdSuggest(
   parsed?: CommandParseResult,
 ): CommandSuggestion {
   const p = parsed && parsed.raw === query ? parsed : cmdParse(query, settings);
-  const { stage, partial } = detectStage(query, p);
+  const { stage, partial } = cmdDetectStage(query, p);
 
   if (stage === "empty" || stage === "profile") {
     // Queries the user actually ran, first — one tap re-runs the calculation.

@@ -278,21 +278,30 @@ function PartsRow({
   if (compact) {
     return (
       <div
-        className="flex flex-col gap-1.5 border-t border-border-faint first:border-t-0"
-        style={{ padding: "10px 12px" }}
+        className="flex items-center gap-2 border-t border-border-faint first:border-t-0"
+        style={{ padding: "10px 8px 10px 12px" }}
       >
-        <div className="flex items-center gap-2">
-          {name}
-          {useButton}
-          {menu}
-        </div>
-        <div className="flex items-center gap-2.5 font-mono text-[11.5px] flex-wrap">
-          <span className="text-muted-faint truncate">{specText}</span>
-          <span className="font-bold" style={{ color: "var(--accent-text)" }}>
-            {kgmText}
+        <button
+          type="button"
+          onClick={() => actions.onPick(entry)}
+          className="flex min-w-0 flex-1 flex-col gap-0.5 border-0 bg-transparent p-0 text-left cursor-pointer"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <SavedThumb model={model} size={24} />
+            <span className="min-w-0 truncate font-bold text-[13.5px] text-foreground">
+              {entry.name.trim() || model.specLabel}
+            </span>
           </span>
-          <span className="text-muted">{t("parts.usedTimes", { count: entry.useCount })}</span>
-        </div>
+          <span className="font-mono text-[11.5px] text-muted truncate">
+            {specText}
+            <span className="font-bold" style={{ color: "var(--accent-text)" }}>
+              {" · "}
+              {kgmText}
+            </span>
+          </span>
+        </button>
+        {useButton}
+        {menu}
       </div>
     );
   }

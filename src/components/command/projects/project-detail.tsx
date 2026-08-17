@@ -291,6 +291,7 @@ export function ProjectDetail({
 }) {
   const t = useTranslations("command");
   const [editingDetails, setEditingDetails] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const [notes, setNotes] = useState(project.description ?? "");
   // A pull from another device rewrites the project underneath the textarea.
   // Re-seeding during render keeps the draft while the user types and adopts
@@ -703,7 +704,26 @@ export function ProjectDetail({
             </div>
             {itemsTable}
           </div>
-          {rail}
+          {compact ? (
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setShowMore((on) => !on)}
+                aria-expanded={showMore}
+                className="self-start rounded-[10px] px-3 h-8 text-[12px] font-bold cursor-pointer"
+                style={{
+                  border: "1px solid var(--border-faint)",
+                  background: "var(--surface)",
+                  color: "var(--muted)",
+                }}
+              >
+                {showMore ? t("projects.hideDetails") : t("projects.moreDetails")}
+              </button>
+              {showMore && rail}
+            </div>
+          ) : (
+            rail
+          )}
         </div>
       </div>
     </div>

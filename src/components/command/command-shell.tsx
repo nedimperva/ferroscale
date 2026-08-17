@@ -16,6 +16,7 @@ import {
   cmdSuggest,
   cmdApplyInsert,
   cmdAppendLineItem,
+  cmdDetectStage,
   cmdParseLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
@@ -53,10 +54,17 @@ import {
   editLineToken,
   lineChips,
   removeLineToken,
+  replaceLineToken,
 } from "./line-edit";
+import { TokenChip } from "./token-chip";
 import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
+import {
+  commandKeypadInsert,
+  commandKeypadLayout,
+  type CommandKeypadOverride,
+} from "./keypad-layout";
 import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import type { ProjectActions } from "./projects/project-actions";
@@ -71,6 +79,7 @@ import {
   readSharedQuery,
   sharedPricingDiffers,
 } from "@/lib/command/share";
+import { shareCalculation } from "@/lib/command/share-card";
 import { buildUsageSource, recordCommandUsage, usageStatsVersionStore } from "@/lib/usage-stats";
 import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
@@ -190,6 +199,8 @@ export function CommandShell() {
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  /** Letters / number pad chosen by hand. Cleared when the active item empties. */
+  const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
   const [isWideViewport, setIsWideViewport] = useState(false);
   /** Workspace, but narrow: one column, breakdown folded away. */
   const [isCompactDesktop, setIsCompactDesktop] = useState(false);
@@ -414,13 +425,29 @@ export function CommandShell() {
   const shareLink = useCallback(() => {
     if (!p.valid) return;
     const url = buildShareUrl(query, window.location, shared);
-    if (isPhoneViewport && typeof navigator.share === "function") {
-      navigator.share({ url }).catch(() => {});
+    if (isPhoneViewport) {
+      const name = formatCommandParseName(t, p) ?? p.name ?? query;
+      const weight =
+        (line.multi ? line.totalKg : p.totalKg) != null
+          ? `${fsWeight((line.multi ? line.totalKg : p.totalKg)!)} ${fsWeightUnit()}`
+          : null;
+      const amount =
+        (line.multi ? line.totalAmount : p.totalAmount) != null
+          ? `${sym}${fsMoney((line.multi ? line.totalAmount : p.totalAmount)!)}`
+          : null;
+      void shareCalculation({
+        summary: buildCommandSummary(t, p, line),
+        url,
+        title: name,
+        card: { name, query, weight, amount },
+      }).then((how) => {
+        if (how === "copied") showToast(t("toast.copiedSummary"));
+      });
       return;
     }
     navigator.clipboard?.writeText(url).catch(() => {});
     showToast(t("toast.linkCopied"));
-  }, [p.valid, query, shared, isPhoneViewport, showToast, t]);
+  }, [p, line, query, shared, isPhoneViewport, showToast, t, sym]);
 
   // The bookmark state of the line currently in the bar — drives the Save
   // button's filled/outlined look, so "is this one saved?" is answerable
@@ -828,14 +855,19 @@ export function CommandShell() {
         setQuery((q) => cmdAppendLineItem(q));
         return;
       }
+      setKeypadOverride(null);
       setQuery((q) => applyToActiveItem(q, (text) => cmdApplyInsert(text, item)));
     },
     [doSave],
   );
 
   const onKey = useCallback((ch: string) => {
-    setQuery((q) => q + ch);
-  }, []);
+    setQuery((q) =>
+      applyToActiveItem(q, (text) =>
+        commandKeypadInsert(text, ch, cmdParse(text, parserSettings)),
+      ),
+    );
+  }, [parserSettings]);
   const insertPriceToken = useCallback(
     (unit: string) => {
       setQuery((q) => {
@@ -888,8 +920,16 @@ export function CommandShell() {
     };
   }, [quickHistory, parserSettings]);
 
-  /** The keypad's ↵. */
-  const onEnter = logToSession;
+  /** ↵ commits the open token (a space) so the next kind can start; if the
+   *  token is already committed, it logs the line to the session. */
+  const onEnter = useCallback(() => {
+    const text = activeItemText(query);
+    if (text.trim() !== "" && !/\s$/.test(text)) {
+      onKey(" ");
+      return;
+    }
+    logToSession();
+  }, [query, onKey, logToSession]);
 
   // Focus with the caret at the end (after chip edit/remove) — select-all
   // would make the next keystroke wipe the whole query.
@@ -941,6 +981,15 @@ export function CommandShell() {
   const chips = useMemo(() => lineChips(query), [query]);
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
+  if (activeQuery.trim() === "" && keypadOverride !== null) {
+    setKeypadOverride(null);
+  }
+  const keypadStage = cmdDetectStage(activeQuery, p);
+  const keypadMode = commandKeypadLayout(activeQuery, p, keypadOverride);
+  const keypadShowNumbers =
+    keypadMode === "letters" &&
+    (keypadOverride === "letters" ||
+      (keypadStage.stage !== "empty" && keypadStage.stage !== "profile"));
   // Faint completion drawn after the caret (profile letters / recent prefix).
   const ghost = computeGhost(partialToken ?? "", sug);
   const acceptGhost = () => {
@@ -976,6 +1025,9 @@ export function CommandShell() {
   };
   const removeTokenAt = (item: number, idx: number) => {
     keepExpanded(item, removeLineToken(query, item, idx));
+  };
+  const replaceTokenAt = (item: number, idx: number, next: string) => {
+    keepExpanded(item, replaceLineToken(query, item, idx, next));
   };
   // Pull a token back to the end of its own item as the editable partial (the
   // parser is order-tolerant within an item, so the reordering is free).
@@ -1513,7 +1565,10 @@ export function CommandShell() {
               className="flex gap-1.5 px-[18px] pb-1"
               style={{ overflowX: "auto", overflowY: "hidden" }}
             >
-              {sug.items.map((it, i) => (
+              {(isPhoneViewport
+                ? sug.items.filter((it) => it.kind !== "save")
+                : sug.items
+              ).map((it, i) => (
                 <button
                   key={i}
                   ref={i === 0 ? firstSuggestionRef : undefined}
@@ -1606,6 +1661,9 @@ export function CommandShell() {
               <div
                 ref={queryLineRef}
                 data-query-line=""
+                onClick={() => {
+                  if (keypadMode === "actions") setKeypadOverride("numpad");
+                }}
                 // One row that scrolls sideways to the caret, never wrapping.
                 // Wrapping meant the line's height depended on the token count:
                 // capped, it sliced chips across half-rows; uncapped, a long
@@ -1657,6 +1715,7 @@ export function CommandShell() {
                           kindClass={KIND_BG[cmdClassifyToken(tok)]}
                           onEdit={() => editTokenAt(group.item, i)}
                           onRemove={() => removeTokenAt(group.item, i)}
+                          onReplace={(next) => replaceTokenAt(group.item, i, next)}
                         />
                       ))
                     ) : (
@@ -1711,12 +1770,24 @@ export function CommandShell() {
 
           {/* On-screen keypad */}
           <CommandKeypad
+            mode={keypadMode}
             onKey={onKey}
             onPriceUnit={onPriceUnit}
             onPriceUnitPick={insertPriceToken}
             onBack={onBack}
             onBackToken={onBackToken}
             onEnter={onEnter}
+            onNew={newCalc}
+            onTweak={() => setKeypadOverride("numpad")}
+            onShare={shareLink}
+            onLetters={() => setKeypadOverride("letters")}
+            onNumbers={() => setKeypadOverride("numpad")}
+            onDone={() => {
+              setQuery((q) => (/\s$/.test(q) || q.trim() === "" ? q : `${q} `));
+              setKeypadOverride(null);
+            }}
+            showNumbers={keypadShowNumbers}
+            showDone={keypadMode === "numpad" && p.valid}
             priceUnitLabel={priceUnitLabel}
             valid={p.valid}
           />
@@ -1737,6 +1808,10 @@ export function CommandShell() {
               onCopyValue={() => {
                 setSheet(null);
                 copyValue();
+              }}
+              onCopySummary={() => {
+                setSheet(null);
+                copySummary();
               }}
               onShareLink={() => {
                 setSheet(null);
@@ -1816,46 +1891,6 @@ export function CommandShell() {
           <ResultAnnouncer text={liveResultText} />
       </div>
     </div>
-  );
-}
-
-function TokenChip({
-  tok,
-  kindClass,
-  onEdit,
-  onRemove,
-  anchor,
-}: {
-  tok: string;
-  kindClass: string;
-  onEdit: () => void;
-  onRemove: () => void;
-  /** Marks the chip the query line scrolls to when an item is opened. */
-  anchor?: boolean;
-}) {
-  const t = useTranslations("command");
-  return (
-    <span
-      data-expanded-start={anchor ? "" : undefined}
-      className={`inline-flex items-stretch flex-shrink-0 font-mono text-sm font-semibold rounded-md ${kindClass}`}
-    >
-      <button
-        type="button"
-        onClick={onEdit}
-        aria-label={t("token.edit", { token: tok })}
-        className="pl-2 pr-0.5 py-1.5 rounded-l-md"
-      >
-        {tok}
-      </button>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={t("token.remove", { token: tok })}
-        className="flex items-center justify-center w-7 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
-      >
-        ×
-      </button>
-    </span>
   );
 }
 
