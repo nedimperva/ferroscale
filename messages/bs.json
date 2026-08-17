@@ -281,7 +281,8 @@
       "pricing": "Cijene",
       "unitPrice": "Jedinična cijena",
       "grade": "Kvalitet",
-      "massBand": "Opseg mase {percent}"
+      "massBand": "Opseg mase {percent}",
+      "assembly": "Sklop · {count, plural, one {# dio} other {# dijela}}"
     },
     "settings": {
       "mainResult": "Glavni rezultat",

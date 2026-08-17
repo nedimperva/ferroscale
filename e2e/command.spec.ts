@@ -499,3 +499,23 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
     await expect(page.getByRole("button", { name: "Edit 7m" })).toBeVisible();
   });
 });
+
+test.describe("Assembly breakdown (phone viewport)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("lists every part and switches the drawing to the one you tap", async ({ page }) => {
+    await page.goto(`/en?q=${encodeURIComponent("hea120 6m x2 + ipe200 4m x3")}`);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /Breakdown/i }).first().click();
+    const dialog = page.getByRole("dialog", { name: /Assembly/ });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("list", { name: "Line items" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /HEA 120/ })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /IPE 200/ })).toBeVisible();
+    await dialog.getByRole("button", { name: /IPE 200/ }).click();
+    await expect(dialog.getByRole("button", { name: /IPE 200/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+});

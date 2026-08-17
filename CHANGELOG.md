@@ -71,7 +71,11 @@ tabs in the same places, on every viewport. Only what is *inside* them changed.
   that token, so `6m` becomes `7m` without deleting and retyping
 - **Share on the phone sends the number, not only a URL.** The formatted
   summary goes as text, plus a PNG card when the OS will take a file, so the
-  figure can leave via WhatsApp. Copy as text is on the breakdown sheet too
+  figure can leave via WhatsApp. Copy as text is on the breakdown sheet too.
+  An assembly card lists every part under the line total, not only the last
+  name
+- **Breakdown of a `+`-joined line lists every part.** Tap a row to see that
+  part's drawing and figures; the heading is the assembly, not "item 3 of 3"
 
 ### Fixed
 

@@ -1,6 +1,7 @@
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import type { CommandLine } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { formatCommandParseName } from "./command-copy";
+import type { ShareCardModel } from "@/lib/command/share-card";
 
 type CommandT = (key: string, values?: Record<string, string | number>) => string;
 
@@ -17,6 +18,31 @@ export interface LineSummaryRow {
   amount: string;
   /** True when the item hasn't parsed to a calculation yet. */
   pending: boolean;
+}
+
+/** What the WhatsApp card should say — one part, or the assembly and every line. */
+export function buildShareCardModel(
+  t: CommandT,
+  p: CommandParseResult,
+  line: CommandLine,
+  query: string,
+): ShareCardModel {
+  const sym = CURRENCY_SYMBOLS[p.pricing.currency] ?? "€";
+  const totalKg = line.multi ? line.totalKg : p.totalKg;
+  const totalAmount = line.multi ? line.totalAmount : p.totalAmount;
+  return {
+    title: line.multi
+      ? t("result.assembly", { count: line.items.length })
+      : (formatCommandParseName(t, p) ?? p.name ?? query),
+    query,
+    weight: totalKg != null ? `${fsWeight(totalKg)} ${fsWeightUnit()}` : null,
+    amount: totalAmount != null ? `${sym}${fsMoney(totalAmount)}` : null,
+    items: line.multi
+      ? buildLineSummary(line, t)
+          .filter((row) => !row.pending)
+          .map((row) => ({ label: row.label, weight: row.weight, amount: row.amount }))
+      : [],
+  };
 }
 
 export function buildLineSummary(line: CommandLine, t: CommandT): LineSummaryRow[] {

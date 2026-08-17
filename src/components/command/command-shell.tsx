@@ -43,6 +43,7 @@ import {
   formatCommandSuggestionLabel,
   buildCommandSummary,
 } from "./command-copy";
+import { buildShareCardModel } from "./line-summary";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
@@ -426,20 +427,12 @@ export function CommandShell() {
     if (!p.valid) return;
     const url = buildShareUrl(query, window.location, shared);
     if (isPhoneViewport) {
-      const name = formatCommandParseName(t, p) ?? p.name ?? query;
-      const weight =
-        (line.multi ? line.totalKg : p.totalKg) != null
-          ? `${fsWeight((line.multi ? line.totalKg : p.totalKg)!)} ${fsWeightUnit()}`
-          : null;
-      const amount =
-        (line.multi ? line.totalAmount : p.totalAmount) != null
-          ? `${sym}${fsMoney((line.multi ? line.totalAmount : p.totalAmount)!)}`
-          : null;
+      const card = buildShareCardModel(t, p, line, query);
       void shareCalculation({
         summary: buildCommandSummary(t, p, line),
         url,
-        title: name,
-        card: { name, query, weight, amount },
+        title: card.title,
+        card,
       }).then((how) => {
         if (how === "copied") showToast(t("toast.copiedSummary"));
       });
@@ -447,7 +440,7 @@ export function CommandShell() {
     }
     navigator.clipboard?.writeText(url).catch(() => {});
     showToast(t("toast.linkCopied"));
-  }, [p, line, query, shared, isPhoneViewport, showToast, t, sym]);
+  }, [p, line, query, shared, isPhoneViewport, showToast, t]);
 
   // The bookmark state of the line currently in the bar — drives the Save
   // button's filled/outlined look, so "is this one saved?" is answerable

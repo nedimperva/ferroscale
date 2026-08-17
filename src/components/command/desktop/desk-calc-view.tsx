@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useRef, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import {
   cmdAppendLineItem,
@@ -32,6 +32,7 @@ import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./d
 import { PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { LineItems } from "../line-items";
+import { AssemblyParts } from "../assembly-parts";
 import { massBand } from "../mass-band";
 import {
   editLineToken,
@@ -970,7 +971,15 @@ const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?
 
 function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }) {
   const t = useTranslations("command");
-  const r = p.calc?.result;
+  const [picked, setPicked] = useState(line.activeIndex);
+  const [seed, setSeed] = useState(line.raw);
+  if (seed !== line.raw) {
+    setSeed(line.raw);
+    setPicked(line.activeIndex);
+  }
+  const focus =
+    line.multi && line.items[picked]?.parse.valid ? line.items[picked].parse : p;
+  const r = focus.calc?.result;
   const marginPercent = useSyncExternalStore(
     marginPercentStore.subscribe,
     marginPercentStore.getSnapshot,
@@ -981,7 +990,7 @@ function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }
     massTolerancePercentStore.getSnapshot,
     massTolerancePercentStore.getServerSnapshot,
   );
-  const rows = p.valid ? buildBreakdownRows(p, t, { marginPercent, massTolerancePercent }) : null;
+  const rows = focus.valid ? buildBreakdownRows(focus, t, { marginPercent, massTolerancePercent }) : null;
   // The expanded right column keeps a tighter subset: density lives in the
   // header, and per-piece price / subtotal stay sheet-only.
   const geometry = rows?.geometry.filter((row) => row.id !== "density") ?? [];
@@ -997,29 +1006,29 @@ function DeskBreakdown({ p, line }: { p: CommandParseResult; line: CommandLine }
             don't sum — so on a multi-item line it has to say which one, or its
             numbers read as contradicting the hero's total. */}
         {line.multi
-          ? t("desktop.breakdownItem", {
-              index: line.activeIndex + 1,
-              count: line.items.length,
-            })
+          ? t("result.assembly", { count: line.items.length })
           : t("desktop.breakdown")}
       </div>
+      {line.multi && (
+        <AssemblyParts line={line} selected={picked} onSelect={setPicked} />
+      )}
       {rows && r ? (
         <>
           <div
             className="rounded-[14px] flex items-center justify-center mb-4 flex-shrink-0"
             style={{ background: "var(--surface-inset)", padding: "16px 10px" }}
           >
-            <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+            <ProfileDrawing p={focus} className="w-full flex flex-col items-center" />
           </div>
           <div
             className="min-w-0 flex-shrink-0"
             style={{ paddingBottom: 12, borderBottom: "1px solid var(--border-faint)" }}
           >
             <div className="fs-track-tight font-extrabold text-[17px] text-foreground">
-              {formatCommandParseName(t, p)}
+              {formatCommandParseName(t, focus)}
             </div>
             <div className="font-mono text-[11px] text-muted mt-0.5">
-              {p.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
+              {focus.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
             </div>
           </div>
           <div style={{ paddingTop: 6 }}>

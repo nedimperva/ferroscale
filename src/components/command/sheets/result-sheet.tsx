@@ -1,12 +1,13 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
 import { formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
+import { AssemblyParts } from "../assembly-parts";
 import { SheetShell } from "./sheet-shell";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
@@ -58,6 +59,7 @@ interface CommandResultSheetProps {
  *  layout where there is no sheet at all. */
 export function CommandResultBreakdown({
   p,
+  line,
   onSave,
   isSaved,
   onCopy,
@@ -70,6 +72,17 @@ export function CommandResultBreakdown({
   columns = 1,
 }: Omit<CommandResultSheetProps, "onClose"> & { columns?: 1 | 2 }) {
   const t = useTranslations("command");
+  const [picked, setPicked] = useState(line?.activeIndex ?? 0);
+  const seed = line?.raw ?? "";
+  const [seedSeen, setSeedSeen] = useState(seed);
+  if (seedSeen !== seed) {
+    setSeedSeen(seed);
+    setPicked(line?.activeIndex ?? 0);
+  }
+  const focus =
+    line?.multi && line.items[picked]?.parse.valid
+      ? line.items[picked].parse
+      : p;
   const marginPercent = useSyncExternalStore(
     marginPercentStore.subscribe,
     marginPercentStore.getSnapshot,
@@ -80,8 +93,8 @@ export function CommandResultBreakdown({
     massTolerancePercentStore.getSnapshot,
     massTolerancePercentStore.getServerSnapshot,
   );
-  const rows = buildBreakdownRows(p, t, { marginPercent, massTolerancePercent });
-  if (!rows) {
+  const rows = buildBreakdownRows(focus, t, { marginPercent, massTolerancePercent });
+  if (!rows && !(line?.multi)) {
     return null;
   }
   const secondaryBtn =
@@ -89,7 +102,7 @@ export function CommandResultBreakdown({
 
   const geometryRows = (
     <>
-      {rows.geometry.map((row) => (
+      {(rows?.geometry ?? []).map((row) => (
         <SheetRow key={row.id} label={row.label} value={row.value} mono />
       ))}
     </>
@@ -97,7 +110,7 @@ export function CommandResultBreakdown({
 
   const pricingRows = (
     <>
-      {rows.pricing.map((row) => (
+      {(rows?.pricing ?? []).map((row) => (
         <SheetRow
           key={row.id}
           label={row.label}
@@ -111,21 +124,26 @@ export function CommandResultBreakdown({
 
   return (
     <>
+      {line?.multi && (
+        <AssemblyParts line={line} selected={picked} onSelect={setPicked} />
+      )}
       <div className="flex items-baseline gap-2 mb-3">
-        {p.alias && (
+        {focus.alias && (
           <span className="text-accent">
-            <CommandGlyph fam={p.alias.fam} size={22} />
+            <CommandGlyph fam={focus.alias.fam} size={22} />
           </span>
         )}
-        <span className="text-lg font-bold text-foreground">{formatCommandParseName(t, p)}</span>
-        {p.gradeLabel && (
-          <span className="text-xs font-semibold text-muted">· {p.gradeLabel}</span>
+        <span className="text-lg font-bold text-foreground">{formatCommandParseName(t, focus)}</span>
+        {focus.gradeLabel && (
+          <span className="text-xs font-semibold text-muted">· {focus.gradeLabel}</span>
         )}
       </div>
+      {rows && (
       <div className="rounded-2xl border border-border-faint bg-[var(--surface)] flex items-center justify-center px-4 py-4 mb-3">
-        <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+        <ProfileDrawing p={focus} className="w-full flex flex-col items-center" />
       </div>
-      {columns === 2 ? (
+      )}
+      {rows && (columns === 2 ? (
         <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] grid grid-cols-2 divide-x divide-border-faint">
           <div className="px-4">
             <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase pt-3 pb-1">
@@ -145,7 +163,7 @@ export function CommandResultBreakdown({
           {geometryRows}
           {pricingRows}
         </div>
-      )}
+      ))}
       <div className="flex gap-2 mt-4">
         <button
           type="button"
@@ -208,18 +226,13 @@ export function CommandResultSheet({
   return (
     <SheetShell
       title={
-        // kg/m and per-piece weight don't sum, so the breakdown is always one
-        // calculation — on a multi-item line it has to say which.
         line && line.multi
-          ? t("desktop.breakdownItem", {
-              index: line.activeIndex + 1,
-              count: line.items.length,
-            })
+          ? t("result.assembly", { count: line.items.length })
           : t("sheets.resultBreakdown")
       }
       onClose={onClose}
     >
-      <CommandResultBreakdown {...rest} />
+      <CommandResultBreakdown line={line} {...rest} />
     </SheetShell>
   );
 }

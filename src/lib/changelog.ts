@@ -24,14 +24,14 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
     changed: [
       "The phone keypad follows the query: letters while you pick a profile or type a grade, a number pad for size, length, quantity and rate, and a short New / Tweak / Share bar once the line computes. Tweak or a tap on the query line brings the numbers back; ABC and 123 switch layouts; Done puts the bar away. The number pad has a space key, and a finished size plus the next length digit land as two tokens rather than one glued word",
-      "Library and Settings fill the phone screen instead of sitting in an 82% sheet. Hold a length, quantity or rate chip to nudge the number. Share on the phone sends the formatted result and a PNG card, not only a URL",
+      "Library and Settings fill the phone screen instead of sitting in an 82% sheet. Hold a length, quantity or rate chip to nudge the number. Share on the phone sends the formatted result and a PNG card, not only a URL. An assembly's share card and breakdown list every part under the line total",
     ],
     added_bs: [
       "Postavke, Projekti i Dijelovi iznova — grupirane pretražive postavke, lista i detalj projekta, i Sačuvano preimenovano u Dijelove sa Sklopovima i Historijom",
     ],
     changed_bs: [
       "Tastatura na telefonu prati upit: slova dok birate profil ili kucate kvalitet, brojčana tastatura za dimenziju, dužinu, količinu i cijenu, i kratka traka Novo / Mijenjaj / Dijeli kad linija izračuna. Mijenjaj ili dodir na liniju upita vraća brojeve; ABC i 123 mijenjaju raspored; Gotovo sklanja traku. Brojčana tastatura ima razmak, i gotova dimenzija plus sljedeća cifra dužine padaju kao dva tokena, ne kao jedna slijepljena riječ",
-      "Biblioteka i Postavke pune ekran telefona umjesto 82% panela. Zadržite čip dužine, količine ili cijene da pomaknete broj. Dijeljenje na telefonu šalje formatirani rezultat i PNG karticu, ne samo URL",
+      "Biblioteka i Postavke pune ekran telefona umjesto 82% panela. Zadržite čip dužine, količine ili cijene da pomaknete broj. Dijeljenje na telefonu šalje formatirani rezultat i PNG karticu, ne samo URL. Sklop na dijeljenju i u pregledu nabraja svaki dio ispod zbira",
     ],
   },
   {
