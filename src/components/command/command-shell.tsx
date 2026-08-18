@@ -1725,7 +1725,7 @@ export function CommandShell() {
                           onReplace={(next) => replaceTokenAt(group.item, i, next)}
                         />
                       ))
-                    ) : (
+                    ) : group.tokens.length === 0 ? null : (
                       <button
                         type="button"
                         onClick={() => setExpandedItem(group.item)}

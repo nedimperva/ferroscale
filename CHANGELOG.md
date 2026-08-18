@@ -14,6 +14,7 @@ Paint on a project is coats, not one rate.
 - **Primer and finish can be different paints.** The project shows the surface of every item, then you add coats. Each coat has layers, coverage (m²/kg) and price per kg. Settings keeps the default rate a new coat starts with
 - **A multi-item line no longer repeats its parts under the hero.** The assembly list stays in the breakdown — tap a row there to aim the drawing
 - **The breakdown drawing is a short 3D stub of the real section.** Same millimetres as before, callouts stay on the cut face, no extra library
+- **A multi-item line on the desktop greys finished items in the command bar**, same as the phone. Tap one to open its tokens
 
 ---
 
