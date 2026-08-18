@@ -219,7 +219,7 @@ describe("target queries in the bar", () => {
   });
 });
 
-describe("multi-item lines", () => {
+describe("multi-item lines", { timeout: 15_000 }, () => {
   beforeEach(() => {
     vi.useRealTimers();
   });

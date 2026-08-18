@@ -5,6 +5,7 @@ import {
   editLineToken,
   lineChipPrefix,
   lineChips,
+  lineExpandedIndex,
   pullLastChip,
   removeLineToken,
   replaceItemTokenKind,
@@ -43,10 +44,25 @@ describe("lineChips", () => {
   });
 });
 
+describe("lineExpandedIndex", () => {
+  it("stays on a locked item", () => {
+    const { groups } = lineChips("hea120 6m + ipe200 4m ");
+    expect(lineExpandedIndex(groups, 0)).toBe(0);
+  });
+
+  it("falls back to the last item that still has chips", () => {
+    const { groups } = lineChips("hea120 6m + ipe200 4m + ");
+    expect(lineExpandedIndex(groups, null)).toBe(1);
+  });
+});
+
 describe("removeLineToken", () => {
   it("removes from the item it was in", () => {
     expect(removeLineToken("hea120 6m + ipe200 4m ", 1, 1)).toBe("hea120 6m + ipe200 ");
     expect(removeLineToken("hea120 6m + ipe200 4m ", 0, 1)).toBe("hea120 + ipe200 4m ");
+    expect(removeLineToken("hea120 6m x2 + ipe200 4m x3 ", 1, 2)).toBe(
+      "hea120 6m x2 + ipe200 4m ",
+    );
   });
 
   it("keeps the caret token a partial when the line has no trailing space", () => {

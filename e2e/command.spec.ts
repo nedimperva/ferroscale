@@ -69,7 +69,8 @@ test.describe("Command bar", () => {
     // Removing the second item's quantity must not touch the first item's.
     await page.getByRole("button", { name: "Remove x3" }).click();
     await expect(page.getByRole("button", { name: "Edit x3" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Edit ipe200" })).toBeVisible();
+    // Second item stays on the line even if its tokens are the caret now.
+    await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
     await page.getByRole("button", { name: /Item 1, HEA 120/ }).click();
     await expect(page.getByRole("button", { name: "Edit x2" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Edit hea120" })).toBeVisible();

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import {
   cmdAppendLineItem,
@@ -38,6 +38,7 @@ import {
   editLineToken,
   lineChipPrefix,
   lineChips,
+  lineExpandedIndex,
   pullLastChip,
   removeLineToken,
 } from "../line-edit";
@@ -210,16 +211,20 @@ export function DeskCalcView({
    */
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
   const [expandSeed, setExpandSeed] = useState(query);
+  // Keep the item you just edited open. Cleared after paint so Strict Mode's
+  // second render still sees the lock (mutating it during render would not).
+  const expandLockRef = useRef<number | null>(null);
   if (expandSeed !== query) {
     setExpandSeed(query);
-    setExpandedItem(null);
+    setExpandedItem(expandLockRef.current);
   }
-  const expandedIndex =
-    expandedItem != null && expandedItem < chips.groups.length
-      ? expandedItem
-      : chips.groups.length - 1;
+  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
+  useEffect(() => {
+    expandLockRef.current = null;
+  });
 
   const keepExpanded = (item: number, next: string) => {
+    expandLockRef.current = item;
     setQuery(next);
     setExpandedItem(item);
     setExpandSeed(next);

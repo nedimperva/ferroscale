@@ -54,6 +54,7 @@ import {
   applyToActiveItem,
   editLineToken,
   lineChips,
+  lineExpandedIndex,
   removeLineToken,
   replaceLineToken,
 } from "./line-edit";
@@ -1013,17 +1014,21 @@ export function CommandShell() {
    */
   const [expandedItem, setExpandedItem] = useState<number | null>(null);
   const [expandSeed, setExpandSeed] = useState(query);
+  // Same lock as the desktop bar. Cleared after paint so Strict Mode's second
+  // render still sees it.
+  const expandLockRef = useRef<number | null>(null);
   if (expandSeed !== query) {
     setExpandSeed(query);
-    setExpandedItem(null);
+    setExpandedItem(expandLockRef.current);
   }
-  const expandedIndex =
-    expandedItem != null && expandedItem < chips.groups.length
-      ? expandedItem
-      : chips.groups.length - 1;
+  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
+  useEffect(() => {
+    expandLockRef.current = null;
+  });
 
   /** An edit inside the open item is not a reason to close it. */
   const keepExpanded = (item: number, next: string) => {
+    expandLockRef.current = item;
     setQuery(next);
     setExpandedItem(item);
     setExpandSeed(next);
