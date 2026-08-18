@@ -238,13 +238,6 @@ function sortFarToNear(quads: SideQuad[], dx: number, dy: number): SideQuad[] {
   });
 }
 
-/** Drop the bottom-flange end face — it reads as a stray tab under the section. */
-function filterRolledEnds(quads: SideQuad[], f: FittedBox, kind: Section["kind"]): SideQuad[] {
-  if (kind !== "ibeam" && kind !== "channel" && kind !== "tee") return quads;
-  const floor = f.y0 + f.h * 0.72;
-  return quads.filter((q) => !(q.role === "side" && q.a.y >= floor && q.b.y >= floor));
-}
-
 /* ── Per-kind rendering ──────────────────────────────────────────────────── */
 
 function renderSection(sec: Section): React.ReactNode {
@@ -259,7 +252,7 @@ function renderSection(sec: Section): React.ReactNode {
   const outer = mapRing(model.outer, f);
   const holes = model.holes.map((hole) => clampHole(mapRing(hole, f), f));
   // Sharp rings for the stub — fillets stay on the cut so the 3D doesn't stair-step.
-  const outerQuads = filterRolledEnds(visibleSideQuads(outer.pts, dx, dy), f, sec.kind);
+  const outerQuads = visibleSideQuads(outer.pts, dx, dy);
   const holeQuads = holes.flatMap((hole) => visibleSideQuads(hole.pts, dx, dy));
   const front = `${roundedPath(outer.pts, outer.radii)}${holes.map((h) => ` ${polyPath(h.pts)}`).join("")}`;
 
