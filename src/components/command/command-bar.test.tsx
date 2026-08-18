@@ -245,9 +245,17 @@ describe("multi-item lines", () => {
     await waitFor(() => {
       expect(h.getAllByRole("listitem").length).toBeGreaterThanOrEqual(2);
     });
-    // Both items are chipped and neither has swallowed the other's tokens.
-    expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
+    // Finished items collapse to one chip; the item being typed stays open.
+    expect(h.getByRole("button", { name: /Item 1, HEA 120/ })).toBeDefined();
     expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
+    expect(h.getByRole("button", { name: "Edit 4m" })).toBeDefined();
+    // Opening the first item shows its own tokens — it didn't swallow the second.
+    await h.user.click(h.getByRole("button", { name: /Item 1, HEA 120/ }));
+    await waitFor(() => {
+      expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
+    });
+    expect(h.getByRole("button", { name: "Edit 6m" })).toBeDefined();
+    expect(h.getByRole("button", { name: /Item 2, IPE 200/ })).toBeDefined();
   });
 
   it("saves a multi-item line as one assembly, not two entries", async () => {
