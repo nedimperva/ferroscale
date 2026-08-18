@@ -253,7 +253,6 @@ function renderSection(sec: Section): React.ReactNode {
   const holes = model.holes.map((hole) => clampHole(mapRing(hole, f), f));
   // Sharp rings for the stub — fillets stay on the cut so the 3D doesn't stair-step.
   const outerQuads = visibleSideQuads(outer.pts, dx, dy);
-  const holeQuads = holes.flatMap((hole) => visibleSideQuads(hole.pts, dx, dy));
   const front = `${roundedPath(outer.pts, outer.radii)}${holes.map((h) => ` ${polyPath(h.pts)}`).join("")}`;
 
   const dims = renderDims(sec, f);
@@ -263,15 +262,8 @@ function renderSection(sec: Section): React.ReactNode {
     <>
       <SideFaces quads={sortFarToNear(outerQuads, dx, dy)} />
       {holes.map((hole, i) => (
-        <path
-          key={i}
-          d={polyPath(hole.pts.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })))}
-          fill="var(--surface-inset)"
-          stroke={FACE.stroke}
-          strokeWidth={1}
-        />
+        <FarAperture key={i} hole={hole.pts} dx={dx} dy={dy} />
       ))}
-      {holeQuads.length > 0 ? <SideFaces quads={sortFarToNear(holeQuads, dx, dy)} /> : null}
       <path d={front} fillRule="evenodd" {...CUT} strokeLinejoin="round" />
       {extras}
       {dims}
@@ -302,6 +294,36 @@ function clampHole(
     ],
     radii: [0, 0, 0, 0],
   };
+}
+
+function FarAperture({
+  hole,
+  dx,
+  dy,
+}: {
+  hole: { x: number; y: number }[];
+  dx: number;
+  dy: number;
+}) {
+  const clipId = `${useContext(ArrowId)}-hole`;
+  const far = hole.map((pt) => ({ x: pt.x + dx, y: pt.y + dy }));
+  return (
+    <>
+      <defs>
+        <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+          <path d={polyPath(hole)} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${clipId})`}>
+        <path
+          d={polyPath(far)}
+          fill="var(--surface-inset)"
+          stroke={CUT.stroke}
+          strokeWidth={1.2}
+        />
+      </g>
+    </>
+  );
 }
 
 function CircleSection({
