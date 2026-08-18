@@ -7,6 +7,7 @@ import {
   circleToRing,
   circleWallPath,
   fitSection,
+  layoutSheet,
   resolveSection,
   sectionModel,
   tessellateRounded,
@@ -61,6 +62,16 @@ describe("resolveSection", () => {
     expect(sec?.kind).toBe("plate");
   });
 
+  it("reads a panel as a sheet with width, length and thickness", () => {
+    const p = cmdParse("plt1500x3000x6", SETTINGS);
+    const sec = resolveSection(p);
+    expect(sec?.kind).toBe("sheet");
+    if (sec?.kind !== "sheet") return;
+    expect(sec.w).toBe(1500);
+    expect(sec.t).toBe(6);
+    expect(sec.lengthMm).toBe(3000);
+  });
+
   it("returns null for an incomplete line", () => {
     const p = cmdParse("hea", SETTINGS);
     expect(resolveSection(p)).toBeNull();
@@ -110,6 +121,13 @@ describe("cabinet extrusion", () => {
     const f = fitSection(200, 200);
     expect(f.w + EXTRUDE.dx).toBeLessThanOrEqual(320 - 50);
     expect(f.y0 + EXTRUDE.dy).toBeGreaterThan(0);
+  });
+
+  it("lays a sheet out with length on the face, not a stub", () => {
+    const L = layoutSheet(1500, 3000, 6);
+    expect(L.w).toBeGreaterThan(L.tPx);
+    expect(Math.abs(L.ddx)).toBeGreaterThan(L.w * 0.5);
+    expect(L.ddy).toBeLessThan(0);
   });
 
   it("tessellates a fillet into more than one point", () => {

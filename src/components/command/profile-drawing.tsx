@@ -7,6 +7,7 @@ import {
   circleEvenoddPath,
   circleWallPath,
   fitSection,
+  layoutSheet,
   mapRing,
   polyPath,
   quadPath,
@@ -95,9 +96,22 @@ function Label({
 
 const ArrowId = createContext("fsArrow");
 
-function DimTop({ x1, x2, shapeY, value }: { x1: number; x2: number; shapeY: number; value: string }) {
+function DimTop({
+  x1,
+  x2,
+  shapeY,
+  value,
+  clearance,
+}: {
+  x1: number;
+  x2: number;
+  shapeY: number;
+  value: string;
+  clearance?: number;
+}) {
   const id = useContext(ArrowId);
-  const y = Math.max(12, shapeY + EXTRUDE.dy - 14);
+  const lift = clearance ?? Math.abs(EXTRUDE.dy) + 14;
+  const y = Math.max(12, shapeY - lift);
   if (!useContext(DimensionsShown)) return null;
   return (
     <g stroke={DIM} strokeWidth={1}>
@@ -220,6 +234,56 @@ function Tick({ x, y, value, dx = 8, dy = -2 }: { x: number; y: number; value: s
   );
 }
 
+/** Dimension along a receding edge (plate length). Label stays horizontal. */
+function DimAlong({
+  x1,
+  y1,
+  x2,
+  y2,
+  value,
+  offset = 16,
+}: {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  value: string;
+  offset?: number;
+}) {
+  const id = useContext(ArrowId);
+  if (!useContext(DimensionsShown)) return null;
+  const vx = x2 - x1;
+  const vy = y2 - y1;
+  const len = Math.hypot(vx, vy) || 1;
+  let nx = -vy / len;
+  let ny = vx / len;
+  if (nx < 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  const ax1 = x1 + nx * offset;
+  const ay1 = y1 + ny * offset;
+  const ax2 = x2 + nx * offset;
+  const ay2 = y2 + ny * offset;
+  return (
+    <g stroke={DIM} strokeWidth={1}>
+      <line x1={x1} y1={y1} x2={ax1} y2={ay1} />
+      <line x1={x2} y1={y2} x2={ax2} y2={ay2} />
+      <line
+        x1={ax1}
+        y1={ay1}
+        x2={ax2}
+        y2={ay2}
+        markerStart={`url(#${id})`}
+        markerEnd={`url(#${id})`}
+      />
+      <Label x={(ax1 + ax2) / 2 + nx * 5} y={(ay1 + ay2) / 2 + ny * 5}>
+        {value}
+      </Label>
+    </g>
+  );
+}
+
 function SideFaces({ quads }: { quads: SideQuad[] }) {
   return (
     <g stroke={FACE.stroke} strokeWidth={1} strokeLinejoin="round">
@@ -244,6 +308,10 @@ function renderSection(sec: Section): React.ReactNode {
   const model = sectionModel(sec);
   const f = fitSection(model.widthMm, model.heightMm);
   const { dx, dy } = EXTRUDE;
+
+  if (sec.kind === "sheet") {
+    return <SheetSection sec={sec} />;
+  }
 
   if (model.kind === "circle") {
     return <CircleSection sec={sec} model={model} f={f} dx={dx} dy={dy} />;
@@ -294,6 +362,124 @@ function clampHole(
     ],
     radii: [0, 0, 0, 0],
   };
+}
+
+function sheetPt(
+  L: ReturnType<typeof layoutSheet>,
+  u: number,
+  v: number,
+): { x: number; y: number } {
+  return { x: L.x0 + u * L.w + v * L.ddx, y: L.y0 + v * L.ddy };
+}
+
+/** Teardrop on the plate face, pointing along the length (cabinet-projected). */
+function tearPath(L: ReturnType<typeof layoutSheet>, u: number, v: number, du: number, dv: number): string {
+  const tip = sheetPt(L, u, v + dv);
+  const left = sheetPt(L, u - du, v + dv * 0.15);
+  const right = sheetPt(L, u + du, v + dv * 0.15);
+  const fat = sheetPt(L, u, v - dv * 0.65);
+  return `M${tip.x},${tip.y} Q${left.x},${left.y} ${fat.x},${fat.y} Q${right.x},${right.y} ${tip.x},${tip.y} Z`;
+}
+
+function chequeredFrontPath(L: ReturnType<typeof layoutSheet>, bumpPx: number): string {
+  const n = 6;
+  let d = `M${L.x0},${L.y1} L${L.x1},${L.y1} L${L.x1},${L.y0}`;
+  for (let i = n - 1; i >= 0; i--) {
+    const cx = L.x0 + ((i + 0.5) / n) * L.w;
+    const half = (L.w / n) * 0.32;
+    d += ` L${cx + half},${L.y0}`;
+    d += ` Q${cx},${L.y0 - bumpPx} ${cx - half},${L.y0}`;
+  }
+  d += ` L${L.x0},${L.y0} Z`;
+  return d;
+}
+
+function ChequerFace({
+  L,
+  clipId,
+}: {
+  L: ReturnType<typeof layoutSheet>;
+  clipId: string;
+}) {
+  const rows = 5;
+  const cols = 7;
+  const du = 0.038;
+  const dv = 0.072;
+  const tears: React.ReactNode[] = [];
+  for (let r = 0; r < rows; r++) {
+    const v = 0.1 + (r / (rows - 1)) * 0.78;
+    const odd = r % 2 === 1;
+    const n = odd ? cols - 1 : cols;
+    for (let c = 0; c < n; c++) {
+      const u = (odd ? 0.12 : 0.07) + (c / Math.max(n - 1, 1)) * 0.86;
+      tears.push(
+        <path
+          key={`${r}-${c}`}
+          d={tearPath(L, u, v, du, dv)}
+          fill="color-mix(in srgb, var(--accent) 32%, var(--accent-surface))"
+          stroke="color-mix(in srgb, var(--accent) 50%, var(--border))"
+          strokeWidth={0.6}
+        />,
+      );
+    }
+  }
+  return <g clipPath={`url(#${clipId})`}>{tears}</g>;
+}
+
+function SheetSection({ sec }: { sec: Extract<Section, { kind: "sheet" }> }) {
+  const clipId = `${useContext(ArrowId)}-face`;
+  const L = layoutSheet(sec.w, sec.lengthMm, sec.t);
+  const top = [
+    { x: L.x0, y: L.y0 },
+    { x: L.x1, y: L.y0 },
+    { x: L.x1 + L.ddx, y: L.y0 + L.ddy },
+    { x: L.x0 + L.ddx, y: L.y0 + L.ddy },
+  ];
+  const right = [
+    { x: L.x1, y: L.y0 },
+    { x: L.x1, y: L.y1 },
+    { x: L.x1 + L.ddx, y: L.y1 + L.ddy },
+    { x: L.x1 + L.ddx, y: L.y0 + L.ddy },
+  ];
+  const bumpPx = sec.ph != null && sec.t > 0 ? Math.max(3.5, L.tPx * (sec.ph / sec.t)) : 0;
+  const front = bumpPx > 0 ? chequeredFrontPath(L, bumpPx) : `M${L.x0},${L.y0} h${L.w} v${L.tPx} h${-L.w} Z`;
+  return (
+    <>
+      <defs>
+        <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
+          <path d={polyPath(top)} />
+        </clipPath>
+      </defs>
+      <path d={polyPath(right)} fill={FACE.side} stroke={FACE.stroke} strokeWidth={1} />
+      <path d={polyPath(top)} fill={FACE.top} stroke={FACE.stroke} strokeWidth={1} />
+      {sec.ph != null ? <ChequerFace L={L} clipId={clipId} /> : null}
+      <path d={front} {...CUT} strokeLinejoin="round" />
+      <DimTop
+        x1={L.x0}
+        x2={L.x1}
+        shapeY={bumpPx > 0 ? L.y0 - bumpPx : L.y0}
+        value={fmt(sec.w)}
+        clearance={Math.abs(L.ddy) + 14}
+      />
+      <DimLeft y1={L.y0} y2={L.y1} shapeX={L.x0} value={fmt(sec.t)} />
+      {sec.ph != null ? (
+        <Tick
+          x={L.x0 + L.w * 0.22}
+          y={L.y0 - bumpPx}
+          value={`+${fmt(sec.ph)}`}
+          dx={6}
+          dy={-13}
+        />
+      ) : null}
+      <DimAlong
+        x1={L.x1}
+        y1={L.y0}
+        x2={L.x1 + L.ddx}
+        y2={L.y0 + L.ddy}
+        value={fmt(sec.lengthMm)}
+      />
+    </>
+  );
 }
 
 function FarAperture({
@@ -448,6 +634,8 @@ function renderDims(sec: Section, f: FittedBox): React.ReactNode {
           <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
         </>
       );
+    case "sheet":
+      return null;
     case "plate":
     case "chequered":
       return (

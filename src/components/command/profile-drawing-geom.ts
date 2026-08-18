@@ -15,6 +15,7 @@ export type Section =
   | { kind: "round"; d: number }
   | { kind: "square"; a: number }
   | { kind: "plate"; w: number; t: number }
+  | { kind: "sheet"; w: number; t: number; lengthMm: number; ph?: number }
   | { kind: "angle"; a: number; b: number; t: number }
   | { kind: "chequered"; w: number; t: number; ph: number };
 
@@ -44,6 +45,16 @@ export const FRAME = {
 export const EXTRUDE = { dx: 26, dy: -16 } as const;
 
 const CIRCLE_SEGS = 40;
+
+function lengthMmOf(p: CommandParseResult): number | null {
+  const len = p.calc?.input.length;
+  if (len && len.value > 0) {
+    const v = toMillimeters(len.value, len.unit);
+    return v > 0 ? v : null;
+  }
+  if (p.lengthM != null && p.lengthM > 0) return p.lengthM * 1000;
+  return null;
+}
 
 export function resolveSection(p: CommandParseResult): Section | null {
   const input = p.calc?.input;
@@ -100,11 +111,20 @@ export function resolveSection(p: CommandParseResult): Section | null {
       const a = mm("side");
       return a != null ? { kind: "square", a } : null;
     }
-    case "flat":
-    case "panel": {
+    case "flat": {
       const w = mm("width");
       const t = mm("thickness");
       return w != null && t != null ? { kind: "plate", w, t } : null;
+    }
+    case "panel": {
+      const w = mm("width");
+      const t = mm("thickness");
+      const lengthMm = lengthMmOf(p);
+      return w != null && t != null && lengthMm != null
+        ? { kind: "sheet", w, t, lengthMm }
+        : w != null && t != null
+          ? { kind: "plate", w, t }
+          : null;
     }
     case "angle": {
       const a = mm("legA");
@@ -116,7 +136,12 @@ export function resolveSection(p: CommandParseResult): Section | null {
       const w = mm("width");
       const t = mm("thickness");
       const ph = mm("patternHeight");
-      return w != null && t != null && ph != null ? { kind: "chequered", w, t, ph } : null;
+      const lengthMm = lengthMmOf(p);
+      return w != null && t != null && ph != null && lengthMm != null
+        ? { kind: "sheet", w, t, lengthMm, ph }
+        : w != null && t != null && ph != null
+          ? { kind: "chequered", w, t, ph }
+          : null;
     }
     default:
       return null;
@@ -242,6 +267,14 @@ export function sectionModel(sec: Section): SectionModel {
         outer: rectRing(0, 0, sec.w, sec.t),
         holes: [],
       };
+    case "sheet":
+      return {
+        kind: "poly",
+        widthMm: sec.w,
+        heightMm: sec.t,
+        outer: rectRing(0, 0, sec.w, sec.t),
+        holes: [],
+      };
     case "angle":
       return {
         kind: "poly",
@@ -302,6 +335,40 @@ export function fitSection(widthMm: number, heightMm: number): FittedBox {
     px: (mx: number) => x0 + mx * s,
     py: (my: number) => y0 + my * s,
   };
+}
+
+export interface SheetLayout {
+  x0: number;
+  y0: number;
+  w: number;
+  tPx: number;
+  ddx: number;
+  ddy: number;
+  x1: number;
+  y1: number;
+}
+
+/** Cabinet layout of a plate: width × length on the face, thickness on the edge. */
+export function layoutSheet(widthMm: number, lengthMm: number, thicknessMm: number): SheetLayout {
+  const { margin, vbW, vbH } = FRAME;
+  const cw = vbW - margin.l - margin.r;
+  const ch = vbH - margin.t - margin.b;
+  const kx = 0.4;
+  const ky = 0.24;
+  const tMinPx = 12;
+  const s = Math.min(
+    cw / (widthMm + lengthMm * kx),
+    (ch - tMinPx) / Math.max(lengthMm * ky, 1),
+  );
+  const w = widthMm * s;
+  const ddx = lengthMm * kx * s;
+  const ddy = -lengthMm * ky * s;
+  const tPx = Math.max(tMinPx, thicknessMm * s);
+  const bboxW = w + ddx;
+  const bboxH = tPx + Math.abs(ddy);
+  const x0 = margin.l + (cw - bboxW) / 2;
+  const y0 = margin.t + Math.abs(ddy) + (ch - bboxH) / 2;
+  return { x0, y0, w, tPx, ddx, ddy, x1: x0 + w, y1: y0 + tPx };
 }
 
 export function mapRing(ring: PolyRing, f: FittedBox): PolyRing {
