@@ -59,6 +59,7 @@ import {
   replaceLineToken,
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
+import { useExpandedItem } from "./use-expanded-item";
 import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
@@ -1012,26 +1013,13 @@ export function CommandShell() {
    * keystroke goes into. Tapping another item's chip parks the expansion there
    * until the query changes for a reason other than editing that item.
    */
-  const [expandedItem, setExpandedItem] = useState<number | null>(null);
-  const [expandSeed, setExpandSeed] = useState(query);
-  // Same lock as the desktop bar. Cleared after paint so Strict Mode's second
-  // render still sees it.
-  const expandLockRef = useRef<number | null>(null);
-  if (expandSeed !== query) {
-    setExpandSeed(query);
-    setExpandedItem(expandLockRef.current);
-  }
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
   const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
-  useEffect(() => {
-    expandLockRef.current = null;
-  });
 
   /** An edit inside the open item is not a reason to close it. */
   const keepExpanded = (item: number, next: string) => {
-    expandLockRef.current = item;
+    lockExpanded(item, next);
     setQuery(next);
-    setExpandedItem(item);
-    setExpandSeed(next);
   };
   const removeTokenAt = (item: number, idx: number) => {
     keepExpanded(item, removeLineToken(query, item, idx));

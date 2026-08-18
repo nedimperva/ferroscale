@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import {
   cmdAppendLineItem,
@@ -43,6 +43,7 @@ import {
   removeLineToken,
 } from "../line-edit";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
+import { useExpandedItem } from "../use-expanded-item";
 
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -209,25 +210,12 @@ export function DeskCalcView({
    * chips. Finished `+` items collapse to one grey chip so "+ another item"
    * does not flood the bar. Tap a grey chip to open that item.
    */
-  const [expandedItem, setExpandedItem] = useState<number | null>(null);
-  const [expandSeed, setExpandSeed] = useState(query);
-  // Keep the item you just edited open. Cleared after paint so Strict Mode's
-  // second render still sees the lock (mutating it during render would not).
-  const expandLockRef = useRef<number | null>(null);
-  if (expandSeed !== query) {
-    setExpandSeed(query);
-    setExpandedItem(expandLockRef.current);
-  }
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
   const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
-  useEffect(() => {
-    expandLockRef.current = null;
-  });
 
   const keepExpanded = (item: number, next: string) => {
-    expandLockRef.current = item;
+    lockExpanded(item, next);
     setQuery(next);
-    setExpandedItem(item);
-    setExpandSeed(next);
     focusInputAtEnd();
   };
   const removeTokenAt = (item: number, idx: number) => {

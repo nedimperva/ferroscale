@@ -71,8 +71,13 @@ test.describe("Command bar", () => {
     await expect(page.getByRole("button", { name: "Edit x3" })).toHaveCount(0);
     // Second item stays on the line even if its tokens are the caret now.
     await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
-    await page.getByRole("button", { name: /Item 1, HEA 120/ }).click();
-    await expect(page.getByRole("button", { name: "Edit x2" })).toBeVisible();
+    // First item is a grey chip when the last item is open; after some edits
+    // it is already spelled out. Either way its quantity must still be there.
+    const collapsed = page.getByRole("button", { name: /Item 1, HEA 120/ });
+    const x2 = page.getByRole("button", { name: "Edit x2" });
+    await expect(collapsed.or(x2)).toBeVisible();
+    if (await collapsed.isVisible()) await collapsed.click();
+    await expect(x2).toBeVisible();
     await expect(page.getByRole("button", { name: "Edit hea120" })).toBeVisible();
   });
 
