@@ -54,10 +54,12 @@ import {
   applyToActiveItem,
   editLineToken,
   lineChips,
+  lineExpandedIndex,
   removeLineToken,
   replaceLineToken,
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
+import { useExpandedItem } from "./use-expanded-item";
 import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
@@ -1011,22 +1013,13 @@ export function CommandShell() {
    * keystroke goes into. Tapping another item's chip parks the expansion there
    * until the query changes for a reason other than editing that item.
    */
-  const [expandedItem, setExpandedItem] = useState<number | null>(null);
-  const [expandSeed, setExpandSeed] = useState(query);
-  if (expandSeed !== query) {
-    setExpandSeed(query);
-    setExpandedItem(null);
-  }
-  const expandedIndex =
-    expandedItem != null && expandedItem < chips.groups.length
-      ? expandedItem
-      : chips.groups.length - 1;
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
+  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
 
   /** An edit inside the open item is not a reason to close it. */
   const keepExpanded = (item: number, next: string) => {
+    lockExpanded(item, next);
     setQuery(next);
-    setExpandedItem(item);
-    setExpandSeed(next);
   };
   const removeTokenAt = (item: number, idx: number) => {
     keepExpanded(item, removeLineToken(query, item, idx));
@@ -1725,7 +1718,7 @@ export function CommandShell() {
                           onReplace={(next) => replaceTokenAt(group.item, i, next)}
                         />
                       ))
-                    ) : (
+                    ) : group.tokens.length === 0 ? null : (
                       <button
                         type="button"
                         onClick={() => setExpandedItem(group.item)}

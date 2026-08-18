@@ -48,9 +48,9 @@ test.describe("Command bar", () => {
   test("a + joins two items, sums them, and lists both", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
-    // Both items are chipped, either side of the separator.
-    await expect(page.getByText("hea120", { exact: true })).toBeVisible();
-    await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
+    // Finished items collapse to one chip; the last item stays spelled out.
+    await expect(page.getByRole("button", { name: /Item 1, HEA 120/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit ipe200" })).toBeVisible();
 
     // The item list replaces the single-item equation line...
     const items = page.getByRole("list", { name: "Assembly parts" });
@@ -65,12 +65,20 @@ test.describe("Command bar", () => {
 
   test("editing one item leaves the other alone", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // Removing the second item's quantity must not touch the first item's.
     await page.getByRole("button", { name: "Remove x3" }).click();
-    await expect(page.getByText("x2", { exact: true })).toBeVisible();
-    await expect(page.getByText("x3", { exact: true })).toHaveCount(0);
-    await expect(page.getByText("hea120", { exact: true })).toBeVisible();
-    await expect(page.getByText("ipe200", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit x3" })).toHaveCount(0);
+    // Second item stays on the line even if its tokens are the caret now.
+    await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
+    // First item is a grey chip when the last item is open; after some edits
+    // it is already spelled out. Either way its quantity must still be there.
+    const collapsed = page.getByRole("button", { name: /Item 1, HEA 120/ });
+    const x2 = page.getByRole("button", { name: "Edit x2" });
+    await expect(collapsed.or(x2)).toBeVisible();
+    if (await collapsed.isVisible()) await collapsed.click();
+    await expect(x2).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit hea120" })).toBeVisible();
   });
 
   test("pasting a cut list turns each row into an item", async ({ page }) => {
@@ -105,13 +113,14 @@ test.describe("Command bar", () => {
 
     // Three items: the one that was typed, plus the two pasted.
     await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(3);
-    await expect(page.getByText("hea120", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Item 1, HEA 120/ })).toBeVisible();
   });
 
   test("the breakdown says which item it describes on a multi-item line", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
     // The hero totals the line; the assembly list in the breakdown picks a part.
-    await expect(page.getByText("Assembly · 2 parts")).toBeVisible();
+    // The same heading also sits under the hero number — don't require a unique match.
+    await expect(page.getByText("Assembly · 2 parts").first()).toBeVisible();
     await expect(page.getByRole("list", { name: "Assembly parts" })).toBeVisible();
 
     await page.goto("/en?q=hea120+6m+x2");
@@ -237,10 +246,11 @@ test.describe("Phone fold (390x844)", () => {
     const actionsTop = async (count: number) => {
       await page.goto(`/en?q=${encodeURIComponent(items.slice(0, count).join(" + "))}`);
       await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
-      // The per-item list replaces the single equation line, which moves the
-      // actions down once. Measuring before it mounts reads the wrong layout.
-      await expect(page.getByRole("list", { name: /item/i })).toBeVisible();
-      // `Save calculation` is a suggestion chip on the same screen.
+      // Multi-item lines used to grow a per-item list under the hero. That is
+      // now a one-line "Assembly · N parts" so the actions stay put. Wait for
+      // it before measuring, or the first paint still has the single-item row.
+      await expect(page.getByText(`Assembly · ${count} parts`)).toBeVisible();
+      // `Save` is an action under the hero, on the same screen.
       const save = page.getByRole("button", { name: "Save", exact: true });
       return (await save.boundingBox())!.y;
     };

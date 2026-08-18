@@ -22,10 +22,14 @@ export const CHANGELOG: ChangelogEntry[] = [
     changed: [
       "Project paint is a list of coats now. Surface comes from the items; add a primer and a finish with their own price per kg and coverage. Settings holds the default rate you start from",
       "A multi-item line no longer repeats its parts under the hero. The assembly list stays in the breakdown — tap a row there to aim the drawing",
+      "The breakdown drawing is a short 3D stub of the real section — same millimetres, cut-face callouts, no extra library",
+      "A multi-item line on the desktop greys finished items in the command bar, same as the phone — tap one to open its tokens",
     ],
     changed_bs: [
       "Boja na projektu je lista slojeva. Površina dolazi iz stavki; dodaj temelj i završni sloj sa svojom cijenom po kg i pokrivnošću. U postavkama je zadana cijena od koje krećeš",
       "Linija s više stavki više ne ponavlja dijelove ispod heroja. Lista sklopa ostaje u pregledu — tamo dodirom biraš crtež",
+      "Crtež u pregledu je kratki 3D komad stvarnog presjeka — isti milimetri, mjere na rezu, bez nove biblioteke",
+      "Linija s više stavki na desktopu sive završene stavke u komandnoj traci, isto kao na telefonu — dodirom otvaraš tokene",
     ],
   },
   {

@@ -38,10 +38,12 @@ import {
   editLineToken,
   lineChipPrefix,
   lineChips,
+  lineExpandedIndex,
   pullLastChip,
   removeLineToken,
 } from "../line-edit";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
+import { useExpandedItem } from "../use-expanded-item";
 
 type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -203,16 +205,30 @@ export function DeskCalcView({
     massTolerancePercentStore.getServerSnapshot,
   );
 
+  /**
+   * Same rule as the phone: only the item being typed is spelled out as
+   * chips. Finished `+` items collapse to one grey chip so "+ another item"
+   * does not flood the bar. Tap a grey chip to open that item.
+   */
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
+  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
+
+  const keepExpanded = (item: number, next: string) => {
+    lockExpanded(item, next);
+    setQuery(next);
+    focusInputAtEnd();
+  };
   const removeTokenAt = (item: number, idx: number) => {
-    setQuery(removeLineToken(query, item, idx));
-    focusInputAtEnd();
+    keepExpanded(item, removeLineToken(query, item, idx));
   };
-  // Pull a token back to the end of its own item as the editable trailing
-  // partial (the parser is order-tolerant within an item, so this is free).
   const editTokenAt = (item: number, idx: number) => {
-    setQuery(editLineToken(query, item, idx));
-    focusInputAtEnd();
+    keepExpanded(item, editLineToken(query, item, idx));
   };
+  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
+    line.items[group.item]?.parse.name ||
+    group.tokens[0] ||
+    partial ||
+    String(group.item + 1);
 
   // Hero metric counts up when the query settles (see useCountUp). Weight
   // always counts up in exact kilograms (no tonne conversion).
@@ -279,15 +295,37 @@ export function DeskCalcView({
                   +
                 </span>
               )}
-              {group.tokens.map((tok, i) => (
-                <DeskTokenChip
-                  key={`${tok}-${i}`}
-                  tok={tok}
-                  kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                  onEdit={() => editTokenAt(group.item, i)}
-                  onRemove={() => removeTokenAt(group.item, i)}
-                />
-              ))}
+              {group.item === expandedIndex ? (
+                group.tokens.map((tok, i) => (
+                  <DeskTokenChip
+                    key={`${tok}-${i}`}
+                    tok={tok}
+                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                    onEdit={() => editTokenAt(group.item, i)}
+                    onRemove={() => removeTokenAt(group.item, i)}
+                  />
+                ))
+              ) : group.tokens.length === 0 ? null : (
+                <button
+                  type="button"
+                  onClick={() => setExpandedItem(group.item)}
+                  aria-label={t("query.expandItem", {
+                    index: group.item + 1,
+                    name: collapsedItemLabel(group),
+                  })}
+                  className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-[13.5px] font-semibold whitespace-nowrap"
+                  style={{
+                    padding: "5px 10px",
+                    border: "1px solid var(--border-faint)",
+                    background: "var(--surface-inset)",
+                    color: "var(--foreground-secondary)",
+                  }}
+                >
+                  <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
+                  {collapsedItemLabel(group)}
+                  <span className="text-[10px] text-muted-faint">▸</span>
+                </button>
+              )}
             </Fragment>
           ))}
           <GhostField
