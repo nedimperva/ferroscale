@@ -37,7 +37,7 @@ export const FRAME = {
   vbW: 320,
   vbH: 236,
   // Tighter right margin: feature dims now sit on the cut, not in a leader stack.
-  margin: { t: 36, r: 58, b: 20, l: 62 },
+  margin: { t: 36, r: 58, b: 32, l: 62 },
   minThick: 8,
 } as const;
 

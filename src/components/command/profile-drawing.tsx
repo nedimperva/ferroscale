@@ -125,6 +125,32 @@ function DimTop({
   );
 }
 
+function DimBottom({
+  x1,
+  x2,
+  shapeY,
+  value,
+}: {
+  x1: number;
+  x2: number;
+  shapeY: number;
+  value: string;
+}) {
+  const id = useContext(ArrowId);
+  const y = Math.min(VB_H - 14, shapeY + 14);
+  if (!useContext(DimensionsShown)) return null;
+  return (
+    <g stroke={DIM} strokeWidth={1}>
+      <line x1={x1} y1={shapeY + 2} x2={x1} y2={y + 2} />
+      <line x1={x2} y1={shapeY + 2} x2={x2} y2={y + 2} />
+      <line x1={x1} y1={y} x2={x2} y2={y} markerStart={`url(#${id})`} markerEnd={`url(#${id})`} />
+      <Label x={(x1 + x2) / 2} y={y + 11}>
+        {value}
+      </Label>
+    </g>
+  );
+}
+
 function DimLeft({ y1, y2, shapeX, value }: { y1: number; y2: number; shapeX: number; value: string }) {
   const id = useContext(ArrowId);
   const x = M.l - 24;
@@ -650,10 +676,10 @@ function renderDims(sec: Section, f: FittedBox): React.ReactNode {
     case "angle":
       return (
         <>
-          <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
           <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.a)} />
+          <DimBottom x1={f.x0} x2={f.x1} shapeY={f.y1} value={fmt(sec.b)} />
           <DimV
-            x={f.x0 + Math.max(8, sec.t * f.s + 8)}
+            x={f.px((sec.b + sec.t) / 2)}
             y1={f.py(sec.a - sec.t)}
             y2={f.y1}
             value={`t ${fmt(sec.t)}`}
