@@ -147,7 +147,6 @@ function ProjectRow({
   const title = (
     <button
       type="button"
-      role="cell"
       onClick={onOpen}
       aria-label={t("projects.openAria", { name: project.name })}
       className="flex-1 min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer"
@@ -202,9 +201,12 @@ function ProjectRow({
       className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
       style={{ padding: "10px 16px" }}
     >
-      {/* role=cell on the button itself keeps the layout; screen readers get
-          the column structure without an extra wrapper per row. */}
-      {title}
+      {/* The cell wrapper carries the table role — putting it on the button
+          itself would strip its implicit button role and hide it from every
+          getByRole("button") lookup. */}
+      <div role="cell" className="flex flex-1 min-w-0">
+        {title}
+      </div>
       <span
         role="cell"
         className="text-[13px] text-foreground-secondary truncate"

@@ -14,7 +14,21 @@ async function typeQuery(page: Page, query: string) {
   await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
 }
 
-const openSettings = (page: Page) => page.getByRole("button", { name: "Settings" }).click();
+/**
+ * Settings is the first click after goto in several tests. Clicking before
+ * React has hydrated lands on an inert button — the shell announces it is
+ * interactive with html.app-ready (the boot splash's retire signal), so wait
+ * for that, then for the settings view itself.
+ */
+const openSettings = async (page: Page) => {
+  await page.waitForFunction(() =>
+    document.documentElement.classList.contains("app-ready"),
+  );
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(
+    page.getByText("applies to every calculation on this device"),
+  ).toBeVisible();
+};
 /** Settings is grouped now — the price book is its own pane in the rail. */
 async function openPriceBook(page: Page) {
   await openSettings(page);
@@ -69,10 +83,10 @@ test.describe("Desktop fold", () => {
     await expect(page.getByText("238.7 kg").first()).toBeVisible();
   });
 
-  test("+ another item starts a second item from the desktop action row", async ({ page }) => {
+  test("+ item starts a second item from the desktop action row", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 ");
-    await page.getByRole("button", { name: "+ another item" }).click();
+    await page.getByRole("button", { name: "Add another item to the line" }).click();
     // Not typeQuery: that helper presses ⌘K first, which would clear the line
     // the button just extended.
     await page
@@ -94,7 +108,16 @@ test.describe("Session rail", () => {
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // KM (BAM) is two characters where € is one; the columns were fixed-width,
     // so the unit dropped to a second line as soon as the value outgrew them.
-    await page.getByRole("button", { name: "Settings" }).click();
+    // LIVE renders in SSR HTML, so it is not proof of hydration — wait for it.
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    await page
+      .getByRole("button", { name: "Settings" })
+      .click();
+    await expect(
+      page.getByText("applies to every calculation on this device"),
+    ).toBeVisible();
     await page.getByRole("radio", { name: "BAM", exact: true }).click();
     await page.getByRole("button", { name: "Calculator" }).click();
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
@@ -203,6 +226,9 @@ test.describe("Assemblies", () => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 + ipe200 4m x3 ");
     await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
+    // A multi-item line opens the rename editor on save — close it before
+    // navigating; the assembly is already in the library.
+    await page.keyboard.press("Escape");
 
     // The surface opens on Assemblies: it is the only tab with anything in it.
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();

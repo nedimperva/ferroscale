@@ -216,7 +216,6 @@ function PartsRow({
   const name = (
     <button
       type="button"
-      role="cell"
       onClick={() => actions.onPick(entry)}
       aria-label={t("saved.openAria", { name: entry.name })}
       className="flex flex-1 min-w-0 items-center gap-2 border-0 bg-transparent p-0 text-left cursor-pointer"
@@ -313,9 +312,12 @@ function PartsRow({
       className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
       style={{ padding: "9px 14px" }}
     >
-      {/* role=cell on the button itself keeps the layout; screen readers get
-          the column structure without an extra wrapper per row. */}
-      {name}
+      {/* The cell wrapper carries the table role — putting it on the button
+          itself would strip its implicit button role and hide it from every
+          getByRole("button") lookup. */}
+      <div role="cell" className="flex flex-1 min-w-0">
+        {name}
+      </div>
       <span
         role="cell"
         className="font-mono text-[12px] text-muted-faint truncate"

@@ -316,8 +316,9 @@ test.describe("Phone fold (390x844)", () => {
 
   test("every library tab label is readable, not clipped", async ({ page }) => {
     await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Library" }).click();
+    await page.getByRole("button", { name: "Parts" }).click();
     const clipped = await page.evaluate(() =>
       Array.from(document.querySelectorAll('[role="tab"] span:not([aria-hidden])'))
         .filter((el) => el.scrollWidth > el.clientWidth + 1)
@@ -334,6 +335,7 @@ test.describe("Sheet dialogs (phone viewport)", () => {
 
   test("the settings sheet is a modal dialog: named, focused, Escape closes", async ({ page }) => {
     await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
     await page.getByRole("button", { name: "Settings" }).click();
 
     const dialog = page.getByRole("dialog", { name: "Settings" });
@@ -349,8 +351,9 @@ test.describe("Sheet dialogs (phone viewport)", () => {
 
   test("Tab cycles inside the dialog without escaping it", async ({ page }) => {
     await page.goto("/en");
-    await page.getByRole("button", { name: "Library" }).click();
-    const dialog = page.getByRole("dialog", { name: "Library" });
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    await page.getByRole("button", { name: "Parts" }).click();
+    const dialog = page.getByRole("dialog", { name: "Parts" });
     await expect(dialog).toBeVisible();
 
     // Shift+Tab from the first focusable wraps to the last; repeated Tab
@@ -365,6 +368,7 @@ test.describe("Sheet dialogs (phone viewport)", () => {
 
   test("the backdrop click still closes the sheet", async ({ page }) => {
     await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
     await page.getByRole("button", { name: "Settings" }).click();
     const dialog = page.getByRole("dialog", { name: "Settings" });
     await expect(dialog).toBeVisible();
@@ -374,14 +378,15 @@ test.describe("Sheet dialogs (phone viewport)", () => {
 
   test("settings and library fill the phone screen", async ({ page }) => {
     await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
     await page.getByRole("button", { name: "Settings" }).click();
     const dialog = page.getByRole("dialog", { name: "Settings" });
     const box = await dialog.boundingBox();
     expect(box!.height).toBeGreaterThan(700);
     await page.getByRole("button", { name: "Back", exact: true }).click();
 
-    await page.getByRole("button", { name: "Library" }).click();
-    const library = page.getByRole("dialog", { name: "Library" });
+    await page.getByRole("button", { name: "Parts" }).click();
+    const library = page.getByRole("dialog", { name: "Parts" });
     expect((await library.boundingBox())!.height).toBeGreaterThan(700);
   });
 });

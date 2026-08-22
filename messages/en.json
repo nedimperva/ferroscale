@@ -471,7 +471,8 @@
       "breakdownItem": "Breakdown · item {index} of {count}",
       "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
       "saveAsProject": "Save as project",
-      "anotherItem": "+ item"
+      "anotherItem": "+ item",
+      "anotherItemAria": "Add another item to the line"
     },
     "suggest": {
       "standardSize": "standard size",

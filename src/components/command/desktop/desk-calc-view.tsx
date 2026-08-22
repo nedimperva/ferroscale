@@ -806,6 +806,9 @@ export function DeskCalcView({
                   type="button"
                   onClick={() => setQuery((q) => cmdAppendLineItem(q))}
                   disabled={!p.valid}
+                  // A spoken "+ item" is cryptic; the suggestion chip keeps
+                  // the short label, this one says what it does.
+                  aria-label={t("desktop.anotherItemAria")}
                   className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-muted"
                   style={{
                     padding: "9px 14px",
