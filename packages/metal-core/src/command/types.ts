@@ -102,6 +102,14 @@ export interface CommandParseResult {
   valid: boolean;
   /** Parse/validation problems worth telling the user about; [] when clean. */
   issues: CommandParseIssue[];
+  /**
+   * Tokenize-order indexes of tokens that were recognized but dropped because
+   * their slot was already filled (a second profile, a second length, …). The
+   * result is computed from the first of each kind, so these ride along inert —
+   * which a calculator must never do silently. The UI marks such chips so the
+   * "why is my other profile ignored?" question answers itself.
+   */
+  shadowedTokenIndexes: number[];
   /** Echo of the pricing settings used (for sheet display). */
   pricing: CommandPricing;
   /** Non-null when the query asked for a target instead of an input. */

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { currentQuery, renderCommandShell } from "@/test/render-command";
 
 /**
@@ -237,7 +237,10 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
     // length, quantity, grade.
     await h.user.type(h.input(), "hea120 6m x2 s355 ");
 
-    const addItem = await h.findByRole("button", { name: /\+ item/ });
+    // The action button under the hero is also "+ item" now — the chip lives
+    // in the suggestion strip, so scope the lookup there.
+    const strip = h.container.querySelector("[data-suggestion-strip]") as HTMLElement;
+    const addItem = await within(strip).findByRole("button", { name: /\+ item/ });
     await h.user.click(addItem);
     // The separator is decoration between chip groups, not a chip of its own,
     // so the proof it landed is that what follows parses as a second item.

@@ -114,19 +114,28 @@ export function DeskTokenChip({
   kindClass,
   onEdit,
   onRemove,
+  shadowed,
 }: {
   tok: string;
   kindClass: string;
   onEdit: () => void;
   onRemove: () => void;
+  /** Recognized but inert: its slot was already filled by an earlier token. */
+  shadowed?: boolean;
 }) {
   const t = useTranslations("command");
+  const shadowNote = shadowed ? t("token.shadowed") : null;
   return (
-    <span className={`inline-flex items-stretch font-mono text-base font-semibold rounded-lg ${kindClass}`}>
+    <span
+      className={`inline-flex items-stretch font-mono text-base font-semibold rounded-lg ${kindClass}`}
+      style={shadowed ? { opacity: 0.55 } : undefined}
+      title={shadowNote ?? undefined}
+    >
       <button
         type="button"
         onClick={onEdit}
-        aria-label={t("token.edit", { token: tok })}
+        aria-label={shadowNote ? `${t("token.edit", { token: tok })} — ${shadowNote}` : t("token.edit", { token: tok })}
+        style={shadowed ? { textDecoration: "line-through" } : undefined}
         className="pl-2.5 pr-1 py-1 rounded-l-lg"
       >
         {tok}

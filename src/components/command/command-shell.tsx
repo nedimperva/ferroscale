@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/useTheme";
-import { useCountUp } from "@/hooks/useCountUp";
+import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { useSaved } from "@/hooks/useSaved";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
@@ -386,6 +386,7 @@ export function CommandShell() {
         if (last) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
           setQuery(`${last} `);
+          markExternalValueChange();
           touchedRef.current = true;
           requestAnimationFrame(() => inputRef.current?.select());
         }
@@ -397,6 +398,7 @@ export function CommandShell() {
       return;
     }
     setQuery(`${sharedQuery} `);
+    markExternalValueChange();
     touchedRef.current = true;
     // A link carries the sender's rate context. Apply it (otherwise the same
     // link shows a different price to every recipient) and say so out loud —
@@ -518,10 +520,17 @@ export function CommandShell() {
     );
     haptic("commit");
     for (const item of line.items) pushHistory(item.text.trim());
-    showActionToast(t("toast.saved"), {
-      label: t("common.nameIt"),
-      onAction: () => setEditingSavedId(entry.id),
-    });
+    if (line.multi) {
+      // An assembly's placeholder name ("Assembly (2 parts)") says nothing a
+      // search could find — ask for the real one now, not via a toast that
+      // five seconds of jobsite noise can swallow.
+      setEditingSavedId(entry.id);
+    } else {
+      showActionToast(t("toast.saved"), {
+        label: t("common.nameIt"),
+        onAction: () => setEditingSavedId(entry.id),
+      });
+    }
   }, [
     p,
     line,
@@ -597,23 +606,50 @@ export function CommandShell() {
     );
   }, [line, pushHistory, showToast, t]);
 
+  /**
+   * Swap the bar's contents from anywhere (compare, parts, history, library).
+   * When work is already on the line, the swap is one Undo away rather than a
+   * silent loss — same contract as deletes.
+   */
+  const replaceQuery = useCallback(
+    (next: string) => {
+      const prevTrim = query.trim();
+      const nextTrim = next.trim();
+      setQuery(next);
+      markExternalValueChange();
+      setSheet(null);
+      if (prevTrim && prevTrim !== nextTrim) {
+        showActionToast(t("toast.lineReplaced"), {
+          label: t("common.undo"),
+          onAction: () => {
+            setQuery(`${prevTrim} `);
+            markExternalValueChange();
+            showToast(t("toast.restored"));
+          },
+        });
+      }
+    },
+    [query, showActionToast, showToast, t],
+  );
+
   const loadInput = useCallback(
     (input: CalculationInput) => {
       const q = inputToQuery(input, defaultUnit, {
         defaultGradeId: shared.defaultGradeId,
         defaultPricing: shared,
       });
-      if (q) setQuery(q);
-      setSheet(null);
+      if (q) replaceQuery(q);
     },
-    [defaultUnit, shared],
+    [defaultUnit, shared, replaceQuery],
   );
 
   /** Put a history line back in the bar, fully chipped. */
-  const loadQuery = useCallback((entry: string) => {
-    setQuery(`${entry} `);
-    setSheet(null);
-  }, []);
+  const loadQuery = useCallback(
+    (entry: string) => {
+      replaceQuery(`${entry} `);
+    },
+    [replaceQuery],
+  );
 
   /** Every part of a saved entry as one `+`-joined command line. */
   const savedEntryQuery = useCallback(
@@ -643,10 +679,9 @@ export function CommandShell() {
     (entry: SavedEntry) => {
       markSavedUsed(entry.id);
       const q = savedEntryQuery(entry);
-      if (q) setQuery(`${q} `);
-      setSheet(null);
+      if (q) replaceQuery(`${q} `);
     },
-    [markSavedUsed, savedEntryQuery],
+    [markSavedUsed, savedEntryQuery, replaceQuery],
   );
 
   /**
@@ -850,6 +885,7 @@ export function CommandShell() {
     // so starting a new line never loses the previous number.
     if (p.valid) pushHistory(query);
     setQuery("");
+    markExternalValueChange();
   }, [p.valid, query, pushHistory]);
 
   const onSuggest = useCallback(
@@ -1081,6 +1117,7 @@ export function CommandShell() {
       onClose={() => setSheet(null)}
       onTryExample={(example) => {
         setQuery(`${example} `);
+        markExternalValueChange();
         setSheet(null);
         if (!isPhoneViewport) focusInputAtEnd();
       }}
@@ -1280,7 +1317,9 @@ export function CommandShell() {
                           : "var(--muted)",
                       }}
                     >
-                      {isWeight ? fsWeightUnit().toUpperCase() : sym}
+                      {/* Same words as the desktop toggle — the concept is
+                          one, so the label is one (KG/€ read as units). */}
+                      {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
                     </button>
                   );
                 })}
@@ -1462,8 +1501,8 @@ export function CommandShell() {
                 aria-label={t("suggest.addItem")}
                 className="flex items-center justify-center rounded-[11px] text-[16px] font-bold leading-none"
                 style={{
-                  width: 34,
-                  height: 34,
+                  width: 44,
+                  height: 44,
                   border: "1px dashed var(--border-strong)",
                   background: "transparent",
                   color: "var(--muted)",
@@ -1604,7 +1643,9 @@ export function CommandShell() {
                   }}
                   className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
                   style={{
-                    padding: it.sub ? "7px 12px" : "8px 13px",
+                    // 44px touch targets — the strip is the phone's main
+                    // input accelerator, tapped with thumbs on the jobsite.
+                    padding: it.sub ? "9px 13px" : "12px 14px",
                     border:
                       it.kind === "save"
                         ? "none"
@@ -1713,6 +1754,7 @@ export function CommandShell() {
                           anchor={i === 0 && group.item !== chips.groups.length - 1}
                           tok={tok}
                           kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                          shadowed={line.items[group.item]?.parse.shadowedTokenIndexes.includes(i)}
                           onEdit={() => editTokenAt(group.item, i)}
                           onRemove={() => removeTokenAt(group.item, i)}
                           onReplace={(next) => replaceTokenAt(group.item, i, next)}
@@ -1802,11 +1844,6 @@ export function CommandShell() {
               onClose={() => setSheet(null)}
               onSave={doSave}
               isSaved={!!currentSavedEntry}
-              onCopy={() => {
-                navigator.clipboard?.writeText(query).catch(() => {});
-                setSheet(null);
-                showToast(t("toast.copied"));
-              }}
               onCopyValue={() => {
                 setSheet(null);
                 copyValue();
@@ -1997,7 +2034,7 @@ function ActionBtn({
       onClick={onClick}
       className="flex flex-1 items-center justify-center gap-1.5 rounded-[11px] text-[12px] font-bold"
       style={{
-        height: 34,
+        height: 44,
         letterSpacing: 0.4,
         border: `1px solid ${primary ? "var(--accent-border)" : "var(--border-faint)"}`,
         background: primary ? "var(--accent-surface)" : "var(--surface)",

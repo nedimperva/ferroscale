@@ -27,6 +27,29 @@ vi.mock("@/i18n/navigation", () => ({
 
 /** jsdom has no matchMedia, no clipboard and no layout — fill the gaps. */
 export function installBrowserStubs({ width = 1280 }: { width?: number } = {}) {
+  // Node ≥23 ships an experimental global `localStorage` that stays inert
+  // without --localstorage-file, shadowing jsdom's working one. Give the
+  // window a Map-backed stand-in so storage behaves on every Node.
+  let storageUsable = false;
+  try {
+    window.localStorage.setItem("__probe", "1");
+    window.localStorage.removeItem("__probe");
+    storageUsable = true;
+  } catch {
+    storageUsable = false;
+  }
+  if (!storageUsable) {
+    const mem = new Map<string, string>();
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: (key: string) => (mem.has(key) ? mem.get(key)! : null),
+        setItem: (key: string, value: string) => void mem.set(key, String(value)),
+        removeItem: (key: string) => void mem.delete(key),
+        clear: () => void mem.clear(),
+      },
+    });
+  }
   window.localStorage.clear();
   // The shell mirrors the query into the URL, and jsdom keeps that URL across
   // tests in a file — without this reset the next mount hydrates from the

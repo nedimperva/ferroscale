@@ -331,6 +331,41 @@ describe("cmdParse did-you-mean suggestions", () => {
   });
 });
 
+describe("cmdParse shadowed duplicate tokens", () => {
+  it("flags a second profile as shadowed and keeps the first in charge", () => {
+    const hea = cmdParse("hea120 6m ", mkSettings());
+    const both = cmdParse("hea120 6m ipe200 ", mkSettings());
+    expect(both.valid).toBe(true);
+    // First profile wins — the result is HEA 120's, not IPE 200's.
+    expect(both.totalKg).toBe(hea.totalKg);
+    expect(both.alias?.alias).toBe("hea");
+    expect(both.shadowedTokenIndexes).toEqual([2]);
+    expect(both.issues).toHaveLength(0);
+  });
+
+  it("flags shadowed lengths, quantities and grades by tokenize index", () => {
+    const p = cmdParse("hea120 6m x2 s355 8m x5 s235 ", mkSettings());
+    expect(p.valid).toBe(true);
+    // tokens: [hea120, 6m, x2, s355, 8m, x5, s235] → the last three shadow.
+    expect(p.shadowedTokenIndexes).toEqual([4, 5, 6]);
+    expect(p.realQty).toBe(2);
+    expect(p.gradeId).toBe("steel-s355jr");
+  });
+
+  it("never flags the token still being typed", () => {
+    // No trailing space: "ipe200" is mid-typing, not a committed duplicate.
+    const p = cmdParse("hea120 6m ipe200", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.shadowedTokenIndexes).toEqual([]);
+  });
+
+  it("a clean line shadows nothing", () => {
+    const p = cmdParse("hea120 6m x2 s355 @1.5/kg ", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.shadowedTokenIndexes).toEqual([]);
+  });
+});
+
 describe("cmdParse with glued queries", () => {
   it("hea1006m parses identically to hea100 6m", () => {
     const spaced = cmdParse("hea100 6m", mkSettings());

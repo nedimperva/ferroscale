@@ -56,9 +56,9 @@ function variantClass(variant: "default" | "accent" | "dim"): string {
     return "bg-[var(--accent)] text-[var(--accent-contrast)] font-bold border border-transparent";
   }
   if (variant === "dim") {
-    return "bg-[var(--surface)] dark:bg-[#262017] text-muted border border-border-faint";
+    return "bg-[var(--surface)] dark:bg-[var(--surface-raised)] text-muted border border-border-faint";
   }
-  return "bg-[var(--surface)] dark:bg-[#262017] text-foreground border border-border-faint";
+  return "bg-[var(--surface)] dark:bg-[var(--surface-raised)] text-foreground border border-border-faint";
 }
 
 interface KeyProps {

@@ -15,6 +15,7 @@ export function TokenChip({
   onRemove,
   onReplace,
   anchor,
+  shadowed,
 }: {
   tok: string;
   kindClass: string;
@@ -23,8 +24,11 @@ export function TokenChip({
   onReplace?: (next: string) => void;
   /** Marks the chip the query line scrolls to when an item is opened. */
   anchor?: boolean;
+  /** Recognized but inert: its slot was already filled by an earlier token. */
+  shadowed?: boolean;
 }) {
   const t = useTranslations("command");
+  const shadowNote = shadowed ? t("token.shadowed") : null;
   const steppable = Boolean(onReplace && canStepToken(tok));
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
@@ -52,6 +56,7 @@ export function TokenChip({
       ref={chipRef}
       data-expanded-start={anchor ? "" : undefined}
       className={`relative inline-flex items-stretch flex-shrink-0 font-mono text-sm font-semibold rounded-md ${kindClass}`}
+      style={shadowed ? { opacity: 0.55 } : undefined}
     >
       {open &&
         steppable &&
@@ -125,8 +130,9 @@ export function TokenChip({
         onPointerLeave={steppable ? clearTimer : undefined}
         onPointerCancel={steppable ? clearTimer : undefined}
         onContextMenu={steppable ? (e) => e.preventDefault() : undefined}
-        aria-label={t("token.edit", { token: tok })}
-        title={steppable ? t("token.holdToStep") : undefined}
+        aria-label={shadowNote ? `${t("token.edit", { token: tok })} — ${shadowNote}` : t("token.edit", { token: tok })}
+        title={shadowNote ?? (steppable ? t("token.holdToStep") : undefined)}
+        style={shadowed ? { textDecoration: "line-through" } : undefined}
         className="pl-2 pr-0.5 py-1.5 rounded-l-md"
       >
         {tok}

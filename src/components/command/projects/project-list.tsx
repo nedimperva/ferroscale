@@ -147,6 +147,7 @@ function ProjectRow({
   const title = (
     <button
       type="button"
+      role="cell"
       onClick={onOpen}
       aria-label={t("projects.openAria", { name: project.name })}
       className="flex-1 min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer"
@@ -197,32 +198,44 @@ function ProjectRow({
 
   return (
     <div
+      role="row"
       className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
       style={{ padding: "10px 16px" }}
     >
+      {/* role=cell on the button itself keeps the layout; screen readers get
+          the column structure without an extra wrapper per row. */}
       {title}
-      <span className="text-[13px] text-foreground-secondary truncate" style={{ width: 150 }}>
+      <span
+        role="cell"
+        className="text-[13px] text-foreground-secondary truncate"
+        style={{ width: 150 }}
+      >
         {project.client?.trim() || "—"}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] text-muted text-right flex-shrink-0"
         style={{ width: 44 }}
       >
         {summary.itemCount}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
         style={{ width: 104, color: "var(--accent-text)" }}
       >
         {weightText}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] font-semibold text-right flex-shrink-0"
         style={{ width: 116, color: "var(--blue-text)" }}
       >
         {valueText}
       </span>
-      {menu}
+      <div role="cell" className="flex items-center flex-shrink-0">
+        {menu}
+      </div>
     </div>
   );
 }
@@ -345,6 +358,8 @@ export function ProjectList({
       )
     ) : (
       <div
+        role="table"
+        aria-label={t("nav.projects")}
         className="rounded-[18px] overflow-hidden"
         style={{
           border: "1px solid var(--border-faint)",
@@ -354,21 +369,22 @@ export function ProjectList({
       >
         {!compact && (
           <div
+            role="row"
             className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
             style={{ padding: "10px 16px", background: "var(--surface-raised)" }}
           >
-            <span className="flex-1 min-w-0">{t("projects.columns.project")}</span>
-            <span style={{ width: 150 }}>{t("projects.columns.client")}</span>
-            <span style={{ width: 44 }} className="text-right">
+            <span role="columnheader" className="flex-1 min-w-0">{t("projects.columns.project")}</span>
+            <span role="columnheader" style={{ width: 150 }}>{t("projects.columns.client")}</span>
+            <span role="columnheader" style={{ width: 44 }} className="text-right">
               {t("projects.columns.items")}
             </span>
-            <span style={{ width: 104 }} className="text-right">
+            <span role="columnheader" style={{ width: 104 }} className="text-right">
               {t("projects.columns.weight")}
             </span>
-            <span style={{ width: 116 }} className="text-right">
+            <span role="columnheader" style={{ width: 116 }} className="text-right">
               {t("projects.columns.value")}
             </span>
-            <span style={{ width: 30 }} aria-hidden="true" />
+            <span role="columnheader" style={{ width: 30 }} aria-label={t("common.more")} />
           </div>
         )}
         {visible.map((project) => (

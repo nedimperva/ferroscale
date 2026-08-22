@@ -216,6 +216,7 @@ function PartsRow({
   const name = (
     <button
       type="button"
+      role="cell"
       onClick={() => actions.onPick(entry)}
       aria-label={t("saved.openAria", { name: entry.name })}
       className="flex flex-1 min-w-0 items-center gap-2 border-0 bg-transparent p-0 text-left cursor-pointer"
@@ -308,30 +309,38 @@ function PartsRow({
 
   return (
     <div
+      role="row"
       className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
       style={{ padding: "9px 14px" }}
     >
+      {/* role=cell on the button itself keeps the layout; screen readers get
+          the column structure without an extra wrapper per row. */}
       {name}
       <span
+        role="cell"
         className="font-mono text-[12px] text-muted-faint truncate"
         style={{ width: 190 }}
       >
         {specText}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
         style={{ width: 96, color: "var(--accent-text)" }}
       >
         {kgmText}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12px] text-muted text-right flex-shrink-0"
         style={{ width: 56 }}
       >
         {t("parts.usedTimes", { count: entry.useCount })}
       </span>
-      {useButton}
-      {menu}
+      <div role="cell" className="flex items-center gap-2 flex-shrink-0">
+        {useButton}
+        {menu}
+      </div>
     </div>
   );
 }
@@ -726,6 +735,8 @@ export function PartsView({
           </div>
         ) : (
           <div
+            role="table"
+            aria-label={tab === "assemblies" ? t("parts.tabs.assemblies") : t("parts.tabs.parts")}
             className="rounded-[18px] overflow-hidden"
             style={{
               border: "1px solid var(--border-faint)",
@@ -735,18 +746,19 @@ export function PartsView({
           >
             {!compact && (
               <div
+                role="row"
                 className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
                 style={{ padding: "10px 14px", background: "var(--surface-raised)" }}
               >
-                <span className="flex-1 min-w-0">{t("parts.columns.name")}</span>
-                <span style={{ width: 190 }}>{t("parts.columns.spec")}</span>
-                <span style={{ width: 96 }} className="text-right">
+                <span role="columnheader" className="flex-1 min-w-0">{t("parts.columns.name")}</span>
+                <span role="columnheader" style={{ width: 190 }}>{t("parts.columns.spec")}</span>
+                <span role="columnheader" style={{ width: 96 }} className="text-right">
                   {tab === "assemblies" ? t("parts.columns.total") : t("parts.columns.kgm")}
                 </span>
-                <span style={{ width: 56 }} className="text-right">
+                <span role="columnheader" style={{ width: 56 }} className="text-right">
                   {t("parts.columns.used")}
                 </span>
-                <span style={{ width: 108 }} aria-hidden="true" />
+                <span role="columnheader" style={{ width: 108 }} aria-label={t("common.more")} />
               </div>
             )}
             {models.map((model) => (

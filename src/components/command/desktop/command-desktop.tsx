@@ -46,6 +46,36 @@ export function CommandDesktop(props: CommandDesktopProps) {
     requestAnimationFrame(() => focusInputAtEnd());
   }, [focusInputAtEnd]);
 
+  // Workspace tab ↔ URL: switching tabs rewrites the path (replaceState — no
+  // navigation, nothing remounts) so a refresh or a pasted link lands on the
+  // tab you were on. Compare has no route of its own; it shares the base path
+  // with the calculator, like every route does in this single-shell app.
+  useEffect(() => {
+    const KNOWN = ["/saved", "/projects", "/settings"];
+    let base = window.location.pathname;
+    for (const suffix of KNOWN) {
+      if (base.endsWith(suffix)) {
+        base = base.slice(0, -suffix.length);
+        break;
+      }
+    }
+    const suffix =
+      view === "saved"
+        ? "/saved"
+        : view === "projects"
+          ? "/projects"
+          : view === "settings"
+            ? "/settings"
+            : "";
+    const stripped = base.replace(/\/+$/, "");
+    const nextPath = stripped + suffix;
+    window.history.replaceState(
+      null,
+      "",
+      `${nextPath === "" ? "/" : nextPath}${window.location.search}`,
+    );
+  }, [view]);
+
   // Top-bar "New" (mirrors ⌘K): clear the line, jump to the calculator, focus.
   const { onNew } = props;
   const startNewCalc = useCallback(() => {
@@ -164,6 +194,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "compare" && (
         <DeskCompareView
           compareItems={props.compareItems}
+          currentValid={props.p.valid}
+          onAddCurrent={props.onCompareCurrent}
           onRemove={props.onRemoveCompare}
           onClearAll={props.onClearCompare}
           gotoCalc={gotoCalc}

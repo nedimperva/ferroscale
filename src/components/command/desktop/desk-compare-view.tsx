@@ -39,12 +39,17 @@ function DeltaChip({ pct }: { pct: number }) {
 
 export function DeskCompareView({
   compareItems,
+  currentValid,
+  onAddCurrent,
   onRemove,
   onClearAll,
   gotoCalc,
   onPick,
 }: {
   compareItems: CompareItem[];
+  /** The live line can be compared right here — no detour via the calculator. */
+  currentValid: boolean;
+  onAddCurrent: () => void;
   onRemove: (id: string) => void;
   onClearAll: () => void;
   gotoCalc: () => void;
@@ -106,7 +111,13 @@ export function DeskCompareView({
                 {t("common.clearAll")}
               </DeskBtn>
             )}
-            <DeskBtn small primary onClick={gotoCalc}>
+            {/* A computable line is added on the spot; only a dead or empty
+                bar sends the user back to the calculator. */}
+            <DeskBtn
+              small
+              primary
+              onClick={currentValid ? onAddCurrent : gotoCalc}
+            >
               <DeskIcon name="plus" stroke={"var(--accent-contrast)"} />
               {t("compare.addFromCalculator")}
             </DeskBtn>

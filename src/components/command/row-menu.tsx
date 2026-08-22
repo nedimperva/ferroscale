@@ -76,13 +76,59 @@ export function RowMenu({
 
   useEffect(() => {
     if (!open) return;
+    // Move focus into the menu on open, like a native context menu — arrow
+    // keys and Enter then work without reaching for the mouse again.
+    panelRef.current
+      ?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)')
+      ?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
       setOpen(false);
     };
+    const moveFocus = (step: 1 | -1 | "first" | "last") => {
+      const focusable = Array.from(
+        panelRef.current?.querySelectorAll<HTMLButtonElement>(
+          '[role="menuitem"]:not(:disabled)',
+        ) ?? [],
+      );
+      if (focusable.length === 0) return;
+      const current = focusable.indexOf(document.activeElement as HTMLButtonElement);
+      const next =
+        step === "first"
+          ? 0
+          : step === "last"
+            ? focusable.length - 1
+            : (current + step + focusable.length) % focusable.length;
+      focusable[next]?.focus();
+    };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      switch (event.key) {
+        case "Escape":
+          setOpen(false);
+          triggerRef.current?.focus();
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          moveFocus(1);
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          moveFocus(-1);
+          break;
+        case "Home":
+          event.preventDefault();
+          moveFocus("first");
+          break;
+        case "End":
+          event.preventDefault();
+          moveFocus("last");
+          break;
+      }
     };
     // A portalled panel does not travel with its row, so any scroll or resize
     // would leave it stranded mid-page. Closing is honest and cheap.
