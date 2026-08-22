@@ -48,7 +48,7 @@ function GroupRailItem({
       type="button"
       onClick={onClick}
       aria-current={active ? "true" : undefined}
-      className="flex items-center gap-2 w-full rounded-[11px] text-left cursor-pointer"
+      className="flex items-center gap-2 w-full rounded-button text-left cursor-pointer"
       style={{
         padding: "9px 13px",
         background: active ? "var(--accent-surface)" : "transparent",
@@ -98,7 +98,7 @@ function GroupHeading({ label, hint }: { label: string; hint?: string }) {
 function FieldCard({ fields }: { fields: SettingsField[] }) {
   return (
     <div
-      className="rounded-[18px] overflow-hidden"
+      className="rounded-panel-lg overflow-hidden"
       style={{
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
@@ -208,7 +208,7 @@ export function DeskSettingsView({
       case "priceBook":
         return (
           <div
-            className="rounded-[18px]"
+            className="rounded-panel-lg"
             style={{
               border: "1px solid var(--border-faint)",
               background: "var(--surface)",

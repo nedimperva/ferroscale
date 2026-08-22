@@ -473,7 +473,7 @@ function CompareTabContent({
       <button
         type="button"
         onClick={onClearAll}
-        className="mt-3 w-full h-10 rounded-xl border border-border-faint bg-transparent text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground hover:bg-[var(--surface-raised)]"
+        className="mt-3 w-full h-10 rounded-button border border-border-faint bg-transparent text-xs font-bold uppercase tracking-wider text-muted hover:text-foreground hover:bg-[var(--surface-raised)]"
       >
         {t("common.clearAll")}
       </button>
@@ -650,7 +650,7 @@ function SessionTabContent({
       <button
         type="button"
         onClick={onSaveAsProject}
-        className="rounded-[11px] text-[12.5px] font-bold"
+        className="rounded-button text-[12.5px] font-bold"
         style={{
           height: 40,
           border: "1px solid var(--accent-border)",

@@ -60,7 +60,7 @@ export function SheetShell({
               type="button"
               onClick={onClose}
               aria-label={t("common.back")}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-[11px] border border-border-faint bg-[var(--surface-raised)] text-foreground-secondary"
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-button border border-border-faint bg-[var(--surface-raised)] text-foreground-secondary"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6" />

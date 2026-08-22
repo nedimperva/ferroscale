@@ -71,7 +71,7 @@ export function TokenChip({
             <div
               role="group"
               aria-label={t("token.stepper", { token: tok })}
-              className="fixed z-[90] flex -translate-x-1/2 -translate-y-full items-center gap-1 rounded-xl border border-border-faint bg-[var(--surface)] p-1"
+              className="fixed z-[90] flex -translate-x-1/2 -translate-y-full items-center gap-1 rounded-button border border-border-faint bg-[var(--surface)] p-1"
               style={{
                 top: menuPos.top,
                 left: menuPos.left,

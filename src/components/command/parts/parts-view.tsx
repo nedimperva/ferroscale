@@ -396,7 +396,7 @@ function HistoryTab({
         </button>
       </div>
       <div
-        className="rounded-[18px] overflow-hidden"
+        className="rounded-panel-lg overflow-hidden"
         style={{
           border: "1px solid var(--border-faint)",
           background: "var(--surface)",
@@ -598,7 +598,7 @@ export function PartsView({
           <button
             type="button"
             onClick={() => setTab(siblingTab)}
-            className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[13px] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-button font-bold text-[13px] cursor-pointer"
             style={{
               padding: "9px 15px",
               border: "1px solid var(--accent-border)",
@@ -614,7 +614,7 @@ export function PartsView({
             <button
               type="button"
               onClick={actions.onNew}
-              className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[13px] cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-button font-bold text-[13px] cursor-pointer"
               style={{
                 padding: "9px 15px",
                 border: "1px solid var(--border-faint)",
@@ -737,7 +737,7 @@ export function PartsView({
           <div
             role="table"
             aria-label={tab === "assemblies" ? t("parts.tabs.assemblies") : t("parts.tabs.parts")}
-            className="rounded-[18px] overflow-hidden"
+            className="rounded-panel-lg overflow-hidden"
             style={{
               border: "1px solid var(--border-faint)",
               background: "var(--surface)",

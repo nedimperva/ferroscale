@@ -220,7 +220,7 @@ function HoldPickerKey({
           <div
             role="menu"
             aria-label={menuLabel}
-            className={`absolute bottom-full mb-1.5 ${align === "right" ? "right-0" : "left-0"} z-50 flex gap-1 rounded-xl border border-border-faint bg-[var(--surface)] p-1`}
+            className={`absolute bottom-full mb-1.5 ${align === "right" ? "right-0" : "left-0"} z-50 flex gap-1 rounded-button border border-border-faint bg-[var(--surface)] p-1`}
             style={{ boxShadow: "var(--panel-shadow-strong, 0 8px 24px rgba(0,0,0,0.25))" }}
           >
             {choices.map((choice) => (

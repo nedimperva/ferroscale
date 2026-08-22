@@ -45,13 +45,13 @@ export function CommandProjectPickerSheet({
             if (e.key === "Enter") submit();
           }}
           placeholder={t("library.newProjectName")}
-          className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
+          className="flex-1 h-10 rounded-button border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
         />
         <button
           type="button"
           onClick={submit}
           disabled={!newName.trim()}
-          className="h-10 px-4 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+          className="h-10 px-4 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {t("common.create")}
         </button>

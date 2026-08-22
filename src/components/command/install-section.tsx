@@ -28,7 +28,7 @@ export function InstallAppSection() {
         <button
           type="button"
           onClick={() => void installPromptStore.promptInstall()}
-          className="shrink-0 h-10 px-4 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
+          className="shrink-0 h-10 px-4 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
         >
           {t("installButton")}
         </button>

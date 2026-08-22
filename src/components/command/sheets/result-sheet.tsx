@@ -102,7 +102,7 @@ export function CommandResultBreakdown({
     return null;
   }
   const secondaryBtn =
-    "flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
+    "flex-1 h-11 rounded-button border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
 
   const geometryRows = (
     <>
@@ -183,7 +183,7 @@ export function CommandResultBreakdown({
           type="button"
           onClick={onSave}
           aria-pressed={isSaved}
-          className="flex-1 h-11 rounded-xl font-bold text-sm"
+          className="flex-1 h-11 rounded-button font-bold text-sm"
           style={
             isSaved
               ? {

@@ -90,7 +90,7 @@ export function CommandHelpSheet({
       <button
         type="button"
         onClick={() => onTryExample("hea120 6m x2 s355 @2.50/kg")}
-        className="w-full rounded-xl text-left cursor-pointer"
+        className="w-full rounded-button text-left cursor-pointer"
         style={{
           padding: "11px 14px",
           border: "1px solid var(--accent-border)",

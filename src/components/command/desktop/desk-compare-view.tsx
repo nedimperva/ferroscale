@@ -151,7 +151,7 @@ export function DeskCompareView({
         <div className="flex-1 overflow-y-auto" style={{ padding: "24px 32px 32px" }}>
           <div className="overflow-x-auto">
             <div
-              className="rounded-[18px] overflow-hidden"
+              className="rounded-panel-lg overflow-hidden"
               style={{
                 display: "grid",
                 gridTemplateColumns: `140px repeat(${cols.length}, minmax(190px, 250px))`,

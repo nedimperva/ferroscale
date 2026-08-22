@@ -20,7 +20,7 @@ export function DeskBtn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex flex-1 items-center justify-center gap-[7px] rounded-[11px] font-bold whitespace-nowrap"
+      className="inline-flex flex-1 items-center justify-center gap-[7px] rounded-button font-bold whitespace-nowrap"
       style={{
         padding: small ? "7px 13px" : "10px 16px",
         cursor: disabled ? "default" : "pointer",

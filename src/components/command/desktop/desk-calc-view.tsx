@@ -71,7 +71,7 @@ function PanelIconBtn({
       disabled={disabled}
       title={title}
       aria-label={ariaLabel}
-      className="flex items-center justify-center rounded-[11px] text-muted"
+      className="flex items-center justify-center rounded-button text-muted"
       style={{
         width: 38,
         height: 38,
@@ -521,7 +521,7 @@ export function DeskCalcView({
                     focusInputAtEnd();
                   }
                 }}
-                className="fs-pop flex items-center gap-[7px] rounded-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+                className="fs-pop flex items-center gap-[7px] rounded-button cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
                 style={{
                   padding: it.sub ? "7px 13px" : "8px 14px",
                   border: it.kind === "save" ? "none" : "1px solid var(--border-faint)",
@@ -579,7 +579,7 @@ export function DeskCalcView({
           <DeskPanel className="flex-shrink-0 flex flex-col" padding="22px 26px">
             <div className="flex items-center gap-3">
               <div
-                className="inline-flex gap-1 rounded-[11px]"
+                className="inline-flex gap-1 rounded-button"
                 style={{ padding: 3, background: "var(--surface-inset)" }}
               >
                 {(["weight", "price"] as const).map((m) => (
@@ -748,7 +748,7 @@ export function DeskCalcView({
                   disabled={!p.valid}
                   aria-pressed={currentSaved}
                   title={currentSaved ? t("common.saved") : t("common.save")}
-                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap"
+                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap"
                   style={{
                     padding: "9px 16px",
                     // Disabled goes quiet like its siblings — a full-accent
@@ -789,7 +789,7 @@ export function DeskCalcView({
                   type="button"
                   onClick={onCompareCurrent}
                   disabled={!p.valid}
-                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap text-foreground"
+                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-foreground"
                   style={{
                     padding: "9px 14px",
                     border: "1px solid var(--border-faint)",
@@ -806,7 +806,7 @@ export function DeskCalcView({
                   type="button"
                   onClick={() => setQuery((q) => cmdAppendLineItem(q))}
                   disabled={!p.valid}
-                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap text-muted"
+                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-muted"
                   style={{
                     padding: "9px 14px",
                     border: "1px dashed var(--border-strong)",

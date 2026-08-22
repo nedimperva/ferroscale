@@ -40,7 +40,7 @@ export function SavedEditSheet({
   };
 
   const fieldClass =
-    "w-full rounded-xl border border-border-faint bg-[var(--surface-raised)] px-3 text-sm text-foreground placeholder:text-muted-faint outline-none focus-visible:border-[var(--accent-border)]";
+    "w-full rounded-button border border-border-faint bg-[var(--surface-raised)] px-3 text-sm text-foreground placeholder:text-muted-faint outline-none focus-visible:border-[var(--accent-border)]";
 
   return (
     <SheetShell title={t("saved.editTitle")} onClose={onClose} maxWidth={520}>
@@ -94,14 +94,14 @@ export function SavedEditSheet({
           <button
             type="button"
             onClick={submit}
-            className="flex-1 h-11 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
+            className="flex-1 h-11 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
           >
             {t("common.saveChanges")}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground"
+            className="flex-1 h-11 rounded-button border border-border bg-[var(--surface)] font-semibold text-sm text-foreground"
           >
             {t("common.cancel")}
           </button>
