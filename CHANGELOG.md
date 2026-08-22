@@ -21,6 +21,7 @@ Paint on a project is coats, not one rate.
 - **Switching workspace tabs updates the address bar,** so a refresh or a pasted link lands back on the tab you were reading
 - **The ··· row menus work from the keyboard now:** arrows walk the items, Home and End jump, Escape closes back onto the button that opened them. Parts and Projects lists expose their columns to screen readers
 - **Saving an assembly asks for its name straight away** instead of trusting a five-second toast
+- **Shared controls converge on one corner-radius scale** — buttons and compact cards at 12px, workspace panels at 18px — replacing a dozen one-off pixel values
 
 ### Fixed
 
@@ -28,6 +29,7 @@ Paint on a project is coats, not one rate.
 - **The session tape's running total counted only the six rows on screen** once the tape grew longer; it sums every line logged this session now
 - **Opening an item from compare or parts replaced whatever was on the line without a trace;** a Line replaced toast now offers Undo
 - **On load, the big number could briefly show the previous line's total** before the restored line settled; replaced lines snap into place instead of tweening across two unrelated results
+- **The loading splash retires the moment the app is interactive** — a fast load no longer waits out its own fade animation
 
 ---
 

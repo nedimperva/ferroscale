@@ -30,6 +30,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Switching workspace tabs updates the address bar, so a refresh or a pasted link lands back on the tab you were reading",
       "The ··· row menus work from the keyboard now: arrows walk the items, Home and End jump, Escape closes back onto the button that opened them",
       "Saving an assembly asks for its name straight away instead of trusting a five-second toast",
+      "Shared controls converge on one corner-radius scale — buttons and compact cards at 12px, workspace panels at 18px — replacing a dozen one-off pixel values",
     ],
     changed_bs: [
       "Boja na projektu je lista slojeva. Površina dolazi iz stavki; dodaj temelj i završni sloj sa svojom cijenom po kg i pokrivnošću. U postavkama je zadana cijena od koje krećeš",
@@ -42,18 +43,21 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Prebacivanje tabi radnog prostora ažurira adresnu traku, pa osvježavanje ili zalijepljeni link vraća na tab koji ste gledali",
       "Meniji ··· sada rade i s tastature: strelice prolaze kroz stavke, Home i End skaču, Escape zatvara nazad na dugme koje ih je otvorilo",
       "Čuvanje sklopa odmah traži njegovo ime, umjesto da se oslanja na toast od pet sekundi",
+      "Dijeljene kontrole se slažu na jednu ljestvicu radijus uglova — dugmad i kompaktnije kartice na 12px, radni paneli na 18px — umjesto desetak razbacanih pikselnih vrijednosti",
     ],
     fixed: [
       "A second profile, length, quantity or grade on one line was silently ignored while its chip looked active. Duplicates now show struck-through with an explanation, so the number on the card is never a surprise",
       "The session tape's running total counted only the six rows on screen once the tape grew longer; it sums every line logged this session now",
       "Opening an item from compare or parts replaced whatever was on the line without a trace; a Line replaced toast now offers Undo",
       "On load, the big number could briefly show the previous line's total before the restored line settled; replaced lines snap into place instead of tweening across two unrelated results",
+      "The loading splash retired the moment the app is interactive — a fast load no longer waits out its own fade animation",
     ],
     fixed_bs: [
       "Drugi profil, dužina, količina ili kvalitet u jednom redu bio je tiho ignorisan dok je njegov čip izgledao aktivan. Duplikati su sada precrtani s objašnjenjem, da broj na kartici nikad nije iznenađenje",
       "Zbir trake sesije računao je samo šest redova na ekranu kad traka poraste; sada sabira svaku liniju zapisanu u sesiji",
       "Otvaranje stavke iz poređenja ili dijelova zamijenilo je ono što je bilo u redu bez traga; toast Linija zamijenjena sada nudi Vrati",
       "Pri učitavanju veliki broj je kratko mogao pokazati ukupnost prethodne linije prije nego što se vraćena linija smirila; zamijenjene linije skaču na mjesto umjesto da se animiraju kroz dva nepovezana rezultata",
+      "Učitavajući splash se povlači onog trenutka kad je aplikacija interaktivna — brzo učitavanje više ne čeka svoju fade animaciju",
     ],
   },
   {

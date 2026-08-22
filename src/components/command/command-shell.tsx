@@ -247,6 +247,13 @@ export function CommandShell() {
     return () => window.clearTimeout(id);
   }, [query, shared]);
 
+  // The boot splash covers SSR→hydration on slow loads; once this shell is
+  // mounted it is obsolete, and on a fast load it would still be playing its
+  // own fade for another few hundred ms. Retire it the moment we exist.
+  useEffect(() => {
+    document.documentElement.classList.add("app-ready");
+  }, []);
+
   // Two shells, not three:
   //  · phone (<640) → fullscreen with the on-screen keypad and sheets
   //  · everything else (≥640) → the workspace, single-column below 1024
@@ -1499,7 +1506,7 @@ export function CommandShell() {
                 }}
                 disabled={!p.valid}
                 aria-label={t("suggest.addItem")}
-                className="flex items-center justify-center rounded-[11px] text-[16px] font-bold leading-none"
+                className="flex items-center justify-center rounded-button text-[16px] font-bold leading-none"
                 style={{
                   width: 44,
                   height: 44,
@@ -1947,7 +1954,7 @@ function IconBtn({
       type="button"
       onClick={onClick}
       aria-label={ariaLabel}
-      className="w-[34px] h-[34px] rounded-[11px] border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
+      className="w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
     >
       {children}
     </button>
@@ -1996,7 +2003,7 @@ function MetricStrip({
       type="button"
       onClick={onOpen}
       disabled={!p.valid}
-      className="flex items-center gap-3 w-full mt-2.5 rounded-xl text-left border border-border-faint"
+      className="flex items-center gap-3 w-full mt-2.5 rounded-button text-left border border-border-faint"
       style={{
         padding: "7px 11px",
         background: "var(--surface-raised)",
@@ -2032,7 +2039,7 @@ function ActionBtn({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-[11px] text-[12px] font-bold"
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-button text-[12px] font-bold"
       style={{
         height: 44,
         letterSpacing: 0.4,
