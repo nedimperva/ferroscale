@@ -22,7 +22,7 @@ function SidebarNavItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-[11px] w-full rounded-[11px] text-left cursor-pointer"
+      className="flex items-center gap-[11px] w-full rounded-button text-left cursor-pointer"
       style={{
         padding: "9px 12px",
         background: active ? "var(--accent-surface)" : "transparent",
@@ -143,7 +143,7 @@ export function DeskSidebar({
 
       {/* shortcut hint */}
       <div
-        className="flex items-center gap-2 rounded-[11px] mb-2.5"
+        className="flex items-center gap-2 rounded-button mb-2.5"
         style={{ padding: "10px 12px", background: "var(--surface-inset)" }}
       >
         <Kbd>⌘K</Kbd>
@@ -160,7 +160,7 @@ export function DeskSidebar({
         <button
           type="button"
           onClick={onToggleTheme}
-          className="flex items-center gap-[11px] w-full rounded-[11px] text-left cursor-pointer text-foreground-secondary"
+          className="flex items-center gap-[11px] w-full rounded-button text-left cursor-pointer text-foreground-secondary"
           style={{ padding: "9px 12px", background: "transparent" }}
         >
           <span className="flex text-muted">

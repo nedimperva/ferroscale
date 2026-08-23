@@ -22,7 +22,7 @@ export function SearchField({
 }) {
   return (
     <label
-      className="flex items-center gap-2 rounded-xl px-3 w-full"
+      className="flex items-center gap-2 rounded-button px-3 w-full"
       style={{
         height: compact ? 34 : 38,
         border: "1px solid var(--border-faint)",

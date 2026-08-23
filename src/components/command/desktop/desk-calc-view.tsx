@@ -9,7 +9,7 @@ import {
   cmdPasteIntoLine,
 } from "@ferroscale/metal-core";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import { useCountUp } from "@/hooks/useCountUp";
+import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
 import { CommandGlyph } from "../command-glyph";
@@ -71,7 +71,7 @@ function PanelIconBtn({
       disabled={disabled}
       title={title}
       aria-label={ariaLabel}
-      className="flex items-center justify-center rounded-[11px] text-muted"
+      className="flex items-center justify-center rounded-button text-muted"
       style={{
         width: 38,
         height: 38,
@@ -248,18 +248,21 @@ export function DeskCalcView({
           maximumFractionDigits: 2,
         });
 
-  const tapeRows = useMemo(
+  // Parse every tape line — the Σ footer is a promise about the whole session,
+  // so it must never silently cover only what happens to be on screen.
+  const validTape = useMemo(
     () =>
       sessionTape
-        .slice(0, 6)
         .map((q) => ({ q, rp: cmdParse(q, parserSettings) }))
         .filter(
           (x) => x.rp.valid && x.rp.totalKg != null && x.rp.totalAmount != null,
         ),
     [sessionTape, parserSettings],
   );
-  const sumKg = tapeRows.reduce((s, x) => s + (x.rp.totalKg ?? 0), 0);
-  const sumAmount = tapeRows.reduce((s, x) => s + (x.rp.totalAmount ?? 0), 0);
+  // The list itself shows only the newest few; totals stay whole-tape.
+  const tapeRows = useMemo(() => validTape.slice(0, 6), [validTape]);
+  const sumKg = validTape.reduce((s, x) => s + (x.rp.totalKg ?? 0), 0);
+  const sumAmount = validTape.reduce((s, x) => s + (x.rp.totalAmount ?? 0), 0);
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
@@ -301,6 +304,7 @@ export function DeskCalcView({
                     key={`${tok}-${i}`}
                     tok={tok}
                     kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                    shadowed={line.items[group.item]?.parse.shadowedTokenIndexes.includes(i)}
                     onEdit={() => editTokenAt(group.item, i)}
                     onRemove={() => removeTokenAt(group.item, i)}
                   />
@@ -409,6 +413,7 @@ export function DeskCalcView({
                     sessionTape.length - 1,
                   );
                   setQuery(sessionTape[historyIdxRef.current] + " ");
+                  markExternalValueChange();
                   focusInputAtEnd();
                   return;
                 }
@@ -416,6 +421,7 @@ export function DeskCalcView({
                   const nextIdx = historyIdxRef.current - 1;
                   historyIdxRef.current = nextIdx;
                   setQuery(nextIdx < 0 ? draftRef.current : sessionTape[nextIdx] + " ");
+                  markExternalValueChange();
                   focusInputAtEnd();
                   return;
                 }
@@ -471,7 +477,7 @@ export function DeskCalcView({
               />
             </span>
           </div>
-          <div className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
+          <div data-suggestion-strip="" className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
             {groupedSuggestions(sug.items).map((group) => (
               <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
                 {group.group && (
@@ -515,7 +521,7 @@ export function DeskCalcView({
                     focusInputAtEnd();
                   }
                 }}
-                className="fs-pop flex items-center gap-[7px] rounded-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+                className="fs-pop flex items-center gap-[7px] rounded-button cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
                 style={{
                   padding: it.sub ? "7px 13px" : "8px 14px",
                   border: it.kind === "save" ? "none" : "1px solid var(--border-faint)",
@@ -573,7 +579,7 @@ export function DeskCalcView({
           <DeskPanel className="flex-shrink-0 flex flex-col" padding="22px 26px">
             <div className="flex items-center gap-3">
               <div
-                className="inline-flex gap-1 rounded-[11px]"
+                className="inline-flex gap-1 rounded-button"
                 style={{ padding: 3, background: "var(--surface-inset)" }}
               >
                 {(["weight", "price"] as const).map((m) => (
@@ -742,14 +748,27 @@ export function DeskCalcView({
                   disabled={!p.valid}
                   aria-pressed={currentSaved}
                   title={currentSaved ? t("common.saved") : t("common.save")}
-                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap"
+                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap"
                   style={{
                     padding: "9px 16px",
-                    border: currentSaved ? "1px solid var(--accent-border)" : "none",
-                    background: currentSaved ? "var(--accent-surface)" : "var(--accent)",
-                    color: currentSaved ? "var(--accent-text)" : "var(--accent-contrast)",
+                    // Disabled goes quiet like its siblings — a full-accent
+                    // button at half opacity still reads as the main action.
+                    border: !p.valid
+                      ? "1px solid var(--border-faint)"
+                      : currentSaved
+                        ? "1px solid var(--accent-border)"
+                        : "none",
+                    background: !p.valid
+                      ? "var(--surface)"
+                      : currentSaved
+                        ? "var(--accent-surface)"
+                        : "var(--accent)",
+                    color: !p.valid
+                      ? "var(--muted)"
+                      : currentSaved
+                        ? "var(--accent-text)"
+                        : "var(--accent-contrast)",
                     cursor: p.valid ? "pointer" : "default",
-                    opacity: p.valid ? 1 : 0.45,
                   }}
                 >
                   <svg
@@ -770,7 +789,7 @@ export function DeskCalcView({
                   type="button"
                   onClick={onCompareCurrent}
                   disabled={!p.valid}
-                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap text-foreground"
+                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-foreground"
                   style={{
                     padding: "9px 14px",
                     border: "1px solid var(--border-faint)",
@@ -787,7 +806,10 @@ export function DeskCalcView({
                   type="button"
                   onClick={() => setQuery((q) => cmdAppendLineItem(q))}
                   disabled={!p.valid}
-                  className="inline-flex items-center gap-[7px] rounded-[11px] font-bold text-[13px] whitespace-nowrap text-muted"
+                  // A spoken "+ item" is cryptic; the suggestion chip keeps
+                  // the short label, this one says what it does.
+                  aria-label={t("desktop.anotherItemAria")}
+                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-muted"
                   style={{
                     padding: "9px 14px",
                     border: "1px dashed var(--border-strong)",
@@ -809,8 +831,8 @@ export function DeskCalcView({
                 <PanelIconBtn
                   onClick={onAddToProject}
                   disabled={!p.valid}
-                  title={t("common.project")}
-                  ariaLabel={t("common.project")}
+                  title={t("common.addProjectLong")}
+                  ariaLabel={t("common.addProjectLong")}
                 >
                   <DeskIcon name="plus" stroke="currentColor" />
                 </PanelIconBtn>
@@ -878,6 +900,7 @@ export function DeskCalcView({
                         type="button"
                         onClick={() => {
                           setQuery(q + " ");
+                          markExternalValueChange();
                           focusInputAtEnd();
                         }}
                         className="flex-1 min-w-0 flex items-center gap-3 border-0 cursor-pointer text-left bg-transparent p-0"
@@ -928,7 +951,7 @@ export function DeskCalcView({
                     className="flex-1 text-[10.5px] font-bold text-muted"
                     style={{ letterSpacing: 0.8 }}
                   >
-                    {t("desktop.runningTotal", { count: tapeRows.length })}
+                    {t("desktop.runningTotal", { count: validTape.length })}
                   </span>
                   <span
                     className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"

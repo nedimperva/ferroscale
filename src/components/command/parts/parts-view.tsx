@@ -308,30 +308,41 @@ function PartsRow({
 
   return (
     <div
+      role="row"
       className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
       style={{ padding: "9px 14px" }}
     >
-      {name}
+      {/* The cell wrapper carries the table role — putting it on the button
+          itself would strip its implicit button role and hide it from every
+          getByRole("button") lookup. */}
+      <div role="cell" className="flex flex-1 min-w-0">
+        {name}
+      </div>
       <span
+        role="cell"
         className="font-mono text-[12px] text-muted-faint truncate"
         style={{ width: 190 }}
       >
         {specText}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
         style={{ width: 96, color: "var(--accent-text)" }}
       >
         {kgmText}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12px] text-muted text-right flex-shrink-0"
         style={{ width: 56 }}
       >
         {t("parts.usedTimes", { count: entry.useCount })}
       </span>
-      {useButton}
-      {menu}
+      <div role="cell" className="flex items-center gap-2 flex-shrink-0">
+        {useButton}
+        {menu}
+      </div>
     </div>
   );
 }
@@ -387,7 +398,7 @@ function HistoryTab({
         </button>
       </div>
       <div
-        className="rounded-[18px] overflow-hidden"
+        className="rounded-panel-lg overflow-hidden"
         style={{
           border: "1px solid var(--border-faint)",
           background: "var(--surface)",
@@ -589,7 +600,7 @@ export function PartsView({
           <button
             type="button"
             onClick={() => setTab(siblingTab)}
-            className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[13px] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-button font-bold text-[13px] cursor-pointer"
             style={{
               padding: "9px 15px",
               border: "1px solid var(--accent-border)",
@@ -605,7 +616,7 @@ export function PartsView({
             <button
               type="button"
               onClick={actions.onNew}
-              className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[13px] cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-button font-bold text-[13px] cursor-pointer"
               style={{
                 padding: "9px 15px",
                 border: "1px solid var(--border-faint)",
@@ -726,7 +737,9 @@ export function PartsView({
           </div>
         ) : (
           <div
-            className="rounded-[18px] overflow-hidden"
+            role="table"
+            aria-label={tab === "assemblies" ? t("parts.tabs.assemblies") : t("parts.tabs.parts")}
+            className="rounded-panel-lg overflow-hidden"
             style={{
               border: "1px solid var(--border-faint)",
               background: "var(--surface)",
@@ -735,18 +748,19 @@ export function PartsView({
           >
             {!compact && (
               <div
+                role="row"
                 className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
                 style={{ padding: "10px 14px", background: "var(--surface-raised)" }}
               >
-                <span className="flex-1 min-w-0">{t("parts.columns.name")}</span>
-                <span style={{ width: 190 }}>{t("parts.columns.spec")}</span>
-                <span style={{ width: 96 }} className="text-right">
+                <span role="columnheader" className="flex-1 min-w-0">{t("parts.columns.name")}</span>
+                <span role="columnheader" style={{ width: 190 }}>{t("parts.columns.spec")}</span>
+                <span role="columnheader" style={{ width: 96 }} className="text-right">
                   {tab === "assemblies" ? t("parts.columns.total") : t("parts.columns.kgm")}
                 </span>
-                <span style={{ width: 56 }} className="text-right">
+                <span role="columnheader" style={{ width: 56 }} className="text-right">
                   {t("parts.columns.used")}
                 </span>
-                <span style={{ width: 108 }} aria-hidden="true" />
+                <span role="columnheader" style={{ width: 108 }} aria-label={t("common.more")} />
               </div>
             )}
             {models.map((model) => (

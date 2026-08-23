@@ -210,7 +210,7 @@ function DetailsForm({
           onChange={(e) => setClient(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && commit()}
           placeholder={t("projects.clientPlaceholder")}
-          className="h-9 rounded-[11px] border border-border-faint bg-[var(--surface)] px-3 text-[13px] text-foreground placeholder:text-muted-faint"
+          className="h-9 rounded-button border border-border-faint bg-[var(--surface)] px-3 text-[13px] text-foreground placeholder:text-muted-faint"
         />
       </label>
       <label className="flex flex-col gap-1">
@@ -221,13 +221,13 @@ function DetailsForm({
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="h-9 rounded-[11px] border border-border-faint bg-[var(--surface)] px-3 font-mono text-[13px] text-foreground"
+          className="h-9 rounded-button border border-border-faint bg-[var(--surface)] px-3 font-mono text-[13px] text-foreground"
         />
       </label>
       <button
         type="button"
         onClick={commit}
-        className="h-9 px-4 rounded-[11px] font-bold text-[13px] cursor-pointer"
+        className="h-9 px-4 rounded-button font-bold text-[13px] cursor-pointer"
         style={{ background: "var(--accent)", color: "var(--accent-contrast)", border: "none" }}
       >
         {t("common.done")}
@@ -367,7 +367,7 @@ function PaintNumber({
   return (
     <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 72px" }}>
       <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">{label}</span>
-      <span className="flex items-center gap-1 h-9 rounded-[11px] border border-border-faint bg-[var(--surface)] px-2.5">
+      <span className="flex items-center gap-1 h-9 rounded-button border border-border-faint bg-[var(--surface)] px-2.5">
         {prefix && <span className="font-mono text-[11px] text-muted flex-shrink-0">{prefix}</span>}
         <input
           type="number"
@@ -442,7 +442,7 @@ function PaintingForm({
 
   return (
     <section
-      className="rounded-[18px]"
+      className="rounded-panel-lg"
       style={{
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
@@ -619,7 +619,7 @@ export function ProjectDetail({
 
   const itemsTable = (
     <div
-      className="rounded-[18px] overflow-hidden"
+      className="rounded-panel-lg overflow-hidden"
       style={{
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
@@ -796,7 +796,7 @@ export function ProjectDetail({
   const rail = (
     <div className="flex flex-col gap-3 min-w-0">
       <section
-        className="rounded-[18px]"
+        className="rounded-panel-lg"
         style={{
           border: "1px solid var(--border-faint)",
           background: "var(--surface)",
@@ -813,7 +813,7 @@ export function ProjectDetail({
           placeholder={t("projects.notesPlaceholder")}
           rows={compact ? 3 : 4}
           aria-label={t("projects.notesLabel")}
-          className="w-full resize-y rounded-[11px] border border-border-faint bg-[var(--surface-raised)] px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-faint outline-none"
+          className="w-full resize-y rounded-button border border-border-faint bg-[var(--surface-raised)] px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-faint outline-none"
         />
       </section>
 
@@ -828,7 +828,7 @@ export function ProjectDetail({
       />
 
       <section
-        className="rounded-[18px]"
+        className="rounded-panel-lg"
         style={{
           border: "1px solid var(--border-faint)",
           background: "var(--surface)",
@@ -905,7 +905,7 @@ export function ProjectDetail({
               onClick={() => actions.onPrintQuote(project)}
               disabled={summary.isEmpty}
               title={t("quote.print")}
-              className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[12.5px]"
+              className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px]"
               style={{
                 padding: "8px 13px",
                 border: "1px solid var(--border-faint)",
@@ -925,7 +925,7 @@ export function ProjectDetail({
             <button
               type="button"
               onClick={() => actions.onAddItem(project.id)}
-              className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[12.5px] cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px] cursor-pointer"
               style={{
                 padding: "8px 13px",
                 border: "none",

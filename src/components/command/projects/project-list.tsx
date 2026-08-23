@@ -44,7 +44,7 @@ function BucketRow({
       type="button"
       onClick={onClick}
       aria-current={active ? "true" : undefined}
-      className="flex items-center gap-2 w-full rounded-[11px] text-left cursor-pointer"
+      className="flex items-center gap-2 w-full rounded-button text-left cursor-pointer"
       style={{
         padding: "8px 13px",
         background: active ? "var(--accent-surface)" : "transparent",
@@ -197,32 +197,47 @@ function ProjectRow({
 
   return (
     <div
+      role="row"
       className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
       style={{ padding: "10px 16px" }}
     >
-      {title}
-      <span className="text-[13px] text-foreground-secondary truncate" style={{ width: 150 }}>
+      {/* The cell wrapper carries the table role — putting it on the button
+          itself would strip its implicit button role and hide it from every
+          getByRole("button") lookup. */}
+      <div role="cell" className="flex flex-1 min-w-0">
+        {title}
+      </div>
+      <span
+        role="cell"
+        className="text-[13px] text-foreground-secondary truncate"
+        style={{ width: 150 }}
+      >
         {project.client?.trim() || "—"}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] text-muted text-right flex-shrink-0"
         style={{ width: 44 }}
       >
         {summary.itemCount}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
         style={{ width: 104, color: "var(--accent-text)" }}
       >
         {weightText}
       </span>
       <span
+        role="cell"
         className="font-mono text-[12.5px] font-semibold text-right flex-shrink-0"
         style={{ width: 116, color: "var(--blue-text)" }}
       >
         {valueText}
       </span>
-      {menu}
+      <div role="cell" className="flex items-center flex-shrink-0">
+        {menu}
+      </div>
     </div>
   );
 }
@@ -286,7 +301,7 @@ export function ProjectList({
     <button
       type="button"
       onClick={() => setCreating((v) => !v)}
-      className="inline-flex items-center gap-2 rounded-[11px] font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
+      className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
       style={{
         padding: "9px 14px",
         border: "none",
@@ -311,13 +326,13 @@ export function ProjectList({
         autoFocus
         placeholder={t("library.newProjectName")}
         aria-label={t("library.newProjectName")}
-        className="flex-1 h-10 rounded-xl border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
+        className="flex-1 h-10 rounded-button border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
       />
       <button
         type="button"
         onClick={submitNew}
         disabled={!newName.trim()}
-        className="h-10 px-4 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+        className="h-10 px-4 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {t("common.create")}
       </button>
@@ -345,7 +360,9 @@ export function ProjectList({
       )
     ) : (
       <div
-        className="rounded-[18px] overflow-hidden"
+        role="table"
+        aria-label={t("nav.projects")}
+        className="rounded-panel-lg overflow-hidden"
         style={{
           border: "1px solid var(--border-faint)",
           background: "var(--surface)",
@@ -354,21 +371,22 @@ export function ProjectList({
       >
         {!compact && (
           <div
+            role="row"
             className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
             style={{ padding: "10px 16px", background: "var(--surface-raised)" }}
           >
-            <span className="flex-1 min-w-0">{t("projects.columns.project")}</span>
-            <span style={{ width: 150 }}>{t("projects.columns.client")}</span>
-            <span style={{ width: 44 }} className="text-right">
+            <span role="columnheader" className="flex-1 min-w-0">{t("projects.columns.project")}</span>
+            <span role="columnheader" style={{ width: 150 }}>{t("projects.columns.client")}</span>
+            <span role="columnheader" style={{ width: 44 }} className="text-right">
               {t("projects.columns.items")}
             </span>
-            <span style={{ width: 104 }} className="text-right">
+            <span role="columnheader" style={{ width: 104 }} className="text-right">
               {t("projects.columns.weight")}
             </span>
-            <span style={{ width: 116 }} className="text-right">
+            <span role="columnheader" style={{ width: 116 }} className="text-right">
               {t("projects.columns.value")}
             </span>
-            <span style={{ width: 30 }} aria-hidden="true" />
+            <span role="columnheader" style={{ width: 30 }} aria-label={t("common.more")} />
           </div>
         )}
         {visible.map((project) => (
@@ -386,7 +404,7 @@ export function ProjectList({
 
   const sortSelect = (
     <label
-      className="flex items-center gap-1.5 rounded-xl px-2.5 flex-shrink-0"
+      className="flex items-center gap-1.5 rounded-button px-2.5 flex-shrink-0"
       style={{
         height: compact ? 34 : 38,
         border: "1px solid var(--border-faint)",

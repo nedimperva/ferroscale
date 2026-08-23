@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { commandKeyHints } from "./command-keys";
 
@@ -8,6 +9,9 @@ import { commandKeyHints } from "./command-keys";
  * Tab completion, ↑ recall, Enter, ⌥-digit picking — and none of them were
  * discoverable. It changes with the line, so "↵" reads *insert* while a
  * suggestion is pending and *log* once the calculation is complete.
+ *
+ * Hidden on coarse pointers (touch tablets): ⌥1–9 and ⌘S promise keys the
+ * user doesn't have.
  */
 export function CommandKeyHints({
   valid,
@@ -25,6 +29,17 @@ export function CommandKeyHints({
   compact?: boolean;
 }) {
   const t = useTranslations("command");
+  const [coarsePointer, setCoarsePointer] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    const update = () => setCoarsePointer(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  if (coarsePointer) return null;
+
   const hints = commandKeyHints({ valid, hasGhost, suggestionCount, historyLength });
 
   return (

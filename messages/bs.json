@@ -154,6 +154,7 @@
       "copiedSummary": "Sažetak kopiran",
       "linkCopied": "Link kopiran",
       "linkPricingApplied": "Primijenjena cijena iz linka",
+      "lineReplaced": "Linija zamijenjena",
       "savedRemoved": "Uklonjeno iz sačuvanih",
       "savedRemovedMany": "{count, plural, one {# izračun uklonjen} few {# izračuna uklonjena} other {# izračuna uklonjeno}}",
       "restored": "Vraćeno",
@@ -177,7 +178,7 @@
       "projects": "Projekti",
       "compare": "Poređenje",
       "settings": "Postavke",
-      "library": "Biblioteka",
+      "library": "Dijelovi",
       "parts": "Dijelovi"
     },
     "status": {
@@ -210,7 +211,8 @@
       "stepper": "Prilagodi {token}",
       "stepUp": "Povećaj {token}",
       "stepDown": "Smanji {token}",
-      "holdToStep": "Zadržite da pomaknete broj"
+      "holdToStep": "Zadržite da pomaknete broj",
+      "shadowed": "Zanemareno — linija već ima jedan. Ukloni ovo, ili pokreni novu stavku sa +"
     },
     "preview": {
       "perPiece": "Po komadu",
@@ -266,7 +268,7 @@
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
       "settings": "Postavke",
-      "library": "Biblioteka",
+      "library": "Dijelovi",
       "addToProject": "Dodaj u projekat"
     },
     "result": {
@@ -469,7 +471,8 @@
       "breakdownItem": "Pregled · stavka {index} od {count}",
       "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
       "saveAsProject": "Sačuvaj kao projekat",
-      "anotherItem": "+ još jedna stavka"
+      "anotherItem": "+ stavka",
+      "anotherItemAria": "Dodaj još jednu stavku u liniju"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
@@ -646,7 +649,7 @@
         "itemsAdded": "{detail} stavki dodano",
         "itemRemoved": "{detail} uklonjeno",
         "qtyChanged": "{detail} kol. {from} → {to}",
-        "quotePrinted": "Ponuda štampana",
+        "quotePrinted": "Ponuda otvorena",
         "empty": "Ovdje se još ništa nije desilo."
       },
       "clientLabel": "Klijent",

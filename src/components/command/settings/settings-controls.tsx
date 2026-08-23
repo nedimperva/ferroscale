@@ -34,7 +34,7 @@ export function SettingsSeg({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className="inline-flex rounded-[11px]"
+      className="inline-flex rounded-button"
       style={{ background: "var(--surface-inset)", padding: 3, gap: 2 }}
     >
       {options.map((option) => {
@@ -87,7 +87,7 @@ export function SettingsChips({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(option.value)}
-            className={`rounded-[11px] cursor-pointer font-bold text-[13px] ${option.mono ? "font-mono" : ""}`}
+            className={`rounded-button cursor-pointer font-bold text-[13px] ${option.mono ? "font-mono" : ""}`}
             style={{
               padding: "7px 13px",
               border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
@@ -131,7 +131,7 @@ export function SettingsGroupedChoice({ field }: { field: SettingsChoiceField })
         aria-label={field.label}
         value={activeGroup}
         onChange={(e) => setGroup(e.target.value)}
-        className="h-9 rounded-[11px] border border-border-faint bg-[var(--surface-raised)] px-2.5 text-[12.5px] font-bold text-foreground cursor-pointer"
+        className="h-9 rounded-button border border-border-faint bg-[var(--surface-raised)] px-2.5 text-[12.5px] font-bold text-foreground cursor-pointer"
       >
         {groups.map((name) => (
           <option key={name} value={name}>

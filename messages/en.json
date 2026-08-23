@@ -154,6 +154,7 @@
       "copiedSummary": "Summary copied",
       "linkCopied": "Link copied",
       "linkPricingApplied": "Pricing from the link applied",
+      "lineReplaced": "Line replaced",
       "savedRemoved": "Removed from saved",
       "savedRemovedMany": "{count, plural, one {# calculation removed} other {# calculations removed}}",
       "restored": "Restored",
@@ -177,7 +178,7 @@
       "projects": "Projects",
       "compare": "Compare",
       "settings": "Settings",
-      "library": "Library",
+      "library": "Parts",
       "parts": "Parts"
     },
     "status": {
@@ -210,7 +211,8 @@
       "stepper": "Adjust {token}",
       "stepUp": "Increase {token}",
       "stepDown": "Decrease {token}",
-      "holdToStep": "Hold to nudge the number"
+      "holdToStep": "Hold to nudge the number",
+      "shadowed": "Ignored — the line already has one. Remove it, or start another item with +"
     },
     "preview": {
       "perPiece": "Per piece",
@@ -266,7 +268,7 @@
     "sheets": {
       "resultBreakdown": "Result breakdown",
       "settings": "Settings",
-      "library": "Library",
+      "library": "Parts",
       "addToProject": "Add to project"
     },
     "result": {
@@ -469,7 +471,8 @@
       "breakdownItem": "Breakdown · item {index} of {count}",
       "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
       "saveAsProject": "Save as project",
-      "anotherItem": "+ another item"
+      "anotherItem": "+ item",
+      "anotherItemAria": "Add another item to the line"
     },
     "suggest": {
       "standardSize": "standard size",
@@ -646,7 +649,7 @@
         "itemsAdded": "{detail} items added",
         "itemRemoved": "{detail} removed",
         "qtyChanged": "{detail} qty {from} → {to}",
-        "quotePrinted": "Quote printed",
+        "quotePrinted": "Quote opened",
         "empty": "Nothing has happened here yet."
       },
       "clientLabel": "Client",

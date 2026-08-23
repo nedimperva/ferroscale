@@ -791,6 +791,8 @@ export function cmdParse(
   let gradeId: string | null = null;
   let pricingOverride: Partial<CommandPricing> | null = null;
   const issues: CommandParseIssue[] = [];
+  /** Recognized tokens whose slot was already filled — real input, no effect. */
+  const shadowed: number[] = [];
 
   for (let i = 0; i < toks.length; i++) {
     const tk = toks[i];
@@ -882,14 +884,20 @@ export function cmdParse(
       continue;
     }
     // Fell through every matcher. Duplicates of an already-filled slot keep
-    // their token kind and stay silent; genuinely unrecognized input is an issue.
-    if (committed && cmdClassifyToken(tk) === "unknown") {
-      issues.push({
-        code: "unknownToken",
-        token: tk,
-        message: `Didn't understand "${tk}".`,
-        suggestion: suggestForUnknownToken(tk),
-      });
+    // their token kind but are recorded as shadowed — the user typed real
+    // input and nothing changed, which the UI must surface, not swallow.
+    // Genuinely unrecognized input is an issue.
+    if (committed) {
+      if (cmdClassifyToken(tk) === "unknown") {
+        issues.push({
+          code: "unknownToken",
+          token: tk,
+          message: `Didn't understand "${tk}".`,
+          suggestion: suggestForUnknownToken(tk),
+        });
+      } else {
+        shadowed.push(i);
+      }
     }
   }
 
@@ -1093,6 +1101,7 @@ export function cmdParse(
     name,
     valid: calc != null,
     issues,
+    shadowedTokenIndexes: shadowed,
     pricing: effectivePricing,
     target,
     priceOverride: pricingOverride

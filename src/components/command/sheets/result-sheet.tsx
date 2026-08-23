@@ -48,7 +48,6 @@ interface CommandResultSheetProps {
   onSave: () => void;
   /** Whether this exact calculation is already bookmarked (Save toggles). */
   isSaved: boolean;
-  onCopy: () => void;
   onCopyValue: () => void;
   onCopySummary?: () => void;
   onShareLink: () => void;
@@ -66,7 +65,6 @@ export function CommandResultBreakdown({
   line,
   onSave,
   isSaved,
-  onCopy,
   onCopyValue,
   onCopySummary,
   onShareLink,
@@ -104,7 +102,7 @@ export function CommandResultBreakdown({
     return null;
   }
   const secondaryBtn =
-    "flex-1 h-11 rounded-xl border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
+    "flex-1 h-11 rounded-button border border-border bg-[var(--surface)] font-semibold text-sm text-foreground";
 
   const geometryRows = (
     <>
@@ -185,7 +183,7 @@ export function CommandResultBreakdown({
           type="button"
           onClick={onSave}
           aria-pressed={isSaved}
-          className="flex-1 h-11 rounded-xl font-bold text-sm"
+          className="flex-1 h-11 rounded-button font-bold text-sm"
           style={
             isSaved
               ? {
@@ -198,9 +196,11 @@ export function CommandResultBreakdown({
         >
           {isSaved ? t("common.saved") : t("common.save")}
         </button>
-        <button type="button" onClick={onCopy} className={secondaryBtn}>
-          {t("common.copy")}
-        </button>
+        {onCopySummary && (
+          <button type="button" onClick={onCopySummary} className={secondaryBtn}>
+            {t("common.copySummary")}
+          </button>
+        )}
         <button type="button" onClick={onNew} className={secondaryBtn}>
           {t("common.new")}
         </button>

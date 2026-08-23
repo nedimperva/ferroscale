@@ -15,6 +15,16 @@ function usePrefersReducedMotion(): boolean {
 }
 
 /**
+ * Announce that a value moved for reasons other than the user's own input
+ * (a restored line, a share link, a tape recall) so an in-flight tween does
+ * not animate between two unrelated totals. The next tween snaps instead.
+ */
+let externalChangeNonce = 0;
+export function markExternalValueChange() {
+  externalChangeNonce += 1;
+}
+
+/**
  * Tween a number toward `target` (easeOutCubic) so the hero metric counts up
  * when a query settles. `resetKey` snaps instead of tweening whenever the scale
  * changes (weight↔price, kg↔t) — a cross-unit tween would be nonsense. Honors
@@ -31,6 +41,7 @@ export function useCountUp(
   // mid-tween, so interruptions continue from where the eye is.
   const currentRef = useRef<number>(target ?? 0);
   const keyRef = useRef<string>(resetKey);
+  const nonceRef = useRef<number>(externalChangeNonce);
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -39,11 +50,14 @@ export function useCountUp(
       setValue(null);
       currentRef.current = 0;
       keyRef.current = resetKey;
+      nonceRef.current = externalChangeNonce;
       return;
     }
     const keyChanged = keyRef.current !== resetKey;
     keyRef.current = resetKey;
-    if (reduce || keyChanged || currentRef.current === target) {
+    const externallyReplaced = nonceRef.current !== externalChangeNonce;
+    nonceRef.current = externalChangeNonce;
+    if (reduce || keyChanged || externallyReplaced || currentRef.current === target) {
       // Snap (no tween) across scale changes or when reduced motion is on.
       setValue(target);
       currentRef.current = target;

@@ -217,6 +217,15 @@
   /* ── Typography — extra-small tier ── */
   --font-size-2xs: 0.625rem;
   --font-size-2xs--line-height: 1rem;
+
+  /* ── Radii — one step per surface role, so similar things look alike.
+     chip 8px (chips, keycaps, small pill controls) · button 12px (buttons,
+     inputs, compact cards) · panel-lg 18px (workspace panels) · sheets keep
+     their own 24–28px top radius. The legacy --radius-panel/--radius-control
+     vars below still back the .panel-* classes. ── */
+  --radius-chip: 0.5rem;
+  --radius-button: 0.75rem;
+  --radius-panel-lg: 1.125rem;
 }
 
 html {
@@ -590,6 +599,14 @@ samp,
   backdrop-filter: blur(16px);
   animation: boot-splash-fade 220ms ease-out forwards;
   animation-delay: 220ms;
+}
+
+/* Once the shell is interactive the splash has done its job — on a fast
+   load that is well before its own fade animation finishes playing. JS
+   adds .app-ready on first mount; without it every visit paid the full
+   ~440ms minimum even when the app was ready in 80ms. */
+html.app-ready .boot-splash {
+  display: none;
 }
 
 .boot-splash-card {

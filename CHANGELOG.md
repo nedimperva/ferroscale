@@ -15,6 +15,21 @@ Paint on a project is coats, not one rate.
 - **A multi-item line no longer repeats its parts under the hero.** The assembly list stays in the breakdown — tap a row there to aim the drawing
 - **The breakdown drawing is a short 3D stub of the real section.** Same millimetres as before, callouts stay on the cut face, no extra library
 - **A multi-item line on the desktop greys finished items in the command bar**, same as the phone. Tap one to open its tokens
+- **Add from calculator on an empty compare tab adds the current line on the spot,** instead of sending you back to type it again
+- **One name for one thing:** the phone's Library sheet is Parts like the desktop tab, the second-item button reads + item everywhere, and the phone's KG / € toggle reads Weight / Price like the desktop
+- **Copy on the phone's result sheet now means Copy summary** — the ambiguous plain Copy is gone. The action row and suggestion chips are 44 px tall, easier on the thumb
+- **Switching workspace tabs updates the address bar,** so a refresh or a pasted link lands back on the tab you were reading
+- **The ··· row menus work from the keyboard now:** arrows walk the items, Home and End jump, Escape closes back onto the button that opened them. Parts and Projects lists expose their columns to screen readers
+- **Saving an assembly asks for its name straight away** instead of trusting a five-second toast
+- **Shared controls converge on one corner-radius scale** — buttons and compact cards at 12px, workspace panels at 18px — replacing a dozen one-off pixel values
+
+### Fixed
+
+- **A second profile, length, quantity or grade on one line was silently ignored** while its chip looked active. Duplicates now show struck-through with an explanation, so the number on the card is never a surprise
+- **The session tape's running total counted only the six rows on screen** once the tape grew longer; it sums every line logged this session now
+- **Opening an item from compare or parts replaced whatever was on the line without a trace;** a Line replaced toast now offers Undo
+- **On load, the big number could briefly show the previous line's total** before the restored line settled; replaced lines snap into place instead of tweening across two unrelated results
+- **The loading splash retires the moment the app is interactive** — a fast load no longer waits out its own fade animation
 
 ---
 

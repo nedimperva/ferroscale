@@ -71,7 +71,7 @@ export function SavedToolbar({
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 flex-wrap">
         <label
-          className="flex items-center gap-2 rounded-xl px-3 flex-1"
+          className="flex items-center gap-2 rounded-button px-3 flex-1"
           style={{ ...controlStyle, minWidth: 160 }}
         >
           <span className="flex text-muted" aria-hidden="true">
@@ -87,7 +87,7 @@ export function SavedToolbar({
           />
         </label>
 
-        <label className="flex items-center gap-1.5 rounded-xl px-2.5" style={controlStyle}>
+        <label className="flex items-center gap-1.5 rounded-button px-2.5" style={controlStyle}>
           <span className="text-[10px] font-bold text-muted uppercase" style={{ letterSpacing: 0.8 }}>
             {t("saved.sortLabel")}
           </span>
@@ -106,7 +106,7 @@ export function SavedToolbar({
         </label>
 
         {density && onSetDensity && (
-          <div className="flex gap-0.5 rounded-xl" style={{ ...controlStyle, padding: 3 }}>
+          <div className="flex gap-0.5 rounded-button" style={{ ...controlStyle, padding: 3 }}>
             {(["grid", "table"] as const).map((kind) => (
               <button
                 key={kind}
@@ -133,7 +133,7 @@ export function SavedToolbar({
             type="button"
             onClick={onToggleSelecting}
             aria-pressed={selecting}
-            className="rounded-xl px-3 text-[12px] font-bold cursor-pointer whitespace-nowrap"
+            className="rounded-button px-3 text-[12px] font-bold cursor-pointer whitespace-nowrap"
             style={{
               ...controlStyle,
               background: selecting ? "var(--accent-surface)" : "var(--surface)",
@@ -204,7 +204,7 @@ export function SavedBulkBar({
     "rounded-[10px] px-3 h-8 text-[12px] font-bold cursor-pointer whitespace-nowrap";
   return (
     <div
-      className="flex items-center gap-2 flex-wrap rounded-xl"
+      className="flex items-center gap-2 flex-wrap rounded-button"
       style={{
         padding: "8px 12px",
         background: "var(--accent-surface)",

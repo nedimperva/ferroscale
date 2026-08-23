@@ -132,6 +132,10 @@ test.describe("Saved library", () => {
   });
 
   test("the empty state points at the shortcut that fills it", async ({ page }) => {
+    // First action after load: wait until the shell can actually hear clicks.
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
     await savedTab(page).click();
     await expect(page.getByText("No parts yet")).toBeVisible();
     await expect(page.getByRole("button", { name: /New calculation/ })).toBeVisible();

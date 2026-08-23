@@ -82,7 +82,7 @@ export function NearbySpecs({
               <button
                 type="button"
                 onClick={() => onPick(row)}
-                className="flex w-full items-baseline gap-2 rounded-[11px] text-left cursor-pointer"
+                className="flex w-full items-baseline gap-2 rounded-button text-left cursor-pointer"
                 style={{
                   padding: "7px 10px",
                   border: "1px solid var(--border-faint)",
