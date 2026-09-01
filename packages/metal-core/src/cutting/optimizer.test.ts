@@ -122,4 +122,23 @@ describe("optimizeCutList", () => {
     expect(bar.cuts[1].endMm).toBe(2014 + 1000); // 3014
     expect(bar.remnantMm).toBe(6000 - 3014); // 2986
   });
+
+  it("mixes 12m and 6m stock bars to minimize total purchased length and waste", () => {
+    // Pieces totaling ~16.5m: 2x 5.5m + 1x 5.5m -> 1x 12m bar (holds 2x 5.5m = 11m) + 1x 6m bar (holds 1x 5.5m)
+    // Total stock = 18m (instead of 2x 12m = 24m or 4x 6m = 24m)
+    const pieces: CutPiece[] = [
+      { id: "chord", label: "Chord", lengthMm: 5500, quantity: 3 },
+    ];
+
+    const result = optimizeCutList(pieces, {
+      stockLengthsMm: [6000, 12000],
+      kerfMm: 3,
+    });
+
+    expect(result.totalStockBars).toBe(2);
+    expect(result.totalStockLengthMm).toBe(18000);
+    const stockLengths = result.patterns.map((p) => p.stockLengthMm).sort((a, b) => b - a);
+    expect(stockLengths).toEqual([12000, 6000]);
+    expect(result.yieldPercent).toBeGreaterThan(90);
+  });
 });

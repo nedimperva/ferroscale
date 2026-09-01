@@ -95,4 +95,32 @@ describe("optimizePlateCutList", () => {
     const xCoords = new Set(sheet.cuts.map((c) => c.xMm));
     expect(xCoords.size).toBeGreaterThanOrEqual(2);
   });
+
+  it("automatically selects 1 plate of 1250x2500 mm (3.125 m²) over 2 plates of 1000x2000 mm (4.0 m²) to minimize waste", () => {
+    // 4 panels of 600x1100 mm (total net area: 4 * 0.66 = 2.64 m²)
+    // On 1000x2000 (2.0 m² each): each plate holds at most 2 panels (600x2=1200 > 1000, so only 1 wide, 1100 fits in 2000 once) -> requires 2 or 3 plates (4.0 - 6.0 m² raw)
+    // On 1250x2500 (3.125 m²): 2 panels wide (600*2 = 1200 <= 1250) and 2 panels long (1100*2 = 2200 <= 2500) -> fits ALL 4 ON 1 PLATE! (3.125 m² raw)
+    const pieces: PlatePiece[] = [
+      { id: "panel", label: "Cover panel", widthMm: 600, lengthMm: 1100, quantity: 4 },
+    ];
+
+    const result = optimizePlateCutList(pieces, {
+      standardSheets: [
+        { label: "1000 × 2000 mm", widthMm: 1000, lengthMm: 2000 },
+        { label: "1250 × 2500 mm", widthMm: 1250, lengthMm: 2500 },
+        { label: "1500 × 3000 mm", widthMm: 1500, lengthMm: 3000 },
+      ],
+      kerfMm: 3,
+      edgeTrimMm: 10,
+      allowRotation: true,
+    });
+
+    // Must choose 1 sheet of 1250x2500 (total raw area 3.125 m²) instead of multiple 1000x2000 sheets (>= 4.0 m²)
+    expect(result.totalMasterSheets).toBe(1);
+    expect(result.patterns[0].sheetLengthMm).toBe(2500);
+    expect(result.patterns[0].sheetWidthMm).toBe(1250);
+    expect(result.totalMasterAreaM2).toBeCloseTo(3.125, 2);
+    expect(result.totalPiecesCount).toBe(4);
+    expect(result.yieldPercent).toBeGreaterThan(80);
+  });
 });
