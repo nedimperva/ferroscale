@@ -422,7 +422,7 @@ export function ProjectList({
         }}
         title={t("templates.newFromTemplate")}
       >
-        <span>🧩</span>
+        <DeskIcon name="layers" />
         <span>{t("templates.fromTemplateButton")}</span>
       </button>
       <button

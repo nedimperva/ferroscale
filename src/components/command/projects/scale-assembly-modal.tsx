@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { DeskIcon } from "../desktop/desk-atoms";
 
 export function ScaleAssemblyModal({
   assemblyName,
@@ -35,7 +36,7 @@ export function ScaleAssemblyModal({
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <h3 className="font-extrabold text-sm sm:text-base text-foreground flex items-center gap-1.5">
-              <span>⚡</span>
+              <DeskIcon name="bolt" stroke="var(--accent-text)" />
               <span>{t("templates.scaleAssemblyTitle")}</span>
             </h3>
             <p className="text-[11.5px] text-muted">
@@ -46,9 +47,9 @@ export function ScaleAssemblyModal({
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground text-sm font-bold cursor-pointer"
+            className="w-11 h-11 sm:w-9 sm:h-9 rounded-chip flex items-center justify-center text-muted hover:text-foreground cursor-pointer"
           >
-            ✕
+            <DeskIcon name="close" />
           </button>
         </div>
 

@@ -71,7 +71,7 @@ function StatTile({
             tone === "accent"
               ? "var(--accent-text)"
               : tone === "green"
-                ? "var(--green-strong, #10b981)"
+                ? "var(--green-text)"
                 : "var(--foreground)",
         }}
       >
@@ -127,7 +127,7 @@ function BarSvgDiagram({
             className="font-bold px-2 py-0.5 rounded-full text-[11px]"
             style={{
               background: pattern.utilizationPercent >= 85 ? "var(--green-surface, rgba(16,185,129,0.12))" : "var(--surface-inset)",
-              color: pattern.utilizationPercent >= 85 ? "var(--green-strong, #10b981)" : "var(--foreground-secondary)",
+              color: pattern.utilizationPercent >= 85 ? "var(--green-text)" : "var(--foreground-secondary)",
             }}
           >
             {pattern.utilizationPercent}% {t("cutting.yield")}
@@ -339,7 +339,7 @@ function PlateSvgDiagram({
             className="font-bold px-2 py-0.5 rounded-full text-[11px]"
             style={{
               background: pattern.utilizationPercent >= 75 ? "var(--green-surface, rgba(16,185,129,0.12))" : "var(--surface-inset)",
-              color: pattern.utilizationPercent >= 75 ? "var(--green-strong, #10b981)" : "var(--foreground-secondary)",
+              color: pattern.utilizationPercent >= 75 ? "var(--green-text)" : "var(--foreground-secondary)",
             }}
           >
             {pattern.utilizationPercent}% {t("cutting.yield")}
@@ -906,7 +906,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
               style={{
                 background: "rgba(239,68,68,0.1)",
                 border: "1px solid rgba(239,68,68,0.25)",
-                color: "var(--red-strong, #ef4444)",
+                color: "var(--red-interactive)",
               }}
             >
               <strong>⚠️ {t("cutting.oversizedWarning")}:</strong>
@@ -926,7 +926,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
               style={{
                 background: "rgba(239,68,68,0.1)",
                 border: "1px solid rgba(239,68,68,0.25)",
-                color: "var(--red-strong, #ef4444)",
+                color: "var(--red-interactive)",
               }}
             >
               <strong>⚠️ {t("cutting.oversizedWarning")}:</strong>

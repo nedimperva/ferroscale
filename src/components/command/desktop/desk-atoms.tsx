@@ -239,6 +239,47 @@ export function DeskIcon({ name, stroke }: { name: string; stroke?: string }) {
           <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
         </svg>
       );
+    case "tag":
+      return (
+        <svg {...common} strokeWidth={1.75}>
+          <path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0l-7.2-7.2A2 2 0 013 12V4a1 1 0 011-1h8a2 2 0 011.4.6l7.2 7.2a2 2 0 010 2.6z" />
+          <circle cx="7.6" cy="7.6" r="1.2" fill={c} stroke="none" />
+        </svg>
+      );
+    case "bolt":
+      return (
+        <svg {...common} strokeWidth={1.75} strokeLinecap={undefined}>
+          <path d="M13 2.5L4.5 13.5H11l-1 8 8.5-11H12z" />
+        </svg>
+      );
+    case "bookmark":
+      return (
+        <svg {...common} strokeWidth={1.75}>
+          <path d="M19 21l-7-4-7 4V5a2 2 0 012-2h10a2 2 0 012 2z" />
+        </svg>
+      );
+    case "layers":
+      return (
+        <svg {...common} strokeWidth={1.75}>
+          <path d="M12 2.5l9 5-9 5-9-5 9-5z" />
+          <path d="M3 12l9 5 9-5" />
+          <path d="M3 17l9 5 9-5" />
+        </svg>
+      );
+    case "printer":
+      return (
+        <svg {...common} strokeWidth={1.75}>
+          <path d="M6 9V3h12v6" />
+          <path d="M6 18H4a2 2 0 01-2-2v-4a2 2 0 012-2h16a2 2 0 012 2v4a2 2 0 01-2 2h-2" />
+          <path d="M6 14h12v7H6z" />
+        </svg>
+      );
+    case "close":
+      return (
+        <svg {...common} strokeWidth={2.2} strokeLinejoin={undefined}>
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      );
     case "trash":
       return (
         <svg {...common} width={14} height={14}>

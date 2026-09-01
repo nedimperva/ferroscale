@@ -586,7 +586,8 @@
       "templateProjectCreated": "Kreiran novi projekat iz šablona {name}",
       "tabs": {
         "items": "Stavke",
-        "cutting": "Plan rezanja"
+        "cutting": "Plan rezanja",
+        "details": "Detalji"
       },
       "pipeline": {
         "active": "Aktivni poslovi",
@@ -750,7 +751,13 @@
       "unarchivedToast": "Vraćeno na aktivne",
       "full": "20 projekata je maksimum — arhiviraj ili obriši jedan",
       "itemsFull": "50 stavki je maksimum za jedan projekat",
-      "nothingToPrint": "Dodaj stavku prije štampanja ponude"
+      "nothingToPrint": "Dodaj stavku prije štampanja ponude",
+      "breakdown": {
+        "material": "Materijal",
+        "labor": "Rad",
+        "extras": "Dodatno",
+        "paint": "Boja"
+      }
     },
     "parts": {
       "subtitle": "Specifikacije koje često kucaš i sklopovi koje redovno praviš. Odaberi jedan i učitaće se u traku — količina i dužina ostaju izmjenjive.",
@@ -804,7 +811,7 @@
       "area": "Površina",
       "markOffset": "Raspon reza",
       "partName": "Dio / Napomena",
-      "reusableOffcut": "Iskoristiv ostatak",
+      "reusableOffcut": "Iskoristivi ostaci",
       "scrapRemainder": "Otpadni komad",
       "remaining": "preostalo",
       "emptyTitle": "Nema stavki za rezanje",
@@ -823,7 +830,6 @@
       "usedArea": "Površina rezanja",
       "scrapArea": "Površina otpada",
       "scrapLoss": "Gubitak otpada",
-      "reusableOffcut": "Iskoristivi ostaci",
       "oversizedWarning": "Komadi koji prelaze dimenzije osnovnog materijala",
       "cuttingPlan": "Raspored rezanja · {profile}",
       "printSheet": "Štampaj plan rezanja",
@@ -838,7 +844,6 @@
       "stockToOrder": "Optimalna narudžba sa skladišta",
       "rawWeight": "Sirova masa",
       "netWeight": "Neto masa",
-      "scrap": "Otpad",
       "totalProcurement": "Ukupna nabavka",
       "globalYield": "Ukupno iskorištenje"
     },

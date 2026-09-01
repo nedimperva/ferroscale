@@ -586,7 +586,8 @@
       "templateProjectCreated": "Created new project from {name}",
       "tabs": {
         "items": "Items",
-        "cutting": "Cut plan"
+        "cutting": "Cut plan",
+        "details": "Details"
       },
       "pipeline": {
         "active": "Active jobs",
@@ -750,7 +751,13 @@
       "unarchivedToast": "Back in the active list",
       "full": "20 projects is the limit — archive or delete one first",
       "itemsFull": "50 items is the limit for one project",
-      "nothingToPrint": "Add an item before printing a quote"
+      "nothingToPrint": "Add an item before printing a quote",
+      "breakdown": {
+        "material": "Material",
+        "labor": "Labor",
+        "extras": "Extras",
+        "paint": "Paint"
+      }
     },
     "parts": {
       "subtitle": "Specs you type often and assemblies you build repeatedly. Pick one to load it into the bar — quantity and length stay editable.",
@@ -795,7 +802,7 @@
       "used": "Used",
       "yield": "yield",
       "offcut": "Offcut",
-      "scrap": "Scrap",
+      "scrap": "Scrap Drop",
       "cutIndex": "Cut #",
       "length": "Length",
       "dimensions": "Dimensions",
@@ -804,7 +811,7 @@
       "area": "Area",
       "markOffset": "Cut range",
       "partName": "Part / Note",
-      "reusableOffcut": "Reusable offcut",
+      "reusableOffcut": "Reusable offcuts",
       "scrapRemainder": "Scrap drop",
       "remaining": "remaining",
       "emptyTitle": "No cuttable items",
@@ -823,7 +830,6 @@
       "usedArea": "Cut area",
       "scrapArea": "Scrap area",
       "scrapLoss": "Scrap loss",
-      "reusableOffcut": "Reusable offcuts",
       "oversizedWarning": "Pieces exceeding master material dimensions",
       "cuttingPlan": "Cutting schedule · {profile}",
       "printSheet": "Print cut sheet",
@@ -838,7 +844,6 @@
       "stockToOrder": "Optimal Stock to Order",
       "rawWeight": "Raw Weight",
       "netWeight": "Net Weight",
-      "scrap": "Scrap Drop",
       "totalProcurement": "Total Procurement",
       "globalYield": "Global Yield"
     },

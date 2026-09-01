@@ -100,7 +100,7 @@ export function BackupSection() {
             style={{
               background: "rgba(239,68,68,0.1)",
               border: "1px solid rgba(239,68,68,0.25)",
-              color: "var(--red-strong, #ef4444)",
+              color: "var(--red-interactive)",
             }}
           >
             {error}
@@ -113,7 +113,7 @@ export function BackupSection() {
             style={{
               background: "rgba(16,185,129,0.12)",
               border: "1px solid rgba(16,185,129,0.25)",
-              color: "var(--green-strong, #10b981)",
+              color: "var(--green-text)",
             }}
           >
             {successMsg}

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { useAssemblyTemplates, type AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
 import { PROJECT_CATEGORIES } from "@/hooks/useProjects";
+import { DeskIcon } from "../desktop/desk-atoms";
 
 export function AssemblyTemplateModal({
   onInsert,
@@ -103,7 +104,7 @@ export function AssemblyTemplateModal({
         <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--border-faint)] bg-[var(--surface-raised)] flex-shrink-0">
           <div className="min-w-0">
             <h2 className="font-extrabold text-sm sm:text-base text-foreground flex items-center gap-2 truncate">
-              <span>🧩</span>
+              <DeskIcon name="layers" stroke="var(--accent-text)" />
               <span>{t("templates.modalTitle")}</span>
             </h2>
             <p className="text-[11px] sm:text-xs text-muted mt-0.5 truncate">
@@ -114,9 +115,9 @@ export function AssemblyTemplateModal({
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-[var(--surface)] transition-colors cursor-pointer text-base font-bold flex-shrink-0"
+            className="w-11 h-11 sm:w-9 sm:h-9 rounded-chip flex items-center justify-center text-muted hover:text-foreground hover:bg-[var(--surface)] transition-colors cursor-pointer flex-shrink-0"
           >
-            ✕
+            <DeskIcon name="close" />
           </button>
         </div>
 

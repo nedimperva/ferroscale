@@ -48,7 +48,7 @@ function StatTile({
             tone === "accent"
               ? "var(--accent-text)"
               : tone === "green"
-                ? "var(--green-strong, #10b981)"
+                ? "var(--green-text)"
                 : "var(--foreground)",
         }}
       >
@@ -202,7 +202,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
                         : "var(--surface-inset)",
                     color:
                       item.yieldPercent >= 80
-                        ? "var(--green-strong, #10b981)"
+                        ? "var(--green-text)"
                         : "var(--foreground-secondary)",
                   }}
                 >
@@ -244,7 +244,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
             </div>
             <div className="flex items-center justify-between text-[11px] text-muted">
               <span>{summary.totalBarsCount} bars · {summary.totalSheetsCount} master plates</span>
-              <span className="text-[var(--green-strong, #10b981)] font-bold">{summary.globalYieldPercent}% yield</span>
+              <span className="text-[var(--green-text)] font-bold">{summary.globalYieldPercent}% yield</span>
             </div>
           </div>
         </div>
@@ -301,7 +301,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
                             : "var(--surface-inset)",
                         color:
                           item.yieldPercent >= 80
-                            ? "var(--green-strong, #10b981)"
+                            ? "var(--green-text)"
                             : "var(--foreground-secondary)",
                       }}
                     >
@@ -328,7 +328,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
                 <td className="py-2.5 text-right text-muted">
                   {summary.totalScrapWeightKg.toLocaleString()} kg
                 </td>
-                <td className="py-2.5 text-right text-[var(--green-strong, #10b981)]">
+                <td className="py-2.5 text-right text-[var(--green-text)]">
                   {summary.globalYieldPercent}%
                 </td>
               </tr>
