@@ -826,7 +826,7 @@ function PaintingForm({
           {t("projects.paintingLabel")}
         </div>
         <div className="font-mono text-[11.5px] text-muted">
-          <span className="text-muted-faint">{t("projects.paintSurface")}: </span>
+          <span className="text-muted-faint">{t("projects.paintSurface")}</span>:{" "}
           <span className="font-bold text-foreground">{surfaceM2.toFixed(2)} m²</span>
         </div>
       </div>
