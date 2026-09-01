@@ -16,6 +16,7 @@ import type { Project } from "@/hooks/useProjects";
 import { extractProjectCutGroups, type ProjectCutGroup } from "@/lib/projects/cutting";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { EmptyState } from "../empty-state";
+import { ProjectProcurement } from "./project-procurement";
 
 interface ProjectCuttingProps {
   project: Project;
@@ -440,7 +441,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
   const t = useTranslations("command");
 
   const cutGroups = useMemo(() => extractProjectCutGroups(project), [project]);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>(cutGroups[0]?.groupId ?? "");
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("procurement");
 
   // 1D Bar Optimizer Parameters
   const [stockChoice, setStockChoice] = useState<number>(6000); // 6000, 12000, -1 (mixed), 0 (custom)
@@ -455,9 +456,12 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
   const [allowRotation, setAllowRotation] = useState<boolean>(true);
   const [edgeTrimMm, setEdgeTrimMm] = useState<number>(10);
 
+  const isProcurement = selectedGroupId === "procurement";
+
   const activeGroup = useMemo(() => {
+    if (isProcurement) return null;
     return cutGroups.find((g) => g.groupId === selectedGroupId) ?? cutGroups[0] ?? null;
-  }, [cutGroups, selectedGroupId]);
+  }, [cutGroups, selectedGroupId, isProcurement]);
 
   // 1D Bar Optimization Result
   const barOptResult: CutOptimizationResult | null = useMemo(() => {
@@ -521,8 +525,31 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
           {t("cutting.selectProfileGroup")}
         </label>
         <div className="flex gap-2 flex-wrap">
+          {/* Procurement Overview Option */}
+          <button
+            type="button"
+            onClick={() => setSelectedGroupId("procurement")}
+            className="h-8 px-3 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
+            style={{
+              background: isProcurement ? "var(--accent)" : "var(--surface)",
+              color: isProcurement ? "var(--accent-contrast)" : "var(--foreground)",
+              border: isProcurement ? "1px solid var(--accent)" : "1px solid var(--border-faint)",
+            }}
+          >
+            <span>📋 {t("cutting.procurementOverview")}</span>
+            <span
+              className="font-mono text-[10.5px] px-1.5 py-0.2 rounded-md"
+              style={{
+                background: isProcurement ? "rgba(0,0,0,0.15)" : "var(--surface-inset)",
+                color: isProcurement ? "var(--accent-contrast)" : "var(--muted)",
+              }}
+            >
+              {cutGroups.length} {t("cutting.sectionsCount", { count: cutGroups.length })}
+            </span>
+          </button>
+
           {cutGroups.map((grp) => {
-            const isSelected = grp.groupId === (activeGroup?.groupId ?? "");
+            const isSelected = !isProcurement && grp.groupId === (activeGroup?.groupId ?? "");
             return (
               <button
                 key={grp.groupId}
@@ -551,14 +578,19 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
         </div>
       </div>
 
-      {/* Control Panel: 1D Bar or 2D Plate */}
-      <div
-        className="rounded-[18px] p-3.5 sm:p-4 space-y-3"
-        style={{
-          border: "1px solid var(--border-faint)",
-          background: "var(--surface-raised)",
-        }}
-      >
+      {/* Procurement Overview Screen */}
+      {isProcurement ? (
+        <ProjectProcurement project={project} compact={compact} />
+      ) : (
+        <>
+          {/* Control Panel: 1D Bar or 2D Plate */}
+          <div
+            className="rounded-[18px] p-3.5 sm:p-4 space-y-3"
+            style={{
+              border: "1px solid var(--border-faint)",
+              background: "var(--surface-raised)",
+            }}
+          >
         {!is2D ? (
           /* 1D Bar Controls */
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -888,6 +920,8 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

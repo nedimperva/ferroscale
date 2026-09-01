@@ -747,7 +747,21 @@
       "reusableOffcut": "Reusable offcuts",
       "oversizedWarning": "Pieces exceeding master material dimensions",
       "cuttingPlan": "Cutting schedule · {profile}",
-      "printSheet": "Print cut sheet"
+      "printSheet": "Print cut sheet",
+      "procurementOverview": "Material order",
+      "sectionsCount": "{count, plural, one {# section} other {# sections}}",
+      "orderOverviewTitle": "Material Procurement & Purchasing BOM",
+      "orderOverviewDesc": "Optimized raw stock order required for {bars} stock bars and {sheets} master plates.",
+      "copyRfq": "Copy Supplier RFQ",
+      "rfqCopied": "RFQ Copied!",
+      "printOrder": "Print Order",
+      "sectionMaterial": "Material / Section",
+      "stockToOrder": "Optimal Stock to Order",
+      "rawWeight": "Raw Weight",
+      "netWeight": "Net Weight",
+      "scrap": "Scrap Drop",
+      "totalProcurement": "Total Procurement",
+      "globalYield": "Global Yield"
     },
     "backup": {
       "title": "Offline JSON backup",

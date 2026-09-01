@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { extractProjectCutGroups } from "./cutting";
+import {
+  extractProjectCutGroups,
+  computeProjectProcurementSummary,
+  generateSupplierRfqText,
+} from "./cutting";
 import type { Project } from "@/hooks/useProjects";
 
 describe("extractProjectCutGroups", () => {
@@ -239,5 +243,74 @@ describe("extractProjectCutGroups", () => {
     expect(groups[0].platePieces?.[0].quantity).toBe(8);
     // Area: 8 * (0.4 * 0.6) = 1.92 m²
     expect(groups[0].totalAreaM2).toBeCloseTo(1.92, 2);
+  });
+
+  it("computes project procurement summary and generates supplier RFQ", () => {
+    const project: Project = {
+      id: "p3",
+      name: "Mezzanine Floor",
+      createdAt: "2026-08-01T10:00:00.000Z",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      calculations: [
+        {
+          id: "c1",
+          timestamp: "2026-08-01T10:00:00.000Z",
+          note: "Columns",
+          input: {
+            profileCategory: "structural",
+            profileId: "beam_hea_en",
+            materialGradeId: "steel-s235jr",
+            dimensions: { height: 114, width: 120 },
+            length: 4,
+            lengthUnit: "m",
+            quantity: 4,
+            priceBasis: "weight",
+            priceUnit: "kg",
+            unitPrice: 1.5,
+            currency: "EUR",
+            wastePercent: 0,
+            includeVat: false,
+            vatPercent: 0,
+          },
+          result: {
+            profileId: "beam_hea_en",
+            profileLabel: "HEA 120",
+            gradeLabel: "S235JR",
+            densityKgPerM3: 7850,
+            areaMm2: 2530,
+            lengthMm: 4000,
+            quantity: 4,
+            unitWeightKg: 79.44,
+            totalWeightKg: 317.76,
+            totalWeightLb: 700.54,
+            unitPriceAmount: 1.5,
+            subtotalAmount: 476.64,
+            wasteAmount: 0,
+            subtotalWithWasteAmount: 476.64,
+            vatAmount: 0,
+            grandTotalAmount: 476.64,
+            currency: "EUR",
+            priceBasis: "weight",
+            priceUnit: "kg",
+            formulaLabel: "EN 10025",
+            datasetVersion: "1.0",
+            referenceLabels: [],
+            dimensions: { height: 114, width: 120 },
+          },
+          normalizedProfile: { category: "structural", id: "beam_hea_en", mode: "standard" },
+        },
+      ],
+    };
+
+    const summary = computeProjectProcurementSummary(project);
+    expect(summary.items.length).toBe(1);
+    expect(summary.totalBarsCount).toBeGreaterThanOrEqual(1);
+    expect(summary.totalRawWeightKg).toBeGreaterThan(0);
+    expect(summary.totalNetWeightKg).toBeCloseTo(317.76, 1);
+
+    const rfq = generateSupplierRfqText(summary, project.name);
+    expect(rfq).toContain("Mezzanine Floor");
+    expect(rfq).toContain("HEA 120");
+    expect(rfq).toContain("SUMMARY:");
   });
 });

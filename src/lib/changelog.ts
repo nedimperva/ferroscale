@@ -22,12 +22,14 @@ export const CHANGELOG: ChangelogEntry[] = [
     added: [
       "1D cutting stock optimizer (linear nesting) for steel profiles. Groups project items by cross-section and computes optimal cutting schedules across standard stock lengths (6m, 12m, custom) with saw kerf loss compensation",
       "2D rectangular plate and sheet cutting optimizer (nesting) supporting standard European sheet formats (1000×2000, 1250×2500, 1500×3000, 2000×6000 mm, custom) with 90° rotation, laser/saw kerf, and edge trim margins",
+      "Material Procurement & Steel Purchasing Overview (BOM) in Project Detail. Recommends exact stock bars and master plates to order from steel suppliers, computes raw purchasing weight vs finished net weight, scrap loss %, and includes one-click 'Copy Supplier RFQ'",
       "Visual bar and plate cut map diagrams in Project Detail with proportional colored cut segments, saw kerf dividers, scrap drop maps, and printable workshop saw/shear cut sheets",
       "Offline local JSON backup and restore. Download a full standalone .json backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes"
     ],
     added_bs: [
       "1D optimizator rezanja (linearno gniježđenje) za čelične profile. Grupiše stavke projekta po poprečnom presjeku i računa optimalan raspored rezanja za standardne dužine šipki (6m, 12m, prilagođeno) uz kompenzaciju debljine reza pile",
       "2D optimizator rezanja (gniježđenje) za limove i ploče koji podržava standardne evropske formate (1000×2000, 1250×2500, 1500×3000, 2000×6000 mm, prilagođeno) uz rotaciju od 90°, debljinu reza lasera/pile i margine rubova",
+      "Pregled i specifikacija nabavke materijala (BOM) u detaljima projekta. Preporučuje tačne šipke i osnovne table limova za narudžbu od dobavljača, računa sirovu masu u odnosu na neto masu, postotak otpada i sadrži opciju 'Kopiraj upit za ponudu (RFQ)'",
       "Vizuelni dijagrami rezanja šipki i 2D ploča u detaljima projekta s proporcionalnim segmentima u boji, oznakama rezova, otpadom i planom za radionicu",
       "Lokalna JSON sigurnosna kopija i vraćanje podataka. Preuzmite kompletnu samostalnu .json datoteku sačuvanih dijelova, sklopova, projekata, cjenovnika i postavki, ili vratite podatke uz načine Spoji ili Zamijeni"
     ],

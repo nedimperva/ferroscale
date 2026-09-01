@@ -747,7 +747,21 @@
       "reusableOffcut": "Iskoristivi ostaci",
       "oversizedWarning": "Komadi koji prelaze dimenzije osnovnog materijala",
       "cuttingPlan": "Raspored rezanja · {profile}",
-      "printSheet": "Štampaj plan rezanja"
+      "printSheet": "Štampaj plan rezanja",
+      "procurementOverview": "Narudžba materijala",
+      "sectionsCount": "{count, plural, one {# profil} few {# profila} other {# profila}}",
+      "orderOverviewTitle": "Specifikacija i narudžba materijala za nabavku",
+      "orderOverviewDesc": "Optimizovana narudžba sirovog materijala potrebna za {bars} šipki i {sheets} tabli limova.",
+      "copyRfq": "Kopiraj upit (RFQ)",
+      "rfqCopied": "Upit kopiran!",
+      "printOrder": "Štampaj narudžbu",
+      "sectionMaterial": "Materijal / Profil",
+      "stockToOrder": "Optimalna narudžba sa skladišta",
+      "rawWeight": "Sirova masa",
+      "netWeight": "Neto masa",
+      "scrap": "Otpad",
+      "totalProcurement": "Ukupna nabavka",
+      "globalYield": "Ukupno iskorištenje"
     },
     "backup": {
       "title": "Lokalna JSON sigurnosna kopija",

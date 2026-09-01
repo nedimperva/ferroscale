@@ -13,6 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **1D cutting stock optimizer (linear nesting) for steel profiles.** Groups project items by identical cross-section and material grade, computing optimal cutting schedules across standard stock lengths (6m, 12m, or custom) with blade kerf loss compensation and reusable offcut tracking
 - **2D rectangular plate and sheet cutting optimizer (nesting).** Supports standard European sheet formats ($1000 \times 2000$, $1250 \times 2500$, $1500 \times 3000$, $2000 \times 6000\text{ mm}$ and custom formats) with 90° rotation, laser/saw kerf spacing, and sheet edge trim margins
+- **Material Procurement & Steel Purchasing Order Overview (BOM).** Unified project-wide overview recommending exact stock bars and master plates to order from steel suppliers, computing total raw weight to purchase vs net finished parts weight, scrap drop %, and one-click 'Copy Supplier RFQ'
 - **Visual bar and plate cut map diagrams in Project Detail.** Interactive SVG diagrams displaying proportionally scaled cut segments with distinct palette coloring, cut lines, saw kerf dividers, scrap drops, and a printable workshop saw/shear cut sheet
 - **Offline local JSON backup and restore in Settings.** Download a complete standalone `.json` backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes without requiring cloud storage
 
