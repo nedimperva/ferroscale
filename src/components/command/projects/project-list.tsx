@@ -7,7 +7,6 @@ import {
   exportProjectCsv,
   PROJECT_CATEGORIES,
   type Project,
-  type ProjectCategory,
 } from "@/hooks/useProjects";
 import {
   ALL_PROJECTS,

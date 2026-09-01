@@ -719,12 +719,23 @@ function LaborAndExtrasForm({
       )}
 
       {/* Add Extra Cost Form */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <select
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value as typeof newCategory)}
+          aria-label="Expense category"
+          className="h-7 rounded-md border border-[var(--border-faint)] bg-[var(--surface-raised)] px-1 text-[11px] text-foreground font-semibold cursor-pointer"
+        >
+          <option value="hardware">Hardware</option>
+          <option value="transport">Transport</option>
+          <option value="finishing">Finishing</option>
+          <option value="other">Other</option>
+        </select>
         <input
           value={newLabel}
           onChange={(e) => setNewLabel(e.target.value)}
           placeholder={t("projects.extraExpensePlaceholder")}
-          className="flex-1 h-7 rounded-md border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-[11px] text-foreground placeholder:text-muted-faint"
+          className="flex-1 min-w-[120px] h-7 rounded-md border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-[11px] text-foreground placeholder:text-muted-faint"
         />
         <input
           type="number"
@@ -810,8 +821,14 @@ function PaintingForm({
         padding: "13px 15px",
       }}
     >
-      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-2">
-        {t("projects.paintingTitle")}
+      <div className="flex items-baseline justify-between gap-2 mb-2">
+        <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+          {t("projects.paintingLabel")}
+        </div>
+        <div className="font-mono text-[11.5px] text-muted">
+          <span className="text-muted-faint">{t("projects.paintSurface")}: </span>
+          <span className="font-bold text-foreground">{surfaceM2.toFixed(2)} m²</span>
+        </div>
       </div>
       <div className="flex flex-col gap-2.5">
         {coats.map((coat) => {
@@ -848,6 +865,7 @@ function PaintingForm({
                     type="number"
                     min={1}
                     value={coat.layers}
+                    aria-label={`${t("projects.paintLayers")} · ${title}`}
                     onChange={(e) => patch(coat.id, { layers: Math.max(1, Number(e.target.value) || 1) })}
                     className="w-12 h-7 rounded border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
                   />
@@ -859,6 +877,7 @@ function PaintingForm({
                     min={0.1}
                     step={0.5}
                     value={coat.coverageM2PerKg}
+                    aria-label={`${t("projects.paintCoverage")} · ${title}`}
                     onChange={(e) => patch(coat.id, { coverageM2PerKg: Number(e.target.value) || 1 })}
                     className="w-14 h-7 rounded border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
                   />
@@ -870,6 +889,7 @@ function PaintingForm({
                     min={0}
                     step={1}
                     value={coat.pricePerKg}
+                    aria-label={`${t("projects.paintPrice")} · ${title}`}
                     onChange={(e) => patch(coat.id, { pricePerKg: Number(e.target.value) || 0 })}
                     className="w-16 h-7 rounded border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
                   />
@@ -1420,7 +1440,7 @@ export function ProjectDetail({
                     : "repeat(auto-fit, minmax(130px, 1fr))",
                 }}
               >
-                <StatTile label={t("projects.stats.items")} value={String(summary.itemCount)} />
+                <StatTile label={t("projects.stats.items")} value={t("projects.itemCount", { count: summary.itemCount })} />
                 <StatTile
                   label={t("projects.stats.weight")}
                   tone="accent"

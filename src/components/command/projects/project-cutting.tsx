@@ -14,7 +14,7 @@ import {
   type PlateSheetOption,
 } from "@ferroscale/metal-core";
 import type { Project } from "@/hooks/useProjects";
-import { extractProjectCutGroups, type ProjectCutGroup } from "@/lib/projects/cutting";
+import { extractProjectCutGroups } from "@/lib/projects/cutting";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { EmptyState } from "../empty-state";
 import { ProjectProcurement } from "./project-procurement";

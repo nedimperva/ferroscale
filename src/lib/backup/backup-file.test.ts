@@ -5,7 +5,7 @@ import {
   validateBackupFile,
   type FerroscaleBackupFile,
 } from "./backup-file";
-import { loadProjects, loadSavedEntries, persistProjects, persistSavedEntries } from "@/lib/sync/collections";
+import { loadProjects, persistProjects, persistSavedEntries } from "@/lib/sync/collections";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
 

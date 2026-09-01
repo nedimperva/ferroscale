@@ -275,7 +275,7 @@ function packItemsOnSheets(
       h: cutDy + kerfMm,
     };
 
-    let nextFreeList: FreeRect[] = [];
+    const nextFreeList: FreeRect[] = [];
     for (const free of targetSheet.freeRects) {
       const splits = splitFreeRect(free, occupiedBox.x, occupiedBox.y, occupiedBox.w, occupiedBox.h);
       nextFreeList.push(...splits);

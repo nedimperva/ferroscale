@@ -193,7 +193,7 @@ describe("extractProjectCutGroups", () => {
               width: { value: 400, unit: "mm" },
               thickness: { value: 10, unit: "mm" },
             },
-            length: { value: 0.6, unit: "m" } as any,
+            length: { value: 0.6, unit: "m" },
             quantity: 8,
             priceBasis: "weight",
             priceUnit: "kg",

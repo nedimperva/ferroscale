@@ -1,4 +1,4 @@
-import { computeAggregates, isArchivedProject, type Project, type ProjectCategory } from "@/hooks/useProjects";
+import { computeAggregates, isArchivedProject, type Project } from "@/hooks/useProjects";
 
 /**
  * Search, client-filter and sort for the Projects surface. Pure and UI-free,
