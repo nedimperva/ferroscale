@@ -1187,52 +1187,67 @@ export function ProjectDetail({
           return (
             <div key={`asm-${asmName || "main"}`} className="border-t first:border-t-0 border-[var(--border-faint)]">
               <div
-                className="flex items-center justify-between px-3 py-1.5 bg-[var(--surface-inset)] font-mono text-[11px] font-bold text-muted flex-wrap gap-2"
+                className="px-3 py-2 sm:py-2.5 bg-[var(--surface-inset)] border-b border-[var(--border-faint)] flex flex-col sm:flex-row sm:items-center justify-between gap-2"
               >
-                <div className="flex items-center gap-1.5">
-                  <span>🏷️ {asmName || t("projects.generalSection")} ({asmRows.length} items)</span>
-                  {asmName && (
-                    <button
-                      type="button"
-                      onClick={() => setQuickAddAssembly(asmName)}
-                      className="px-2 py-0.5 rounded text-[9.5px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
-                      title={t("projects.addToThisAssembly", { name: asmName })}
-                    >
-                      + {t("common.add")}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setScalingAssembly({ name: asmName, count: asmRows.length })}
-                    className="px-2 py-0.5 rounded text-[9.5px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
-                    title={t("templates.scaleAssemblyTitle")}
-                  >
-                    ⚡ {t("templates.scaleButton")}
-                  </button>
-                  {asmRows.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const templateItems: AssemblyTemplateItem[] = asmRows.map((r) => ({
-                          id: crypto.randomUUID(),
-                          input: r.calc.input,
-                          result: r.calc.result,
-                          normalizedProfile: r.calc.normalizedProfile,
-                          quantity: r.calc.input.quantity || 1,
-                          note: r.calc.note,
-                        }));
-                        setSavingTemplateAsm({ name: asmName, items: templateItems });
-                      }}
-                      className="px-2 py-0.5 rounded text-[9.5px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
-                      title={t("templates.saveAsTemplateButton")}
-                    >
-                      💾 {t("templates.saveTemplateButton")}
-                    </button>
-                  )}
+                <div className="flex items-center justify-between sm:justify-start gap-2 flex-wrap">
+                  <span className="font-mono text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <span>🏷️</span>
+                    <span>{asmName || t("projects.generalSection")}</span>
+                    <span className="text-muted font-normal">({asmRows.length})</span>
+                  </span>
+                  <span className="sm:hidden font-mono text-xs font-bold" style={{ color: "var(--accent-text)" }}>
+                    {fsWeight(asmWeight)} {fsWeightUnit()} · {sym} {fsMoney(asmCost)}
+                  </span>
                 </div>
-                <span>
-                  {fsWeight(asmWeight)} {fsWeightUnit()} · {sym} {fsMoney(asmCost)}
-                </span>
+
+                <div className="flex items-center justify-between sm:justify-end gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+                    {asmName && (
+                      <button
+                        type="button"
+                        onClick={() => setQuickAddAssembly(asmName)}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer flex items-center gap-1 active:scale-95 transition-all shadow-2xs"
+                        title={t("projects.addToThisAssembly", { name: asmName })}
+                      >
+                        <span>+</span>
+                        <span>{t("common.add")}</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setScalingAssembly({ name: asmName, count: asmRows.length })}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer flex items-center gap-1 active:scale-95 transition-all shadow-2xs"
+                      title={t("templates.scaleAssemblyTitle")}
+                    >
+                      <span>⚡</span>
+                      <span>{t("templates.scaleButton")}</span>
+                    </button>
+                    {asmRows.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const templateItems: AssemblyTemplateItem[] = asmRows.map((r) => ({
+                            id: crypto.randomUUID(),
+                            input: r.calc.input,
+                            result: r.calc.result,
+                            normalizedProfile: r.calc.normalizedProfile,
+                            quantity: r.calc.input.quantity || 1,
+                            note: r.calc.note,
+                          }));
+                          setSavingTemplateAsm({ name: asmName, items: templateItems });
+                        }}
+                        className="px-2.5 py-1 rounded-lg text-[11px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer flex items-center gap-1 active:scale-95 transition-all shadow-2xs"
+                        title={t("templates.saveAsTemplateButton")}
+                      >
+                        <span>💾</span>
+                        <span>{t("templates.saveTemplateButton")}</span>
+                      </button>
+                    )}
+                  </div>
+                  <span className="hidden sm:inline-block font-mono text-xs font-bold text-muted">
+                    {fsWeight(asmWeight)} {fsWeightUnit()} · {sym} {fsMoney(asmCost)}
+                  </span>
+                </div>
               </div>
               {asmRows.map(renderItemRow)}
             </div>
@@ -1370,15 +1385,15 @@ export function ProjectDetail({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <button
               type="button"
               onClick={() => actions.onPrintQuote(project)}
               disabled={summary.isEmpty}
               title={t("quote.print")}
-              className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px]"
+              className="inline-flex items-center gap-1.5 rounded-button font-bold text-[12px] sm:text-[12.5px] active:scale-95 transition-all"
               style={{
-                padding: "8px 13px",
+                padding: "8px 10px",
                 border: "1px solid var(--border-faint)",
                 background: "var(--surface)",
                 color: "var(--foreground)",
@@ -1391,14 +1406,14 @@ export function ProjectDetail({
                 <path d="M6 18H4a2 2 0 01-2-2v-4a2 2 0 012-2h16a2 2 0 012 2v4a2 2 0 01-2 2h-2" />
                 <path d="M6 14h12v7H6z" />
               </svg>
-              {t("quote.short")}
+              <span>{t("quote.short")}</span>
             </button>
             <button
               type="button"
               onClick={() => setShowTemplateModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-button font-bold text-[12.5px] cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-button font-bold text-[12px] sm:text-[12.5px] cursor-pointer active:scale-95 transition-all"
               style={{
-                padding: "8px 12px",
+                padding: "8px 10px",
                 border: "1px solid var(--border-faint)",
                 background: "var(--surface-raised)",
                 color: "var(--foreground)",
@@ -1411,22 +1426,22 @@ export function ProjectDetail({
             <button
               type="button"
               onClick={() => actions.onAddItem(project.id)}
-              className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px] cursor-pointer"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-button font-bold text-[12px] sm:text-[12.5px] cursor-pointer active:scale-95 transition-all shadow-xs"
               style={{
-                padding: "8px 13px",
+                padding: "8px 12px",
                 border: "none",
                 background: "var(--accent)",
                 color: "var(--accent-contrast)",
               }}
             >
               <DeskIcon name="plus" stroke="var(--accent-contrast)" />
-              {t("projects.addItem")}
+              <span>{t("projects.addItem")}</span>
             </button>
             <RowMenu items={menuItems} ariaLabel={project.name} />
           </div>
         </div>
 
-        <div className="font-mono text-[11.5px] text-muted mt-1">
+        <div className="font-mono text-[11.5px] text-muted mt-1 truncate">
           {subtitleParts.join(" · ")}
         </div>
 
@@ -1445,11 +1460,11 @@ export function ProjectDetail({
         style={compact ? undefined : { padding: "20px 32px 32px" }}
       >
         {/* Navigation Tabs: Items vs Cut Plan */}
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-inset)] border border-[var(--border-faint)] self-start mb-3">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-inset)] border border-[var(--border-faint)] self-start mb-3 max-w-full overflow-x-auto scrollbar-none touch-pan-x">
           <button
             type="button"
             onClick={() => setDetailTab("items")}
-            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             style={{
               background: detailTab === "items" ? "var(--surface)" : "transparent",
               color: detailTab === "items" ? "var(--foreground)" : "var(--muted)",
@@ -1461,7 +1476,7 @@ export function ProjectDetail({
           <button
             type="button"
             onClick={() => setDetailTab("cutting")}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             style={{
               background: detailTab === "cutting" ? "var(--surface)" : "transparent",
               color: detailTab === "cutting" ? "var(--foreground)" : "var(--muted)",

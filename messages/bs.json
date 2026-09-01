@@ -556,6 +556,8 @@
       "modalTitle": "Modularni šabloni sklopova",
       "modalSubtitle": "Izaberite standardni fabrički šablon ili umetnite sa prilagođenim množiocem količine.",
       "searchPlaceholder": "Pretraži šablone, profile, rezove…",
+      "selectTemplateTab": "Odaberi šablon",
+      "configureTab": "Konfiguriši i ubaci",
       "addTemplateButton": "+ Šablon",
       "fromTemplateButton": "Iz šablona",
       "newFromTemplate": "Započni projekat iz fabričkog šablona",

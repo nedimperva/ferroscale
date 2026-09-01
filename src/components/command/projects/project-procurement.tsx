@@ -181,8 +181,76 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
           </div>
         </div>
 
-        {/* Itemized Material Order Table */}
-        <div className="overflow-x-auto">
+        {/* Mobile Procurement Cards View (< md) */}
+        <div className="md:hidden space-y-2.5">
+          {summary.items.map((item, idx) => (
+            <div
+              key={`procure-card-${idx}`}
+              className="p-3 rounded-xl border border-[var(--border-faint)] bg-[var(--surface-raised)] space-y-2 font-mono"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-xs text-foreground flex items-center gap-1.5 truncate">
+                  <span>{item.kind === "2d_plate" ? "📐" : "📏"}</span>
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span
+                  className="px-2 py-0.5 rounded-full text-[10.5px] font-bold flex-shrink-0"
+                  style={{
+                    background:
+                      item.yieldPercent >= 80
+                        ? "var(--green-surface, rgba(16,185,129,0.12))"
+                        : "var(--surface-inset)",
+                    color:
+                      item.yieldPercent >= 80
+                        ? "var(--green-strong, #10b981)"
+                        : "var(--foreground-secondary)",
+                  }}
+                >
+                  {item.yieldPercent}% {t("cutting.yield")}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-xs bg-[var(--surface-inset)] p-2 rounded-lg border border-[var(--border-faint)]">
+                <span className="text-muted text-[11px]">{t("cutting.stockToOrder")}:</span>
+                <span className="font-bold text-[var(--accent-text)]">
+                  {item.rawStockUnits} <span className="text-muted font-normal text-[10.5px]">({item.stockDescription})</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-center text-[11px] pt-0.5">
+                <div className="bg-[var(--surface)] p-1.5 rounded-lg border border-[var(--border-faint)]">
+                  <div className="text-muted-faint text-[9.5px] uppercase">{t("cutting.rawWeight")}</div>
+                  <div className="font-bold text-foreground mt-0.5">{item.rawWeightKg.toLocaleString()} kg</div>
+                </div>
+                <div className="bg-[var(--surface)] p-1.5 rounded-lg border border-[var(--border-faint)]">
+                  <div className="text-muted-faint text-[9.5px] uppercase">{t("cutting.netWeight")}</div>
+                  <div className="font-semibold text-foreground mt-0.5">{item.netWeightKg.toLocaleString()} kg</div>
+                </div>
+                <div className="bg-[var(--surface)] p-1.5 rounded-lg border border-[var(--border-faint)]">
+                  <div className="text-muted-faint text-[9.5px] uppercase">{t("cutting.scrap")}</div>
+                  <div className="text-muted mt-0.5">{item.scrapWeightKg.toLocaleString()} kg</div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Mobile Totals Card */}
+          <div className="p-3 rounded-xl border border-[var(--border-faint)] bg-[var(--surface-inset)] space-y-2 font-mono">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-xs text-foreground">{t("cutting.totalProcurement")}</span>
+              <span className="font-bold text-xs" style={{ color: "var(--accent-text)" }}>
+                {summary.totalRawWeightKg.toLocaleString()} kg
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[11px] text-muted">
+              <span>{summary.totalBarsCount} bars · {summary.totalSheetsCount} master plates</span>
+              <span className="text-[var(--green-strong, #10b981)] font-bold">{summary.globalYieldPercent}% yield</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Itemized Material Order Table (hidden on mobile, visible >= md) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[12px] font-mono border-collapse">
             <thead>
               <tr className="text-muted text-[10.5px] uppercase border-b border-[var(--border-faint)] text-left">

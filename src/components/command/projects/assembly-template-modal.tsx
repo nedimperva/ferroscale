@@ -21,6 +21,7 @@ export function AssemblyTemplateModal({
   const [customAsmName, setCustomAsmName] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
+  const [mobileTab, setMobileTab] = useState<"list" | "preview">("list");
 
   const filteredTemplates = useMemo(() => {
     return templates.filter((tpl) => {
@@ -91,21 +92,21 @@ export function AssemblyTemplateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border border-[var(--border-faint)] bg-[var(--surface)] shadow-2xl overflow-hidden"
+        className="w-full max-w-4xl h-[94vh] sm:h-auto sm:max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-[var(--border-faint)] bg-[var(--surface)] shadow-2xl overflow-hidden"
         role="dialog"
         aria-modal="true"
         aria-label={t("templates.modalTitle")}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-faint)] bg-[var(--surface-raised)]">
-          <div>
-            <h2 className="font-extrabold text-base text-foreground flex items-center gap-2">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--border-faint)] bg-[var(--surface-raised)] flex-shrink-0">
+          <div className="min-w-0">
+            <h2 className="font-extrabold text-sm sm:text-base text-foreground flex items-center gap-2 truncate">
               <span>🧩</span>
               <span>{t("templates.modalTitle")}</span>
             </h2>
-            <p className="text-xs text-muted mt-0.5">
+            <p className="text-[11px] sm:text-xs text-muted mt-0.5 truncate">
               {t("templates.modalSubtitle")}
             </p>
           </div>
@@ -113,29 +114,66 @@ export function AssemblyTemplateModal({
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-[var(--surface)] transition-colors cursor-pointer text-sm font-bold"
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:text-foreground hover:bg-[var(--surface)] transition-colors cursor-pointer text-base font-bold flex-shrink-0"
           >
             ✕
+          </button>
+        </div>
+
+        {/* Mobile Tab Switcher */}
+        <div className="flex md:hidden items-center border-b border-[var(--border-faint)] bg-[var(--surface-raised)] p-1.5 gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setMobileTab("list")}
+            className="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-center"
+            style={{
+              background: mobileTab === "list" ? "var(--surface)" : "transparent",
+              color: mobileTab === "list" ? "var(--foreground)" : "var(--muted)",
+              boxShadow: mobileTab === "list" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+            }}
+          >
+            1. {t("templates.selectTemplateTab")} ({filteredTemplates.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("preview")}
+            className="flex-1 py-2 rounded-lg text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
+            style={{
+              background: mobileTab === "preview" ? "var(--surface)" : "transparent",
+              color: mobileTab === "preview" ? "var(--foreground)" : "var(--muted)",
+              boxShadow: mobileTab === "preview" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+            }}
+          >
+            <span>2. {t("templates.configureTab")}</span>
+            {preview && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[var(--accent-surface)] text-[var(--accent-text)] font-mono">
+                ×{preview.mult}
+              </span>
+            )}
           </button>
         </div>
 
         {/* Body Container */}
         <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 overflow-hidden">
           {/* Left Column: Template Catalog & Filter */}
-          <div className="md:col-span-6 flex flex-col border-r border-[var(--border-faint)] overflow-hidden bg-[var(--surface)]">
+          <div
+            className={`md:col-span-6 flex flex-col border-r border-[var(--border-faint)] overflow-hidden bg-[var(--surface)] ${
+              mobileTab === "preview" ? "hidden md:flex" : "flex"
+            }`}
+          >
             {/* Search & Category Pills */}
-            <div className="p-3 border-b border-[var(--border-faint)] space-y-2 bg-[var(--surface)]">
+            <div className="p-3 border-b border-[var(--border-faint)] space-y-2 bg-[var(--surface)] flex-shrink-0">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t("templates.searchPlaceholder")}
-                className="w-full h-8 px-3 rounded-lg text-xs bg-[var(--surface-inset)] border border-[var(--border-faint)] text-foreground placeholder:text-muted-faint outline-none"
+                className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-inset)] border border-[var(--border-faint)] text-foreground placeholder:text-muted-faint outline-none"
               />
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px] touch-pan-x">
                 <button
                   type="button"
                   onClick={() => setSelectedCategory("all")}
-                  className="px-2.5 py-1 rounded-md font-semibold whitespace-nowrap cursor-pointer transition-colors"
+                  className="px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap cursor-pointer transition-colors"
                   style={{
                     background: selectedCategory === "all" ? "var(--accent)" : "var(--surface-raised)",
                     color: selectedCategory === "all" ? "var(--accent-contrast)" : "var(--muted)",
@@ -148,7 +186,7 @@ export function AssemblyTemplateModal({
                     key={cat}
                     type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className="px-2.5 py-1 rounded-md font-semibold whitespace-nowrap cursor-pointer transition-colors"
+                    className="px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap cursor-pointer transition-colors"
                     style={{
                       background: selectedCategory === cat ? "var(--accent)" : "var(--surface-raised)",
                       color: selectedCategory === cat ? "var(--accent-contrast)" : "var(--muted)",
@@ -161,7 +199,7 @@ export function AssemblyTemplateModal({
             </div>
 
             {/* Template List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
               {filteredTemplates.map((tpl) => {
                 const isSelected = selectedTemplate?.id === tpl.id;
                 return (
@@ -170,40 +208,44 @@ export function AssemblyTemplateModal({
                     onClick={() => {
                       setSelectedTemplateId(tpl.id);
                       setCustomAsmName(tpl.name);
+                      // On mobile, automatically advance to configure tab
+                      if (window.innerWidth < 768) {
+                        setMobileTab("preview");
+                      }
                     }}
-                    className="p-3 rounded-xl border transition-all cursor-pointer text-left space-y-1.5"
+                    className="p-3.5 rounded-xl border transition-all cursor-pointer text-left space-y-2 active:scale-[0.99]"
                     style={{
                       borderColor: isSelected ? "var(--accent)" : "var(--border-faint)",
                       background: isSelected ? "var(--accent-surface)" : "var(--surface-raised)",
                     }}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-bold text-xs text-foreground truncate">
+                      <span className="font-bold text-xs sm:text-sm text-foreground truncate">
                         {tpl.name}
                       </span>
                       {tpl.category && (
-                        <span className="px-1.5 py-0.2 rounded text-[9.5px] font-semibold bg-[var(--surface)] text-muted border border-[var(--border-faint)]">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[var(--surface)] text-muted border border-[var(--border-faint)] flex-shrink-0">
                           {t(`projects.categories.${tpl.category}`)}
                         </span>
                       )}
                     </div>
                     {tpl.description && (
-                      <p className="text-[11px] text-muted line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-muted line-clamp-2 leading-relaxed">
                         {tpl.description}
                       </p>
                     )}
                     {/* Item pills preview */}
-                    <div className="flex flex-wrap gap-1 pt-1">
+                    <div className="flex flex-wrap gap-1.5 pt-1">
                       {tpl.items.map((it) => (
                         <span
                           key={it.id}
-                          className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]"
+                          className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]"
                         >
                           {it.quantity}× {it.result.profileLabel}
                         </span>
                       ))}
                       {tpl.laborHours !== undefined && tpl.laborHours > 0 && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]">
+                        <span className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]">
                           ⏱️ {tpl.laborHours}h
                         </span>
                       )}
@@ -215,13 +257,17 @@ export function AssemblyTemplateModal({
           </div>
 
           {/* Right Column: Multiplier, Assembly Tag & Live Preview */}
-          <div className="md:col-span-6 flex flex-col p-6 overflow-y-auto bg-[var(--surface-raised)] space-y-5">
+          <div
+            className={`md:col-span-6 flex flex-col p-4 sm:p-6 overflow-y-auto bg-[var(--surface-raised)] space-y-4 sm:space-y-5 ${
+              mobileTab === "list" ? "hidden md:flex" : "flex"
+            }`}
+          >
             {selectedTemplate && preview ? (
               <>
                 {/* Template Title & Summary */}
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-extrabold text-sm text-foreground">
+                    <h3 className="font-extrabold text-sm sm:text-base text-foreground">
                       {selectedTemplate.name}
                     </h3>
                     {selectedTemplate.isBuiltin && (
@@ -238,18 +284,18 @@ export function AssemblyTemplateModal({
                 </div>
 
                 {/* Multiplier Configuration */}
-                <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] space-y-3">
-                  <div className="flex items-center justify-between">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] space-y-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <label className="text-xs font-bold text-foreground">
                       {t("templates.multiplierLabel")}:
                     </label>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {[1, 5, 10, 15, 20].map((val) => (
                         <button
                           key={val}
                           type="button"
                           onClick={() => setMultiplier(val)}
-                          className="px-2 py-1 rounded text-xs font-bold border transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer min-w-[36px]"
                           style={{
                             background: multiplier === val ? "var(--accent)" : "var(--surface-raised)",
                             color: multiplier === val ? "var(--accent-contrast)" : "var(--foreground)",
@@ -262,13 +308,14 @@ export function AssemblyTemplateModal({
                     </div>
                   </div>
 
+                  {/* Stepper with Large 44px Touch Targets */}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setMultiplier((m) => Math.max(1, m - 1))}
-                      className="w-9 h-9 rounded-lg bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground font-bold text-base hover:bg-[var(--surface-inset)] cursor-pointer flex items-center justify-center"
+                      className="w-11 h-11 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground font-extrabold text-xl hover:bg-[var(--surface-inset)] active:scale-95 cursor-pointer flex items-center justify-center"
                     >
-                      -
+                      −
                     </button>
                     <div className="flex-1 relative">
                       <input
@@ -277,13 +324,13 @@ export function AssemblyTemplateModal({
                         max={1000}
                         value={multiplier}
                         onChange={(e) => setMultiplier(Math.max(1, Number(e.target.value) || 1))}
-                        className="w-full h-9 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-inset)] text-center font-mono font-bold text-sm text-foreground outline-none"
+                        className="w-full h-11 rounded-xl border border-[var(--border-faint)] bg-[var(--surface-inset)] text-center font-mono font-extrabold text-base text-foreground outline-none"
                       />
                     </div>
                     <button
                       type="button"
                       onClick={() => setMultiplier((m) => m + 1)}
-                      className="w-9 h-9 rounded-lg bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground font-bold text-base hover:bg-[var(--surface-inset)] cursor-pointer flex items-center justify-center"
+                      className="w-11 h-11 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground font-extrabold text-xl hover:bg-[var(--surface-inset)] active:scale-95 cursor-pointer flex items-center justify-center"
                     >
                       +
                     </button>
@@ -299,7 +346,7 @@ export function AssemblyTemplateModal({
                     value={customAsmName}
                     onChange={(e) => setCustomAsmName(e.target.value)}
                     placeholder={selectedTemplate.name}
-                    className="w-full h-8 px-3 rounded-lg text-xs bg-[var(--surface)] border border-[var(--border-faint)] text-foreground outline-none font-semibold"
+                    className="w-full h-9 px-3 rounded-xl text-xs bg-[var(--surface)] border border-[var(--border-faint)] text-foreground outline-none font-semibold"
                   />
                   <p className="text-[10.5px] text-muted-faint">
                     {t("templates.targetAssemblyHint")}
@@ -321,8 +368,8 @@ export function AssemblyTemplateModal({
                             key={it.id}
                             className="flex items-center justify-between px-3 py-2 text-xs"
                           >
-                            <div className="min-w-0">
-                              <span className="font-bold text-foreground">
+                            <div className="min-w-0 pr-2">
+                              <span className="font-bold text-foreground block truncate">
                                 {scaledQty}× {it.result.profileLabel}
                               </span>
                               {it.note && (
@@ -331,7 +378,7 @@ export function AssemblyTemplateModal({
                                 </span>
                               )}
                             </div>
-                            <span className="font-mono text-muted flex-shrink-0">
+                            <span className="font-mono text-muted flex-shrink-0 text-[11.5px]">
                               {fsWeight(itemWeight)} {fsWeightUnit()}
                             </span>
                           </div>
@@ -342,10 +389,10 @@ export function AssemblyTemplateModal({
                           key={cost.id}
                           className="flex items-center justify-between px-3 py-2 text-xs bg-[var(--surface-inset)]"
                         >
-                          <span className="text-foreground">
+                          <span className="text-foreground truncate pr-2">
                             🔩 {cost.label} {preview.mult > 1 ? `(×${preview.mult})` : ""}
                           </span>
-                          <span className="font-mono font-semibold text-foreground">
+                          <span className="font-mono font-semibold text-foreground flex-shrink-0 text-[11.5px]">
                             € {fsMoney(cost.amount * preview.mult)}
                           </span>
                         </div>
@@ -355,7 +402,7 @@ export function AssemblyTemplateModal({
                           <span className="text-foreground">
                             ⏱️ {t("projects.laborHours")}
                           </span>
-                          <span className="font-mono font-semibold text-foreground">
+                          <span className="font-mono font-semibold text-foreground text-[11.5px]">
                             {preview.totalLaborHours.toFixed(2)} hrs
                           </span>
                         </div>
@@ -374,18 +421,24 @@ export function AssemblyTemplateModal({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex items-center gap-2.5 pt-2">
                   <button
                     type="button"
-                    onClick={onClose}
-                    className="flex-1 h-9 rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-inset)] text-xs font-bold text-foreground cursor-pointer transition-colors"
+                    onClick={() => {
+                      if (window.innerWidth < 768 && mobileTab === "preview") {
+                        setMobileTab("list");
+                      } else {
+                        onClose();
+                      }
+                    }}
+                    className="flex-1 h-10 rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-inset)] text-xs font-bold text-foreground cursor-pointer transition-colors"
                   >
-                    {t("common.cancel")}
+                    {window.innerWidth < 768 && mobileTab === "preview" ? `← ${t("templates.selectTemplateTab")}` : t("common.cancel")}
                   </button>
                   <button
                     type="button"
                     onClick={handleInsert}
-                    className="flex-1 h-9 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 text-xs font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                    className="flex-1 h-10 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 text-xs font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
                   >
                     <span>+ {t("templates.insertAction", { count: preview.mult })}</span>
                   </button>

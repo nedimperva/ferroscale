@@ -556,6 +556,8 @@
       "modalTitle": "Modular Assembly Templates",
       "modalSubtitle": "Choose a standard fabrication template or insert with a custom quantity multiplier.",
       "searchPlaceholder": "Search templates, cuts, profiles…",
+      "selectTemplateTab": "Select Template",
+      "configureTab": "Configure & Insert",
       "addTemplateButton": "+ Template",
       "fromTemplateButton": "From Template",
       "newFromTemplate": "Start project from a fabrication template",

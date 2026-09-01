@@ -221,6 +221,38 @@ function BarSvgDiagram({
         </svg>
       </div>
 
+      {/* Mobile Cut Inspection Badges Row (< md) */}
+      <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none font-mono text-[11px] touch-pan-x">
+        {pattern.cuts.map((cut, cIdx) => {
+          const color = CUT_PALETTE[cIdx % CUT_PALETTE.length];
+          return (
+            <span
+              key={`cut-badge-${cIdx}`}
+              className="px-2 py-0.5 rounded-md border flex items-center gap-1 flex-shrink-0"
+              style={{
+                background: color.fill,
+                borderColor: color.stroke,
+                color: "var(--foreground)",
+              }}
+            >
+              <strong className="font-bold">#{cut.cutIndex}</strong> {cut.lengthMm} mm
+            </span>
+          );
+        })}
+        {pattern.remnantMm > 0 && (
+          <span
+            className="px-2 py-0.5 rounded-md border flex-shrink-0"
+            style={{
+              background: pattern.isReusable ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.10)",
+              borderColor: pattern.isReusable ? "#10b981" : "rgba(239,68,68,0.3)",
+              color: pattern.isReusable ? "#10b981" : "var(--muted)",
+            }}
+          >
+            {pattern.remnantMm} mm {pattern.isReusable ? t("cutting.offcut") : t("cutting.scrap")}
+          </span>
+        )}
+      </div>
+
       {/* Cuts Table */}
       <div className="overflow-x-auto pt-1">
         <table className="w-full text-[11.5px] font-mono border-collapse">
