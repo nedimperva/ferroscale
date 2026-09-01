@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import type { Project, ProjectStatus } from "@/hooks/useProjects";
 import {
   ALL_PROJECTS,
+  calculatePipelineAggregates,
   collectProjectClients,
   countProjects,
   filterSortProjects,
+  getDueDateUrgency,
   matchesBucket,
   sameBucket,
 } from "./query";
@@ -157,5 +159,29 @@ describe("bucket helpers", () => {
     expect(sameBucket(ALL_PROJECTS, { kind: "all" })).toBe(true);
     expect(sameBucket({ kind: "client", client: "A" }, { kind: "client", client: "B" })).toBe(false);
     expect(sameBucket({ kind: "client", client: "A" }, { kind: "client", client: "A" })).toBe(true);
+  });
+});
+
+describe("calculatePipelineAggregates", () => {
+  it("computes active counts, total steel in kg, and quoted pipeline value", () => {
+    const agg = calculatePipelineAggregates(PROJECTS, 10);
+    expect(agg.activeCount).toBe(4);
+    expect(agg.totalWeightKg).toBe(1427); // 240 + 1187
+    expect(agg.clientCount).toBe(2);
+    expect(agg.totalQuotedValue).toBeGreaterThan(0);
+  });
+});
+
+describe("getDueDateUrgency", () => {
+  it("accurately reports urgency status", () => {
+    expect(getDueDateUrgency(undefined)).toEqual({ status: "none", daysDiff: 0 });
+
+    const overdue = getDueDateUrgency("2020-01-01");
+    expect(overdue.status).toBe("overdue");
+    expect(overdue.daysDiff).toBeLessThan(0);
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    expect(getDueDateUrgency(todayStr).status).toBe("today");
   });
 });

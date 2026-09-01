@@ -6,6 +6,7 @@ import { APP_VERSION } from "@/lib/changelog";
 import { useTheme } from "@/hooks/useTheme";
 import { CommandDocsSection, useCommandLocaleSwitch } from "../sheets/settings-sheet";
 import { SyncSection } from "../sheets/sync-section";
+import { BackupSection } from "../backup-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
@@ -222,6 +223,7 @@ export function DeskSettingsView({
       case "sync":
         return (
           <div className="flex flex-col">
+            <BackupSection />
             <SyncSection />
             <InstallAppSection />
           </div>

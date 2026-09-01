@@ -5,6 +5,43 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.23.0] - 2026-09-01
+
+Modular Sub-Assembly Templates, Instant Multiplier Scaling, and Template Project Creation.
+
+### Added
+
+- **Modular Sub-Assembly Templates.** Pre-configured standard European fabrication components (Stair Step Treads, Railing Posts with Base Plates, Baluster Infill Panels, Beams with Welded End Plates, Fence Panels) composed of mixed profile cuts, plates, hardware, and shop labor
+- **Insert Templates with Multipliers ($\times N$).** Pick any assembly template, specify the unit count (e.g. $\times 15$), and automatically generate, scale, and insert all individual cuts, plates, bolts, and labor into the project under that sub-assembly
+- **In-Place Sub-Assembly Scaling ($\times N$).** Direct multiplier button on sub-assembly section headers to scale all member piece counts up or down in one click
+- **Save Sub-Assembly as Custom Template.** Export any combination of profiles, plates, and components from a project into your custom template library for reuse across jobs
+- **Start New Project from Template.** Quickly initialize complete fabrication projects from predefined standard or custom assembly templates
+
+---
+
+## [3.22.0] - 2026-09-01
+
+1D cutting stock optimizer (linear nesting) for steel profiles, 2D plate/sheet nesting optimizer, and offline JSON backup/restore.
+
+### Added
+
+- **1D cutting stock optimizer (linear nesting) for steel profiles.** Groups project items by identical cross-section and material grade, computing optimal cutting schedules across standard stock lengths (6m, 12m, or custom) with blade kerf loss compensation and reusable offcut tracking
+- **2D rectangular plate and sheet cutting optimizer (nesting).** Supports standard European sheet formats ($1000 \times 2000$, $1250 \times 2500$, $1500 \times 3000$, $2000 \times 6000\text{ mm}$ and custom formats) with 90° rotation, laser/saw kerf spacing, and sheet edge trim margins
+- **Material Procurement & Steel Purchasing Order Overview (BOM).** Unified project-wide overview recommending exact stock bars and master plates to order from steel suppliers, computing total raw weight to purchase vs net finished parts weight, scrap drop %, and one-click 'Copy Supplier RFQ'
+- **Visual bar and plate cut map diagrams in Project Detail.** Interactive SVG diagrams displaying proportionally scaled cut segments with distinct palette coloring, cut lines, saw kerf dividers, scrap drops, and a printable workshop saw/shear cut sheet
+- **Offline local JSON backup and restore in Settings.** Download a complete standalone `.json` backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes without requiring cloud storage
+- **Projects Pipeline Summary KPI Ribbon.** Top strip displaying Total Active Projects, Total Steel in Tonnes, and Quoted Pipeline Value
+- **Due Date Urgency Badges.** Real-time indicators for overdue jobs, jobs due today, and jobs due soon
+- **Fabrication Categories & Filter Strip.** Categorize projects (Structural, Stairs & Railings, Roof Trusses, Gates & Fences, Sheet Metal, Maintenance, General) with instant filter pills
+- **Multi-Select Batch Actions.** Bulk archive, bulk delete, or export combined CSV material lists across selected projects
+- **Workshop Job Costing & Labor Quoting.** Estimate fabrication & welding hours with custom shop rates and add extra job expenses (hardware/bolts, transport, finishing) into live quotes
+- **Per-Project Margin Override.** Custom markup margin percentage per project without mutating global defaults
+- **Sub-Assembly Sections & Grouping.** Divide project items into sub-assemblies (Stringers, Treads, Handrails) with section subtotals
+- **In-Place Fast Command Bar.** Add items directly inside the project detail view via command syntax
+
+
+---
+
 ## [3.21.0] - 2026-08-17
 
 Paint on a project is coats, not one rate.

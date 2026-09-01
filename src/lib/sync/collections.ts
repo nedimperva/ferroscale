@@ -5,9 +5,18 @@ import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { DimensionPreset } from "@/hooks/usePresets";
-import { PROJECT_STATUSES, type Project, type ProjectActivityEntry, type ProjectStatus } from "@/hooks/useProjects";
+import {
+  PROJECT_CATEGORIES,
+  PROJECT_STATUSES,
+  type Project,
+  type ProjectActivityEntry,
+  type ProjectAdditionalCost,
+  type ProjectCategory,
+  type ProjectStatus,
+} from "@/hooks/useProjects";
 import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import type { AssemblyTemplate, AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
 import { notifySyncedCollectionDirty } from "./registry";
@@ -57,7 +66,7 @@ function normalizeTemplatePart(raw: unknown): TemplatePart | null {
   };
 }
 
-function normalizeSavedEntry(raw: unknown): SavedEntry | null {
+export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<SavedEntry>;
   if (!candidate.id || !candidate.timestamp || !candidate.name || !candidate.input || !candidate.result) {
@@ -99,12 +108,35 @@ function normalizeSavedEntry(raw: unknown): SavedEntry | null {
   };
 }
 
-function normalizeProject(raw: unknown): Project | null {
+export function normalizeProject(raw: unknown): Project | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<Project>;
   if (!candidate.id || !candidate.name || !candidate.createdAt || !candidate.updatedAt || !Array.isArray(candidate.calculations)) {
     return null;
   }
+
+  const normalizedCalculations = candidate.calculations.map((calc) => {
+    if (!calc || typeof calc !== "object") return calc;
+    return {
+      ...calc,
+      assembly: typeof calc.assembly === "string" ? calc.assembly.trim() || undefined : undefined,
+    };
+  });
+
+  const normalizedAdditionalCosts = Array.isArray(candidate.additionalCosts)
+    ? candidate.additionalCosts
+        .filter(
+          (c): c is ProjectAdditionalCost =>
+            Boolean(c && typeof c === "object" && typeof c.id === "string" && typeof c.label === "string" && typeof c.amount === "number"),
+        )
+        .map((c) => ({
+          id: c.id,
+          label: c.label.trim(),
+          amount: Math.max(0, Number(c.amount) || 0),
+          category: c.category,
+        }))
+    : undefined;
+
   return {
     id: candidate.id,
     name: candidate.name,
@@ -115,6 +147,25 @@ function normalizeProject(raw: unknown): Project | null {
     status: PROJECT_STATUSES.includes(candidate.status as ProjectStatus)
       ? candidate.status
       : undefined,
+    category: PROJECT_CATEGORIES.includes(candidate.category as ProjectCategory)
+      ? candidate.category
+      : undefined,
+    marginPercent:
+      typeof candidate.marginPercent === "number" && !Number.isNaN(candidate.marginPercent)
+        ? Math.max(0, Math.min(500, candidate.marginPercent))
+        : undefined,
+    laborHours:
+      typeof candidate.laborHours === "number" && !Number.isNaN(candidate.laborHours)
+        ? Math.max(0, candidate.laborHours)
+        : undefined,
+    laborRatePerHour:
+      typeof candidate.laborRatePerHour === "number" && !Number.isNaN(candidate.laborRatePerHour)
+        ? Math.max(0, candidate.laborRatePerHour)
+        : undefined,
+    additionalCosts:
+      normalizedAdditionalCosts && normalizedAdditionalCosts.length > 0
+        ? normalizedAdditionalCosts
+        : undefined,
     dueDate: candidate.dueDate?.slice(0, 10) || undefined,
     activity: Array.isArray(candidate.activity)
       ? candidate.activity
@@ -127,7 +178,7 @@ function normalizeProject(raw: unknown): Project | null {
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
     deletedAt: candidate.deletedAt,
-    calculations: candidate.calculations,
+    calculations: normalizedCalculations,
     paintCoats: normalizePaintCoats(candidate.paintCoats, {
       paintingPricePerKg: (candidate as { paintingPricePerKg?: number }).paintingPricePerKg,
       paintingCoverageM2PerKg: (candidate as { paintingCoverageM2PerKg?: number })
@@ -137,7 +188,7 @@ function normalizeProject(raw: unknown): Project | null {
   };
 }
 
-function normalizePreset(raw: unknown): DimensionPreset | null {
+export function normalizePreset(raw: unknown): DimensionPreset | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<DimensionPreset>;
   if (!candidate.id || !candidate.profileId || !candidate.label || !candidate.createdAt) {
@@ -329,4 +380,94 @@ export function createSavedPart(
     result,
     normalizedProfile: normalizeProfileSnapshot(input),
   };
+}
+
+export function normalizeAssemblyTemplate(raw: unknown): AssemblyTemplate | null {
+  if (!raw || typeof raw !== "object") return null;
+  const candidate = raw as Partial<AssemblyTemplate>;
+  const id = typeof candidate.id === "string" ? candidate.id : "";
+  const name = typeof candidate.name === "string" ? candidate.name.trim() : "";
+  if (!id || !name) return null;
+  const createdAt = typeof candidate.createdAt === "string" ? candidate.createdAt : nowIso();
+  const updatedAt = typeof candidate.updatedAt === "string" ? candidate.updatedAt : createdAt;
+  const deletedAt = typeof candidate.deletedAt === "string" ? candidate.deletedAt : undefined;
+  const description = typeof candidate.description === "string" ? candidate.description : undefined;
+  const category =
+    typeof candidate.category === "string" && (PROJECT_CATEGORIES as readonly string[]).includes(candidate.category)
+      ? (candidate.category as ProjectCategory)
+      : undefined;
+  const laborHours =
+    Number.isFinite(Number(candidate.laborHours)) && Number(candidate.laborHours) >= 0
+      ? Number(candidate.laborHours)
+      : undefined;
+  const additionalCosts = Array.isArray(candidate.additionalCosts)
+    ? (candidate.additionalCosts
+        .map((cost) => {
+          if (!cost || typeof cost !== "object") return null;
+          const c = cost as Partial<ProjectAdditionalCost>;
+          const label = typeof c.label === "string" ? c.label.trim() : "";
+          const amount = Number(c.amount);
+          if (!label || !Number.isFinite(amount) || amount < 0) return null;
+          return {
+            id: typeof c.id === "string" ? c.id : crypto.randomUUID(),
+            label,
+            amount,
+            category: typeof c.category === "string" ? (c.category as ProjectAdditionalCost["category"]) : undefined,
+          };
+        })
+        .filter(Boolean) as ProjectAdditionalCost[])
+    : undefined;
+
+  const rawItems = Array.isArray(candidate.items) ? candidate.items : [];
+  const items: AssemblyTemplateItem[] = [];
+  for (const item of rawItems) {
+    if (!item || typeof item !== "object") continue;
+    const it = item as Partial<AssemblyTemplateItem>;
+    if (!it.input || !it.result) continue;
+    const quantity = Math.max(1, Math.min(10000, Number(it.quantity) || 1));
+    items.push({
+      id: typeof it.id === "string" ? it.id : crypto.randomUUID(),
+      input: it.input,
+      result: it.result,
+      normalizedProfile: it.normalizedProfile ?? normalizeProfileSnapshot(it.input),
+      quantity,
+      note: typeof it.note === "string" ? it.note : undefined,
+    });
+  }
+
+  return {
+    id,
+    name,
+    description,
+    category,
+    items,
+    laborHours,
+    additionalCosts,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    isBuiltin: Boolean(candidate.isBuiltin),
+  };
+}
+
+export function normalizeAssemblyTemplates(raw: unknown): AssemblyTemplate[] {
+  if (!Array.isArray(raw)) return [];
+  const out: AssemblyTemplate[] = [];
+  const seen = new Set<string>();
+  for (const entry of raw) {
+    const normalized = normalizeAssemblyTemplate(entry);
+    if (!normalized || seen.has(normalized.id)) continue;
+    seen.add(normalized.id);
+    out.push(normalized);
+  }
+  return out;
+}
+
+export function loadAssemblyTemplates(): AssemblyTemplate[] {
+  return normalizeAssemblyTemplates(loadArrayFromStorage<unknown>(SYNC_STORAGE_KEYS.templates));
+}
+
+export function persistAssemblyTemplates(entries: AssemblyTemplate[], options?: PersistOptions): void {
+  persistToStorage(SYNC_STORAGE_KEYS.templates, entries);
+  maybeNotify("saved", options?.markDirty ?? true);
 }

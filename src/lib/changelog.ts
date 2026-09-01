@@ -17,6 +17,58 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.23.0",
+    date: "2026-09-01",
+    added: [
+      "Modular Sub-Assembly Templates: Pre-configured standard fabrication components (Stair Step Treads, Railing Posts with Base Plates, Baluster Infill Panels, Beams with Welded End Plates, Fence Panels) composed of mixed profile cuts, plates, hardware, and shop labor",
+      "Insert Templates with Multiplier (×N): Pick any assembly template, specify the unit count (e.g. ×15), and automatically generate, scale, and insert all individual cuts, plates, bolts, and labor into the project under that sub-assembly",
+      "In-Place Sub-Assembly Scaling (×N): Direct multiplier button on sub-assembly section headers to scale all member piece counts up or down in one click",
+      "Save Sub-Assembly as Custom Template: Export any combination of profiles, plates, and components from a project into your custom template library for reuse across jobs",
+      "Start New Project from Template: Quickly initialize complete fabrication projects from predefined standard or custom assembly templates"
+    ],
+    added_bs: [
+      "Modularni šabloni podsklopova: Standardne fabričke komponente (Gazišta stepeništa, Stubovi ograde sa stopama, Polja ograde, Nosači sa čeonim pločama, Ogradni paneli) sastavljene od kombinacije profila, limova, okova i radnih sati",
+      "Ubacivanje šablona s množiocem (×N): Izaberite šablon sklopa, odredite količinu (npr. ×15) i automatski generišite, skalirajte i ubacite sve pojedinačne rezove, ploče, vijke i radne sate u projekat",
+      "Skaliranje podsklopa na licu mjesta (×N): Brzo dugme na zaglavlju podsklopa za množenje količine svih pripadajućih elemenata jednim klikom",
+      "Čuvanje podsklopa kao vlastitog šablona: Sačuvajte bilo koji sklop profila i limova iz projekta u biblioteku šablona za brzu ponovnu upotrebu",
+      "Kreiranje novog projekta iz šablona: Pokretanje novog projekta direktno iz definisanih standardnih ili vlastitih šablona"
+    ]
+  },
+  {
+    version: "3.22.0",
+    date: "2026-09-01",
+    added: [
+      "1D cutting stock optimizer (linear nesting) for steel profiles. Groups project items by cross-section and computes optimal cutting schedules across standard stock lengths (6m, 12m, custom) with saw kerf loss compensation",
+      "2D rectangular plate and sheet cutting optimizer (nesting) supporting standard European sheet formats (1000×2000, 1250×2500, 1500×3000, 2000×6000 mm, custom) with 90° rotation, laser/saw kerf, and edge trim margins",
+      "Material Procurement & Steel Purchasing Overview (BOM) in Project Detail. Recommends exact stock bars and master plates to order from steel suppliers, computes raw purchasing weight vs finished net weight, scrap loss %, and includes one-click 'Copy Supplier RFQ'",
+      "Visual bar and plate cut map diagrams in Project Detail with proportional colored cut segments, saw kerf dividers, scrap drop maps, and printable workshop saw/shear cut sheets",
+      "Offline local JSON backup and restore. Download a full standalone .json backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes",
+      "Projects Pipeline KPI Ribbon: Top summary strip displaying total active projects, total steel weight in tonnes, quoted pipeline value, and active client count",
+      "Due Date Urgency Badges: Real-time badges on projects for overdue jobs, jobs due today, and jobs due soon",
+      "Fabrication Categories & Filtering: Assign projects to Structural, Stairs & Railings, Roof Trusses, Gates & Fences, Sheet Metal, or Maintenance with instant filter chips",
+      "Multi-Select Batch Actions: Select multiple projects for bulk archive, bulk delete, or combined CSV material export",
+      "Workshop Job Costing & Labor Quoting: Add estimated shop fabrication & welding hours with hourly rates, plus extra job expenses (hardware, transport, galvanizing/finishing) with live grand total quoting and printable quote breakdown",
+      "Per-Project Margin Override: Set custom markup margin percentages directly on individual projects without altering global defaults",
+      "Sub-Assembly Sections: Group project items into distinct sub-assemblies (e.g. Stringers, Treads, Handrails) with section subtotals and inline tagging",
+      "In-Place Fast Command Bar: Type command queries directly inside the project detail view to append items without leaving the project"
+    ],
+    added_bs: [
+      "1D optimizator rezanja (linearno gniježđenje) za čelične profile. Grupiše stavke projekta po poprečnom presjeku i računa optimalan raspored rezanja za standardne dužine šipki (6m, 12m, prilagođeno) uz kompenzaciju debljine reza pile",
+      "2D optimizator rezanja (gniježđenje) za limove i ploče koji podržava standardne evropske formate (1000×2000, 1250×2500, 1500×3000, 2000×6000 mm, prilagođeno) uz rotaciju od 90°, debljinu reza lasera/pile i margine rubova",
+      "Pregled i specifikacija nabavke materijala (BOM) u detaljima projekta. Preporučuje tačne šipke i osnovne table limova za narudžbu od dobavljača, računa sirovu masu u odnosu na neto masu, postotak otpada i sadrži opciju 'Kopiraj upit za ponudu (RFQ)'",
+      "Vizuelni dijagrami rezanja šipki i 2D ploča u detaljima projekta s proporcionalnim segmentima u boji, oznakama rezova, otpadom i planom za radionicu",
+      "Lokalna JSON sigurnosna kopija i vraćanje podataka. Preuzmite kompletnu samostalnu .json datoteku sačuvanih dijelova, sklopova, projekata, cjenovnika i postavki, ili vratite podatke uz načine Spoji ili Zamijeni",
+      "KPI traka pregleda projekata: Prikaz ukupnog broja aktivnih poslova, ukupne mase čelika u tonama, vrijednosti poslova i broja klijenata",
+      "Oznake hitnosti rokova: Automatski indikatori za poslove koji kasne, poslove s rokom danas i poslove s rokom uskoro",
+      "Kategorije izrade i filtriranje: Kategorizacija poslova (Konstrukcije, Stepeništa i ograde, Krovne rešetke, Kapije i ograde, Limarija, Održavanje) uz brze filtere",
+      "Grupne radnje (Multi-Select): Odabir više projekata za grupno arhiviranje, brisanje ili izvoz zbirnog CSV-a",
+      "Kalkulacija radnih sati i troškova: Unos radnih sati bravarije i zavarivanja uz satnicu, te dodatnih troškova (vijci, prevoz, pocinčavanje) uz automatski obračun ukupne ponude",
+      "Prilagođena marža po projektu: Podešavanje postotka marže za svaki projekat zasebno bez promjene globalnih postavki",
+      "Podjela po podsklopovima: Grupisanje stavki u sklopove (npr. Nosači, Gazišta, Rukohvati) uz podzbirove i jednostavno označavanje",
+      "Brza komandna linija u projektu: Direktno dodavanje stavki unosom komande unutar detalja projekta bez napuštanja stranice"
+    ],
+  },
+  {
     version: "3.21.0",
     date: "2026-08-17",
     changed: [

@@ -25,6 +25,7 @@ export const ALL_PROJECTS: ProjectBucket = { kind: "all" };
 export interface ProjectQuery {
   search?: string;
   bucket?: ProjectBucket;
+  category?: string;
   sort?: ProjectSort;
 }
 
@@ -34,13 +35,76 @@ export interface ProjectClientBucket {
   count: number;
 }
 
+export interface DueDateUrgency {
+  status: "overdue" | "today" | "soon" | "normal" | "none";
+  daysDiff: number;
+}
+
+export function getDueDateUrgency(dueDate?: string): DueDateUrgency {
+  if (!dueDate) return { status: "none", daysDiff: 0 };
+  const target = new Date(dueDate + "T00:00:00");
+  if (Number.isNaN(target.getTime())) return { status: "none", daysDiff: 0 };
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffMs = target.getTime() - today.getTime();
+  const daysDiff = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (daysDiff < 0) return { status: "overdue", daysDiff };
+  if (daysDiff === 0) return { status: "today", daysDiff: 0 };
+  if (daysDiff <= 3) return { status: "soon", daysDiff };
+  return { status: "normal", daysDiff };
+}
+
+export interface PipelineAggregates {
+  activeCount: number;
+  totalWeightKg: number;
+  totalQuotedValue: number;
+  clientCount: number;
+}
+
+export function calculatePipelineAggregates(
+  projects: Project[],
+  globalMarginPercent: number = 0,
+): PipelineAggregates {
+  let totalWeightKg = 0;
+  let totalQuotedValue = 0;
+  let activeCount = 0;
+  const clients = new Set<string>();
+
+  for (const project of projects) {
+    if (isArchivedProject(project)) continue;
+    activeCount += 1;
+    if (project.client?.trim()) clients.add(project.client.trim());
+
+    const agg = computeAggregates(project);
+    totalWeightKg += agg.totalWeightKg;
+
+    const margin = project.marginPercent ?? globalMarginPercent;
+    const materialQuoted = margin > 0 ? agg.totalCost * (1 + margin / 100) : agg.totalCost;
+    const paint = agg.paintCoatTotals.length > 0 ? agg.totalPaintingCost : 0;
+    const labor = (project.laborHours ?? 0) * (project.laborRatePerHour ?? 0);
+    const extras = (project.additionalCosts ?? []).reduce((s, c) => s + c.amount, 0);
+
+    totalQuotedValue += materialQuoted + paint + labor + extras;
+  }
+
+  return {
+    activeCount,
+    totalWeightKg: Math.round(totalWeightKg * 100) / 100,
+    totalQuotedValue: Math.round(totalQuotedValue * 100) / 100,
+    clientCount: clients.size,
+  };
+}
+
 function haystack(project: Project): string {
   return [
     project.name,
     project.client ?? "",
     project.description ?? "",
+    project.category ?? "",
     ...project.calculations.map(
-      (calc) => calc.templateName ?? calc.normalizedProfile?.shortLabel ?? calc.result.profileLabel,
+      (calc) =>
+        `${calc.templateName ?? calc.normalizedProfile?.shortLabel ?? calc.result.profileLabel} ${calc.assembly ?? ""}`,
     ),
   ]
     .join(" ")
@@ -127,6 +191,9 @@ export function filterSortProjects(projects: Project[], query: ProjectQuery = {}
   const search = query.search?.trim().toLowerCase() ?? "";
   const filtered = projects.filter((project) => {
     if (!matchesBucket(project, bucket)) return false;
+    if (query.category && query.category !== "all" && project.category !== query.category) {
+      return false;
+    }
     if (search && !haystack(project).includes(search)) return false;
     return true;
   });

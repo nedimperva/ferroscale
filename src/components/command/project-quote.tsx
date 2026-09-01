@@ -27,12 +27,28 @@ export function ProjectQuote({
   const currency = calcs[0]?.result.currency ?? ("EUR" as CurrencyCode);
   const sym = CURRENCY_SYMBOLS[currency] ?? "€";
 
+  const effectiveMargin =
+    project.marginPercent !== undefined ? project.marginPercent : marginPercent;
+
   const totalKg = calcs.reduce((sum, c) => sum + (c.result.totalWeightKg ?? 0), 0);
-  const totalCost = calcs.reduce((sum, c) => sum + (c.result.grandTotalAmount ?? 0), 0);
-  const materialTotal = marginPercent > 0 ? sellPrice(totalCost, marginPercent) : totalCost;
+  const rawMaterialCost = calcs.reduce((sum, c) => sum + (c.result.grandTotalAmount ?? 0), 0);
+  const materialTotal =
+    effectiveMargin > 0 ? sellPrice(rawMaterialCost, effectiveMargin) : rawMaterialCost;
+
   const aggregates = computeAggregates(project);
   const hasPainting = aggregates.paintCoatTotals.length > 0 && aggregates.totalPaintingCost > 0;
-  const total = materialTotal + (hasPainting ? aggregates.totalPaintingCost : 0);
+  const paintingCost = hasPainting ? aggregates.totalPaintingCost : 0;
+
+  const laborHours = project.laborHours ?? 0;
+  const laborRate = project.laborRatePerHour ?? 0;
+  const laborTotal = laborHours * laborRate;
+  const hasLabor = laborTotal > 0;
+
+  const additionalCosts = project.additionalCosts ?? [];
+  const extrasTotal = additionalCosts.reduce((s, c) => s + c.amount, 0);
+  const hasExtras = extrasTotal > 0;
+
+  const grandTotal = materialTotal + paintingCost + laborTotal + extrasTotal;
 
   // Stored short labels tack the length on ("SHS 40x40x3 x L 4000 mm"); the
   // quote has a Length column, so the item column keeps just the profile.
@@ -59,11 +75,12 @@ export function ProjectQuote({
         </span>
       </header>
 
-      {(project.client || project.dueDate || project.description) && (
+      {(project.client || project.dueDate || project.description || project.category) && (
         <p style={{ fontSize: 12, margin: "10px 0 0", lineHeight: 1.5, opacity: 0.8 }}>
           {[
-            project.client,
-            project.dueDate,
+            project.client ? `Client: ${project.client}` : null,
+            project.category ? `Category: ${project.category}` : null,
+            project.dueDate ? `Due: ${project.dueDate}` : null,
             project.description,
           ]
             .filter(Boolean)
@@ -89,6 +106,9 @@ export function ProjectQuote({
               <tr key={calc.id}>
                 <td style={cell}>
                   {itemLabel(calc.templateName ?? calc.normalizedProfile?.shortLabel ?? r.profileLabel)}
+                  {calc.assembly ? (
+                    <span style={{ fontSize: 10.5, opacity: 0.6, marginLeft: 6 }}>[{calc.assembly}]</span>
+                  ) : null}
                   {calc.note ? (
                     <div style={{ fontSize: 10.5, opacity: 0.7, marginTop: 2 }}>{calc.note}</div>
                   ) : null}
@@ -100,51 +120,80 @@ export function ProjectQuote({
                   {fsWeight(r.totalWeightKg)} {fsWeightUnit()}
                 </td>
                 <td style={numeric}>
-                  {sym} {fsMoney(marginPercent > 0 ? sellPrice(r.grandTotalAmount, marginPercent) : r.grandTotalAmount)}
+                  {sym} {fsMoney(effectiveMargin > 0 ? sellPrice(r.grandTotalAmount, effectiveMargin) : r.grandTotalAmount)}
                 </td>
               </tr>
             );
           })}
         </tbody>
         <tfoot>
-          {hasPainting && (
-            <>
-              <tr>
+          {/* Subtotal Material */}
+          <tr>
+            <td style={cell} colSpan={4}>
+              {t("quote.material")} {effectiveMargin > 0 ? `(+${effectiveMargin}% markup)` : ""}
+            </td>
+            <td style={numeric}>
+              {fsWeight(totalKg)} {fsWeightUnit()}
+            </td>
+            <td style={numeric}>
+              {sym} {fsMoney(materialTotal)}
+            </td>
+          </tr>
+
+          {/* Painting Breakdown */}
+          {hasPainting &&
+            aggregates.paintCoatTotals.map((row) => {
+              const name =
+                row.coat.kind === "primer"
+                  ? t("projects.paintPrimer")
+                  : row.coat.kind === "finish"
+                    ? t("projects.paintFinish")
+                    : row.coat.name?.trim() || t("projects.paintCustom");
+              return (
+                <tr key={row.coat.id}>
+                  <td style={cell} colSpan={4}>
+                    {t("quote.paintCoat", {
+                      name,
+                      layers: row.coat.layers,
+                      kg: row.kg,
+                    })}
+                  </td>
+                  <td style={numeric} />
+                  <td style={numeric}>
+                    {sym} {fsMoney(row.cost)}
+                  </td>
+                </tr>
+              );
+            })}
+
+          {/* Labor Breakdown */}
+          {hasLabor && (
+            <tr>
+              <td style={cell} colSpan={4}>
+                Shop Fabrication & Welding ({laborHours} hrs @ {sym} {fsMoney(laborRate)}/hr)
+              </td>
+              <td style={numeric} />
+              <td style={numeric}>
+                {sym} {fsMoney(laborTotal)}
+              </td>
+            </tr>
+          )}
+
+          {/* Additional Expenses */}
+          {hasExtras &&
+            additionalCosts.map((cost) => (
+              <tr key={cost.id}>
                 <td style={cell} colSpan={4}>
-                  {t("quote.material")}
+                  Extra: {cost.label}
                 </td>
+                <td style={numeric} />
                 <td style={numeric}>
-                  {fsWeight(totalKg)} {fsWeightUnit()}
-                </td>
-                <td style={numeric}>
-                  {sym} {fsMoney(materialTotal)}
+                  {sym} {fsMoney(cost.amount)}
                 </td>
               </tr>
-              {aggregates.paintCoatTotals.map((row) => {
-                const name =
-                  row.coat.kind === "primer"
-                    ? t("projects.paintPrimer")
-                    : row.coat.kind === "finish"
-                      ? t("projects.paintFinish")
-                      : row.coat.name?.trim() || t("projects.paintCustom");
-                return (
-                  <tr key={row.coat.id}>
-                    <td style={cell} colSpan={4}>
-                      {t("quote.paintCoat", {
-                        name,
-                        layers: row.coat.layers,
-                        kg: row.kg,
-                      })}
-                    </td>
-                    <td style={numeric} />
-                    <td style={numeric}>
-                      {sym} {fsMoney(row.cost)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </>
-          )}
+            ))}
+
+          {/* Grand Total */}
           <tr style={{ fontWeight: 800 }}>
             <td style={cell} colSpan={4}>
               {t("quote.total")}
@@ -153,15 +202,11 @@ export function ProjectQuote({
               {fsWeight(totalKg)} {fsWeightUnit()}
             </td>
             <td style={numeric}>
-              {sym} {fsMoney(total)}
+              {sym} {fsMoney(grandTotal)}
             </td>
           </tr>
         </tfoot>
       </table>
-
-      <p style={{ fontSize: 10.5, opacity: 0.7, marginTop: 14, lineHeight: 1.5 }}>
-        {t("quote.footnote")}
-      </p>
     </article>
   );
 }

@@ -155,6 +155,11 @@ export function CommandShell() {
     createProject,
     renameProject,
     updateProjectMeta,
+    updateProjectLabor,
+    updateProjectAdditionalCosts,
+    updateItemAssembly,
+    batchArchiveProjects,
+    batchDeleteProjects,
     updateProjectDescription,
     logQuotePrinted,
     deleteProject,
@@ -163,6 +168,9 @@ export function CommandShell() {
     addCalculation,
     addCalculations,
     addTemplateCalculation,
+    insertAssemblyTemplate,
+    scaleSubAssembly,
+    createProjectFromTemplate,
     removeCalculation,
     updateCalculationQuantity,
     updateCalculationNote,
@@ -815,6 +823,17 @@ export function CommandShell() {
       onSetItemQuantity: updateCalculationQuantity,
       onSetItemNote: updateCalculationNote,
       onSetPaintCoats: updateProjectPaintCoats,
+      onUpdateLabor: updateProjectLabor,
+      onUpdateAdditionalCosts: updateProjectAdditionalCosts,
+      onSetItemAssembly: updateItemAssembly,
+      onBatchArchive: (ids) => {
+        batchArchiveProjects(ids);
+        showToast(t("projects.archivedToast"));
+      },
+      onBatchDelete: (ids) => {
+        batchDeleteProjects(ids);
+        showToast(t("projects.deleted"));
+      },
       onOpenItem: loadInput,
       onAddItem: (projectId: string) => {
         if (!p.calc) {
@@ -830,6 +849,40 @@ export function CommandShell() {
         );
         return ok;
       },
+      onQuickAddItem: (projectId: string, queryStr: string, assembly?: string) => {
+        const parsed = cmdParse(queryStr, parserSettings);
+        if (!parsed.calc) {
+          showToast(t("toast.addLength"));
+          return false;
+        }
+        const ok = addCalculation(projectId, parsed.calc.input, parsed.calc.result, assembly);
+        const name = projects.find((project) => project.id === projectId)?.name;
+        showToast(
+          ok
+            ? t("toast.addedToProject", { project: name ?? t("common.project") })
+            : t("projects.itemsFull"),
+        );
+        return ok;
+      },
+      onInsertTemplate: (projectId, template, multiplier, customAssemblyName) => {
+        const ok = insertAssemblyTemplate(projectId, template, multiplier, customAssemblyName);
+        if (ok) {
+          showToast(t("projects.templateInserted", { name: template.name, mult: multiplier }));
+        }
+        return ok;
+      },
+      onScaleSubAssembly: (projectId, assemblyName, multiplier) => {
+        const ok = scaleSubAssembly(projectId, assemblyName, multiplier);
+        if (ok) {
+          showToast(t("projects.assemblyScaledToast", { name: assemblyName || "General", mult: multiplier }));
+        }
+        return ok;
+      },
+      onCreateFromTemplate: (name, template, multiplier) => {
+        const project = createProjectFromTemplate(name, template, multiplier);
+        showToast(t("projects.templateProjectCreated", { name: project.name }));
+        return project;
+      },
       onPrintQuote: (project) => logQuotePrinted(project.id),
     }),
     [
@@ -838,6 +891,11 @@ export function CommandShell() {
       renameProject,
       updateProjectMeta,
       updateProjectDescription,
+      updateProjectLabor,
+      updateProjectAdditionalCosts,
+      updateItemAssembly,
+      batchArchiveProjects,
+      batchDeleteProjects,
       duplicateProject,
       deleteProject,
       restoreProject,
@@ -847,8 +905,12 @@ export function CommandShell() {
       updateProjectPaintCoats,
       loadInput,
       addCalculation,
+      insertAssemblyTemplate,
+      scaleSubAssembly,
+      createProjectFromTemplate,
       logQuotePrinted,
       p.calc,
+      parserSettings,
       showToast,
       showActionToast,
       t,
