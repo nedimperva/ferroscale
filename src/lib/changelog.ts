@@ -17,6 +17,20 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.22.0",
+    date: "2026-09-01",
+    added: [
+      "1D cutting stock optimizer (linear nesting) for steel profiles. Groups project items by cross-section and computes optimal cutting schedules across standard stock lengths (6m, 12m, custom) with saw kerf loss compensation",
+      "Visual bar-by-bar cut map diagrams in Project Detail with proportional colored cut segments, saw kerf dividers, scrap vs reusable offcuts, and printable saw operator cut sheet",
+      "Offline local JSON backup and restore. Download a full standalone .json backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes"
+    ],
+    added_bs: [
+      "1D optimizator rezanja (linearno gniježđenje) za čelične profile. Grupiše stavke projekta po poprečnom presjeku i računa optimalan raspored rezanja za standardne dužine šipki (6m, 12m, prilagođeno) uz kompenzaciju debljine reza pile",
+      "Vizuelni dijagrami rezanja po šipkama u detaljima projekta s proporcionalnim segmentima u boji, oznakama rezova, otpadom naspram iskoristivih ostataka i planom za operatera pile",
+      "Lokalna JSON sigurnosna kopija i vraćanje podataka. Preuzmite kompletnu samostalnu .json datoteku sačuvanih dijelova, sklopova, projekata, cjenovnika i postavki, ili vratite podatke uz načine Spoji ili Zamijeni"
+    ],
+  },
+  {
     version: "3.21.0",
     date: "2026-08-17",
     changed: [

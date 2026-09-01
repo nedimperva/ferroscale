@@ -17,6 +17,7 @@ import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
 import { RowMenu } from "../row-menu";
 import { DeskIcon } from "../desktop/desk-atoms";
+import { ProjectCutting } from "./project-cutting";
 import {
   formatActivity,
   formatRelativeTime,
@@ -567,6 +568,7 @@ export function ProjectDetail({
 }) {
   const t = useTranslations("command");
   const [editingDetails, setEditingDetails] = useState(false);
+  const [detailTab, setDetailTab] = useState<"items" | "cutting">("items");
   const [showMore, setShowMore] = useState(false);
   const [notes, setNotes] = useState(project.description ?? "");
   // A pull from another device rewrites the project underneath the textarea.
@@ -997,7 +999,33 @@ export function ProjectDetail({
                 />
               )}
             </div>
-            {itemsTable}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-inset)] border border-[var(--border-faint)] self-start">
+              <button
+                type="button"
+                onClick={() => setDetailTab("items")}
+                className="px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                style={{
+                  background: detailTab === "items" ? "var(--surface)" : "transparent",
+                  color: detailTab === "items" ? "var(--foreground)" : "var(--muted)",
+                  boxShadow: detailTab === "items" ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                }}
+              >
+                {t("projects.tabs.items")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDetailTab("cutting")}
+                className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                style={{
+                  background: detailTab === "cutting" ? "var(--surface)" : "transparent",
+                  color: detailTab === "cutting" ? "var(--foreground)" : "var(--muted)",
+                  boxShadow: detailTab === "cutting" ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                }}
+              >
+                <span>{t("projects.tabs.cutting")}</span>
+              </button>
+            </div>
+            {detailTab === "items" ? itemsTable : <ProjectCutting project={project} compact={compact} />}
           </div>
           {compact ? (
             <div className="flex flex-col gap-2">

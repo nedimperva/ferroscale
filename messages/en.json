@@ -552,6 +552,10 @@
       "assemblyName": "Assembly ({count} parts)"
     },
     "projects": {
+      "tabs": {
+        "items": "Items",
+        "cutting": "Cut plan"
+      },
       "subtitleCount": "{count, plural, one {# active} other {# active}}",
       "subtitleEmpty": "group calcs into jobs",
       "empty": "no projects yet — hit New project, or + Project on a result",
@@ -703,6 +707,48 @@
       "showOther": "Show {label}",
       "emptyPartsAllAssemblies": "Everything you have saved holds more than one line, so it lives under Assemblies.",
       "emptyAssembliesHasParts": "Open a part and add the current line to it — two lines make an assembly."
+    },
+    "cutting": {
+      "title": "Cut plan",
+      "barNumber": "Bar #{number}",
+      "cutsCount": "{count, plural, one {# cut} other {# cuts}}",
+      "used": "Used",
+      "yield": "yield",
+      "offcut": "Offcut",
+      "scrap": "Scrap",
+      "cutIndex": "Cut #",
+      "length": "Length",
+      "markOffset": "Cut range",
+      "partName": "Part / Note",
+      "reusableOffcut": "Reusable offcut",
+      "scrapRemainder": "Scrap drop",
+      "remaining": "remaining",
+      "emptyTitle": "No cuttable profiles",
+      "emptyBody": "Add profile items to this project to generate an optimized 1D cutting plan.",
+      "selectProfileGroup": "Profile group",
+      "stockLength": "Stock length",
+      "custom": "Custom",
+      "bladeKerf": "Saw kerf",
+      "minOffcut": "Min offcut",
+      "totalBars": "Stock bars",
+      "scrapLoss": "Scrap loss",
+      "reusableOffcut": "Reusable offcuts",
+      "oversizedWarning": "Pieces exceeding maximum stock length",
+      "cuttingPlan": "Cutting schedule · {profile}",
+      "printSheet": "Print saw sheet"
+    },
+    "backup": {
+      "title": "Offline JSON backup",
+      "description": "Download a standalone .json backup of your saved parts, projects, price books, and settings, or restore from a previous file without requiring cloud sync.",
+      "downloadButton": "Download backup",
+      "restoreButton": "Restore from backup",
+      "invalidFile": "Invalid backup file. Please select a valid Ferroscale JSON backup.",
+      "restoreSuccess": "Successfully restored {saved} parts and {projects} projects.",
+      "restoreFailed": "Failed to restore backup file.",
+      "confirmTitle": "Restore backup file",
+      "summaryInfo": "Found: {saved} parts, {projects} projects, {priceBook} price book rates (from {date}).",
+      "mergeMode": "Merge with current data",
+      "replaceMode": "Replace all current data"
     },
     "time": {
       "justNow": "just now",

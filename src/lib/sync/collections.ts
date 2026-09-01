@@ -57,7 +57,7 @@ function normalizeTemplatePart(raw: unknown): TemplatePart | null {
   };
 }
 
-function normalizeSavedEntry(raw: unknown): SavedEntry | null {
+export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<SavedEntry>;
   if (!candidate.id || !candidate.timestamp || !candidate.name || !candidate.input || !candidate.result) {
@@ -99,7 +99,7 @@ function normalizeSavedEntry(raw: unknown): SavedEntry | null {
   };
 }
 
-function normalizeProject(raw: unknown): Project | null {
+export function normalizeProject(raw: unknown): Project | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<Project>;
   if (!candidate.id || !candidate.name || !candidate.createdAt || !candidate.updatedAt || !Array.isArray(candidate.calculations)) {
@@ -137,7 +137,7 @@ function normalizeProject(raw: unknown): Project | null {
   };
 }
 
-function normalizePreset(raw: unknown): DimensionPreset | null {
+export function normalizePreset(raw: unknown): DimensionPreset | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<DimensionPreset>;
   if (!candidate.id || !candidate.profileId || !candidate.label || !candidate.createdAt) {

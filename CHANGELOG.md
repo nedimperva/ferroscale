@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.22.0] - 2026-09-01
+
+1D cutting stock optimizer (linear nesting) for steel profiles and offline JSON backup/restore.
+
+### Added
+
+- **1D cutting stock optimizer (linear nesting) for steel profiles.** Groups project items by identical cross-section and material grade, computing optimal cutting schedules across standard stock lengths (6m, 12m, or custom) with blade kerf loss compensation and reusable offcut tracking
+- **Visual bar-by-bar cut map diagrams in Project Detail.** Interactive SVG diagrams displaying proportionally scaled cut segments with distinct palette coloring, cut lines, saw kerf dividers, scrap drops, and a printable saw operator cut sheet
+- **Offline local JSON backup and restore in Settings.** Download a complete standalone `.json` backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes without requiring cloud storage
+
+---
+
 ## [3.21.0] - 2026-08-17
 
 Paint on a project is coats, not one rate.

@@ -552,6 +552,10 @@
       "assemblyName": "Sklop ({count} dijelova)"
     },
     "projects": {
+      "tabs": {
+        "items": "Stavke",
+        "cutting": "Plan rezanja"
+      },
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
       "subtitleEmpty": "grupišite izračune u poslove",
       "empty": "još nema projekata — kliknite Novi projekat ili + Projekat na rezultatu",
@@ -703,6 +707,48 @@
       "showOther": "Prikaži {label}",
       "emptyPartsAllAssemblies": "Sve što si sačuvao ima više stavki, pa se nalazi pod Sklopovi.",
       "emptyAssembliesHasParts": "Otvori dio i dodaj mu trenutnu stavku — dvije stavke čine sklop."
+    },
+    "cutting": {
+      "title": "Plan rezanja",
+      "barNumber": "Šipka #{number}",
+      "cutsCount": "{count, plural, one {# rez} few {# reza} other {# rezova}}",
+      "used": "Iskorišteno",
+      "yield": "iskoristivost",
+      "offcut": "Ostatak",
+      "scrap": "Otpad",
+      "cutIndex": "Rez #",
+      "length": "Dužina",
+      "markOffset": "Raspon reza",
+      "partName": "Dio / Napomena",
+      "reusableOffcut": "Iskoristiv ostatak",
+      "scrapRemainder": "Otpadni komad",
+      "remaining": "preostalo",
+      "emptyTitle": "Nema profila za rezanje",
+      "emptyBody": "Dodajte stavke profila u ovaj projekat da generišete optimizovan 1D plan rezanja.",
+      "selectProfileGroup": "Grupa profila",
+      "stockLength": "Dužina šipke",
+      "custom": "Prilagođeno",
+      "bladeKerf": "Debljina reza",
+      "minOffcut": "Min. ostatak",
+      "totalBars": "Šipke",
+      "scrapLoss": "Gubitak otpada",
+      "reusableOffcut": "Iskoristivi ostaci",
+      "oversizedWarning": "Komadi koji prelaze maksimalnu dužinu šipke",
+      "cuttingPlan": "Raspored rezanja · {profile}",
+      "printSheet": "Štampaj plan za pilu"
+    },
+    "backup": {
+      "title": "Lokalna JSON sigurnosna kopija",
+      "description": "Preuzmite samostalnu .json sigurnosnu kopiju sačuvanih dijelova, projekata, cjenovnika i postavki, ili vratite podatke iz prethodne datoteke bez potrebe za sinhronizacijom na oblaku.",
+      "downloadButton": "Preuzmi kopiju",
+      "restoreButton": "Vrati iz kopije",
+      "invalidFile": "Nevažeća datoteka sigurnosne kopije. Odaberite ispravan Ferroscale JSON fajl.",
+      "restoreSuccess": "Uspješno vraćeno {saved} dijelova i {projects} projekata.",
+      "restoreFailed": "Neuspješno vraćanje sigurnosne kopije.",
+      "confirmTitle": "Vrati sigurnosnu kopiju",
+      "summaryInfo": "Pronađeno: {saved} dijelova, {projects} projekata, {priceBook} stavki cjenovnika (od {date}).",
+      "mergeMode": "Spoji sa postojećim",
+      "replaceMode": "Zamijeni sve podatke"
     },
     "time": {
       "justNow": "upravo sad",

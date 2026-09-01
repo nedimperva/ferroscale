@@ -26,6 +26,7 @@ import { SearchField } from "../search-field";
 import { EmptyState } from "../empty-state";
 import { SheetShell } from "./sheet-shell";
 import { SyncSection } from "./sync-section";
+import { BackupSection } from "../backup-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
@@ -406,6 +407,7 @@ export function CommandSettingsSheet({
             {showExtras && (
               <div className="px-4 py-3">
                 <PriceBookSection compact shared={shared} priceBook={priceBook} />
+                <BackupSection />
                 <InstallAppSection />
                 <SyncSection />
               </div>
