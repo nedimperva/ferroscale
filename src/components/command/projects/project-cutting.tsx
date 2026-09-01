@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import {
   optimizeCutList,
@@ -17,6 +18,7 @@ import { extractProjectCutGroups, type ProjectCutGroup } from "@/lib/projects/cu
 import { DeskIcon } from "../desktop/desk-atoms";
 import { EmptyState } from "../empty-state";
 import { ProjectProcurement } from "./project-procurement";
+import { ProjectCutSheetDoc } from "./project-print-docs";
 
 interface ProjectCuttingProps {
   project: Project;
@@ -456,12 +458,26 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
   const [allowRotation, setAllowRotation] = useState<boolean>(true);
   const [edgeTrimMm, setEdgeTrimMm] = useState<number>(10);
 
+  const [isPrintingCutSheet, setIsPrintingCutSheet] = useState<boolean>(false);
+
   const isProcurement = selectedGroupId === "procurement";
 
   const activeGroup = useMemo(() => {
     if (isProcurement) return null;
     return cutGroups.find((g) => g.groupId === selectedGroupId) ?? cutGroups[0] ?? null;
   }, [cutGroups, selectedGroupId, isProcurement]);
+
+  const handlePrintCutSheet = () => {
+    setIsPrintingCutSheet(true);
+    requestAnimationFrame(() => {
+      const done = () => {
+        window.removeEventListener("afterprint", done);
+        setIsPrintingCutSheet(false);
+      };
+      window.addEventListener("afterprint", done);
+      window.print();
+    });
+  };
 
   // 1D Bar Optimization Result
   const barOptResult: CutOptimizationResult | null = useMemo(() => {
@@ -519,6 +535,23 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
 
   return (
     <div className="space-y-3.5">
+      {/* Print Document Portal */}
+      {isPrintingCutSheet &&
+        activeGroup &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fs-print">
+            <ProjectCutSheetDoc
+              group={activeGroup}
+              barResult={barOptResult}
+              plateResult={plateOptResult}
+              projectName={project.name}
+              kerfMm={kerfMm}
+            />
+          </div>,
+          document.body,
+        )}
+
       {/* Sleek Segmented Group Selector Rail */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-[var(--border-faint)]">
         {/* Procurement Overview Tab */}
@@ -660,7 +693,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={handlePrintCutSheet}
                   className="h-7 px-3 rounded-lg text-xs font-semibold border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-foreground flex items-center gap-1.5 cursor-pointer ml-auto"
                 >
                   <DeskIcon name="share" />
@@ -769,7 +802,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
                 </label>
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={handlePrintCutSheet}
                   className="h-7 px-3 rounded-lg text-xs font-semibold border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-foreground flex items-center gap-1.5 cursor-pointer ml-auto"
                 >
                   <DeskIcon name="share" />

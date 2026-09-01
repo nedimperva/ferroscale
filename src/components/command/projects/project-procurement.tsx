@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import type { Project } from "@/hooks/useProjects";
 import {
@@ -9,6 +10,7 @@ import {
   type ProjectProcurementSummary,
 } from "@/lib/projects/cutting";
 import { DeskIcon } from "../desktop/desk-atoms";
+import { ProjectProcurementDoc } from "./project-print-docs";
 
 interface ProjectProcurementProps {
   project: Project;
@@ -60,6 +62,7 @@ function StatTile({
 export function ProjectProcurement({ project, compact }: ProjectProcurementProps) {
   const t = useTranslations("command");
   const [copied, setCopied] = useState<boolean>(false);
+  const [isPrinting, setIsPrinting] = useState<boolean>(false);
 
   const summary: ProjectProcurementSummary = useMemo(() => {
     return computeProjectProcurementSummary(project);
@@ -76,8 +79,30 @@ export function ProjectProcurement({ project, compact }: ProjectProcurementProps
     }
   };
 
+  const handlePrint = () => {
+    setIsPrinting(true);
+    requestAnimationFrame(() => {
+      const done = () => {
+        window.removeEventListener("afterprint", done);
+        setIsPrinting(false);
+      };
+      window.addEventListener("afterprint", done);
+      window.print();
+    });
+  };
+
   return (
     <div className="space-y-4">
+      {/* Print Document Portal */}
+      {isPrinting &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fs-print">
+            <ProjectProcurementDoc summary={summary} projectName={project.name} />
+          </div>,
+          document.body,
+        )}
+
       {/* Top KPI Metrics Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <StatTile
@@ -147,7 +172,7 @@ export function ProjectProcurement({ project, compact }: ProjectProcurementProps
 
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={handlePrint}
               className="h-8 px-3 rounded-xl text-xs font-semibold border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-foreground flex items-center gap-1.5 cursor-pointer transition-colors"
             >
               <DeskIcon name="share" />
