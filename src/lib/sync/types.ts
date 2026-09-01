@@ -5,6 +5,8 @@ import type { SavedEntry } from "@/hooks/useSaved";
 import type { PriceBookEntry } from "@/hooks/usePriceBook";
 import { GOOGLE_SYNC_PROVIDER_ID } from "./keys";
 
+export type { CompareItem, CompareItem as SyncCompareItem, DimensionPreset, Project, SavedEntry, PriceBookEntry };
+
 export type SyncProviderId = typeof GOOGLE_SYNC_PROVIDER_ID;
 
 export type SyncEntityCollectionKey = "saved" | "projects" | "presets";

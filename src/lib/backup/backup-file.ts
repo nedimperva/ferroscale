@@ -8,6 +8,7 @@ import {
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
+  normalizePreset,
   normalizeProject,
   normalizeSavedEntry,
   persistCompareItems,
@@ -21,13 +22,11 @@ import {
   mergeEntityPayload,
   mergeListPayload,
 } from "@/lib/sync/snapshot";
-import type {
-  PriceBookEntry,
-  SavedEntry,
-  SyncCompareItem,
-} from "@/lib/sync/types";
+import type { PriceBookEntry } from "@/hooks/usePriceBook";
+import type { SavedEntry } from "@/hooks/useSaved";
+import type { CompareItem as SyncCompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
-import type { SizePreset } from "@/lib/saved/size-presets";
+import type { DimensionPreset } from "@/hooks/usePresets";
 import {
   defaultPaintCoverageStore,
   defaultPaintPriceStore,
@@ -45,7 +44,7 @@ import { downloadBlob } from "@/lib/csv-utils";
 export interface FerroscaleBackupData {
   saved: SavedEntry[];
   projects: Project[];
-  presets: SizePreset[];
+  presets: DimensionPreset[];
   compare: {
     updatedAt: string;
     items: SyncCompareItem[];
@@ -138,7 +137,7 @@ export function validateBackupFile(raw: unknown): FerroscaleBackupFile {
   const d = candidate.data as Partial<FerroscaleBackupData>;
   const saved = Array.isArray(d.saved) ? d.saved.map(normalizeSavedEntry).filter(Boolean) as SavedEntry[] : [];
   const projects = Array.isArray(d.projects) ? d.projects.map(normalizeProject).filter(Boolean) as Project[] : [];
-  const presets = Array.isArray(d.presets) ? d.presets : [];
+  const presets = Array.isArray(d.presets) ? d.presets.map(normalizePreset).filter(Boolean) as DimensionPreset[] : [];
   const compare = {
     updatedAt: typeof d.compare?.updatedAt === "string" ? d.compare.updatedAt : new Date().toISOString(),
     items: Array.isArray(d.compare?.items) ? d.compare.items : [],

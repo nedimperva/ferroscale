@@ -1,6 +1,5 @@
 import type { Project, ProjectCalculation } from "@/hooks/useProjects";
 import type { CutPiece } from "@ferroscale/metal-core";
-import { fingerprint } from "@/lib/calculator/fingerprint";
 
 export interface ProjectCutGroup {
   groupId: string;
@@ -30,9 +29,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
     const mult = calc.quantityMultiplier ?? 1;
     return calc.templateParts.flatMap((part, idx) => {
       const partResult = part.result;
-      const partInput = part.input;
-      const fp = fingerprint(partInput);
-      const groupKey = `${partInput.profileId}:${partInput.materialGradeId}:${fp}`;
+      const groupKey = `${partResult.profileId}:${partResult.profileLabel}:${partResult.gradeLabel}`;
       const groupLabel = `${partResult.profileLabel} · ${partResult.gradeLabel}`;
       const lengthMm = partResult.lengthMm;
       const quantity = Math.max(1, partResult.quantity * mult);
@@ -40,7 +37,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
       return {
         groupKey,
         label: groupLabel,
-        profileId: partInput.profileId,
+        profileId: partResult.profileId,
         gradeLabel: partResult.gradeLabel,
         unitWeightKg: partResult.unitWeightKg,
         piece: {
@@ -54,8 +51,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
   }
 
   // Single calculation item
-  const fp = fingerprint(input);
-  const groupKey = `${input.profileId}:${input.materialGradeId}:${fp}`;
+  const groupKey = `${result.profileId}:${result.profileLabel}:${result.gradeLabel}`;
   const groupLabel = `${result.profileLabel} · ${result.gradeLabel}`;
   const lengthMm = result.lengthMm;
   const quantity = Math.max(1, result.quantity);
