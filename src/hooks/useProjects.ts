@@ -30,6 +30,36 @@ export interface ProjectTemplatePart {
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
+export type ProjectStatus = "draft" | "quoted" | "archived";
+
+export const PROJECT_STATUSES: readonly ProjectStatus[] = ["draft", "quoted", "archived"];
+
+export type ProjectCategory =
+  | "structural"
+  | "stairs_railings"
+  | "roof_trusses"
+  | "gates_fences"
+  | "sheet_metal"
+  | "maintenance"
+  | "general";
+
+export const PROJECT_CATEGORIES: readonly ProjectCategory[] = [
+  "structural",
+  "stairs_railings",
+  "roof_trusses",
+  "gates_fences",
+  "sheet_metal",
+  "maintenance",
+  "general",
+];
+
+export interface ProjectAdditionalCost {
+  id: string;
+  label: string;
+  amount: number;
+  category?: "hardware" | "transport" | "finishing" | "other";
+}
+
 export interface ProjectCalculation {
   id: string;
   timestamp: string;
@@ -37,6 +67,8 @@ export interface ProjectCalculation {
   result: CalculationResult;
   normalizedProfile: NormalizedProfileSnapshot;
   note?: string;
+  /** Sub-assembly grouping tag (e.g. "Stringers", "Treads", "Handrail"). */
+  assembly?: string;
   /** Present when this entry represents a template added as a single item. */
   templateName?: string;
   /** Individual parts of the template with their own calculations. */
@@ -44,15 +76,6 @@ export interface ProjectCalculation {
   /** How many times the template was multiplied when added. */
   quantityMultiplier?: number;
 }
-
-/**
- * Where a job stands. `archived` is a filter, not a delete: an archived
- * project keeps every item and still prints, it just leaves the active list
- * and stops offering itself as a target for "add to project".
- */
-export type ProjectStatus = "draft" | "quoted" | "archived";
-
-export const PROJECT_STATUSES: readonly ProjectStatus[] = ["draft", "quoted", "archived"];
 
 /**
  * One line of a project's history. Kinds are i18n keys, not sentences, so the
@@ -89,6 +112,16 @@ export interface Project {
   client?: string;
   /** Absent means `draft`; stored only once it moves off the default. */
   status?: ProjectStatus;
+  /** Fabrication category/tag. */
+  category?: ProjectCategory;
+  /** Per-project margin override (percentage, e.g. 15 for +15%). */
+  marginPercent?: number;
+  /** Estimated shop fabrication/welding hours. */
+  laborHours?: number;
+  /** Hourly shop labor rate in project currency. */
+  laborRatePerHour?: number;
+  /** Extra job expenses (Hardware, Transport, Finishing, etc.). */
+  additionalCosts?: ProjectAdditionalCost[];
   /** ISO date (YYYY-MM-DD), not a timestamp — a due date has no clock. */
   dueDate?: string;
   /** Newest first, capped at MAX_ACTIVITY. */
@@ -560,8 +593,22 @@ export interface UseProjectsReturn {
   renameProject: (id: string, name: string) => void;
   updateProjectMeta: (
     id: string,
-    patch: { client?: string; status?: ProjectStatus; dueDate?: string },
+    patch: {
+      client?: string;
+      status?: ProjectStatus;
+      dueDate?: string;
+      category?: ProjectCategory;
+      marginPercent?: number;
+    },
   ) => void;
+  updateProjectLabor: (
+    id: string,
+    labor: { laborHours?: number; laborRatePerHour?: number },
+  ) => void;
+  updateProjectAdditionalCosts: (id: string, costs: ProjectAdditionalCost[]) => void;
+  updateItemAssembly: (projectId: string, calcId: string, assembly?: string) => void;
+  batchArchiveProjects: (ids: string[]) => void;
+  batchDeleteProjects: (ids: string[]) => void;
   logQuotePrinted: (id: string) => void;
   deleteProject: (id: string) => void;
   /** Undo a delete — clears the tombstone so sync keeps the project alive. */
@@ -638,7 +685,16 @@ export function useProjects(): UseProjectsReturn {
    * activity line, so the rail reads as a history rather than "project edited".
    */
   const updateProjectMeta = useCallback(
-    (id: string, patch: { client?: string; status?: ProjectStatus; dueDate?: string }) => {
+    (
+      id: string,
+      patch: {
+        client?: string;
+        status?: ProjectStatus;
+        dueDate?: string;
+        category?: ProjectCategory;
+        marginPercent?: number;
+      },
+    ) => {
       setProjects((prev) =>
         prev.map((p) => {
           if (p.id !== id || p.deletedAt) return p;
@@ -665,9 +721,97 @@ export function useProjects(): UseProjectsReturn {
               });
             }
           }
+          if (patch.category !== undefined) {
+            next = { ...next, category: patch.category || undefined, updatedAt: new Date().toISOString() };
+          }
+          if (patch.marginPercent !== undefined) {
+            const m = Math.max(0, Math.min(500, Number(patch.marginPercent) || 0));
+            next = { ...next, marginPercent: m, updatedAt: new Date().toISOString() };
+          }
           return next;
         }),
       );
+    },
+    [setProjects],
+  );
+
+  const updateProjectLabor = useCallback(
+    (id: string, labor: { laborHours?: number; laborRatePerHour?: number }) => {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== id || p.deletedAt) return p;
+          return {
+            ...p,
+            laborHours: labor.laborHours !== undefined ? Math.max(0, Number(labor.laborHours) || 0) : p.laborHours,
+            laborRatePerHour: labor.laborRatePerHour !== undefined ? Math.max(0, Number(labor.laborRatePerHour) || 0) : p.laborRatePerHour,
+            updatedAt: new Date().toISOString(),
+          };
+        }),
+      );
+    },
+    [setProjects],
+  );
+
+  const updateProjectAdditionalCosts = useCallback(
+    (id: string, costs: ProjectAdditionalCost[]) => {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== id || p.deletedAt) return p;
+          return {
+            ...p,
+            additionalCosts: costs,
+            updatedAt: new Date().toISOString(),
+          };
+        }),
+      );
+    },
+    [setProjects],
+  );
+
+  const updateItemAssembly = useCallback(
+    (projectId: string, calcId: string, assembly?: string) => {
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== projectId || p.deletedAt) return p;
+          return {
+            ...p,
+            updatedAt: new Date().toISOString(),
+            calculations: p.calculations.map((c) =>
+              c.id === calcId ? { ...c, assembly: assembly?.trim() || undefined } : c,
+            ),
+          };
+        }),
+      );
+    },
+    [setProjects],
+  );
+
+  const batchArchiveProjects = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return;
+      const targetSet = new Set(ids);
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (!targetSet.has(p.id) || p.deletedAt || p.status === "archived") return p;
+          return withActivity({ ...p, status: "archived" }, "statusChanged", {
+            from: projectStatus(p),
+            to: "archived",
+          });
+        }),
+      );
+    },
+    [setProjects],
+  );
+
+  const batchDeleteProjects = useCallback(
+    (ids: string[]) => {
+      if (ids.length === 0) return;
+      const targetSet = new Set(ids);
+      const deletedAt = new Date().toISOString();
+      setProjects((prev) =>
+        prev.map((p) => (targetSet.has(p.id) && !p.deletedAt ? markEntityDeleted(p, deletedAt) : p)),
+      );
+      setActiveProjectId((current) => (current && targetSet.has(current) ? null : current));
     },
     [setProjects],
   );
@@ -1001,6 +1145,11 @@ export function useProjects(): UseProjectsReturn {
     createProject,
     renameProject,
     updateProjectMeta,
+    updateProjectLabor,
+    updateProjectAdditionalCosts,
+    updateItemAssembly,
+    batchArchiveProjects,
+    batchDeleteProjects,
     logQuotePrinted,
     deleteProject,
     restoreProject,

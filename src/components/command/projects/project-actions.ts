@@ -1,5 +1,10 @@
 import type { CalculationInput } from "@/lib/calculator/types";
-import type { Project, ProjectStatus } from "@/hooks/useProjects";
+import type {
+  Project,
+  ProjectAdditionalCost,
+  ProjectCategory,
+  ProjectStatus,
+} from "@/hooks/useProjects";
 import type { ProjectPaintCoat } from "@/lib/projects/paint";
 
 /**
@@ -13,9 +18,23 @@ export interface ProjectActions {
   onRename: (id: string, name: string) => void;
   onUpdateMeta: (
     id: string,
-    patch: { client?: string; status?: ProjectStatus; dueDate?: string },
+    patch: {
+      client?: string;
+      status?: ProjectStatus;
+      dueDate?: string;
+      category?: ProjectCategory;
+      marginPercent?: number;
+    },
   ) => void;
   onUpdateNotes: (id: string, notes: string) => void;
+  onUpdateLabor?: (
+    id: string,
+    labor: { laborHours?: number; laborRatePerHour?: number },
+  ) => void;
+  onUpdateAdditionalCosts?: (id: string, costs: ProjectAdditionalCost[]) => void;
+  onSetItemAssembly?: (projectId: string, calcId: string, assembly?: string) => void;
+  onBatchArchive?: (ids: string[]) => void;
+  onBatchDelete?: (ids: string[]) => void;
   onDuplicate: (id: string) => void;
   /** Deletes with an undo toast — the surfaces never confirm inline. */
   onDelete: (id: string) => void;
@@ -31,5 +50,7 @@ export interface ProjectActions {
    * the calculator, which is the only place that state can be fixed.
    */
   onAddItem: (projectId: string) => boolean;
+  /** Add a query directly to the project using fast inline command parser. */
+  onQuickAddItem?: (projectId: string, query: string) => boolean;
   onPrintQuote: (project: Project) => void;
 }

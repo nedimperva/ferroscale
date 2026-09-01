@@ -155,6 +155,11 @@ export function CommandShell() {
     createProject,
     renameProject,
     updateProjectMeta,
+    updateProjectLabor,
+    updateProjectAdditionalCosts,
+    updateItemAssembly,
+    batchArchiveProjects,
+    batchDeleteProjects,
     updateProjectDescription,
     logQuotePrinted,
     deleteProject,
@@ -815,6 +820,17 @@ export function CommandShell() {
       onSetItemQuantity: updateCalculationQuantity,
       onSetItemNote: updateCalculationNote,
       onSetPaintCoats: updateProjectPaintCoats,
+      onUpdateLabor: updateProjectLabor,
+      onUpdateAdditionalCosts: updateProjectAdditionalCosts,
+      onSetItemAssembly: updateItemAssembly,
+      onBatchArchive: (ids) => {
+        batchArchiveProjects(ids);
+        showToast(t("projects.archivedToast"));
+      },
+      onBatchDelete: (ids) => {
+        batchDeleteProjects(ids);
+        showToast(t("projects.deleted"));
+      },
       onOpenItem: loadInput,
       onAddItem: (projectId: string) => {
         if (!p.calc) {
@@ -822,6 +838,21 @@ export function CommandShell() {
           return false;
         }
         const ok = addCalculation(projectId, p.calc.input, p.calc.result);
+        const name = projects.find((project) => project.id === projectId)?.name;
+        showToast(
+          ok
+            ? t("toast.addedToProject", { project: name ?? t("common.project") })
+            : t("projects.itemsFull"),
+        );
+        return ok;
+      },
+      onQuickAddItem: (projectId: string, queryStr: string) => {
+        const parsed = cmdParse(queryStr, parserSettings);
+        if (!parsed.calc) {
+          showToast(t("toast.addLength"));
+          return false;
+        }
+        const ok = addCalculation(projectId, parsed.calc.input, parsed.calc.result);
         const name = projects.find((project) => project.id === projectId)?.name;
         showToast(
           ok
@@ -838,6 +869,11 @@ export function CommandShell() {
       renameProject,
       updateProjectMeta,
       updateProjectDescription,
+      updateProjectLabor,
+      updateProjectAdditionalCosts,
+      updateItemAssembly,
+      batchArchiveProjects,
+      batchDeleteProjects,
       duplicateProject,
       deleteProject,
       restoreProject,
@@ -849,6 +885,7 @@ export function CommandShell() {
       addCalculation,
       logQuotePrinted,
       p.calc,
+      parserSettings,
       showToast,
       showActionToast,
       t,

@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import { PROJECT_STATUSES, type Project, type ProjectStatus } from "@/hooks/useProjects";
+import {
+  PROJECT_CATEGORIES,
+  PROJECT_STATUSES,
+  type Project,
+  type ProjectAdditionalCost,
+  type ProjectCategory,
+  type ProjectStatus,
+} from "@/hooks/useProjects";
 import {
   createPaintCoat,
   type PaintCoatKind,
@@ -28,34 +35,24 @@ import {
 } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 
-/**
- * The project detail page (2d) — the screen the app did not have. A project
- * used to be a card with a list of profile names on it; everything you might
- * want to do to a job (rename it, say whose it is, mark it quoted, change a
- * piece count, print it, archive it) had to happen somewhere else or not at
- * all.
- *
- * One component serves both surfaces. `compact` narrows it to a single column
- * for the library sheet; nothing else differs, so the numbers a phone shows
- * are the numbers the desktop shows.
- */
-
 function StatTile({
   label,
   value,
   tone,
   emphasis,
+  sub,
 }: {
   label: string;
   value: string;
-  tone?: "accent" | "blue";
+  tone?: "accent" | "blue" | "green";
   emphasis?: boolean;
+  sub?: string;
 }) {
   return (
     <div
-      className="rounded-[15px] min-w-0"
+      className="rounded-[14px] min-w-0"
       style={{
-        padding: "11px 14px",
+        padding: "10px 14px",
         border: `1px solid ${emphasis ? "var(--accent-border)" : "var(--border-faint)"}`,
         background: emphasis ? "var(--accent-surface)" : "var(--surface)",
       }}
@@ -64,19 +61,22 @@ function StatTile({
         {label}
       </div>
       <div
-        className="font-mono font-bold mt-1 truncate"
+        className="font-mono font-bold mt-0.5 truncate"
         style={{
-          fontSize: 17,
+          fontSize: 16,
           color:
             tone === "accent"
               ? "var(--accent-text)"
               : tone === "blue"
                 ? "var(--blue-strong)"
-                : "var(--foreground)",
+                : tone === "green"
+                  ? "var(--green-strong, #10b981)"
+                  : "var(--foreground)",
         }}
       >
         {value}
       </div>
+      {sub && <div className="text-[10px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
@@ -113,6 +113,37 @@ function StatusBadge({
       {PROJECT_STATUSES.map((value) => (
         <option key={value} value={value}>
           {t(`projects.status.${value}`)}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function CategoryBadge({
+  category,
+  onChange,
+}: {
+  category?: ProjectCategory;
+  onChange: (cat: ProjectCategory | undefined) => void;
+}) {
+  const t = useTranslations("command");
+  return (
+    <select
+      value={category ?? ""}
+      onChange={(e) => onChange((e.target.value as ProjectCategory) || undefined)}
+      aria-label="Project category"
+      className="fs-track-label rounded-full font-semibold text-[10px] cursor-pointer"
+      style={{
+        padding: "4px 9px",
+        border: "1px solid var(--border-faint)",
+        background: category ? "var(--accent-surface)" : "var(--surface-inset)",
+        color: category ? "var(--accent-text)" : "var(--muted)",
+      }}
+    >
+      <option value="">{t("projects.noCategory")}</option>
+      {PROJECT_CATEGORIES.map((cat) => (
+        <option key={cat} value={cat}>
+          {t(`projects.categories.${cat}`)}
         </option>
       ))}
     </select>
@@ -178,18 +209,29 @@ function EditableTitle({
 function DetailsForm({
   project,
   actions,
+  marginPercent,
   onDone,
 }: {
   project: Project;
   actions: ProjectActions;
+  marginPercent: number;
   onDone: () => void;
 }) {
   const t = useTranslations("command");
   const [client, setClient] = useState(project.client ?? "");
   const [dueDate, setDueDate] = useState(toDateInputValue(project.dueDate));
+  const [category, setCategory] = useState<string>(project.category ?? "");
+  const [margin, setMargin] = useState<string>(
+    project.marginPercent !== undefined ? String(project.marginPercent) : "",
+  );
 
   const commit = () => {
-    actions.onUpdateMeta(project.id, { client, dueDate });
+    actions.onUpdateMeta(project.id, {
+      client,
+      dueDate,
+      category: (category as ProjectCategory) || undefined,
+      marginPercent: margin ? Number(margin) : undefined,
+    });
     onDone();
   };
 
@@ -202,7 +244,7 @@ function DetailsForm({
         background: "var(--surface-raised)",
       }}
     >
-      <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 200px" }}>
+      <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 180px" }}>
         <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
           {t("projects.clientLabel")}
         </span>
@@ -214,6 +256,41 @@ function DetailsForm({
           className="h-9 rounded-button border border-border-faint bg-[var(--surface)] px-3 text-[13px] text-foreground placeholder:text-muted-faint"
         />
       </label>
+
+      <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 160px" }}>
+        <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+          {t("projects.categoryLabel")}
+        </span>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="h-9 rounded-button border border-border-faint bg-[var(--surface)] px-2.5 text-[13px] text-foreground font-semibold cursor-pointer"
+        >
+          <option value="">{t("projects.noCategory")}</option>
+          {PROJECT_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {t(`projects.categories.${cat}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-1 w-24">
+        <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+          {t("projects.markupMargin")} (%)
+        </span>
+        <input
+          type="number"
+          min={0}
+          max={300}
+          step={1}
+          value={margin}
+          onChange={(e) => setMargin(e.target.value)}
+          placeholder={String(marginPercent)}
+          className="h-9 rounded-button border border-border-faint bg-[var(--surface)] px-2.5 text-[13px] font-mono text-foreground"
+        />
+      </label>
+
       <label className="flex flex-col gap-1">
         <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
           {t("projects.dueLabel")}
@@ -225,10 +302,11 @@ function DetailsForm({
           className="h-9 rounded-button border border-border-faint bg-[var(--surface)] px-3 font-mono text-[13px] text-foreground"
         />
       </label>
+
       <button
         type="button"
         onClick={commit}
-        className="h-9 px-4 rounded-button font-bold text-[13px] cursor-pointer"
+        className="h-9 px-4 rounded-button font-bold text-[13px] cursor-pointer ml-auto"
         style={{ background: "var(--accent)", color: "var(--accent-contrast)", border: "none" }}
       >
         {t("common.done")}
@@ -248,9 +326,6 @@ function QuantityCell({
 }) {
   const t = useTranslations("command");
   const [draft, setDraft] = useState(String(row.quantity));
-  // Adjusting state during render (rather than in an effect) is how React
-  // wants a controlled draft re-seeded when the value behind it moves — a
-  // sync from another device, or an edit made in the other surface.
   const [seededFrom, setSeededFrom] = useState(row.quantity);
   if (seededFrom !== row.quantity) {
     setSeededFrom(row.quantity);
@@ -318,72 +393,222 @@ function ItemNote({
       }}
       placeholder={t("projects.itemNotePlaceholder")}
       aria-label={t("projects.itemNoteAria", { name: row.specLabel })}
-      className="w-full min-w-0 border-0 bg-transparent p-0 text-[12px] text-foreground-secondary placeholder:text-muted-faint outline-none"
+      className="w-full min-w-0 border-0 bg-transparent p-0 text-[11.5px] text-foreground-secondary placeholder:text-muted-faint outline-none"
     />
   );
 }
 
-function coatTitle(
-  coat: ProjectPaintCoat,
-  t: (key: string, values?: Record<string, string | number>) => string,
-): string {
-  if (coat.kind === "primer") return t("projects.paintPrimer");
-  if (coat.kind === "finish") return t("projects.paintFinish");
-  return coat.name?.trim() || t("projects.paintCustom");
+function QuickAddCommandBar({
+  projectId,
+  actions,
+}: {
+  projectId: string;
+  actions: ProjectActions;
+}) {
+  const t = useTranslations("command");
+  const [query, setQuery] = useState("");
+  const [error, setError] = useState(false);
+
+  const handleAdd = () => {
+    const q = query.trim();
+    if (!q) return;
+    const ok = actions.onQuickAddItem?.(projectId, q);
+    if (ok) {
+      setQuery("");
+      setError(false);
+    } else {
+      setError(true);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 p-2 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] mb-3">
+      <span className="text-[10.5px] font-bold text-muted uppercase tracking-wider pl-1 whitespace-nowrap">
+        + {t("projects.quickAdd")}:
+      </span>
+      <input
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          if (error) setError(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleAdd();
+        }}
+        placeholder={t("projects.quickAddPlaceholder")}
+        aria-label="Quick add item command"
+        className="flex-1 h-8 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-inset)] px-2.5 text-xs font-mono text-foreground placeholder:text-muted-faint outline-none"
+        style={{ borderColor: error ? "var(--red-strong, #ef4444)" : undefined }}
+      />
+      <button
+        type="button"
+        onClick={handleAdd}
+        disabled={!query.trim()}
+        className="h-8 px-3 rounded-lg text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] disabled:opacity-40 cursor-pointer flex items-center gap-1 flex-shrink-0"
+      >
+        <DeskIcon name="plus" stroke="var(--accent-contrast)" />
+        <span>{t("common.add")}</span>
+      </button>
+    </div>
+  );
 }
 
-function PaintNumber({
-  label,
-  ariaLabel,
-  value,
-  suffix,
-  prefix,
-  min,
-  step,
-  onCommit,
+function LaborAndExtrasForm({
+  project,
+  actions,
+  currencySymbol,
 }: {
-  label: string;
-  ariaLabel?: string;
-  value: number;
-  suffix?: string;
-  prefix?: string;
-  min?: number;
-  step?: string;
-  onCommit: (value: number) => void;
+  project: Project;
+  actions: ProjectActions;
+  currencySymbol: string;
 }) {
-  const [draft, setDraft] = useState(String(value));
-  const [seed, setSeed] = useState(value);
-  if (seed !== value) {
-    setSeed(value);
-    setDraft(String(value));
-  }
-  const commit = () => {
-    const next = Number(draft);
-    if (!Number.isFinite(next) || next < (min ?? 0)) {
-      setDraft(String(value));
-      return;
-    }
-    onCommit(next);
+  const t = useTranslations("command");
+  const [laborHours, setLaborHours] = useState<string>(
+    project.laborHours !== undefined ? String(project.laborHours) : "",
+  );
+  const [laborRate, setLaborRate] = useState<string>(
+    project.laborRatePerHour !== undefined ? String(project.laborRatePerHour) : "45",
+  );
+  const [costs, setCosts] = useState<ProjectAdditionalCost[]>(project.additionalCosts ?? []);
+  const [newLabel, setNewLabel] = useState("");
+  const [newAmount, setNewAmount] = useState("");
+  const [newCategory, setNewCategory] = useState<"hardware" | "transport" | "finishing" | "other">("hardware");
+
+  const saveLabor = (hrs?: string, rate?: string) => {
+    const h = hrs !== undefined ? hrs : laborHours;
+    const r = rate !== undefined ? rate : laborRate;
+    actions.onUpdateLabor?.(project.id, {
+      laborHours: h ? Math.max(0, Number(h) || 0) : undefined,
+      laborRatePerHour: r ? Math.max(0, Number(r) || 0) : undefined,
+    });
   };
+
+  const addCost = () => {
+    if (!newLabel.trim() || !newAmount) return;
+    const item: ProjectAdditionalCost = {
+      id: crypto.randomUUID(),
+      label: newLabel.trim(),
+      amount: Math.max(0, Number(newAmount) || 0),
+      category: newCategory,
+    };
+    const next = [...costs, item];
+    setCosts(next);
+    actions.onUpdateAdditionalCosts?.(project.id, next);
+    setNewLabel("");
+    setNewAmount("");
+  };
+
+  const removeCost = (id: string) => {
+    const next = costs.filter((c) => c.id !== id);
+    setCosts(next);
+    actions.onUpdateAdditionalCosts?.(project.id, next);
+  };
+
+  const laborTotal = (Number(laborHours) || 0) * (Number(laborRate) || 0);
+  const extrasTotal = costs.reduce((s, c) => s + c.amount, 0);
+
   return (
-    <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 72px" }}>
-      <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">{label}</span>
-      <span className="flex items-center gap-1 h-9 rounded-button border border-border-faint bg-[var(--surface)] px-2.5">
-        {prefix && <span className="font-mono text-[11px] text-muted flex-shrink-0">{prefix}</span>}
+    <section
+      className="rounded-panel-lg"
+      style={{
+        border: "1px solid var(--border-faint)",
+        background: "var(--surface)",
+        padding: "13px 15px",
+      }}
+    >
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+          {t("projects.laborAndExtras")}
+        </div>
+        <div className="font-mono text-xs font-bold text-foreground">
+          {currencySymbol} {fsMoney(laborTotal + extrasTotal)}
+        </div>
+      </div>
+
+      {/* Labor inputs */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-muted">{t("projects.laborHours")}:</span>
+          <input
+            type="number"
+            min={0}
+            step={0.5}
+            value={laborHours}
+            onChange={(e) => {
+              setLaborHours(e.target.value);
+              saveLabor(e.target.value, undefined);
+            }}
+            placeholder="0"
+            className="h-8 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-xs font-mono text-foreground"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] text-muted">{t("projects.hourlyRate")} ({currencySymbol}/h):</span>
+          <input
+            type="number"
+            min={0}
+            step={5}
+            value={laborRate}
+            onChange={(e) => {
+              setLaborRate(e.target.value);
+              saveLabor(undefined, e.target.value);
+            }}
+            placeholder="45"
+            className="h-8 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-xs font-mono text-foreground"
+          />
+        </label>
+      </div>
+
+      {/* Additional Costs List */}
+      {costs.length > 0 && (
+        <div className="space-y-1.5 mb-2.5">
+          {costs.map((cost) => (
+            <div
+              key={cost.id}
+              className="flex items-center justify-between text-xs font-mono p-1.5 rounded-md bg-[var(--surface-raised)]"
+            >
+              <span className="text-foreground truncate max-w-[140px]">{cost.label}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold">{currencySymbol} {fsMoney(cost.amount)}</span>
+                <button
+                  type="button"
+                  onClick={() => removeCost(cost.id)}
+                  className="text-muted hover:text-red-500 cursor-pointer text-xs px-1"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Extra Cost Form */}
+      <div className="flex items-center gap-1.5">
+        <input
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+          placeholder={t("projects.extraExpensePlaceholder")}
+          className="flex-1 h-7 rounded-md border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-[11px] text-foreground placeholder:text-muted-faint"
+        />
         <input
           type="number"
-          min={min ?? 0}
-          step={step ?? "any"}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          aria-label={ariaLabel ?? label}
-          className="min-w-0 flex-1 border-0 bg-transparent font-mono text-[13px] text-foreground outline-none"
+          min={0}
+          value={newAmount}
+          onChange={(e) => setNewAmount(e.target.value)}
+          placeholder="€"
+          className="w-14 h-7 rounded-md border border-[var(--border-faint)] bg-[var(--surface-raised)] px-1.5 text-[11px] font-mono text-foreground"
         />
-        {suffix && <span className="font-mono text-[11px] text-muted flex-shrink-0">{suffix}</span>}
-      </span>
-    </label>
+        <button
+          type="button"
+          onClick={addCost}
+          disabled={!newLabel.trim() || !newAmount}
+          className="h-7 px-2.5 rounded-md bg-[var(--accent)] text-[var(--accent-contrast)] text-[11px] font-bold disabled:opacity-40 cursor-pointer"
+        >
+          +
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -450,81 +675,73 @@ function PaintingForm({
         padding: "13px 15px",
       }}
     >
-      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-1">
-        {t("projects.paintingLabel")}
+      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-2">
+        {t("projects.paintingTitle")}
       </div>
-      <div className="flex items-baseline justify-between gap-3 mb-2">
-        <span className="text-[12.5px] text-muted">{t("projects.paintSurface")}</span>
-        <span className="font-mono text-[13px] font-bold text-foreground">
-          {surfaceM2.toFixed(2)} m²
-        </span>
-      </div>
-      <p className="text-[12px] text-muted mb-2.5 leading-snug">
-        {surfaceM2 > 0 ? t("projects.paintingHint") : t("projects.paintNoSurface")}
-      </p>
-
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         {coats.map((coat) => {
-          const total = coatTotals.find((row) => row.coat.id === coat.id);
-          const title = coatTitle(coat, t);
+          const total = coatTotals.find((c) => c.coat.id === coat.id);
+          const title =
+            coat.kind === "primer"
+              ? t("projects.paintPrimer")
+              : coat.kind === "finish"
+                ? t("projects.paintFinish")
+                : coat.name?.trim() || t("projects.paintCustom");
           return (
             <div
               key={coat.id}
-              className="rounded-[14px] flex flex-col gap-2"
+              className="flex flex-col gap-2 rounded-[12px] p-2.5"
               style={{
-                padding: "10px 11px",
                 border: "1px solid var(--border-faint)",
                 background: "var(--surface-raised)",
               }}
             >
-              <div className="flex items-center gap-2">
-                {coat.kind === "custom" ? (
-                  <input
-                    value={coat.name ?? ""}
-                    onChange={(e) => patch(coat.id, { name: e.target.value })}
-                    placeholder={t("projects.paintCustom")}
-                    aria-label={t("projects.paintCustom")}
-                    className="min-w-0 flex-1 border-0 bg-transparent font-bold text-[13px] text-foreground outline-none"
-                  />
-                ) : (
-                  <span className="flex-1 font-bold text-[13px] text-foreground">{title}</span>
-                )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-[12.5px] text-foreground">{title}</span>
                 <button
                   type="button"
                   onClick={() => remove(coat.id)}
-                  aria-label={t("projects.paintRemove", { name: title })}
-                  className="border-0 bg-transparent p-0 cursor-pointer text-[12px] font-bold text-muted"
+                  className="text-muted hover:text-red-500 cursor-pointer text-xs"
                 >
-                  ✕
+                  ×
                 </button>
               </div>
-              <div className="flex items-end gap-2 flex-wrap">
-                <PaintNumber
-                  label={t("projects.paintLayers")}
-                  ariaLabel={`${t("projects.paintLayers")} · ${title}`}
-                  value={coat.layers}
-                  min={1}
-                  step="1"
-                  onCommit={(layers) => patch(coat.id, { layers: Math.max(1, Math.floor(layers)) })}
-                />
-                <PaintNumber
-                  label={t("projects.paintCoverage")}
-                  ariaLabel={`${t("projects.paintCoverage")} · ${title}`}
-                  value={coat.coverageM2PerKg}
-                  suffix={t("projects.paintCoverageUnit")}
-                  onCommit={(coverageM2PerKg) => patch(coat.id, { coverageM2PerKg })}
-                />
-                <PaintNumber
-                  label={t("projects.paintPrice")}
-                  ariaLabel={`${t("projects.paintPrice")} · ${title}`}
-                  value={coat.pricePerKg}
-                  prefix={currencySymbol}
-                  suffix={t("projects.paintPriceUnit")}
-                  onCommit={(pricePerKg) => patch(coat.id, { pricePerKg })}
-                />
+              <div className="flex items-end gap-2 flex-wrap text-xs">
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[9.5px] text-muted">{t("projects.paintLayers")}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={coat.layers}
+                    onChange={(e) => patch(coat.id, { layers: Math.max(1, Number(e.target.value) || 1) })}
+                    className="w-12 h-7 rounded border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
+                  />
+                </label>
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[9.5px] text-muted">{t("projects.paintCoverage")}</span>
+                  <input
+                    type="number"
+                    min={0.1}
+                    step={0.5}
+                    value={coat.coverageM2PerKg}
+                    onChange={(e) => patch(coat.id, { coverageM2PerKg: Number(e.target.value) || 1 })}
+                    className="w-14 h-7 rounded border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
+                  />
+                </label>
+                <label className="flex flex-col gap-0.5">
+                  <span className="text-[9.5px] text-muted">{t("projects.paintPrice")}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={coat.pricePerKg}
+                    onChange={(e) => patch(coat.id, { pricePerKg: Number(e.target.value) || 0 })}
+                    className="w-16 h-7 rounded border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
+                  />
+                </label>
               </div>
               {total && (
-                <div className="font-mono text-[11.5px] text-muted">
+                <div className="font-mono text-[11px] text-muted">
                   {total.kg} kg · {currencySymbol} {fsMoney(total.cost)}
                 </div>
               )}
@@ -571,15 +788,8 @@ export function ProjectDetail({
   const [detailTab, setDetailTab] = useState<"items" | "cutting">("items");
   const [showMore, setShowMore] = useState(false);
   const [notes, setNotes] = useState(project.description ?? "");
-  // A pull from another device rewrites the project underneath the textarea.
-  // Re-seeding during render keeps the draft while the user types and adopts
-  // the stored text whenever the project itself changes.
-  const [notesSeed, setNotesSeed] = useState(`${project.id}:${project.description ?? ""}`);
-  const nextNotesSeed = `${project.id}:${project.description ?? ""}`;
-  if (notesSeed !== nextNotesSeed) {
-    setNotesSeed(nextNotesSeed);
-    setNotes(project.description ?? "");
-  }
+  const [editingAssemblyId, setEditingAssemblyId] = useState<string | null>(null);
+  const [draftAssembly, setDraftAssembly] = useState("");
 
   const summary = projectSummary(project, marginPercent);
   const rows = projectItemRows(project);
@@ -591,6 +801,20 @@ export function ProjectDetail({
     project.dueDate ? t("projects.dueOn", { date: formatShortDate(project.dueDate) }) : null,
     t("projects.createdOn", { date: formatShortDate(project.createdAt) }),
   ].filter(Boolean) as string[];
+
+  // Group rows by sub-assembly
+  const assemblyGroups = useMemo(() => {
+    const groups = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const asm = row.assembly?.trim() || "";
+      if (!groups.has(asm)) groups.set(asm, []);
+      groups.get(asm)!.push(row);
+    }
+    return Array.from(groups.entries());
+  }, [rows]);
+
+  const hasMultipleAssemblies =
+    assemblyGroups.length > 1 || (assemblyGroups.length === 1 && assemblyGroups[0][0] !== "");
 
   const menuItems = [
     {
@@ -618,6 +842,153 @@ export function ProjectDetail({
       onSelect: () => actions.onDelete(project.id),
     },
   ];
+
+  const renderItemRow = (row: (typeof rows)[number]) => {
+    const fam = familyForInput(row.calc.input);
+    const glyph = (
+      <span className="flex flex-shrink-0 text-muted" style={{ width: 24 }} aria-hidden="true">
+        {fam && <CommandGlyph fam={fam} size={17} />}
+      </span>
+    );
+
+    const isEditingAsm = editingAssemblyId === row.id;
+
+    const name = (
+      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => actions.onOpenItem(row.calc.input)}
+            title={t("projects.openInBar")}
+            className="min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer font-bold text-[13.5px] text-foreground truncate"
+          >
+            {row.specLabel}
+          </button>
+          {isEditingAsm ? (
+            <input
+              value={draftAssembly}
+              onChange={(e) => setDraftAssembly(e.target.value)}
+              onBlur={() => {
+                actions.onSetItemAssembly?.(project.id, row.id, draftAssembly);
+                setEditingAssemblyId(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  actions.onSetItemAssembly?.(project.id, row.id, draftAssembly);
+                  setEditingAssemblyId(null);
+                }
+                if (e.key === "Escape") setEditingAssemblyId(null);
+              }}
+              autoFocus
+              placeholder="Assembly name"
+              className="h-5 px-1.5 rounded text-[10.5px] border border-[var(--accent-border)] bg-[var(--surface-raised)] text-foreground font-mono"
+            />
+          ) : row.assembly ? (
+            <button
+              type="button"
+              onClick={() => {
+                setDraftAssembly(row.assembly ?? "");
+                setEditingAssemblyId(row.id);
+              }}
+              className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[var(--surface-inset)] text-muted hover:text-foreground border border-[var(--border-faint)] cursor-pointer"
+            >
+              🏷️ {row.assembly}
+            </button>
+          ) : null}
+        </div>
+        <ItemNote row={row} projectId={project.id} actions={actions} />
+      </div>
+    );
+
+    const menu = (
+      <RowMenu
+        ariaLabel={row.specLabel}
+        items={[
+          {
+            id: "open",
+            label: t("projects.openInBar"),
+            onSelect: () => actions.onOpenItem(row.calc.input),
+          },
+          {
+            id: "assembly",
+            label: t("projects.setAssembly"),
+            onSelect: () => {
+              setDraftAssembly(row.assembly ?? "");
+              setEditingAssemblyId(row.id);
+            },
+          },
+          {
+            id: "remove",
+            label: t("projects.removeFromProject"),
+            danger: true,
+            onSelect: () => actions.onRemoveItem(project.id, row.id),
+          },
+        ]}
+      />
+    );
+
+    if (compact) {
+      return (
+        <div
+          key={row.id}
+          className="flex flex-col gap-1.5 border-t border-border-faint first:border-t-0"
+          style={{ padding: "10px 12px" }}
+        >
+          <div className="flex items-center gap-2">
+            {glyph}
+            {name}
+            <QuantityCell row={row} projectId={project.id} actions={actions} />
+            {menu}
+          </div>
+          <div
+            className="flex items-center gap-2.5 font-mono text-[11.5px] flex-wrap"
+            style={{ paddingLeft: 24 }}
+          >
+            <span className="text-muted-faint">{row.gradeLabel}</span>
+            <span className="text-foreground-secondary">{row.lengthLabel}</span>
+            <span className="font-bold" style={{ color: "var(--accent-text)" }}>
+              {fsWeight(row.weightKg)} {fsWeightUnit()}
+            </span>
+            <span className="font-semibold" style={{ color: "var(--blue-text)" }}>
+              {sym} {fsMoney(row.amount)}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={row.id}
+        className="flex items-center gap-3 border-t border-border-faint first:border-t-0 hover:bg-[var(--surface-raised)] transition-colors"
+        style={{ padding: "9px 14px" }}
+      >
+        {glyph}
+        {name}
+        <span className="font-mono text-[12px] text-muted-faint" style={{ width: 70 }}>
+          {row.gradeLabel}
+        </span>
+        <span
+          className="font-mono text-[12px] text-foreground-secondary text-right"
+          style={{ width: 82 }}
+        >
+          {row.lengthLabel}
+        </span>
+        <span className="flex justify-center" style={{ width: 62 }}>
+          <QuantityCell row={row} projectId={project.id} actions={actions} />
+        </span>
+        <span className="font-mono text-[12px] font-bold text-foreground text-right" style={{ width: 96 }}>
+          {fsWeight(row.weightKg)} {fsWeightUnit()}
+        </span>
+        <span className="font-mono text-[12px] font-bold text-right" style={{ width: 96, color: "var(--blue-text)" }}>
+          {sym} {fsMoney(row.amount)}
+        </span>
+        <div style={{ width: 30 }} className="flex justify-end">
+          {menu}
+        </div>
+      </div>
+    );
+  };
 
   const itemsTable = (
     <div
@@ -656,147 +1027,33 @@ export function ProjectDetail({
         <div className="font-mono text-[12px] text-muted-faint" style={{ padding: "18px 16px" }}>
           {t("projects.emptyRow")}
         </div>
-      ) : (
-        rows.map((row) => {
-          const fam = familyForInput(row.calc.input);
-          const glyph = (
-            <span className="flex flex-shrink-0 text-muted" style={{ width: 24 }} aria-hidden="true">
-              {fam && <CommandGlyph fam={fam} size={17} />}
-            </span>
-          );
-          const name = (
-            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-              <button
-                type="button"
-                onClick={() => actions.onOpenItem(row.calc.input)}
-                title={t("projects.openInBar")}
-                className="min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer font-bold text-[13.5px] text-foreground truncate"
-              >
-                {row.specLabel}
-              </button>
-              <ItemNote row={row} projectId={project.id} actions={actions} />
-            </div>
-          );
-          const menu = (
-            <RowMenu
-              ariaLabel={row.specLabel}
-              items={[
-                {
-                  id: "open",
-                  label: t("projects.openInBar"),
-                  onSelect: () => actions.onOpenItem(row.calc.input),
-                },
-                {
-                  id: "remove",
-                  label: t("projects.removeFromProject"),
-                  danger: true,
-                  onSelect: () => actions.onRemoveItem(project.id, row.id),
-                },
-              ]}
-            />
-          );
-
-          // The phone drops the columns and stacks the figures under the name;
-          // six columns in 390px is a table that wraps into confetti.
-          if (compact) {
-            return (
-              <div
-                key={row.id}
-                className="flex flex-col gap-1.5 border-t border-border-faint first:border-t-0"
-                style={{ padding: "10px 12px" }}
-              >
-                <div className="flex items-center gap-2">
-                  {glyph}
-                  {name}
-                  <QuantityCell row={row} projectId={project.id} actions={actions} />
-                  {menu}
-                </div>
-                <div
-                  className="flex items-center gap-2.5 font-mono text-[11.5px] flex-wrap"
-                  style={{ paddingLeft: 24 }}
-                >
-                  <span className="text-muted-faint">{row.gradeLabel}</span>
-                  <span className="text-foreground-secondary">{row.lengthLabel}</span>
-                  <span className="font-bold" style={{ color: "var(--accent-text)" }}>
-                    {fsWeight(row.weightKg)} {fsWeightUnit()}
-                  </span>
-                  <span className="font-semibold" style={{ color: "var(--blue-text)" }}>
-                    {sym} {fsMoney(row.amount)}
-                  </span>
-                </div>
-              </div>
-            );
-          }
-
+      ) : hasMultipleAssemblies ? (
+        assemblyGroups.map(([asmName, asmRows]) => {
+          const asmWeight = asmRows.reduce((s, r) => s + r.weightKg, 0);
+          const asmCost = asmRows.reduce((s, r) => s + r.amount, 0);
           return (
-            <div
-              key={row.id}
-              className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
-              style={{ padding: "9px 14px" }}
-            >
-              {glyph}
-              {name}
-              <span className="font-mono text-[12px] text-muted-faint" style={{ width: 70 }}>
-                {row.gradeLabel}
-              </span>
-              <span
-                className="font-mono text-[12px] text-foreground-secondary text-right"
-                style={{ width: 82 }}
+            <div key={`asm-${asmName || "main"}`} className="border-t first:border-t-0 border-[var(--border-faint)]">
+              <div
+                className="flex items-center justify-between px-3 py-1.5 bg-[var(--surface-inset)] font-mono text-[11px] font-bold text-muted"
               >
-                {row.lengthLabel}
-              </span>
-              <span className="flex justify-center" style={{ width: 62 }}>
-                <QuantityCell row={row} projectId={project.id} actions={actions} />
-              </span>
-              <span
-                className="font-mono text-[12.5px] font-bold text-right"
-                style={{ width: 96, color: "var(--accent-text)" }}
-              >
-                {fsWeight(row.weightKg)} {fsWeightUnit()}
-              </span>
-              <span
-                className="font-mono text-[12.5px] font-semibold text-right"
-                style={{ width: 96, color: "var(--blue-text)" }}
-              >
-                {sym} {fsMoney(row.amount)}
-              </span>
-              {menu}
+                <span>🏷️ {asmName || t("projects.generalSection")} ({asmRows.length} items)</span>
+                <span>
+                  {fsWeight(asmWeight)} {fsWeightUnit()} · {sym} {fsMoney(asmCost)}
+                </span>
+              </div>
+              {asmRows.map(renderItemRow)}
             </div>
           );
         })
-      )}
-
-      {rows.length > 0 && (
-        <div
-          className="flex items-center gap-3 border-t border-border-faint"
-          style={{ padding: "10px 14px", background: "var(--surface-raised)" }}
-        >
-          <span className="font-mono text-[13px] text-muted" style={{ width: 24 }}>
-            Σ
-          </span>
-          <span className="fs-track-label flex-1 min-w-0 text-[10px] font-bold text-muted uppercase truncate">
-            {t("projects.totalRow", { count: summary.itemCount })}
-          </span>
-          <span
-            className="font-mono text-[13px] font-bold text-right flex-shrink-0"
-            style={{ color: "var(--accent-text)" }}
-          >
-            {fsWeight(summary.totalWeightKg)} {fsWeightUnit()}
-          </span>
-          <span
-            className="font-mono text-[13px] font-bold text-right flex-shrink-0"
-            style={{ color: "var(--blue-strong)" }}
-          >
-            {sym} {fsMoney(summary.totalCost)}
-          </span>
-          {!compact && <span style={{ width: 30 }} aria-hidden="true" />}
-        </div>
+      ) : (
+        rows.map(renderItemRow)
       )}
     </div>
   );
 
   const rail = (
-    <div className="flex flex-col gap-3 min-w-0">
+    <div className="flex flex-col gap-3">
+      {/* Notes / Description */}
       <section
         className="rounded-panel-lg"
         style={{
@@ -819,6 +1076,14 @@ export function ProjectDetail({
         />
       </section>
 
+      {/* Labor and Extras Form */}
+      <LaborAndExtrasForm
+        project={project}
+        actions={actions}
+        currencySymbol={sym}
+      />
+
+      {/* Surface Area & Painting Form */}
       <PaintingForm
         project={project}
         actions={actions}
@@ -829,6 +1094,7 @@ export function ProjectDetail({
         currencySymbol={sym}
       />
 
+      {/* Activity Log */}
       <section
         className="rounded-panel-lg"
         style={{
@@ -869,6 +1135,7 @@ export function ProjectDetail({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+      {/* Header */}
       <div
         className="flex-shrink-0"
         style={{
@@ -889,7 +1156,7 @@ export function ProjectDetail({
         </button>
 
         <div className="flex items-center gap-3 flex-wrap mt-1.5">
-          <div className="flex items-center gap-2.5 min-w-0" style={{ flex: "1 1 240px" }}>
+          <div className="flex items-center gap-2.5 min-w-0 flex-wrap" style={{ flex: "1 1 240px" }}>
             <EditableTitle
               name={project.name}
               onRename={(name) => actions.onRename(project.id, name)}
@@ -900,6 +1167,15 @@ export function ProjectDetail({
               name={project.name}
               onChange={(status) => actions.onUpdateMeta(project.id, { status })}
             />
+            <CategoryBadge
+              category={project.category}
+              onChange={(cat) => actions.onUpdateMeta(project.id, { category: cat })}
+            />
+            {summary.marginPercent > 0 && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
+                +{summary.marginPercent}% {t("projects.markupMargin")}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
@@ -950,6 +1226,7 @@ export function ProjectDetail({
           <DetailsForm
             project={project}
             actions={actions}
+            marginPercent={marginPercent}
             onDone={() => setEditingDetails(false)}
           />
         )}
@@ -997,12 +1274,13 @@ export function ProjectDetail({
             }
           >
             <div className="flex flex-col gap-3 min-w-0">
+              {/* Stat Tiles */}
               <div
                 className="grid gap-2.5"
                 style={{
                   gridTemplateColumns: compact
                     ? "repeat(2, minmax(0, 1fr))"
-                    : "repeat(auto-fit, minmax(140px, 1fr))",
+                    : "repeat(auto-fit, minmax(130px, 1fr))",
                 }}
               >
                 <StatTile label={t("projects.stats.items")} value={String(summary.itemCount)} />
@@ -1013,14 +1291,26 @@ export function ProjectDetail({
                 />
                 <StatTile
                   label={t("projects.stats.materialCost")}
-                  value={`${sym} ${fsMoney(summary.totalCost)}`}
+                  value={`${sym} ${fsMoney(summary.materialQuotedTotal)}`}
+                  sub={summary.marginPercent > 0 ? `+${summary.marginPercent}% markup` : undefined}
                 />
                 <StatTile
                   emphasis
                   tone="accent"
-                  label={t("projects.stats.quoted", { margin: marginPercent })}
-                  value={`${sym} ${fsMoney(summary.hasPainting ? summary.quotedWithPaint : summary.quotedTotal)}`}
+                  label={t("projects.stats.grandTotalQuote")}
+                  value={`${sym} ${fsMoney(summary.quotedTotal)}`}
+                  sub={
+                    summary.hasLabor || summary.hasAdditionalCosts || summary.hasPainting
+                      ? "Inc. labor & extras"
+                      : undefined
+                  }
                 />
+                {summary.hasLabor && (
+                  <StatTile
+                    label={t("projects.laborHours")}
+                    value={`${summary.laborHours}h · ${sym} ${fsMoney(summary.laborCost)}`}
+                  />
+                )}
                 {summary.hasPainting && (
                   <StatTile
                     label={t("projects.stats.paint")}
@@ -1028,6 +1318,11 @@ export function ProjectDetail({
                   />
                 )}
               </div>
+
+              {/* Fast Inline Quick Command Bar */}
+              <QuickAddCommandBar projectId={project.id} actions={actions} />
+
+              {/* Items Table */}
               {itemsTable}
             </div>
             {compact ? (

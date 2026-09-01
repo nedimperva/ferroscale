@@ -5,7 +5,15 @@ import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { DimensionPreset } from "@/hooks/usePresets";
-import { PROJECT_STATUSES, type Project, type ProjectActivityEntry, type ProjectStatus } from "@/hooks/useProjects";
+import {
+  PROJECT_CATEGORIES,
+  PROJECT_STATUSES,
+  type Project,
+  type ProjectActivityEntry,
+  type ProjectAdditionalCost,
+  type ProjectCategory,
+  type ProjectStatus,
+} from "@/hooks/useProjects";
 import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
@@ -105,6 +113,29 @@ export function normalizeProject(raw: unknown): Project | null {
   if (!candidate.id || !candidate.name || !candidate.createdAt || !candidate.updatedAt || !Array.isArray(candidate.calculations)) {
     return null;
   }
+
+  const normalizedCalculations = candidate.calculations.map((calc) => {
+    if (!calc || typeof calc !== "object") return calc;
+    return {
+      ...calc,
+      assembly: typeof calc.assembly === "string" ? calc.assembly.trim() || undefined : undefined,
+    };
+  });
+
+  const normalizedAdditionalCosts = Array.isArray(candidate.additionalCosts)
+    ? candidate.additionalCosts
+        .filter(
+          (c): c is ProjectAdditionalCost =>
+            Boolean(c && typeof c === "object" && typeof c.id === "string" && typeof c.label === "string" && typeof c.amount === "number"),
+        )
+        .map((c) => ({
+          id: c.id,
+          label: c.label.trim(),
+          amount: Math.max(0, Number(c.amount) || 0),
+          category: c.category,
+        }))
+    : undefined;
+
   return {
     id: candidate.id,
     name: candidate.name,
@@ -115,6 +146,25 @@ export function normalizeProject(raw: unknown): Project | null {
     status: PROJECT_STATUSES.includes(candidate.status as ProjectStatus)
       ? candidate.status
       : undefined,
+    category: PROJECT_CATEGORIES.includes(candidate.category as ProjectCategory)
+      ? candidate.category
+      : undefined,
+    marginPercent:
+      typeof candidate.marginPercent === "number" && !Number.isNaN(candidate.marginPercent)
+        ? Math.max(0, Math.min(500, candidate.marginPercent))
+        : undefined,
+    laborHours:
+      typeof candidate.laborHours === "number" && !Number.isNaN(candidate.laborHours)
+        ? Math.max(0, candidate.laborHours)
+        : undefined,
+    laborRatePerHour:
+      typeof candidate.laborRatePerHour === "number" && !Number.isNaN(candidate.laborRatePerHour)
+        ? Math.max(0, candidate.laborRatePerHour)
+        : undefined,
+    additionalCosts:
+      normalizedAdditionalCosts && normalizedAdditionalCosts.length > 0
+        ? normalizedAdditionalCosts
+        : undefined,
     dueDate: candidate.dueDate?.slice(0, 10) || undefined,
     activity: Array.isArray(candidate.activity)
       ? candidate.activity
@@ -127,7 +177,7 @@ export function normalizeProject(raw: unknown): Project | null {
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
     deletedAt: candidate.deletedAt,
-    calculations: candidate.calculations,
+    calculations: normalizedCalculations,
     paintCoats: normalizePaintCoats(candidate.paintCoats, {
       paintingPricePerKg: (candidate as { paintingPricePerKg?: number }).paintingPricePerKg,
       paintingCoverageM2PerKg: (candidate as { paintingCoverageM2PerKg?: number })

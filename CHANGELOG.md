@@ -16,6 +16,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Material Procurement & Steel Purchasing Order Overview (BOM).** Unified project-wide overview recommending exact stock bars and master plates to order from steel suppliers, computing total raw weight to purchase vs net finished parts weight, scrap drop %, and one-click 'Copy Supplier RFQ'
 - **Visual bar and plate cut map diagrams in Project Detail.** Interactive SVG diagrams displaying proportionally scaled cut segments with distinct palette coloring, cut lines, saw kerf dividers, scrap drops, and a printable workshop saw/shear cut sheet
 - **Offline local JSON backup and restore in Settings.** Download a complete standalone `.json` backup of your saved parts, assemblies, projects, price books, and settings, or restore with Merge and Replace modes without requiring cloud storage
+- **Projects Pipeline Summary KPI Ribbon.** Top strip displaying Total Active Projects, Total Steel in Tonnes, and Quoted Pipeline Value
+- **Due Date Urgency Badges.** Real-time indicators for overdue jobs, jobs due today, and jobs due soon
+- **Fabrication Categories & Filter Strip.** Categorize projects (Structural, Stairs & Railings, Roof Trusses, Gates & Fences, Sheet Metal, Maintenance, General) with instant filter pills
+- **Multi-Select Batch Actions.** Bulk archive, bulk delete, or export combined CSV material lists across selected projects
+- **Workshop Job Costing & Labor Quoting.** Estimate fabrication & welding hours with custom shop rates and add extra job expenses (hardware/bolts, transport, finishing) into live quotes
+- **Per-Project Margin Override.** Custom markup margin percentage per project without mutating global defaults
+- **Sub-Assembly Sections & Grouping.** Divide project items into sub-assemblies (Stringers, Treads, Handrails) with section subtotals
+- **In-Place Fast Command Bar.** Add items directly inside the project detail view via command syntax
+
 
 ---
 

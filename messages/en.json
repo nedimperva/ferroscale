@@ -556,6 +556,46 @@
         "items": "Items",
         "cutting": "Cut plan"
       },
+      "pipeline": {
+        "active": "Active jobs",
+        "steel": "Total steel",
+        "value": "Pipeline value",
+        "clients": "Clients"
+      },
+      "categories": {
+        "all": "All categories",
+        "structural": "Structural",
+        "stairs_railings": "Stairs & Railings",
+        "roof_trusses": "Roof Trusses",
+        "gates_fences": "Gates & Fences",
+        "sheet_metal": "Sheet Metal",
+        "maintenance": "Maintenance",
+        "general": "General"
+      },
+      "categoryLabel": "Category",
+      "noCategory": "None / General",
+      "markupMargin": "Markup",
+      "urgency": {
+        "overdue": "Overdue {days}d",
+        "today": "Due today",
+        "soon": "Due in {days}d"
+      },
+      "batch": {
+        "selected": "{count, plural, one {# project} other {# projects}} selected",
+        "clear": "Deselect",
+        "archive": "Archive Selected",
+        "delete": "Delete Selected",
+        "exportCsv": "Export Combined CSV"
+      },
+      "quickAdd": "Quick Add",
+      "quickAddPlaceholder": "hea120 6m x2 s235 (Enter to add)",
+      "laborAndExtras": "Labor & Additional Costs",
+      "laborHours": "Labor Hours",
+      "hourlyRate": "Shop Rate",
+      "extraExpensePlaceholder": "Hardware, Transport, Finishing...",
+      "paintingTitle": "Surface Painting",
+      "setAssembly": "Set Sub-Assembly",
+      "generalSection": "Main Structure / General",
       "subtitleCount": "{count, plural, one {# active} other {# active}}",
       "subtitleEmpty": "group calcs into jobs",
       "empty": "no projects yet — hit New project, or + Project on a result",
@@ -605,6 +645,7 @@
         "weight": "Weight",
         "materialCost": "Material cost",
         "quoted": "Quoted +{margin}%",
+        "grandTotalQuote": "Grand Total Quote",
         "paint": "Paint"
       },
       "itemColumns": {

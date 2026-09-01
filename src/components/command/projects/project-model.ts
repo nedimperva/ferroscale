@@ -1,11 +1,14 @@
 import { CURRENCY_SYMBOLS } from "@ferroscale/metal-core";
 import type { CurrencyCode } from "@/lib/calculator/types";
+import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import {
   computeAggregates,
   projectStatus,
   type Project,
   type ProjectActivityEntry,
+  type ProjectAdditionalCost,
   type ProjectCalculation,
+  type ProjectCategory,
   type ProjectStatus,
 } from "@/hooks/useProjects";
 
@@ -59,6 +62,9 @@ export interface ProjectItemRow {
   weightKg: number;
   amount: number;
   note?: string;
+  assembly?: string;
+  profileId?: string;
+  normalizedProfile?: NormalizedProfileSnapshot;
   /** Templates hold their own parts; their quantity is not editable here. */
   isTemplate: boolean;
 }
@@ -82,6 +88,9 @@ export function projectItemRows(project: Project): ProjectItemRow[] {
     weightKg: calc.result.totalWeightKg,
     amount: calc.result.grandTotalAmount,
     note: calc.note,
+    assembly: calc.assembly,
+    profileId: calc.input?.profileId,
+    normalizedProfile: calc.normalizedProfile,
     isTemplate: Boolean(calc.templateName),
   }));
 }
@@ -89,39 +98,74 @@ export function projectItemRows(project: Project): ProjectItemRow[] {
 export interface ProjectSummary {
   project: Project;
   status: ProjectStatus;
+  category?: ProjectCategory;
   itemCount: number;
   totalWeightKg: number;
   totalCost: number;
   /** Material cost plus the margin the quote adds on top. */
-  quotedTotal: number;
+  materialQuotedTotal: number;
+  /** Effective margin percentage (project override or global default). */
+  marginPercent: number;
+  laborHours: number;
+  laborRatePerHour: number;
+  laborCost: number;
+  hasLabor: boolean;
+  additionalCosts: ProjectAdditionalCost[];
+  additionalCostsTotal: number;
+  hasAdditionalCosts: boolean;
   paintKgNeeded: number;
   paintingCost: number;
   totalSurfaceAreaM2: number;
   paintCoatTotals: ReturnType<typeof computeAggregates>["paintCoatTotals"];
   /** Quoted material plus painting, when a paint rate is set. */
   quotedWithPaint: number;
+  /** Grand Total Quote (Material + Paint + Labor + Extras). */
+  quotedTotal: number;
   hasPainting: boolean;
   currency: CurrencyCode;
   currencySymbol: string;
   isEmpty: boolean;
 }
 
-export function projectSummary(project: Project, marginPercent: number): ProjectSummary {
+export function projectSummary(project: Project, globalMarginPercent: number): ProjectSummary {
   const aggregates = computeAggregates(project);
-  const quotedTotal = Math.round(aggregates.totalCost * (1 + marginPercent / 100) * 100) / 100;
-  const hasPainting = (project.paintCoats?.length ?? 0) > 0;
+  const effectiveMargin = project.marginPercent !== undefined ? project.marginPercent : globalMarginPercent;
+  const materialQuotedTotal = Math.round(aggregates.totalCost * (1 + effectiveMargin / 100) * 100) / 100;
+  
+  const laborHours = project.laborHours ?? 0;
+  const laborRatePerHour = project.laborRatePerHour ?? 0;
+  const laborCost = Math.round(laborHours * laborRatePerHour * 100) / 100;
+  
+  const additionalCosts = project.additionalCosts ?? [];
+  const additionalCostsTotal = Math.round(additionalCosts.reduce((s, c) => s + c.amount, 0) * 100) / 100;
+  
+  const paintingCost = aggregates.totalPaintingCost;
+  const hasPainting = (project.paintCoats?.length ?? 0) > 0 && paintingCost > 0;
+  
+  const grandTotal = Math.round((materialQuotedTotal + paintingCost + laborCost + additionalCostsTotal) * 100) / 100;
+
   return {
     project,
     status: projectStatus(project),
+    category: project.category,
     itemCount: aggregates.count,
     totalWeightKg: aggregates.totalWeightKg,
     totalCost: aggregates.totalCost,
-    quotedTotal,
+    materialQuotedTotal,
+    marginPercent: effectiveMargin,
+    laborHours,
+    laborRatePerHour,
+    laborCost,
+    hasLabor: laborCost > 0,
+    additionalCosts,
+    additionalCostsTotal,
+    hasAdditionalCosts: additionalCostsTotal > 0,
     paintKgNeeded: aggregates.paintKgNeeded,
-    paintingCost: aggregates.totalPaintingCost,
+    paintingCost,
     totalSurfaceAreaM2: aggregates.totalSurfaceAreaM2,
     paintCoatTotals: aggregates.paintCoatTotals,
-    quotedWithPaint: Math.round((quotedTotal + aggregates.totalPaintingCost) * 100) / 100,
+    quotedWithPaint: Math.round((materialQuotedTotal + paintingCost) * 100) / 100,
+    quotedTotal: grandTotal,
     hasPainting,
     currency: aggregates.currency,
     currencySymbol: CURRENCY_SYMBOLS[aggregates.currency] ?? "€",
@@ -139,19 +183,13 @@ export function formatActivity(entry: ProjectActivityEntry, t: CommandT): string
     from: entry.from ?? "",
     to: entry.to ?? "",
   };
-  switch (entry.kind) {
-    case "clientSet":
-      return entry.to ? t("projects.activity.clientSet", values) : t("projects.activity.clientCleared");
-    case "dueDateSet":
-      return entry.to
-        ? t("projects.activity.dueDateSet", { to: formatShortDate(entry.to) })
-        : t("projects.activity.dueDateCleared");
-    case "statusChanged":
-      return t("projects.activity.statusChanged", {
-        ...values,
-        to: t(`projects.status.${entry.to ?? "draft"}`),
-      });
-    default:
-      return t(`projects.activity.${entry.kind}`, values);
+  if (entry.kind === "clientSet" && !entry.to) return t("projects.activity.clientCleared");
+  if (entry.kind === "dueDateSet" && !entry.to) return t("projects.activity.dueDateCleared");
+  if (entry.kind === "statusChanged") {
+    return t("projects.activity.statusChanged", {
+      from: entry.from ? t(`projects.status.${entry.from}`) : "",
+      to: entry.to ? t(`projects.status.${entry.to}`) : "",
+    });
   }
+  return t(`projects.activity.${entry.kind}`, values);
 }

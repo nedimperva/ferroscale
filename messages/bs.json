@@ -556,6 +556,46 @@
         "items": "Stavke",
         "cutting": "Plan rezanja"
       },
+      "pipeline": {
+        "active": "Aktivni poslovi",
+        "steel": "Ukupno čelika",
+        "value": "Vrijednost poslova",
+        "clients": "Klijenti"
+      },
+      "categories": {
+        "all": "Sve kategorije",
+        "structural": "Konstrukcije",
+        "stairs_railings": "Stepeništa i ograde",
+        "roof_trusses": "Krovne rešetke",
+        "gates_fences": "Kapije i ograde",
+        "sheet_metal": "Limarski radovi",
+        "maintenance": "Održavanje",
+        "general": "Općenito"
+      },
+      "categoryLabel": "Kategorija",
+      "noCategory": "Bez / Općenito",
+      "markupMargin": "Marža",
+      "urgency": {
+        "overdue": "Kasni {days}d",
+        "today": "Rok danas",
+        "soon": "Rok za {days}d"
+      },
+      "batch": {
+        "selected": "{count, plural, one {# projekat} few {# projekta} other {# projekata}} odabrano",
+        "clear": "Poništi odabir",
+        "archive": "Arhiviraj odabrano",
+        "delete": "Obriši odabrano",
+        "exportCsv": "Izvezi zbirni CSV"
+      },
+      "quickAdd": "Brzi unos",
+      "quickAddPlaceholder": "hea120 6m x2 s235 (Enter za unos)",
+      "laborAndExtras": "Radni sati i dodatni troškovi",
+      "laborHours": "Radni sati",
+      "hourlyRate": "Satnica",
+      "extraExpensePlaceholder": "Vijci, Prevoz, Pocinčavanje...",
+      "paintingTitle": "Bojenje površine",
+      "setAssembly": "Postavi sklop",
+      "generalSection": "Glavna konstrukcija / Općenito",
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
       "subtitleEmpty": "grupišite izračune u poslove",
       "empty": "još nema projekata — kliknite Novi projekat ili + Projekat na rezultatu",
@@ -605,6 +645,7 @@
         "weight": "Težina",
         "materialCost": "Cijena materijala",
         "quoted": "Ponuda +{margin}%",
+        "grandTotalQuote": "Ukupna ponuda",
         "paint": "Boja"
       },
       "itemColumns": {

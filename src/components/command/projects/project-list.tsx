@@ -3,12 +3,19 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import type { Project } from "@/hooks/useProjects";
+import {
+  exportProjectCsv,
+  PROJECT_CATEGORIES,
+  type Project,
+  type ProjectCategory,
+} from "@/hooks/useProjects";
 import {
   ALL_PROJECTS,
+  calculatePipelineAggregates,
   collectProjectClients,
   countProjects,
   filterSortProjects,
+  getDueDateUrgency,
   PROJECT_SORTS,
   sameBucket,
   type ProjectBucket,
@@ -21,12 +28,37 @@ import { DeskIcon } from "../desktop/desk-atoms";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 
-/**
- * The Projects list (2c): a table with the client each job belongs to, a rail
- * that filters by client, and row actions. What it replaces was a grid of
- * cards that could show a project and add to it, but had no way to rename it,
- * copy it, archive it or delete it.
- */
+function PipelineStatTile({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "accent";
+}) {
+  return (
+    <div
+      className="rounded-[12px] p-2.5 min-w-0"
+      style={{
+        border: "1px solid var(--border-faint)",
+        background: "var(--surface)",
+      }}
+    >
+      <div className="fs-track-label text-[9px] font-bold text-muted uppercase truncate">
+        {label}
+      </div>
+      <div
+        className="font-mono font-bold mt-0.5 truncate text-[14.5px]"
+        style={{
+          color: tone === "accent" ? "var(--accent-text)" : "var(--foreground)",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
 
 function BucketRow({
   label,
@@ -95,12 +127,16 @@ function ProjectRow({
   actions,
   onOpen,
   compact,
+  selected,
+  onToggleSelect,
 }: {
   project: Project;
   marginPercent: number;
   actions: ProjectActions;
   onOpen: () => void;
   compact?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const t = useTranslations("command");
   const summary = projectSummary(project, marginPercent);
@@ -108,7 +144,9 @@ function ProjectRow({
   const weightText = summary.isEmpty
     ? "—"
     : `${fsWeight(summary.totalWeightKg)} ${fsWeightUnit()}`;
-  const valueText = summary.isEmpty ? "—" : `${sym} ${fsMoney(summary.totalCost)}`;
+  const valueText = summary.isEmpty ? "—" : `${sym} ${fsMoney(summary.quotedTotal)}`;
+
+  const urgency = getDueDateUrgency(project.dueDate);
 
   const menu = (
     <RowMenu
@@ -151,9 +189,16 @@ function ProjectRow({
       aria-label={t("projects.openAria", { name: project.name })}
       className="flex-1 min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer"
     >
-      <span className="block font-extrabold text-[14px] text-foreground truncate">
-        {project.name}
-      </span>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="font-extrabold text-[14px] text-foreground truncate">
+          {project.name}
+        </span>
+        {project.category && (
+          <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[var(--surface-inset)] text-muted border border-[var(--border-faint)]">
+            {t(`projects.categories.${project.category}`)}
+          </span>
+        )}
+      </div>
       <span className="block font-mono text-[11px] text-muted-faint mt-0.5 truncate">
         {summary.isEmpty
           ? t("projects.emptyRow")
@@ -162,35 +207,47 @@ function ProjectRow({
     </button>
   );
 
-  // On a phone the five columns become two lines: who and when on top, the
-  // figures underneath. Wrapping the same row would leave the menu stranded
-  // on a line of its own.
   if (compact) {
     return (
       <div
-        className="flex flex-col gap-1.5 border-t border-border-faint first:border-t-0"
-        style={{ padding: "11px 13px" }}
+        className="flex items-center gap-2 rounded-panel p-3"
+        style={{
+          border: `1px solid ${selected ? "var(--accent)" : "var(--border-faint)"}`,
+          background: selected ? "var(--accent-surface)" : "var(--surface)",
+        }}
       >
-        <div className="flex items-center gap-2">
-          {title}
-          {menu}
+        {onToggleSelect && (
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggleSelect}
+            className="accent-[var(--accent)] mr-1 cursor-pointer"
+            aria-label={`Select ${project.name}`}
+          />
+        )}
+        <div className="flex-1 min-w-0">{title}</div>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <div className="flex items-center gap-1.5">
+            {urgency.status === "overdue" && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-500/15 text-red-500 border border-red-500/30">
+                🔴 {t("projects.urgency.overdue", { days: Math.abs(urgency.daysDiff) })}
+              </span>
+            )}
+            {urgency.status === "today" && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                🟠 {t("projects.urgency.today")}
+              </span>
+            )}
+            {urgency.status === "soon" && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/30">
+                🟡 {t("projects.urgency.soon", { days: urgency.daysDiff })}
+              </span>
+            )}
+            <span className="font-mono text-xs font-bold text-foreground">{valueText}</span>
+          </div>
+          <span className="font-mono text-[11px] text-muted">{weightText}</span>
         </div>
-        <div className="flex items-center gap-2.5 font-mono text-[11.5px] flex-wrap">
-          {project.client?.trim() && (
-            <span className="text-foreground-secondary truncate" style={{ maxWidth: 150 }}>
-              {project.client}
-            </span>
-          )}
-          <span className="text-muted">
-            {t("projects.itemCount", { count: summary.itemCount })}
-          </span>
-          <span className="font-bold" style={{ color: "var(--accent-text)" }}>
-            {weightText}
-          </span>
-          <span className="font-semibold" style={{ color: "var(--blue-text)" }}>
-            {valueText}
-          </span>
-        </div>
+        {menu}
       </div>
     );
   }
@@ -198,44 +255,55 @@ function ProjectRow({
   return (
     <div
       role="row"
-      className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
-      style={{ padding: "10px 16px" }}
+      className="flex items-center gap-3 border-t border-[var(--border-faint)] transition-colors hover:bg-[var(--surface-raised)]"
+      style={{
+        padding: "10px 16px",
+        background: selected ? "var(--accent-surface)" : undefined,
+      }}
     >
-      {/* The cell wrapper carries the table role — putting it on the button
-          itself would strip its implicit button role and hide it from every
-          getByRole("button") lookup. */}
-      <div role="cell" className="flex flex-1 min-w-0">
+      {onToggleSelect && (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          className="accent-[var(--accent)] cursor-pointer"
+          aria-label={`Select ${project.name}`}
+        />
+      )}
+      <div role="cell" className="flex-1 min-w-0">
         {title}
       </div>
-      <span
-        role="cell"
-        className="text-[13px] text-foreground-secondary truncate"
-        style={{ width: 150 }}
-      >
-        {project.client?.trim() || "—"}
-      </span>
-      <span
-        role="cell"
-        className="font-mono text-[12.5px] text-muted text-right flex-shrink-0"
-        style={{ width: 44 }}
-      >
-        {summary.itemCount}
-      </span>
-      <span
-        role="cell"
-        className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
-        style={{ width: 104, color: "var(--accent-text)" }}
-      >
+      <div role="cell" style={{ width: 140 }} className="flex flex-col min-w-0">
+        <span className="text-[12.5px] text-foreground truncate">{project.client || "—"}</span>
+        {urgency.status === "overdue" && (
+          <span className="text-[10px] font-bold text-red-500">
+            🔴 {t("projects.urgency.overdue", { days: Math.abs(urgency.daysDiff) })}
+          </span>
+        )}
+        {urgency.status === "today" && (
+          <span className="text-[10px] font-bold text-amber-500">
+            🟠 {t("projects.urgency.today")}
+          </span>
+        )}
+        {urgency.status === "soon" && (
+          <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400">
+            🟡 {t("projects.urgency.soon", { days: urgency.daysDiff })}
+          </span>
+        )}
+        {urgency.status === "normal" && (
+          <span className="text-[10.5px] font-mono text-muted">{project.dueDate}</span>
+        )}
+      </div>
+      <div role="cell" style={{ width: 44 }} className="text-right font-mono text-[12.5px] text-foreground">
+        {summary.isEmpty ? "—" : summary.itemCount}
+      </div>
+      <div role="cell" style={{ width: 104 }} className="text-right font-mono text-[12.5px] text-foreground">
         {weightText}
-      </span>
-      <span
-        role="cell"
-        className="font-mono text-[12.5px] font-semibold text-right flex-shrink-0"
-        style={{ width: 116, color: "var(--blue-text)" }}
-      >
+      </div>
+      <div role="cell" style={{ width: 116 }} className="text-right font-mono text-[12.5px] font-bold text-foreground">
         {valueText}
-      </span>
-      <div role="cell" className="flex items-center flex-shrink-0">
+      </div>
+      <div role="cell" style={{ width: 30 }} className="flex justify-end">
         {menu}
       </div>
     </div>
@@ -258,16 +326,58 @@ export function ProjectList({
   const t = useTranslations("command");
   const [search, setSearch] = useState("");
   const [bucket, setBucket] = useState<ProjectBucket>(ALL_PROJECTS);
+  const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<ProjectSort>("updated");
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const counts = useMemo(() => countProjects(projects), [projects]);
   const clients = useMemo(() => collectProjectClients(projects), [projects]);
+  const pipeline = useMemo(() => calculatePipelineAggregates(projects, marginPercent), [projects, marginPercent]);
+  
   const visible = useMemo(
-    () => filterSortProjects(projects, { search, bucket, sort }),
-    [projects, search, bucket, sort],
+    () => filterSortProjects(projects, { search, bucket, category, sort }),
+    [projects, search, bucket, category, sort],
   );
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === visible.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visible.map((p) => p.id)));
+    }
+  };
+
+  const handleBatchArchive = () => {
+    if (actions.onBatchArchive && selectedIds.size > 0) {
+      actions.onBatchArchive(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleBatchDelete = () => {
+    if (actions.onBatchDelete && selectedIds.size > 0) {
+      actions.onBatchDelete(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleBatchExport = () => {
+    const selectedProjects = projects.filter((p) => selectedIds.has(p.id));
+    for (const p of selectedProjects) {
+      exportProjectCsv(p);
+    }
+  };
 
   const submitNew = () => {
     const trimmed = newName.trim();
@@ -339,6 +449,73 @@ export function ProjectList({
     </div>
   );
 
+  const batchBar = selectedIds.size > 0 && (
+    <div
+      className="flex items-center justify-between gap-3 p-2.5 rounded-xl mb-3 flex-wrap"
+      style={{
+        background: "var(--accent-surface)",
+        border: "1px solid var(--accent-border)",
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-xs text-[var(--accent-text)]">
+          {t("projects.batch.selected", { count: selectedIds.size })}
+        </span>
+        <button
+          type="button"
+          onClick={() => setSelectedIds(new Set())}
+          className="text-xs text-muted hover:text-foreground cursor-pointer underline"
+        >
+          {t("projects.batch.clear")}
+        </button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleBatchArchive}
+          className="h-7 px-2.5 rounded-md text-xs font-semibold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
+        >
+          {t("projects.batch.archive")}
+        </button>
+        <button
+          type="button"
+          onClick={handleBatchExport}
+          className="h-7 px-2.5 rounded-md text-xs font-semibold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
+        >
+          {t("projects.batch.exportCsv")}
+        </button>
+        <button
+          type="button"
+          onClick={handleBatchDelete}
+          className="h-7 px-2.5 rounded-md text-xs font-semibold bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/30 cursor-pointer"
+        >
+          {t("projects.batch.delete")}
+        </button>
+      </div>
+    </div>
+  );
+
+  const categoryFilterStrip = (
+    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-3 no-scrollbar">
+      {["all", ...PROJECT_CATEGORIES].map((cat) => (
+        <button
+          key={cat}
+          type="button"
+          onClick={() => setCategory(cat)}
+          className="h-7 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer"
+          style={{
+            background: category === cat ? "var(--accent-surface)" : "var(--surface)",
+            border: category === cat ? "1px solid var(--accent-border)" : "1px solid var(--border-faint)",
+            color: category === cat ? "var(--accent-text)" : "var(--muted)",
+          }}
+        >
+          {t(`projects.categories.${cat}`)}
+        </button>
+      ))}
+    </div>
+  );
+
   const table =
     visible.length === 0 ? (
       search.trim() ? (
@@ -375,8 +552,15 @@ export function ProjectList({
             className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
             style={{ padding: "10px 16px", background: "var(--surface-raised)" }}
           >
+            <input
+              type="checkbox"
+              checked={visible.length > 0 && selectedIds.size === visible.length}
+              onChange={toggleSelectAll}
+              className="accent-[var(--accent)] cursor-pointer"
+              aria-label="Select all"
+            />
             <span role="columnheader" className="flex-1 min-w-0">{t("projects.columns.project")}</span>
-            <span role="columnheader" style={{ width: 150 }}>{t("projects.columns.client")}</span>
+            <span role="columnheader" style={{ width: 140 }}>{t("projects.columns.client")}</span>
             <span role="columnheader" style={{ width: 44 }} className="text-right">
               {t("projects.columns.items")}
             </span>
@@ -396,6 +580,8 @@ export function ProjectList({
             marginPercent={marginPercent}
             actions={actions}
             compact={compact}
+            selected={selectedIds.has(project.id)}
+            onToggleSelect={() => toggleSelect(project.id)}
             onOpen={() => onOpenProject(project.id)}
           />
         ))}
@@ -445,6 +631,8 @@ export function ProjectList({
           {newProjectButton}
         </div>
         {createRow}
+        {batchBar}
+        {categoryFilterStrip}
         {(clients.length > 0 || counts.archived > 0) && (
           <div className="flex items-center gap-1.5 flex-wrap">
             {buckets.map((entry) => (
@@ -541,7 +729,37 @@ export function ProjectList({
 
         <div className="flex-1 min-w-0 overflow-y-auto" style={{ padding: "20px 32px 32px" }}>
           <div className="min-w-0">
+            {/* Pipeline KPI Summary Strip */}
+            {bucket.kind !== "archived" && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
+                <PipelineStatTile
+                  label={t("projects.pipeline.active")}
+                  value={`${pipeline.activeCount} jobs`}
+                />
+                <PipelineStatTile
+                  label={t("projects.pipeline.steel")}
+                  value={
+                    pipeline.totalWeightKg >= 1000
+                      ? `${(pipeline.totalWeightKg / 1000).toFixed(2)} t`
+                      : `${fsWeight(pipeline.totalWeightKg)} kg`
+                  }
+                  tone="accent"
+                />
+                <PipelineStatTile
+                  label={t("projects.pipeline.value")}
+                  value={`€ ${fsMoney(pipeline.totalQuotedValue)}`}
+                  tone="accent"
+                />
+                <PipelineStatTile
+                  label={t("projects.pipeline.clients")}
+                  value={`${pipeline.clientCount} clients`}
+                />
+              </div>
+            )}
+
             {createRow}
+            {batchBar}
+            {categoryFilterStrip}
             {table}
           </div>
         </div>
