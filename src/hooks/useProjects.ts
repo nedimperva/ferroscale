@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
@@ -17,6 +17,7 @@ import {
   totalPaint,
   type ProjectPaintCoat,
 } from "@/lib/projects/paint";
+import type { AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -626,6 +627,22 @@ export interface UseProjectsReturn {
     entries: Array<{ input: CalculationInput; result: CalculationResult }>,
   ) => void;
   addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
+  insertAssemblyTemplate: (
+    projectId: string,
+    template: AssemblyTemplate,
+    multiplier: number,
+    customAssemblyName?: string,
+  ) => boolean;
+  scaleSubAssembly: (
+    projectId: string,
+    assemblyName: string,
+    multiplier: number,
+  ) => boolean;
+  createProjectFromTemplate: (
+    name: string,
+    template: AssemblyTemplate,
+    multiplier?: number,
+  ) => Project;
   removeCalculation: (projectId: string, calcId: string) => void;
   updateCalculationQuantity: (projectId: string, calcId: string, quantity: number) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
@@ -636,7 +653,13 @@ export interface UseProjectsReturn {
 }
 
 export function useProjects(): UseProjectsReturn {
-  const [allProjects, setAllProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>(() => {
+    if (typeof window !== "undefined") {
+      return loadProjects();
+    }
+    return [];
+  });
+  const projectsRef = useRef<Project[]>(allProjects);
   const [isOpen, setIsOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
@@ -645,6 +668,7 @@ export function useProjects(): UseProjectsReturn {
       const next = typeof updater === "function"
         ? (updater as (prev: Project[]) => Project[])(previous)
         : updater;
+      projectsRef.current = next;
       persistProjects(next);
       return next;
     });
@@ -653,8 +677,8 @@ export function useProjects(): UseProjectsReturn {
   const projects = allProjects.filter((project) => isActiveSyncEntity(project));
 
   useEffect(() => {
-    setAllProjects(loadProjects()); // eslint-disable-line react-hooks/set-state-in-effect
-  }, []);
+    projectsRef.current = allProjects;
+  }, [allProjects]);
 
   const createProject = useCallback((name: string): Project => {
     const now = new Date().toISOString();
@@ -1067,6 +1091,186 @@ export function useProjects(): UseProjectsReturn {
     [setProjects],
   );
 
+  const insertAssemblyTemplate = useCallback(
+    (
+      projectId: string,
+      template: AssemblyTemplate,
+      multiplier: number,
+      customAssemblyName?: string,
+    ): boolean => {
+      const mult = Math.max(1, Math.floor(multiplier || 1));
+      if (!template.items || template.items.length === 0) return false;
+
+      const project = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
+      if (!project || project.calculations.length >= MAX_CALCS_PER_PROJECT) return false;
+
+      const now = new Date().toISOString();
+      const asmTag = customAssemblyName?.trim() || template.name;
+
+      const newCalcs: ProjectCalculation[] = [];
+      for (const item of template.items) {
+        const itemQty = Math.max(1, Math.floor((item.quantity || 1) * mult));
+        const nextInput = { ...item.input, quantity: itemQty };
+        const calc = calculateMetal(nextInput);
+        if (!calc.ok) continue;
+        newCalcs.push({
+          id: crypto.randomUUID(),
+          timestamp: now,
+          input: nextInput,
+          result: calc.result,
+          normalizedProfile: item.normalizedProfile ?? normalizeProfileSnapshot(nextInput),
+          assembly: asmTag,
+          note: item.note,
+        });
+      }
+
+      if (newCalcs.length === 0) return false;
+
+      // Scale labor hours
+      let nextLaborHours = project.laborHours;
+      if (template.laborHours !== undefined && template.laborHours > 0) {
+        nextLaborHours = (project.laborHours ?? 0) + template.laborHours * mult;
+      }
+
+      // Scale additional costs
+      let nextAdditionalCosts = project.additionalCosts;
+      if (template.additionalCosts && template.additionalCosts.length > 0) {
+        const scaledCosts: ProjectAdditionalCost[] = template.additionalCosts.map((c) => ({
+          id: crypto.randomUUID(),
+          label: mult > 1 ? `${c.label} (×${mult})` : c.label,
+          amount: Math.round(c.amount * mult * 100) / 100,
+          category: c.category,
+        }));
+        nextAdditionalCosts = [...(project.additionalCosts ?? []), ...scaledCosts];
+      }
+
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== projectId || p.deletedAt) return p;
+          return withActivity(
+            {
+              ...p,
+              category: p.category || template.category,
+              calculations: [...p.calculations, ...newCalcs],
+              laborHours: nextLaborHours,
+              additionalCosts: nextAdditionalCosts,
+              updatedAt: now,
+            },
+            "itemAdded",
+            { detail: `${template.name} (×${mult})` },
+          );
+        }),
+      );
+      return true;
+    },
+    [setProjects],
+  );
+
+  const scaleSubAssembly = useCallback(
+    (projectId: string, assemblyName: string, multiplier: number): boolean => {
+      const mult = Number(multiplier);
+      if (!Number.isFinite(mult) || mult <= 0) return false;
+
+      const project = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
+      if (!project) return false;
+
+      const targetAsm = assemblyName.trim();
+      let hasMatching = false;
+
+      const updatedCalcs = project.calculations.map((c) => {
+        const asm = c.assembly?.trim() || "";
+        if (asm !== targetAsm) return c;
+
+        hasMatching = true;
+        const nextQty = Math.max(1, Math.round((c.input.quantity || 1) * mult));
+        if (nextQty === c.input.quantity) return c;
+
+        const nextInput = { ...c.input, quantity: nextQty };
+        const res = calculateMetal(nextInput);
+        if (!res.ok) return c;
+
+        return {
+          ...c,
+          input: nextInput,
+          result: res.result,
+        };
+      });
+
+      if (!hasMatching) return false;
+
+      setProjects((prev) =>
+        prev.map((p) => {
+          if (p.id !== projectId || p.deletedAt) return p;
+          return withActivity(
+            {
+              ...p,
+              calculations: updatedCalcs,
+              updatedAt: new Date().toISOString(),
+            },
+            "qtyChanged",
+            { detail: `${targetAsm || "General"} (×${mult})`, from: "1", to: String(mult) },
+          );
+        }),
+      );
+      return true;
+    },
+    [setProjects],
+  );
+
+  const createProjectFromTemplate = useCallback(
+    (name: string, template: AssemblyTemplate, multiplier = 1): Project => {
+      const mult = Math.max(1, Math.floor(multiplier || 1));
+      const now = new Date().toISOString();
+      const newId = crypto.randomUUID();
+      const asmTag = template.name;
+
+      const newCalcs: ProjectCalculation[] = [];
+      for (const item of template.items) {
+        const itemQty = Math.max(1, Math.floor((item.quantity || 1) * mult));
+        const nextInput = { ...item.input, quantity: itemQty };
+        const calc = calculateMetal(nextInput);
+        if (!calc.ok) continue;
+        newCalcs.push({
+          id: crypto.randomUUID(),
+          timestamp: now,
+          input: nextInput,
+          result: calc.result,
+          normalizedProfile: item.normalizedProfile ?? normalizeProfileSnapshot(nextInput),
+          assembly: asmTag,
+          note: item.note,
+        });
+      }
+
+      const scaledCosts: ProjectAdditionalCost[] | undefined = template.additionalCosts
+        ? template.additionalCosts.map((c) => ({
+            id: crypto.randomUUID(),
+            label: mult > 1 ? `${c.label} (×${mult})` : c.label,
+            amount: Math.round(c.amount * mult * 100) / 100,
+            category: c.category,
+          }))
+        : undefined;
+
+      const project: Project = {
+        id: newId,
+        name: name.trim() || template.name,
+        category: template.category,
+        description: template.description,
+        createdAt: now,
+        updatedAt: now,
+        calculations: newCalcs,
+        laborHours: template.laborHours ? template.laborHours * mult : undefined,
+        laborRatePerHour: 45,
+        additionalCosts: scaledCosts,
+        activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
+      };
+
+      setProjects((prev) => [project, ...prev]);
+      setActiveProjectId(newId);
+      return project;
+    },
+    [setProjects],
+  );
+
   const removeCalculation = useCallback((projectId: string, calcId: string) => {
     setProjects((prev) =>
       prev.map((p) => {
@@ -1168,6 +1372,9 @@ export function useProjects(): UseProjectsReturn {
     addCalculation,
     addCalculations,
     addTemplateCalculation,
+    insertAssemblyTemplate,
+    scaleSubAssembly,
+    createProjectFromTemplate,
     removeCalculation,
     updateCalculationQuantity,
     updateCalculationNote,

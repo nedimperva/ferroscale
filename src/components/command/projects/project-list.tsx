@@ -26,6 +26,7 @@ import { SearchField } from "../search-field";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
+import { AssemblyTemplateModal } from "./assembly-template-modal";
 
 function PipelineStatTile({
   label,
@@ -330,6 +331,7 @@ export function ProjectList({
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
 
   const counts = useMemo(() => countProjects(projects), [projects]);
   const clients = useMemo(() => collectProjectClients(projects), [projects]);
@@ -407,20 +409,37 @@ export function ProjectList({
   ];
 
   const newProjectButton = (
-    <button
-      type="button"
-      onClick={() => setCreating((v) => !v)}
-      className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
-      style={{
-        padding: "9px 14px",
-        border: "none",
-        background: "var(--accent)",
-        color: "var(--accent-contrast)",
-      }}
-    >
-      <DeskIcon name="plus" stroke="var(--accent-contrast)" />
-      {t("library.newProject")}
-    </button>
+    <div className="flex items-center gap-1.5 flex-shrink-0">
+      <button
+        type="button"
+        onClick={() => setShowTemplateModal(true)}
+        className="inline-flex items-center gap-1.5 rounded-button font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
+        style={{
+          padding: "9px 12px",
+          border: "1px solid var(--border-faint)",
+          background: "var(--surface)",
+          color: "var(--foreground)",
+        }}
+        title={t("templates.newFromTemplate")}
+      >
+        <span>🧩</span>
+        <span>{t("templates.fromTemplateButton")}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => setCreating((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
+        style={{
+          padding: "9px 14px",
+          border: "none",
+          background: "var(--accent)",
+          color: "var(--accent-contrast)",
+        }}
+      >
+        <DeskIcon name="plus" stroke="var(--accent-contrast)" />
+        {t("library.newProject")}
+      </button>
+    </div>
   );
 
   const createRow = creating && (
@@ -763,6 +782,18 @@ export function ProjectList({
           </div>
         </div>
       </div>
+
+      {showTemplateModal && (
+        <AssemblyTemplateModal
+          onInsert={(tpl, mult) => {
+            const created = actions.onCreateFromTemplate?.(tpl.name, tpl, mult);
+            if (created && typeof created === "object" && "id" in created) {
+              onOpenProject(created.id);
+            }
+          }}
+          onClose={() => setShowTemplateModal(false)}
+        />
+      )}
     </div>
   );
 }

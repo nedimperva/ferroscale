@@ -5,6 +5,7 @@ import type {
   ProjectCategory,
   ProjectStatus,
 } from "@/hooks/useProjects";
+import type { AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
 import type { ProjectPaintCoat } from "@/lib/projects/paint";
 
 /**
@@ -52,5 +53,21 @@ export interface ProjectActions {
   onAddItem: (projectId: string) => boolean;
   /** Add a query directly to the project using fast inline command parser. */
   onQuickAddItem?: (projectId: string, query: string, assembly?: string) => boolean;
+  onInsertTemplate?: (
+    projectId: string,
+    template: AssemblyTemplate,
+    multiplier: number,
+    customAssemblyName?: string,
+  ) => boolean;
+  onScaleSubAssembly?: (
+    projectId: string,
+    assemblyName: string,
+    multiplier: number,
+  ) => boolean;
+  onCreateFromTemplate?: (
+    name: string,
+    template: AssemblyTemplate,
+    multiplier?: number,
+  ) => Project | void;
   onPrintQuote: (project: Project) => void;
 }

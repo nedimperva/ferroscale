@@ -17,6 +17,24 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.23.0",
+    date: "2026-09-01",
+    added: [
+      "Modular Sub-Assembly Templates: Pre-configured standard fabrication components (Stair Step Treads, Railing Posts with Base Plates, Baluster Infill Panels, Beams with Welded End Plates, Fence Panels) composed of mixed profile cuts, plates, hardware, and shop labor",
+      "Insert Templates with Multiplier (×N): Pick any assembly template, specify the unit count (e.g. ×15), and automatically generate, scale, and insert all individual cuts, plates, bolts, and labor into the project under that sub-assembly",
+      "In-Place Sub-Assembly Scaling (×N): Direct multiplier button on sub-assembly section headers to scale all member piece counts up or down in one click",
+      "Save Sub-Assembly as Custom Template: Export any combination of profiles, plates, and components from a project into your custom template library for reuse across jobs",
+      "Start New Project from Template: Quickly initialize complete fabrication projects from predefined standard or custom assembly templates"
+    ],
+    added_bs: [
+      "Modularni šabloni podsklopova: Standardne fabričke komponente (Gazišta stepeništa, Stubovi ograde sa stopama, Polja ograde, Nosači sa čeonim pločama, Ogradni paneli) sastavljene od kombinacije profila, limova, okova i radnih sati",
+      "Ubacivanje šablona s množiocem (×N): Izaberite šablon sklopa, odredite količinu (npr. ×15) i automatski generišite, skalirajte i ubacite sve pojedinačne rezove, ploče, vijke i radne sate u projekat",
+      "Skaliranje podsklopa na licu mjesta (×N): Brzo dugme na zaglavlju podsklopa za množenje količine svih pripadajućih elemenata jednim klikom",
+      "Čuvanje podsklopa kao vlastitog šablona: Sačuvajte bilo koji sklop profila i limova iz projekta u biblioteku šablona za brzu ponovnu upotrebu",
+      "Kreiranje novog projekta iz šablona: Pokretanje novog projekta direktno iz definisanih standardnih ili vlastitih šablona"
+    ]
+  },
+  {
     version: "3.22.0",
     date: "2026-09-01",
     added: [

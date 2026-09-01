@@ -552,7 +552,36 @@
       "tagsHint": "Odvojeno zarezom, najviše {max}.",
       "assemblyName": "Sklop ({count} dijelova)"
     },
+    "templates": {
+      "modalTitle": "Modularni šabloni sklopova",
+      "modalSubtitle": "Izaberite standardni fabrički šablon ili umetnite sa prilagođenim množiocem količine.",
+      "searchPlaceholder": "Pretraži šablone, profile, rezove…",
+      "addTemplateButton": "+ Šablon",
+      "fromTemplateButton": "Iz šablona",
+      "newFromTemplate": "Započni projekat iz fabričkog šablona",
+      "multiplierLabel": "Množilac količine",
+      "targetAssemblyLabel": "Naziv podsklopa",
+      "targetAssemblyHint": "Svi generisani rezovi i komponente biće grupisani pod ovim podsklopom.",
+      "scaledBreakdown": "Skalirani sastav materijala (×{mult})",
+      "insertAction": "Ubaci ×{count} u projekat",
+      "scaleButton": "Skaliraj",
+      "scaleAssemblyTitle": "Skaliraj podsklop",
+      "scaleFactorLabel": "Faktor skaliranja",
+      "scaleAssemblyHint": "Množi broj komada svih rezova u ovom podsklopu izabranim faktorom.",
+      "applyScale": "Primijeni skaliranje (×{mult})",
+      "saveTemplateButton": "Sačuvaj kao šablon",
+      "saveAsTemplateButton": "Sačuvaj podsklop kao višekratni šablon",
+      "saveTemplateTitle": "Sačuvaj kao šablon sklopa",
+      "saveTemplateSubtitle": "Sačuvaj ovaj sklop od {count} stavki u biblioteku šablona za brzu ponovnu upotrebu.",
+      "templateNameLabel": "Naziv šablona",
+      "descriptionLabel": "Opis (opcionalno)",
+      "descriptionPlaceholder": "npr. Dimenzije, namjena, specifikacije okova...",
+      "includedItems": "Uključene komponente"
+    },
     "projects": {
+      "templateInserted": "Ubačen šablon {name} (×{mult}) u projekat",
+      "assemblyScaledToast": "Skaliran podsklop \"{name}\" za ×{mult}",
+      "templateProjectCreated": "Kreiran novi projekat iz šablona {name}",
       "tabs": {
         "items": "Stavke",
         "cutting": "Plan rezanja"

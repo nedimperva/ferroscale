@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.23.0] - 2026-09-01
+
+Modular Sub-Assembly Templates, Instant Multiplier Scaling, and Template Project Creation.
+
+### Added
+
+- **Modular Sub-Assembly Templates.** Pre-configured standard European fabrication components (Stair Step Treads, Railing Posts with Base Plates, Baluster Infill Panels, Beams with Welded End Plates, Fence Panels) composed of mixed profile cuts, plates, hardware, and shop labor
+- **Insert Templates with Multipliers ($\times N$).** Pick any assembly template, specify the unit count (e.g. $\times 15$), and automatically generate, scale, and insert all individual cuts, plates, bolts, and labor into the project under that sub-assembly
+- **In-Place Sub-Assembly Scaling ($\times N$).** Direct multiplier button on sub-assembly section headers to scale all member piece counts up or down in one click
+- **Save Sub-Assembly as Custom Template.** Export any combination of profiles, plates, and components from a project into your custom template library for reuse across jobs
+- **Start New Project from Template.** Quickly initialize complete fabrication projects from predefined standard or custom assembly templates
+
+---
+
 ## [3.22.0] - 2026-09-01
 
 1D cutting stock optimizer (linear nesting) for steel profiles, 2D plate/sheet nesting optimizer, and offline JSON backup/restore.

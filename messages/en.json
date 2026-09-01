@@ -552,7 +552,36 @@
       "tagsHint": "Comma-separated, up to {max}.",
       "assemblyName": "Assembly ({count} parts)"
     },
+    "templates": {
+      "modalTitle": "Modular Assembly Templates",
+      "modalSubtitle": "Choose a standard fabrication template or insert with a custom quantity multiplier.",
+      "searchPlaceholder": "Search templates, cuts, profiles…",
+      "addTemplateButton": "+ Template",
+      "fromTemplateButton": "From Template",
+      "newFromTemplate": "Start project from a fabrication template",
+      "multiplierLabel": "Quantity Multiplier",
+      "targetAssemblyLabel": "Sub-Assembly Name",
+      "targetAssemblyHint": "All generated cuts and components will be grouped under this sub-assembly.",
+      "scaledBreakdown": "Scaled Bill of Materials (×{mult})",
+      "insertAction": "Insert ×{count} into Project",
+      "scaleButton": "Scale",
+      "scaleAssemblyTitle": "Scale Sub-Assembly",
+      "scaleFactorLabel": "Multiplier Factor",
+      "scaleAssemblyHint": "Multiplies the piece counts of all member cuts in this sub-assembly by the chosen factor.",
+      "applyScale": "Apply Scale (×{mult})",
+      "saveTemplateButton": "Save as Template",
+      "saveAsTemplateButton": "Save sub-assembly as a reusable template",
+      "saveTemplateTitle": "Save as Assembly Template",
+      "saveTemplateSubtitle": "Save this {count}-item assembly to your template library for quick reuse in any project.",
+      "templateNameLabel": "Template Name",
+      "descriptionLabel": "Description (Optional)",
+      "descriptionPlaceholder": "e.g. Dimensions, purpose, hardware specifications...",
+      "includedItems": "Included Components"
+    },
     "projects": {
+      "templateInserted": "Inserted {name} (×{mult}) into project",
+      "assemblyScaledToast": "Scaled \"{name}\" sub-assembly by ×{mult}",
+      "templateProjectCreated": "Created new project from {name}",
       "tabs": {
         "items": "Items",
         "cutting": "Cut plan"

@@ -59,7 +59,7 @@ function StatTile({
   );
 }
 
-export function ProjectProcurement({ project, compact: _compact }: ProjectProcurementProps) {
+export function ProjectProcurement({ project }: ProjectProcurementProps) {
   const t = useTranslations("command");
   const [copied, setCopied] = useState<boolean>(false);
   const [isPrinting, setIsPrinting] = useState<boolean>(false);

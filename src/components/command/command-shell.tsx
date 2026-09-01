@@ -168,6 +168,9 @@ export function CommandShell() {
     addCalculation,
     addCalculations,
     addTemplateCalculation,
+    insertAssemblyTemplate,
+    scaleSubAssembly,
+    createProjectFromTemplate,
     removeCalculation,
     updateCalculationQuantity,
     updateCalculationNote,
@@ -861,6 +864,25 @@ export function CommandShell() {
         );
         return ok;
       },
+      onInsertTemplate: (projectId, template, multiplier, customAssemblyName) => {
+        const ok = insertAssemblyTemplate(projectId, template, multiplier, customAssemblyName);
+        if (ok) {
+          showToast(t("projects.templateInserted", { name: template.name, mult: multiplier }));
+        }
+        return ok;
+      },
+      onScaleSubAssembly: (projectId, assemblyName, multiplier) => {
+        const ok = scaleSubAssembly(projectId, assemblyName, multiplier);
+        if (ok) {
+          showToast(t("projects.assemblyScaledToast", { name: assemblyName || "General", mult: multiplier }));
+        }
+        return ok;
+      },
+      onCreateFromTemplate: (name, template, multiplier) => {
+        const project = createProjectFromTemplate(name, template, multiplier);
+        showToast(t("projects.templateProjectCreated", { name: project.name }));
+        return project;
+      },
       onPrintQuote: (project) => logQuotePrinted(project.id),
     }),
     [
@@ -883,6 +905,9 @@ export function CommandShell() {
       updateProjectPaintCoats,
       loadInput,
       addCalculation,
+      insertAssemblyTemplate,
+      scaleSubAssembly,
+      createProjectFromTemplate,
       logQuotePrinted,
       p.calc,
       parserSettings,

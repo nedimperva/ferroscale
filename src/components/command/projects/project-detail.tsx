@@ -34,6 +34,10 @@ import {
   toDateInputValue,
 } from "./project-model";
 import type { ProjectActions } from "./project-actions";
+import { AssemblyTemplateModal } from "./assembly-template-modal";
+import { ScaleAssemblyModal } from "./scale-assembly-modal";
+import { SaveAssemblyTemplateModal } from "./save-assembly-template-modal";
+import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
 
 function StatTile({
   label,
@@ -939,12 +943,16 @@ export function ProjectDetail({
   compact?: boolean;
 }) {
   const t = useTranslations("command");
+  const { saveTemplate } = useAssemblyTemplates();
   const [editingDetails, setEditingDetails] = useState(false);
   const [detailTab, setDetailTab] = useState<"items" | "cutting">("items");
   const [showMore, setShowMore] = useState(false);
   const [notes, setNotes] = useState(project.description ?? "");
   const [pickingAssemblyRow, setPickingAssemblyRow] = useState<(ReturnType<typeof projectItemRows>[number]) | null>(null);
   const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [scalingAssembly, setScalingAssembly] = useState<{ name: string; count: number } | null>(null);
+  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: AssemblyTemplateItem[] } | null>(null);
 
   const summary = projectSummary(project, marginPercent);
   const rows = projectItemRows(project);
@@ -1181,7 +1189,7 @@ export function ProjectDetail({
               <div
                 className="flex items-center justify-between px-3 py-1.5 bg-[var(--surface-inset)] font-mono text-[11px] font-bold text-muted flex-wrap gap-2"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span>🏷️ {asmName || t("projects.generalSection")} ({asmRows.length} items)</span>
                   {asmName && (
                     <button
@@ -1191,6 +1199,34 @@ export function ProjectDetail({
                       title={t("projects.addToThisAssembly", { name: asmName })}
                     >
                       + {t("common.add")}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setScalingAssembly({ name: asmName, count: asmRows.length })}
+                    className="px-2 py-0.5 rounded text-[9.5px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
+                    title={t("templates.scaleAssemblyTitle")}
+                  >
+                    ⚡ {t("templates.scaleButton")}
+                  </button>
+                  {asmRows.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const templateItems: AssemblyTemplateItem[] = asmRows.map((r) => ({
+                          id: crypto.randomUUID(),
+                          input: r.calc.input,
+                          result: r.calc.result,
+                          normalizedProfile: r.calc.normalizedProfile,
+                          quantity: r.calc.input.quantity || 1,
+                          note: r.calc.note,
+                        }));
+                        setSavingTemplateAsm({ name: asmName, items: templateItems });
+                      }}
+                      className="px-2 py-0.5 rounded text-[9.5px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
+                      title={t("templates.saveAsTemplateButton")}
+                    >
+                      💾 {t("templates.saveTemplateButton")}
                     </button>
                   )}
                 </div>
@@ -1356,6 +1392,21 @@ export function ProjectDetail({
                 <path d="M6 14h12v7H6z" />
               </svg>
               {t("quote.short")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowTemplateModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-button font-bold text-[12.5px] cursor-pointer"
+              style={{
+                padding: "8px 12px",
+                border: "1px solid var(--border-faint)",
+                background: "var(--surface-raised)",
+                color: "var(--foreground)",
+              }}
+              title={t("templates.modalTitle")}
+            >
+              <span>🧩</span>
+              <span>{t("templates.addTemplateButton")}</span>
             </button>
             <button
               type="button"
@@ -1526,6 +1577,45 @@ export function ProjectDetail({
             setPickingAssemblyRow(null);
           }}
           onClose={() => setPickingAssemblyRow(null)}
+        />
+      )}
+
+      {/* Assembly Template Insertion Modal */}
+      {showTemplateModal && (
+        <AssemblyTemplateModal
+          onInsert={(template, mult, asmName) => {
+            actions.onInsertTemplate?.(project.id, template, mult, asmName);
+          }}
+          onClose={() => setShowTemplateModal(false)}
+        />
+      )}
+
+      {/* In-Place Sub-Assembly Scaling Modal */}
+      {scalingAssembly && (
+        <ScaleAssemblyModal
+          assemblyName={scalingAssembly.name}
+          itemCount={scalingAssembly.count}
+          onScale={(mult) => {
+            actions.onScaleSubAssembly?.(project.id, scalingAssembly.name, mult);
+          }}
+          onClose={() => setScalingAssembly(null)}
+        />
+      )}
+
+      {/* Save Sub-Assembly as Reusable Template Modal */}
+      {savingTemplateAsm && (
+        <SaveAssemblyTemplateModal
+          assemblyName={savingTemplateAsm.name}
+          items={savingTemplateAsm.items}
+          onSave={(name, description, category) => {
+            saveTemplate({
+              name,
+              description,
+              category,
+              items: savingTemplateAsm.items,
+            });
+          }}
+          onClose={() => setSavingTemplateAsm(null)}
         />
       )}
     </div>
