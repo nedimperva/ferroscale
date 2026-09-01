@@ -20,9 +20,9 @@ export interface PlatePiece {
 export interface PlateSheetOption {
   /** Format label (e.g. "Kleinformat (1000×2000)"). */
   label: string;
-  /** Width in millimetres (shorter edge). */
+  /** Width in millimetres (shorter edge, Y-axis). */
   widthMm: number;
-  /** Length in millimetres (longer edge). */
+  /** Length in millimetres (longer edge, X-axis). */
   lengthMm: number;
   /** Optional unit cost per master sheet. */
   cost?: number;
@@ -36,11 +36,15 @@ export interface PlacedPlateCut {
   xMm: number;
   /** Y-coordinate from bottom/top edge of master sheet (mm). */
   yMm: number;
-  /** Effective placed width (mm). */
+  /** Placed dimension along sheet horizontal X axis (mm). */
+  dxMm: number;
+  /** Placed dimension along sheet vertical Y axis (mm). */
+  dyMm: number;
+  /** Original piece width (mm). */
   widthMm: number;
-  /** Effective placed length (mm). */
+  /** Original piece length (mm). */
   lengthMm: number;
-  /** Whether the piece was rotated 90 degrees to fit. */
+  /** Whether the piece was rotated 90 degrees on the sheet. */
   rotated: boolean;
 }
 
@@ -49,9 +53,9 @@ export interface PlatePattern {
   sheetId: string;
   /** Master sheet format label (e.g. "1500 × 3000 mm"). */
   formatLabel: string;
-  /** Master sheet width in millimetres. */
+  /** Master sheet width in millimetres (Y-axis). */
   sheetWidthMm: number;
-  /** Master sheet length in millimetres. */
+  /** Master sheet length in millimetres (X-axis). */
   sheetLengthMm: number;
   /** Ordered list of rectangular cuts placed on this sheet. */
   cuts: PlacedPlateCut[];

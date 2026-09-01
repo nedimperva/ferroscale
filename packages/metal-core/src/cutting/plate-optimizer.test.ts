@@ -72,4 +72,27 @@ describe("optimizePlateCutList", () => {
     expect(result.uncuttablePieces[0].id).toBe("huge");
     expect(result.totalPiecesCount).toBe(1);
   });
+
+  it("correctly nests 10 pieces of 1240x200 mm into 2 columns on a single 1500x3000 mm sheet", () => {
+    const pieces: PlatePiece[] = [
+      { id: "cut1", label: "1240×200 mm", widthMm: 200, lengthMm: 1240, quantity: 10 },
+    ];
+
+    const result = optimizePlateCutList(pieces, {
+      standardSheets: [{ label: "1500 × 3000 mm", widthMm: 1500, lengthMm: 3000 }],
+      kerfMm: 3,
+      edgeTrimMm: 10,
+      allowRotation: true,
+    });
+
+    // All 10 pieces must fit on 1 master plate in multiple columns (since 2x1240 = 2480 <= 3000 and 5x200 = 1000 <= 1500)
+    expect(result.totalMasterSheets).toBe(1);
+    expect(result.totalPiecesCount).toBe(10);
+    expect(result.uncuttablePieces.length).toBe(0);
+
+    const sheet = result.patterns[0];
+    // Check that cuts are placed at multiple distinct X columns
+    const xCoords = new Set(sheet.cuts.map((c) => c.xMm));
+    expect(xCoords.size).toBeGreaterThanOrEqual(2);
+  });
 });

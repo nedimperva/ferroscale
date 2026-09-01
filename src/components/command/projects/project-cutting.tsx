@@ -144,7 +144,7 @@ function BarSvgDiagram({
             const color = CUT_PALETTE[cIdx % CUT_PALETTE.length];
             const x = scale(cut.startMm);
             const w = Math.max(1, scale(cut.lengthMm));
-            const isWideEnough = w >= 60;
+            const isWideEnough = w >= 50;
 
             return (
               <g key={`cut-${cIdx}`}>
@@ -169,7 +169,7 @@ function BarSvgDiagram({
                     fontWeight="600"
                     className="select-none pointer-events-none"
                   >
-                    {cut.lengthMm} mm
+                    #{cut.cutIndex}
                   </text>
                 )}
                 {cIdx < pattern.cuts.length - 1 && kerfMm > 0 && (
@@ -265,13 +265,15 @@ function BarSvgDiagram({
 function PlateSvgDiagram({
   pattern,
   sheetIndex,
+  edgeTrimMm,
 }: {
   pattern: PlatePattern;
   sheetIndex: number;
+  edgeTrimMm: number;
 }) {
   const t = useTranslations("command");
-  const sheetW = pattern.sheetWidthMm;
-  const sheetL = pattern.sheetLengthMm;
+  const sheetL = pattern.sheetLengthMm; // X axis (horizontal length)
+  const sheetW = pattern.sheetWidthMm;  // Y axis (vertical width)
 
   return (
     <div
@@ -301,8 +303,8 @@ function PlateSvgDiagram({
           <span
             className="font-bold px-2 py-0.5 rounded-full text-[11px]"
             style={{
-              background: pattern.utilizationPercent >= 80 ? "var(--green-surface, rgba(16,185,129,0.12))" : "var(--surface-inset)",
-              color: pattern.utilizationPercent >= 80 ? "var(--green-strong, #10b981)" : "var(--foreground-secondary)",
+              background: pattern.utilizationPercent >= 75 ? "var(--green-surface, rgba(16,185,129,0.12))" : "var(--surface-inset)",
+              color: pattern.utilizationPercent >= 75 ? "var(--green-strong, #10b981)" : "var(--foreground-secondary)",
             }}
           >
             {pattern.utilizationPercent}% {t("cutting.yield")}
@@ -315,10 +317,10 @@ function PlateSvgDiagram({
         <svg
           viewBox={`0 0 ${sheetL} ${sheetW}`}
           className="w-full block"
-          style={{ maxHeight: "320px" }}
+          style={{ maxHeight: "360px" }}
           preserveAspectRatio="xMidYMid meet"
         >
-          {/* Master sheet background */}
+          {/* Master sheet background (unutilized space is light scrap tint) */}
           <rect
             x={0}
             y={0}
@@ -326,16 +328,34 @@ function PlateSvgDiagram({
             height={sheetW}
             fill="rgba(239,68,68,0.06)"
             stroke="var(--border-faint)"
-            strokeWidth={Math.max(2, sheetL / 1000)}
+            strokeWidth={Math.max(2, sheetL / 1200)}
           />
+
+          {/* Edge margin trim border */}
+          {edgeTrimMm > 0 && (
+            <rect
+              x={edgeTrimMm}
+              y={edgeTrimMm}
+              width={Math.max(0, sheetL - 2 * edgeTrimMm)}
+              height={Math.max(0, sheetW - 2 * edgeTrimMm)}
+              fill="none"
+              stroke="var(--border-faint)"
+              strokeWidth={1}
+              strokeDasharray="6 4"
+            />
+          )}
 
           {/* Placed rectangular cuts */}
           {pattern.cuts.map((cut, cIdx) => {
             const color = CUT_PALETTE[cIdx % CUT_PALETTE.length];
             const cutX = cut.xMm;
             const cutY = cut.yMm;
-            const cutW = cut.lengthMm; // along length axis
-            const cutH = cut.widthMm;  // along width axis
+            const cutW = cut.dxMm; // width along X (length axis)
+            const cutH = cut.dyMm; // height along Y (width axis)
+
+            const minDim = Math.min(cutW, cutH);
+            const badgeFontSize = Math.max(14, Math.min(36, minDim * 0.45));
+            const showBadge = cutW >= 30 && cutH >= 20;
 
             return (
               <g key={`plate-cut-${cIdx}`}>
@@ -347,32 +367,23 @@ function PlateSvgDiagram({
                   fill={color.fill}
                   stroke={color.stroke}
                   strokeWidth={Math.max(1.5, sheetL / 1500)}
+                  rx={Math.max(1, sheetL / 2000)}
                 />
-                <text
-                  x={cutX + cutW / 2}
-                  y={cutY + cutH / 2}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="var(--foreground)"
-                  fontSize={Math.max(20, sheetL / 45)}
-                  fontFamily="var(--font-mono)"
-                  fontWeight="bold"
-                  className="select-none pointer-events-none"
-                >
-                  {cut.label || `${cut.widthMm}×${cut.lengthMm}`}
-                </text>
-                <text
-                  x={cutX + cutW / 2}
-                  y={cutY + cutH / 2 + Math.max(22, sheetL / 40)}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="var(--muted)"
-                  fontSize={Math.max(16, sheetL / 55)}
-                  fontFamily="var(--font-mono)"
-                  className="select-none pointer-events-none"
-                >
-                  {cut.widthMm}×{cut.lengthMm} mm {cut.rotated ? "(⟳ 90°)" : ""}
-                </text>
+                {showBadge && (
+                  <text
+                    x={cutX + cutW / 2}
+                    y={cutY + cutH / 2 + 1}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="var(--foreground)"
+                    fontSize={badgeFontSize}
+                    fontFamily="var(--font-mono)"
+                    fontWeight="bold"
+                    className="select-none pointer-events-none"
+                  >
+                    #{cut.cutIndex}
+                  </text>
+                )}
               </g>
             );
           })}
@@ -871,6 +882,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
                 key={pattern.sheetId}
                 pattern={pattern}
                 sheetIndex={idx}
+                edgeTrimMm={edgeTrimMm}
               />
             ))}
           </div>
