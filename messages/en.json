@@ -139,6 +139,7 @@
       "edit": "Edit",
       "search": "Search",
       "more": "More actions",
+      "add": "Add",
       "addProjectLong": "Add to project"
     },
     "toast": {
@@ -595,6 +596,12 @@
       "extraExpensePlaceholder": "Hardware, Transport, Finishing...",
       "paintingTitle": "Surface Painting",
       "setAssembly": "Set Sub-Assembly",
+      "assemblyPickerTitle": "Assign Sub-Assembly",
+      "existingAssemblies": "Existing Sub-Assemblies",
+      "newAssemblyPlaceholder": "Type new sub-assembly name...",
+      "clearAssembly": "Clear Sub-Assembly",
+      "addToThisAssembly": "+ Add item to {name}",
+      "targetAssembly": "Target assembly",
       "generalSection": "Main Structure / General",
       "subtitleCount": "{count, plural, one {# active} other {# active}}",
       "subtitleEmpty": "group calcs into jobs",

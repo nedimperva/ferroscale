@@ -401,9 +401,15 @@ function ItemNote({
 function QuickAddCommandBar({
   projectId,
   actions,
+  existingAssemblies,
+  targetAssembly,
+  onTargetAssemblyChange,
 }: {
   projectId: string;
   actions: ProjectActions;
+  existingAssemblies: string[];
+  targetAssembly: string;
+  onTargetAssemblyChange: (asm: string) => void;
 }) {
   const t = useTranslations("command");
   const [query, setQuery] = useState("");
@@ -412,7 +418,7 @@ function QuickAddCommandBar({
   const handleAdd = () => {
     const q = query.trim();
     if (!q) return;
-    const ok = actions.onQuickAddItem?.(projectId, q);
+    const ok = actions.onQuickAddItem?.(projectId, q, targetAssembly || undefined);
     if (ok) {
       setQuery("");
       setError(false);
@@ -422,10 +428,25 @@ function QuickAddCommandBar({
   };
 
   return (
-    <div className="flex items-center gap-2 p-2 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] mb-3">
+    <div className="flex items-center gap-2 p-2 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] mb-3 flex-wrap sm:flex-nowrap">
       <span className="text-[10.5px] font-bold text-muted uppercase tracking-wider pl-1 whitespace-nowrap">
         + {t("projects.quickAdd")}:
       </span>
+      {existingAssemblies.length > 0 && (
+        <select
+          value={targetAssembly}
+          onChange={(e) => onTargetAssemblyChange(e.target.value)}
+          aria-label={t("projects.targetAssembly")}
+          className="h-8 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-xs font-semibold text-foreground cursor-pointer flex-shrink-0"
+        >
+          <option value="">🏷️ {t("projects.generalSection")}</option>
+          {existingAssemblies.map((asm) => (
+            <option key={asm} value={asm}>
+              🏷️ {asm}
+            </option>
+          ))}
+        </select>
+      )}
       <input
         value={query}
         onChange={(e) => {
@@ -437,7 +458,7 @@ function QuickAddCommandBar({
         }}
         placeholder={t("projects.quickAddPlaceholder")}
         aria-label="Quick add item command"
-        className="flex-1 h-8 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-inset)] px-2.5 text-xs font-mono text-foreground placeholder:text-muted-faint outline-none"
+        className="flex-1 h-8 min-w-[200px] rounded-lg border border-[var(--border-faint)] bg-[var(--surface-inset)] px-2.5 text-xs font-mono text-foreground placeholder:text-muted-faint outline-none"
         style={{ borderColor: error ? "var(--red-strong, #ef4444)" : undefined }}
       />
       <button
@@ -449,6 +470,120 @@ function QuickAddCommandBar({
         <DeskIcon name="plus" stroke="var(--accent-contrast)" />
         <span>{t("common.add")}</span>
       </button>
+    </div>
+  );
+}
+
+function AssemblyPickerModal({
+  currentAssembly,
+  existingAssemblies,
+  onSelect,
+  onClose,
+}: {
+  currentAssembly?: string;
+  existingAssemblies: string[];
+  onSelect: (assembly?: string) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("command");
+  const [customName, setCustomName] = useState("");
+
+  const handleCustomSubmit = () => {
+    const trimmed = customName.trim();
+    if (!trimmed) return;
+    onSelect(trimmed);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+      <div
+        className="w-full max-w-sm rounded-2xl border border-[var(--border-faint)] bg-[var(--surface)] p-4 shadow-xl space-y-3"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("projects.assemblyPickerTitle")}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-sm text-foreground">
+            {t("projects.assemblyPickerTitle")}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-muted hover:text-foreground text-sm cursor-pointer p-1"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Existing Assemblies Quick Select Chips */}
+        {existingAssemblies.length > 0 && (
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-bold text-muted uppercase tracking-wider">
+              {t("projects.existingAssemblies")}
+            </div>
+            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+              {existingAssemblies.map((asm) => (
+                <button
+                  key={asm}
+                  type="button"
+                  onClick={() => onSelect(asm)}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer flex items-center gap-1"
+                  style={{
+                    background: currentAssembly === asm ? "var(--accent-surface)" : "var(--surface-raised)",
+                    borderColor: currentAssembly === asm ? "var(--accent-border)" : "var(--border-faint)",
+                    color: currentAssembly === asm ? "var(--accent-text)" : "var(--foreground)",
+                  }}
+                >
+                  <span>🏷️</span>
+                  <span>{asm}</span>
+                  {currentAssembly === asm && <span>✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Create new assembly */}
+        <div className="space-y-1.5 pt-1 border-t border-[var(--border-faint)]">
+          <div className="text-[10px] font-bold text-muted uppercase tracking-wider">
+            + {t("projects.newAssemblyPlaceholder")}
+          </div>
+          <div className="flex gap-1.5">
+            <input
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCustomSubmit();
+                if (e.key === "Escape") onClose();
+              }}
+              autoFocus
+              placeholder="e.g. Stringers, Handrail, Base Frame"
+              className="flex-1 h-8 rounded-lg border border-[var(--border-faint)] bg-[var(--surface-inset)] px-2.5 text-xs text-foreground placeholder:text-muted-faint outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleCustomSubmit}
+              disabled={!customName.trim()}
+              className="h-8 px-3 rounded-lg text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] disabled:opacity-40 cursor-pointer"
+            >
+              {t("common.save")}
+            </button>
+          </div>
+        </div>
+
+        {/* Clear assembly */}
+        {currentAssembly && (
+          <div className="pt-2 border-t border-[var(--border-faint)]">
+            <button
+              type="button"
+              onClick={() => onSelect(undefined)}
+              className="w-full h-8 rounded-lg text-xs font-semibold text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 cursor-pointer"
+            >
+              {t("projects.clearAssembly")}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -788,8 +923,8 @@ export function ProjectDetail({
   const [detailTab, setDetailTab] = useState<"items" | "cutting">("items");
   const [showMore, setShowMore] = useState(false);
   const [notes, setNotes] = useState(project.description ?? "");
-  const [editingAssemblyId, setEditingAssemblyId] = useState<string | null>(null);
-  const [draftAssembly, setDraftAssembly] = useState("");
+  const [pickingAssemblyRow, setPickingAssemblyRow] = useState<(ReturnType<typeof projectItemRows>[number]) | null>(null);
+  const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
 
   const summary = projectSummary(project, marginPercent);
   const rows = projectItemRows(project);
@@ -801,6 +936,13 @@ export function ProjectDetail({
     project.dueDate ? t("projects.dueOn", { date: formatShortDate(project.dueDate) }) : null,
     t("projects.createdOn", { date: formatShortDate(project.createdAt) }),
   ].filter(Boolean) as string[];
+
+  // All distinct existing sub-assemblies in the project
+  const existingAssemblies = useMemo(() => {
+    return Array.from(
+      new Set(rows.map((r) => r.assembly?.trim()).filter(Boolean) as string[]),
+    );
+  }, [rows]);
 
   // Group rows by sub-assembly
   const assemblyGroups = useMemo(() => {
@@ -851,8 +993,6 @@ export function ProjectDetail({
       </span>
     );
 
-    const isEditingAsm = editingAssemblyId === row.id;
-
     const name = (
       <div className="flex-1 min-w-0 flex flex-col gap-0.5">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -864,37 +1004,25 @@ export function ProjectDetail({
           >
             {row.specLabel}
           </button>
-          {isEditingAsm ? (
-            <input
-              value={draftAssembly}
-              onChange={(e) => setDraftAssembly(e.target.value)}
-              onBlur={() => {
-                actions.onSetItemAssembly?.(project.id, row.id, draftAssembly);
-                setEditingAssemblyId(null);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  actions.onSetItemAssembly?.(project.id, row.id, draftAssembly);
-                  setEditingAssemblyId(null);
-                }
-                if (e.key === "Escape") setEditingAssemblyId(null);
-              }}
-              autoFocus
-              placeholder="Assembly name"
-              className="h-5 px-1.5 rounded text-[10.5px] border border-[var(--accent-border)] bg-[var(--surface-raised)] text-foreground font-mono"
-            />
-          ) : row.assembly ? (
+          {row.assembly ? (
             <button
               type="button"
-              onClick={() => {
-                setDraftAssembly(row.assembly ?? "");
-                setEditingAssemblyId(row.id);
-              }}
+              onClick={() => setPickingAssemblyRow(row)}
               className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[var(--surface-inset)] text-muted hover:text-foreground border border-[var(--border-faint)] cursor-pointer"
+              title={t("projects.assemblyPickerTitle")}
             >
               🏷️ {row.assembly}
             </button>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              onClick={() => setPickingAssemblyRow(row)}
+              className="opacity-0 group-hover:opacity-100 hover:opacity-100 px-1 py-0.2 rounded text-[9.5px] text-muted-faint hover:text-foreground cursor-pointer transition-opacity"
+              title={t("projects.setAssembly")}
+            >
+              + Tag
+            </button>
+          )}
         </div>
         <ItemNote row={row} projectId={project.id} actions={actions} />
       </div>
@@ -912,10 +1040,7 @@ export function ProjectDetail({
           {
             id: "assembly",
             label: t("projects.setAssembly"),
-            onSelect: () => {
-              setDraftAssembly(row.assembly ?? "");
-              setEditingAssemblyId(row.id);
-            },
+            onSelect: () => setPickingAssemblyRow(row),
           },
           {
             id: "remove",
@@ -931,7 +1056,7 @@ export function ProjectDetail({
       return (
         <div
           key={row.id}
-          className="flex flex-col gap-1.5 border-t border-border-faint first:border-t-0"
+          className="group flex flex-col gap-1.5 border-t border-border-faint first:border-t-0"
           style={{ padding: "10px 12px" }}
         >
           <div className="flex items-center gap-2">
@@ -960,7 +1085,7 @@ export function ProjectDetail({
     return (
       <div
         key={row.id}
-        className="flex items-center gap-3 border-t border-border-faint first:border-t-0 hover:bg-[var(--surface-raised)] transition-colors"
+        className="group flex items-center gap-3 border-t border-border-faint first:border-t-0 hover:bg-[var(--surface-raised)] transition-colors"
         style={{ padding: "9px 14px" }}
       >
         {glyph}
@@ -1034,9 +1159,21 @@ export function ProjectDetail({
           return (
             <div key={`asm-${asmName || "main"}`} className="border-t first:border-t-0 border-[var(--border-faint)]">
               <div
-                className="flex items-center justify-between px-3 py-1.5 bg-[var(--surface-inset)] font-mono text-[11px] font-bold text-muted"
+                className="flex items-center justify-between px-3 py-1.5 bg-[var(--surface-inset)] font-mono text-[11px] font-bold text-muted flex-wrap gap-2"
               >
-                <span>🏷️ {asmName || t("projects.generalSection")} ({asmRows.length} items)</span>
+                <div className="flex items-center gap-2">
+                  <span>🏷️ {asmName || t("projects.generalSection")} ({asmRows.length} items)</span>
+                  {asmName && (
+                    <button
+                      type="button"
+                      onClick={() => setQuickAddAssembly(asmName)}
+                      className="px-2 py-0.5 rounded text-[9.5px] font-sans font-bold bg-[var(--surface)] hover:bg-[var(--surface-raised)] border border-[var(--border-faint)] text-foreground cursor-pointer"
+                      title={t("projects.addToThisAssembly", { name: asmName })}
+                    >
+                      + {t("common.add")}
+                    </button>
+                  )}
+                </div>
                 <span>
                   {fsWeight(asmWeight)} {fsWeightUnit()} · {sym} {fsMoney(asmCost)}
                 </span>
@@ -1319,8 +1456,14 @@ export function ProjectDetail({
                 )}
               </div>
 
-              {/* Fast Inline Quick Command Bar */}
-              <QuickAddCommandBar projectId={project.id} actions={actions} />
+              {/* Fast Inline Quick Command Bar with Assembly Targeting */}
+              <QuickAddCommandBar
+                projectId={project.id}
+                actions={actions}
+                existingAssemblies={existingAssemblies}
+                targetAssembly={quickAddAssembly}
+                onTargetAssemblyChange={setQuickAddAssembly}
+              />
 
               {/* Items Table */}
               {itemsTable}
@@ -1352,6 +1495,19 @@ export function ProjectDetail({
           </div>
         )}
       </div>
+
+      {/* Interactive Sub-Assembly Picker Modal */}
+      {pickingAssemblyRow && (
+        <AssemblyPickerModal
+          currentAssembly={pickingAssemblyRow.assembly}
+          existingAssemblies={existingAssemblies}
+          onSelect={(asm) => {
+            actions.onSetItemAssembly?.(project.id, pickingAssemblyRow.id, asm);
+            setPickingAssemblyRow(null);
+          }}
+          onClose={() => setPickingAssemblyRow(null)}
+        />
+      )}
     </div>
   );
 }

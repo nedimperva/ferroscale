@@ -614,7 +614,12 @@ export interface UseProjectsReturn {
   /** Undo a delete — clears the tombstone so sync keeps the project alive. */
   restoreProject: (id: string) => void;
   duplicateProject: (id: string) => Project | null;
-  addCalculation: (projectId: string, input: CalculationInput, result: CalculationResult) => boolean;
+  addCalculation: (
+    projectId: string,
+    input: CalculationInput,
+    result: CalculationResult,
+    assembly?: string,
+  ) => boolean;
   /** Bulk add in one state update — see the note on the implementation. */
   addCalculations: (
     projectId: string,
@@ -895,7 +900,12 @@ export function useProjects(): UseProjectsReturn {
   }, [setProjects]);
 
   const addCalculation = useCallback(
-    (projectId: string, input: CalculationInput, result: CalculationResult): boolean => {
+    (
+      projectId: string,
+      input: CalculationInput,
+      result: CalculationResult,
+      assembly?: string,
+    ): boolean => {
       let added = false;
       setProjects((prev) =>
         prev.map((p) => {
@@ -911,6 +921,7 @@ export function useProjects(): UseProjectsReturn {
             input,
             result,
             normalizedProfile: normalizeProfileSnapshot(input),
+            assembly: assembly?.trim() || undefined,
           };
           return withActivity({ ...p, calculations: [...p.calculations, calc] }, "itemAdded", {
             detail: calc.normalizedProfile.shortLabel,

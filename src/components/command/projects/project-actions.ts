@@ -51,6 +51,6 @@ export interface ProjectActions {
    */
   onAddItem: (projectId: string) => boolean;
   /** Add a query directly to the project using fast inline command parser. */
-  onQuickAddItem?: (projectId: string, query: string) => boolean;
+  onQuickAddItem?: (projectId: string, query: string, assembly?: string) => boolean;
   onPrintQuote: (project: Project) => void;
 }

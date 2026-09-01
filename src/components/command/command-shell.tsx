@@ -846,13 +846,13 @@ export function CommandShell() {
         );
         return ok;
       },
-      onQuickAddItem: (projectId: string, queryStr: string) => {
+      onQuickAddItem: (projectId: string, queryStr: string, assembly?: string) => {
         const parsed = cmdParse(queryStr, parserSettings);
         if (!parsed.calc) {
           showToast(t("toast.addLength"));
           return false;
         }
-        const ok = addCalculation(projectId, parsed.calc.input, parsed.calc.result);
+        const ok = addCalculation(projectId, parsed.calc.input, parsed.calc.result, assembly);
         const name = projects.find((project) => project.id === projectId)?.name;
         showToast(
           ok

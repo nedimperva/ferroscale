@@ -139,6 +139,7 @@
       "edit": "Uredi",
       "search": "Pretraži",
       "more": "Više radnji",
+      "add": "Dodaj",
       "addProjectLong": "Dodaj u projekat"
     },
     "toast": {
@@ -595,6 +596,12 @@
       "extraExpensePlaceholder": "Vijci, Prevoz, Pocinčavanje...",
       "paintingTitle": "Bojenje površine",
       "setAssembly": "Postavi sklop",
+      "assemblyPickerTitle": "Dodijeli podsklop",
+      "existingAssemblies": "Postojeći podsklopovi",
+      "newAssemblyPlaceholder": "Upišite naziv novog podsklopa...",
+      "clearAssembly": "Ukloni iz podsklopa",
+      "addToThisAssembly": "+ Dodaj stavku u {name}",
+      "targetAssembly": "Ciljni podsklop",
       "generalSection": "Glavna konstrukcija / Općenito",
       "subtitleCount": "{count, plural, one {# aktivan} few {# aktivna} other {# aktivnih}}",
       "subtitleEmpty": "grupišite izračune u poslove",
