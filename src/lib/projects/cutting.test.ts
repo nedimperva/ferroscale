@@ -169,4 +169,75 @@ describe("extractProjectCutGroups", () => {
     expect(shsGroup?.totalPieces).toBe(6);
     expect(shsGroup?.totalLengthMm).toBe(6 * 1500); // 9000 mm
   });
+
+  it("extracts 2D plate groups and calculates area m²", () => {
+    const project: Project = {
+      id: "p2",
+      name: "Flange Base Plates",
+      createdAt: "2026-08-01T10:00:00.000Z",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      calculations: [
+        {
+          id: "c1",
+          timestamp: "2026-08-01T10:00:00.000Z",
+          note: "Base plates",
+          input: {
+            profileCategory: "plates_sheets",
+            profileId: "plate",
+            materialGradeId: "steel-s235jr",
+            manualDimensions: {
+              width: { value: 400, unit: "mm" },
+              thickness: { value: 10, unit: "mm" },
+            },
+            length: { value: 0.6, unit: "m" } as any,
+            quantity: 8,
+            priceBasis: "weight",
+            priceUnit: "kg",
+            unitPrice: 2.0,
+            currency: "EUR",
+            wastePercent: 0,
+            includeVat: false,
+            vatPercent: 0,
+          },
+          result: {
+            profileId: "plate",
+            profileLabel: "Plate 400×10",
+            gradeLabel: "S235JR",
+            densityKgPerM3: 7850,
+            areaMm2: 4000,
+            lengthMm: 600,
+            quantity: 8,
+            unitWeightKg: 18.84,
+            totalWeightKg: 150.72,
+            totalWeightLb: 332.28,
+            unitPriceAmount: 2.0,
+            subtotalAmount: 301.44,
+            wasteAmount: 0,
+            subtotalWithWasteAmount: 301.44,
+            vatAmount: 0,
+            grandTotalAmount: 301.44,
+            currency: "EUR",
+            priceBasis: "weight",
+            priceUnit: "kg",
+            formulaLabel: "EN 10029",
+            datasetVersion: "1.0",
+            referenceLabels: [],
+            dimensions: { width: 400, thickness: 10 },
+          },
+          normalizedProfile: { category: "plates_sheets", id: "plate", mode: "manual" },
+        },
+      ],
+    };
+
+    const groups = extractProjectCutGroups(project);
+    expect(groups.length).toBe(1);
+    expect(groups[0].kind).toBe("2d_plate");
+    expect(groups[0].thicknessMm).toBe(10);
+    expect(groups[0].platePieces?.length).toBe(1);
+    expect(groups[0].platePieces?.[0].widthMm).toBe(400);
+    expect(groups[0].platePieces?.[0].lengthMm).toBe(600);
+    expect(groups[0].platePieces?.[0].quantity).toBe(8);
+    // Area: 8 * (0.4 * 0.6) = 1.92 m²
+    expect(groups[0].totalAreaM2).toBeCloseTo(1.92, 2);
+  });
 });
