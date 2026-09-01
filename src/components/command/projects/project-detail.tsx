@@ -959,95 +959,103 @@ export function ProjectDetail({
         className={compact ? "flex flex-col gap-3 pt-3" : "flex-1 overflow-y-auto"}
         style={compact ? undefined : { padding: "20px 32px 32px" }}
       >
-        <div
-          className={compact ? "flex flex-col gap-3" : "grid gap-4 items-start"}
-          style={
-            compact
-              ? undefined
-              : { gridTemplateColumns: "minmax(0, 1fr) minmax(0, 340px)" }
-          }
-        >
-          <div className="flex flex-col gap-3 min-w-0">
-            <div
-              className="grid gap-2.5"
-              style={{
-                gridTemplateColumns: compact
-                  ? "repeat(2, minmax(0, 1fr))"
-                  : "repeat(auto-fit, minmax(140px, 1fr))",
-              }}
-            >
-              <StatTile label={t("projects.stats.items")} value={String(summary.itemCount)} />
-              <StatTile
-                label={t("projects.stats.weight")}
-                tone="accent"
-                value={`${fsWeight(summary.totalWeightKg)} ${fsWeightUnit()}`}
-              />
-              <StatTile
-                label={t("projects.stats.materialCost")}
-                value={`${sym} ${fsMoney(summary.totalCost)}`}
-              />
-              <StatTile
-                emphasis
-                tone="accent"
-                label={t("projects.stats.quoted", { margin: marginPercent })}
-                value={`${sym} ${fsMoney(summary.hasPainting ? summary.quotedWithPaint : summary.quotedTotal)}`}
-              />
-              {summary.hasPainting && (
-                <StatTile
-                  label={t("projects.stats.paint")}
-                  value={`${summary.paintKgNeeded} kg · ${sym} ${fsMoney(summary.paintingCost)}`}
-                />
-              )}
-            </div>
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-inset)] border border-[var(--border-faint)] self-start">
-              <button
-                type="button"
-                onClick={() => setDetailTab("items")}
-                className="px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-                style={{
-                  background: detailTab === "items" ? "var(--surface)" : "transparent",
-                  color: detailTab === "items" ? "var(--foreground)" : "var(--muted)",
-                  boxShadow: detailTab === "items" ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
-                }}
-              >
-                {t("projects.tabs.items")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setDetailTab("cutting")}
-                className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
-                style={{
-                  background: detailTab === "cutting" ? "var(--surface)" : "transparent",
-                  color: detailTab === "cutting" ? "var(--foreground)" : "var(--muted)",
-                  boxShadow: detailTab === "cutting" ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
-                }}
-              >
-                <span>{t("projects.tabs.cutting")}</span>
-              </button>
-            </div>
-            {detailTab === "items" ? itemsTable : <ProjectCutting project={project} compact={compact} />}
-          </div>
-          {compact ? (
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setShowMore((on) => !on)}
-                aria-expanded={showMore}
-                className="self-start rounded-[10px] px-3 h-8 text-[12px] font-bold cursor-pointer"
-                style={{
-                  border: "1px solid var(--border-faint)",
-                  background: "var(--surface)",
-                  color: "var(--muted)",
-                }}
-              >
-                {showMore ? t("projects.hideDetails") : t("projects.moreDetails")}
-              </button>
-              {showMore && rail}
-            </div>
-          ) : (
-            rail
-          )}
+        {/* Navigation Tabs: Items vs Cut Plan */}
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--surface-inset)] border border-[var(--border-faint)] self-start mb-3">
+          <button
+            type="button"
+            onClick={() => setDetailTab("items")}
+            className="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            style={{
+              background: detailTab === "items" ? "var(--surface)" : "transparent",
+              color: detailTab === "items" ? "var(--foreground)" : "var(--muted)",
+              boxShadow: detailTab === "items" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+            }}
+          >
+            {t("projects.tabs.items")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDetailTab("cutting")}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+            style={{
+              background: detailTab === "cutting" ? "var(--surface)" : "transparent",
+              color: detailTab === "cutting" ? "var(--foreground)" : "var(--muted)",
+              boxShadow: detailTab === "cutting" ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+            }}
+          >
+            <span>{t("projects.tabs.cutting")}</span>
+          </button>
         </div>
+
+        {detailTab === "items" ? (
+          <div
+            className={compact ? "flex flex-col gap-3" : "grid gap-4 items-start"}
+            style={
+              compact
+                ? undefined
+                : { gridTemplateColumns: "minmax(0, 1fr) minmax(0, 340px)" }
+            }
+          >
+            <div className="flex flex-col gap-3 min-w-0">
+              <div
+                className="grid gap-2.5"
+                style={{
+                  gridTemplateColumns: compact
+                    ? "repeat(2, minmax(0, 1fr))"
+                    : "repeat(auto-fit, minmax(140px, 1fr))",
+                }}
+              >
+                <StatTile label={t("projects.stats.items")} value={String(summary.itemCount)} />
+                <StatTile
+                  label={t("projects.stats.weight")}
+                  tone="accent"
+                  value={`${fsWeight(summary.totalWeightKg)} ${fsWeightUnit()}`}
+                />
+                <StatTile
+                  label={t("projects.stats.materialCost")}
+                  value={`${sym} ${fsMoney(summary.totalCost)}`}
+                />
+                <StatTile
+                  emphasis
+                  tone="accent"
+                  label={t("projects.stats.quoted", { margin: marginPercent })}
+                  value={`${sym} ${fsMoney(summary.hasPainting ? summary.quotedWithPaint : summary.quotedTotal)}`}
+                />
+                {summary.hasPainting && (
+                  <StatTile
+                    label={t("projects.stats.paint")}
+                    value={`${summary.paintKgNeeded} kg · ${sym} ${fsMoney(summary.paintingCost)}`}
+                  />
+                )}
+              </div>
+              {itemsTable}
+            </div>
+            {compact ? (
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMore((on) => !on)}
+                  aria-expanded={showMore}
+                  className="self-start rounded-[10px] px-3 h-8 text-[12px] font-bold cursor-pointer"
+                  style={{
+                    border: "1px solid var(--border-faint)",
+                    background: "var(--surface)",
+                    color: "var(--muted)",
+                  }}
+                >
+                  {showMore ? t("projects.hideDetails") : t("projects.moreDetails")}
+                </button>
+                {showMore && rail}
+              </div>
+            ) : (
+              rail
+            )}
+          </div>
+        ) : (
+          <div className="w-full min-w-0">
+            <ProjectCutting project={project} compact={compact} />
+          </div>
+        )}
       </div>
     </div>
   );

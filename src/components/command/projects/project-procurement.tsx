@@ -28,9 +28,9 @@ function StatTile({
 }) {
   return (
     <div
-      className="rounded-[15px] min-w-0"
+      className="rounded-[14px] min-w-0"
       style={{
-        padding: "11px 14px",
+        padding: "10px 14px",
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
       }}
@@ -39,9 +39,9 @@ function StatTile({
         {label}
       </div>
       <div
-        className="font-mono font-bold mt-1 truncate"
+        className="font-mono font-bold mt-0.5 truncate"
         style={{
-          fontSize: 17,
+          fontSize: 16,
           color:
             tone === "accent"
               ? "var(--accent-text)"
@@ -52,7 +52,7 @@ function StatTile({
       >
         {value}
       </div>
-      {sub && <div className="text-[11px] text-muted mt-0.5 truncate">{sub}</div>}
+      {sub && <div className="text-[10.5px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
