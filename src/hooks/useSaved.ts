@@ -336,7 +336,10 @@ export function useSaved(): UseSavedReturn {
 
   const removePartFromSaved = useCallback(
     (id: string, partId: string) => {
-      let removed = false;
+      const target = allSaved.find((entry) => entry.id === id && !entry.deletedAt);
+      // The last part is the entry, so it cannot be removed from it.
+      if (!target || target.parts.length <= 1) return false;
+      if (!target.parts.some((part) => part.id === partId)) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
@@ -344,7 +347,6 @@ export function useSaved(): UseSavedReturn {
           if (entry.parts.length <= 1) return entry;
           const nextParts = entry.parts.filter((part) => part.id !== partId);
           if (nextParts.length === entry.parts.length) return entry;
-          removed = true;
           return {
             ...entry,
             updatedAt,
@@ -355,14 +357,19 @@ export function useSaved(): UseSavedReturn {
           };
         }),
       );
-      return removed;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const reorderPartInSaved = useCallback(
     (id: string, partId: string, direction: -1 | 1) => {
-      let changed = false;
+      const target = allSaved.find((entry) => entry.id === id && !entry.deletedAt);
+      if (!target) return false;
+      const index = target.parts.findIndex((part) => part.id === partId);
+      // Nothing to do at either end of the list.
+      if (index < 0) return false;
+      if (index + direction < 0 || index + direction >= target.parts.length) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
@@ -375,7 +382,6 @@ export function useSaved(): UseSavedReturn {
           const nextParts = [...entry.parts];
           const [moved] = nextParts.splice(currentIndex, 1);
           nextParts.splice(nextIndex, 0, moved);
-          changed = true;
           return {
             ...entry,
             updatedAt,
@@ -386,9 +392,9 @@ export function useSaved(): UseSavedReturn {
           };
         }),
       );
-      return changed;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const markSavedUsed = useCallback(

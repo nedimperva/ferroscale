@@ -116,3 +116,82 @@ describe("useSaved — adding parts by command", () => {
     expect(appended).toBe(false);
   });
 });
+
+describe("useSaved — removing and reordering parts", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  function seedAssembly(result: ReturnType<typeof renderHook<ReturnType<typeof useSaved>, unknown>>["result"]) {
+    const id = seedEntry(result);
+    act(() => {
+      result.current.appendPartsToSaved(
+        id,
+        draftsFromCommand("plt200x160x12 x2 s235 + l50x50x5 280mm x4 s235"),
+      );
+    });
+    return id;
+  }
+
+  it("reports a removal that applied, and refuses the last part", () => {
+    const { result } = renderHook(() => useSaved());
+    const id = seedAssembly(result);
+    const parts = result.current.saved.find((e) => e.id === id)!.parts;
+    expect(parts).toHaveLength(3);
+
+    let removed = false;
+    act(() => {
+      removed = result.current.removePartFromSaved(id, parts[1].id);
+    });
+    expect(removed).toBe(true);
+    expect(result.current.saved.find((e) => e.id === id)?.parts).toHaveLength(2);
+
+    // Down to one, the part is the entry — removing it is refused, not silent.
+    act(() => {
+      result.current.removePartFromSaved(id, result.current.saved.find((e) => e.id === id)!.parts[1].id);
+    });
+    let removedLast = true;
+    act(() => {
+      removedLast = result.current.removePartFromSaved(id, result.current.saved.find((e) => e.id === id)!.parts[0].id);
+    });
+    expect(removedLast).toBe(false);
+    expect(result.current.saved.find((e) => e.id === id)?.parts).toHaveLength(1);
+  });
+
+  it("refuses a removal for a part id that is not on the entry", () => {
+    const { result } = renderHook(() => useSaved());
+    const id = seedAssembly(result);
+    let removed = true;
+    act(() => {
+      removed = result.current.removePartFromSaved(id, "not-a-part-id");
+    });
+    expect(removed).toBe(false);
+    expect(result.current.saved.find((e) => e.id === id)?.parts).toHaveLength(3);
+  });
+
+  it("reports a reorder that applied, and refuses one off either end", () => {
+    const { result } = renderHook(() => useSaved());
+    const id = seedAssembly(result);
+    const before = result.current.saved.find((e) => e.id === id)!.parts.map((p) => p.name);
+
+    let moved = false;
+    act(() => {
+      moved = result.current.reorderPartInSaved(id, result.current.saved.find((e) => e.id === id)!.parts[2].id, -1);
+    });
+    expect(moved).toBe(true);
+    const after = result.current.saved.find((e) => e.id === id)!.parts.map((p) => p.name);
+    expect(after).toEqual([before[0], before[2], before[1]]);
+
+    let offTop = true;
+    act(() => {
+      offTop = result.current.reorderPartInSaved(id, result.current.saved.find((e) => e.id === id)!.parts[0].id, -1);
+    });
+    expect(offTop).toBe(false);
+
+    let offEnd = true;
+    act(() => {
+      offEnd = result.current.reorderPartInSaved(id, result.current.saved.find((e) => e.id === id)!.parts[2].id, 1);
+    });
+    expect(offEnd).toBe(false);
+  });
+});
