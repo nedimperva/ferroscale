@@ -24,14 +24,20 @@ Template management: edit, duplicate and remove assembly templates, standards in
 - **Save asks where the line goes.** Save on its own still bookmarks a new part in one tap; the control beside it opens a picker with four destinations — new part, add to an existing part, start a new assembly, add to an existing assembly — plus a fifth that skips the library and puts the cut straight onto a project
 - **Assemblies can hold one part.** Starting an assembly and growing it is now a real thing to do: the intent is recorded on the entry rather than inferred from the part count, so a deliberate assembly stays one when it drops back to a single part
 
+- **Every overlay is one component.** Six went through a shared shell and four were written by hand; none of those four trapped focus, and only one closed on Escape. All ten now share the shell, which owns the backdrop, the focus trap, Escape, the header and the footer in four sizes — so a dialog can no longer ship without them
+- **Saving and adding to a project are one step.** Picking "into a project" opens the project list inside the same overlay, with a field to create one on the spot. Putting a cut on a job went from three overlays in two vocabularies to one
+
 ### Changed
 
+- **Overlays are centred on a desktop and arrive from the bottom on a phone,** everywhere, rather than each dialog deciding for itself
+- **The rename sheet no longer opens itself.** Saving a multi-item line used to force one open; naming now sits beside the option that creates the thing, and the toast offers a rename like every other save
 - **History left the Parts surface.** It listed the calculator's session tape a second time, with the same remove and clear. The phone's tape gains the clear-all it was missing so nothing is lost with the tab
 
 ### Fixed
 
 - **"Add a part" no longer disappears when the command bar is empty.** It used to be offered only while a complete line was typed, which left no way to add a part from the Parts surface itself. It is now always present: with a line it folds that line in, without one it opens the field
 - **The "added as a part" confirmation never appeared.** `addPartToSaved` and `appendPartsToSaved` decided their return value inside a React state updater, which is deferred, so callers always read `false` and skipped the toast. The outcome is now decided before dispatch
+- **Creating a project and adding to it in one gesture reported failure.** `addCalculation` and `addTemplateCalculation` decided their result inside a deferred state updater, the third instance of that bug in the app. Project writes now fold synchronously, so what a caller is told matches what happened
 - **`removePartFromSaved` and `reorderPartInSaved` reported the wrong result,** for the same deferred-updater reason. Neither had a caller reading it, but the next one would have inherited the bug
 - **The assembly badge said "1 parts".** Both part counts now pluralise properly, in English and Bosnian
 - **Two raw translation keys in the templates dialogs.** The "All categories" filter pill and the Category field label rendered `command.projects.allCategories` and `command.projects.category` instead of their text
