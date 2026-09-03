@@ -5,6 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.24.0] - 2026-09-03
+
+Template management: edit, duplicate and remove assembly templates, standards included.
+
+### Added
+
+- **Manage mode in the assembly templates dialog.** A Browse / Manage toggle in the dialog header; Manage lists your own templates and the built-in EN standards side by side, with an editor bound to whichever row is selected
+- **Edit a saved template in place.** Rename, re-categorise, rewrite the description, add or remove component cuts, step piece counts, and edit labour hours and hardware cost lines. An unsaved-changes marker tracks the draft and Save writes it back to every project picker
+- **Add a component by command.** Type a cut the way you would anywhere else in the app (`plt 200x160x12 x2 s235`) to append it to a template
+- **Remove and restore standard EN templates.** Standards you never use can be taken out of the picker. Removed standards are listed under their own heading with a per-item Restore and a Restore all, and the removal survives a reload
+- **Duplicate any template into an editable copy.** Built-in standards stay read-only; duplicating one gives you a fully editable copy with fresh component ids
+- **Undo on a delete.** Deleting a template or removing a standard raises a toast with Undo for six seconds
+
+### Fixed
+
+- **Two raw translation keys in the templates dialogs.** The "All categories" filter pill and the Category field label rendered `command.projects.allCategories` and `command.projects.category` instead of their text
+
+---
+
 ## [3.23.0] - 2026-09-01
 
 Modular Sub-Assembly Templates, Instant Multiplier Scaling, and Template Project Creation.
