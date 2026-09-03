@@ -29,7 +29,6 @@ import {
   weightAsMainStore,
 } from "@/lib/settings-stores";
 import type {
-  CommandCalc,
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestionItem,
@@ -71,11 +70,16 @@ import {
 import { CommandDesktop } from "./desktop/command-desktop";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import type { ProjectActions } from "./projects/project-actions";
-import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { SavedEditSheet } from "./sheets/saved-edit-sheet";
-import { SaveDestinationModal } from "./saved/save-destination-modal";
+import {
+  DestinationSheet,
+  assemblyTargets,
+  partTargets,
+  type DestinationId,
+  type DestinationSubject,
+} from "./sheets/destination-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import {
   buildShareUrl,
@@ -207,11 +211,14 @@ export function CommandShell() {
     remove: removeHistoryEntry,
     clear: clearHistory,
   } = useQuickHistory();
-  const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
-  /** A saved part or assembly waiting for a project to be picked for it. */
-  const [projectEntry, setProjectEntry] = useState<SavedEntry | null>(null);
-  // Save stays one tap; this is the "somewhere else" control beside it.
-  const [pickingSaveDestination, setPickingSaveDestination] = useState(false);
+  /**
+   * The destination overlay: what it is acting on, and which row it opens on.
+   * A null subject means it is closed. It replaces the save picker, the
+   * project picker and the rename-after-save sheet.
+   */
+  const [destination, setDestination] = useState<
+    { entry: SavedEntry | null; initial?: DestinationId } | null
+  >(null);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
@@ -540,10 +547,14 @@ export function CommandShell() {
     haptic("commit");
     for (const item of line.items) pushHistory(item.text.trim());
     if (line.multi) {
-      // An assembly's placeholder name ("Assembly (2 parts)") says nothing a
-      // search could find — ask for the real one now, not via a toast that
-      // five seconds of jobsite noise can swallow.
-      setEditingSavedId(entry.id);
+      // An assembly's placeholder name says nothing a search could find. It
+      // used to be fixed by opening the rename sheet unasked — a third
+      // overlay in a row nobody reached for. Naming now belongs to the save
+      // step itself, so the toast offers it like every other save.
+      showActionToast(t("toast.savedAssembly", { count: line.items.length }), {
+        label: t("common.nameIt"),
+        onAction: () => setEditingSavedId(entry.id),
+      });
     } else {
       showActionToast(t("toast.saved"), {
         label: t("common.nameIt"),
@@ -650,7 +661,7 @@ export function CommandShell() {
       );
       haptic("commit");
       for (const item of line.items) pushHistory(item.text.trim());
-      setPickingSaveDestination(false);
+      setDestination(null);
       showActionToast(t("toast.saved"), {
         label: t("common.nameIt"),
         onAction: () => setEditingSavedId(entry.id),
@@ -667,7 +678,7 @@ export function CommandShell() {
       if (!appendPartsToSaved(entryId, drafts)) return;
       haptic("commit");
       for (const item of line.items) pushHistory(item.text.trim());
-      setPickingSaveDestination(false);
+      setDestination(null);
       showToast(t("toast.partAdded", { name: target.name }));
     },
     [currentLineDrafts, savedEntries, appendPartsToSaved, line, pushHistory, showToast, t],
@@ -827,23 +838,22 @@ export function CommandShell() {
    * keeps it as one named line with its parts behind it, the way it was saved.
    */
   const handlePickProject = useCallback(
-    (projectId: string) => {
+    (projectId: string, entry: SavedEntry | null) => {
       let ok = false;
-      if (projectEntry) {
-        const parts = repriceSavedEntry(projectEntry);
-        if (parts.length > 1 || isAssemblyEntry(projectEntry)) {
-          ok = addTemplateCalculation(projectId, projectEntry.name, parts, 1);
+      if (entry) {
+        const parts = repriceSavedEntry(entry);
+        if (parts.length > 1 || isAssemblyEntry(entry)) {
+          ok = addTemplateCalculation(projectId, entry.name, parts, 1);
         } else if (parts.length === 1) {
           ok = addCalculation(projectId, parts[0].input, parts[0].result);
         }
-      } else if (projectCalc) {
-        ok = addCalculation(projectId, projectCalc.input, projectCalc.result);
+      } else if (p.calc) {
+        ok = addCalculation(projectId, p.calc.input, p.calc.result);
       } else {
         return;
       }
-      setProjectCalc(null);
-      setProjectEntry(null);
-      const project = projects.find((p) => p.id === projectId);
+      setDestination(null);
+      const project = projects.find((item) => item.id === projectId);
       showToast(
         ok
           ? t("toast.addedToProject", { project: project?.name ?? t("common.project") })
@@ -851,8 +861,7 @@ export function CommandShell() {
       );
     },
     [
-      projectCalc,
-      projectEntry,
+      p,
       repriceSavedEntry,
       addCalculation,
       addTemplateCalculation,
@@ -1012,10 +1021,11 @@ export function CommandShell() {
     ],
   );
 
+  /** "Add to project" from the calculator: the same overlay, on that row. */
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
-    setProjectCalc(p.calc);
+    setDestination({ entry: null, initial: "project" });
   }, [p.calc]);
 
   /**
@@ -1275,7 +1285,7 @@ export function CommandShell() {
     },
     onAddSavedToProject: (entry: SavedEntry) => {
       setSheet(null);
-      setProjectEntry(entry);
+      setDestination({ entry, initial: "project" });
     },
   };
   const helpSheet = effectiveSheet === "help" ? (
@@ -1289,23 +1299,42 @@ export function CommandShell() {
       }}
     />
   ) : null;
-  const saveDestinationModal =
-    pickingSaveDestination && p.calc ? (
-      <SaveDestinationModal
-        lineText={query.trim() || p.calc.result.profileLabel}
-        summaryText={`${fsWeight(p.calc.result.totalWeightKg)} ${fsWeightUnit()}`}
-        defaultName={formatCommandParseName(t, p) ?? p.calc.result.profileLabel}
-        parts={savedEntries.filter((entry) => !isAssemblyEntry(entry))}
-        assemblies={savedEntries.filter(isAssemblyEntry)}
-        onSaveNew={saveLineAsNew}
-        onAppendTo={appendLineTo}
-        onSaveToProject={() => {
-          setPickingSaveDestination(false);
-          if (p.calc) setProjectCalc(p.calc);
-        }}
-        onClose={() => setPickingSaveDestination(false)}
-      />
-    ) : null;
+  const destinationSheet = destination ? (
+    (() => {
+      const entry = destination.entry;
+      // A live line and a saved entry are the same act with a different
+      // subject, so the overlay takes one and reads its header from it.
+      const subject: DestinationSubject = entry
+        ? {
+            kind: "entry",
+            label: entry.name,
+            meta: `${entry.parts.length > 1 ? t("saveTo.partsCount", { count: entry.parts.length }) + " · " : ""}${t("saved.usedCount", { count: entry.useCount })}`,
+            glyph: entry.normalizedProfile?.iconKey?.slice(0, 3).toUpperCase() ?? "PT",
+            defaultName: entry.name,
+          }
+        : {
+            kind: "line",
+            label: query.trim() || p.calc?.result.profileLabel || "",
+            meta: p.calc ? `${fsWeight(p.calc.result.totalWeightKg)} ${fsWeightUnit()}` : "",
+            glyph: ">_",
+            defaultName: formatCommandParseName(t, p) ?? p.calc?.result.profileLabel ?? "",
+          };
+      return (
+        <DestinationSheet
+          subject={subject}
+          initial={destination.initial}
+          parts={partTargets(savedEntries)}
+          assemblies={assemblyTargets(savedEntries).filter((item) => item.id !== entry?.id)}
+          projects={projects.filter((project) => !isArchivedProject(project))}
+          onSaveNew={saveLineAsNew}
+          onAppendTo={appendLineTo}
+          onAddToProject={(projectId) => handlePickProject(projectId, entry)}
+          onCreateProject={createProject}
+          onClose={() => setDestination(null)}
+        />
+      );
+    })()
+  ) : null;
 
   const savedEditSheet = editingEntry ? (
     <SavedEditSheet
@@ -1358,7 +1387,7 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
-          onSaveElsewhere={() => setPickingSaveDestination(true)}
+          onSaveElsewhere={() => setDestination({ entry: null })}
           onLogSession={logToSession}
           onCopySummary={copySummary}
           onShareLink={shareLink}
@@ -1379,18 +1408,7 @@ export function CommandShell() {
         />
         {helpSheet}
         {savedEditSheet}
-        {saveDestinationModal}
-        {(projectCalc || projectEntry) && (
-          <CommandProjectPickerSheet
-            projects={projects.filter((project) => !isArchivedProject(project))}
-            onClose={() => {
-              setProjectCalc(null);
-              setProjectEntry(null);
-            }}
-            onCreateProject={createProject}
-            onPickProject={(project) => handlePickProject(project.id)}
-          />
-        )}
+        {destinationSheet}
         <CommandToast toast={toast} bottom={32} dark={dark} />
         <ResultAnnouncer text={liveResultText} />
       </div>
@@ -1673,6 +1691,25 @@ export function CommandShell() {
                 </svg>
                 {currentSavedEntry ? t("common.saved") : t("common.save")}
               </ActionBtn>
+              {/* Save bookmarks in one tap; this is where else it can go. */}
+              <button
+                type="button"
+                onClick={() => p.calc && setDestination({ entry: null })}
+                disabled={!p.calc}
+                aria-label={t("saveTo.title")}
+                className="flex items-center justify-center rounded-button flex-shrink-0 disabled:opacity-40"
+                style={{
+                  width: 44,
+                  height: 44,
+                  border: "1px solid var(--border-faint)",
+                  background: "var(--surface)",
+                  color: "var(--foreground)",
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
               <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
               <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
               {/* The fold doesn't draw this, but without it the phone can only
@@ -2029,7 +2066,7 @@ export function CommandShell() {
               setQuery={setQuery}
               onClose={() => setSheet(null)}
               onSave={doSave}
-              onSaveElsewhere={() => setPickingSaveDestination(true)}
+              onSaveElsewhere={() => setDestination({ entry: null })}
               isSaved={!!currentSavedEntry}
               onCopyValue={() => {
                 setSheet(null);
@@ -2100,18 +2137,7 @@ export function CommandShell() {
           )}
           {helpSheet}
           {savedEditSheet}
-          {saveDestinationModal}
-          {(projectCalc || projectEntry) && (
-            <CommandProjectPickerSheet
-              projects={projects.filter((project) => !isArchivedProject(project))}
-              onClose={() => {
-                setProjectCalc(null);
-                setProjectEntry(null);
-              }}
-              onCreateProject={createProject}
-              onPickProject={(project) => handlePickProject(project.id)}
-            />
-          )}
+          {destinationSheet}
 
           {/* TOAST */}
           <CommandToast toast={toast} bottom={120} dark={dark} />

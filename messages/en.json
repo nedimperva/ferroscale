@@ -165,7 +165,8 @@
       "sessionSaved": "{count, plural, one {# line} other {# lines}} saved to {project}",
       "sessionProjectName": "Session {date}",
       "partAdded": "Added as a part of {name}",
-      "addedItemsToSession": "{count} items added to session"
+      "addedItemsToSession": "{count} items added to session",
+      "savedAssembly": "{count, plural, one {# line} other {# lines}} saved as one assembly"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -923,8 +924,6 @@
       "addToAssemblyBody": "Appends to an assembly you have already built.",
       "projectTitle": "Straight into a project…",
       "projectBody": "Skip the library — put this cut on a job.",
-      "searchParts": "Search your parts…",
-      "searchAssemblies": "Search your assemblies…",
       "partName": "Part name",
       "assemblyName": "Assembly name",
       "partsCount": "{count, plural, one {# part} other {# parts}}",
@@ -935,7 +934,18 @@
       "summaryIntoPart": "Into {name} — becomes an assembly",
       "summaryIntoAssembly": "Into {name}",
       "summaryProject": "Onto a job, not into the library",
-      "chooseProject": "Choose project"
+      "sendTitle": "Add to…",
+      "sendLabel": "Send it to",
+      "search": {
+        "parts": "Search your parts…",
+        "assemblies": "Search your assemblies…",
+        "projects": "Search projects…"
+      },
+      "projectItems": "{count, plural, one {# item} other {# items}}",
+      "addToProject": "Add to project",
+      "noTargets": "Nothing matches that.",
+      "pickAProject": "Pick a project",
+      "summaryOntoProject": "Onto {name}"
     }
   },
   "contact": {

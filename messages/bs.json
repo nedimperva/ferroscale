@@ -165,7 +165,8 @@
       "sessionSaved": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano u {project}",
       "sessionProjectName": "Sesija {date}",
       "partAdded": "Dodano kao dio sklopa {name}",
-      "addedItemsToSession": "{count} stavki dodano u sesiju"
+      "addedItemsToSession": "{count} stavki dodano u sesiju",
+      "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -923,8 +924,6 @@
       "addToAssemblyBody": "Dodaje se u sklop koji si već napravio.",
       "projectTitle": "Odmah u projekat…",
       "projectBody": "Preskoči biblioteku — stavi ovaj rez na posao.",
-      "searchParts": "Pretraži svoje dijelove…",
-      "searchAssemblies": "Pretraži svoje sklopove…",
       "partName": "Naziv dijela",
       "assemblyName": "Naziv sklopa",
       "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
@@ -935,7 +934,18 @@
       "summaryIntoPart": "U {name} — postaje sklop",
       "summaryIntoAssembly": "U {name}",
       "summaryProject": "Na posao, ne u biblioteku",
-      "chooseProject": "Izaberi projekat"
+      "sendTitle": "Dodaj u…",
+      "sendLabel": "Pošalji u",
+      "search": {
+        "parts": "Pretraži svoje dijelove…",
+        "assemblies": "Pretraži svoje sklopove…",
+        "projects": "Pretraži projekte…"
+      },
+      "projectItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
+      "addToProject": "Dodaj u projekat",
+      "noTargets": "Ništa se ne poklapa.",
+      "pickAProject": "Izaberi projekat",
+      "summaryOntoProject": "Na {name}"
     }
   },
   "contact": {
