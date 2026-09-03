@@ -152,6 +152,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
     onTogglePin: props.onTogglePinSaved,
     onEdit: props.onEditSaved,
     onAddPart: props.onAddPartSaved,
+    canAddCurrentLine: props.canAddCurrentLine,
+    onAddPartsByCommand: props.onAddPartsByCommand,
     onRemovePart: props.onRemovePartSaved,
     onAddToProject: props.onAddSavedToProject,
     onLoadQuery: (query) => {

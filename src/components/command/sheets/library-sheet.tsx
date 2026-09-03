@@ -45,6 +45,8 @@ interface CommandLibrarySheetProps {
   onTogglePinSaved: (entry: SavedEntry) => void;
   onEditSaved: (entry: SavedEntry) => void;
   onAddPartSaved?: (entry: SavedEntry) => void;
+  canAddCurrentLine?: boolean;
+  onAddPartsByCommand?: (entry: SavedEntry, command: string) => boolean;
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
   onAddSavedToProject: (entry: SavedEntry) => void;
   onRemoveCompare: (id: string) => void;
@@ -88,6 +90,8 @@ export function CommandLibraryWorkspace({
   onTogglePinSaved,
   onEditSaved,
   onAddPartSaved,
+  canAddCurrentLine,
+  onAddPartsByCommand,
   onRemovePartSaved,
   onAddSavedToProject,
   onRemoveCompare,
@@ -177,6 +181,8 @@ export function CommandLibraryWorkspace({
             onTogglePin: onTogglePinSaved,
             onEdit: onEditSaved,
             onAddPart: onAddPartSaved,
+            canAddCurrentLine,
+            onAddPartsByCommand,
             onRemovePart: onRemovePartSaved,
             onAddToProject: onAddSavedToProject,
             onLoadQuery,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
@@ -14,6 +14,13 @@ export interface SavedCardActions {
   onOpen: () => void;
   /** Add the line currently in the bar to this entry as another part. */
   onAddPart?: () => void;
+  /** Whether there is a line in the bar for `onAddPart` to fold in. */
+  canAddCurrentLine?: boolean;
+  /**
+   * Append parts by typing a cut, without going via the bar. Returns false
+   * when the command does not parse, which the field reports in place.
+   */
+  onAddPartsByCommand?: (command: string) => boolean;
   onRemovePart?: (partId: string) => void;
   onCompare: () => void;
   /** Put this part (or the whole assembly) into a project. */
@@ -169,6 +176,26 @@ export function SavedCard({
   const t = useTranslations("command");
   const locale = useLocale();
   const [expanded, setExpanded] = useState(false);
+  const [addCommand, setAddCommand] = useState("");
+  const [addFailed, setAddFailed] = useState(false);
+  const addFieldRef = useRef<HTMLInputElement>(null);
+
+  /** Expand the card and put the caret in the add-a-cut field. */
+  function revealAddField() {
+    setExpanded(true);
+    requestAnimationFrame(() => addFieldRef.current?.focus());
+  }
+
+  function submitAddCommand() {
+    const command = addCommand.trim();
+    if (!command || !actions.onAddPartsByCommand) return;
+    if (!actions.onAddPartsByCommand(command)) {
+      setAddFailed(true);
+      return;
+    }
+    setAddCommand("");
+    setAddFailed(false);
+  }
 
   const { entry, currencySymbol: sym } = model;
   const isWeight = mode === "weight";
@@ -315,8 +342,19 @@ export function SavedCard({
               <DeskIcon name="projects" />
             </CardAction>
           )}
-          {actions.onAddPart && (
-            <CardAction label={t("saved.addPart")} onClick={actions.onAddPart}>
+          {(actions.onAddPart || actions.onAddPartsByCommand) && (
+            <CardAction
+              label={t("saved.addPart")}
+              onClick={() => {
+                // Folding in the line being typed is the fast path; with an
+                // empty bar the action opens the field rather than going away.
+                if (actions.canAddCurrentLine && actions.onAddPart) {
+                  actions.onAddPart();
+                  return;
+                }
+                revealAddField();
+              }}
+            >
               <StackIcon />
             </CardAction>
           )}
@@ -421,6 +459,52 @@ export function SavedCard({
             </div>
           ) : model.isAssembly ? null : (
             <p className="font-mono text-[11px] text-muted-faint">{t("saved.noBreakdown")}</p>
+          )}
+
+          {/* Add a cut without leaving for the calculator. A multi-item line
+              appends every item at once, which is what a part list is for. */}
+          {actions.onAddPartsByCommand && (
+            <div style={{ marginTop: 10 }}>
+              <div className="flex items-center gap-1.5">
+                <input
+                  ref={addFieldRef}
+                  value={addCommand}
+                  onChange={(e) => {
+                    setAddCommand(e.target.value);
+                    setAddFailed(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      submitAddCommand();
+                    }
+                  }}
+                  placeholder={t("saved.addPartPlaceholder")}
+                  aria-label={t("saved.addPart")}
+                  aria-invalid={addFailed}
+                  className="flex-1 min-w-0 h-9 px-2.5 rounded-chip font-mono text-[12px] text-foreground placeholder:text-muted-faint outline-none"
+                  style={{
+                    background: "var(--surface)",
+                    border: `1px solid ${addFailed ? "var(--red-border)" : "var(--border-faint)"}`,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={submitAddCommand}
+                  disabled={!addCommand.trim()}
+                  className="h-9 px-3 rounded-chip text-[11.5px] font-bold text-foreground flex items-center gap-1.5 flex-shrink-0 cursor-pointer disabled:opacity-40"
+                  style={{ background: "var(--surface)", border: "1px solid var(--border-faint)" }}
+                >
+                  <DeskIcon name="plus" />
+                  <span>{t("common.add")}</span>
+                </button>
+              </div>
+              {addFailed && (
+                <p className="text-[11px] font-semibold mt-1.5" style={{ color: "var(--red-text)" }}>
+                  {t("saved.addPartFailed")}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}

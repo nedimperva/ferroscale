@@ -25,7 +25,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Add a component by command: type a cut the way you would anywhere else in the app (plt 200x160x12 x2 s235) to append it to a template",
       "Remove and restore standard EN templates: take standards you never use out of the picker, with a per-item Restore and Restore all, kept across reloads",
       "Duplicate any template into an editable copy: built-in standards stay read-only, duplicating one gives you a copy you can change",
-      "Undo on a delete: removing a template or a standard raises a toast with Undo"
+      "Undo on a delete: removing a template or a standard raises a toast with Undo",
+      "Add parts to a saved assembly by typing a cut: the same inline field on the expanded Parts card, no trip through the calculator, and a multi-item line appends every item at once"
     ],
     added_bs: [
       "Način uređivanja šablona sklopova: prekidač Pregled / Uredi u dijalogu šablona, sa listom vlastitih šablona i ugrađenih EN standarda te uređivačem vezanim za izabrani red",
@@ -33,12 +34,17 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Dodavanje komponente komandom: upišite rez kao i svugdje u aplikaciji (plt 200x160x12 x2 s235) da ga dodate u šablon",
       "Uklanjanje i vraćanje standardnih EN šablona: izbacite standarde koje ne koristite iz izbornika, uz pojedinačno Vrati i Vrati sve, sačuvano i nakon osvježavanja",
       "Dupliciranje bilo kojeg šablona u kopiju za uređivanje: ugrađeni standardi ostaju samo za čitanje, dupliciranjem dobijate kopiju koju možete mijenjati",
-      "Vraćanje nakon brisanja: uklanjanje šablona ili standarda prikazuje poruku sa dugmetom Vrati"
+      "Vraćanje nakon brisanja: uklanjanje šablona ili standarda prikazuje poruku sa dugmetom Vrati",
+      "Dodavanje dijelova u sačuvani sklop upisivanjem reza: isto polje na proširenoj kartici Dijelovi, bez odlaska u kalkulator, a linija sa više stavki dodaje sve odjednom"
     ],
     fixed: [
+      "'Add a part' no longer disappears when the command bar is empty — with a line it folds that line in, without one it opens the field",
+      "The 'added as a part' confirmation never appeared, because the add returned its result from inside a deferred React state updater",
       "Two raw translation keys in the templates dialogs: the 'All categories' filter pill and the Category field label showed their key instead of their text"
     ],
     fixed_bs: [
+      "'Dodaj dio' više ne nestaje kada je komandna traka prazna — sa linijom je ubacuje, bez nje otvara polje",
+      "Potvrda 'dodano kao dio' se nikada nije prikazivala, jer je dodavanje vraćalo rezultat iz odgođenog React ažuriranja stanja",
       "Dva neprevedena ključa u dijalozima šablona: filter 'Sve kategorije' i oznaka polja Kategorija prikazivali su ključ umjesto teksta"
     ]
   },

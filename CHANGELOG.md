@@ -17,9 +17,12 @@ Template management: edit, duplicate and remove assembly templates, standards in
 - **Remove and restore standard EN templates.** Standards you never use can be taken out of the picker. Removed standards are listed under their own heading with a per-item Restore and a Restore all, and the removal survives a reload
 - **Duplicate any template into an editable copy.** Built-in standards stay read-only; duplicating one gives you a fully editable copy with fresh component ids
 - **Undo on a delete.** Deleting a template or removing a standard raises a toast with Undo for six seconds
+- **Add parts to a saved assembly by typing a cut.** The same inline field, on the expanded Parts card: type a cut (`plt200x160x12 x2 s235`) and it is appended without a trip through the calculator. A multi-item line appends every item at once. Adding a second part to a single part makes it an assembly, and the view follows it to the Assemblies tab instead of letting the card vanish
 
 ### Fixed
 
+- **"Add a part" no longer disappears when the command bar is empty.** It used to be offered only while a complete line was typed, which left no way to add a part from the Parts surface itself. It is now always present: with a line it folds that line in, without one it opens the field
+- **The "added as a part" confirmation never appeared.** `addPartToSaved` and `appendPartsToSaved` decided their return value inside a React state updater, which is deferred, so callers always read `false` and skipped the toast. The outcome is now decided before dispatch
 - **Two raw translation keys in the templates dialogs.** The "All categories" filter pill and the Category field label rendered `command.projects.allCategories` and `command.projects.category` instead of their text
 
 ---

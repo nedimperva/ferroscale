@@ -44,6 +44,10 @@ export interface PartsActions {
   onTogglePin: (entry: SavedEntry) => void;
   onEdit: (entry: SavedEntry) => void;
   onAddPart?: (entry: SavedEntry) => void;
+  /** Whether the bar holds a line for `onAddPart` to fold in. */
+  canAddCurrentLine?: boolean;
+  /** Append parts to an entry from a typed cut. False when it does not parse. */
+  onAddPartsByCommand?: (entry: SavedEntry, command: string) => boolean;
   onRemovePart: (entry: SavedEntry, partId: string) => void;
   /** Put this part (or the whole assembly) into a project. */
   onAddToProject: (entry: SavedEntry) => void;
@@ -200,7 +204,7 @@ function PartsRow({
         { id: "compare", label: t("saved.addToCompare"), onSelect: () => actions.onAddCompare(entry) },
         { id: "edit", label: t("saved.edit"), onSelect: () => actions.onEdit(entry) },
         { id: "duplicate", label: t("saved.duplicate"), onSelect: () => actions.onDuplicate(entry) },
-        ...(actions.onAddPart
+        ...(actions.onAddPart && actions.canAddCurrentLine
           ? [{ id: "addPart", label: t("saved.addPart"), onSelect: () => actions.onAddPart?.(entry) }]
           : []),
         {
@@ -531,6 +535,17 @@ export function PartsView({
     onTogglePin: () => actions.onTogglePin(entry),
     onEdit: () => actions.onEdit(entry),
     onAddPart: actions.onAddPart ? () => actions.onAddPart?.(entry) : undefined,
+    canAddCurrentLine: actions.canAddCurrentLine,
+    onAddPartsByCommand: actions.onAddPartsByCommand
+      ? (command: string) => {
+          const added = actions.onAddPartsByCommand?.(entry, command) ?? false;
+          // A second part makes the entry an assembly, so it leaves this tab.
+          // Follow it, rather than letting the card vanish from under the
+          // field the user is typing in.
+          if (added && tab === "parts" && entry.parts.length === 1) setTab("assemblies");
+          return added;
+        }
+      : undefined,
     onRemovePart: (partId: string) => actions.onRemovePart(entry, partId),
     onRemove: () => actions.onRemove(entry),
     selected: selecting ? selected.includes(entry.id) : undefined,

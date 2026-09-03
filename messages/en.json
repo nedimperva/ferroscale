@@ -523,7 +523,7 @@
       "noBreakdown": "no live breakdown for this entry",
       "partCount": "{count, plural, one {# part} other {# parts}}",
       "parts": "Parts",
-      "addPart": "Add the current line as a part",
+      "addPart": "Add a part",
       "removePart": "Remove {name} from this assembly",
       "searchPlaceholder": "Search name, tag, profile…",
       "sortLabel": "Sort",
@@ -550,7 +550,9 @@
       "notesPlaceholder": "What is this for?",
       "tagsPlaceholder": "gate, shop, urgent",
       "tagsHint": "Comma-separated, up to {max}.",
-      "assemblyName": "Assembly ({count} parts)"
+      "assemblyName": "Assembly ({count} parts)",
+      "addPartPlaceholder": "hea140 3m x2 s235",
+      "addPartFailed": "Could not read that cut — check the command."
     },
     "templates": {
       "modalTitle": "Modular Assembly Templates",

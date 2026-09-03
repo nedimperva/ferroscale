@@ -286,6 +286,12 @@ export function useSaved(): UseSavedReturn {
     [setSavedWithPersist],
   );
 
+  /**
+   * Whether the append applied has to be decided BEFORE dispatching: React
+   * defers a state updater to the next render, so a flag assigned inside one
+   * is still false when the caller reads it. Callers use this to decide
+   * whether to confirm, so it has to be the truth.
+   */
   const addPartToSaved = useCallback(
     (
       id: string,
@@ -293,13 +299,12 @@ export function useSaved(): UseSavedReturn {
       result: CalculationResult,
       partName?: string,
     ) => {
-      let added = false;
+      if (!allSaved.some((entry) => entry.id === id && !entry.deletedAt)) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
           if (entry.id !== id || entry.deletedAt) return entry;
           const nextPart = createSavedPart(partName ?? result.profileLabel, input, result);
-          added = true;
           return {
             ...entry,
             updatedAt,
@@ -307,29 +312,26 @@ export function useSaved(): UseSavedReturn {
           };
         }),
       );
-      return added;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const appendPartsToSaved = useCallback(
     (id: string, parts: TemplatePartDraft[]) => {
       if (parts.length === 0) return false;
-      let appended = false;
+      if (!allSaved.some((entry) => entry.id === id && !entry.deletedAt)) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
           if (entry.id !== id || entry.deletedAt) return entry;
           const normalizedParts = parts.map((part) => createSavedPart(part.name, part.input, part.result));
-          appended = normalizedParts.length > 0;
-          return appended
-            ? { ...entry, updatedAt, parts: [...entry.parts, ...normalizedParts] }
-            : entry;
+          return { ...entry, updatedAt, parts: [...entry.parts, ...normalizedParts] };
         }),
       );
-      return appended;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const removePartFromSaved = useCallback(

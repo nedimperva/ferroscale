@@ -138,6 +138,7 @@ export function CommandShell() {
     restoreSaved,
     duplicateSaved,
     addPartToSaved,
+    appendPartsToSaved,
     removePartFromSaved,
     toggleSavedPinned,
     updateSaved,
@@ -576,6 +577,34 @@ export function CommandShell() {
       }
     },
     [p, addPartToSaved, showToast, t],
+  );
+
+  /**
+   * Add parts by typing a cut, from the entry itself — the path that does not
+   * require a trip through the bar. The line goes through the same parser the
+   * bar uses, so a multi-item line ("hea140 3m + plt200x160x12 x2") appends
+   * every item at once.
+   */
+  const addPartsByCommand = useCallback(
+    (entry: SavedEntry, command: string): boolean => {
+      const text = command.trim();
+      if (!text) return false;
+      const parsedLine = cmdParseLine(text, parserSettings);
+      const drafts = parsedLine.items
+        .map((item) => item.parse)
+        .filter((parse) => parse.calc)
+        .map((parse) => ({
+          name: formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
+          input: parse.calc!.input,
+          result: parse.calc!.result,
+        }));
+      if (drafts.length === 0) return false;
+      if (!appendPartsToSaved(entry.id, drafts)) return false;
+      haptic("commit");
+      showToast(t("toast.partAdded", { name: entry.name }));
+      return true;
+    },
+    [parserSettings, appendPartsToSaved, showToast, t],
   );
 
   const duplicateSavedEntry = useCallback(
@@ -1172,7 +1201,9 @@ export function CommandShell() {
     onDuplicateSaved: duplicateSavedEntry,
     onTogglePinSaved: (entry: SavedEntry) => toggleSavedPinned(entry.id),
     onEditSaved: (entry: SavedEntry) => setEditingSavedId(entry.id),
-    onAddPartSaved: p.calc ? addCurrentAsPart : undefined,
+    onAddPartSaved: addCurrentAsPart,
+    canAddCurrentLine: Boolean(p.calc),
+    onAddPartsByCommand: addPartsByCommand,
     onRemovePartSaved: (entry: SavedEntry, partId: string) => {
       removePartFromSaved(entry.id, partId);
     },

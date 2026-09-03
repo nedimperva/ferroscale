@@ -75,8 +75,11 @@ export interface CommandDesktopProps {
   onDuplicateSaved: (entry: SavedEntry) => void;
   onTogglePinSaved: (entry: SavedEntry) => void;
   onEditSaved: (entry: SavedEntry) => void;
-  /** Undefined while the bar has no complete calculation to fold in. */
   onAddPartSaved?: (entry: SavedEntry) => void;
+  /** False while the bar has no complete calculation for `onAddPartSaved`. */
+  canAddCurrentLine?: boolean;
+  /** Append parts to an entry from a typed cut. False when it does not parse. */
+  onAddPartsByCommand?: (entry: SavedEntry, command: string) => boolean;
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
   /** Open the project picker for a saved part or assembly. */
   onAddSavedToProject: (entry: SavedEntry) => void;

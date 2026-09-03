@@ -523,7 +523,7 @@
       "noBreakdown": "nema živog pregleda za ovu stavku",
       "partCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
       "parts": "Dijelovi",
-      "addPart": "Dodaj trenutnu liniju kao dio",
+      "addPart": "Dodaj dio",
       "removePart": "Ukloni {name} iz ovog sklopa",
       "searchPlaceholder": "Traži naziv, oznaku, profil…",
       "sortLabel": "Sortiraj",
@@ -550,7 +550,9 @@
       "notesPlaceholder": "Za šta je ovo?",
       "tagsPlaceholder": "kapija, radionica, hitno",
       "tagsHint": "Odvojeno zarezom, najviše {max}.",
-      "assemblyName": "Sklop ({count} dijelova)"
+      "assemblyName": "Sklop ({count} dijelova)",
+      "addPartPlaceholder": "hea140 3m x2 s235",
+      "addPartFailed": "Nije moguće pročitati taj rez — provjeri komandu."
     },
     "templates": {
       "modalTitle": "Modularni šabloni sklopova",
