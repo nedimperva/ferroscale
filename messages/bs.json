@@ -807,39 +807,36 @@
       }
     },
     "parts": {
-      "subtitle": "Specifikacije koje često kucaš i sklopovi koje redovno praviš. Odaberi jedan i učitaće se u traku — količina i dužina ostaju izmjenjive.",
-      "tabs": {
-        "parts": "Dijelovi",
-        "assemblies": "Sklopovi",
-        "history": "Historija"
-      },
+      "subtitle": "Specifikacije koje često upisuješ i sklopovi koje ponavljaš. Iskoristi jedan da ga učitaš u traku ili ga odmah ubaci u projekat.",
       "pinnedLabel": "Zakačeno — uvijek prvo u prijedlozima",
       "pinPlaceholder": "Zakači dio da ostane ovdje",
-      "allParts": "Svi dijelovi",
-      "allAssemblies": "Svi sklopovi",
       "columns": {
         "name": "Naziv",
         "spec": "Specifikacija",
-        "kgm": "kg / m",
         "used": "Korišteno",
         "total": "Ukupno"
       },
       "use": "Koristi",
       "useAria": "Učitaj {name} u traku",
       "usedTimes": "{count}×",
-      "assemblyBadge": "sklop · {count} dijelova",
+      "assemblyBadge": "sklop · {count, plural, one {# dio} few {# dijela} other {# dijelova}}",
       "emptyPartsTitle": "Još nema dijelova",
       "emptyPartsBody": "Pritisni Sačuvaj na rezultatu i stiže ovdje, spreman za ponovo.",
-      "emptyAssembliesTitle": "Još nema sklopova",
-      "emptyAssembliesBody": "Dodaj drugu stavku sačuvanom dijelu i postaje sklop.",
-      "emptyHistoryTitle": "Historija je prazna",
-      "emptyHistoryBody": "Svaka stavka koju upišeš sa ↵ čuva se ovdje na ovom uređaju.",
-      "historySubtitle": "Stavke koje si računao na ovom uređaju, najnovije prvo — nigdje drugo se ne čuvaju.",
-      "clearHistory": "Očisti historiju",
-      "removeFromHistory": "Ukloni {query} iz historije",
-      "showOther": "Prikaži {label}",
-      "emptyPartsAllAssemblies": "Sve što si sačuvao ima više stavki, pa se nalazi pod Sklopovi.",
-      "emptyAssembliesHasParts": "Otvori dio i dodaj mu trenutnu stavku — dvije stavke čine sklop."
+      "filters": {
+        "all": "Sve",
+        "parts": "Dijelovi",
+        "assemblies": "Sklopovi"
+      },
+      "section": {
+        "all": "Sve",
+        "parts": "Dijelovi",
+        "assemblies": "Sklopovi"
+      },
+      "project": "Projekat",
+      "addToProjectAria": "Dodaj {name} u projekat",
+      "emptyFilterTitle": "Još nema ničega te vrste",
+      "emptyFilterBody": "Proširi filter da vidiš sve što si sačuvao.",
+      "showAll": "Prikaži sve"
     },
     "cutting": {
       "title": "Plan rezanja",
@@ -912,6 +909,33 @@
       "minutes": "prije {count} min",
       "hours": "prije {count} h",
       "days": "{count, plural, one {prije # dan} other {prije # dana}}"
+    },
+    "saveTo": {
+      "title": "Sačuvaj ovu liniju",
+      "whereLabel": "Gdje ide",
+      "newPartTitle": "Sačuvaj kao novi dio",
+      "newPartBody": "Samostalna specifikacija, zasebno u biblioteci.",
+      "addToPartTitle": "Dodaj u postojeći dio…",
+      "addToPartBody": "Dodaje se na njega, čime taj dio postaje sklop.",
+      "newAssemblyTitle": "Započni novi sklop",
+      "newAssemblyBody": "Ova linija postaje njegov prvi dio.",
+      "addToAssemblyTitle": "Dodaj u postojeći sklop…",
+      "addToAssemblyBody": "Dodaje se u sklop koji si već napravio.",
+      "projectTitle": "Odmah u projekat…",
+      "projectBody": "Preskoči biblioteku — stavi ovaj rez na posao.",
+      "searchParts": "Pretraži svoje dijelove…",
+      "searchAssemblies": "Pretraži svoje sklopove…",
+      "partName": "Naziv dijela",
+      "assemblyName": "Naziv sklopa",
+      "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+      "pickAPart": "Izaberi dio kojem dodaješ",
+      "pickAnAssembly": "Izaberi sklop kojem dodaješ",
+      "summaryNewPart": "Novi dio u biblioteci",
+      "summaryNewAssembly": "Novi sklop, 1 dio",
+      "summaryIntoPart": "U {name} — postaje sklop",
+      "summaryIntoAssembly": "U {name}",
+      "summaryProject": "Na posao, ne u biblioteku",
+      "chooseProject": "Izaberi projekat"
     }
   },
   "contact": {

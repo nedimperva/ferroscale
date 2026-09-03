@@ -162,6 +162,7 @@ export function CommandLibraryWorkspace({
           mode={mode}
           onLoad={onLoadQuery}
           onRemove={onRemoveTapeEntry}
+          onClear={onClearHistory}
           onSaveAsProject={onSaveSessionAsProject}
         />
       )}
@@ -169,7 +170,6 @@ export function CommandLibraryWorkspace({
         <PartsView
           compact
           saved={saved}
-          history={sessionTape}
           settings={settings}
           defaultUnit={defaultUnit}
           mode={mode}
@@ -185,9 +185,6 @@ export function CommandLibraryWorkspace({
             onAddPartsByCommand,
             onRemovePart: onRemovePartSaved,
             onAddToProject: onAddSavedToProject,
-            onLoadQuery,
-            onRemoveHistoryEntry: onRemoveTapeEntry,
-            onClearHistory: onClearHistory,
           }}
         />
       )}
@@ -580,6 +577,7 @@ function SessionTabContent({
   mode,
   onLoad,
   onRemove,
+  onClear,
   onSaveAsProject,
 }: {
   tape: string[];
@@ -587,6 +585,7 @@ function SessionTabContent({
   mode: "weight" | "price";
   onLoad: (query: string) => void;
   onRemove: (query: string) => void;
+  onClear: () => void;
   onSaveAsProject: () => void;
 }) {
   const t = useTranslations("command");
@@ -653,19 +652,35 @@ function SessionTabContent({
         </span>
       </div>
 
-      <button
-        type="button"
-        onClick={onSaveAsProject}
-        className="rounded-button text-[12.5px] font-bold"
-        style={{
-          height: 40,
-          border: "1px solid var(--accent-border)",
-          background: "var(--accent-surface)",
-          color: "var(--accent-text)",
-        }}
-      >
-        {t("desktop.saveAsProject")}
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-button text-[12.5px] font-bold flex-shrink-0"
+          style={{
+            height: 40,
+            padding: "0 14px",
+            border: "1px solid var(--border-faint)",
+            background: "var(--surface)",
+            color: "var(--muted)",
+          }}
+        >
+          {t("common.clearAll")}
+        </button>
+        <button
+          type="button"
+          onClick={onSaveAsProject}
+          className="rounded-button text-[12.5px] font-bold flex-1"
+          style={{
+            height: 40,
+            border: "1px solid var(--accent-border)",
+            background: "var(--accent-surface)",
+            color: "var(--accent-text)",
+          }}
+        >
+          {t("desktop.saveAsProject")}
+        </button>
+      </div>
     </div>
   );
 }

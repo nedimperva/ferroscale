@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import type { LengthUnit } from "@/lib/calculator/types";
-import type { SavedEntry } from "@/hooks/useSaved";
+import { isAssemblyEntry as isAssembly, type SavedEntry } from "@/hooks/useSaved";
 import { collectSavedTags, filterSortSaved, type SavedSort } from "@/lib/saved/query";
 import { buildSavedCardModel, type SavedCardModel } from "../saved/saved-model";
 import { PinIcon, SavedCard, SavedThumb, type SavedCardActions } from "../saved/saved-card";
@@ -26,14 +26,19 @@ import { DeskIcon, Kbd } from "../desktop/desk-atoms";
  * The things people actually re-run are specs (a section at a grade) and
  * assemblies (a gate frame, a railing bay), and the useful question about one
  * is "how often do I reach for this", not "when did I bookmark it". So the
- * surface splits along that line — Parts, Assemblies, History — leads with the
- * pinned few, and leads every row with a Use button.
+ * surface leads with the pinned few and leads every row with Use.
+ *
+ * Parts and assemblies are one list, narrowed by a chip rather than split
+ * across tabs: an entry crosses that line the moment a second part is added,
+ * and a tab split meant the thing you had just worked on kept leaving the
+ * list you were looking at. History is not here — it is the calculator's
+ * session tape, which already lists it with the same remove and clear.
  *
  * Nothing about the data changed: `pinned`, `useCount`, `lastUsedAt` and
  * multi-part entries were all already there and mostly unsurfaced.
  */
 
-export type PartsTab = "parts" | "assemblies" | "history";
+export type PartsFilter = "all" | "parts" | "assemblies";
 
 export interface PartsActions {
   onPick: (entry: SavedEntry) => void;
@@ -51,18 +56,12 @@ export interface PartsActions {
   onRemovePart: (entry: SavedEntry, partId: string) => void;
   /** Put this part (or the whole assembly) into a project. */
   onAddToProject: (entry: SavedEntry) => void;
-  onLoadQuery: (query: string) => void;
-  onRemoveHistoryEntry: (query: string) => void;
-  onClearHistory: () => void;
   onNew?: () => void;
 }
 
-/** An entry with more than one part is an assembly; the rest are parts. */
-function isAssembly(entry: SavedEntry): boolean {
-  return entry.parts.length > 1;
-}
 
-function TabPill({
+
+function FilterChip({
   active,
   label,
   count,
@@ -70,27 +69,27 @@ function TabPill({
 }: {
   active: boolean;
   label: string;
-  count?: number;
+  count: number;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      role="tab"
-      aria-selected={active}
+      aria-pressed={active}
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-[9px] cursor-pointer whitespace-nowrap"
+      className="flex items-center gap-1.5 rounded-[10px] cursor-pointer whitespace-nowrap font-bold text-[12.5px]"
       style={{
-        padding: "7px 14px",
-        background: active ? "var(--surface)" : "transparent",
-        color: active ? "var(--foreground)" : "var(--muted)",
-        fontSize: 13,
-        fontWeight: active ? 700 : 600,
-        boxShadow: active ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+        height: 32,
+        padding: "0 13px",
+        border: `1px solid ${active ? "var(--accent)" : "var(--border-faint)"}`,
+        background: active ? "var(--accent)" : "var(--surface)",
+        color: active ? "var(--accent-contrast)" : "var(--muted)",
       }}
     >
       {label}
-      {count != null && <span className="font-mono text-[11px] text-muted">{count}</span>}
+      <span className="font-mono text-[11px] font-semibold" style={{ opacity: 0.75 }}>
+        {count}
+      </span>
     </button>
   );
 }
@@ -187,6 +186,27 @@ function PartsRow({
     </button>
   );
 
+  // Adding to a project used to live only in the row menu and a hover-only
+  // icon row, which a touch screen never reveals. It is the second thing
+  // anyone does with a saved part, so it gets a button of its own.
+  const projectButton = (
+    <button
+      type="button"
+      onClick={() => actions.onAddToProject(entry)}
+      aria-label={t("parts.addToProjectAria", { name: entry.name })}
+      className="rounded-[9px] font-bold text-[12px] cursor-pointer flex-shrink-0 flex items-center gap-1.5"
+      style={{
+        padding: "6px 12px",
+        border: "1px solid var(--accent)",
+        background: "var(--accent)",
+        color: "var(--accent-contrast)",
+      }}
+    >
+      <DeskIcon name="projects" />
+      <span>{t("parts.project")}</span>
+    </button>
+  );
+
   const menu = (
     <RowMenu
       ariaLabel={entry.name}
@@ -195,11 +215,6 @@ function PartsRow({
           id: "pin",
           label: entry.pinned ? t("saved.unpin") : t("saved.pin"),
           onSelect: () => actions.onTogglePin(entry),
-        },
-        {
-          id: "project",
-          label: t("common.addProjectLong"),
-          onSelect: () => actions.onAddToProject(entry),
         },
         { id: "compare", label: t("saved.addToCompare"), onSelect: () => actions.onAddCompare(entry) },
         { id: "edit", label: t("saved.edit"), onSelect: () => actions.onEdit(entry) },
@@ -272,12 +287,8 @@ function PartsRow({
     ? model.parts.map((part) => part.specLabel.split(" ")[0]).join(" + ")
     : model.query || model.specLabel;
 
-  const perMetre = !assembly && model.kgm != null && (model.parsed?.lengthM ?? 0) > 0;
-  const kgmText = perMetre
-    ? model.kgm!.toFixed(2)
-    : model.totalKg != null
-      ? `${fsWeight(model.totalKg)} ${fsWeightUnit()}`
-      : "—";
+  const totalText =
+    model.totalKg != null ? `${fsWeight(model.totalKg)} ${fsWeightUnit()}` : "—";
 
   if (compact) {
     return (
@@ -300,11 +311,12 @@ function PartsRow({
             {specText}
             <span className="font-bold" style={{ color: "var(--accent-text)" }}>
               {" · "}
-              {kgmText}
+              {totalText}
             </span>
           </span>
         </button>
         {useButton}
+        {projectButton}
         {menu}
       </div>
     );
@@ -334,7 +346,7 @@ function PartsRow({
         className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
         style={{ width: 96, color: "var(--accent-text)" }}
       >
-        {kgmText}
+        {totalText}
       </span>
       <span
         role="cell"
@@ -345,115 +357,8 @@ function PartsRow({
       </span>
       <div role="cell" className="flex items-center gap-2 flex-shrink-0">
         {useButton}
+        {projectButton}
         {menu}
-      </div>
-    </div>
-  );
-}
-
-function HistoryTab({
-  history,
-  settings,
-  actions,
-  compact,
-}: {
-  history: string[];
-  settings: CommandParserSettings;
-  actions: PartsActions;
-  compact?: boolean;
-}) {
-  const t = useTranslations("command");
-  const sym = CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€";
-  const rows = useMemo(
-    () =>
-      history
-        .map((query) => ({ query, parsed: cmdParse(query, settings) }))
-        .filter((row) => row.parsed.valid),
-    [history, settings],
-  );
-
-  if (rows.length === 0) {
-    return (
-      <EmptyState
-        compact={compact}
-        title={t("parts.emptyHistoryTitle")}
-        body={t("parts.emptyHistoryBody")}
-      />
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-[12.5px] text-muted flex-1 min-w-0">
-          {t("parts.historySubtitle")}
-        </span>
-        <button
-          type="button"
-          onClick={actions.onClearHistory}
-          className="rounded-[10px] px-3 h-8 text-[12px] font-bold cursor-pointer flex-shrink-0"
-          style={{
-            border: "1px solid var(--border-faint)",
-            background: "var(--surface)",
-            color: "var(--muted)",
-          }}
-        >
-          {t("parts.clearHistory")}
-        </button>
-      </div>
-      <div
-        className="rounded-panel-lg overflow-hidden"
-        style={{
-          border: "1px solid var(--border-faint)",
-          background: "var(--surface)",
-          boxShadow: "var(--panel-shadow-soft)",
-        }}
-      >
-        {rows.map((row) => (
-          <div
-            key={row.query}
-            className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
-            style={{ padding: "9px 14px" }}
-          >
-            <button
-              type="button"
-              onClick={() => actions.onLoadQuery(row.query)}
-              className="flex-1 min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer font-mono text-[13px] font-bold text-foreground truncate"
-            >
-              {row.query}
-            </button>
-            <span
-              className="font-mono text-[12px] font-bold text-right flex-shrink-0"
-              style={{ color: "var(--accent-text)" }}
-            >
-              {row.parsed.totalKg != null
-                ? `${fsWeight(row.parsed.totalKg)} ${fsWeightUnit()}`
-                : "—"}
-            </span>
-            {!compact && (
-              <span
-                className="font-mono text-[12px] text-right flex-shrink-0"
-                style={{ width: 96, color: "var(--blue-text)" }}
-              >
-                {row.parsed.totalAmount != null ? `${sym} ${fsMoney(row.parsed.totalAmount)}` : "—"}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => actions.onRemoveHistoryEntry(row.query)}
-              aria-label={t("parts.removeFromHistory", { query: row.query })}
-              className="flex items-center justify-center rounded-[9px] cursor-pointer flex-shrink-0 text-muted text-[15px] leading-none"
-              style={{
-                width: 28,
-                height: 28,
-                border: "1px solid var(--border-faint)",
-                background: "var(--surface-raised)",
-              }}
-            >
-              ×
-            </button>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -461,36 +366,23 @@ function HistoryTab({
 
 export function PartsView({
   saved,
-  history,
   settings,
   defaultUnit,
   mode,
   actions,
   compact,
-  initialTab,
 }: {
   saved: SavedEntry[];
-  history: string[];
   settings: CommandParserSettings;
   defaultUnit: LengthUnit;
   mode: "weight" | "price";
   actions: PartsActions;
   compact?: boolean;
-  /** Force a tab; by default the surface opens on the first non-empty one. */
-  initialTab?: PartsTab;
 }) {
   const t = useTranslations("command");
-  // Saving one assembly and landing on an empty Parts tab would read as "your
-  // save did not work", so the opening tab follows what is actually there.
-  const [tab, setTab] = useState<PartsTab>(
-    () =>
-      initialTab ??
-      (saved.some((entry) => entry.parts.length <= 1)
-        ? "parts"
-        : saved.length > 0
-          ? "assemblies"
-          : "parts"),
-  );
+  // Everything is listed together; the chip narrows it. Opening on "all"
+  // means a save is always visible, whichever kind it turned out to be.
+  const [filter, setFilter] = useState<PartsFilter>("all");
   const [query, setQuery] = useState<SavedToolbarState>({
     search: "",
     sort: "used" as SavedSort,
@@ -504,7 +396,11 @@ export function PartsView({
 
   const parts = useMemo(() => saved.filter((entry) => !isAssembly(entry)), [saved]);
   const assemblies = useMemo(() => saved.filter(isAssembly), [saved]);
-  const scope = tab === "assemblies" ? assemblies : parts;
+  const scope = useMemo(() => {
+    if (filter === "parts") return parts;
+    if (filter === "assemblies") return assemblies;
+    return saved;
+  }, [filter, saved, parts, assemblies]);
 
   const tags = useMemo(() => collectSavedTags(scope), [scope]);
   const visible = useMemo(() => filterSortSaved(scope, query), [scope, query]);
@@ -537,14 +433,7 @@ export function PartsView({
     onAddPart: actions.onAddPart ? () => actions.onAddPart?.(entry) : undefined,
     canAddCurrentLine: actions.canAddCurrentLine,
     onAddPartsByCommand: actions.onAddPartsByCommand
-      ? (command: string) => {
-          const added = actions.onAddPartsByCommand?.(entry, command) ?? false;
-          // A second part makes the entry an assembly, so it leaves this tab.
-          // Follow it, rather than letting the card vanish from under the
-          // field the user is typing in.
-          if (added && tab === "parts" && entry.parts.length === 1) setTab("assemblies");
-          return added;
-        }
+      ? (command: string) => actions.onAddPartsByCommand?.(entry, command) ?? false
       : undefined,
     onRemovePart: (partId: string) => actions.onRemovePart(entry, partId),
     onRemove: () => actions.onRemove(entry),
@@ -559,29 +448,25 @@ export function PartsView({
       : undefined,
   });
 
-  const tabs = (
-    <div
-      role="tablist"
-      aria-label={t("nav.parts")}
-      className="flex gap-0.5 flex-shrink-0"
-      style={{ background: "var(--surface-inset)", borderRadius: 11, padding: 3 }}
-    >
-      <TabPill
-        active={tab === "parts"}
-        label={t("parts.tabs.parts")}
+  const filters = (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      <FilterChip
+        active={filter === "all"}
+        label={t("parts.filters.all")}
+        count={saved.length}
+        onClick={() => setFilter("all")}
+      />
+      <FilterChip
+        active={filter === "parts"}
+        label={t("parts.filters.parts")}
         count={parts.length}
-        onClick={() => setTab("parts")}
+        onClick={() => setFilter("parts")}
       />
-      <TabPill
-        active={tab === "assemblies"}
-        label={t("parts.tabs.assemblies")}
+      <FilterChip
+        active={filter === "assemblies"}
+        label={t("parts.filters.assemblies")}
         count={assemblies.length}
-        onClick={() => setTab("assemblies")}
-      />
-      <TabPill
-        active={tab === "history"}
-        label={t("parts.tabs.history")}
-        onClick={() => setTab("history")}
+        onClick={() => setFilter("assemblies")}
       />
     </div>
   );
@@ -589,32 +474,17 @@ export function PartsView({
   const emptyScope = scope.length === 0;
   const filtering = query.search.trim() !== "" || query.tags.length > 0;
 
-  // Folding a second line into a part turns it into an assembly, which moves
-  // it to the other tab. Saying where it went beats leaving a blank screen —
-  // and beats moving the user there without asking.
-  const siblingTab: PartsTab = tab === "assemblies" ? "parts" : "assemblies";
-  const siblingCount = tab === "assemblies" ? parts.length : assemblies.length;
-  const siblingLabel = t(`parts.tabs.${siblingTab}`);
-
   const list = emptyScope ? (
     <EmptyState
       compact={compact}
       icon={<DeskIcon name="saved" />}
-      title={tab === "assemblies" ? t("parts.emptyAssembliesTitle") : t("parts.emptyPartsTitle")}
-      body={
-        siblingCount > 0
-          ? tab === "assemblies"
-            ? t("parts.emptyAssembliesHasParts")
-            : t("parts.emptyPartsAllAssemblies")
-          : tab === "assemblies"
-            ? t("parts.emptyAssembliesBody")
-            : t("parts.emptyPartsBody")
-      }
+      title={filter === "all" ? t("parts.emptyPartsTitle") : t("parts.emptyFilterTitle")}
+      body={filter === "all" ? t("parts.emptyPartsBody") : t("parts.emptyFilterBody")}
       action={
-        siblingCount > 0 ? (
+        filter !== "all" ? (
           <button
             type="button"
-            onClick={() => setTab(siblingTab)}
+            onClick={() => setFilter("all")}
             className="inline-flex items-center gap-2 rounded-button font-bold text-[13px] cursor-pointer"
             style={{
               padding: "9px 15px",
@@ -623,8 +493,8 @@ export function PartsView({
               color: "var(--accent-text)",
             }}
           >
-            {t("parts.showOther", { label: siblingLabel })}
-            <span className="font-mono text-[11px]">{siblingCount}</span>
+            {t("parts.showAll")}
+            <span className="font-mono text-[11px]">{saved.length}</span>
           </button>
         ) : (
           actions.onNew && (
@@ -678,7 +548,9 @@ export function PartsView({
         />
       )}
 
-      {tab === "parts" && !filtering && (
+      {filters}
+
+      {!filtering && pinnedModels.length > 0 && (
         <section>
           <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-2 px-1">
             {t("parts.pinnedLabel")}
@@ -711,7 +583,7 @@ export function PartsView({
 
       <section>
         <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-2 px-1">
-          {tab === "assemblies" ? t("parts.allAssemblies") : t("parts.allParts")}
+          {t(`parts.section.${filter}`)}
         </div>
         {models.length === 0 ? (
           <EmptyState
@@ -753,7 +625,7 @@ export function PartsView({
         ) : (
           <div
             role="table"
-            aria-label={tab === "assemblies" ? t("parts.tabs.assemblies") : t("parts.tabs.parts")}
+            aria-label={t(`parts.section.${filter}`)}
             className="rounded-panel-lg overflow-hidden"
             style={{
               border: "1px solid var(--border-faint)",
@@ -770,7 +642,7 @@ export function PartsView({
                 <span role="columnheader" className="flex-1 min-w-0">{t("parts.columns.name")}</span>
                 <span role="columnheader" style={{ width: 190 }}>{t("parts.columns.spec")}</span>
                 <span role="columnheader" style={{ width: 96 }} className="text-right">
-                  {tab === "assemblies" ? t("parts.columns.total") : t("parts.columns.kgm")}
+                  {t("parts.columns.total")}
                 </span>
                 <span role="columnheader" style={{ width: 56 }} className="text-right">
                   {t("parts.columns.used")}
@@ -792,20 +664,8 @@ export function PartsView({
     </div>
   );
 
-  const body =
-    tab === "history" ? (
-      <HistoryTab history={history} settings={settings} actions={actions} compact={compact} />
-    ) : (
-      list
-    );
-
   if (compact) {
-    return (
-      <div className="flex flex-col gap-3">
-        {tabs}
-        {body}
-      </div>
-    );
+    return <div className="flex flex-col gap-3">{list}</div>;
   }
 
   return (
@@ -820,10 +680,9 @@ export function PartsView({
           </div>
           <div className="text-[12.5px] text-muted mt-1 leading-snug">{t("parts.subtitle")}</div>
         </div>
-        <div className="ml-auto">{tabs}</div>
       </div>
       <div className="flex-1 overflow-y-auto" style={{ padding: "20px 32px 32px" }}>
-        <div className="min-w-0">{body}</div>
+        <div className="min-w-0">{list}</div>
       </div>
     </div>
   );
