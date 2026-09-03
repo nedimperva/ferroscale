@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { DeskIcon } from "../desktop/desk-atoms";
+import { SheetShell } from "../sheets/sheet-shell";
 
 export function ScaleAssemblyModal({
   assemblyName,
@@ -26,33 +27,40 @@ export function ScaleAssemblyModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div
-        className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl border border-[var(--border-faint)] bg-[var(--surface)] p-5 shadow-2xl space-y-4"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("templates.scaleAssemblyTitle")}
-      >
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <h3 className="font-extrabold text-sm sm:text-base text-foreground flex items-center gap-1.5">
-              <DeskIcon name="bolt" stroke="var(--accent-text)" />
-              <span>{t("templates.scaleAssemblyTitle")}</span>
-            </h3>
-            <p className="text-[11.5px] text-muted">
-              {assemblyName || t("projects.generalSection")} ({itemCount} {t("projects.columns.items")})
-            </p>
-          </div>
+    <SheetShell
+      title={t("templates.scaleAssemblyTitle")}
+      onClose={onClose}
+      size="compact"
+      icon={
+        <span className="flex items-center justify-center rounded-chip" style={{ width: 34, height: 34, background: "var(--accent-surface)" }}>
+          <DeskIcon name="bolt" stroke="var(--accent-text)" />
+        </span>
+      }
+      subtitle={
+        <p className="text-[11.5px] text-muted mt-1 truncate">
+          {assemblyName || t("projects.generalSection")} ({itemCount} {t("projects.columns.items")})
+        </p>
+      }
+      footer={
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onClose}
-            aria-label={t("common.close")}
-            className="w-11 h-11 sm:w-9 sm:h-9 rounded-chip flex items-center justify-center text-muted hover:text-foreground cursor-pointer"
+            className="flex-1 h-11 sm:h-10 rounded-button border border-border-faint bg-[var(--surface)] text-xs font-bold text-foreground cursor-pointer"
           >
-            <DeskIcon name="close" />
+            {t("common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={handleConfirm}
+            className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-bold cursor-pointer"
+          >
+            {t("templates.applyScale", { mult: multiplier })}
           </button>
         </div>
-
+      }
+    >
+      <div className="space-y-4">
         {/* Quick Multiplier Buttons */}
         <div className="space-y-2">
           <label className="text-[11px] font-bold text-muted uppercase tracking-wider">
@@ -95,7 +103,6 @@ export function ScaleAssemblyModal({
               onChange={(e) => setMultiplier(Number(e.target.value) || 1)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleConfirm();
-                if (e.key === "Escape") onClose();
               }}
               autoFocus
               className="w-full h-11 rounded-xl border border-[var(--border-faint)] bg-[var(--surface-inset)] px-3 font-mono font-extrabold text-base text-foreground text-center outline-none"
@@ -114,23 +121,7 @@ export function ScaleAssemblyModal({
           {t("templates.scaleAssemblyHint")}
         </p>
 
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-10 rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-xs font-bold text-foreground cursor-pointer transition-colors"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            className="flex-1 h-10 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-bold cursor-pointer active:scale-98 transition-all shadow-xs"
-          >
-            {t("templates.applyScale", { mult: multiplier })}
-          </button>
-        </div>
       </div>
-    </div>
+    </SheetShell>
   );
 }

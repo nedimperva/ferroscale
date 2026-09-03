@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { PROJECT_CATEGORIES, type ProjectCategory } from "@/hooks/useProjects";
 import type { AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
 import { DeskIcon } from "../desktop/desk-atoms";
+import { SheetShell } from "../sheets/sheet-shell";
 
 export function SaveAssemblyTemplateModal({
   assemblyName,
@@ -29,33 +30,41 @@ export function SaveAssemblyTemplateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div
-        className="w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-[var(--border-faint)] bg-[var(--surface)] p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("templates.saveTemplateTitle")}
-      >
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <h3 className="font-extrabold text-sm sm:text-base text-foreground flex items-center gap-1.5">
-              <DeskIcon name="bookmark" stroke="var(--accent-text)" />
-              <span>{t("templates.saveTemplateTitle")}</span>
-            </h3>
-            <p className="text-[11.5px] text-muted">
-              {t("templates.saveTemplateSubtitle", { count: items.length })}
-            </p>
-          </div>
+    <SheetShell
+      title={t("templates.saveTemplateTitle")}
+      onClose={onClose}
+      size="compact"
+      icon={
+        <span className="flex items-center justify-center rounded-chip" style={{ width: 34, height: 34, background: "var(--accent-surface)" }}>
+          <DeskIcon name="bookmark" stroke="var(--accent-text)" />
+        </span>
+      }
+      subtitle={
+        <p className="text-[11.5px] text-muted mt-1">
+          {t("templates.saveTemplateSubtitle", { count: items.length })}
+        </p>
+      }
+      footer={
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onClose}
-            aria-label={t("common.close")}
-            className="w-11 h-11 sm:w-9 sm:h-9 rounded-chip flex items-center justify-center text-muted hover:text-foreground cursor-pointer"
+            className="flex-1 h-11 sm:h-10 rounded-button border border-border-faint bg-[var(--surface)] text-xs font-bold text-foreground cursor-pointer"
           >
-            <DeskIcon name="close" />
+            {t("common.cancel")}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!name.trim()}
+            className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-bold disabled:opacity-40 cursor-pointer"
+          >
+            {t("common.save")}
           </button>
         </div>
-
+      }
+    >
+      <div className="space-y-4">
         {/* Template Name Input */}
         <div className="space-y-1">
           <label className="text-xs font-bold text-foreground">
@@ -119,24 +128,7 @@ export function SaveAssemblyTemplateModal({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-10 rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-xs font-bold text-foreground cursor-pointer transition-colors"
-          >
-            {t("common.cancel")}
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!name.trim()}
-            className="flex-1 h-10 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-bold disabled:opacity-40 cursor-pointer active:scale-98 transition-all shadow-xs"
-          >
-            {t("common.save")}
-          </button>
-        </div>
       </div>
-    </div>
+    </SheetShell>
   );
 }

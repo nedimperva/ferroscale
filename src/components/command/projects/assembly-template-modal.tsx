@@ -7,6 +7,7 @@ import { useAssemblyTemplates, type AssemblyTemplate } from "@/hooks/useAssembly
 import { PROJECT_CATEGORIES } from "@/hooks/useProjects";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { ManageTemplatesPanel } from "./manage-templates-panel";
+import { SheetShell } from "../sheets/sheet-shell";
 
 type TemplateMode = "browse" | "manage";
 
@@ -23,93 +24,81 @@ export function AssemblyTemplateModal({
   const templatesApi = useAssemblyTemplates();
   const [mode, setMode] = useState<TemplateMode>("browse");
 
+  const modeToggle = (
+    <div className="hidden sm:flex items-center gap-1.5 p-1.5 rounded-button bg-[var(--surface-inset)] border border-border-faint flex-shrink-0">
+      {(["browse", "manage"] as const).map((value) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => setMode(value)}
+          aria-pressed={mode === value}
+          className="h-8 px-3.5 rounded-chip text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
+          style={{
+            background: mode === value ? "var(--surface)" : "transparent",
+            color: mode === value ? "var(--foreground)" : "var(--muted)",
+            boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+          }}
+        >
+          <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
+          {value === "manage" && templatesApi.customTemplates.length > 0 && (
+            <span className="px-1.5 rounded-full font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
+              {templatesApi.customTemplates.length}
+            </span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div
-        className="w-full max-w-4xl h-[94vh] sm:h-auto sm:max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-[var(--border-faint)] bg-[var(--surface)] shadow-2xl overflow-hidden relative"
-        role="dialog"
-        aria-modal="true"
-        aria-label={mode === "manage" ? t("templates.manageAria") : t("templates.modalTitle")}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-2 sm:gap-3.5 px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[var(--border-faint)] bg-[var(--surface-raised)] flex-shrink-0">
-          <div className="min-w-0 flex-1">
-            <h2 className="font-extrabold text-sm sm:text-base text-foreground flex items-center gap-2 truncate">
-              <DeskIcon name="layers" stroke="var(--accent-text)" />
-              <span>{t("templates.modalTitle")}</span>
-            </h2>
-            <p className="text-[11px] sm:text-xs text-muted mt-0.5 truncate">
-              {mode === "manage" ? t("templates.manageSubtitle") : t("templates.modalSubtitle")}
-            </p>
-          </div>
-
-          {/* Browse / Manage */}
-          <div className="hidden sm:flex items-center gap-1.5 p-1.5 rounded-button bg-[var(--surface-inset)] border border-[var(--border-faint)] flex-shrink-0">
-            {(["browse", "manage"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setMode(value)}
-                aria-pressed={mode === value}
-                className="h-8 px-3.5 rounded-chip text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
-                style={{
-                  background: mode === value ? "var(--surface)" : "transparent",
-                  color: mode === value ? "var(--foreground)" : "var(--muted)",
-                  boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                }}
-              >
-                <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
-                {value === "manage" && templatesApi.customTemplates.length > 0 && (
-                  <span className="px-1.5 rounded-full font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
-                    {templatesApi.customTemplates.length}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
+    <SheetShell
+      title={t("templates.modalTitle")}
+      onClose={onClose}
+      size="wide"
+      bare
+      icon={
+        <span className="flex items-center justify-center rounded-chip" style={{ width: 34, height: 34, background: "var(--accent-surface)" }}>
+          <DeskIcon name="layers" stroke="var(--accent-text)" />
+        </span>
+      }
+      subtitle={
+        <p className="text-[11px] sm:text-xs text-muted mt-0.5 truncate">
+          {mode === "manage" ? t("templates.manageSubtitle") : t("templates.modalSubtitle")}
+        </p>
+      }
+      headerAction={modeToggle}
+    >
+      {/* Browse / Manage — full width on a phone, where the header has no room */}
+      <div className="flex sm:hidden items-center gap-1.5 p-1.5 border-b border-border-faint bg-[var(--surface-raised)] flex-shrink-0">
+        {(["browse", "manage"] as const).map((value) => (
           <button
+            key={value}
             type="button"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="w-11 h-11 sm:w-9 sm:h-9 rounded-chip flex items-center justify-center text-muted hover:text-foreground hover:bg-[var(--surface)] transition-colors cursor-pointer flex-shrink-0"
+            onClick={() => setMode(value)}
+            aria-pressed={mode === value}
+            className="flex-1 h-10 rounded-chip text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5"
+            style={{
+              background: mode === value ? "var(--surface)" : "transparent",
+              color: mode === value ? "var(--foreground)" : "var(--muted)",
+              boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+            }}
           >
-            <DeskIcon name="close" />
+            <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
+            {value === "manage" && templatesApi.customTemplates.length > 0 && (
+              <span className="px-1.5 rounded-full font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
+                {templatesApi.customTemplates.length}
+              </span>
+            )}
           </button>
-        </div>
-
-        {/* Browse / Manage — full width on a phone, where the header has no room */}
-        <div className="flex sm:hidden items-center gap-1.5 p-1.5 border-b border-[var(--border-faint)] bg-[var(--surface-raised)] flex-shrink-0">
-          {(["browse", "manage"] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setMode(value)}
-              aria-pressed={mode === value}
-              className="flex-1 h-10 rounded-chip text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5"
-              style={{
-                background: mode === value ? "var(--surface)" : "transparent",
-                color: mode === value ? "var(--foreground)" : "var(--muted)",
-                boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-              }}
-            >
-              <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
-              {value === "manage" && templatesApi.customTemplates.length > 0 && (
-                <span className="px-1.5 rounded-full font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
-                  {templatesApi.customTemplates.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        ))}
+      </div>
 
         {mode === "manage" ? (
           <ManageTemplatesPanel api={templatesApi} />
         ) : (
           <BrowseTemplatesBody templates={templatesApi.templates} onInsert={onInsert} onClose={onClose} />
         )}
-      </div>
-    </div>
+    </SheetShell>
   );
 }
 
