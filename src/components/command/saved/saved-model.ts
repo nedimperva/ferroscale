@@ -6,7 +6,7 @@ import type {
   CommandParserSettings,
 } from "@ferroscale/metal-core";
 import type { LengthUnit } from "@/lib/calculator/types";
-import type { SavedEntry } from "@/hooks/useSaved";
+import { isAssemblyEntry, type SavedEntry } from "@/hooks/useSaved";
 import { familyForInput } from "../command-copy";
 
 /**
@@ -106,7 +106,7 @@ export function buildSavedCardModel(
   const grade = live?.gradeLabel ?? r.gradeLabel;
   // An assembly's headline is its parts, not one part's dimensions.
   const detailLine =
-    entry.parts.length > 1
+    isAssemblyEntry(entry)
       ? ""
       : [
           `${live?.lengthM ?? formatLengthM(r.lengthMm)} m × ${live?.realQty ?? r.quantity}`,

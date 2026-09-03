@@ -27,6 +27,8 @@ export interface SavedEntry {
   useCount: number;
   lastUsedAt?: string;
   updatedAt: string;
+  /** Set when the entry was deliberately made an assembly; see isAssemblyEntry. */
+  isAssembly?: boolean;
   deletedAt?: string;
   parts: TemplatePart[];
   input: CalculationInput;
@@ -48,6 +50,19 @@ export interface TemplatePartDraft {
   result: CalculationResult;
 }
 
+/**
+ * Is this entry an assembly?
+ *
+ * Part count used to be the whole answer, which made a one-part assembly
+ * impossible to express — you could not start one and grow it, and removing
+ * the second-to-last part silently turned an assembly back into a part. The
+ * flag records the intent when there is one; everything saved before it, and
+ * anything saved without deciding, still reads from the part count.
+ */
+export function isAssemblyEntry(entry: Pick<SavedEntry, "parts" | "isAssembly">): boolean {
+  return entry.isAssembly ?? entry.parts.length > 1;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Hook                                                              */
 /* ------------------------------------------------------------------ */
@@ -62,6 +77,7 @@ export interface UseSavedReturn {
     notes?: string,
     tags?: string[],
     parts?: TemplatePartDraft[],
+    asAssembly?: boolean,
   ) => SavedEntry;
   removeSaved: (id: string) => void;
   removeSavedMany: (ids: string[]) => void;
@@ -124,6 +140,7 @@ export function useSaved(): UseSavedReturn {
       notes?: string,
       tags?: string[],
       parts?: TemplatePartDraft[],
+      asAssembly?: boolean,
     ) => {
       const timestamp = new Date().toISOString();
       const normalizedParts = (parts ?? [])
@@ -142,6 +159,7 @@ export function useSaved(): UseSavedReturn {
         useCount: 0,
         updatedAt: timestamp,
         parts: finalParts,
+        isAssembly: asAssembly || undefined,
         input: finalParts[0].input,
         result: finalParts[0].result,
         normalizedProfile: finalParts[0].normalizedProfile,

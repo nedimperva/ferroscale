@@ -4,8 +4,8 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExt
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
-import { useSaved } from "@/hooks/useSaved";
-import type { SavedEntry } from "@/hooks/useSaved";
+import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
+import type { SavedEntry, TemplatePartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
@@ -75,6 +75,7 @@ import { CommandProjectPickerSheet } from "./sheets/project-picker-sheet";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { SavedEditSheet } from "./sheets/saved-edit-sheet";
+import { SaveDestinationModal } from "./saved/save-destination-modal";
 import { PwaRegister } from "@/components/pwa-register";
 import {
   buildShareUrl,
@@ -209,6 +210,8 @@ export function CommandShell() {
   const [projectCalc, setProjectCalc] = useState<CommandCalc | null>(null);
   /** A saved part or assembly waiting for a project to be picked for it. */
   const [projectEntry, setProjectEntry] = useState<SavedEntry | null>(null);
+  // Save stays one tap; this is the "somewhere else" control beside it.
+  const [pickingSaveDestination, setPickingSaveDestination] = useState(false);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
@@ -607,6 +610,69 @@ export function CommandShell() {
     [parserSettings, appendPartsToSaved, showToast, t],
   );
 
+  /**
+   * The parts of the current line, as drafts. One item for a plain line, one
+   * per item for a multi-item one — the same shape `doSave` already builds.
+   */
+  const currentLineDrafts = useCallback((): TemplatePartDraft[] => {
+    if (!p.calc) return [];
+    if (!line.multi) {
+      return [{
+        name: formatCommandParseName(t, p) ?? p.calc.result.profileLabel,
+        input: p.calc.input,
+        result: p.calc.result,
+      }];
+    }
+    return line.items
+      .map((item) => item.parse)
+      .filter((parse) => parse.calc)
+      .map((parse) => ({
+        name: formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
+        input: parse.calc!.input,
+        result: parse.calc!.result,
+      }));
+  }, [p, line, t]);
+
+  const saveLineAsNew = useCallback(
+    (name: string, asAssembly: boolean) => {
+      if (!p.calc) return;
+      const drafts = currentLineDrafts();
+      const entry = saveCalculation(
+        p.calc.input,
+        p.calc.result,
+        name,
+        undefined,
+        undefined,
+        drafts.length > 1 ? drafts : undefined,
+        // A one-part assembly is a real thing to start and grow, so the
+        // intent is recorded rather than inferred from the part count.
+        asAssembly,
+      );
+      haptic("commit");
+      for (const item of line.items) pushHistory(item.text.trim());
+      setPickingSaveDestination(false);
+      showActionToast(t("toast.saved"), {
+        label: t("common.nameIt"),
+        onAction: () => setEditingSavedId(entry.id),
+      });
+    },
+    [p, line, currentLineDrafts, saveCalculation, pushHistory, showActionToast, t],
+  );
+
+  const appendLineTo = useCallback(
+    (entryId: string) => {
+      const drafts = currentLineDrafts();
+      const target = savedEntries.find((entry) => entry.id === entryId);
+      if (drafts.length === 0 || !target) return;
+      if (!appendPartsToSaved(entryId, drafts)) return;
+      haptic("commit");
+      for (const item of line.items) pushHistory(item.text.trim());
+      setPickingSaveDestination(false);
+      showToast(t("toast.partAdded", { name: target.name }));
+    },
+    [currentLineDrafts, savedEntries, appendPartsToSaved, line, pushHistory, showToast, t],
+  );
+
   const duplicateSavedEntry = useCallback(
     (entry: SavedEntry) => {
       duplicateSaved(entry.id);
@@ -765,7 +831,7 @@ export function CommandShell() {
       let ok = false;
       if (projectEntry) {
         const parts = repriceSavedEntry(projectEntry);
-        if (parts.length > 1) {
+        if (parts.length > 1 || isAssemblyEntry(projectEntry)) {
           ok = addTemplateCalculation(projectId, projectEntry.name, parts, 1);
         } else if (parts.length === 1) {
           ok = addCalculation(projectId, parts[0].input, parts[0].result);
@@ -1223,6 +1289,24 @@ export function CommandShell() {
       }}
     />
   ) : null;
+  const saveDestinationModal =
+    pickingSaveDestination && p.calc ? (
+      <SaveDestinationModal
+        lineText={query.trim() || p.calc.result.profileLabel}
+        summaryText={`${fsWeight(p.calc.result.totalWeightKg)} ${fsWeightUnit()}`}
+        defaultName={formatCommandParseName(t, p) ?? p.calc.result.profileLabel}
+        parts={savedEntries.filter((entry) => !isAssemblyEntry(entry))}
+        assemblies={savedEntries.filter(isAssemblyEntry)}
+        onSaveNew={saveLineAsNew}
+        onAppendTo={appendLineTo}
+        onSaveToProject={() => {
+          setPickingSaveDestination(false);
+          if (p.calc) setProjectCalc(p.calc);
+        }}
+        onClose={() => setPickingSaveDestination(false)}
+      />
+    ) : null;
+
   const savedEditSheet = editingEntry ? (
     <SavedEditSheet
       entry={editingEntry}
@@ -1274,6 +1358,7 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
+          onSaveElsewhere={() => setPickingSaveDestination(true)}
           onLogSession={logToSession}
           onCopySummary={copySummary}
           onShareLink={shareLink}
@@ -1294,6 +1379,7 @@ export function CommandShell() {
         />
         {helpSheet}
         {savedEditSheet}
+        {saveDestinationModal}
         {(projectCalc || projectEntry) && (
           <CommandProjectPickerSheet
             projects={projects.filter((project) => !isArchivedProject(project))}
@@ -1943,6 +2029,7 @@ export function CommandShell() {
               setQuery={setQuery}
               onClose={() => setSheet(null)}
               onSave={doSave}
+              onSaveElsewhere={() => setPickingSaveDestination(true)}
               isSaved={!!currentSavedEntry}
               onCopyValue={() => {
                 setSheet(null);
@@ -2013,6 +2100,7 @@ export function CommandShell() {
           )}
           {helpSheet}
           {savedEditSheet}
+          {saveDestinationModal}
           {(projectCalc || projectEntry) && (
             <CommandProjectPickerSheet
               projects={projects.filter((project) => !isArchivedProject(project))}

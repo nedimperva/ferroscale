@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
-import { useSaved, type TemplatePartDraft } from "./useSaved";
+import { isAssemblyEntry, useSaved, type TemplatePartDraft } from "./useSaved";
 
 const SETTINGS: CommandParserSettings = {
   pricing: {
@@ -193,5 +193,79 @@ describe("useSaved — removing and reordering parts", () => {
       offEnd = result.current.reorderPartInSaved(id, result.current.saved.find((e) => e.id === id)!.parts[2].id, 1);
     });
     expect(offEnd).toBe(false);
+  });
+});
+
+describe("useSaved — what counts as an assembly", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("treats a multi-part entry as an assembly without being told", () => {
+    const { result } = renderHook(() => useSaved());
+    const id = seedEntry(result);
+    act(() => {
+      result.current.appendPartsToSaved(id, draftsFromCommand("plt200x160x12 x2 s235"));
+    });
+    expect(isAssemblyEntry(result.current.saved.find((e) => e.id === id)!)).toBe(true);
+  });
+
+  it("lets a one-part assembly exist, and keeps it one across a remount", () => {
+    const first = renderHook(() => useSaved());
+    const drafts = draftsFromCommand("hea140 3m x1 s235");
+    let id = "";
+    act(() => {
+      id = first.result.current.saveCalculation(
+        drafts[0].input,
+        drafts[0].result,
+        "Gate frame",
+        undefined,
+        undefined,
+        drafts,
+        true,
+      ).id;
+    });
+    const made = first.result.current.saved.find((e) => e.id === id)!;
+    expect(made.parts).toHaveLength(1);
+    expect(isAssemblyEntry(made)).toBe(true);
+    first.unmount();
+
+    const second = renderHook(() => useSaved());
+    expect(isAssemblyEntry(second.result.current.saved.find((e) => e.id === id)!)).toBe(true);
+  });
+
+  it("does not reclassify a deliberate assembly when it drops back to one part", () => {
+    const { result } = renderHook(() => useSaved());
+    const drafts = draftsFromCommand("hea140 3m x1 s235");
+    let id = "";
+    act(() => {
+      id = result.current.saveCalculation(
+        drafts[0].input,
+        drafts[0].result,
+        "Gate frame",
+        undefined,
+        undefined,
+        drafts,
+        true,
+      ).id;
+    });
+    act(() => {
+      result.current.appendPartsToSaved(id, draftsFromCommand("plt200x160x12 x2 s235"));
+    });
+    const withTwo = result.current.saved.find((e) => e.id === id)!;
+    expect(withTwo.parts).toHaveLength(2);
+
+    act(() => {
+      result.current.removePartFromSaved(id, withTwo.parts[1].id);
+    });
+    const back = result.current.saved.find((e) => e.id === id)!;
+    expect(back.parts).toHaveLength(1);
+    expect(isAssemblyEntry(back)).toBe(true);
+  });
+
+  it("leaves an ordinary one-part entry a part", () => {
+    const { result } = renderHook(() => useSaved());
+    const id = seedEntry(result);
+    expect(isAssemblyEntry(result.current.saved.find((e) => e.id === id)!)).toBe(false);
   });
 });

@@ -151,6 +151,7 @@ export function DeskCalcView({
   onClearTape,
   onSaveSessionAsProject,
   onSave,
+  onSaveElsewhere,
   currentSaved,
   onOpenHelp,
   onLogSession,
@@ -784,6 +785,28 @@ export function DeskCalcView({
                     <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                   </svg>
                   {currentSaved ? t("common.saved") : t("common.save")}
+                </button>
+                {/* Save bookmarks in one tap; this is where else it can go —
+                    onto an existing part or assembly, or straight onto a job. */}
+                <button
+                  type="button"
+                  onClick={onSaveElsewhere}
+                  disabled={!p.valid}
+                  title={t("saveTo.title")}
+                  aria-label={t("saveTo.title")}
+                  className="inline-flex items-center justify-center rounded-button"
+                  style={{
+                    width: 34,
+                    height: 36,
+                    border: "1px solid var(--border-faint)",
+                    background: "var(--surface)",
+                    color: p.valid ? "var(--foreground)" : "var(--muted)",
+                    cursor: p.valid ? "pointer" : "default",
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
                 </button>
                 <button
                   type="button"
