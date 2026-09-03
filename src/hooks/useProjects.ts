@@ -663,15 +663,23 @@ export function useProjects(): UseProjectsReturn {
   const [isOpen, setIsOpen] = useState(false);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
 
+  /**
+   * The ref is the authoritative list, not the rendered state.
+   *
+   * React defers a state updater to the next render, so anything computed
+   * inside one — a flag, a ref assignment, a persist — has not happened yet
+   * when the caller returns. Creating a project and immediately adding to it
+   * used to report failure for exactly that reason. Writes are folded here,
+   * synchronously, and the render is told afterwards.
+   */
   const setProjects = useCallback((updater: React.SetStateAction<Project[]>) => {
-    setAllProjects((previous) => {
-      const next = typeof updater === "function"
-        ? (updater as (prev: Project[]) => Project[])(previous)
-        : updater;
-      projectsRef.current = next;
-      persistProjects(next);
-      return next;
-    });
+    const previous = projectsRef.current;
+    const next = typeof updater === "function"
+      ? (updater as (prev: Project[]) => Project[])(previous)
+      : updater;
+    projectsRef.current = next;
+    persistProjects(next);
+    setAllProjects(next);
   }, []);
 
   const projects = allProjects.filter((project) => isActiveSyncEntity(project));
@@ -930,15 +938,15 @@ export function useProjects(): UseProjectsReturn {
       result: CalculationResult,
       assembly?: string,
     ): boolean => {
-      let added = false;
+      const fp = fingerprint(result);
+      const target = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
+      if (!target) return false;
+      if (target.calculations.length >= MAX_CALCS_PER_PROJECT) return false;
+      if (target.calculations.some((c) => fingerprint(c.result) === fp)) return false;
+
       setProjects((prev) =>
         prev.map((p) => {
           if (p.id !== projectId || p.deletedAt) return p;
-          if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
-          const fp = fingerprint(result);
-          if (p.calculations.some((c) => fingerprint(c.result) === fp)) return p;
-
-          added = true;
           const calc: ProjectCalculation = {
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
@@ -952,7 +960,7 @@ export function useProjects(): UseProjectsReturn {
           });
         }),
       );
-      return added;
+      return true;
     },
     [setProjects],
   );
@@ -1059,18 +1067,19 @@ export function useProjects(): UseProjectsReturn {
 
       const fp = templateFingerprint(tplName, totalWeightKg, totalCost);
 
-      let added = false;
+      const target = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
+      if (!target) return false;
+      if (target.calculations.length >= MAX_CALCS_PER_PROJECT) return false;
+      const duplicate = target.calculations.some((c) =>
+        c.templateName
+          ? templateFingerprint(c.templateName, c.result.totalWeightKg, c.result.grandTotalAmount) === fp
+          : false,
+      );
+      if (duplicate) return false;
+
       setProjects((prev) =>
         prev.map((p) => {
           if (p.id !== projectId || p.deletedAt) return p;
-          if (p.calculations.length >= MAX_CALCS_PER_PROJECT) return p;
-          // Check for duplicate template entry
-          if (p.calculations.some((c) => {
-            if (c.templateName) return templateFingerprint(c.templateName, c.result.totalWeightKg, c.result.grandTotalAmount) === fp;
-            return false;
-          })) return p;
-
-          added = true;
           const entry: ProjectCalculation = {
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
@@ -1086,7 +1095,7 @@ export function useProjects(): UseProjectsReturn {
           });
         }),
       );
-      return added;
+      return true;
     },
     [setProjects],
   );

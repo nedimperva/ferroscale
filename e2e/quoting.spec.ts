@@ -207,11 +207,10 @@ test.describe("Assemblies", () => {
     await typeQuery(page, "shs40x40x3 4m x10 ");
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
     await page.getByRole("button", { name: "HEA 120", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Add the current line as a part" }).click();
+    await page.getByRole("menuitem", { name: "Add a part" }).click();
 
-    // The row is now an assembly: two parts, summed — and it moved tabs, which
-    // the emptied Parts tab says out loud rather than showing a blank list.
-    await page.getByRole("button", { name: /^Show Assemblies/ }).click();
+    // The row is now an assembly: two parts, summed. Parts and assemblies share
+    // one list, so it gains a badge where it sits rather than moving tabs.
     await expect(page.getByText("assembly · 2 parts")).toBeVisible();
     await page.getByRole("button", { name: "Card view" }).click();
     await page.getByRole("button", { name: "Show details" }).click();
@@ -226,11 +225,9 @@ test.describe("Assemblies", () => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 + ipe200 4m x3 ");
     await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
-    // A multi-item line opens the rename editor on save — close it before
-    // navigating; the assembly is already in the library.
-    await page.keyboard.press("Escape");
 
-    // The surface opens on Assemblies: it is the only tab with anything in it.
+    // Saving no longer forces the rename sheet open — naming belongs to the
+    // save step, and the toast offers it. Nothing to dismiss.
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
     await page.getByRole("button", { name: /^Load / }).first().click();
 
@@ -239,15 +236,18 @@ test.describe("Assemblies", () => {
     await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
   });
 
-  test("a saved part goes into a project from its row menu", async ({ page }) => {
+  test("a saved part goes into a project from its row", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 ");
     await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
 
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
-    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Add to project" }).click();
+    // Adding to a project is a button on the row, not an entry in the ⋯ menu:
+    // a touch screen never reveals a hover-only action.
+    await page.getByRole("button", { name: "Add HEA 120 to a project" }).click();
 
+    // One overlay: it opens on the project row with the list already in it,
+    // and a project can be created without leaving for a second sheet.
     await page.getByPlaceholder("New project name...").fill("Mezzanine");
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
@@ -263,8 +263,7 @@ test.describe("Assemblies", () => {
     await page.getByRole("button", { name: /^Saved?$/ }).and(page.locator("[aria-pressed]")).click();
 
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
-    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Add to project" }).click();
+    await page.getByRole("button", { name: "Add HEA 120 to a project" }).click();
     await page.getByPlaceholder("New project name...").fill("Gate");
     await page.getByRole("button", { name: "Create", exact: true }).click();
 

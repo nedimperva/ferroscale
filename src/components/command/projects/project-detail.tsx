@@ -35,6 +35,7 @@ import {
 } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 import { AssemblyTemplateModal } from "./assembly-template-modal";
+import { SheetShell } from "../sheets/sheet-shell";
 import { ScaleAssemblyModal } from "./scale-assembly-modal";
 import { SaveAssemblyTemplateModal } from "./save-assembly-template-modal";
 import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
@@ -623,27 +624,17 @@ function AssemblyPickerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div
-        className="w-full max-w-sm rounded-panel-lg border border-[var(--border-faint)] bg-[var(--surface)] p-4 shadow-xl space-y-3"
-        role="dialog"
-        aria-modal="true"
-        aria-label={t("projects.assemblyPickerTitle")}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-sm text-foreground">
-            {t("projects.assemblyPickerTitle")}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("common.close")}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-chip text-muted hover:text-foreground cursor-pointer sm:h-9 sm:w-9"
-          >
-            <DeskIcon name="close" />
-          </button>
-        </div>
-
+    <SheetShell
+      title={t("projects.assemblyPickerTitle")}
+      onClose={onClose}
+      size="compact"
+      icon={
+        <span className="flex items-center justify-center rounded-chip" style={{ width: 34, height: 34, background: "var(--accent-surface)" }}>
+          <DeskIcon name="tag" stroke="var(--accent-text)" />
+        </span>
+      }
+    >
+      <div className="space-y-3">
         {/* Existing Assemblies Quick Select Chips */}
         {existingAssemblies.length > 0 && (
           <div className="space-y-1.5">
@@ -683,7 +674,6 @@ function AssemblyPickerModal({
               onChange={(e) => setCustomName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCustomSubmit();
-                if (e.key === "Escape") onClose();
               }}
               autoFocus
               placeholder="e.g. Stringers, Handrail, Base Frame"
@@ -713,7 +703,7 @@ function AssemblyPickerModal({
           </div>
         )}
       </div>
-    </div>
+    </SheetShell>
   );
 }
 

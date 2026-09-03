@@ -46,6 +46,8 @@ interface CommandResultSheetProps {
   line?: CommandLine;
   onClose: () => void;
   onSave: () => void;
+  /** Open the destination picker instead of the one-tap bookmark. */
+  onSaveElsewhere?: () => void;
   /** Whether this exact calculation is already bookmarked (Save toggles). */
   isSaved: boolean;
   onCopyValue: () => void;
@@ -64,6 +66,7 @@ export function CommandResultBreakdown({
   p,
   line,
   onSave,
+  onSaveElsewhere,
   isSaved,
   onCopyValue,
   onCopySummary,
@@ -196,6 +199,25 @@ export function CommandResultBreakdown({
         >
           {isSaved ? t("common.saved") : t("common.save")}
         </button>
+        {onSaveElsewhere && (
+          <button
+            type="button"
+            onClick={onSaveElsewhere}
+            aria-label={t("saveTo.title")}
+            title={t("saveTo.title")}
+            className="h-11 rounded-button flex items-center justify-center flex-shrink-0"
+            style={{
+              width: 44,
+              border: "1px solid var(--border-faint)",
+              background: "var(--surface)",
+              color: "var(--foreground)",
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+        )}
         {onCopySummary && (
           <button type="button" onClick={onCopySummary} className={secondaryBtn}>
             {t("common.copySummary")}

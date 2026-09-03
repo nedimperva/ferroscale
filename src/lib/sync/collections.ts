@@ -101,6 +101,7 @@ export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
     lastUsedAt: candidate.lastUsedAt,
     updatedAt: candidate.updatedAt ?? candidate.lastUsedAt ?? candidate.timestamp,
     deletedAt: candidate.deletedAt,
+    isAssembly: candidate.isAssembly === true || undefined,
     parts,
     input: parts[0].input,
     result: parts[0].result,

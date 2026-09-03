@@ -152,14 +152,10 @@ export function CommandDesktop(props: CommandDesktopProps) {
     onTogglePin: props.onTogglePinSaved,
     onEdit: props.onEditSaved,
     onAddPart: props.onAddPartSaved,
+    canAddCurrentLine: props.canAddCurrentLine,
+    onAddPartsByCommand: props.onAddPartsByCommand,
     onRemovePart: props.onRemovePartSaved,
     onAddToProject: props.onAddSavedToProject,
-    onLoadQuery: (query) => {
-      props.onLoadQuery(query);
-      gotoCalc();
-    },
-    onRemoveHistoryEntry: props.onRemoveTapeEntry,
-    onClearHistory: props.onClearTape,
     onNew: startNewCalc,
   };
 
@@ -205,7 +201,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
       {view === "saved" && (
         <PartsView
           saved={props.saved}
-          history={props.history}
           settings={props.parserSettings}
           defaultUnit={props.defaultUnit}
           mode={props.mode}

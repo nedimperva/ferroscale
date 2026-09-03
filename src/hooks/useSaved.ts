@@ -27,6 +27,8 @@ export interface SavedEntry {
   useCount: number;
   lastUsedAt?: string;
   updatedAt: string;
+  /** Set when the entry was deliberately made an assembly; see isAssemblyEntry. */
+  isAssembly?: boolean;
   deletedAt?: string;
   parts: TemplatePart[];
   input: CalculationInput;
@@ -48,6 +50,19 @@ export interface TemplatePartDraft {
   result: CalculationResult;
 }
 
+/**
+ * Is this entry an assembly?
+ *
+ * Part count used to be the whole answer, which made a one-part assembly
+ * impossible to express — you could not start one and grow it, and removing
+ * the second-to-last part silently turned an assembly back into a part. The
+ * flag records the intent when there is one; everything saved before it, and
+ * anything saved without deciding, still reads from the part count.
+ */
+export function isAssemblyEntry(entry: Pick<SavedEntry, "parts" | "isAssembly">): boolean {
+  return entry.isAssembly ?? entry.parts.length > 1;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Hook                                                              */
 /* ------------------------------------------------------------------ */
@@ -62,6 +77,7 @@ export interface UseSavedReturn {
     notes?: string,
     tags?: string[],
     parts?: TemplatePartDraft[],
+    asAssembly?: boolean,
   ) => SavedEntry;
   removeSaved: (id: string) => void;
   removeSavedMany: (ids: string[]) => void;
@@ -124,6 +140,7 @@ export function useSaved(): UseSavedReturn {
       notes?: string,
       tags?: string[],
       parts?: TemplatePartDraft[],
+      asAssembly?: boolean,
     ) => {
       const timestamp = new Date().toISOString();
       const normalizedParts = (parts ?? [])
@@ -142,6 +159,7 @@ export function useSaved(): UseSavedReturn {
         useCount: 0,
         updatedAt: timestamp,
         parts: finalParts,
+        isAssembly: asAssembly || undefined,
         input: finalParts[0].input,
         result: finalParts[0].result,
         normalizedProfile: finalParts[0].normalizedProfile,
@@ -286,6 +304,12 @@ export function useSaved(): UseSavedReturn {
     [setSavedWithPersist],
   );
 
+  /**
+   * Whether the append applied has to be decided BEFORE dispatching: React
+   * defers a state updater to the next render, so a flag assigned inside one
+   * is still false when the caller reads it. Callers use this to decide
+   * whether to confirm, so it has to be the truth.
+   */
   const addPartToSaved = useCallback(
     (
       id: string,
@@ -293,13 +317,12 @@ export function useSaved(): UseSavedReturn {
       result: CalculationResult,
       partName?: string,
     ) => {
-      let added = false;
+      if (!allSaved.some((entry) => entry.id === id && !entry.deletedAt)) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
           if (entry.id !== id || entry.deletedAt) return entry;
           const nextPart = createSavedPart(partName ?? result.profileLabel, input, result);
-          added = true;
           return {
             ...entry,
             updatedAt,
@@ -307,34 +330,34 @@ export function useSaved(): UseSavedReturn {
           };
         }),
       );
-      return added;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const appendPartsToSaved = useCallback(
     (id: string, parts: TemplatePartDraft[]) => {
       if (parts.length === 0) return false;
-      let appended = false;
+      if (!allSaved.some((entry) => entry.id === id && !entry.deletedAt)) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
           if (entry.id !== id || entry.deletedAt) return entry;
           const normalizedParts = parts.map((part) => createSavedPart(part.name, part.input, part.result));
-          appended = normalizedParts.length > 0;
-          return appended
-            ? { ...entry, updatedAt, parts: [...entry.parts, ...normalizedParts] }
-            : entry;
+          return { ...entry, updatedAt, parts: [...entry.parts, ...normalizedParts] };
         }),
       );
-      return appended;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const removePartFromSaved = useCallback(
     (id: string, partId: string) => {
-      let removed = false;
+      const target = allSaved.find((entry) => entry.id === id && !entry.deletedAt);
+      // The last part is the entry, so it cannot be removed from it.
+      if (!target || target.parts.length <= 1) return false;
+      if (!target.parts.some((part) => part.id === partId)) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
@@ -342,7 +365,6 @@ export function useSaved(): UseSavedReturn {
           if (entry.parts.length <= 1) return entry;
           const nextParts = entry.parts.filter((part) => part.id !== partId);
           if (nextParts.length === entry.parts.length) return entry;
-          removed = true;
           return {
             ...entry,
             updatedAt,
@@ -353,14 +375,19 @@ export function useSaved(): UseSavedReturn {
           };
         }),
       );
-      return removed;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const reorderPartInSaved = useCallback(
     (id: string, partId: string, direction: -1 | 1) => {
-      let changed = false;
+      const target = allSaved.find((entry) => entry.id === id && !entry.deletedAt);
+      if (!target) return false;
+      const index = target.parts.findIndex((part) => part.id === partId);
+      // Nothing to do at either end of the list.
+      if (index < 0) return false;
+      if (index + direction < 0 || index + direction >= target.parts.length) return false;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
         previous.map((entry) => {
@@ -373,7 +400,6 @@ export function useSaved(): UseSavedReturn {
           const nextParts = [...entry.parts];
           const [moved] = nextParts.splice(currentIndex, 1);
           nextParts.splice(nextIndex, 0, moved);
-          changed = true;
           return {
             ...entry,
             updatedAt,
@@ -384,9 +410,9 @@ export function useSaved(): UseSavedReturn {
           };
         }),
       );
-      return changed;
+      return true;
     },
-    [setSavedWithPersist],
+    [allSaved, setSavedWithPersist],
   );
 
   const markSavedUsed = useCallback(
