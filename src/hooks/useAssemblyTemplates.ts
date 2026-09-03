@@ -49,7 +49,7 @@ const DEFAULT_PARSER_SETTINGS = {
   defaultLengthUnit: "m" as const,
 };
 
-function createItemFromCommand(cmd: string, quantity = 1, note?: string): AssemblyTemplateItem | null {
+export function createItemFromCommand(cmd: string, quantity = 1, note?: string): AssemblyTemplateItem | null {
   const parsed = cmdParse(cmd, DEFAULT_PARSER_SETTINGS);
   if (!parsed.calc) return null;
   return {
@@ -161,14 +161,32 @@ export function getBuiltinAssemblyTemplates(): AssemblyTemplate[] {
   ];
 }
 
+/**
+ * A removed built-in is recorded as a tombstone in the same stored array the
+ * custom templates live in: same id as the constant, `isBuiltin`, `deletedAt`
+ * set, no items. Nothing new to persist, restoring is just dropping the row,
+ * and a later build that changes a standard's contents still honours the
+ * removal.
+ */
+function isBuiltinTombstone(entity: AssemblyTemplate): boolean {
+  return Boolean(entity.isBuiltin && entity.deletedAt);
+}
+
 export interface UseAssemblyTemplatesReturn {
   templates: AssemblyTemplate[];
   customTemplates: AssemblyTemplate[];
+  /** Standards the user has removed — listed so they can be put back. */
+  removedBuiltins: AssemblyTemplate[];
   saveTemplate: (
     template: Omit<AssemblyTemplate, "id" | "createdAt" | "updatedAt" | "deletedAt" | "isBuiltin">,
   ) => AssemblyTemplate;
   deleteTemplate: (id: string) => void;
+  restoreTemplate: (id: string) => void;
   updateTemplate: (id: string, patch: Partial<AssemblyTemplate>) => void;
+  duplicateTemplate: (id: string, copyLabel: string) => AssemblyTemplate | null;
+  removeBuiltin: (id: string) => void;
+  restoreBuiltin: (id: string) => void;
+  restoreAllBuiltins: () => void;
 }
 
 export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
@@ -179,20 +197,33 @@ export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
     return [];
   });
 
+  // Writes are applied to what is on disk, not to this instance's snapshot:
+  // more than one component mounts this hook (the dialog and the project view),
+  // and folding a write into a stale list would resurrect rows another instance
+  // had already removed.
   const persist = useCallback((updater: React.SetStateAction<AssemblyTemplate[]>) => {
-    setCustomTemplates((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      persistAssemblyTemplates(next);
-      return next;
-    });
+    const current = loadAssemblyTemplates();
+    const next = typeof updater === "function" ? updater(current) : updater;
+    persistAssemblyTemplates(next);
+    setCustomTemplates(next);
   }, []);
 
   const builtins = useMemo(() => getBuiltinAssemblyTemplates(), []);
 
+  const removedBuiltinIds = useMemo(
+    () => new Set(customTemplates.filter(isBuiltinTombstone).map((tpl) => tpl.id)),
+    [customTemplates],
+  );
+
   const templates = useMemo(() => {
-    const activeCustom = customTemplates.filter(isActiveSyncEntity);
-    return [...builtins, ...activeCustom];
-  }, [builtins, customTemplates]);
+    const activeCustom = customTemplates.filter((tpl) => !tpl.isBuiltin && isActiveSyncEntity(tpl));
+    return [...builtins.filter((tpl) => !removedBuiltinIds.has(tpl.id)), ...activeCustom];
+  }, [builtins, customTemplates, removedBuiltinIds]);
+
+  const removedBuiltins = useMemo(
+    () => builtins.filter((tpl) => removedBuiltinIds.has(tpl.id)),
+    [builtins, removedBuiltinIds],
+  );
 
   const saveTemplate = useCallback(
     (
@@ -216,7 +247,24 @@ export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
     (id: string) => {
       const deletedAt = new Date().toISOString();
       persist((prev) =>
-        prev.map((tpl) => (tpl.id === id && !tpl.deletedAt ? markEntityDeleted(tpl, deletedAt) : tpl)),
+        prev.map((tpl) =>
+          tpl.id === id && !tpl.isBuiltin && !tpl.deletedAt ? markEntityDeleted(tpl, deletedAt) : tpl,
+        ),
+      );
+    },
+    [persist],
+  );
+
+  /** Undo for a just-deleted custom template — the soft delete is reversible. */
+  const restoreTemplate = useCallback(
+    (id: string) => {
+      persist((prev) =>
+        prev.map((tpl) => {
+          if (tpl.id !== id || tpl.isBuiltin || !tpl.deletedAt) return tpl;
+          const restored = { ...tpl, updatedAt: new Date().toISOString() };
+          delete restored.deletedAt;
+          return restored;
+        }),
       );
     },
     [persist],
@@ -226,7 +274,7 @@ export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
     (id: string, patch: Partial<AssemblyTemplate>) => {
       persist((prev) =>
         prev.map((tpl) => {
-          if (tpl.id !== id || tpl.deletedAt) return tpl;
+          if (tpl.id !== id || tpl.isBuiltin || tpl.deletedAt) return tpl;
           return {
             ...tpl,
             ...patch,
@@ -238,11 +286,70 @@ export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
     [persist],
   );
 
+  const duplicateTemplate = useCallback(
+    (id: string, copyLabel: string): AssemblyTemplate | null => {
+      const source = templates.find((tpl) => tpl.id === id);
+      if (!source) return null;
+      return saveTemplate({
+        name: `${source.name} (${copyLabel})`,
+        description: source.description,
+        category: source.category,
+        items: source.items.map((item) => ({ ...item, id: crypto.randomUUID() })),
+        laborHours: source.laborHours,
+        additionalCosts: source.additionalCosts?.map((cost) => ({ ...cost, id: crypto.randomUUID() })),
+      });
+    },
+    [templates, saveTemplate],
+  );
+
+  const removeBuiltin = useCallback(
+    (id: string) => {
+      const builtin = builtins.find((tpl) => tpl.id === id);
+      if (!builtin) return;
+      const now = new Date().toISOString();
+      persist((prev) => {
+        if (prev.some((tpl) => tpl.id === id)) {
+          return prev.map((tpl) => (tpl.id === id ? { ...tpl, updatedAt: now, deletedAt: now } : tpl));
+        }
+        return [
+          ...prev,
+          {
+            id: builtin.id,
+            name: builtin.name,
+            items: [],
+            isBuiltin: true,
+            createdAt: builtin.createdAt,
+            updatedAt: now,
+            deletedAt: now,
+          },
+        ];
+      });
+    },
+    [builtins, persist],
+  );
+
+  const restoreBuiltin = useCallback(
+    (id: string) => {
+      persist((prev) => prev.filter((tpl) => !(tpl.id === id && isBuiltinTombstone(tpl))));
+    },
+    [persist],
+  );
+
+  const restoreAllBuiltins = useCallback(() => {
+    persist((prev) => prev.filter((tpl) => !isBuiltinTombstone(tpl)));
+  }, [persist]);
+
   return {
     templates,
-    customTemplates: customTemplates.filter(isActiveSyncEntity),
+    customTemplates: customTemplates.filter((tpl) => !tpl.isBuiltin && isActiveSyncEntity(tpl)),
+    removedBuiltins,
     saveTemplate,
     deleteTemplate,
+    restoreTemplate,
     updateTemplate,
+    duplicateTemplate,
+    removeBuiltin,
+    restoreBuiltin,
+    restoreAllBuiltins,
   };
 }

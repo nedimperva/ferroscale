@@ -73,7 +73,7 @@ export function SaveAssemblyTemplateModal({
         {/* Category Select */}
         <div className="space-y-1">
           <label className="text-xs font-bold text-foreground">
-            {t("projects.category")}:
+            {t("projects.categoryLabel")}:
           </label>
           <select
             value={category}
