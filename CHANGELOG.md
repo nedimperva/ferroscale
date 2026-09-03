@@ -19,10 +19,21 @@ Template management: edit, duplicate and remove assembly templates, standards in
 - **Undo on a delete.** Deleting a template or removing a standard raises a toast with Undo for six seconds
 - **Add parts to a saved assembly by typing a cut.** The same inline field, on the expanded Parts card: type a cut (`plt200x160x12 x2 s235`) and it is appended without a trip through the calculator. A multi-item line appends every item at once. Adding a second part to a single part makes it an assembly, and the view follows it to the Assemblies tab instead of letting the card vanish
 
+- **Parts and assemblies are one list.** The Parts / Assemblies / History tabs are gone. Everything is listed together and narrowed by an All / Parts / Assemblies chip, so an entry no longer jumps between tabs the moment a second part is added
+- **Use and Project are buttons on every row.** Adding a saved part or assembly to a project used to live only in a hover-only icon row and the ⋯ menu, which a touch screen never reveals
+- **Save asks where the line goes.** Save on its own still bookmarks a new part in one tap; the control beside it opens a picker with four destinations — new part, add to an existing part, start a new assembly, add to an existing assembly — plus a fifth that skips the library and puts the cut straight onto a project
+- **Assemblies can hold one part.** Starting an assembly and growing it is now a real thing to do: the intent is recorded on the entry rather than inferred from the part count, so a deliberate assembly stays one when it drops back to a single part
+
+### Changed
+
+- **History left the Parts surface.** It listed the calculator's session tape a second time, with the same remove and clear. The phone's tape gains the clear-all it was missing so nothing is lost with the tab
+
 ### Fixed
 
 - **"Add a part" no longer disappears when the command bar is empty.** It used to be offered only while a complete line was typed, which left no way to add a part from the Parts surface itself. It is now always present: with a line it folds that line in, without one it opens the field
 - **The "added as a part" confirmation never appeared.** `addPartToSaved` and `appendPartsToSaved` decided their return value inside a React state updater, which is deferred, so callers always read `false` and skipped the toast. The outcome is now decided before dispatch
+- **`removePartFromSaved` and `reorderPartInSaved` reported the wrong result,** for the same deferred-updater reason. Neither had a caller reading it, but the next one would have inherited the bug
+- **The assembly badge said "1 parts".** Both part counts now pluralise properly, in English and Bosnian
 - **Two raw translation keys in the templates dialogs.** The "All categories" filter pill and the Category field label rendered `command.projects.allCategories` and `command.projects.category` instead of their text
 
 ---

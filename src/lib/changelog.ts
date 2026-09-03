@@ -26,7 +26,14 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Remove and restore standard EN templates: take standards you never use out of the picker, with a per-item Restore and Restore all, kept across reloads",
       "Duplicate any template into an editable copy: built-in standards stay read-only, duplicating one gives you a copy you can change",
       "Undo on a delete: removing a template or a standard raises a toast with Undo",
-      "Add parts to a saved assembly by typing a cut: the same inline field on the expanded Parts card, no trip through the calculator, and a multi-item line appends every item at once"
+      "Add parts to a saved assembly by typing a cut: the same inline field on the expanded Parts card, no trip through the calculator, and a multi-item line appends every item at once",
+      "Parts and assemblies in one list: the Parts / Assemblies / History tabs are replaced by an All / Parts / Assemblies chip, so nothing jumps between tabs as you work on it",
+      "Use and Project as buttons on every row: adding a saved part or assembly to a project no longer hides in a hover-only icon row",
+      "Save asks where the line goes: one tap still bookmarks a new part, and the control beside it offers a new part, an existing part, a new assembly, an existing assembly, or straight onto a project",
+      "Assemblies can hold a single part, so you can start one and grow it"
+    ],
+    changed: [
+      "History left the Parts surface — it repeated the calculator's session tape, which now has the clear-all the phone was missing"
     ],
     added_bs: [
       "Način uređivanja šablona sklopova: prekidač Pregled / Uredi u dijalogu šablona, sa listom vlastitih šablona i ugrađenih EN standarda te uređivačem vezanim za izabrani red",
@@ -35,16 +42,27 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Uklanjanje i vraćanje standardnih EN šablona: izbacite standarde koje ne koristite iz izbornika, uz pojedinačno Vrati i Vrati sve, sačuvano i nakon osvježavanja",
       "Dupliciranje bilo kojeg šablona u kopiju za uređivanje: ugrađeni standardi ostaju samo za čitanje, dupliciranjem dobijate kopiju koju možete mijenjati",
       "Vraćanje nakon brisanja: uklanjanje šablona ili standarda prikazuje poruku sa dugmetom Vrati",
-      "Dodavanje dijelova u sačuvani sklop upisivanjem reza: isto polje na proširenoj kartici Dijelovi, bez odlaska u kalkulator, a linija sa više stavki dodaje sve odjednom"
+      "Dodavanje dijelova u sačuvani sklop upisivanjem reza: isto polje na proširenoj kartici Dijelovi, bez odlaska u kalkulator, a linija sa više stavki dodaje sve odjednom",
+      "Dijelovi i sklopovi u jednoj listi: kartice Dijelovi / Sklopovi / Historija zamijenjene su filterom Sve / Dijelovi / Sklopovi, pa ništa ne iskače iz liste dok radiš na tome",
+      "Iskoristi i Projekat kao dugmad u svakom redu: dodavanje sačuvanog dijela ili sklopa u projekat više se ne krije u redu ikona koji se vidi tek na hover",
+      "Čuvanje pita gdje linija ide: jedan dodir i dalje sprema novi dio, a dugme pored nudi novi dio, postojeći dio, novi sklop, postojeći sklop ili odmah projekat",
+      "Sklop može imati samo jedan dio, pa ga možeš započeti i dograđivati"
+    ],
+    changed_bs: [
+      "Historija je uklonjena sa Dijelova — ponavljala je traku sesije u kalkulatoru, koja sada ima i brisanje svega koje je nedostajalo na telefonu"
     ],
     fixed: [
       "'Add a part' no longer disappears when the command bar is empty — with a line it folds that line in, without one it opens the field",
       "The 'added as a part' confirmation never appeared, because the add returned its result from inside a deferred React state updater",
+      "Removing and reordering parts reported the wrong result for the same reason",
+      "The assembly badge said '1 parts' — both part counts now pluralise properly",
       "Two raw translation keys in the templates dialogs: the 'All categories' filter pill and the Category field label showed their key instead of their text"
     ],
     fixed_bs: [
       "'Dodaj dio' više ne nestaje kada je komandna traka prazna — sa linijom je ubacuje, bez nje otvara polje",
       "Potvrda 'dodano kao dio' se nikada nije prikazivala, jer je dodavanje vraćalo rezultat iz odgođenog React ažuriranja stanja",
+      "Uklanjanje i promjena redoslijeda dijelova javljali su pogrešan rezultat iz istog razloga",
+      "Oznaka sklopa je pisala '1 dijelova' — oba brojanja dijelova sada koriste ispravnu množinu",
       "Dva neprevedena ključa u dijalozima šablona: filter 'Sve kategorije' i oznaka polja Kategorija prikazivali su ključ umjesto teksta"
     ]
   },
