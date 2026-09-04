@@ -246,10 +246,11 @@ test.describe("Assemblies", () => {
     // a touch screen never reveals a hover-only action.
     await page.getByRole("button", { name: "Add HEA 120 to a project" }).click();
 
-    // One overlay: it opens on the project row with the list already in it,
+    // One overlay: it opens on Projects with the list already beside the rail,
     // and a project can be created without leaving for a second sheet.
+    await page.getByRole("button", { name: /^Start a new project/ }).click();
     await page.getByPlaceholder("New project name...").fill("Mezzanine");
-    await page.getByRole("button", { name: "Create", exact: true }).click();
+    await page.getByRole("button", { name: "Add to project", exact: true }).click();
 
     await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
     await page.getByRole("button", { name: /^Open project Mezzanine/ }).click();
@@ -264,8 +265,9 @@ test.describe("Assemblies", () => {
 
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
     await page.getByRole("button", { name: "Add HEA 120 to a project" }).click();
+    await page.getByRole("button", { name: /^Start a new project/ }).click();
     await page.getByPlaceholder("New project name...").fill("Gate");
-    await page.getByRole("button", { name: "Create", exact: true }).click();
+    await page.getByRole("button", { name: "Add to project", exact: true }).click();
 
     await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
     await page.getByRole("button", { name: /^Open project Gate/ }).click();

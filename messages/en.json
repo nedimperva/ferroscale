@@ -165,6 +165,7 @@
       "sessionSaved": "{count, plural, one {# line} other {# lines}} saved to {project}",
       "sessionProjectName": "Session {date}",
       "partAdded": "Added as a part of {name}",
+      "templateAdded": "Added to template {name}",
       "addedItemsToSession": "{count} items added to session",
       "savedAssembly": "{count, plural, one {# line} other {# lines}} saved as one assembly"
     },
@@ -913,39 +914,92 @@
     },
     "saveTo": {
       "title": "Save this line",
-      "whereLabel": "Where it goes",
-      "newPartTitle": "Save as a new part",
-      "newPartBody": "A standalone spec, on its own in the library.",
-      "addToPartTitle": "Add to an existing part…",
-      "addToPartBody": "Appends to it, which turns that part into an assembly.",
-      "newAssemblyTitle": "Start a new assembly",
-      "newAssemblyBody": "This line becomes the first part of one.",
-      "addToAssemblyTitle": "Add to an existing assembly…",
-      "addToAssemblyBody": "Appends to an assembly you have already built.",
-      "projectTitle": "Straight into a project…",
-      "projectBody": "Skip the library — put this cut on a job.",
-      "partName": "Part name",
-      "assemblyName": "Assembly name",
-      "partsCount": "{count, plural, one {# part} other {# parts}}",
-      "pickAPart": "Pick a part to add to",
-      "pickAnAssembly": "Pick an assembly to add to",
-      "summaryNewPart": "New part in your library",
-      "summaryNewAssembly": "New assembly, 1 part",
-      "summaryIntoPart": "Into {name} — becomes an assembly",
-      "summaryIntoAssembly": "Into {name}",
-      "summaryProject": "Onto a job, not into the library",
       "sendTitle": "Add to…",
+      "whereLabel": "Where it goes",
       "sendLabel": "Send it to",
+      "recentLabel": "Recent",
+      "kind": {
+        "parts": "Parts",
+        "assemblies": "Assemblies",
+        "projects": "Projects",
+        "templates": "Templates"
+      },
+      "kindBody": {
+        "parts": "Save on its own, or add to a part you already have.",
+        "assemblies": "Start a new one, or add to an assembly you have built.",
+        "projects": "Straight onto a job, skipping the library.",
+        "templates": "Keep it as a reusable assembly you can drop onto any job."
+      },
+      "count": {
+        "parts": "{count, plural, one {# part} other {# parts}}",
+        "assemblies": "{count, plural, one {# assembly} other {# assemblies}}",
+        "projects": "{count, plural, one {# job} other {# jobs}}",
+        "templates": "{count, plural, one {# template} other {# templates}}"
+      },
+      "new": {
+        "parts": "Save as a new part",
+        "assemblies": "Start a new assembly",
+        "projects": "Start a new project",
+        "templates": "Save as a new template"
+      },
+      "newBody": {
+        "parts": "A standalone spec, on its own in the library.",
+        "assemblies": "This line becomes its first part.",
+        "projects": "Opens a job with this line on it.",
+        "templates": "A reusable assembly, ready to insert into a job."
+      },
+      "name": {
+        "parts": "Part name",
+        "assemblies": "Assembly name",
+        "projects": "Project name",
+        "templates": "Template name"
+      },
+      "existing": {
+        "parts": "Your parts",
+        "assemblies": "Your assemblies",
+        "projects": "Your projects",
+        "templates": "Your templates"
+      },
+      "commit": {
+        "parts": "Save part",
+        "assemblies": "Add to assembly",
+        "projects": "Add to project",
+        "templates": "Save template"
+      },
+      "pick": {
+        "parts": "Pick a part to add to, or start a new one",
+        "assemblies": "Pick an assembly to add to, or start a new one",
+        "projects": "Pick a project, or start a new one",
+        "templates": "Pick a template to add to, or start a new one"
+      },
+      "nameItFirst": {
+        "parts": "Name the part first",
+        "assemblies": "Name the assembly first",
+        "projects": "Name the project first",
+        "templates": "Name the template first"
+      },
+      "summaryNew": {
+        "parts": "New part “{name}”",
+        "assemblies": "New assembly “{name}”, 1 part",
+        "projects": "New project “{name}”",
+        "templates": "New template “{name}”"
+      },
+      "summaryInto": {
+        "parts": "Into {name} — becomes an assembly",
+        "assemblies": "Into {name}",
+        "projects": "Onto {name}",
+        "templates": "Into {name}"
+      },
+      "partsCount": "{count, plural, one {# part} other {# parts}}",
+      "projectItems": "{count, plural, one {# item} other {# items}}",
       "search": {
         "parts": "Search your parts…",
         "assemblies": "Search your assemblies…",
-        "projects": "Search projects…"
+        "projects": "Search projects…",
+        "templates": "Search your templates…"
       },
-      "projectItems": "{count, plural, one {# item} other {# items}}",
-      "addToProject": "Add to project",
       "noTargets": "Nothing matches that.",
-      "pickAProject": "Pick a project",
-      "summaryOntoProject": "Onto {name}"
+      "templateItems": "{count, plural, one {# item} other {# items}}"
     }
   },
   "contact": {
