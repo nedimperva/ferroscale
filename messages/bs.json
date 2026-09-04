@@ -165,6 +165,7 @@
       "sessionSaved": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano u {project}",
       "sessionProjectName": "Sesija {date}",
       "partAdded": "Dodano kao dio sklopa {name}",
+      "templateAdded": "Dodano u šablon {name}",
       "addedItemsToSession": "{count} stavki dodano u sesiju",
       "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop"
     },
@@ -913,39 +914,92 @@
     },
     "saveTo": {
       "title": "Sačuvaj ovu liniju",
-      "whereLabel": "Gdje ide",
-      "newPartTitle": "Sačuvaj kao novi dio",
-      "newPartBody": "Samostalna specifikacija, zasebno u biblioteci.",
-      "addToPartTitle": "Dodaj u postojeći dio…",
-      "addToPartBody": "Dodaje se na njega, čime taj dio postaje sklop.",
-      "newAssemblyTitle": "Započni novi sklop",
-      "newAssemblyBody": "Ova linija postaje njegov prvi dio.",
-      "addToAssemblyTitle": "Dodaj u postojeći sklop…",
-      "addToAssemblyBody": "Dodaje se u sklop koji si već napravio.",
-      "projectTitle": "Odmah u projekat…",
-      "projectBody": "Preskoči biblioteku — stavi ovaj rez na posao.",
-      "partName": "Naziv dijela",
-      "assemblyName": "Naziv sklopa",
-      "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
-      "pickAPart": "Izaberi dio kojem dodaješ",
-      "pickAnAssembly": "Izaberi sklop kojem dodaješ",
-      "summaryNewPart": "Novi dio u biblioteci",
-      "summaryNewAssembly": "Novi sklop, 1 dio",
-      "summaryIntoPart": "U {name} — postaje sklop",
-      "summaryIntoAssembly": "U {name}",
-      "summaryProject": "Na posao, ne u biblioteku",
       "sendTitle": "Dodaj u…",
+      "whereLabel": "Gdje ide",
       "sendLabel": "Pošalji u",
+      "recentLabel": "Nedavno",
+      "kind": {
+        "parts": "Dijelovi",
+        "assemblies": "Sklopovi",
+        "projects": "Projekti",
+        "templates": "Šabloni"
+      },
+      "kindBody": {
+        "parts": "Sačuvaj zasebno ili dodaj u dio koji već imaš.",
+        "assemblies": "Započni novi ili dodaj u sklop koji si već napravio.",
+        "projects": "Odmah na posao, bez biblioteke.",
+        "templates": "Sačuvaj kao sklop koji možeš ubaciti na bilo koji posao."
+      },
+      "count": {
+        "parts": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+        "assemblies": "{count, plural, one {# sklop} few {# sklopa} other {# sklopova}}",
+        "projects": "{count, plural, one {# posao} few {# posla} other {# poslova}}",
+        "templates": "{count, plural, one {# šablon} few {# šablona} other {# šablona}}"
+      },
+      "new": {
+        "parts": "Sačuvaj kao novi dio",
+        "assemblies": "Započni novi sklop",
+        "projects": "Započni novi projekat",
+        "templates": "Sačuvaj kao novi šablon"
+      },
+      "newBody": {
+        "parts": "Samostalna specifikacija, zasebno u biblioteci.",
+        "assemblies": "Ova linija postaje njegov prvi dio.",
+        "projects": "Otvara posao sa ovom linijom na njemu.",
+        "templates": "Sklop za ponovnu upotrebu, spreman za posao."
+      },
+      "name": {
+        "parts": "Naziv dijela",
+        "assemblies": "Naziv sklopa",
+        "projects": "Naziv projekta",
+        "templates": "Naziv šablona"
+      },
+      "existing": {
+        "parts": "Tvoji dijelovi",
+        "assemblies": "Tvoji sklopovi",
+        "projects": "Tvoji projekti",
+        "templates": "Tvoji šabloni"
+      },
+      "commit": {
+        "parts": "Sačuvaj dio",
+        "assemblies": "Dodaj u sklop",
+        "projects": "Dodaj u projekat",
+        "templates": "Sačuvaj šablon"
+      },
+      "pick": {
+        "parts": "Izaberi dio kojem dodaješ ili započni novi",
+        "assemblies": "Izaberi sklop kojem dodaješ ili započni novi",
+        "projects": "Izaberi projekat ili započni novi",
+        "templates": "Izaberi šablon kojem dodaješ ili započni novi"
+      },
+      "nameItFirst": {
+        "parts": "Prvo imenuj dio",
+        "assemblies": "Prvo imenuj sklop",
+        "projects": "Prvo imenuj projekat",
+        "templates": "Prvo imenuj šablon"
+      },
+      "summaryNew": {
+        "parts": "Novi dio „{name}“",
+        "assemblies": "Novi sklop „{name}“, 1 dio",
+        "projects": "Novi projekat „{name}“",
+        "templates": "Novi šablon „{name}“"
+      },
+      "summaryInto": {
+        "parts": "U {name} — postaje sklop",
+        "assemblies": "U {name}",
+        "projects": "Na {name}",
+        "templates": "U {name}"
+      },
+      "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+      "projectItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
       "search": {
         "parts": "Pretraži svoje dijelove…",
         "assemblies": "Pretraži svoje sklopove…",
-        "projects": "Pretraži projekte…"
+        "projects": "Pretraži projekte…",
+        "templates": "Pretraži svoje šablone…"
       },
-      "projectItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
-      "addToProject": "Dodaj u projekat",
       "noTargets": "Ništa se ne poklapa.",
-      "pickAProject": "Izaberi projekat",
-      "summaryOntoProject": "Na {name}"
+      "templateItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}"
     }
   },
   "contact": {

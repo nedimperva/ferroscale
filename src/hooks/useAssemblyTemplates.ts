@@ -187,6 +187,12 @@ export interface UseAssemblyTemplatesReturn {
   removeBuiltin: (id: string) => void;
   restoreBuiltin: (id: string) => void;
   restoreAllBuiltins: () => void;
+  /**
+   * Re-read what is on disk. Writes already go through it, but a long-lived
+   * instance (the shell) can be holding a snapshot another one (a dialog)
+   * has since added to — call this when a surface that lists templates opens.
+   */
+  refresh: () => void;
 }
 
 export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
@@ -206,6 +212,11 @@ export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
     const next = typeof updater === "function" ? updater(current) : updater;
     persistAssemblyTemplates(next);
     setCustomTemplates(next);
+  }, []);
+
+  const refresh = useCallback(() => {
+    if (typeof window === "undefined") return;
+    setCustomTemplates(loadAssemblyTemplates());
   }, []);
 
   const builtins = useMemo(() => getBuiltinAssemblyTemplates(), []);
@@ -351,5 +362,6 @@ export function useAssemblyTemplates(): UseAssemblyTemplatesReturn {
     removeBuiltin,
     restoreBuiltin,
     restoreAllBuiltins,
+    refresh,
   };
 }

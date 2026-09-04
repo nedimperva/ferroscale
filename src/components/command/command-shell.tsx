@@ -7,6 +7,8 @@ import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
 import type { SavedEntry, TemplatePartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
+import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
@@ -77,7 +79,7 @@ import {
   DestinationSheet,
   assemblyTargets,
   partTargets,
-  type DestinationId,
+  type DestinationKind,
   type DestinationSubject,
 } from "./sheets/destination-sheet";
 import { PwaRegister } from "@/components/pwa-register";
@@ -184,6 +186,10 @@ export function CommandShell() {
   } = useProjects();
   const { presets } = usePresets();
   const priceBook = usePriceBook();
+  // The save overlay offers the template library as a destination, so the
+  // shell holds an instance too. Writes go through disk (see the hook), and
+  // `refresh` closes the read gap when a project dialog has added one.
+  const templatesApi = useAssemblyTemplates();
 
   const [query, setQuery] = useState(DEMO_QUERY);
   // The URL only mirrors the query once the user has replaced the demo query
@@ -217,11 +223,16 @@ export function CommandShell() {
    * project picker and the rename-after-save sheet.
    */
   const [destination, setDestination] = useState<
-    { entry: SavedEntry | null; initial?: DestinationId } | null
+    { entry: SavedEntry | null; initial?: DestinationKind } | null
   >(null);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
+  // A project dialog may have written templates since this instance loaded.
+  const refreshTemplates = templatesApi.refresh;
+  useEffect(() => {
+    if (destination) refreshTemplates();
+  }, [destination, refreshTemplates]);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   /** Letters / number pad chosen by hand. Cleared when the active item empties. */
   const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
@@ -871,6 +882,56 @@ export function CommandShell() {
     ],
   );
 
+  /**
+   * The subject as template items: a live line becomes one item per cut, a
+   * saved entry contributes its parts at today's rates — the same repricing a
+   * project gets, since a template is quoted long after it was written.
+   */
+  const templateItemsFor = useCallback(
+    (entry: SavedEntry | null): AssemblyTemplateItem[] => {
+      const parts = entry
+        ? repriceSavedEntry(entry)
+        : currentLineDrafts().map((draft) => ({
+            input: draft.input,
+            result: draft.result,
+            normalizedProfile: normalizeProfileSnapshot(draft.input),
+          }));
+      return parts.map((part) => ({
+        id: crypto.randomUUID(),
+        input: part.input,
+        result: part.result,
+        normalizedProfile: part.normalizedProfile,
+        quantity: part.input.quantity ?? 1,
+      }));
+    },
+    [repriceSavedEntry, currentLineDrafts],
+  );
+
+  const saveAsTemplate = useCallback(
+    (name: string, entry: SavedEntry | null) => {
+      const items = templateItemsFor(entry);
+      if (items.length === 0) return;
+      templatesApi.saveTemplate({ name, items });
+      haptic("commit");
+      setDestination(null);
+      showToast(t("templates.templateSaved"));
+    },
+    [templateItemsFor, templatesApi, showToast, t],
+  );
+
+  const appendToTemplate = useCallback(
+    (templateId: string, entry: SavedEntry | null) => {
+      const target = templatesApi.customTemplates.find((tpl) => tpl.id === templateId);
+      const items = templateItemsFor(entry);
+      if (!target || items.length === 0) return;
+      templatesApi.updateTemplate(templateId, { items: [...target.items, ...items] });
+      haptic("commit");
+      setDestination(null);
+      showToast(t("toast.templateAdded", { name: target.name }));
+    },
+    [templateItemsFor, templatesApi, showToast, t],
+  );
+
   const addCompareEntry = useCallback(
     (input: CalculationInput, result: CalculationResult) => {
       if (isInCompare(result)) {
@@ -1025,7 +1086,7 @@ export function CommandShell() {
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
-    setDestination({ entry: null, initial: "project" });
+    setDestination({ entry: null, initial: "projects" });
   }, [p.calc]);
 
   /**
@@ -1285,7 +1346,7 @@ export function CommandShell() {
     },
     onAddSavedToProject: (entry: SavedEntry) => {
       setSheet(null);
-      setDestination({ entry, initial: "project" });
+      setDestination({ entry, initial: "projects" });
     },
   };
   const helpSheet = effectiveSheet === "help" ? (
@@ -1325,9 +1386,12 @@ export function CommandShell() {
           initial={destination.initial}
           parts={partTargets(savedEntries)}
           assemblies={assemblyTargets(savedEntries).filter((item) => item.id !== entry?.id)}
+          templates={templatesApi.customTemplates}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
           onAppendTo={appendLineTo}
+          onSaveAsTemplate={(name) => saveAsTemplate(name, entry)}
+          onAppendToTemplate={(templateId) => appendToTemplate(templateId, entry)}
           onAddToProject={(projectId) => handlePickProject(projectId, entry)}
           onCreateProject={createProject}
           onClose={() => setDestination(null)}
