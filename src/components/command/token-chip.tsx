@@ -82,7 +82,7 @@ export function TokenChip({
                 type="button"
                 aria-label={t("token.stepDown", { token: tok })}
                 onClick={() => nudge(-1)}
-                className="h-9 w-9 rounded-[9px] border border-border-faint bg-[var(--surface-raised)] text-base font-bold text-foreground"
+                className="h-9 w-9 rounded-none border border-border-faint bg-[var(--surface-raised)] text-base font-bold text-foreground"
               >
                 −
               </button>
@@ -93,7 +93,7 @@ export function TokenChip({
                 type="button"
                 aria-label={t("token.stepUp", { token: tok })}
                 onClick={() => nudge(1)}
-                className="h-9 w-9 rounded-[9px] border border-border-faint bg-[var(--surface-raised)] text-base font-bold text-foreground"
+                className="h-9 w-9 rounded-none border border-border-faint bg-[var(--surface-raised)] text-base font-bold text-foreground"
               >
                 +
               </button>

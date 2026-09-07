@@ -57,7 +57,7 @@ export function SaveAssemblyTemplateModal({
             type="button"
             onClick={handleSave}
             disabled={!name.trim()}
-            className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-bold disabled:opacity-40 cursor-pointer"
+            className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--action)] text-[var(--action-contrast)] text-xs font-bold disabled:opacity-40 cursor-pointer"
           >
             {t("common.save")}
           </button>

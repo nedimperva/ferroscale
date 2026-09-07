@@ -810,6 +810,7 @@
     },
     "parts": {
       "subtitle": "Specifikacije koje često upisuješ i sklopovi koje ponavljaš. Iskoristi jedan da ga učitaš u traku ili ga odmah ubaci u projekat.",
+      "headerCount": "{parts} dijelova · {assemblies} sklopova",
       "pinnedLabel": "Zakačeno — uvijek prvo u prijedlozima",
       "pinPlaceholder": "Zakači dio da ostane ovdje",
       "columns": {

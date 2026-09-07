@@ -18,6 +18,7 @@ import {
 import { EmptyState } from "../empty-state";
 import { RowMenu } from "../row-menu";
 import { DeskIcon, Kbd } from "../desktop/desk-atoms";
+import { DeskViewHeader } from "../desktop/desk-rail";
 
 /**
  * Parts (2e) — what "Saved" becomes once it has a job.
@@ -77,13 +78,13 @@ function FilterChip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-[10px] cursor-pointer whitespace-nowrap font-bold text-[12.5px]"
+      className="flex items-center gap-1.5 rounded-none cursor-pointer whitespace-nowrap font-bold text-[12.5px]"
       style={{
         height: 32,
         padding: "0 13px",
-        border: `1px solid ${active ? "var(--accent)" : "var(--border-faint)"}`,
-        background: active ? "var(--accent)" : "var(--surface)",
-        color: active ? "var(--accent-contrast)" : "var(--muted)",
+        border: `1px solid ${active ? "var(--action)" : "var(--border)"}`,
+        background: active ? "var(--action)" : "transparent",
+        color: active ? "var(--action-contrast)" : "var(--muted)",
       }}
     >
       {label}
@@ -107,7 +108,7 @@ function PinnedCard({
   const { entry } = model;
   return (
     <div
-      className="flex flex-col gap-2 rounded-[15px] min-w-0"
+      className="flex flex-col gap-2 rounded-none min-w-0"
       style={{
         padding: "12px 14px",
         border: "1px solid var(--accent-border)",
@@ -141,7 +142,7 @@ function PinnedCard({
         <button
           type="button"
           onClick={onUse}
-          className="rounded-[9px] font-bold text-[12px] cursor-pointer flex-shrink-0"
+          className="rounded-none font-bold text-[12px] cursor-pointer flex-shrink-0"
           style={{
             padding: "5px 13px",
             border: "1px solid var(--accent-border)",
@@ -174,7 +175,7 @@ function PartsRow({
       type="button"
       onClick={() => actions.onPick(entry)}
       aria-label={t("parts.useAria", { name: entry.name })}
-      className="rounded-[9px] font-bold text-[12px] cursor-pointer flex-shrink-0"
+      className="rounded-none font-bold text-[12px] cursor-pointer flex-shrink-0"
       style={{
         padding: "6px 13px",
         border: "1px solid var(--border-faint)",
@@ -194,12 +195,12 @@ function PartsRow({
       type="button"
       onClick={() => actions.onAddToProject(entry)}
       aria-label={t("parts.addToProjectAria", { name: entry.name })}
-      className="rounded-[9px] font-bold text-[12px] cursor-pointer flex-shrink-0 flex items-center gap-1.5"
+      className="text-[12px] cursor-pointer flex-shrink-0 flex items-center gap-1.5"
       style={{
-        padding: "6px 12px",
-        border: "1px solid var(--accent)",
-        background: "var(--accent)",
-        color: "var(--accent-contrast)",
+        padding: "5px 11px",
+        border: "1px solid var(--border)",
+        background: "transparent",
+        color: "var(--foreground-secondary)",
       }}
     >
       <DeskIcon name="projects" />
@@ -250,7 +251,7 @@ function PartsRow({
       </span>
       {assembly && (
         <span
-          className="font-mono text-[10px] font-bold rounded-full flex-shrink-0 whitespace-nowrap"
+          className="font-mono text-[10px] font-bold rounded-none flex-shrink-0 whitespace-nowrap"
           style={{
             padding: "2px 8px",
             background: "var(--accent-surface)",
@@ -325,8 +326,8 @@ function PartsRow({
   return (
     <div
       role="row"
-      className="flex items-center gap-3 border-t border-border-faint first:border-t-0"
-      style={{ padding: "9px 14px" }}
+      className="flex items-center gap-3 border-b border-border-faint"
+      style={{ padding: "10px 0" }}
     >
       {/* The cell wrapper carries the table role — putting it on the button
           itself would strip its implicit button role and hide it from every
@@ -343,8 +344,8 @@ function PartsRow({
       </span>
       <span
         role="cell"
-        className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
-        style={{ width: 96, color: "var(--accent-text)" }}
+        className="font-mono text-[12.5px] text-right flex-shrink-0"
+        style={{ width: 96, color: "var(--foreground)" }}
       >
         {totalText}
       </span>
@@ -572,7 +573,7 @@ export function PartsView({
               />
             ))}
             <div
-              className="flex items-center justify-center rounded-[15px] text-center text-[12px] text-muted-faint"
+              className="flex items-center justify-center rounded-none text-center text-[12px] text-muted-faint"
               style={{ padding: "16px 14px", border: "1px dashed var(--border-strong)", minHeight: 92 }}
             >
               {t("parts.pinPlaceholder")}
@@ -594,7 +595,7 @@ export function PartsView({
               <button
                 type="button"
                 onClick={() => setQuery({ search: "", sort: query.sort, tags: [] })}
-                className="rounded-[10px] px-3.5 h-9 text-[12.5px] font-bold cursor-pointer"
+                className="rounded-none px-3.5 h-9 text-[12.5px] font-bold cursor-pointer"
                 style={{
                   border: "1px solid var(--border-faint)",
                   background: "var(--surface)",
@@ -626,18 +627,16 @@ export function PartsView({
           <div
             role="table"
             aria-label={t(`parts.section.${filter}`)}
-            className="rounded-panel-lg overflow-hidden"
-            style={{
-              border: "1px solid var(--border-faint)",
-              background: "var(--surface)",
-              boxShadow: "var(--panel-shadow-soft)",
-            }}
           >
             {!compact && (
               <div
                 role="row"
-                className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
-                style={{ padding: "10px 14px", background: "var(--surface-raised)" }}
+                className="flex items-center gap-3 font-mono text-[10px] text-muted uppercase"
+                style={{
+                  padding: "9px 0",
+                  letterSpacing: 1.4,
+                  borderBottom: "1px solid var(--border-faint)",
+                }}
               >
                 <span role="columnheader" className="flex-1 min-w-0">{t("parts.columns.name")}</span>
                 <span role="columnheader" style={{ width: 190 }}>{t("parts.columns.spec")}</span>
@@ -670,18 +669,14 @@ export function PartsView({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      <div
-        className="flex items-start gap-4 flex-wrap flex-shrink-0"
-        style={{ padding: "20px 32px 16px", borderBottom: "1px solid var(--border-faint)" }}
-      >
-        <div className="min-w-0" style={{ maxWidth: 620 }}>
-          <div className="font-extrabold text-xl text-foreground" style={{ letterSpacing: -0.4 }}>
-            {t("nav.parts")}
-          </div>
-          <div className="text-[12.5px] text-muted mt-1 leading-snug">{t("parts.subtitle")}</div>
-        </div>
-      </div>
-      <div className="flex-1 overflow-y-auto" style={{ padding: "20px 32px 32px" }}>
+      {/* The paragraph that used to sit under the title is a tooltip's worth
+          of copy on a screen whose own rows explain it better. What survives
+          is the count, which is the thing you actually check on arrival. */}
+      <DeskViewHeader
+        title={t("nav.parts")}
+        subtitle={t("parts.headerCount", { parts: parts.length, assemblies: assemblies.length })}
+      />
+      <div className="flex-1 overflow-y-auto" style={{ padding: "18px 20px 28px" }}>
         <div className="min-w-0">{list}</div>
       </div>
     </div>

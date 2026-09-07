@@ -58,7 +58,7 @@ export function SyncSection() {
 
   const action =
     "h-9 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50";
-  const primary = `${action} bg-[var(--accent)] text-[var(--accent-contrast)]`;
+  const primary = `${action} bg-[var(--action)] text-[var(--action-contrast)]`;
   const secondary = `${action} border border-border-faint bg-[var(--surface)] text-foreground`;
 
   return (
@@ -71,7 +71,7 @@ export function SyncSection() {
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span
-                className="w-2 h-2 rounded-full"
+                className="w-2 h-2 rounded-none"
                 style={{ background: "var(--green-text)" }}
                 aria-hidden="true"
               />

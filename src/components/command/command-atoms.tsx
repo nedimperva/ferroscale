@@ -65,7 +65,7 @@ export function CommandToast({
         }}
       >
         <span
-          className="flex w-5 h-5 rounded-full items-center justify-center flex-shrink-0"
+          className="flex w-5 h-5 rounded-none items-center justify-center flex-shrink-0"
           style={{ background: "var(--green-text)" }}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={dark ? "var(--green-surface)" : "var(--surface)"} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">

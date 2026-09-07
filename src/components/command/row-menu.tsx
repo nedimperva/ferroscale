@@ -150,7 +150,7 @@ export function RowMenu({
       <div
         ref={panelRef}
         role="menu"
-        className="fixed z-[60] rounded-[13px] overflow-hidden"
+        className="fixed z-[60] rounded-none overflow-hidden"
         style={{
           top: position.top,
           left: position.left,
@@ -196,7 +196,7 @@ export function RowMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={ariaLabel ?? t("common.more")}
-        className="flex items-center justify-center rounded-[9px] cursor-pointer flex-shrink-0"
+        className="flex items-center justify-center rounded-none cursor-pointer flex-shrink-0"
         style={{
           width: 30,
           height: 30,

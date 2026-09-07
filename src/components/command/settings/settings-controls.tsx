@@ -34,10 +34,10 @@ export function SettingsSeg({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className="inline-flex rounded-button"
-      style={{ background: "var(--surface-inset)", padding: 3, gap: 2 }}
+      className="inline-flex"
+      style={{ border: "1px solid var(--border)" }}
     >
-      {options.map((option) => {
+      {options.map((option, i) => {
         const active = value === option.value;
         return (
           <button
@@ -46,15 +46,15 @@ export function SettingsSeg({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(option.value)}
-            className={`rounded-[9px] border-0 cursor-pointer font-bold whitespace-nowrap ${
+            className={`border-0 cursor-pointer whitespace-nowrap ${
               option.mono ? "font-mono" : ""
             }`}
             style={{
               padding: compact ? "6px 11px" : "7px 14px",
-              fontSize: compact ? 12.5 : 13,
-              background: active ? "var(--surface)" : "transparent",
-              color: active ? "var(--foreground)" : "var(--muted)",
-              boxShadow: active ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+              fontSize: compact ? 12 : 12.5,
+              borderLeft: i === 0 ? undefined : "1px solid var(--border)",
+              background: active ? "var(--action)" : "transparent",
+              color: active ? "var(--action-contrast)" : "var(--muted)",
             }}
           >
             {active ? (option.deskLabel ?? option.label) : option.label}
@@ -87,12 +87,12 @@ export function SettingsChips({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(option.value)}
-            className={`rounded-button cursor-pointer font-bold text-[13px] ${option.mono ? "font-mono" : ""}`}
+            className={`cursor-pointer text-[12.5px] ${option.mono ? "font-mono" : ""}`}
             style={{
-              padding: "7px 13px",
-              border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
-              background: active ? "var(--accent-surface)" : "var(--surface-raised)",
-              color: active ? "var(--accent-text)" : "var(--foreground-secondary)",
+              padding: "6px 13px",
+              border: `1px solid ${active ? "var(--action)" : "var(--border)"}`,
+              background: active ? "var(--action)" : "transparent",
+              color: active ? "var(--action-contrast)" : "var(--foreground-secondary)",
             }}
           >
             {option.label}
@@ -160,24 +160,23 @@ export function SettingsSwitch({
       aria-checked={on}
       aria-label={ariaLabel}
       onClick={() => onChange(!on)}
-      className="relative rounded-full cursor-pointer flex-shrink-0"
+      className="relative rounded-none cursor-pointer flex-shrink-0"
       style={{
         width: 48,
         height: 28,
-        border: `1px solid ${on ? "var(--accent-border)" : "var(--border-faint)"}`,
-        background: on ? "var(--accent)" : "var(--surface-inset)",
+        border: `1px solid ${on ? "var(--action)" : "var(--border)"}`,
+        background: on ? "var(--action)" : "var(--surface-inset)",
         transition: "background 120ms ease",
       }}
     >
       <span
-        className="absolute rounded-full"
+        className="absolute rounded-none"
         style={{
           width: 22,
           height: 22,
           top: 2,
           left: on ? 23 : 2,
-          background: on ? "var(--accent-contrast)" : "var(--surface)",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          background: on ? "var(--action-contrast)" : "var(--surface)",
           transition: "left 120ms ease",
         }}
       />
@@ -199,7 +198,7 @@ export function SettingsNumberBox({
   return (
     <div className="flex items-center gap-2 flex-wrap justify-end">
       <div
-        className="flex items-center gap-2 rounded-[13px]"
+        className="flex items-center gap-2 rounded-none"
         style={{
           padding: compact ? "7px 11px" : "9px 13px",
           border: "1px solid var(--border-faint)",

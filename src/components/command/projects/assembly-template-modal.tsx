@@ -41,7 +41,7 @@ export function AssemblyTemplateModal({
         >
           <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
           {value === "manage" && templatesApi.customTemplates.length > 0 && (
-            <span className="px-1.5 rounded-full font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
+            <span className="px-1.5 rounded-none font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
               {templatesApi.customTemplates.length}
             </span>
           )}
@@ -85,7 +85,7 @@ export function AssemblyTemplateModal({
           >
             <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
             {value === "manage" && templatesApi.customTemplates.length > 0 && (
-              <span className="px-1.5 rounded-full font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
+              <span className="px-1.5 rounded-none font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
                 {templatesApi.customTemplates.length}
               </span>
             )}
@@ -216,7 +216,7 @@ function BrowseTemplatesBody({
         >
           <span>2. {t("templates.configureTab")}</span>
           {preview && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[var(--accent-surface)] text-[var(--accent-text)] font-mono">
+            <span className="px-1.5 py-0.2 rounded-none text-[10px] bg-[var(--accent-surface)] text-[var(--accent-text)] font-mono">
               ×{preview.mult}
             </span>
           )}
@@ -245,8 +245,8 @@ function BrowseTemplatesBody({
                 onClick={() => setSelectedCategory("all")}
                 className="px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap cursor-pointer transition-colors"
                 style={{
-                  background: selectedCategory === "all" ? "var(--accent)" : "var(--surface-raised)",
-                  color: selectedCategory === "all" ? "var(--accent-contrast)" : "var(--muted)",
+                  background: selectedCategory === "all" ? "var(--action)" : "var(--surface-inset)",
+                  color: selectedCategory === "all" ? "var(--action-contrast)" : "var(--muted)",
                 }}
               >
                 {t("projects.categories.all")}
@@ -258,8 +258,8 @@ function BrowseTemplatesBody({
                   onClick={() => setSelectedCategory(cat)}
                   className="px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap cursor-pointer transition-colors"
                   style={{
-                    background: selectedCategory === cat ? "var(--accent)" : "var(--surface-raised)",
-                    color: selectedCategory === cat ? "var(--accent-contrast)" : "var(--muted)",
+                    background: selectedCategory === cat ? "var(--action)" : "var(--surface-inset)",
+                    color: selectedCategory === cat ? "var(--action-contrast)" : "var(--muted)",
                   }}
                 >
                   {t(`projects.categories.${cat}`)}
@@ -341,7 +341,7 @@ function BrowseTemplatesBody({
                     {selectedTemplate.name}
                   </h3>
                   {selectedTemplate.isBuiltin && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
+                    <span className="px-2 py-0.5 rounded-none text-[10px] font-bold bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
                       Standard EN
                     </span>
                   )}
@@ -365,11 +365,11 @@ function BrowseTemplatesBody({
                         key={val}
                         type="button"
                         onClick={() => setMultiplier(val)}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-colors cursor-pointer min-w-[36px]"
+                        className="px-2.5 py-1.5 text-xs font-bold border transition-colors cursor-pointer min-w-[36px]"
                         style={{
-                          background: multiplier === val ? "var(--accent)" : "var(--surface-raised)",
-                          color: multiplier === val ? "var(--accent-contrast)" : "var(--foreground)",
-                          borderColor: multiplier === val ? "var(--accent)" : "var(--border-faint)",
+                          background: multiplier === val ? "var(--action)" : "transparent",
+                          color: multiplier === val ? "var(--action-contrast)" : "var(--foreground)",
+                          borderColor: multiplier === val ? "var(--action)" : "var(--border)",
                         }}
                       >
                         ×{val}
@@ -508,7 +508,7 @@ function BrowseTemplatesBody({
                 <button
                   type="button"
                   onClick={handleInsert}
-                  className="flex-1 h-10 rounded-xl bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90 text-xs font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 h-10 rounded-xl bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 text-xs font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
                 >
                   <span>+ {t("templates.insertAction", { count: preview.mult })}</span>
                 </button>

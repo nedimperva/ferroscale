@@ -194,7 +194,7 @@ export function CommandResultBreakdown({
                   color: "var(--accent-text)",
                   border: "1px solid var(--accent-border)",
                 }
-              : { background: "var(--accent)", color: "var(--accent-contrast)" }
+              : { background: "var(--action)", color: "var(--action-contrast)" }
           }
         >
           {isSaved ? t("common.saved") : t("common.save")}

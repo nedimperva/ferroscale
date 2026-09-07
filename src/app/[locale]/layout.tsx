@@ -50,7 +50,7 @@ export default async function LocaleLayout({
                 alt=""
                 width={56}
                 height={56}
-                className="h-full w-full rounded-[1.15rem]"
+                className="h-full w-full rounded-none"
               />
             </div>
             <div className="space-y-1">

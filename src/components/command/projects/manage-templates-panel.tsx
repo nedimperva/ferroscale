@@ -472,7 +472,7 @@ export function ManageTemplatesPanel({ api }: { api: UseAssemblyTemplatesReturn 
                     </p>
                   </div>
                   <span
-                    className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold border"
+                    className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-none text-[10px] font-bold border"
                     style={{
                       background: isBuiltin
                         ? "var(--surface-inset)"
@@ -503,7 +503,7 @@ export function ManageTemplatesPanel({ api }: { api: UseAssemblyTemplatesReturn 
                     <button
                       type="button"
                       onClick={() => handleDuplicate(selected.id)}
-                      className="flex-shrink-0 h-11 sm:h-9 px-4 rounded-chip text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] cursor-pointer"
+                      className="flex-shrink-0 h-11 sm:h-9 px-4 rounded-chip text-xs font-bold bg-[var(--action)] text-[var(--action-contrast)] cursor-pointer"
                     >
                       {t("templates.duplicateToEdit")}
                     </button>
@@ -774,7 +774,7 @@ export function ManageTemplatesPanel({ api }: { api: UseAssemblyTemplatesReturn 
                     type="button"
                     onClick={handleSave}
                     disabled={!dirty || !draft.name.trim()}
-                    className="flex-1 sm:flex-none h-11 sm:h-10 px-5 rounded-button text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] cursor-pointer disabled:opacity-40"
+                    className="flex-1 sm:flex-none h-11 sm:h-10 px-5 rounded-button text-xs font-bold bg-[var(--action)] text-[var(--action-contrast)] cursor-pointer disabled:opacity-40"
                   >
                     {t("common.saveChanges")}
                   </button>

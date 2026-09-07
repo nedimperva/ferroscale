@@ -149,12 +149,12 @@ export function SheetShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full flex flex-col bg-[var(--surface)] border border-border-faint rounded-t-3xl sm:rounded-2xl overflow-hidden"
+        className="relative w-full flex flex-col bg-[var(--surface)] border border-border-faint rounded-none sm:rounded-2xl overflow-hidden"
         style={{ maxWidth: width, maxHeight: SIZE_HEIGHT[resolved], margin: "0 auto" }}
       >
         {/* The grab handle belongs to the phone, where the sheet slides up. */}
         <div className="flex flex-col items-center pt-2 sm:hidden flex-shrink-0">
-          <span className="w-9 h-1 rounded-full bg-border" />
+          <span className="w-9 h-1 rounded-none bg-border" />
         </div>
 
         <div className="flex items-start gap-3 px-5 pt-3 pb-3 sm:pt-4 border-b border-border-faint bg-[var(--surface-raised)] flex-shrink-0">

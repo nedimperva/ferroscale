@@ -94,7 +94,7 @@ export function SavedEditSheet({
           <button
             type="button"
             onClick={submit}
-            className="flex-1 h-11 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm"
+            className="flex-1 h-11 rounded-button bg-[var(--action)] text-[var(--action-contrast)] font-bold text-sm"
           >
             {t("common.saveChanges")}
           </button>

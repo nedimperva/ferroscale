@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.25.0] - 2026-09-07
+
+A redesign of the whole app around one idea: a precision instrument, not a dashboard.
+
+### Changed
+
+- **A new visual language.** Warm paper (`#f4f3f0`) instead of white cards; hairline rules instead of borders and shadows; square corners everywhere — the radius scale is zeroed in one place in `globals.css`, so every `rounded-*` in the app resolves to nothing. Depth is gone: grouping is now rules and whitespace
+- **Every number is monospaced, with tabular figures.** A value no longer shifts sideways as it counts up or a digit changes. The headline figure dropped from an 800-weight sans to a regular-weight mono — at that size the digits carry on their own
+- **Terracotta is the only colour, and it marks one thing per screen.** Cost used to be blue against a terracotta weight, projects were purple, compare deltas were green. All of that is ink now; the accent is reserved for the figure that is the answer, the live indicator, and the caret. A new `--action` token means filled buttons are ink too, so a dozen of them no longer compete with the result
+- **Navigation is a 56px icon rail, not a row of tabs.** The tabs cost a band of height on the one screen where height is the answer; the rail spends 56px of width the workspace already has. Counts survive as a mono numeral on the icon — and as part of the button's accessible name, so a screen reader hears "Parts 5" where it previously heard only "Parts"
+- **One header for every workspace view.** A 42px bar: the view's name in a serif, its state beside it in tracked mono small caps, its actions on the right. Parts, Projects and Settings each had their own; the calculator had none
+- **The command line is an ink edge, not an accent glow.** On the phone and on the desktop. It is the one thing you always type into, so it is drawn like a rule rather than lit like a notification
+- **Lists and settings shed their card frames.** Rows are divided by a rule and run full-bleed; the calculator's four glance figures and the projects pipeline strip each read as one band divided by hairlines instead of four separate boxes
+- **A serif appears in exactly one role** — the name of the thing you are looking at (a view title, a profile, a project). Never a number, never body copy
+- Compare deltas are directional rather than a verdict: heavier or dearer takes the accent, lighter or cheaper stays ink. The same rule now governs the calculator's nearby-sizes list
+
+### Fixed
+
+- **Monospaced text had lost its tabular figures.** The rule that grants them had lost its declaration block, which silently merged its selector list into the letter-spacing rule below — so every `.font-mono`, `code`, `kbd` and `samp` in the app was getting 1.2px label tracking and proportional digits instead
+
+### Removed
+
+- The unused desktop sidebar, and the top-tab bar the rail replaces
+
 ## [3.24.0] - 2026-09-03
 
 Template management: edit, duplicate and remove assembly templates, standards included.

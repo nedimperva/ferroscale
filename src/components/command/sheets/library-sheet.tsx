@@ -612,7 +612,7 @@ function SessionTabContent({
       {rows.map((row) => (
         <div
           key={row.query}
-          className="flex items-center gap-2.5 rounded-[13px] border border-border-faint bg-[var(--surface)]"
+          className="flex items-center gap-2.5 rounded-none border border-border-faint bg-[var(--surface)]"
           style={{ padding: "12px 13px" }}
         >
           <button
@@ -630,7 +630,7 @@ function SessionTabContent({
             type="button"
             onClick={() => onRemove(row.query)}
             aria-label={t("common.remove")}
-            className="flex items-center justify-center rounded-[9px] border border-border-faint text-muted text-[14px] leading-none"
+            className="flex items-center justify-center rounded-none border border-border-faint text-muted text-[14px] leading-none"
             style={{ width: 30, height: 30, background: "var(--surface-raised)" }}
           >
             ×
@@ -639,7 +639,7 @@ function SessionTabContent({
       ))}
 
       <div
-        className="flex items-center gap-2.5 rounded-[13px]"
+        className="flex items-center gap-2.5 rounded-none"
         style={{ padding: "12px 13px", background: "var(--surface-inset)" }}
       >
         <span className="fs-track-wide text-[11px] font-bold uppercase text-muted">

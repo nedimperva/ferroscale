@@ -78,7 +78,7 @@ export function CommandDocsSection({ className = "mt-4" }: { className?: string 
               <ul className="mt-2.5 space-y-1.5">
                 {Object.values(section.tips).map((tip) => (
                   <li key={tip} className="flex gap-2 text-[11.5px] leading-relaxed text-muted">
-                    <span className="mt-[7px] h-1 w-1 rounded-full bg-[var(--accent)] flex-shrink-0" />
+                    <span className="mt-[7px] h-1 w-1 rounded-none bg-[var(--accent)] flex-shrink-0" />
                     <span>{tip}</span>
                   </li>
                 ))}
@@ -341,7 +341,7 @@ export function CommandSettingsSheet({
           }}
           aria-label={t("settings.searchAria")}
           aria-pressed={searching}
-          className="flex items-center justify-center rounded-[10px] cursor-pointer flex-shrink-0"
+          className="flex items-center justify-center rounded-none cursor-pointer flex-shrink-0"
           style={{
             width: 32,
             height: 32,
