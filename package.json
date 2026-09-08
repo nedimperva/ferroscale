@@ -19,7 +19,7 @@
     "test:all": "npm run test && npm run test:core"
   },
   "dependencies": {
-    "next": "16.1.6",
+    "next": "16.3.4",
     "next-intl": "^4.8.2",
     "react": "19.2.3",
     "react-dom": "19.2.3"
