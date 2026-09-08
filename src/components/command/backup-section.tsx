@@ -54,7 +54,7 @@ export function BackupSection() {
   };
 
   const btnClass = "h-9 px-3.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer";
-  const primaryBtn = `${btnClass} bg-[var(--accent)] text-[var(--accent-contrast)] hover:opacity-90`;
+  const primaryBtn = `${btnClass} bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90`;
   const secondaryBtn = `${btnClass} border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] text-foreground`;
 
   return (

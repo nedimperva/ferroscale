@@ -53,6 +53,25 @@ and exists only for metadata/URLs; `RouteAwareAppShell`
 5. **Share links** — the query is mirrored to `?q=` (`src/lib/command/share.ts`);
    a `?q=` param on load hydrates the command line.
 
+### Design language
+
+Direction 1a — "a precision instrument, not a dashboard". Warm paper, hairline
+rules instead of cards and shadows, square corners, mono tabular figures for
+every number, a serif for headings only, and terracotta as the single signal
+colour marking one thing per screen: the figure that is the answer.
+
+Nearly all of it lives in `src/app/globals.css`, which is the place to change
+it: the palette (light + `.dark`), the zeroed radius scale (every `rounded-*`
+utility resolves through it), the nulled shadow vars, `.fs-title` for the
+serif, and `--action`/`--action-contrast` for the ink primary button — kept
+separate from `--accent` so buttons never compete with the result. The blue
+and purple token families still exist so call sites did not have to churn, but
+both now resolve to ink.
+
+Desktop chrome is two pieces, both in `desktop/desk-rail.tsx`: `DeskRail` (the
+56px icon rail that replaced the top tabs) and `DeskViewHeader` (the 42px bar
+every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
+
 ### Workspace layout
 
 - `src/` — Next.js app. `src/lib/calculator/*` and `src/lib/datasets/*`

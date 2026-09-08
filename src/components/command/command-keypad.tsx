@@ -49,7 +49,7 @@ const PRICE_UNIT_CHOICES = [
 const LONG_PRESS_MS = 450;
 
 const KEY_BASE =
-  "min-w-0 rounded-[10px] flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
+  "min-w-0 rounded-none flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
 
 function variantClass(variant: "default" | "accent" | "dim"): string {
   if (variant === "accent") {
@@ -233,7 +233,7 @@ function HoldPickerKey({
                   haptic("tap");
                   onPick(choice.ins);
                 }}
-                className="h-10 px-3.5 rounded-[9px] font-mono text-[14px] font-bold text-foreground bg-[var(--surface-raised)] border border-border-faint"
+                className="h-10 px-3.5 rounded-none font-mono text-[14px] font-bold text-foreground bg-[var(--surface-raised)] border border-border-faint"
               >
                 {choice.label}
               </button>
@@ -346,7 +346,7 @@ export function CommandKeypad({
               haptic("tap");
               onLetters();
             }}
-            className="rounded-[9px] border border-border-faint bg-[var(--surface)] px-2.5 py-1 text-[12px] font-bold text-muted"
+            className="rounded-none border border-border-faint bg-[var(--surface)] px-2.5 py-1 text-[12px] font-bold text-muted"
           >
             {t("keypad.letters")}
           </button>

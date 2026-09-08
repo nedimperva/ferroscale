@@ -53,7 +53,7 @@ function StatTile({
 }) {
   return (
     <div
-      className="rounded-[14px] min-w-0"
+      className="rounded-none min-w-0"
       style={{
         padding: "10px 14px",
         border: "1px solid var(--border-faint)",
@@ -100,7 +100,7 @@ function BarSvgDiagram({
 
   return (
     <div
-      className="rounded-[14px] p-3.5 space-y-2.5"
+      className="rounded-none p-3.5 space-y-2.5"
       style={{
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
@@ -124,7 +124,7 @@ function BarSvgDiagram({
             {t("cutting.used")}: <strong className="text-foreground">{pattern.usedLengthMm} mm</strong>
           </span>
           <span
-            className="font-bold px-2 py-0.5 rounded-full text-[11px]"
+            className="font-bold px-2 py-0.5 rounded-none text-[11px]"
             style={{
               background: pattern.utilizationPercent >= 85 ? "var(--green-surface, rgba(16,185,129,0.12))" : "var(--surface-inset)",
               color: pattern.utilizationPercent >= 85 ? "var(--green-text)" : "var(--foreground-secondary)",
@@ -312,7 +312,7 @@ function PlateSvgDiagram({
 
   return (
     <div
-      className="rounded-[14px] p-3.5 space-y-2.5"
+      className="rounded-none p-3.5 space-y-2.5"
       style={{
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
@@ -336,7 +336,7 @@ function PlateSvgDiagram({
             {t("cutting.used")}: <strong className="text-foreground">{pattern.usedAreaM2} m²</strong> / {pattern.totalAreaM2} m²
           </span>
           <span
-            className="font-bold px-2 py-0.5 rounded-full text-[11px]"
+            className="font-bold px-2 py-0.5 rounded-none text-[11px]"
             style={{
               background: pattern.utilizationPercent >= 75 ? "var(--green-surface, rgba(16,185,129,0.12))" : "var(--surface-inset)",
               color: pattern.utilizationPercent >= 75 ? "var(--green-text)" : "var(--foreground-secondary)",

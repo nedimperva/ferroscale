@@ -8,7 +8,7 @@ import {
   cmdClassifyToken,
   cmdPasteIntoLine,
 } from "@ferroscale/metal-core";
-import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { fsMoney, fsWeight, fsWeightUnit, getMaterialGradeById } from "@ferroscale/metal-core";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
@@ -28,7 +28,8 @@ import { resolveCommandKey } from "../command-keys";
 import { CommandKeyHints } from "../command-key-hints";
 import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
-import { CloseIcon, DeskIcon, DeskPanel, DeskTokenChip, SectionLabel } from "./desk-atoms";
+import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
+import { DeskViewHeader } from "./desk-rail";
 import { PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { AssemblyParts } from "../assembly-parts";
@@ -71,12 +72,12 @@ function PanelIconBtn({
       disabled={disabled}
       title={title}
       aria-label={ariaLabel}
-      className="flex items-center justify-center rounded-button text-muted"
+      className="flex items-center justify-center text-muted"
       style={{
-        width: 38,
-        height: 38,
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
+        width: 34,
+        height: 34,
+        border: "1px solid var(--border)",
+        background: "transparent",
         cursor: disabled ? "default" : "pointer",
         opacity: disabled ? 0.45 : 1,
       }}
@@ -114,19 +115,28 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
   ];
 
   return (
-    <div className="grid w-full gap-2.5" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
-      {cells.map((cell) => (
+    /* Four boxes became one band: a rule above, a rule below, hairlines
+       between. Same four numbers, three fewer edges each. */
+    <div
+      className="flex w-full"
+      style={{
+        borderTop: "1px solid var(--border-faint)",
+        borderBottom: "1px solid var(--border-faint)",
+      }}
+    >
+      {cells.map((cell, i) => (
         <div
           key={cell.label}
-          className="rounded-[13px] border border-border-faint"
-          style={{ padding: "12px 14px", background: "var(--surface-raised)" }}
+          className="flex-1 min-w-0"
+          style={{
+            padding: i === 0 ? "11px 16px 11px 0" : "11px 16px",
+            borderLeft: i === 0 ? undefined : "1px solid var(--border-faint)",
+          }}
         >
-          <div className="fs-track-wide text-[9.5px] font-bold uppercase text-muted">
+          <div className="font-mono text-[10px] uppercase text-muted" style={{ letterSpacing: 1.6 }}>
             {cell.label}
           </div>
-          <div className="font-mono text-[17px] font-bold mt-1 truncate">
-            {cell.value}
-          </div>
+          <div className="font-mono text-[16px] mt-1 truncate">{cell.value}</div>
         </div>
       ))}
     </div>
@@ -136,7 +146,6 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
 
 export function DeskCalcView({
   compact,
-  dark,
   query,
   setQuery,
   p,
@@ -146,6 +155,8 @@ export function DeskCalcView({
   mode,
   onSetMode,
   parserSettings,
+  shared,
+  defaultUnit,
   sessionTape,
   onRemoveTapeEntry,
   onClearTape,
@@ -166,6 +177,15 @@ export function DeskCalcView({
   const t = useTranslations("command");
   const isW = mode === "weight";
   const targetNote = commandTargetNote(p);
+  // What every untyped line already assumes, stated once in the header rather
+  // than repeated as a badge on each result: currency, length unit, grade.
+  const settingsSummary = [
+    shared.currency,
+    defaultUnit,
+    getMaterialGradeById(shared.defaultGradeId)?.label ?? null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
   // ↑/↓ recall through the session tape; draft holds the in-progress query so
   // ↓ past the newest entry restores it.
@@ -267,18 +287,32 @@ export function DeskCalcView({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
+      {/* No standfirst here: the design puts the query in this slot, but the
+          command line sits directly below and says the same thing in full.
+          What the header adds is the state the line does *not* show — the
+          defaults every untyped token falls back to. */}
+      <DeskViewHeader
+        title={t("nav.calculator")}
+        actions={
+          <span className="font-mono text-[10.5px] text-muted whitespace-nowrap">
+            {settingsSummary}
+          </span>
+        }
+      />
+
       {/* ───────── command line — full width ───────── */}
-      <div className="flex-shrink-0" style={{ padding: compact ? "14px 16px 0" : "22px 28px 0" }}>
+      <div className="flex-shrink-0" style={{ padding: compact ? "14px 16px 0" : "18px 20px 0" }}>
+        {/* An ink edge, not an accent glow. The bar is the one thing on the
+            screen you always type into, so it is drawn like a rule rather
+            than lit like a notification — which leaves the accent free to
+            mean "this is the answer" a few centimetres below. */}
         <label
-          className="flex items-center gap-2 flex-wrap rounded-2xl cursor-text"
+          className="flex items-center gap-2 flex-wrap cursor-text"
           style={{
-            minHeight: 58,
-            border: "1.5px solid var(--accent-border)",
+            minHeight: 52,
+            border: "1px solid var(--foreground)",
             background: "var(--surface)",
-            padding: "12px 18px",
-            boxShadow: dark
-              ? "0 0 0 3px rgba(240,121,63,0.13)"
-              : "0 0 0 3px rgba(196,71,26,0.10)",
+            padding: "10px 14px",
           }}
         >
           <span
@@ -522,13 +556,12 @@ export function DeskCalcView({
                     focusInputAtEnd();
                   }
                 }}
-                className="fs-pop flex items-center gap-[7px] rounded-button cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+                className="fs-pop flex items-center gap-[7px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
                 style={{
                   padding: it.sub ? "7px 13px" : "8px 14px",
-                  border: it.kind === "save" ? "none" : "1px solid var(--border-faint)",
-                  background: it.kind === "save" ? "var(--accent)" : "var(--surface)",
-                  color: it.kind === "save" ? "var(--accent-contrast)" : "var(--foreground)",
-                  boxShadow: "var(--panel-shadow-soft)",
+                  border: it.kind === "save" ? "none" : "1px solid var(--border)",
+                  background: it.kind === "save" ? "var(--action)" : "var(--surface)",
+                  color: it.kind === "save" ? "var(--action-contrast)" : "var(--foreground)",
                 }}
               >
                 {it.fam && (
@@ -569,53 +602,53 @@ export function DeskCalcView({
         </div>
       </div>
 
-      {/* ───────── dashboard grid ───────── */}
+      {/* ───────── dashboard grid ─────────
+          The aside is flush to the edge with a rule down its left, not a card
+          floating in a gutter — so the two columns read as one sheet split,
+          and the answer column keeps the width the gutter was using. */}
       <div
-        className={`flex flex-1 min-h-0 ${compact ? "flex-col overflow-y-auto" : ""} gap-[18px]`}
-        style={{ padding: compact ? "14px 16px 20px" : "18px 28px 28px" }}
+        className={`flex flex-1 min-h-0 ${compact ? "flex-col overflow-y-auto" : ""}`}
+        style={{ padding: compact ? "14px 16px 20px" : undefined }}
       >
         {/* LEFT column — result + session tape */}
-        <div className="flex flex-col gap-4 min-w-0" style={{ flex: 1.55 }}>
-          {/* RESULT PANEL */}
-          <DeskPanel className="flex-shrink-0 flex flex-col" padding="22px 26px">
+        <div
+          className="flex flex-col gap-4 min-w-0"
+          style={{ flex: 1.55, padding: compact ? undefined : "20px 24px 0" }}
+        >
+          {/* RESULT — no panel. The answer is the page here, so it sits on
+              the paper directly and lets the rules below it do the grouping. */}
+          <div className="flex-shrink-0 flex flex-col">
             <div className="flex items-center gap-3">
-              <div
-                className="inline-flex gap-1 rounded-button"
-                style={{ padding: 3, background: "var(--surface-inset)" }}
-              >
-                {(["weight", "price"] as const).map((m) => (
+              <div className="inline-flex" style={{ border: "1px solid var(--border)" }}>
+                {(["weight", "price"] as const).map((m, i) => (
                   <button
                     key={m}
                     type="button"
                     onClick={() => onSetMode(m)}
-                    className="rounded-lg cursor-pointer border-0 font-bold text-[10px]"
+                    aria-pressed={mode === m}
+                    className="cursor-pointer border-0 font-mono text-[10px]"
                     style={{
-                      padding: "6px 16px",
+                      padding: "5px 14px",
                       letterSpacing: 1.3,
-                      background: mode === m ? "var(--surface)" : "transparent",
-                      color:
-                        mode === m
-                          ? m === "weight"
-                            ? "var(--accent-text)"
-                            : "var(--blue-text)"
-                          : "var(--muted)",
-                      boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                      borderLeft: i === 0 ? undefined : "1px solid var(--border)",
+                      background: mode === m ? "var(--foreground)" : "transparent",
+                      color: mode === m ? "var(--background)" : "var(--muted)",
                     }}
                   >
                     {(m === "weight" ? t("settings.weight") : t("settings.price")).toUpperCase()}
                   </button>
                 ))}
               </div>
-              <span className="ml-auto flex items-center gap-[5px]">
+              <span className="ml-auto flex items-center gap-[6px]">
                 <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: p.valid ? "var(--green-text)" : "var(--muted-faint)" }}
+                  className="w-1.5 h-1.5"
+                  style={{ background: p.valid ? "var(--accent)" : "var(--muted-faint)" }}
                 />
                 <span
-                  className="text-[10.5px] font-bold"
+                  className="font-mono text-[10px] uppercase"
                   style={{
-                    letterSpacing: 0.5,
-                    color: p.valid ? "var(--green-text)" : "var(--muted-faint)",
+                    letterSpacing: 1.6,
+                    color: p.valid ? "var(--accent)" : "var(--muted-faint)",
                   }}
                 >
                   {p.valid ? t("status.live") : t("status.waiting")}
@@ -623,39 +656,38 @@ export function DeskCalcView({
               </span>
             </div>
 
-            {/* hero */}
-            <div style={{ padding: "14px 0 16px" }}>
-              <div className="flex items-baseline gap-3.5">
+            {/* hero — mono like every other figure in the app, and set at a
+                regular weight: at this size the digits carry on their own, and
+                mono keeps them from reflowing as the value counts up. */}
+            <div style={{ padding: "10px 0 14px" }}>
+              <div className="flex items-baseline gap-3">
                 {!isW && p.totalAmount != null && (
                   <span
-                    className="leading-none"
-                    style={{ fontWeight: 800, fontSize: 48, color: "var(--blue-strong)" }}
+                    className="font-mono leading-none"
+                    style={{ fontSize: 36, color: "var(--muted)" }}
                   >
                     {sym}
                   </span>
                 )}
                 <span
-                  className="fs-display-num"
+                  className="font-mono fs-display-num"
                   style={{
-                    fontWeight: 800,
-                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(64px, 6vw, 104px)",
-                    lineHeight: 0.82,
-                    letterSpacing: -5,
+                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(56px, 6.2vw, 92px)",
+                    lineHeight: 0.86,
+                    letterSpacing: -4,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
                   }}
                 >
                   {heroVal}
                 </span>
                 {isW && p.totalKg != null && (
-                  <span className="font-bold text-[40px]" style={{ color: "var(--accent)" }}>
+                  <span className="font-mono text-[22px]" style={{ color: "var(--accent)" }}>
                     {fsWeightUnit()}
                   </span>
                 )}
               </div>
               {band && (
-                <div
-                  className="fs-track-wide font-mono text-[12px] text-muted mt-2"
-                >
+                <div className="font-mono text-[12px] text-foreground-secondary mt-2.5">
                   {band.percentLabel} · {band.rangeLabel}
                 </div>
               )}
@@ -709,7 +741,7 @@ export function DeskCalcView({
                           );
                           focusInputAtEnd();
                         }}
-                        className="rounded-full font-bold cursor-pointer"
+                        className="rounded-none font-bold cursor-pointer"
                         style={{
                           padding: "2px 9px",
                           background: "var(--accent-surface)",
@@ -749,35 +781,28 @@ export function DeskCalcView({
                   disabled={!p.valid}
                   aria-pressed={currentSaved}
                   title={currentSaved ? t("common.saved") : t("common.save")}
-                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap"
+                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap"
                   style={{
-                    padding: "9px 16px",
-                    // Disabled goes quiet like its siblings — a full-accent
-                    // button at half opacity still reads as the main action.
-                    border: !p.valid
-                      ? "1px solid var(--border-faint)"
-                      : currentSaved
-                        ? "1px solid var(--accent-border)"
-                        : "none",
-                    background: !p.valid
-                      ? "var(--surface)"
-                      : currentSaved
-                        ? "var(--accent-surface)"
-                        : "var(--accent)",
+                    padding: "8px 16px",
+                    // Ink, not accent: the accent belongs to the figure above.
+                    // Saved reverses into an outline so the state is legible
+                    // without a second colour.
+                    border: p.valid && !currentSaved ? "none" : "1px solid var(--border)",
+                    background: p.valid && !currentSaved ? "var(--foreground)" : "transparent",
                     color: !p.valid
                       ? "var(--muted)"
                       : currentSaved
-                        ? "var(--accent-text)"
-                        : "var(--accent-contrast)",
+                        ? "var(--foreground)"
+                        : "var(--background)",
                     cursor: p.valid ? "pointer" : "default",
                   }}
                 >
                   <svg
-                    width="15"
-                    height="15"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
                     fill={currentSaved ? "currentColor" : "none"}
-                    stroke={currentSaved ? "currentColor" : "var(--accent-contrast)"}
+                    stroke="currentColor"
                     strokeWidth={2}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -794,12 +819,12 @@ export function DeskCalcView({
                   disabled={!p.valid}
                   title={t("saveTo.title")}
                   aria-label={t("saveTo.title")}
-                  className="inline-flex items-center justify-center rounded-button"
+                  className="inline-flex items-center justify-center"
                   style={{
-                    width: 34,
-                    height: 36,
-                    border: "1px solid var(--border-faint)",
-                    background: "var(--surface)",
+                    width: 32,
+                    height: 34,
+                    border: "1px solid var(--border)",
+                    background: "transparent",
                     color: p.valid ? "var(--foreground)" : "var(--muted)",
                     cursor: p.valid ? "pointer" : "default",
                   }}
@@ -812,14 +837,13 @@ export function DeskCalcView({
                   type="button"
                   onClick={onCompareCurrent}
                   disabled={!p.valid}
-                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-foreground"
+                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap text-foreground"
                   style={{
-                    padding: "9px 14px",
-                    border: "1px solid var(--border-faint)",
-                    background: "var(--surface)",
+                    padding: "8px 14px",
+                    border: "1px solid var(--border)",
+                    background: "transparent",
                     cursor: p.valid ? "pointer" : "default",
                     opacity: p.valid ? 1 : 0.45,
-                    boxShadow: "var(--panel-shadow-soft)",
                   }}
                 >
                   <DeskIcon name="compare" />
@@ -832,10 +856,10 @@ export function DeskCalcView({
                   // A spoken "+ item" is cryptic; the suggestion chip keeps
                   // the short label, this one says what it does.
                   aria-label={t("desktop.anotherItemAria")}
-                  className="inline-flex items-center gap-[7px] rounded-button font-bold text-[13px] whitespace-nowrap text-muted"
+                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap text-muted"
                   style={{
-                    padding: "9px 14px",
-                    border: "1px dashed var(--border-strong)",
+                    padding: "8px 14px",
+                    border: "1px dashed var(--border)",
                     background: "transparent",
                     cursor: p.valid ? "pointer" : "default",
                     opacity: p.valid ? 1 : 0.45,
@@ -869,13 +893,14 @@ export function DeskCalcView({
                 </PanelIconBtn>
               </div>
             </div>
-          </DeskPanel>
+          </div>
 
-          {/* SESSION TAPE — fills remaining height */}
-          <DeskPanel
+          {/* SESSION TAPE — fills remaining height. An ink rule heads it: the
+              tape is a different kind of thing from the answer above, and the
+              rule says so more quietly than a second box would. */}
+          <div
             className={`flex flex-col ${compact ? "flex-shrink-0" : "flex-1 min-h-0"}`}
-            radius={16}
-            padding="14px 18px"
+            style={{ borderTop: "1px solid var(--foreground)", paddingTop: 10 }}
           >
             <div className="flex items-baseline gap-2.5 mb-1.5 flex-shrink-0">
               <SectionLabel>{t("desktop.session")}</SectionLabel>
@@ -957,7 +982,7 @@ export function DeskCalcView({
                         aria-label={t("desktop.removeFromTapeAria", {
                           name: formatCommandParseName(t, rp) ?? q,
                         })}
-                        className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                        className="flex items-center justify-center rounded-none border-0 cursor-pointer flex-shrink-0 text-muted opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
                         style={{ width: 20, height: 20, background: "var(--surface-inset)" }}
                       >
                         <CloseIcon />
@@ -993,17 +1018,19 @@ export function DeskCalcView({
                 </div>
               </>
             )}
-          </DeskPanel>
+          </div>
         </div>
 
         {/* RIGHT column — expanded breakdown */}
-        <DeskPanel
-          className={`flex flex-col ${compact ? "flex-shrink-0" : "min-h-0 overflow-y-auto"}`}
-          padding="20px 22px"
+        <div
+          className={`flex flex-col ${compact ? "flex-shrink-0 mt-4" : "min-h-0 overflow-y-auto"}`}
           style={{
-            flex: compact ? "0 0 auto" : 1,
-            minWidth: compact ? 0 : 300,
-            maxWidth: compact ? "100%" : 400,
+            flex: compact ? "0 0 auto" : "0 0 352px",
+            width: compact ? "100%" : 352,
+            padding: "20px 22px",
+            background: "var(--surface)",
+            borderLeft: compact ? undefined : "1px solid var(--border-faint)",
+            borderTop: compact ? "1px solid var(--border-faint)" : undefined,
           }}
         >
           <DeskBreakdown
@@ -1014,7 +1041,7 @@ export function DeskCalcView({
             query={query}
             setQuery={setQuery}
           />
-        </DeskPanel>
+        </div>
       </div>
     </div>
   );
@@ -1120,7 +1147,7 @@ function DeskBreakdown({
       {rows && r ? (
         <>
           <div
-            className="rounded-[14px] flex items-center justify-center mb-4 flex-shrink-0"
+            className="rounded-none flex items-center justify-center mb-4 flex-shrink-0"
             style={{ background: "var(--surface-inset)", padding: "16px 10px" }}
           >
             <ProfileDrawing p={focus} className="w-full flex flex-col items-center" />

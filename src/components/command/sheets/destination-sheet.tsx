@@ -315,7 +315,7 @@ export function DestinationSheet({
                 type="button"
                 onClick={commit}
                 disabled={blocked}
-                className="flex-[1.4] sm:flex-none sm:ml-auto h-11 sm:h-10 px-5 rounded-button text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] cursor-pointer disabled:opacity-40"
+                className="flex-[1.4] sm:flex-none sm:ml-auto h-11 sm:h-10 px-5 rounded-button text-xs font-bold bg-[var(--action)] text-[var(--action-contrast)] cursor-pointer disabled:opacity-40"
               >
                 {t(`saveTo.commit.${def.id}`)}
               </button>

@@ -24,35 +24,41 @@ import { EmptyState } from "../empty-state";
 import { RowMenu } from "../row-menu";
 import { SearchField } from "../search-field";
 import { DeskIcon } from "../desktop/desk-atoms";
+import { DeskViewHeader } from "../desktop/desk-rail";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 import { AssemblyTemplateModal } from "./assembly-template-modal";
 
+/**
+ * One cell of the pipeline band. The four of them share a rule above and
+ * below and a hairline between, the same shape the calculator's glance row
+ * uses — four tiles meant four boxes for four numbers that belong together.
+ */
 function PipelineStatTile({
   label,
   value,
   tone,
+  first,
 }: {
   label: string;
   value: string;
   tone?: "accent";
+  first?: boolean;
 }) {
   return (
     <div
-      className="rounded-[12px] p-2.5 min-w-0"
+      className="min-w-0"
       style={{
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
+        padding: first ? "11px 16px 11px 0" : "11px 16px",
+        borderLeft: first ? undefined : "1px solid var(--border-faint)",
       }}
     >
-      <div className="fs-track-label text-[9px] font-bold text-muted uppercase truncate">
+      <div className="font-mono text-[10px] text-muted uppercase truncate" style={{ letterSpacing: 1.6 }}>
         {label}
       </div>
       <div
-        className="font-mono font-bold mt-0.5 truncate text-[14.5px]"
-        style={{
-          color: tone === "accent" ? "var(--accent-text)" : "var(--foreground)",
-        }}
+        className="font-mono mt-1 truncate text-[18px]"
+        style={{ color: tone === "accent" ? "var(--accent)" : "var(--foreground)" }}
       >
         {value}
       </div>
@@ -76,13 +82,13 @@ function BucketRow({
       type="button"
       onClick={onClick}
       aria-current={active ? "true" : undefined}
-      className="flex items-center gap-2 w-full rounded-button text-left cursor-pointer"
+      className="flex items-center gap-2 w-full text-left cursor-pointer"
       style={{
-        padding: "8px 13px",
+        padding: "7px 16px",
+        borderLeft: `2px solid ${active ? "var(--accent)" : "transparent"}`,
         background: active ? "var(--accent-surface)" : "transparent",
-        color: active ? "var(--accent-text)" : "var(--foreground-secondary)",
-        fontWeight: active ? 700 : 600,
-        fontSize: 13.5,
+        color: active ? "var(--foreground)" : "var(--foreground-secondary)",
+        fontSize: 13,
       }}
     >
       <span className="flex-1 min-w-0 truncate">{label}</span>
@@ -107,7 +113,7 @@ function ClientChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="flex items-center gap-1.5 rounded-full font-bold text-[11.5px] cursor-pointer whitespace-nowrap"
+      className="flex items-center gap-1.5 rounded-none font-bold text-[11.5px] cursor-pointer whitespace-nowrap"
       style={{
         padding: "5px 11px",
         border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
@@ -255,9 +261,9 @@ function ProjectRow({
   return (
     <div
       role="row"
-      className="flex items-center gap-3 border-t border-[var(--border-faint)] transition-colors hover:bg-[var(--surface-raised)]"
+      className="flex items-center gap-3 border-b border-[var(--border-faint)] transition-colors hover:bg-[var(--surface-inset)]"
       style={{
-        padding: "10px 16px",
+        padding: "11px 0",
         background: selected ? "var(--accent-surface)" : undefined,
       }}
     >
@@ -413,12 +419,13 @@ export function ProjectList({
       <button
         type="button"
         onClick={() => setShowTemplateModal(true)}
-        className="inline-flex items-center gap-1.5 rounded-button font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
+        className="inline-flex items-center gap-1.5 text-[12px] cursor-pointer whitespace-nowrap"
         style={{
-          padding: "9px 12px",
-          border: "1px solid var(--border-faint)",
-          background: "var(--surface)",
-          color: "var(--foreground)",
+          height: 28,
+          padding: "0 11px",
+          border: "1px solid var(--border)",
+          background: "transparent",
+          color: "var(--foreground-secondary)",
         }}
         title={t("templates.newFromTemplate")}
       >
@@ -428,15 +435,16 @@ export function ProjectList({
       <button
         type="button"
         onClick={() => setCreating((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-button font-bold text-[12.5px] cursor-pointer whitespace-nowrap"
+        className="inline-flex items-center gap-1.5 text-[12px] cursor-pointer whitespace-nowrap"
         style={{
-          padding: "9px 14px",
+          height: 28,
+          padding: "0 12px",
           border: "none",
-          background: "var(--accent)",
-          color: "var(--accent-contrast)",
+          background: "var(--action)",
+          color: "var(--action-contrast)",
         }}
       >
-        <DeskIcon name="plus" stroke="var(--accent-contrast)" />
+        <DeskIcon name="plus" stroke="var(--action-contrast)" />
         {t("library.newProject")}
       </button>
     </div>
@@ -460,7 +468,7 @@ export function ProjectList({
         type="button"
         onClick={submitNew}
         disabled={!newName.trim()}
-        className="h-10 px-4 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+        className="h-10 px-4 rounded-button bg-[var(--action)] text-[var(--action-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {t("common.create")}
       </button>
@@ -521,7 +529,7 @@ export function ProjectList({
           key={cat}
           type="button"
           onClick={() => setCategory(cat)}
-          className="h-7 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer"
+          className="h-7 px-2.5 rounded-none text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer"
           style={{
             background: category === cat ? "var(--accent-surface)" : "var(--surface)",
             border: category === cat ? "1px solid var(--accent-border)" : "1px solid var(--border-faint)",
@@ -557,18 +565,16 @@ export function ProjectList({
       <div
         role="table"
         aria-label={t("nav.projects")}
-        className="rounded-panel-lg overflow-hidden"
-        style={{
-          border: "1px solid var(--border-faint)",
-          background: "var(--surface)",
-          boxShadow: "var(--panel-shadow-soft)",
-        }}
       >
         {!compact && (
           <div
             role="row"
-            className="flex items-center gap-3 fs-track-label text-[9.5px] font-bold text-muted uppercase"
-            style={{ padding: "10px 16px", background: "var(--surface-raised)" }}
+            className="flex items-center gap-3 font-mono text-[10px] text-muted uppercase"
+            style={{
+              padding: "9px 0",
+              letterSpacing: 1.4,
+              borderBottom: "1px solid var(--border-faint)",
+            }}
           >
             <input
               type="checkbox"
@@ -608,14 +614,14 @@ export function ProjectList({
 
   const sortSelect = (
     <label
-      className="flex items-center gap-1.5 rounded-button px-2.5 flex-shrink-0"
+      className="flex items-center gap-1.5 px-2.5 flex-shrink-0"
       style={{
-        height: compact ? 34 : 38,
-        border: "1px solid var(--border-faint)",
+        height: compact ? 32 : 28,
+        border: "1px solid var(--border)",
         background: "var(--surface)",
       }}
     >
-      <span className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+      <span className="font-mono text-[10px] text-muted uppercase" style={{ letterSpacing: 1.4 }}>
         {t("projects.sortLabel")}
       </span>
       <select
@@ -680,23 +686,15 @@ export function ProjectList({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      <div
-        className="flex items-center gap-4 flex-wrap flex-shrink-0"
-        style={{ padding: "20px 32px 16px", borderBottom: "1px solid var(--border-faint)" }}
-      >
-        <div className="min-w-0">
-          <div className="font-extrabold text-xl text-foreground" style={{ letterSpacing: -0.4 }}>
-            {t("nav.projects")}
-          </div>
-          <div className="font-mono text-[11.5px] text-muted mt-0.5">
-            {t("projects.subtitleCounts", {
-              active: counts.active,
-              archived: counts.archived,
-            })}
-          </div>
-        </div>
-        <div className="ml-auto flex items-center gap-2.5">
-          <div style={{ width: 260 }}>
+      <DeskViewHeader
+        title={t("nav.projects")}
+        subtitle={t("projects.subtitleCounts", {
+          active: counts.active,
+          archived: counts.archived,
+        })}
+        actions={
+          <>
+          <div style={{ width: 220 }}>
             <SearchField
               value={search}
               onChange={setSearch}
@@ -706,22 +704,23 @@ export function ProjectList({
           </div>
           {sortSelect}
           {newProjectButton}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <div className="flex flex-1 min-h-0">
         <nav
           aria-label={t("projects.clientsLabel")}
           className="flex-shrink-0 overflow-y-auto"
-          style={{ width: 216, borderRight: "1px solid var(--border-faint)", padding: "18px 12px" }}
+          style={{ width: 190, borderRight: "1px solid var(--border-faint)", padding: "16px 0" }}
         >
           <div
-            className="fs-track-label text-[9.5px] font-bold text-muted-faint uppercase"
-            style={{ padding: "0 13px 8px" }}
+            className="font-mono text-[10px] text-muted uppercase"
+            style={{ padding: "0 13px 8px", letterSpacing: 1.6 }}
           >
             {t("projects.clientsLabel")}
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col">
             {buckets.map((entry) => (
               <BucketRow
                 key={entry.key}
@@ -745,12 +744,19 @@ export function ProjectList({
           )}
         </nav>
 
-        <div className="flex-1 min-w-0 overflow-y-auto" style={{ padding: "20px 32px 32px" }}>
+        <div className="flex-1 min-w-0 overflow-y-auto" style={{ padding: "0 20px 28px" }}>
           <div className="min-w-0">
             {/* Pipeline KPI Summary Strip */}
             {bucket.kind !== "archived" && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3.5">
+              <div
+                className="grid grid-cols-2 sm:grid-cols-4 mb-4"
+                style={{
+                  borderTop: "1px solid var(--border-faint)",
+                  borderBottom: "1px solid var(--border-faint)",
+                }}
+              >
                 <PipelineStatTile
+                  first
                   label={t("projects.pipeline.active")}
                   value={`${pipeline.activeCount} jobs`}
                 />
@@ -761,7 +767,6 @@ export function ProjectList({
                       ? `${(pipeline.totalWeightKg / 1000).toFixed(2)} t`
                       : `${fsWeight(pipeline.totalWeightKg)} kg`
                   }
-                  tone="accent"
                 />
                 <PipelineStatTile
                   label={t("projects.pipeline.value")}

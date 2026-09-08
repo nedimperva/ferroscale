@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, IBM_Plex_Mono } from "next/font/google";
+import { Archivo, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
@@ -14,6 +14,14 @@ const archivo = Archivo({
 const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-plex-mono",
   weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+});
+
+// Headings only — view titles, profile and project names. Never a number and
+// never body copy; see .fs-title in globals.css.
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  weight: ["300", "400", "500"],
   subsets: ["latin"],
 });
 
@@ -109,8 +117,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   interactiveWidget: "overlays-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#efeae0" },
-    { media: "(prefers-color-scheme: dark)", color: "#131009" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f3f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#171614" },
   ],
 };
 
@@ -132,7 +140,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${archivo.variable} ${ibmPlexMono.variable} antialiased min-h-dvh bg-surface md:bg-background text-foreground`}
+        className={`${archivo.variable} ${ibmPlexMono.variable} ${newsreader.variable} antialiased min-h-dvh bg-surface md:bg-background text-foreground`}
         suppressHydrationWarning
       >
         {children}

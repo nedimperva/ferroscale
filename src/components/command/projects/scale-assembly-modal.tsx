@@ -53,7 +53,7 @@ export function ScaleAssemblyModal({
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--accent)] text-[var(--accent-contrast)] text-xs font-bold cursor-pointer"
+            className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--action)] text-[var(--action-contrast)] text-xs font-bold cursor-pointer"
           >
             {t("templates.applyScale", { mult: multiplier })}
           </button>
@@ -72,11 +72,11 @@ export function ScaleAssemblyModal({
                 key={val}
                 type="button"
                 onClick={() => setMultiplier(val)}
-                className="py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer active:scale-95 shadow-2xs"
+                className="py-2.5 text-xs font-bold border transition-all cursor-pointer active:scale-95"
                 style={{
-                  background: multiplier === val ? "var(--accent)" : "var(--surface-raised)",
-                  color: multiplier === val ? "var(--accent-contrast)" : "var(--foreground)",
-                  borderColor: multiplier === val ? "var(--accent)" : "var(--border-faint)",
+                  background: multiplier === val ? "var(--action)" : "transparent",
+                  color: multiplier === val ? "var(--action-contrast)" : "var(--foreground)",
+                  borderColor: multiplier === val ? "var(--action)" : "var(--border)",
                 }}
               >
                 ×{val}

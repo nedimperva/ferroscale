@@ -7,7 +7,7 @@ import { isArchivedProject } from "@/hooks/useProjects";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CommandDesktopProps, DeskView } from "./desktop-props";
 import type { ProjectActions } from "../projects/project-actions";
-import { DeskTopTabs } from "./desk-top-tabs";
+import { DeskRail } from "./desk-rail";
 import { DeskCalcView } from "./desk-calc-view";
 import { DeskCompareView } from "./desk-compare-view";
 import { PartsView, type PartsActions } from "../parts/parts-view";
@@ -168,9 +168,11 @@ export function CommandDesktop(props: CommandDesktopProps) {
   };
 
   return (
-    <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      <DeskTopTabs
-        compact={props.compact}
+    /* Rail beside the workspace, not a bar above it: navigation costs 56px of
+       width, which the calculator has, instead of a band of height, which is
+       what the answer needs. */
+    <div className="flex flex-1 min-w-0 overflow-hidden">
+      <DeskRail
         dark={props.dark}
         view={view}
         setView={setView}
@@ -179,7 +181,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
         onToggleTheme={props.onToggleTheme}
       />
       {/* Keyed by view so switching tabs cross-fades instead of snapping. */}
-      <div key={view} className="fs-fade flex flex-1 min-h-0 flex-col">
+      <div key={view} className="fs-fade flex flex-1 min-w-0 min-h-0 flex-col">
       {view === "calc" && (
         <DeskCalcView
           {...props}

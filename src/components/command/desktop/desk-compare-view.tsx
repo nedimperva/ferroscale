@@ -5,7 +5,7 @@ import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/m
 import { CommandGlyph } from "../command-glyph";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CompareItem } from "@/hooks/useCompare";
-import { DeskTopbar } from "./desk-sidebar";
+import { DeskViewHeader } from "./desk-rail";
 import { CloseIcon, DeskBtn, DeskIcon } from "./desk-atoms";
 import { familyForInput } from "../command-copy";
 
@@ -14,8 +14,8 @@ function DeltaChip({ pct }: { pct: number }) {
   if (!Number.isFinite(pct) || Math.abs(pct) < 0.5) {
     return (
       <span
-        className="font-mono text-[10px] font-bold rounded-full"
-        style={{ padding: "2px 7px", background: "var(--surface-inset)", color: "var(--muted)" }}
+        className="font-mono text-[10px] uppercase"
+        style={{ padding: "2px 0", letterSpacing: 1.2, color: "var(--muted)" }}
       >
         {t("compare.approxBase")}
       </span>
@@ -24,11 +24,11 @@ function DeltaChip({ pct }: { pct: number }) {
   const up = pct > 0;
   return (
     <span
-      className="font-mono text-[10px] font-bold rounded-full"
+      className="font-mono text-[10px]"
       style={{
-        padding: "2px 7px",
-        background: up ? "var(--accent-surface)" : "var(--green-surface)",
-        color: up ? "var(--accent-text)" : "var(--green-text)",
+        padding: "2px 0",
+        background: "transparent",
+        color: up ? "var(--accent)" : "var(--foreground-secondary)",
       }}
     >
       {up ? "+" : ""}
@@ -76,11 +76,6 @@ export function DeskCompareView({
   });
   const base = cols[0];
   const maxKg = Math.max(1, ...cols.map((c) => c.r.totalWeightKg));
-  const minKg = Math.min(...cols.map((c) => c.r.totalWeightKg));
-  const minCost = Math.min(...cols.map((c) => c.r.grandTotalAmount));
-  const multi = cols.length > 1;
-  const kgVaries = multi && cols.some((c) => c.r.totalWeightKg !== minKg);
-  const costVaries = multi && cols.some((c) => c.r.grandTotalAmount !== minCost);
   const hasSurface = cols.some((c) => c.r.surfaceAreaM2 != null);
 
   const labelCell: React.CSSProperties = {
@@ -96,7 +91,7 @@ export function DeskCompareView({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      <DeskTopbar
+      <DeskViewHeader
         title={t("nav.compare")}
         subtitle={
           compareItems.length
@@ -118,7 +113,7 @@ export function DeskCompareView({
               primary
               onClick={currentValid ? onAddCurrent : gotoCalc}
             >
-              <DeskIcon name="plus" stroke={"var(--accent-contrast)"} />
+              <DeskIcon name="plus" stroke="var(--background)" />
               {t("compare.addFromCalculator")}
             </DeskBtn>
           </>
@@ -175,7 +170,7 @@ export function DeskCompareView({
                 >
                   <div className="flex items-start gap-2.5">
                     <div
-                      className="flex items-center justify-center flex-shrink-0 rounded-[10px] text-foreground"
+                      className="flex items-center justify-center flex-shrink-0 rounded-none text-foreground"
                       style={{ width: 34, height: 34, background: "var(--surface-inset)" }}
                     >
                       {c.fam && <CommandGlyph fam={c.fam} size={19} />}
@@ -195,7 +190,7 @@ export function DeskCompareView({
                       onClick={() => onRemove(c.item.id)}
                       title={t("common.remove")}
                       aria-label={t("compare.removeAria", { name: c.name })}
-                      className="flex items-center justify-center rounded-full border-0 cursor-pointer flex-shrink-0 text-muted"
+                      className="flex items-center justify-center rounded-none border-0 cursor-pointer flex-shrink-0 text-muted"
                       style={{ width: 22, height: 22, background: "var(--surface-inset)" }}
                     >
                       <CloseIcon />
@@ -204,7 +199,7 @@ export function DeskCompareView({
                   <div className="mt-2">
                     {i === 0 ? (
                       <span
-                        className="text-[9px] font-extrabold rounded-full"
+                        className="text-[9px] font-extrabold rounded-none"
                         style={{
                           letterSpacing: 1,
                           padding: "3px 8px",
@@ -232,15 +227,14 @@ export function DeskCompareView({
                 const pct = base.r.totalWeightKg > 0
                   ? ((c.r.totalWeightKg - base.r.totalWeightKg) / base.r.totalWeightKg) * 100
                   : 0;
-                const best = kgVaries && c.r.totalWeightKg === minKg;
                 return (
                   <div key={c.item.id} style={valueCell(i)}>
                     <div className="flex items-baseline gap-1.5">
                       <span
-                        className="font-mono font-extrabold text-[22px]"
+                        className="font-mono text-[24px]"
                         style={{
                           letterSpacing: -0.8,
-                          color: best ? "var(--green-text)" : "var(--foreground)",
+                          color: "var(--foreground)",
                         }}
                       >
                         {fsWeight(c.r.totalWeightKg)}
@@ -255,11 +249,11 @@ export function DeskCompareView({
                       )}
                     </div>
                     <div
-                      className="rounded-[3px] overflow-hidden mt-2"
+                      className="rounded-none overflow-hidden mt-2"
                       style={{ height: 5, background: "var(--surface-inset)" }}
                     >
                       <div
-                        className="h-full rounded-[3px]"
+                        className="h-full rounded-none"
                         style={{
                           width: `${Math.max(4, (c.r.totalWeightKg / maxKg) * 100)}%`,
                           background: i === 0 ? "var(--accent)" : "var(--blue-strong)",
@@ -278,12 +272,11 @@ export function DeskCompareView({
                 const pct = base.r.grandTotalAmount > 0
                   ? ((c.r.grandTotalAmount - base.r.grandTotalAmount) / base.r.grandTotalAmount) * 100
                   : 0;
-                const best = costVaries && c.r.grandTotalAmount === minCost;
                 return (
                   <div key={c.item.id} style={valueCell(i)} className="flex items-baseline gap-1.5">
                     <span
                       className="font-mono text-[14px] font-bold"
-                      style={{ color: best ? "var(--green-text)" : "var(--foreground)" }}
+                      style={{ color: "var(--foreground)" }}
                     >
                       {c.sym} {fsMoney(c.r.grandTotalAmount)}
                     </span>
@@ -367,7 +360,7 @@ export function DeskCompareView({
                   <button
                     type="button"
                     onClick={() => onPick(c.item.input)}
-                    className="w-full rounded-[10px] cursor-pointer font-bold text-[11.5px] text-foreground-secondary"
+                    className="w-full rounded-none cursor-pointer font-bold text-[11.5px] text-foreground-secondary"
                     style={{
                       padding: "8px 0",
                       border: "1px solid var(--border-faint)",

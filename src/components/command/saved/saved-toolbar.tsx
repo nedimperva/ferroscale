@@ -61,8 +61,8 @@ export function SavedToolbar({
 }) {
   const t = useTranslations("command");
   const controlStyle: React.CSSProperties = {
-    height: compact ? 34 : 36,
-    border: "1px solid var(--border-faint)",
+    height: compact ? 32 : 30,
+    border: "1px solid var(--border)",
     background: "var(--surface)",
     color: "var(--foreground)",
   };
@@ -83,12 +83,12 @@ export function SavedToolbar({
             onChange={(e) => onChange({ search: e.target.value })}
             placeholder={t("saved.searchPlaceholder")}
             aria-label={t("saved.searchPlaceholder")}
-            className="flex-1 min-w-0 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-faint"
+            className="flex-1 min-w-0 bg-transparent outline-none text-[12.5px] text-foreground placeholder:text-muted-faint"
           />
         </label>
 
         <label className="flex items-center gap-1.5 rounded-button px-2.5" style={controlStyle}>
-          <span className="text-[10px] font-bold text-muted uppercase" style={{ letterSpacing: 0.8 }}>
+          <span className="font-mono text-[10px] text-muted uppercase" style={{ letterSpacing: 1.4 }}>
             {t("saved.sortLabel")}
           </span>
           <select
@@ -160,7 +160,7 @@ export function SavedToolbar({
                   })
                 }
                 aria-pressed={on}
-                className="font-mono text-[11px] font-bold rounded-full cursor-pointer"
+                className="font-mono text-[11px] font-bold rounded-none cursor-pointer"
                 style={{
                   padding: "3px 10px",
                   border: `1px solid ${on ? "var(--accent-border)" : "var(--border-faint)"}`,
@@ -201,7 +201,7 @@ export function SavedBulkBar({
 }) {
   const t = useTranslations("command");
   const btn =
-    "rounded-[10px] px-3 h-8 text-[12px] font-bold cursor-pointer whitespace-nowrap";
+    "rounded-none px-3 h-8 text-[12px] font-bold cursor-pointer whitespace-nowrap";
   return (
     <div
       className="flex items-center gap-2 flex-wrap rounded-button"

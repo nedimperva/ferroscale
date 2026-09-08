@@ -29,6 +29,7 @@ import {
 import { SettingsFieldControl } from "../settings/settings-controls";
 import { EmptyState } from "../empty-state";
 import { SearchField } from "../search-field";
+import { DeskViewHeader } from "./desk-rail";
 
 /** Groups whose pane is a panel of its own rather than a list of fields. */
 const PANEL_GROUPS: readonly SettingsGroupId[] = ["priceBook", "sync", "help"];
@@ -49,13 +50,13 @@ function GroupRailItem({
       type="button"
       onClick={onClick}
       aria-current={active ? "true" : undefined}
-      className="flex items-center gap-2 w-full rounded-button text-left cursor-pointer"
+      className="flex items-center gap-2 w-full text-left cursor-pointer"
       style={{
-        padding: "9px 13px",
+        padding: "7px 16px",
+        borderLeft: `2px solid ${active ? "var(--accent)" : "transparent"}`,
         background: active ? "var(--accent-surface)" : "transparent",
-        color: active ? "var(--accent-text)" : "var(--foreground-secondary)",
-        fontWeight: active ? 700 : 600,
-        fontSize: 13.5,
+        color: active ? "var(--foreground)" : "var(--foreground-secondary)",
+        fontSize: 13,
       }}
     >
       <span className="flex-1 min-w-0 truncate">{label}</span>
@@ -70,10 +71,10 @@ function SettingsRow({ field }: { field: SettingsField }) {
   return (
     <div
       className="flex items-center gap-6 flex-wrap"
-      style={{ padding: "15px 20px", borderBottom: "1px solid var(--border-faint)" }}
+      style={{ padding: "14px 0", borderBottom: "1px solid var(--border-faint)" }}
     >
       <div className="min-w-0" style={{ flex: "1 1 180px" }}>
-        <div className="font-bold text-[14.5px] text-foreground">{field.label}</div>
+        <div className="text-[13.5px] text-foreground">{field.label}</div>
         {field.description && (
           <div className="text-[12.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
         )}
@@ -88,24 +89,15 @@ function SettingsRow({ field }: { field: SettingsField }) {
 function GroupHeading({ label, hint }: { label: string; hint?: string }) {
   return (
     <div className="flex items-baseline gap-2.5 flex-wrap mb-2.5 px-1">
-      <span className="fs-track-label text-[10.5px] font-bold text-foreground-secondary uppercase">
-        {label}
-      </span>
-      {hint && <span className="text-[12.5px] text-muted">{hint}</span>}
+      <span className="fs-title text-[20px] text-foreground">{label}</span>
+      {hint && <span className="text-[12.5px] text-foreground-secondary">{hint}</span>}
     </div>
   );
 }
 
 function FieldCard({ fields }: { fields: SettingsField[] }) {
   return (
-    <div
-      className="rounded-panel-lg overflow-hidden"
-      style={{
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
-        boxShadow: "var(--panel-shadow-soft)",
-      }}
-    >
+    <div style={{ borderTop: "1px solid var(--foreground)" }}>
       {fields.map((field, index) => (
         <div key={field.id} style={index === fields.length - 1 ? { marginBottom: -1 } : undefined}>
           <SettingsRow field={field} />
@@ -244,45 +236,38 @@ export function DeskSettingsView({
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      <div
-        className="flex items-center gap-4 flex-wrap flex-shrink-0"
-        style={{ padding: "20px 32px 16px", borderBottom: "1px solid var(--border-faint)" }}
-      >
-        <div className="min-w-0">
-          <div className="font-extrabold text-xl text-foreground" style={{ letterSpacing: -0.4 }}>
-            {t("nav.settings")}
+      <DeskViewHeader
+        title={t("nav.settings")}
+        subtitle={t("settings.deviceSubtitle")}
+        actions={
+          <div style={{ width: 260, maxWidth: "100%" }}>
+            <SearchField
+              value={search}
+              onChange={setSearch}
+              placeholder={t("settings.searchPlaceholder")}
+              ariaLabel={t("settings.searchAria")}
+            />
           </div>
-          <div className="font-mono text-[11.5px] text-muted mt-0.5">
-            {t("settings.deviceSubtitle")}
-          </div>
-        </div>
-        <div className="ml-auto" style={{ width: 300, maxWidth: "100%" }}>
-          <SearchField
-            value={search}
-            onChange={setSearch}
-            placeholder={t("settings.searchPlaceholder")}
-            ariaLabel={t("settings.searchAria")}
-          />
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex flex-1 min-h-0">
         <nav
           aria-label={t("settings.groupsLabel")}
           className="flex-shrink-0 overflow-y-auto"
           style={{
-            width: 216,
+            width: 190,
             borderRight: "1px solid var(--border-faint)",
-            padding: "18px 12px",
+            padding: "16px 0",
           }}
         >
           <div
-            className="fs-track-label text-[9.5px] font-bold text-muted-faint uppercase"
-            style={{ padding: "0 13px 8px" }}
+            className="font-mono text-[10px] text-muted uppercase"
+            style={{ padding: "0 18px 8px", letterSpacing: 1.6 }}
           >
             {t("settings.groupsLabel")}
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col">
             {SETTINGS_GROUPS.map((id) => (
               <GroupRailItem
                 key={id}

@@ -2,6 +2,11 @@
 
 import { useTranslations } from "next-intl";
 
+/**
+ * The workspace button. Two weights, and the primary one is ink rather than
+ * accent: the accent is reserved for the figure that is the answer, so a
+ * button that borrowed it competed with the number for the same meaning.
+ */
 export function DeskBtn({
   children,
   onClick,
@@ -20,16 +25,15 @@ export function DeskBtn({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex flex-1 items-center justify-center gap-[7px] rounded-button font-bold whitespace-nowrap"
+      className="inline-flex flex-1 items-center justify-center gap-[7px] whitespace-nowrap"
       style={{
-        padding: small ? "7px 13px" : "10px 16px",
+        padding: small ? "6px 13px" : "8px 16px",
         cursor: disabled ? "default" : "pointer",
-        border: primary ? "none" : "1px solid var(--border-faint)",
-        background: primary ? "var(--accent)" : "var(--surface)",
-        color: primary ? ("var(--accent-contrast)") : "var(--foreground)",
-        fontSize: small ? 12 : 13,
+        border: primary ? "none" : "1px solid var(--border)",
+        background: primary ? "var(--foreground)" : "transparent",
+        color: primary ? "var(--background)" : "var(--foreground)",
+        fontSize: small ? 12 : 12.5,
         opacity: disabled ? 0.45 : 1,
-        boxShadow: primary ? "none" : "var(--panel-shadow-soft)",
       }}
     >
       {children}
@@ -38,21 +42,20 @@ export function DeskBtn({
 }
 
 /**
- * The workspace panel: one border, one surface, one shadow. It was written
- * out by hand in every desktop view, so a change to the app's panel look was
- * a find-and-replace instead of an edit.
+ * The workspace panel: one hairline, one surface, square corners. It was
+ * written out by hand in every desktop view, so a change to the app's panel
+ * look was a find-and-replace instead of an edit. The `radius` prop is gone
+ * with the radii themselves — see the geometry note in globals.css.
  */
 export function DeskPanel({
   children,
   className = "",
   padding,
-  radius = 18,
   style,
 }: {
   children: React.ReactNode;
   className?: string;
   padding?: string | number;
-  radius?: number;
   style?: React.CSSProperties;
 }) {
   return (
@@ -61,8 +64,6 @@ export function DeskPanel({
       style={{
         border: "1px solid var(--border-faint)",
         background: "var(--surface)",
-        boxShadow: "var(--panel-shadow-soft)",
-        borderRadius: radius,
         padding,
         ...style,
       }}
@@ -75,11 +76,11 @@ export function DeskPanel({
 export function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <span
-      className="font-mono text-[10px] font-bold rounded-md whitespace-nowrap"
+      className="font-mono text-[10px] whitespace-nowrap"
       style={{
-        padding: "2.5px 6px",
-        background: "var(--surface)",
-        border: "1px solid var(--border-faint)",
+        padding: "1px 5px",
+        background: "transparent",
+        border: "1px solid var(--border)",
         color: "var(--muted)",
       }}
     >
@@ -101,7 +102,7 @@ export function SectionLabel({
   className?: string;
 }) {
   return (
-    <span className={`fs-track-label text-[10px] font-bold text-muted ${className}`}>
+    <span className={`font-mono text-[10px] uppercase text-muted ${className}`} style={{ letterSpacing: 1.6 }}>
       {children}
     </span>
   );
@@ -127,7 +128,7 @@ export function DeskTokenChip({
   const shadowNote = shadowed ? t("token.shadowed") : null;
   return (
     <span
-      className={`inline-flex items-stretch font-mono text-base font-semibold rounded-lg ${kindClass}`}
+      className={`inline-flex items-stretch font-mono text-base font-semibold ${kindClass}`}
       style={shadowed ? { opacity: 0.55 } : undefined}
       title={shadowNote ?? undefined}
     >
@@ -136,7 +137,7 @@ export function DeskTokenChip({
         onClick={onEdit}
         aria-label={shadowNote ? `${t("token.edit", { token: tok })} — ${shadowNote}` : t("token.edit", { token: tok })}
         style={shadowed ? { textDecoration: "line-through" } : undefined}
-        className="pl-2.5 pr-1 py-1 rounded-l-lg"
+        className="pl-2.5 pr-1 py-1"
       >
         {tok}
       </button>
@@ -144,7 +145,7 @@ export function DeskTokenChip({
         type="button"
         onClick={onRemove}
         aria-label={t("token.remove", { token: tok })}
-        className="flex items-center justify-center w-6 rounded-r-lg text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
+        className="flex items-center justify-center w-6 text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
       >
         ×
       </button>
@@ -160,11 +161,11 @@ export function CloseIcon() {
   );
 }
 
-export function DeskIcon({ name, stroke }: { name: string; stroke?: string }) {
+export function DeskIcon({ name, stroke, size }: { name: string; stroke?: string; size?: number }) {
   const c = stroke ?? "currentColor";
   const common = {
-    width: 16,
-    height: 16,
+    width: size ?? 16,
+    height: size ?? 16,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: c,
@@ -208,33 +209,33 @@ export function DeskIcon({ name, stroke }: { name: string; stroke?: string }) {
       );
     case "sun":
       return (
-        <svg {...common} width={15} height={15} strokeLinejoin={undefined}>
+        <svg {...common} width={size ?? 15} height={size ?? 15} strokeLinejoin={undefined}>
           <circle cx="12" cy="12" r="4.5" />
           <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
         </svg>
       );
     case "moon":
       return (
-        <svg {...common} width={15} height={15}>
+        <svg {...common} width={size ?? 15} height={size ?? 15}>
           <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
         </svg>
       );
     case "copy":
       return (
-        <svg {...common} width={15} height={15}>
+        <svg {...common} width={size ?? 15} height={size ?? 15}>
           <rect x="9" y="9" width="11" height="11" rx="2" />
           <path d="M5 15V5a2 2 0 012-2h10" />
         </svg>
       );
     case "plus":
       return (
-        <svg {...common} width={15} height={15} strokeWidth={2.2} strokeLinejoin={undefined}>
+        <svg {...common} width={size ?? 15} height={size ?? 15} strokeWidth={2.2} strokeLinejoin={undefined}>
           <path d="M12 5v14M5 12h14" />
         </svg>
       );
     case "link":
       return (
-        <svg {...common} width={15} height={15}>
+        <svg {...common} width={size ?? 15} height={size ?? 15}>
           <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
           <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
         </svg>
@@ -282,7 +283,7 @@ export function DeskIcon({ name, stroke }: { name: string; stroke?: string }) {
       );
     case "trash":
       return (
-        <svg {...common} width={14} height={14}>
+        <svg {...common} width={size ?? 14} height={size ?? 14}>
           <path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
         </svg>
       );

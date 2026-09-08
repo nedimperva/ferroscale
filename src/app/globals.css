@@ -1,149 +1,181 @@
 @import "tailwindcss";
 
 :root {
-  /* ── Neutral / Surface ── */
-  --background: #efeae0;
-  --surface: #ffffff;
-  --surface-raised: #f8f5ee;
-  --surface-inset: #ece6da;
-  --surface-emphasis: #f6efe8;
-  --surface-inverted: #16120b;
+  /* ── Neutral / Surface ──
+     Warm paper, two steps apart. `background` is the sheet, `surface` the
+     chrome laid on it (rails, headers, side panels); everything else groups
+     with a hairline rather than a new colour. */
+  --background: #f4f3f0;
+  --surface: #fbfaf8;
+  --surface-raised: #fbfaf8;
+  --surface-inset: #eceae4;
+  --surface-emphasis: #f7e9e2;
+  --surface-inverted: #191817;
 
-  /* ── Text ── */
-  --foreground: #16120b;
-  --foreground-secondary: #4a4237;
-  --muted: #6a614f;
-  --muted-faint: #736959;
+  /* ── Text ──
+     Four inks: the answer, the sentence about it, the label above it, and the
+     hairline-weight annotation beside it. */
+  --foreground: #191817;
+  --foreground-secondary: #57544e;
+  --muted: #6f6b64;
+  --muted-faint: #8b8781;
 
-  /* ── Borders ── */
-  --border: #ddd5c9;
-  --border-strong: #c8beaf;
-  --border-faint: #ebe5da;
+  /* ── Borders ──
+     `faint` divides rows, plain divides controls, `strong` is the dashed
+     drop-target and input edge. Ink rules (section breaks) use --foreground
+     directly: they are structure, not a border. */
+  --border: #cec9c0;
+  --border-strong: #8b8781;
+  --border-faint: #e3e0d9;
 
   /* ── Overlay ── */
-  --overlay: rgba(0, 0, 0, 0.3);
+  --overlay: rgba(25, 24, 23, 0.32);
 
-  /* ── Accent (terracotta orange) ── */
+  /* ── Accent (terracotta) — the app's only colour ──
+     It marks one thing per screen: the number that is the answer. */
   --accent: #c4471a;
-  --accent-contrast: #ffffff;
+  --accent-contrast: #fbfaf8;
   --accent-hover: #8a3110;
-  --accent-surface: #fbe6d7;
-  --accent-border: #eab896;
-  --accent-text: #8a3110;
+  --accent-surface: #f7e9e2;
+  --accent-border: #e0b7a3;
+  --accent-text: #a4380f;
 
-  /* ── Blue (compare, active, inputs) ── */
-  --blue-surface: #eef4ff;
-  --blue-text: #2759b5;
-  --blue-border: #cbd9f6;
-  --blue-strong: #3568c8;
-  --blue-strong-hover: #2a55a5;
+  /* ── Blue → ink ──
+     Cost used to be blue against a terracotta weight. Near-monochrome means
+     one signal colour, so money is now plain ink and the accent is left to
+     the headline figure. The token names stay so call sites don't churn. */
+  --blue-surface: #eceae4;
+  --blue-text: #34312c;
+  --blue-border: #cec9c0;
+  --blue-strong: #191817;
+  --blue-strong-hover: #34312c;
 
-  /* ── Purple (projects) ── */
-  --purple-surface: #f6f1fb;
-  --purple-text: #7350a0;
-  --purple-border: #ddd0ef;
-  --purple-strong: #7e5ab3;
-  --purple-strong-hover: #684791;
+  /* ── Purple → ink (was the Projects tint) ── */
+  --purple-surface: #eceae4;
+  --purple-text: #34312c;
+  --purple-border: #cec9c0;
+  --purple-strong: #191817;
+  --purple-strong-hover: #34312c;
 
-  /* ── Green (success) ── */
-  --green-surface: #f0fdf4;
-  --green-text: #166534;
-  --green-border: #bbf7d0;
+  /* ── Green (success) — olive, so it sits on paper ── */
+  --green-surface: #eaeee4;
+  --green-text: #3d5730;
+  --green-border: #c8d4ba;
 
-  /* ── Red (error) ── */
-  --red-surface: #fef2f2;
-  --red-text: #b91c1c;
-  --red-border: #fecaca;
-  --red-interactive: #ef4444;
+  /* ── Red (error) — cooler and darker than the accent, which is the only
+     thing keeping the two apart in a monochrome palette ── */
+  --red-surface: #f6e6e4;
+  --red-text: #8f2420;
+  --red-border: #e0bcb7;
+  --red-interactive: #a32b23;
 
   /* ── Amber (warning) ── */
-  --amber-surface: #fffbeb;
-  --amber-text: #92400e;
-  --amber-border: #fde68a;
+  --amber-surface: #f5eeda;
+  --amber-text: #77571a;
+  --amber-border: #ddcda1;
+
+  /* ── Primary action ──
+     Ink, not accent. Every filled button in the app used to be terracotta,
+     which put a dozen of them in direct competition with the one terracotta
+     figure that is the answer. Naming the role separately means "make primary
+     buttons accent again" stays a two-line change. The keypad's ↵ is the
+     deliberate exception — it *is* the answer key. */
+  --action: #191817;
+  --action-contrast: #f4f3f0;
 
   /* ── Interactive / Misc ── */
-  --focus-ring: #2563eb;
-  --disabled-bg: #e2e8f0;
-  --disabled-text: #94a3b8;
-  --radius-panel: 0.5rem;
-  --radius-control: 0.375rem;
+  --focus-ring: #c4471a;
+  --disabled-bg: #eceae4;
+  --disabled-text: #8b8781;
+  --radius-panel: 0;
+  --radius-control: 0;
   --motion-fast: 140ms;
   --motion-medium: 220ms;
-  --panel-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px rgba(15, 23, 42, 0.06);
-  --panel-shadow-strong: 0 1px 2px rgba(15, 23, 42, 0.08), 0 18px 40px rgba(15, 23, 42, 0.12);
-  --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  /* Depth is gone: grouping is hairlines and whitespace. The vars stay so the
+     panel and card classes, and a dozen inline styles, resolve to nothing
+     instead of needing an edit each. */
+  --panel-shadow-soft: none;
+  --panel-shadow-strong: none;
+  --panel-highlight: none;
 }
 
 .dark {
+  /* The same system with the paper burnt down to ink. The direction has no
+     dark artboard, so the rule applied here is the one the light palette
+     follows: two neutral grounds, four inks, three hairlines, one colour. */
+
   /* ── Neutral / Surface ── */
-  --background: #131009;
-  --surface: #1d1812;
-  --surface-raised: #241e16;
-  --surface-inset: #14100a;
-  --surface-emphasis: #231a16;
-  --surface-inverted: #f5ecdb;
+  --background: #171614;
+  --surface: #1e1d1a;
+  --surface-raised: #1e1d1a;
+  --surface-inset: #272521;
+  --surface-emphasis: #2e1c13;
+  --surface-inverted: #f4f3f0;
 
   /* ── Text ── */
-  --foreground: #f5ecdb;
-  --foreground-secondary: #cabca4;
-  --muted: #a29781;
-  --muted-faint: #93876f;
+  --foreground: #f0eee9;
+  --foreground-secondary: #b9b4aa;
+  --muted: #979188;
+  --muted-faint: #7b756c;
 
   /* ── Borders ── */
-  --border: #2b2418;
-  --border-strong: #3b3322;
-  --border-faint: #221d13;
+  --border: #38352f;
+  --border-strong: #565049;
+  --border-faint: #2a2824;
 
   /* ── Overlay ── */
   --overlay: rgba(0, 0, 0, 0.6);
 
-  /* ── Accent (terracotta orange) ── */
-  --accent: #f0793f;
-  --accent-contrast: #161109;
-  --accent-hover: #fbcba8;
-  --accent-surface: #2e1c11;
-  --accent-border: #683c22;
-  --accent-text: #fbcba8;
+  /* ── Accent (terracotta), lifted so it carries on an ink ground ── */
+  --accent: #e0703f;
+  --accent-contrast: #171614;
+  --accent-hover: #f0916a;
+  --accent-surface: #2e1c13;
+  --accent-border: #5d3620;
+  --accent-text: #ef8d5a;
 
-  /* ── Blue (compare, active, inputs) ── */
-  --blue-surface: #18253c;
-  --blue-text: #a9c5ff;
-  --blue-border: #29446d;
-  --blue-strong: #5e8fe0;
-  --blue-strong-hover: #7ba6eb;
+  /* ── Blue → ink (see the light block) ── */
+  --blue-surface: #272521;
+  --blue-text: #ddd9d2;
+  --blue-border: #38352f;
+  --blue-strong: #f0eee9;
+  --blue-strong-hover: #ffffff;
 
-  /* ── Purple (projects) ── */
-  --purple-surface: #241a30;
-  --purple-text: #d1bfef;
-  --purple-border: #514063;
-  --purple-strong: #9c7cd4;
-  --purple-strong-hover: #b393e8;
+  /* ── Purple → ink ── */
+  --purple-surface: #272521;
+  --purple-text: #ddd9d2;
+  --purple-border: #38352f;
+  --purple-strong: #f0eee9;
+  --purple-strong-hover: #ffffff;
 
   /* ── Green (success) ── */
-  --green-surface: #052e16;
-  --green-text: #86efac;
-  --green-border: #14532d;
+  --green-surface: #1d241a;
+  --green-text: #a8c294;
+  --green-border: #3a462f;
 
   /* ── Red (error) ── */
-  --red-surface: #450a0a;
-  --red-text: #fca5a5;
-  --red-border: #991b1b;
-  --red-interactive: #f87171;
+  --red-surface: #2b1614;
+  --red-text: #e9a49b;
+  --red-border: #592a24;
+  --red-interactive: #d1594a;
 
   /* ── Amber (warning) ── */
-  --amber-surface: #451a03;
-  --amber-text: #fcd34d;
-  --amber-border: #92400e;
+  --amber-surface: #2a2214;
+  --amber-text: #d8bd7e;
+  --amber-border: #574726;
+
+  /* ── Primary action (see the light block) ── */
+  --action: #f0eee9;
+  --action-contrast: #171614;
 
   /* ── Interactive / Misc ── */
-  --focus-ring: #3b82f6;
-  --disabled-bg: #334155;
-  --disabled-text: #64748b;
-  --panel-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.24), 0 16px 34px rgba(0, 0, 0, 0.26);
-  --panel-shadow-strong: 0 1px 2px rgba(0, 0, 0, 0.3), 0 24px 52px rgba(0, 0, 0, 0.34);
-  --panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --focus-ring: #e0703f;
+  --disabled-bg: #272521;
+  --disabled-text: #7b756c;
+  --panel-shadow-soft: none;
+  --panel-shadow-strong: none;
+  --panel-highlight: none;
 }
-
 @theme inline {
   /* ── Neutral / Surface ── */
   --color-background: var(--background);
@@ -205,27 +237,46 @@
   --color-amber-text: var(--amber-text);
   --color-amber-border: var(--amber-border);
 
+  /* ── Primary action ── */
+  --color-action: var(--action);
+  --color-action-contrast: var(--action-contrast);
+
   /* ── Interactive / Misc ── */
   --color-focus-ring: var(--focus-ring);
   --color-disabled-bg: var(--disabled-bg);
   --color-disabled-text: var(--disabled-text);
 
-  /* ── Fonts ── */
+  /* ── Fonts ──
+     Three, each with one job. Serif is headings only — a view title, a
+     profile name — never a number and never body copy. Mono carries every
+     figure, unit, key hint and tracked micro-label. Sans is the sentence in
+     between. */
   --font-sans: var(--font-archivo);
   --font-mono: var(--font-ibm-plex-mono);
+  --font-serif: var(--font-newsreader), Newsreader, Georgia, "Times New Roman", serif;
 
   /* ── Typography — extra-small tier ── */
   --font-size-2xs: 0.625rem;
   --font-size-2xs--line-height: 1rem;
 
-  /* ── Radii — one step per surface role, so similar things look alike.
-     chip 8px (chips, keycaps, small pill controls) · button 12px (buttons,
-     inputs, compact cards) · panel-lg 18px (workspace panels) · sheets keep
-     their own 24–28px top radius. The legacy --radius-panel/--radius-control
-     vars below still back the .panel-* classes. ── */
-  --radius-chip: 0.5rem;
-  --radius-button: 0.75rem;
-  --radius-panel-lg: 1.125rem;
+  /* ── Radii — there are none ──
+     Direction 1a groups with hairline rules and whitespace, so every surface
+     meets at a square corner. Zeroing the scale here squares every
+     `rounded-*` utility and every --radius-* consumer at once; it is the one
+     place to change if a radius is ever wanted back. `rounded-full` resolves
+     to `calc(infinity * 1px)` rather than a theme var, so it is caught by an
+     explicit rule further down instead. */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+  --radius-chip: 0;
+  --radius-button: 0;
+  --radius-panel-lg: 0;
 }
 
 html {
@@ -395,13 +446,20 @@ details[open] .chevron-icon {
 
 /* ── Numbers ──────────────────────────────────────────────────────────────
    One rule for the whole app: figures line up. Everything numeric is either a
-   display metric (the hero — sans, tight tracking) or data (mono), and both
-   get tabular figures so a value never shifts sideways as it counts up or a
-   digit changes. */
+   display metric (the hero) or data, and in this design both are mono — so
+   both get tabular figures and a value never shifts sideways as it counts up
+   or a digit changes.
+
+   (This rule's declaration block had gone missing, which silently merged the
+   selector list into .fs-track-label below: mono text was getting the 1.2px
+   label tracking and no tabular figures at all.) */
 .font-mono,
 code,
 kbd,
-samp,
+samp {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── letter-spacing scale ──────────────────────────────────────────────────
    Tracking was an inline number on a dozen elements, which made "loosen the
    small caps a touch" a find-and-replace instead of an edit. Two named steps
@@ -412,6 +470,28 @@ samp,
 
 .fs-display-num {
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Squared geometry ──────────────────────────────────────────────────────
+   The radius scale is zeroed in @theme, which covers every `rounded-*`
+   utility that reads a theme var. `rounded-full` resolves to
+   `calc(infinity * 1px)` instead, so it needs saying out loud. Unlayered, so
+   it outranks the utility it is undoing. */
+.rounded-full,
+[class*="rounded-full"] {
+  border-radius: 0;
+}
+
+/* ── Headings ──────────────────────────────────────────────────────────────
+   The serif appears in exactly one role — the name of the thing you are
+   looking at (a view title, a profile, a project). It is never set below
+   15px, never bold, and never wraps a figure: numbers are mono everywhere.
+   One class rather than a `font-serif` utility, so the weight and tracking
+   travel with it. */
+.fs-title {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.1px;
 }
 
 /* ── settings slider ───────────────────────────────────────────────────────
@@ -427,30 +507,26 @@ samp,
 }
 .fs-range::-webkit-slider-runnable-track {
   height: 4px;
-  border-radius: 999px;
   background: var(--surface-inset);
 }
 .fs-range::-moz-range-track {
   height: 4px;
-  border-radius: 999px;
   background: var(--surface-inset);
 }
 .fs-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  margin-top: -6px;
-  border-radius: 999px;
-  border: 2px solid var(--accent);
-  background: var(--surface);
+  width: 14px;
+  height: 18px;
+  margin-top: -7px;
+  border: 0;
+  background: var(--accent);
 }
 .fs-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  border: 2px solid var(--accent);
-  background: var(--surface);
+  width: 14px;
+  height: 18px;
+  border: 0;
+  background: var(--accent);
 }
 .fs-range:focus-visible::-webkit-slider-thumb {
   outline: 2px solid var(--accent);
@@ -556,7 +632,6 @@ samp,
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
-  border-radius: 0.5rem;
 }
 
 @keyframes skeleton-shimmer {
@@ -614,15 +689,9 @@ html.app-ready .boot-splash {
   width: min(100%, 22rem);
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 1.9rem;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface) 90%, transparent) 0%,
-    color-mix(in srgb, var(--surface-raised) 88%, var(--surface) 12%) 100%
-  );
+  background: var(--surface);
   padding: 1.5rem 1.25rem;
   text-align: center;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
 }
 
 .boot-splash-glow {
@@ -647,16 +716,13 @@ html.app-ready .boot-splash {
   width: 3.5rem;
   align-items: center;
   justify-content: center;
-  border-radius: 1.15rem;
   background: var(--surface-inverted);
-  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
 }
 
 .boot-splash-dot {
   display: block;
-  height: 0.625rem;
-  width: 0.625rem;
-  border-radius: 999px;
+  height: 0.5rem;
+  width: 0.5rem;
   background: var(--accent);
   animation: boot-splash-dot-pulse 1.05s ease-in-out infinite;
 }
@@ -715,42 +781,35 @@ html.app-ready .boot-splash {
 }
 
 .card-interactive:hover {
-  background-color: color-mix(in srgb, var(--surface-raised) 50%, transparent);
+  background-color: var(--surface-inset);
 }
 
 .card-interactive:focus-within {
-  box-shadow: 0 0 0 2px var(--blue-surface);
+  background-color: var(--surface-inset);
 }
 
-/* Elevated card — subtle shadow for floating cards */
+/* Elevated card — was a floating shadow; now the hairline that replaced it. */
 .card-elevated {
-  box-shadow: var(--panel-shadow-soft);
-  border-radius: var(--radius-panel);
-}
-
-.dark .card-elevated {
-  box-shadow: var(--panel-shadow-soft);
+  border: 1px solid var(--border-faint);
 }
 
 /* Inset card — grouped section background */
 .card-inset {
-  background: var(--surface-raised);
-  border-radius: calc(var(--radius-panel) - 0.125rem);
+  background: var(--surface-inset);
   padding: 0.75rem;
 }
 
-/* Form section group — iOS-style grouped section */
+/* Form section group — rows divided by a rule, not boxed */
 .form-group {
   background: transparent;
   border: 0;
-  border-radius: 0;
   box-shadow: none;
   padding: 0;
 }
 
 .form-group + .form-group {
   margin-top: 0;
-  border-top: 1px solid color-mix(in srgb, var(--border-faint) 72%, transparent);
+  border-top: 1px solid var(--border-faint);
   padding-top: 1rem;
 }
 
@@ -760,73 +819,60 @@ html.app-ready .boot-splash {
   }
 }
 
+/* ── Panels ────────────────────────────────────────────────────────────────
+   Four names that used to mean four elevations. With depth gone they mean
+   four *edges*: base is outlined, unibody is the plain sheet the workspace
+   sits on, raised is the tinted aside, emphasis is the one panel carrying
+   the answer and so the only one allowed the accent rule. */
 .panel-base {
   border: 1px solid var(--border);
-  border-radius: var(--radius-panel);
   background: var(--surface);
-  box-shadow: none;
 }
 
 .panel-unibody {
-  border: 1px solid color-mix(in srgb, var(--border-faint) 78%, transparent);
-  border-radius: calc(var(--radius-panel) + 0.1rem);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface) 88%, transparent) 0%,
-    color-mix(in srgb, var(--surface) 82%, var(--background) 18%) 100%
-  );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border-faint);
+  background: var(--surface);
 }
 
 .panel-raised {
   border: 1px solid var(--border-faint);
-  border-radius: calc(var(--radius-panel) - 0.125rem);
-  background: color-mix(in srgb, var(--surface-raised) 88%, var(--surface) 12%);
-  box-shadow: var(--panel-highlight);
+  background: var(--surface-raised);
 }
 
 .panel-emphasis {
-  border: 1px solid color-mix(in srgb, var(--accent-border) 82%, var(--border) 18%);
-  border-radius: var(--radius-panel);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-emphasis) 92%, var(--surface) 8%), var(--surface));
-  box-shadow: var(--panel-shadow-soft);
+  border: 1px solid var(--border-faint);
+  border-top: 1px solid var(--foreground);
+  background: var(--surface);
 }
 
 .premium-control {
-  min-height: 2.5rem;
+  min-height: 2.25rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-control);
   background: var(--surface);
-  box-shadow: none;
   transition:
     border-color var(--motion-fast) ease,
-    background-color var(--motion-fast) ease,
-    box-shadow var(--motion-fast) ease;
+    background-color var(--motion-fast) ease;
 }
 
 .premium-control:hover {
-  border-color: var(--border);
-  background: color-mix(in srgb, var(--surface-raised) 30%, var(--surface) 70%);
+  border-color: var(--border-strong);
+  background: var(--surface);
 }
 
 .premium-control:focus-visible,
 .premium-control:focus-within {
-  border-color: var(--accent-border);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
   outline: none;
 }
 
 .premium-segment {
-  min-height: 2rem;
-  border: 1px solid var(--border-faint);
-  border-radius: 0.375rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--border);
   background: var(--surface);
   transition:
     border-color var(--motion-fast) ease,
     background-color var(--motion-fast) ease,
-    color var(--motion-fast) ease,
-    box-shadow var(--motion-fast) ease;
+    color var(--motion-fast) ease;
 }
 
 .premium-segment-muted {
@@ -834,27 +880,25 @@ html.app-ready .boot-splash {
 }
 
 .premium-segment-muted:hover {
-  border-color: var(--border);
-  background: var(--surface-raised);
+  border-color: var(--border-strong);
+  background: var(--surface-inset);
   color: var(--foreground);
 }
 
+/* The selected segment is ink-on-paper reversed — the design's way of saying
+   "this one", used for every segmented control (unit, currency, mode). */
 .premium-segment-active {
-  border-color: var(--accent-border);
-  background: var(--accent-surface);
-  color: var(--accent-text);
-  box-shadow: none;
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
 }
 
 .premium-action-button {
-  min-height: 2.5rem;
-  border-radius: 0.375rem;
-  box-shadow: none;
+  min-height: 2.25rem;
   transition:
     border-color var(--motion-fast) ease,
     background-color var(--motion-fast) ease,
     color var(--motion-fast) ease,
-    box-shadow var(--motion-fast) ease,
     transform var(--motion-fast) ease;
 }
 
@@ -863,18 +907,16 @@ html.app-ready .boot-splash {
   align-items: center;
   justify-content: center;
   border: 1px solid transparent;
-  border-radius: 0.375rem;
   background: transparent;
   color: var(--muted-faint);
   transition:
     border-color var(--motion-fast) ease,
     background-color var(--motion-fast) ease,
-    color var(--motion-fast) ease,
-    box-shadow var(--motion-fast) ease;
+    color var(--motion-fast) ease;
 }
 
 .premium-icon-button:hover {
-  border-color: var(--border-faint);
-  background: color-mix(in srgb, var(--surface-raised) 72%, var(--surface) 28%);
-  color: var(--foreground-secondary);
+  border-color: var(--border);
+  background: var(--surface-inset);
+  color: var(--foreground);
 }

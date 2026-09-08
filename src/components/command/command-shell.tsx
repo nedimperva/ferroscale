@@ -95,7 +95,10 @@ import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
-const HERO_FONT_WEIGHT = 800;
+// The phone's headline figure. Mono at a regular weight, like the workspace's
+// — same rule everywhere: numbers are mono, and at this size they carry
+// without extra weight.
+const HERO_FONT_WEIGHT = 400;
 // Trailing space so the demo query renders fully chipped on first load.
 const DEMO_QUERY = "hea120 6m x2 s235 ";
 /** Set after the first visit, so the demo query greets newcomers only. */
@@ -1505,14 +1508,13 @@ export function CommandShell() {
           <div className="flex items-center justify-between px-[18px] pt-1 pb-2">
             <div className="flex items-center gap-2.5">
               <div
-                className="w-6 h-6 rounded-[7px] flex items-center justify-center"
+                className="w-6 h-6 rounded-none flex items-center justify-center"
                 style={{ background: "var(--accent)" }}
               >
                 <span
                   className="w-2.5 h-2.5"
                   style={{
                     background: "var(--accent-contrast)",
-                    borderRadius: 2.5,
                   }}
                 />
               </div>
@@ -1567,7 +1569,7 @@ export function CommandShell() {
                       type="button"
                       onClick={() => setModeOverride(m)}
                       aria-pressed={active}
-                      className="fs-track-label rounded-[9px] text-[10.5px] font-bold"
+                      className="fs-track-label rounded-none text-[10.5px] font-bold"
                       style={{
                         padding: "4px 12px",
                         border: active
@@ -1604,9 +1606,9 @@ export function CommandShell() {
               <div className="flex items-baseline gap-2">
                 {!isW && p.totalAmount != null && (
                   <span
-                    className="text-[34px] leading-none"
+                    className="font-mono text-[30px] leading-none"
                     style={{
-                      color: "var(--blue-strong)",
+                      color: "var(--muted)",
                       fontWeight: HERO_FONT_WEIGHT,
                     }}
                   >
@@ -1614,7 +1616,7 @@ export function CommandShell() {
                   </span>
                 )}
                 <span
-                  className="leading-[0.88] tracking-[-2.4px] fs-display-num"
+                  className="font-mono leading-[0.88] tracking-[-2.8px] fs-display-num"
                   style={{
                     fontSize: 56,
                     fontWeight: HERO_FONT_WEIGHT,
@@ -1625,7 +1627,7 @@ export function CommandShell() {
                 </span>
                 {isW && p.totalKg != null && (
                   <span
-                    className="text-[22px] font-bold"
+                    className="font-mono text-[20px]"
                     style={{ color: "var(--accent)" }}
                   >
                     {fsWeightUnit()}
@@ -1698,7 +1700,7 @@ export function CommandShell() {
                         );
                         // no-op on phone: the keypad owns the caret
                       }}
-                      className="rounded-full font-bold"
+                      className="rounded-none font-bold"
                       style={{
                         padding: "2px 9px",
                         background: "var(--accent-surface)",
@@ -1721,19 +1723,16 @@ export function CommandShell() {
               )}
               <span className="ml-auto flex items-center gap-1.5">
                 <span
-                  className="w-1.5 h-1.5 rounded-full"
+                  className="w-1.5 h-1.5"
                   style={{
-                    background: p.valid
-                      ? "var(--green-text)"
-                      : "var(--muted-faint)",
+                    background: p.valid ? "var(--accent)" : "var(--muted-faint)",
                   }}
                 />
                 <span
-                  className="text-[10.5px] font-bold tracking-wider"
+                  className="font-mono text-[10px] uppercase"
                   style={{
-                    color: p.valid
-                      ? "var(--green-text)"
-                      : "var(--muted-faint)",
+                    letterSpacing: 1.6,
+                    color: p.valid ? "var(--accent)" : "var(--muted-faint)",
                   }}
                 >
                   {p.valid ? t("status.live") : t("status.waiting")}
@@ -1805,7 +1804,7 @@ export function CommandShell() {
               library, with + to add the current line. Recents moved into the
               library's session tab; this is what the phone gets instead. */}
           <div
-            className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-[13px] flex-shrink-0"
+            className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-none flex-shrink-0"
             style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
           >
             <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
@@ -1843,7 +1842,7 @@ export function CommandShell() {
               type="button"
               onClick={logToSession}
               aria-label={t("aria.addToSession")}
-              className="flex items-center justify-center rounded-[9px] text-[16px] font-bold leading-none"
+              className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none"
               style={{
                 width: 28,
                 height: 28,
@@ -1928,7 +1927,7 @@ export function CommandShell() {
                       focusInput();
                     }
                   }}
-                  className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
+                  className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-none font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
                   style={{
                     // 44px touch targets — the strip is the phone's main
                     // input accelerator, tapped with thumbs on the jobsite.
@@ -1939,13 +1938,12 @@ export function CommandShell() {
                         : "1px solid var(--border-faint)",
                     background:
                       it.kind === "save"
-                        ? "var(--accent)"
+                        ? "var(--action)"
                         : "var(--surface)",
                     color:
                       it.kind === "save"
-                        ? "var(--accent-contrast)"
+                        ? "var(--action-contrast)"
                         : "var(--foreground)",
-                    boxShadow: "var(--panel-shadow-soft)",
                   }}
                 >
                   {it.fam && (
@@ -1998,16 +1996,15 @@ export function CommandShell() {
                 // line grew to four rows and pushed the keypad's bottom row off
                 // the screen. A fixed height keeps the input and its keys where
                 // they were, whatever the line holds.
-                className="flex items-center gap-1.5 flex-nowrap rounded-[15px] px-3 py-2.5"
+                className="flex items-center gap-1.5 flex-nowrap rounded-none px-3 py-2.5"
                 style={{
                   height: 50,
                   overflowX: "auto",
                   overflowY: "hidden",
-                  border: "1.5px solid var(--accent-border)",
+                  // Ink edge, no glow — the same command line as the
+                  // workspace, drawn as a rule rather than lit.
+                  border: "1px solid var(--foreground)",
                   background: "var(--surface)",
-                  boxShadow: dark
-                    ? "0 0 0 3px rgba(240,121,63,0.13)"
-                    : "0 0 0 3px rgba(196,71,26,0.10)",
                 }}
               >
                 <span

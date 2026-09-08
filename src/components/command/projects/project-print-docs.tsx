@@ -111,7 +111,6 @@ export function ProjectProcurementDoc({
           style={{
             border: "1px solid #cbd5e1",
             padding: "10px 12px",
-            borderRadius: "8px",
             background: "#f8fafc",
           }}
         >
@@ -145,7 +144,6 @@ export function ProjectProcurementDoc({
           style={{
             border: "1px solid #cbd5e1",
             padding: "10px 12px",
-            borderRadius: "8px",
             background: "#f8fafc",
           }}
         >
@@ -179,7 +177,6 @@ export function ProjectProcurementDoc({
           style={{
             border: "1px solid #cbd5e1",
             padding: "10px 12px",
-            borderRadius: "8px",
             background: "#f8fafc",
           }}
         >
@@ -213,7 +210,6 @@ export function ProjectProcurementDoc({
           style={{
             border: "1px solid #cbd5e1",
             padding: "10px 12px",
-            borderRadius: "8px",
             background: "#f8fafc",
           }}
         >
@@ -346,7 +342,6 @@ export function ProjectProcurementDoc({
                     fontWeight: "bold",
                     background: "#f1f5f9",
                     padding: "2px 6px",
-                    borderRadius: "4px",
                     border: "1px solid #e2e8f0",
                   }}
                 >
@@ -521,7 +516,6 @@ export function ProjectCutSheetDoc({
               key={`print-bar-${bIdx}`}
               style={{
                 border: "1px solid #cbd5e1",
-                borderRadius: "8px",
                 padding: "10px 14px",
                 background: "#ffffff",
                 pageBreakInside: "avoid",
@@ -593,7 +587,6 @@ export function ProjectCutSheetDoc({
               key={`print-plate-${pIdx}`}
               style={{
                 border: "1px solid #cbd5e1",
-                borderRadius: "8px",
                 padding: "10px 14px",
                 background: "#ffffff",
                 pageBreakInside: "avoid",

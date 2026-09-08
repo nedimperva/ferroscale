@@ -22,17 +22,17 @@ export function SearchField({
 }) {
   return (
     <label
-      className="flex items-center gap-2 rounded-button px-3 w-full"
+      className="flex items-center gap-2 px-2.5 w-full"
       style={{
-        height: compact ? 34 : 38,
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
+        height: compact ? 30 : 28,
+        border: "1px solid var(--border)",
+        background: "var(--background)",
       }}
     >
       <span className="flex text-muted flex-shrink-0" aria-hidden="true">
         <svg
-          width="14"
-          height="14"
+          width="13"
+          height="13"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -50,7 +50,7 @@ export function SearchField({
         placeholder={placeholder}
         aria-label={ariaLabel}
         autoFocus={autoFocus}
-        className="flex-1 min-w-0 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-faint"
+        className="flex-1 min-w-0 bg-transparent outline-none text-[12.5px] text-foreground placeholder:text-muted-faint"
       />
     </label>
   );

@@ -30,7 +30,7 @@ function StatTile({
 }) {
   return (
     <div
-      className="rounded-[14px] min-w-0"
+      className="rounded-none min-w-0"
       style={{
         padding: "10px 14px",
         border: "1px solid var(--border-faint)",
@@ -135,7 +135,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
 
       {/* Material Order Table Card */}
       <div
-        className="rounded-[18px] p-4 space-y-3.5"
+        className="rounded-none p-4 space-y-3.5"
         style={{
           border: "1px solid var(--border-faint)",
           background: "var(--surface)",
@@ -194,7 +194,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
                   <span className="truncate">{item.label}</span>
                 </span>
                 <span
-                  className="px-2 py-0.5 rounded-full text-[10.5px] font-bold flex-shrink-0"
+                  className="px-2 py-0.5 rounded-none text-[10.5px] font-bold flex-shrink-0"
                   style={{
                     background:
                       item.yieldPercent >= 80
@@ -293,7 +293,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
                   </td>
                   <td className="py-2.5 text-right font-bold">
                     <span
-                      className="px-2 py-0.5 rounded-full text-[11px]"
+                      className="px-2 py-0.5 rounded-none text-[11px]"
                       style={{
                         background:
                           item.yieldPercent >= 80

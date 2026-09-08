@@ -118,7 +118,7 @@ function CardAction({
       title={label}
       aria-label={label}
       aria-pressed={active}
-      className="flex items-center justify-center rounded-[9px] cursor-pointer"
+      className="flex items-center justify-center rounded-none cursor-pointer"
       style={{
         width: 28,
         height: 28,
@@ -141,7 +141,7 @@ function CardAction({
 export function SavedThumb({ model, size = 46 }: { model: SavedCardModel; size?: number }) {
   return (
     <span
-      className="flex items-center justify-center flex-shrink-0 rounded-[12px] overflow-hidden"
+      className="flex items-center justify-center flex-shrink-0 rounded-none overflow-hidden"
       style={{
         width: size,
         height: size,
@@ -252,7 +252,7 @@ export function SavedCard({
                   <PinIcon filled />
                 </span>
               )}
-              <span className="block font-extrabold text-[15px] text-foreground truncate" style={{ letterSpacing: -0.2 }}>
+              <span className="fs-title block text-[15px] text-foreground truncate">
                 {named ? entry.name : model.specLabel}
               </span>
             </span>
@@ -270,15 +270,15 @@ export function SavedCard({
       {/* Metrics — the mode picks which one dominates. */}
       <div className="flex items-end gap-4" style={{ padding: "10px 14px 12px" }}>
         <div className="min-w-0">
-          <div className="text-[9.5px] font-bold text-muted uppercase" style={{ letterSpacing: 0.8 }}>
+          <div className="font-mono text-[10px] text-muted uppercase" style={{ letterSpacing: 1.4 }}>
             {isWeight ? t("result.totalWeight") : t("result.totalCost")}
           </div>
           <div
-            className="font-mono font-extrabold whitespace-nowrap"
+            className="font-mono whitespace-nowrap"
             style={{
               fontSize: 22,
               letterSpacing: -0.6,
-              color: isWeight ? "var(--accent-text)" : "var(--blue-text)",
+              color: "var(--foreground)",
             }}
           >
             {isWeight ? weightText : priceText}
@@ -314,7 +314,7 @@ export function SavedCard({
           </span>
           {model.repriced && (
             <span
-              className="font-mono text-[10px] font-bold rounded-full whitespace-nowrap"
+              className="font-mono text-[10px] font-bold rounded-none whitespace-nowrap"
               style={{
                 padding: "2px 7px",
                 background: "var(--amber-surface)",
@@ -374,7 +374,7 @@ export function SavedCard({
           aria-expanded={expanded}
           aria-label={t("saved.details")}
           title={t("saved.details")}
-          className="flex items-center justify-center rounded-[9px] cursor-pointer text-muted flex-shrink-0"
+          className="flex items-center justify-center rounded-none cursor-pointer text-muted flex-shrink-0"
           style={{ width: 28, height: 28, border: "1px solid var(--border-faint)", background: "var(--surface-raised)" }}
         >
           <ChevronIcon open={expanded} />
@@ -399,7 +399,7 @@ export function SavedCard({
               {entry.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="font-mono text-[10px] font-bold rounded-full"
+                  className="font-mono text-[10px] font-bold rounded-none"
                   style={{ padding: "2px 8px", background: "var(--surface-inset)", color: "var(--muted)" }}
                 >
                   {tag}
@@ -560,7 +560,7 @@ export function SavedTableRow({
         </span>
         <span
           className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
-          style={{ minWidth: 92, color: "var(--accent-text)" }}
+          style={{ minWidth: 92, color: "var(--foreground)" }}
         >
           {model.totalKg != null ? `${fsWeight(model.totalKg)} ${fsWeightUnit()}` : "—"}
         </span>

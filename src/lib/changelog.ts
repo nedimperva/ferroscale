@@ -17,6 +17,34 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.25.0",
+    date: "2026-09-07",
+    changed: [
+      "A new look across the whole app: warm paper instead of white cards, hairline rules instead of borders and shadows, square corners everywhere, and every number set in a monospaced face with tabular figures so values stop shifting sideways as they change",
+      "Terracotta is now the only colour, and it marks one thing per screen — the figure that is the answer. Costs, projects and compare are ink; filled buttons are ink too, so nothing competes with the result",
+      "Navigation moved from a row of tabs across the top to a 56px icon rail down the left edge, giving the calculator back the band of height the tabs were using",
+      "Every workspace view now opens with the same compact header: its name in a serif, its state beside it, its actions on the right",
+      "The command line is drawn with an ink edge instead of an accent glow, on the phone and on the desktop",
+      "Lists and settings shed their card frames — rows are divided by rules, and the calculator's glance figures and the projects pipeline read as one band rather than four boxes",
+      "The workspace rail reads its counts aloud: a screen reader now hears \"Parts 5\" where before it heard only \"Parts\""
+    ],
+    fixed: [
+      "Monospaced text lost its tabular figures and picked up label letter-spacing — a broken CSS rule had merged it into the one below it"
+    ],
+    changed_bs: [
+      "Novi izgled cijele aplikacije: toplo papirnato umjesto bijelih kartica, tanke linije umjesto okvira i sjena, uglovi bez zaobljenja, i svaki broj u monospace pismu s tabularnim ciframa da vrijednosti ne skaču ustranu dok se mijenjaju",
+      "Terakota je sada jedina boja i označava jednu stvar po ekranu — broj koji je odgovor. Cijene, projekti i poređenje su u tinti; popunjena dugmad također, pa ništa ne konkurira rezultatu",
+      "Navigacija je s reda kartica na vrhu prešla na traku ikona širine 56px uz lijevu ivicu, čime kalkulator vraća visinu koju su kartice zauzimale",
+      "Svaki prikaz radne površine sada otvara isto sažeto zaglavlje: naziv u serifnom pismu, stanje pored njega, akcije desno",
+      "Komandna linija je iscrtana ivicom u tinti umjesto sjajem u naglasnoj boji, i na telefonu i na računaru",
+      "Liste i postavke su izgubile okvire kartica — redovi su odvojeni linijama, a brojevi kalkulatora i pregled projekata čitaju se kao jedna traka umjesto četiri kutije",
+      "Traka radne površine izgovara svoje brojače: čitač ekrana sada čuje \"Parts 5\" tamo gdje je prije čuo samo \"Parts\""
+    ],
+    fixed_bs: [
+      "Monospace tekst je izgubio tabularne cifre i pokupio razmak slova namijenjen oznakama — pokvareno CSS pravilo spojilo ga je s pravilom ispod"
+    ]
+  },
+  {
     version: "3.24.0",
     date: "2026-09-03",
     added: [

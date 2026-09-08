@@ -98,9 +98,15 @@ export function NearbySpecs({
                 )}
                 {delta && (
                   <span
-                    className="font-mono text-[11px] font-bold flex-shrink-0"
+                    className="font-mono text-[11px] flex-shrink-0"
                     style={{
-                      color: heavier ? "var(--accent-text)" : lighter ? "var(--green-text)" : "var(--muted)",
+                      // Direction, not verdict: heavier takes the accent,
+                      // lighter stays ink. Which one you want is your call.
+                      color: heavier
+                        ? "var(--accent)"
+                        : lighter
+                          ? "var(--foreground-secondary)"
+                          : "var(--muted)",
                     }}
                   >
                     {delta}

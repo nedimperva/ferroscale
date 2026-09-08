@@ -810,6 +810,7 @@
     },
     "parts": {
       "subtitle": "Specs you type often and assemblies you build repeatedly. Use one to load it into the bar, or drop it straight into a project.",
+      "headerCount": "{parts} parts · {assemblies} assemblies",
       "pinnedLabel": "Pinned — always first in suggestions",
       "pinPlaceholder": "Pin a part to keep it here",
       "columns": {

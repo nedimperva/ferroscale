@@ -231,7 +231,7 @@ function StatusBadge({
       value={status}
       aria-label={t("projects.statusAria", { name })}
       onChange={(e) => onChange(e.target.value as ProjectStatus)}
-      className="fs-track-label rounded-full font-bold text-[10px] uppercase cursor-pointer"
+      className="fs-track-label rounded-none font-bold text-[10px] uppercase cursor-pointer"
       style={{
         padding: "4px 9px",
         border: `1px solid ${tone.border}`,
@@ -261,7 +261,7 @@ function CategoryBadge({
       value={category ?? ""}
       onChange={(e) => onChange((e.target.value as ProjectCategory) || undefined)}
       aria-label="Project category"
-      className="fs-track-label rounded-full font-semibold text-[10px] cursor-pointer"
+      className="fs-track-label rounded-none font-semibold text-[10px] cursor-pointer"
       style={{
         padding: "4px 9px",
         border: "1px solid var(--border-faint)",
@@ -313,8 +313,8 @@ function EditableTitle({
         }}
         autoFocus
         aria-label={t("common.rename")}
-        className="font-extrabold text-foreground bg-transparent border-0 outline-none min-w-0 w-full"
-        style={{ fontSize: compact ? 18 : 24, letterSpacing: -0.5 }}
+        className="fs-title text-foreground bg-transparent border-0 outline-none min-w-0 w-full"
+        style={{ fontSize: compact ? 19 : 24 }}
       />
     );
   }
@@ -327,8 +327,8 @@ function EditableTitle({
         setEditing(true);
       }}
       title={t("common.rename")}
-      className="font-extrabold text-foreground text-left bg-transparent border-0 p-0 cursor-text min-w-0 truncate"
-      style={{ fontSize: compact ? 18 : 24, letterSpacing: -0.5 }}
+      className="fs-title text-foreground text-left bg-transparent border-0 p-0 cursor-text min-w-0 truncate"
+      style={{ fontSize: compact ? 19 : 24 }}
     >
       {name}
     </button>
@@ -436,7 +436,7 @@ function DetailsForm({
         type="button"
         onClick={commit}
         className="h-11 sm:h-9 px-4 rounded-button font-bold text-[13px] cursor-pointer ml-auto"
-        style={{ background: "var(--accent)", color: "var(--accent-contrast)", border: "none" }}
+        style={{ background: "var(--action)", color: "var(--action-contrast)", border: "none" }}
       >
         {t("common.done")}
       </button>
@@ -594,9 +594,9 @@ function QuickAddCommandBar({
         type="button"
         onClick={handleAdd}
         disabled={!query.trim()}
-        className="h-11 sm:h-8 px-3 rounded-chip text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] disabled:opacity-40 cursor-pointer flex items-center gap-1 flex-shrink-0"
+        className="h-11 sm:h-8 px-3 rounded-chip text-xs font-bold bg-[var(--action)] text-[var(--action-contrast)] disabled:opacity-40 cursor-pointer flex items-center gap-1 flex-shrink-0"
       >
-        <DeskIcon name="plus" stroke="var(--accent-contrast)" />
+        <DeskIcon name="plus" stroke="var(--action-contrast)" />
         <span>{t("common.add")}</span>
       </button>
     </div>
@@ -683,7 +683,7 @@ function AssemblyPickerModal({
               type="button"
               onClick={handleCustomSubmit}
               disabled={!customName.trim()}
-              className="h-11 sm:h-8 px-3 rounded-chip text-xs font-bold bg-[var(--accent)] text-[var(--accent-contrast)] disabled:opacity-40 cursor-pointer"
+              className="h-11 sm:h-8 px-3 rounded-chip text-xs font-bold bg-[var(--action)] text-[var(--action-contrast)] disabled:opacity-40 cursor-pointer"
             >
               {t("common.save")}
             </button>
@@ -868,7 +868,7 @@ function LaborAndExtrasForm({
           type="button"
           onClick={addCost}
           disabled={!newLabel.trim() || !newAmount}
-          className="h-11 sm:h-7 px-2.5 rounded-chip bg-[var(--accent)] text-[var(--accent-contrast)] text-[11px] font-bold disabled:opacity-40 cursor-pointer"
+          className="h-11 sm:h-7 px-2.5 rounded-chip bg-[var(--action)] text-[var(--action-contrast)] text-[11px] font-bold disabled:opacity-40 cursor-pointer"
         >
           +
         </button>
@@ -1511,7 +1511,7 @@ export function ProjectDetail({
             {activity.slice(0, 12).map((entry, index) => (
               <li key={entry.id} className="flex gap-2.5 items-baseline">
                 <span
-                  className="rounded-full flex-shrink-0"
+                  className="rounded-none flex-shrink-0"
                   style={{
                     width: 5,
                     height: 5,
@@ -1537,7 +1537,7 @@ export function ProjectDetail({
       <div
         className="flex-shrink-0"
         style={{
-          padding: compact ? "0 0 14px" : "16px 32px 16px",
+          padding: compact ? "0 0 14px" : "14px 20px 14px",
           borderBottom: compact ? "none" : "1px solid var(--border-faint)",
         }}
       >
@@ -1570,7 +1570,7 @@ export function ProjectDetail({
               onChange={(cat) => actions.onUpdateMeta(project.id, { category: cat })}
             />
             {summary.marginPercent > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
+              <span className="px-2 py-0.5 rounded-none text-[10px] font-bold font-mono bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
                 +{summary.marginPercent}% {t("projects.markupMargin")}
               </span>
             )}
@@ -1620,11 +1620,11 @@ export function ProjectDetail({
               style={{
                 padding: "8px 12px",
                 border: "none",
-                background: "var(--accent)",
-                color: "var(--accent-contrast)",
+                background: "var(--action)",
+                color: "var(--action-contrast)",
               }}
             >
-              <DeskIcon name="plus" stroke="var(--accent-contrast)" />
+              <DeskIcon name="plus" stroke="var(--action-contrast)" />
               <span>{t("projects.addItem")}</span>
             </button>
             <RowMenu items={menuItems} ariaLabel={project.name} />

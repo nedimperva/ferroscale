@@ -134,7 +134,7 @@ export function PriceBookSection({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="self-start rounded-[10px] text-[12px] font-bold cursor-pointer"
+          className="self-start rounded-none text-[12px] font-bold cursor-pointer"
           style={{
             padding: "7px 12px",
             border: "1px solid var(--border-faint)",
