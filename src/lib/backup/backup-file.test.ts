@@ -36,15 +36,19 @@ describe("backup-file", () => {
       id: "save-1",
       name: "HEA 120 Column",
       timestamp: "2026-08-01T10:00:00.000Z",
-      createdAt: "2026-08-01T10:00:00.000Z",
       updatedAt: "2026-08-01T10:00:00.000Z",
+      useCount: 0,
+      parts: [],
+      normalizedProfile: { formatVersion: 1, iconKey: "structural", shortLabel: "HEA 120", canonicalKey: "profile=beam_hea_en|len=6000|qty=2" },
       input: {
-        profileCategory: "structural",
         profileId: "beam_hea_en",
         materialGradeId: "steel-s235jr",
-        dimensions: { height: 114, width: 120 },
-        length: 6,
-        lengthUnit: "m",
+        useCustomDensity: false,
+        manualDimensions: {
+          height: { value: 114, unit: "mm" },
+          width: { value: 120, unit: "mm" },
+        },
+        length: { value: 6, unit: "m" },
         quantity: 2,
         priceBasis: "weight",
         priceUnit: "kg",
@@ -53,6 +57,7 @@ describe("backup-file", () => {
         wastePercent: 0,
         includeVat: false,
         vatPercent: 0,
+        rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
       },
       result: {
         profileId: "beam_hea_en",
@@ -77,7 +82,9 @@ describe("backup-file", () => {
         formulaLabel: "EN 10025",
         datasetVersion: "1.0",
         referenceLabels: ["EN 10025-2"],
-        dimensions: { height: 114, width: 120 },
+        breakdownRows: [],
+        surfaceAreaM2: null,
+        unitSurfaceAreaM2: null,
       },
     };
 
