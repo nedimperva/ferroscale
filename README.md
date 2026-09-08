@@ -1,114 +1,132 @@
 # Ferroscale
 
-EU-focused metal calculator with:
-1. A Next.js web app built around a command bar for fast weight/price calculations.
-2. A shared `@ferroscale/metal-core` package for formulas, datasets, validation, and the command query parser.
+[![CI](https://github.com/nedimperva/ferroscale/actions/workflows/ci.yml/badge.svg)](https://github.com/nedimperva/ferroscale/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+[![PWA](https://img.shields.io/badge/PWA-offline--ready-green)](src/components/pwa-register.tsx)
 
-## Workspace Layout
+EU-focused metal profile weight and price estimator built around a command bar.
+Type a query like `hea120 6m x2 s235` and get a live result — weight, price,
+cutting schedule, and quote. No account, no tracking, works offline.
 
-1. `src/`: main web app (Next.js App Router).
-2. `packages/metal-core/`: shared calculator and parser package.
+**Live demo: https://ferroscale.nedimp.com/en**
 
-## Prerequisites
+![FerroScale calculator on desktop](docs/screenshots/calculator-desktop.png)
 
-1. Node.js 20+
-2. npm 10+
+## The command bar
 
-## Install
+Order-tolerant tokens — profile+size, length, quantity, grade, inline price:
+
+| Query | Meaning |
+| --- | --- |
+| `hea120 6m x2 s235` | HEA 120 beam, 6 m, 2 pieces, grade S235 |
+| `shs40x40x3 6m x10 @2.50/kg` | SHS tube with an inline price override |
+| `hea120 6m x2 + ipe200 4m x3` | Multi-item line, priced together |
+| `hea120 6m =500kg` | Target query — how many pieces make 500 kg? |
+| `plt1500x3000x3 316` | Plate in stainless 316 |
+
+Lengths accept `mm`/`cm`/`m`/`ft`, arithmetic works inside tokens
+(`6m-50mm`, `x2+3`), and a pasted cut list becomes a multi-item line.
+The query mirrors to `?q=`, so every result is a shareable link.
+
+## Features
+
+- **Calculator** — 20 profile types (manual + EN-standard sizes), steel /
+  stainless / aluminum grades, per-grade price book, margin, waste, VAT,
+  mass tolerance bands, dimensioned cross-section drawings.
+- **Projects** — quotes with sub-assemblies, labor and hardware costing,
+  per-project margin, 1D bar + 2D plate cutting optimizers with visual cut
+  maps, supplier BOM/RFQ export, printable quotes, CSV export.
+- **Library** — saved parts and assemblies, templates (incl. standard EN
+  fabrication assemblies), compare, session tape, offline JSON backup.
+- **Sync & privacy** — local-first; optional Google Drive sync of an
+  AES-GCM-encrypted snapshot. No account, no analytics.
+- **Platform** — PWA with offline support, light/dark themes, English +
+  Bosnian (`en`/`bs`), phone keypad and desktop workspace layouts.
+
+![FerroScale calculator on a phone](docs/screenshots/calculator-mobile.png)
+
+## Accuracy
+
+- Dataset version `2026.07.1`
+  (`packages/metal-core/src/datasets/version.ts`).
+- The live engine is validated against published EN catalog masses and
+  independent hand-computed formulas: **200+ cases, ≤0.5% tolerance**.
+- The same benchmark runs as a vitest gate in CI and as an interactive
+  table in the app at `/qa`.
+
+## Quickstart
+
+Prerequisites: Node.js 20+, npm 10+. No env vars needed to run.
 
 ```bash
 npm install
+npm run dev        # http://localhost:3000 (root redirects by locale)
 ```
 
-## Run Web App
+Open `http://localhost:3000/en` directly (root `/` is a locale redirect).
 
 ```bash
-npm run dev
+npm run build      # production build (prebuild injects the SW cache version)
+npm run lint       # ESLint — CI treats it as a hard gate, keep it green
+npm run test       # web vitest suite
+npm run test:core  # metal-core suite (parser, suggestions, engine)
+npm run test:all   # both suites
+npm run i18n:check # en/bs message parity — fails CI when locales drift
 ```
 
-Open:
-1. `http://localhost:3000` (redirects by locale)
-2. `http://localhost:3000/en` (direct English route)
+Single test file: `npx vitest run src/lib/calculator/engine.test.ts`.
+E2E: `npx playwright test` (set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to reuse
+a system Chromium instead of downloading browsers).
 
-## Test and Build
+## Workspace layout
 
-```bash
-# Web tests
-npm run test
+- `src/` — Next.js app. `src/lib/calculator/*` and `src/lib/datasets/*`
+  are one-line re-export shims over metal-core; web-only logic lives in
+  `src/lib/command/` (`share.ts`, `csv.ts`, `profile-specs.ts`, …).
+- `packages/metal-core/` — shared, UI-independent package: engine,
+  validation, units, datasets, command parser/suggestions. Kept free of
+  web imports and i18n so non-web surfaces can reuse it.
+- `messages/` — `en.json` + `bs.json` (bs deep-merges over en).
+- `docs/` — `DESIGN_REVIEW.md` (architecture review + roadmap),
+  `PROJECT_TRACKER.md`, `FEATURE_IMPROVEMENTS.md`, `IMPROVEMENT_IDEAS.md`.
 
-# Shared core tests
-npm run test:core
+Every app route renders the client-side `CommandShell`; see `AGENTS.md`
+for the command flow, profile system, and sync-layer conventions.
 
-# Web + core tests
-npm run test:all
+## Shared core API
 
-# i18n message parity (en/bs)
-npm run i18n:check
+From `@ferroscale/metal-core`:
 
-# End-to-end tests (Playwright)
-npx playwright test
+- Calculator: `calculateMetal`, `validateCalculationInput`, `resolveAreaMm2`
+- Command: `cmdParse`, `cmdTokenize`, `cmdSuggest`, `inputToQuery`
+- Datasets: profile/material definitions and helpers
 
-# Web production build
-npm run build
-```
+## Configuration
 
-CI (`.github/workflows/ci.yml`) runs lint, the i18n check, both test
-suites, and a production build on every push and pull request. Lint is
-a hard gate — keep it green.
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | Deploy only | Base URL for sitemap, robots, and metadata (defaults to `https://ferroscale.nedimp.com`) |
+| `RESEND_*` | No | Contact-form email; form logs and rate-limits without them |
+| `GOOGLE_*` | No | Drive sync only; everything else works without them |
 
-## Command Query Format
+Local `.env` files are gitignored — never commit secrets.
+See [SECURITY.md](SECURITY.md).
 
-The command bar (and share links, e.g. `/en?q=hea120+6m+x2`) accepts
-order-tolerant tokens:
+## API routes
 
-1. Profile + size: `hea120`, `shs40x40x3`, `rhs60x40x3`, `chs48.3x3.2`,
-   `rnd20`, `flt40x8`, `l50x50x5`, `plt1500x3000x3`
-2. Length: `6m`, `4500mm`, `10ft`, or a bare number using the default
-   unit from Settings
-3. Quantity: `x2`
-4. Grade: `s235`, `s355`, `304`, `316l`, `a4`, `6060`, `7075`, …
-5. Inline price override: `@2.50/kg`, `3,20/m`, `@12/pc`
+- `GET /api/health`, `GET /api/captcha`, `POST /api/contact` (rate-limited)
+- `src/app/api/sync/google/*` — Drive appdata sync (reads env at request
+  time, so builds need no secrets)
 
-Examples:
-1. `hea120 6m x2 s235`
-2. `shs40x40x3 6m x10 @2.50/kg`
-3. `plt1500x3000x3 316`
+## Contributing
 
-## Shared Core API
+See [CONTRIBUTING.md](CONTRIBUTING.md) — setup, test gates, i18n rule
+(every string in **both** `en` and `bs`), changelog rule (update
+`CHANGELOG.md` **and** `src/lib/changelog.ts`), and the profile-adding
+checklist.
 
-Main exports from `@ferroscale/metal-core`:
-1. Calculator engine: `calculateMetal`, `validateCalculationInput`, `resolveAreaMm2`
-2. Command parser: `cmdParse`, `cmdTokenize`, `cmdSuggest`, `inputToQuery`
-   (UI-independent — also consumed by the Raycast extension, which lives in its own repository)
-3. Datasets: profile/material definitions and helpers
+## License
 
-## Internationalization
-
-1. Locale routing config: `src/i18n/routing.ts`
-2. Messages: `messages/en.json`, `messages/bs.json`
-3. Missing locale keys fallback to English.
-
-Add a new language:
-1. Add `messages/<locale>.json`.
-2. Register locale in `src/i18n/routing.ts`.
-3. Translate keys.
-4. Run `npm run i18n:check`.
-
-## Environment Variables
-
-1. `NEXT_PUBLIC_SITE_URL`: public base URL used by sitemap/robots metadata.
-2. `PLAYWRIGHT_CHROMIUM_EXECUTABLE` (optional): path to a system Chromium
-   for e2e runs without downloading browsers.
-
-## API Endpoints
-
-1. `GET /api/health`
-2. `GET /api/captcha`
-3. `POST /api/contact`
-4. `/api/sync/google/*` (Google Drive sync)
-
-## Docs
-
-1. `docs/DESIGN_REVIEW.md` — full design/UX/architecture review and follow-up roadmap
-2. `docs/PROJECT_TRACKER.md`
-3. `docs/FEATURE_IMPROVEMENTS.md`
+MIT — see [LICENSE](LICENSE).

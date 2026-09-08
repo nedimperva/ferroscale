@@ -1,0 +1,47 @@
+name: Bug report
+description: Something calculates or renders wrong
+title: "[bug] "
+labels: [bug]
+body:
+  - type: input
+    id: query
+    attributes:
+      label: Command query
+      description: The exact line from the command bar (or its ?q= share link)
+      placeholder: hea120 6m x2 s235
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Actual weight/price or behavior, with numbers
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: Expected value and where you verified it (supplier, catalog, hand calc)
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options: [Calculator (desktop), Calculator (phone), Projects, Parts, Compare, Settings, Share link, PWA/offline]
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Browser + version, viewport width if layout-related
+      placeholder: Chrome 131, 1440px
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I reproduced this on latest master with default settings
+          required: true

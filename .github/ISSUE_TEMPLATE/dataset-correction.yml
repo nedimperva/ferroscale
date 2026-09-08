@@ -1,0 +1,42 @@
+name: Dataset correction
+description: A profile size, mass, or grade that disagrees with a published standard
+title: "[data] "
+labels: [dataset]
+body:
+  - type: input
+    id: profile
+    attributes:
+      label: Profile and size
+      description: Exact designation as typed in the command bar
+      placeholder: UPE 200
+    validations:
+      required: true
+  - type: input
+    id: field
+    attributes:
+      label: Disputed value
+      description: Which figure is wrong (area, mass per metre, dimensions) and what the app shows
+      placeholder: mass per metre shows 22.8 kg/m
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: Published reference (required)
+      description: EN standard + table/page, or manufacturer catalog with edition. "Trust me" is not a reference.
+      placeholder: EN 10279, Table 3
+    validations:
+      required: true
+  - type: input
+    id: correct
+    attributes:
+      label: Correct value per that reference
+      placeholder: 23.1 kg/m
+    validations:
+      required: true
+  - type: input
+    id: dataset
+    attributes:
+      label: Dataset version
+      description: From the /qa page footer or packages/metal-core/src/datasets/version.ts
+      placeholder: 2026.07.1

@@ -47,3 +47,6 @@ next-env.d.ts
 test-results/
 shots/
 .gstack/
+
+# design prototypes — never committed
+.design-fetch/

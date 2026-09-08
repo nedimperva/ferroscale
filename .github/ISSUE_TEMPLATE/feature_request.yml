@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a capability, not a bug
+title: "[feat] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: job
+    attributes:
+      label: The job
+      description: What fabrication task does this unblock? Who does it, where (shop floor, office, phone)?
+      placeholder: Quoting stair railings on site from my phone…
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Concrete behavior, ideally as command-bar examples
+      placeholder: railing-post … / or a sketch of the UI change
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Best-guess scope
+      options: [Hours (S), Days (M), A week or more (L), Not sure]
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds considered
+      description: How do you do this today without the feature?

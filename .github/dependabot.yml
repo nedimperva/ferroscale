@@ -1,0 +1,19 @@
+# Dependabot — weekly, small batches. Runtime deps are intentionally
+# few (next, next-intl, react, react-dom); keep it that way.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      dev-dependencies:
+        patterns: ["*"]
+        exclude-patterns: ["next", "react", "react-dom", "next-intl"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
