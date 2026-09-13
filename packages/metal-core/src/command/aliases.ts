@@ -27,18 +27,59 @@ export const COMMAND_ALIASES: CommandAlias[] = [
   { alias: "corr", name: "Corrugated", fam: "corrugated", profileId: null, manualProfileId: "corrugated_sheet" },
 ];
 
+/**
+ * Spellings people reach for that are not the canonical alias. Typing the
+ * obvious word got "Didn't understand" for every one of these — `rd30`,
+ * `pipe60.3x3.2`, `plate1500x3000x20`, `flat80x8` — while the working forms
+ * were `rnd`, `chs`, `plt`, `flt`. The canonical alias is still what the app
+ * writes and what suggestions offer; these only widen what it will read.
+ *
+ * Longer spellings also settle the prefix collision with the one-letter
+ * aliases: `t` used to swallow the start of `tube`, reporting the mangled
+ * `unknownSize("ube60.3x3.2")`.
+ */
+const COMMAND_ALIAS_SYNONYMS: Record<string, string> = {
+  rd: "rnd",
+  round: "rnd",
+  pipe: "chs",
+  tube: "chs",
+  plate: "plt",
+  sheet: "sht",
+  flat: "flt",
+  tee: "t",
+  angle: "l",
+  square: "sq",
+};
+
 const ALIAS_LOOKUP = new Map<string, CommandAlias>(
   COMMAND_ALIASES.map((a) => [a.alias, a]),
 );
+for (const [synonym, canonical] of Object.entries(COMMAND_ALIAS_SYNONYMS)) {
+  const target = ALIAS_LOOKUP.get(canonical);
+  if (target) ALIAS_LOOKUP.set(synonym, target);
+}
 
-export const COMMAND_ALIAS_RE = COMMAND_ALIASES
-  .map((a) => a.alias)
+export const COMMAND_ALIAS_RE = [
+  ...COMMAND_ALIASES.map((a) => a.alias),
+  ...Object.keys(COMMAND_ALIAS_SYNONYMS),
+]
   .sort((a, b) => b.length - a.length)
   .join("|");
 
+/**
+ * A size always opens with a digit, so anything else after the alias means the
+ * alias was never there: `titanium120` is not a tee called "itanium120". A
+ * token that fails this reads as unknown, which is a message the user can act
+ * on, instead of a mangled size.
+ */
+function isSizeRemainder(rest: string): boolean {
+  return rest === "" || /^[\d.]/.test(rest);
+}
+
 export function findAliasByPrefix(token: string): CommandAlias | null {
-  const match = token.match(new RegExp(`^(${COMMAND_ALIAS_RE})`));
+  const match = token.match(new RegExp(`^(${COMMAND_ALIAS_RE})(.*)$`));
   if (!match) return null;
+  if (!isSizeRemainder(match[2])) return null;
   return ALIAS_LOOKUP.get(match[1]) ?? null;
 }
 
@@ -106,10 +147,10 @@ const GRADE_META: Record<string, { short: string; aliases: string[] }> = {
   "steel-s235jr": { short: "S235", aliases: ["s235", "s235jr"] },
   "steel-s355jr": { short: "S355", aliases: ["s355", "s355jr"] },
   "steel-s420m": { short: "S420", aliases: ["s420", "s420m"] },
-  "stainless-304": { short: "304", aliases: ["304", "1.4301", "a2"] },
+  "stainless-304": { short: "304", aliases: ["304", "1.4301", "a2", "inox"] },
   "stainless-316": { short: "316", aliases: ["316", "1.4401"] },
   "stainless-316l": { short: "316L", aliases: ["316l", "1.4404", "a4"] },
-  "al-6060": { short: "6060", aliases: ["6060"] },
+  "al-6060": { short: "6060", aliases: ["6060", "al", "alu", "aluminium", "aluminum"] },
   "al-6082": { short: "6082", aliases: ["6082"] },
   "al-7075": { short: "7075", aliases: ["7075"] },
 };

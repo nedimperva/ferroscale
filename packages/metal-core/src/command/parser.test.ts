@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calculateMetal } from "@ferroscale/metal-core";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "./parser";
+import { findAliasByProfileId } from "./aliases";
 import type { CommandParserSettings, CommandPricing } from "./types";
 
 const PRICING: CommandPricing = {
@@ -748,5 +749,51 @@ describe("engine issues point at the field that is wrong", () => {
   it("carries the offending value as the token", () => {
     const issue = cmdParse("hea120 51m ", settings).issues.find((i) => i.code === "invalidLength");
     expect(issue?.token).toBe("51m");
+  });
+});
+
+describe("aliases people actually type", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+  const kg = (q: string) => cmdParse(q, settings).totalKg;
+
+  it("reads the spelled-out profile names", () => {
+    expect(kg("rd30 6m ")).toBeCloseTo(kg("rnd30 6m ")!, 6);
+    expect(kg("round30 6m ")).toBeCloseTo(kg("rnd30 6m ")!, 6);
+    expect(kg("pipe60.3x3.2 6m ")).toBeCloseTo(kg("chs60.3x3.2 6m ")!, 6);
+    expect(kg("tube60.3x3.2 6m ")).toBeCloseTo(kg("chs60.3x3.2 6m ")!, 6);
+    expect(kg("flat80x8 6m ")).toBeCloseTo(kg("flt80x8 6m ")!, 6);
+    expect(kg("plate1500x3000x20 ")).toBeCloseTo(kg("plt1500x3000x20 ")!, 6);
+    expect(kg("sheet1250x2500x2 ")).toBeCloseTo(kg("sht1250x2500x2 ")!, 6);
+    expect(kg("tee60x7 6m ")).toBeCloseTo(kg("t60x7 6m ")!, 6);
+    expect(kg("angle60x60x6 6m ")).toBeCloseTo(kg("l60x60x6 6m ")!, 6);
+  });
+
+  it("reads the material families by name", () => {
+    expect(kg("hea120 6m al ")).toBeCloseTo(kg("hea120 6m 6060 ")!, 6);
+    expect(kg("hea120 6m alu ")).toBeCloseTo(kg("hea120 6m 6060 ")!, 6);
+    expect(kg("hea120 6m inox ")).toBeCloseTo(kg("hea120 6m 304 ")!, 6);
+  });
+
+  it("no longer reports a mangled size for a word starting with an alias", () => {
+    const issues = cmdParse("titanium120 6m ", settings).issues;
+    expect(issues.map((i) => i.code)).toEqual(["unknownToken"]);
+    expect(issues[0].token).toBe("titanium120");
+  });
+
+  it("still resolves the canonical alias for a profile id", () => {
+    expect(findAliasByProfileId("round_bar")?.alias).toBe("rnd");
+    expect(findAliasByProfileId("pipe")?.alias).toBe("chs");
   });
 });

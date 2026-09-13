@@ -837,7 +837,10 @@ export function cmdParse(
     if (!alias) {
       const aliasMatch = tk.match(new RegExp(`^(${COMMAND_ALIAS_RE})(.*)$`));
       if (aliasMatch) {
-        const found = findAliasByPrefix(aliasMatch[1]);
+        // Pass the whole token: the alias only counts when what follows it
+        // could be a size, so `titanium120` reads as an unknown word rather
+        // than a tee called "itanium120".
+        const found = findAliasByPrefix(tk);
         if (found) {
           alias = found;
           aliasCommitted = committed;
@@ -1156,7 +1159,9 @@ export function cmdClassifyToken(tok: string): CommandTokenKind {
   // `6m-50mm` reads as a length, `x2+3` as a quantity — the arithmetic is a
   // way of writing the value, not a different kind of thing.
   if (isArithmeticToken(x)) return QTY_EXPR_LEAD.test(x) ? "qty" : "len";
-  if (new RegExp(`^(${COMMAND_ALIAS_RE})`).test(x)) return "profile";
+  // Anchored: the alias only counts when a size could follow it, so a word
+  // that merely starts with one is unknown rather than a profile.
+  if (findAliasByPrefix(x)) return "profile";
   if (QTY_RE.test(x)) return "qty";
   if (parsePriceToken(x)) return "price";
   if (findGradeByAlias(x)) return "grade";
