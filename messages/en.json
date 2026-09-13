@@ -266,7 +266,10 @@
       "unknownSize": "No {profile} size \"{size}\"",
       "invalidQty": "Quantity must be at least 1",
       "invalidExpression": "That leaves nothing: \"{token}\"",
-      "didYouMean": "Did you mean {suggestion}?"
+      "didYouMean": "Did you mean {suggestion}?",
+      "invalidLength": "Length out of range: \"{token}\"",
+      "invalidSetting": "A setting is out of range — check Settings",
+      "invalidQtyRange": "Quantity must be a whole number, 1 to {max}"
     },
     "sheets": {
       "resultBreakdown": "Result breakdown",
@@ -1001,6 +1004,26 @@
       },
       "noTargets": "Nothing matches that.",
       "templateItems": "{count, plural, one {# item} other {# items}}"
+    },
+    "validation": {
+      "angleThickness": "Thickness ({thicknessMm} mm) must be less than the shorter leg ({shorterLegMm} mm).",
+      "customDensityRange": "Custom density must be between {min} and {max} kg/m³.",
+      "customDensityRequired": "Enter a custom density value.",
+      "dimensionRange": "That dimension must be between {min} mm and {max} mm.",
+      "dimensionRequired": "That dimension is required.",
+      "lengthRange": "Length must be between 1 mm and {max} mm.",
+      "materialInvalid": "Select a valid material grade.",
+      "pipeWall": "Wall thickness ({wallMm} mm) must be less than half the outer diameter ({halfOdMm} mm).",
+      "profileInvalid": "Select a valid profile type.",
+      "profileNotFound": "Profile not found.",
+      "quantityRange": "Quantity must be a whole number between 1 and {max}.",
+      "rectangularWall": "Wall thickness ({wallMm} mm) must be less than half of width and height ({maxWallMm} mm).",
+      "sizeInvalid": "Selected size is not valid for this profile.",
+      "sizeRequired": "Select a standard EN size.",
+      "squareWall": "Wall thickness ({wallMm} mm) must be less than half the side ({halfSideMm} mm).",
+      "unitPriceRange": "Unit price must be between 0 and {max}.",
+      "vatRange": "VAT percent must be between 0 and 35.",
+      "wasteRange": "Waste percent must be between 0 and 100."
     }
   },
   "contact": {

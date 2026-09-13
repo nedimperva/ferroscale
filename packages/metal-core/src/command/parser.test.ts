@@ -712,3 +712,41 @@ describe("target queries", () => {
     expect(cmdParse("hea120 6m x2", mkSettings()).target).toBeNull();
   });
 });
+
+describe("engine issues point at the field that is wrong", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+  const codes = (q: string) => cmdParse(q, settings).issues.map((i) => i.code);
+
+  it("blames the length, not the profile size", () => {
+    expect(codes("hea120 0m ")).toContain("invalidLength");
+    expect(codes("hea120 0m ")).not.toContain("invalidGeometry");
+    expect(codes("hea120 51m ")).toContain("invalidLength");
+    expect(codes("hea120 999999m ")).toContain("invalidLength");
+  });
+
+  it("blames the quantity, not the profile size", () => {
+    expect(codes("hea120 6m x10001 ")).toContain("invalidQty");
+    expect(codes("hea120 6m x10001 ")).not.toContain("invalidGeometry");
+  });
+
+  it("still blames the geometry when the geometry is wrong", () => {
+    expect(codes("chs60x30 6m ")).toContain("invalidGeometry");
+  });
+
+  it("carries the offending value as the token", () => {
+    const issue = cmdParse("hea120 51m ", settings).issues.find((i) => i.code === "invalidLength");
+    expect(issue?.token).toBe("51m");
+  });
+});

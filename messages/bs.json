@@ -266,7 +266,10 @@
       "unknownSize": "Ne postoji {profile} veličina \"{size}\"",
       "invalidQty": "Količina mora biti najmanje 1",
       "invalidExpression": "To ne ostavlja ništa: \"{token}\"",
-      "didYouMean": "Jeste li mislili {suggestion}?"
+      "didYouMean": "Jeste li mislili {suggestion}?",
+      "invalidLength": "Dužina izvan opsega: \"{token}\"",
+      "invalidSetting": "Postavka je izvan opsega — provjerite Postavke",
+      "invalidQtyRange": "Količina mora biti cijeli broj, 1 do {max}"
     },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
@@ -1001,6 +1004,26 @@
       },
       "noTargets": "Ništa se ne poklapa.",
       "templateItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}"
+    },
+    "validation": {
+      "angleThickness": "Debljina ({thicknessMm} mm) mora biti manja od kraćeg kraka ({shorterLegMm} mm).",
+      "customDensityRange": "Vlastita gustoća mora biti između {min} i {max} kg/m³.",
+      "customDensityRequired": "Unesite vrijednost vlastite gustoće.",
+      "dimensionRange": "Ta dimenzija mora biti između {min} mm i {max} mm.",
+      "dimensionRequired": "Ta dimenzija je obavezna.",
+      "lengthRange": "Dužina mora biti između 1 mm i {max} mm.",
+      "materialInvalid": "Odaberite ispravnu klasu materijala.",
+      "pipeWall": "Debljina stijenke ({wallMm} mm) mora biti manja od polovine vanjskog promjera ({halfOdMm} mm).",
+      "profileInvalid": "Odaberite ispravan tip profila.",
+      "profileNotFound": "Profil nije pronađen.",
+      "quantityRange": "Količina mora biti cijeli broj između 1 i {max}.",
+      "rectangularWall": "Debljina stijenke ({wallMm} mm) mora biti manja od polovine širine i visine ({maxWallMm} mm).",
+      "sizeInvalid": "Odabrana dimenzija nije ispravna za ovaj profil.",
+      "sizeRequired": "Odaberite standardnu EN dimenziju.",
+      "squareWall": "Debljina stijenke ({wallMm} mm) mora biti manja od polovine stranice ({halfSideMm} mm).",
+      "unitPriceRange": "Jedinična cijena mora biti između 0 i {max}.",
+      "vatRange": "Postotak PDV-a mora biti između 0 i 35.",
+      "wasteRange": "Postotak otpada mora biti između 0 i 100."
     }
   },
   "contact": {

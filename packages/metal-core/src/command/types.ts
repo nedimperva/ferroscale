@@ -127,7 +127,11 @@ export type CommandParseIssueCode =
   | "unknownSize"
   | "invalidQty"
   | "invalidExpression"
-  | "invalidGeometry";
+  | "invalidGeometry"
+  /** The length is out of range — not a problem with the profile or its size. */
+  | "invalidLength"
+  /** Waste, VAT, density or a rate is out of range; the line itself is fine. */
+  | "invalidSetting";
 
 /**
  * Structured feedback for input the parser could not act on. `message` is a

@@ -26,6 +26,7 @@ import type {
   CommandCalc,
   CommandFamily,
   CommandParseIssue,
+  CommandParseIssueCode,
   CommandParseResult,
   CommandParserSettings,
   CommandPricing,
@@ -770,6 +771,42 @@ function suggestForUnknownSize(
   return nearestFrom(size, texts, 1);
 }
 
+/**
+ * Point the issue at the field the engine actually rejected.
+ *
+ * Every engine failure used to surface as `invalidGeometry` carrying the size
+ * text, so `hea120 6m x10001` told the user there was something wrong with
+ * HEA 120 — a perfectly valid size — when the quantity was the problem. Being
+ * pointed at the correct token is worse than silence: it sends the user to
+ * edit the one part of the line that was right.
+ */
+function issueForEngineField(
+  field: string | undefined,
+  size: string,
+  lengthRaw: number | null,
+  lengthUnit: LengthUnit,
+  qty: number | null,
+): { code: CommandParseIssueCode; token: string } {
+  if (field === "length") {
+    return { code: "invalidLength", token: lengthRaw != null ? `${lengthRaw}${lengthUnit}` : "" };
+  }
+  if (field === "quantity") {
+    return { code: "invalidQty", token: qty != null ? `x${qty}` : "" };
+  }
+  if (
+    field === "unitPrice" ||
+    field === "wastePercent" ||
+    field === "vatPercent" ||
+    field === "customDensityKgPerM3" ||
+    field === "priceUnit" ||
+    field === "materialGradeId"
+  ) {
+    return { code: "invalidSetting", token: field };
+  }
+  // selectedSizeId, manualDimensions.*, profileId — genuinely about the shape.
+  return { code: "invalidGeometry", token: size };
+}
+
 export function cmdParse(
   query: string,
   settings: CommandParserSettings,
@@ -958,8 +995,7 @@ export function cmdParse(
     if (response && !response.ok) {
       const first = response.issues[0];
       issues.push({
-        code: "invalidGeometry",
-        token: size,
+        ...issueForEngineField(first?.field, size, lengthRaw, lengthUnit, qty),
         message: first?.message ?? "Invalid dimensions.",
         messageKey: first?.messageKey,
         messageValues: first?.messageValues,
