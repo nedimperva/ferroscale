@@ -100,9 +100,16 @@ export function DeskRail({
         onClick={onNew}
         title={t("common.new")}
         aria-label={t("common.new")}
-        className="cursor-pointer"
-        style={{ width: 22, height: 22, border: 0, background: "var(--accent)", marginBottom: 20 }}
-      />
+        className="cursor-pointer flex items-center justify-center"
+        // The mark stays 22px; the button around it is 28 so the target clears
+        // the 24px floor in WCAG 2.5.8 without the mark changing size.
+        style={{ width: 28, height: 28, border: 0, background: "transparent", padding: 0, marginBottom: 17 }}
+      >
+        <span
+          aria-hidden="true"
+          style={{ width: 22, height: 22, background: "var(--accent)", display: "block" }}
+        />
+      </button>
 
       <div className="flex flex-col items-center" style={{ gap: 4 }}>
         <RailButton

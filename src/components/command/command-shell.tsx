@@ -1625,7 +1625,9 @@ export function CommandShell() {
                       aria-pressed={active}
                       className="fs-track-label rounded-none text-[10.5px] font-bold"
                       style={{
-                        padding: "4px 12px",
+                        // 5px of vertical padding puts the control at 25px, over
+                        // the 24px floor in WCAG 2.5.8. It measured 23px.
+                        padding: "5px 12px",
                         border: active
                           ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
                           : "1px solid var(--border-faint)",
@@ -1786,7 +1788,7 @@ export function CommandShell() {
                   className="font-mono text-[10px] uppercase"
                   style={{
                     letterSpacing: 1.6,
-                    color: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                    color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
                   }}
                 >
                   {p.valid ? t("status.live") : t("status.waiting")}

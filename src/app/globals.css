@@ -18,7 +18,7 @@
   --foreground: #191817;
   --foreground-secondary: #57544e;
   --muted: #6f6b64;
-  --muted-faint: #8b8781;
+  --muted-faint: #726d66;
 
   /* ── Borders ──
      `faint` divides rows, plain divides controls, `strong` is the dashed
@@ -116,7 +116,7 @@
   --foreground: #f0eee9;
   --foreground-secondary: #b9b4aa;
   --muted: #979188;
-  --muted-faint: #7b756c;
+  --muted-faint: #8b857b;
 
   /* ── Borders ── */
   --border: #38352f;

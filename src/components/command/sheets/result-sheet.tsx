@@ -136,7 +136,7 @@ export function CommandResultBreakdown({
       )}
       <div className="flex items-baseline gap-2 mb-3">
         {focus.alias && (
-          <span className="text-accent">
+          <span className="text-accent-text">
             <CommandGlyph fam={focus.alias.fam} size={22} />
           </span>
         )}

@@ -628,7 +628,9 @@ export function DeskCalcView({
                     aria-pressed={mode === m}
                     className="cursor-pointer border-0 font-mono text-[10px]"
                     style={{
-                      padding: "5px 14px",
+                      // 6px puts the control at 25px, over the 24px floor in
+                      // WCAG 2.5.8. It measured 23px.
+                      padding: "6px 14px",
                       letterSpacing: 1.3,
                       borderLeft: i === 0 ? undefined : "1px solid var(--border)",
                       background: mode === m ? "var(--foreground)" : "transparent",
@@ -648,7 +650,7 @@ export function DeskCalcView({
                   className="font-mono text-[10px] uppercase"
                   style={{
                     letterSpacing: 1.6,
-                    color: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                    color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
                   }}
                 >
                   {p.valid ? t("status.live") : t("status.waiting")}
