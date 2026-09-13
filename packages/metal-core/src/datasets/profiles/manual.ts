@@ -315,7 +315,11 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     category: "plates_sheets",
     mode: "manual",
     formulaLabel: "A = w × (t + pattern×0.5)",
-    referenceLabel: "EN 10363",
+    // EN 10363 fixes the base plate; the raised pattern's contribution is a
+    // half-height rule of thumb, not a catalog figure, because the pattern
+    // geometry varies by producer. The formula label shows the assumption so
+    // a user can check it against their own plate.
+    referenceLabel: "EN 10363 (base) · pattern allowance estimated",
     dimensions: [
       { key: "width", label: "Width", minMm: 10, maxMm: 4000, defaultMm: 1500 },
       { key: "thickness", label: "Base Thickness", minMm: 2, maxMm: 20, defaultMm: 5 },
@@ -338,7 +342,12 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     category: "plates_sheets",
     mode: "manual",
     formulaLabel: "A = width × eff. thickness",
-    referenceLabel: "ISO 16573",
+    // No EN or ISO standard fixes expanded-metal mass: the open area depends
+    // on the mesh pattern, which is a producer specification. Citing one here
+    // (this said ISO 16573, which covers hydrogen-embrittlement testing of
+    // high-strength steel) claimed a traceability the figure does not have.
+    // The user supplies an effective thickness, so the source is the user.
+    referenceLabel: "Producer specification",
     dimensions: [
       { key: "width", label: "Width", minMm: 10, maxMm: 3000, defaultMm: 1250 },
       { key: "thickness", label: "Eff. Thickness", minMm: 0.5, maxMm: 10, defaultMm: 3 },
@@ -351,10 +360,14 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     label: "Corrugated Sheet",
     category: "plates_sheets",
     mode: "manual",
-    formulaLabel: "A = width × base thickness",
-    referenceLabel: "EN 508",
+    formulaLabel: "A = developed width × base thickness",
+    // Mass follows the DEVELOPED width of the strip before profiling, which is
+    // longer than the cover width it ends up spanning - by 5-15% depending on
+    // the profile. The dimension is labelled accordingly: feeding it a cover
+    // width understates the mass, and no single factor covers every profile.
+    referenceLabel: "EN 508 · developed width supplied by the user",
     dimensions: [
-      { key: "width", label: "Cover Width", minMm: 10, maxMm: 3000, defaultMm: 1000 },
+      { key: "width", label: "Developed Width", minMm: 10, maxMm: 3000, defaultMm: 1000 },
       { key: "thickness", label: "Base Thickness", minMm: 0.3, maxMm: 3, defaultMm: 0.7 },
     ],
     area: rectangularArea,

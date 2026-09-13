@@ -5,6 +5,101 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.26.0] - 2026-09-13
+
+An accuracy and correctness release. Five EN channel sizes were wrong, and
+the gate that was supposed to catch that could not fail; several input paths
+returned a confidently wrong number with no error state.
+
+### Fixed
+
+- **UPN 320 and UPE 300/330/360/400 were understated by 7–15%.** Two
+  independent methods — geometric reconstruction from nominal EN dimensions,
+  and published catalog mass — agree with each other and disagree with the
+  stored areas. UPN 320 was 14.6% light: a 12 m bar quoted 104 kg under.
+  `DATASET_VERSION` → `2026.09.1`
+- **The accuracy gate was a tautology.** `computeAreaMm2`'s `default:` branch
+  read `areaMm2` off the dataset it was verifying, so the "200+ cases ≤0.5%"
+  assertion could not detect a wrong EN table value for any of the eight
+  standard families. The oracle is now published mass per metre, a size with
+  no reference throws, and `QA_BENCHMARK_ROWS` covers 131 EN sizes instead of
+  8. Two coverage tests stop a new size shipping unchecked
+- **A pasted cut list lost every quantity.** Column separators collapsed to
+  spaces before parsing, and a bare number is a length — so `HEA120⇥6m⇥2`
+  priced one piece. 208.78 kg where the answer was 506.98 kg (−58.8%), with
+  `valid=true` and no issues
+- **A comma-separated list contaminated across items.** `hea120 6m x2,
+  ipe200 4m x3` returned 358.05 kg (−29.4%): `x2,` failed to tokenize, and
+  the second item's `x3` filled the first item's empty quantity slot
+- **Errors named the wrong field.** Length and quantity failures surfaced as
+  `invalidGeometry` carrying the size, so a valid HEA 120 was blamed for an
+  out-of-range length. Engine validation messages are also localized now
+- **`t100x100x10`** — the app's own tee label — parsed as size `100x10`,
+  length 0 and quantity 10
+- **Alias matching was unanchored**, so `tube60.3x3.2` reported the mangled
+  `No T size "ube60.3x3.2"` and `titanium120` was silently shadowed as a profile
+- **Fractional quantities were accepted**: `quantity: 2.5` returned 147.97 kg
+- **Surface area shared `dimensionDecimals`** with cross-section area in mm²,
+  so 0 dp turned 0.754 m² of paint area into 1 m². It has its own
+  `surfaceDecimals`, defaulting to 2
+- **Duplicate rates resolved backwards**: `@2/kg @3/kg` used the last, while a
+  duplicate length or grade kept the first
+- **Phone deep links opened the calculator.** `/saved`, `/projects` and
+  `/settings` all rendered the calculator below 640px while the tab title said
+  otherwise
+- **Contrast and target size.** `--muted-faint` failed AA in both themes
+  (3.14:1 light, 3.69:1 dark); the LIVE badge used `--accent` where
+  `--accent-text` exists; "New" was 22×22 and the mode toggle 23px tall
+- **"Refine" rendered in English in the Bosnian UI.** `formatCommandHint`
+  covered six of the seven hints `cmdSuggest` emits, while
+  `command.suggest.refine` sat unused in both message files
+- **Dataset citations.** Expanded metal cited ISO 16573 (hydrogen-embrittlement
+  testing); corrugated sheet asked for cover width while its formula wants
+  developed width, understating mass by 5–15%; chequered plate presented a rule
+  of thumb as EN 10363
+
+### Added
+
+- **An availability note when a profile is not stock in the chosen material.**
+  Stainless EN sections exist but are [laser-welded to
+  order](https://www.montanstahl.com/processing/production-technologies/laser-welding/)
+  (EN 10365 dimensions, EN 10034 tolerances, EN 10088-3 grades) rather than
+  hot-rolled; aluminium is not rolled or extruded to steel section dimensions
+  at all, since HEA/IPE/UPN are steel standards and aluminium extrusions follow
+  EN 755. Both used to price as quietly as an S235 beam. The line is never
+  blocked — the mass is correct either way — and the note points at the rate,
+  which is where the real surprise is. Bars, tubes, plate, sheet and angle are
+  stocked in all three families and stay silent
+- **The decimal comma works in lengths and sizes**, not just in the price
+  token. `hea120 6,5m` used to fail with no message
+- **Aliases people actually type**: `rd`, `round`, `pipe`, `tube`, `plate`,
+  `sheet`, `flat`, `tee`, `angle`, plus `al`/`alu`/`inox` for materials
+- **A phone can paste a cut list.** Below 640px there is no text input at all,
+  so the workspace's `onPaste` had no counterpart
+- **An Open Graph image**, generated per locale from `next/og`
+- **`/qa` states its coverage** and names the seven sizes held back pending a
+  catalog check, instead of an unqualified "All checks pass"
+- **Canonical URL, `og:url`, `x-default` hreflang**, and a consistent
+  production base-URL fallback across layout, robots and sitemap
+
+### Changed
+
+- **The hero leads with weight until a rate exists.** It opened on a price
+  computed from the seeded €1.20/kg — a placeholder as the largest figure on
+  screen. When money is shown on the seeded rate, the rate is printed beside it
+- **The phone answer sits in the upper third**, using the empty band that ran
+  down about a third of a 390×844 screen
+- **The suggestion strip fades on the right**, where it scrolls
+- **Token chips separate delete from edit** with a hairline and a wider target
+- **Every screen has a heading outline** — the app had zero headings
+- **The cutting optimisers load with their tab**: main chunk 500.6 → 420.5 kB
+  raw (120.9 → 102.6 kB gzip)
+- `sitemap.lastModified` derives from the dataset version instead of `new
+  Date()` per request; Archivo drops the unused weight 900; five unreferenced
+  Next.js starter assets removed from `public/`
+
+---
+
 ## [3.25.0] - 2026-09-07
 
 A redesign of the whole app around one idea: a precision instrument, not a dashboard.

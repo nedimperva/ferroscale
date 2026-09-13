@@ -1,5 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
@@ -24,7 +26,17 @@ import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
 import { RowMenu } from "../row-menu";
 import { DeskIcon } from "../desktop/desk-atoms";
-import { ProjectCutting } from "./project-cutting";
+/**
+ * The 1D bar and 2D plate optimisers, their cut maps and their settings are
+ * the largest leaf in the app and are reachable only from this one tab. The
+ * shell has no code splitting at all, so every byte of them was downloaded
+ * before anyone could run their first calculation. Loading them when the tab
+ * opens costs a frame there and takes them off the first-load path.
+ */
+const ProjectCutting = dynamic(
+  () => import("./project-cutting").then((m) => m.ProjectCutting),
+  { ssr: false },
+);
 import {
   formatActivity,
   formatRelativeTime,

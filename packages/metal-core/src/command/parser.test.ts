@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calculateMetal } from "@ferroscale/metal-core";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "./parser";
+import { findAliasByProfileId } from "./aliases";
 import type { CommandParserSettings, CommandPricing } from "./types";
 
 const PRICING: CommandPricing = {
@@ -710,5 +711,249 @@ describe("target queries", () => {
 
   it("stays out of the way of ordinary queries", () => {
     expect(cmdParse("hea120 6m x2", mkSettings()).target).toBeNull();
+  });
+});
+
+describe("engine issues point at the field that is wrong", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+  const codes = (q: string) => cmdParse(q, settings).issues.map((i) => i.code);
+
+  it("blames the length, not the profile size", () => {
+    expect(codes("hea120 0m ")).toContain("invalidLength");
+    expect(codes("hea120 0m ")).not.toContain("invalidGeometry");
+    expect(codes("hea120 51m ")).toContain("invalidLength");
+    expect(codes("hea120 999999m ")).toContain("invalidLength");
+  });
+
+  it("blames the quantity, not the profile size", () => {
+    expect(codes("hea120 6m x10001 ")).toContain("invalidQty");
+    expect(codes("hea120 6m x10001 ")).not.toContain("invalidGeometry");
+  });
+
+  it("still blames the geometry when the geometry is wrong", () => {
+    expect(codes("chs60x30 6m ")).toContain("invalidGeometry");
+  });
+
+  it("carries the offending value as the token", () => {
+    const issue = cmdParse("hea120 51m ", settings).issues.find((i) => i.code === "invalidLength");
+    expect(issue?.token).toBe("51m");
+  });
+});
+
+describe("aliases people actually type", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+  const kg = (q: string) => cmdParse(q, settings).totalKg;
+
+  it("reads the spelled-out profile names", () => {
+    expect(kg("rd30 6m ")).toBeCloseTo(kg("rnd30 6m ")!, 6);
+    expect(kg("round30 6m ")).toBeCloseTo(kg("rnd30 6m ")!, 6);
+    expect(kg("pipe60.3x3.2 6m ")).toBeCloseTo(kg("chs60.3x3.2 6m ")!, 6);
+    expect(kg("tube60.3x3.2 6m ")).toBeCloseTo(kg("chs60.3x3.2 6m ")!, 6);
+    expect(kg("flat80x8 6m ")).toBeCloseTo(kg("flt80x8 6m ")!, 6);
+    expect(kg("plate1500x3000x20 ")).toBeCloseTo(kg("plt1500x3000x20 ")!, 6);
+    expect(kg("sheet1250x2500x2 ")).toBeCloseTo(kg("sht1250x2500x2 ")!, 6);
+    expect(kg("tee60x7 6m ")).toBeCloseTo(kg("t60x7 6m ")!, 6);
+    expect(kg("angle60x60x6 6m ")).toBeCloseTo(kg("l60x60x6 6m ")!, 6);
+  });
+
+  it("reads the material families by name", () => {
+    expect(kg("hea120 6m al ")).toBeCloseTo(kg("hea120 6m 6060 ")!, 6);
+    expect(kg("hea120 6m alu ")).toBeCloseTo(kg("hea120 6m 6060 ")!, 6);
+    expect(kg("hea120 6m inox ")).toBeCloseTo(kg("hea120 6m 304 ")!, 6);
+  });
+
+  it("no longer reports a mangled size for a word starting with an alias", () => {
+    const issues = cmdParse("titanium120 6m ", settings).issues;
+    expect(issues.map((i) => i.code)).toEqual(["unknownToken"]);
+    expect(issues[0].token).toBe("titanium120");
+  });
+
+  it("still resolves the canonical alias for a profile id", () => {
+    expect(findAliasByProfileId("round_bar")?.alias).toBe("rnd");
+    expect(findAliasByProfileId("pipe")?.alias).toBe("chs");
+  });
+});
+
+describe("decimal comma", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+  const kg = (q: string) => cmdParse(q, settings).totalKg;
+
+  it("reads a comma length the same as a dot length", () => {
+    expect(kg("hea120 6,5m ")).toBeCloseTo(kg("hea120 6.5m ")!, 6);
+    expect(kg("hea120 6,5m ")).toBeCloseTo(129.297, 2);
+  });
+
+  it("reads a comma inside a size", () => {
+    expect(kg("chs60,3x3,2 6m ")).toBeCloseTo(kg("chs60.3x3.2 6m ")!, 6);
+  });
+
+  it("reads a comma in a bare-number length", () => {
+    expect(kg("hea120 6,5 ")).toBeCloseTo(kg("hea120 6.5 ")!, 6);
+  });
+
+  it("keeps the price token working", () => {
+    const withComma = cmdParse("hea120 6m @2,5/kg ", settings);
+    const withDot = cmdParse("hea120 6m @2.5/kg ", settings);
+    expect(withComma.totalAmount).toBeCloseTo(withDot.totalAmount!, 6);
+  });
+
+  it("raises no issue for a comma length", () => {
+    expect(cmdParse("hea120 6,5m ", settings).issues).toEqual([]);
+  });
+});
+
+describe("tee sizes accept the catalog spelling", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("reads T 100x100x10 the same as t100x10", () => {
+    const square = cmdParse("t100x100x10 6m ", settings);
+    const short = cmdParse("t100x10 6m ", settings);
+    expect(square.totalKg).toBeCloseTo(short.totalKg!, 6);
+    expect(square.realQty).toBe(1);
+    expect(square.lengthM).toBe(6);
+    expect(square.issues).toEqual([]);
+  });
+
+  it("reads the spaced catalog form too", () => {
+    expect(cmdParse("t 100x100x10 6m ", settings).totalKg).toBeCloseTo(
+      cmdParse("t100x10 6m ", settings).totalKg!,
+      6,
+    );
+  });
+
+  it("leaves an unequal-leg spelling to fail as an unknown size", () => {
+    expect(cmdParse("t100x80x10 6m ", settings).issues.map((i) => i.code)).toContain(
+      "unknownSize",
+    );
+  });
+
+  it("does not disturb single-dimension beam sizes", () => {
+    expect(cmdParse("hea120 6m ", settings).totalKg).toBeCloseTo(119.351, 2);
+  });
+});
+
+describe("duplicate tokens resolve the same way for every slot", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("keeps the first rate, as it keeps the first length and grade", () => {
+    const twoRates = cmdParse("hea120 6m @2/kg @3/kg ", settings);
+    const oneRate = cmdParse("hea120 6m @2/kg ", settings);
+    expect(twoRates.totalAmount).toBeCloseTo(oneRate.totalAmount!, 6);
+  });
+
+  it("marks the rate that had no effect", () => {
+    expect(cmdParse("hea120 6m @2/kg @3/kg ", settings).shadowedTokenIndexes).toContain(3);
+  });
+
+  it("still applies a single rate", () => {
+    expect(cmdParse("hea120 6m @2/kg ", settings).totalAmount).toBeCloseTo(238.7, 1);
+  });
+
+  it("keeps the first of a duplicate length and grade", () => {
+    expect(cmdParse("hea120 6m 4m ", settings).lengthM).toBe(6);
+    expect(cmdParse("hea120 6m s235 s355 ", settings).gradeLabel).toBe("S235");
+  });
+});
+
+describe("availability rides along with the result", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("never blocks the line — the mass is still right", () => {
+    const stainless = cmdParse("heb400 6m 316 ", settings);
+    expect(stainless.valid).toBe(true);
+    expect(stainless.issues).toEqual([]);
+    expect(stainless.availability?.level).toBe("madeToOrder");
+    // Laser-welded stainless HEB uses the EN 10365 geometry, so the mass is the
+    // steel one scaled by density — not an approximation.
+    expect(stainless.kgm).toBeCloseTo((19782 * 8000) / 1e6, 4);
+  });
+
+  it("flags an aluminium EN section", () => {
+    const al = cmdParse("hea400 6m 6060 ", settings);
+    expect(al.valid).toBe(true);
+    expect(al.availability?.level).toBe("notInSeries");
+  });
+
+  it("stays quiet for steel, and for stock shapes in any material", () => {
+    expect(cmdParse("hea400 6m s355 ", settings).availability).toBeNull();
+    expect(cmdParse("chs60.3x3.2 6m 316 ", settings).availability).toBeNull();
+    expect(cmdParse("plt1500x3000x3 6060 ", settings).availability).toBeNull();
+  });
+
+  it("says nothing until the line names a real size", () => {
+    expect(cmdParse("hea 316 ", settings).availability).toBeNull();
+    expect(cmdParse("hea999 6m 316 ", settings).availability).toBeNull();
   });
 });

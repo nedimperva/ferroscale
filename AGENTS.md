@@ -124,6 +124,13 @@ When adding a new profile:
 5. Add engine test cases (the benchmark oracle in `engine.test.ts`
    re-implements each formula independently — keep it independent)
 
+**Adding a standard EN size takes two edits**: the size table, *and* its
+published catalog mass in `QA_BENCHMARK_ROWS` (`src/lib/qa/benchmark.ts`).
+A coverage test fails otherwise. Never satisfy it by copying the app's own
+output — for standard profiles that reference is the only independent check
+the engine benchmark has, and reading the area back off the dataset is
+exactly the bug that let five wrong channel areas ship.
+
 ### The three list surfaces
 
 Settings, Projects and Parts are each one component rendered twice: full on
@@ -193,3 +200,13 @@ for Bosnian).
 - No env vars needed to run; `RESEND_*` only affect contact-form email,
   `GOOGLE_*` only affect Drive sync.
 - The root `/` returns a 307 redirect — always test against `/en`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

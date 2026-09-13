@@ -17,6 +17,74 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.26.0",
+    date: "2026-09-13",
+    fixed: [
+      "UPN 320 and UPE 300, 330, 360 and 400 were 7-15% light. Two independent checks — reconstruction from nominal EN dimensions, and published catalog mass — agreed against the stored figures, and a 12 m UPN 320 was being quoted 104 kg under",
+      "The accuracy gate could not fail. For every EN profile its \"independent\" reference read the area straight back off the dataset it was checking, so a wrong catalog value passed forever. The reference is now published mass per metre, and the check covers 131 EN sizes instead of 8",
+      "A pasted cut list lost every piece count. HEA120/6m/2 plus IPE200/4m/3 totalled 208.78 kg where the answer was 506.98 kg, and the line reported no problem — a bare number in the grammar is a length, and the quantity column was being read as a second one",
+      "A comma-separated list quoted the wrong steel. In `hea120 6m x2, ipe200 4m x3` the quantity slot stayed open and the second item's x3 filled it, giving three HEA 120 and no IPE at all",
+      "Every error blamed the profile size. A length or quantity out of range reported \"no such HEA 120 size\", sending you to edit the one token that was right",
+      "Typing the app's own tee label back into it produced nonsense: `t100x100x10` read as size 100x10, length 0 and quantity 10",
+      "`tube60.3x3.2` reported a mangled `No T size \"ube60.3x3.2\"` — any word starting with a profile letter was being read as that profile",
+      "A quantity of 2.5 pieces was accepted and priced",
+      "Paint area shared its rounding with cross-section area, so setting dimensions to whole numbers turned 0.75 m² into 1 m²",
+      "A second rate on a line overrode the first, while a second length or grade was ignored — the same situation resolved two opposite ways",
+      "On a phone, opening Parts, Projects or Settings by link showed the calculator instead, while the tab title said otherwise",
+      "Muted text failed contrast in both themes, and the LIVE badge and two controls sat under the minimum readable and tappable sizes",
+      "REFINE stayed in English in the Bosnian interface — the translation existed and was never reached",
+      "Expanded metal cited a hydrogen-embrittlement testing standard, and corrugated sheet asked for cover width while its formula wanted developed width, understating mass by 5-15%"
+    ],
+    added: [
+      "A note when a profile is not ordinary stock in the material you picked. Stainless EN sections are real but laser-welded to order, and aluminium is not rolled to steel section dimensions at all — both used to price as quietly as an S235 beam. Nothing is blocked: the mass is right either way, and the note points at the rate, which is where the real surprise is",
+      "The decimal comma works everywhere. `hea120 6,5m` reads as 6.5 m — it used to fail silently while `@2,5/kg` worked",
+      "The names people actually type now work: rd, round, pipe, tube, plate, sheet, flat, tee, angle — and al, alu and inox for the materials",
+      "A phone can paste. The keypad shell had no text field at all, so a cut list or a query from a chat message could not be pasted on the device most likely to be holding one",
+      "Shared links have a preview card, drawn in the app's own language with a worked example on it",
+      "The QA page says how much of the dataset it actually covers, and names the sizes held back pending a catalog check"
+    ],
+    changed: [
+      "The headline figure is the weight until someone sets a rate. It used to open on a price computed from a placeholder rate nobody had entered, in the same type as the measured weight beside it — and when the money is shown on a placeholder rate, the rate is now printed beside it",
+      "On a phone the answer sits in the upper third rather than pinned to the top, using the empty band that ran down a third of the screen",
+      "The suggestion strip fades on the right, where it scrolls, instead of only at the bottom",
+      "Token chips separate their delete from their edit, so the two are no longer flush",
+      "Every screen has a heading outline — the app had none at all, which left a screen reader nothing to navigate by",
+      "The cutting optimisers load when their tab opens rather than before your first calculation, taking 80 kB off the first load"
+    ],
+    fixed_bs: [
+      "UPN 320 i UPE 300, 330, 360 i 400 bili su 7-15% lakši. Dvije nezavisne provjere — rekonstrukcija iz nominalnih EN dimenzija i objavljena kataloška masa — složile su se protiv pohranjenih vrijednosti; 12 m UPN 320 nudio se 104 kg ispod stvarne mase",
+      "Provjera tačnosti nije mogla pasti. Za svaki EN profil njena \"nezavisna\" referenca čitala je površinu direktno iz istog skupa podataka koji provjerava, pa je pogrešna kataloška vrijednost prolazila zauvijek. Referenca je sada objavljena masa po metru, a provjera pokriva 131 EN dimenziju umjesto 8",
+      "Zalijepljena lista rezanja gubila je sve količine. HEA120/6m/2 plus IPE200/4m/3 davalo je 208,78 kg umjesto 506,98 kg, bez ijedne poruke — goli broj u gramatici je dužina, a kolona količine čitala se kao druga dužina",
+      "Lista odvojena zarezima davala je pogrešan rezultat. U `hea120 6m x2, ipe200 4m x3` mjesto za količinu ostajalo je prazno i popunjavao ga je x3 iz druge stavke, dajući tri HEA 120 i nijedan IPE",
+      "Svaka greška optuživala je dimenziju profila. Dužina ili količina izvan opsega prijavljivala je \"nema takve HEA 120 dimenzije\", upućujući vas da mijenjate jedini ispravan token",
+      "Kucanje vlastite oznake T profila davalo je besmislicu: `t100x100x10` čitalo se kao dimenzija 100x10, dužina 0 i količina 10",
+      "`tube60.3x3.2` prijavljivao je izobličeno `Nema T dimenzije \"ube60.3x3.2\"` — svaka riječ koja počinje slovom profila čitala se kao taj profil",
+      "Količina od 2,5 komada bila je prihvaćena i obračunata",
+      "Površina za farbanje dijelila je zaokruživanje s površinom presjeka, pa je postavljanje dimenzija na cijele brojeve pretvaralo 0,75 m² u 1 m²",
+      "Druga cijena u liniji poništavala je prvu, dok se druga dužina ili klasa ignorisala — ista situacija rješavana na dva suprotna načina",
+      "Na telefonu je otvaranje Dijelova, Projekata ili Postavki preko linka prikazivalo kalkulator, dok je naslov kartice govorio drugačije",
+      "Prigušeni tekst nije zadovoljavao kontrast ni u jednoj temi, a LIVE oznaka i dvije kontrole bile su ispod minimalne čitljive i dodirljive veličine",
+      "REFINE je ostajao na engleskom u bosanskom sučelju — prijevod je postojao i nikad se nije koristio",
+      "Expanded metal je citirao standard za ispitivanje vodikove krhkosti, a valoviti lim je tražio pokrivnu širinu dok mu formula traži razvijenu, umanjujući masu za 5-15%"
+    ],
+    added_bs: [
+      "Napomena kada profil nije uobičajeno skladišni u materijalu koji ste izabrali. Nehrđajući EN profili postoje ali se lasersko vare po narudžbi, a aluminij se uopšte ne valja u dimenzije čeličnih profila — oboje se ranije obračunavalo jednako tiho kao S235 nosač. Ništa nije blokirano: masa je tačna u svakom slučaju, a napomena upućuje na cijenu, gdje je pravo iznenađenje",
+      "Decimalni zarez radi svuda. `hea120 6,5m` čita se kao 6,5 m — ranije je tiho otkazivao dok je `@2,5/kg` radio",
+      "Nazivi koje ljudi zaista kucaju sada rade: rd, round, pipe, tube, plate, sheet, flat, tee, angle — te al, alu i inox za materijale",
+      "Telefon može zalijepiti. Tastatura na ekranu nije imala nikakvo tekstualno polje, pa se lista rezanja ili upit iz poruke nisu mogli zalijepiti na uređaju koji ih najčešće drži",
+      "Podijeljeni linkovi imaju sličicu za pregled, nacrtanu jezikom same aplikacije, s primjerom na njoj",
+      "QA stranica kaže koliki dio skupa podataka zaista pokriva i imenuje dimenzije koje čekaju provjeru u katalogu"
+    ],
+    changed_bs: [
+      "Glavni broj je masa dok neko ne postavi cijenu. Ranije se otvarao na cijeni izračunatoj iz zadane vrijednosti koju niko nije unio, istim pismom kao izmjerena masa pored nje — a kada se novac prikazuje po zadanoj cijeni, ta cijena je sada ispisana uz njega",
+      "Na telefonu odgovor stoji u gornjoj trećini umjesto prikovan za vrh, koristeći praznu traku koja je zauzimala trećinu ekrana",
+      "Traka prijedloga blijedi desno, gdje se i pomiče, a ne samo pri dnu",
+      "Čipovi odvajaju brisanje od uređivanja, pa dvije mete više nisu spojene",
+      "Svaki ekran ima strukturu naslova — aplikacija ih nije imala nijedan, pa čitač ekrana nije imao po čemu se kretati",
+      "Optimizatori rezanja učitavaju se kad se otvori njihova kartica, a ne prije prvog računanja, čime prvo učitavanje gubi 80 kB"
+    ],
+  },
+  {
     version: "3.25.0",
     date: "2026-09-07",
     changed: [

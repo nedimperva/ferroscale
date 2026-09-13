@@ -49,12 +49,18 @@ The query mirrors to `?q=`, so every result is a shareable link.
 
 ## Accuracy
 
-- Dataset version `2026.07.1`
+- Dataset version `2026.09.1`
   (`packages/metal-core/src/datasets/version.ts`).
-- The live engine is validated against published EN catalog masses and
-  independent hand-computed formulas: **200+ cases, ≤0.5% tolerance**.
+- The live engine is validated against references that are independent of
+  the datasets: **published EN catalog masses** for standard sizes,
+  hand-computed cross-section formulas for manual ones. **≤0.5% tolerance**,
+  **131 of 138 EN sizes covered**.
+- Seven sizes are held back — their stored area and their catalog mass
+  disagree and the conflict is unsettled. They are named in
+  `QA_UNVERIFIED_SIZES`, and a test fails if a new size ships without a
+  reference.
 - The same benchmark runs as a vitest gate in CI and as an interactive
-  table in the app at `/qa`.
+  table in the app at `/qa`, which states its own coverage.
 
 ## Quickstart
 

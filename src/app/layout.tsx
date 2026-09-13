@@ -3,11 +3,17 @@ import { Archivo, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import { getLocale, getTranslations } from "next-intl/server";
 import "./globals.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// Same fallback as robots.ts and sitemap.ts. It used to fall back to
+// localhost while those two fell back to the real host, so an unset env var
+// produced og:image URLs pointing at a dev machine while robots and sitemap
+// stayed correct.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ferroscale.nedimp.com";
 
 const archivo = Archivo({
   variable: "--font-archivo",
-  weight: ["400", "500", "600", "700", "800", "900"],
+  // 900 had zero uses in src/ — font-black and numeric weight 900 both. Every
+  // weight here is downloaded and preloaded on first paint.
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
 });
 
@@ -44,9 +50,13 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: "/apple-touch-icon.png",
     },
     alternates: {
+      // `?q=` makes every result its own URL, so the locale root is the one
+      // worth indexing.
+      canonical: `/${locale}`,
       languages: {
         en: "/en",
         bs: "/bs",
+        "x-default": "/en",
       },
     },
     appleWebApp: {
@@ -101,6 +111,8 @@ export async function generateMetadata(): Promise<Metadata> {
       description: t("openGraphDescription"),
       type: "website",
       locale,
+      url: `/${locale}`,
+      siteName: t("applicationName"),
     },
     robots: {
       index: true,

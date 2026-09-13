@@ -25,6 +25,13 @@ export interface RoundingConfig {
   weightDecimals: number;
   priceDecimals: number;
   dimensionDecimals: number;
+  /**
+   * Surface area in m². Optional so existing stored configs keep working; it
+   * falls back to 2, not to dimensionDecimals. Sharing that knob meant one
+   * setting governed a cross-section in mm² (where 1257 is right) and a paint
+   * area in m² (where 0.754 rounding to 1 destroys it).
+   */
+  surfaceDecimals?: number;
 }
 
 export interface CalculationInput {

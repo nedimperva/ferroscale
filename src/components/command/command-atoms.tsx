@@ -15,6 +15,22 @@ export function PricingBadge({ children }: { children: React.ReactNode }) {
  * Purple counterpart for a target query ("=500 kg"), so the line reads as an
  * answer to a question rather than as another input.
  */
+/**
+ * The profile is not ordinary stock in the chosen material. Amber, not red:
+ * the mass is right and the line is valid — this is a procurement note, and
+ * a fabricator welding the section from plate wants exactly this number.
+ *
+ * Sized like the other equation-row badges so it wraps with them rather than
+ * taking a row of its own, which is the whole budget it gets on a phone.
+ */
+export function AvailabilityBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--amber-surface)] text-[var(--amber-text)] whitespace-nowrap">
+      {children}
+    </span>
+  );
+}
+
 export function TargetBadge({ children }: { children: React.ReactNode }) {
   return (
     <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--purple-surface)] text-[var(--purple-text)] whitespace-nowrap">

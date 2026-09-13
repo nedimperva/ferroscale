@@ -18,6 +18,7 @@ import { KIND_BG } from "../command-constants";
 import {
   applyIssueSuggestion,
   computeGhost,
+  formatAvailability,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
@@ -30,7 +31,7 @@ import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { DeskViewHeader } from "./desk-rail";
-import { PricingBadge, TargetBadge } from "../command-atoms";
+import { AvailabilityBadge, PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
@@ -154,6 +155,7 @@ export function DeskCalcView({
   sym,
   mode,
   onSetMode,
+  rateIsUserSupplied,
   parserSettings,
   shared,
   defaultUnit,
@@ -497,11 +499,11 @@ export function DeskCalcView({
         {/* SUGGESTIONS */}
         <div className="mt-3">
           <div className="flex items-center gap-3 flex-wrap mb-2">
-            <div
+            <h2
               className="fs-track-label text-[10px] font-bold text-muted uppercase"
             >
               {formatCommandHint(t, sug.hint)}
-            </div>
+            </h2>
             <span className="ml-auto">
               <CommandKeyHints
                 valid={p.valid}
@@ -628,7 +630,9 @@ export function DeskCalcView({
                     aria-pressed={mode === m}
                     className="cursor-pointer border-0 font-mono text-[10px]"
                     style={{
-                      padding: "5px 14px",
+                      // 6px puts the control at 25px, over the 24px floor in
+                      // WCAG 2.5.8. It measured 23px.
+                      padding: "6px 14px",
                       letterSpacing: 1.3,
                       borderLeft: i === 0 ? undefined : "1px solid var(--border)",
                       background: mode === m ? "var(--foreground)" : "transparent",
@@ -648,7 +652,7 @@ export function DeskCalcView({
                   className="font-mono text-[10px] uppercase"
                   style={{
                     letterSpacing: 1.6,
-                    color: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                    color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
                   }}
                 >
                   {p.valid ? t("status.live") : t("status.waiting")}
@@ -681,7 +685,7 @@ export function DeskCalcView({
                   {heroVal}
                 </span>
                 {isW && p.totalKg != null && (
-                  <span className="font-mono text-[22px]" style={{ color: "var(--accent)" }}>
+                  <span className="font-mono text-[22px]" style={{ color: "var(--accent-text)" }}>
                     {fsWeightUnit()}
                   </span>
                 )}
@@ -704,7 +708,19 @@ export function DeskCalcView({
                       <span className="text-foreground-secondary">{p.lengthM}</span> m ×{" "}
                       <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                      {/* When the money on screen comes from the seeded rate,
+                          say so next to it. The weight is measured; the price
+                          is an assumption, and it should travel with the
+                          figure rather than hide in the breakdown panel. */}
+                      {!isW && !rateIsUserSupplied
+                        ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
+                        : ""}
                     </span>
+                    {p.availability && (
+                      <AvailabilityBadge>
+                        {formatAvailability(t, p.availability, p.gradeLabel).badge}
+                      </AvailabilityBadge>
+                    )}
                     {targetNote && (
                       <TargetBadge>
                         {t(
@@ -903,7 +919,7 @@ export function DeskCalcView({
             style={{ borderTop: "1px solid var(--foreground)", paddingTop: 10 }}
           >
             <div className="flex items-baseline gap-2.5 mb-1.5 flex-shrink-0">
-              <SectionLabel>{t("desktop.session")}</SectionLabel>
+              <SectionLabel as="h2">{t("desktop.session")}</SectionLabel>
               <span className="font-mono text-[10px] text-muted-faint">
                 {t("desktop.sessionSub")}
               </span>
@@ -1140,9 +1156,9 @@ function DeskBreakdown({
       {line.multi ? (
         <AssemblyParts line={line} selected={picked} onSelect={onPick} />
       ) : (
-        <div className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
+        <h2 className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
           {t("desktop.breakdown")}
-        </div>
+        </h2>
       )}
       {rows && r ? (
         <>
@@ -1162,6 +1178,22 @@ function DeskBreakdown({
             <div className="font-mono text-[11px] text-muted mt-0.5">
               {focus.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
             </div>
+            {/* The badge on the hero says "to order"; this is where there is
+                room to say what that means and why the rate will not carry
+                over from the steel price book. */}
+            {focus.availability && (
+              <p
+                className="text-[11px] leading-[1.45] mt-2 mb-0 px-2 py-1.5 rounded"
+                style={{
+                  background: "var(--amber-surface)",
+                  color: "var(--amber-text)",
+                  border: "1px solid var(--amber-border)",
+                }}
+              >
+                {formatAvailability(t, focus.availability, focus.gradeLabel).detail}{" "}
+                {t("availability.checkRate")}
+              </p>
+            )}
           </div>
           <div style={{ paddingTop: 6 }}>
             {geometry.map((row) => (

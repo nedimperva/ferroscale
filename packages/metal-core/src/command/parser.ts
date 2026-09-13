@@ -10,6 +10,7 @@ import type {
 import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./arith";
 import type { LengthExpression } from "./arith";
 import { getProfileById } from "../datasets/profiles";
+import { materialAvailability } from "../datasets/availability";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
   COMMAND_ALIAS_RE,
@@ -26,6 +27,7 @@ import type {
   CommandCalc,
   CommandFamily,
   CommandParseIssue,
+  CommandParseIssueCode,
   CommandParseResult,
   CommandParserSettings,
   CommandPricing,
@@ -289,8 +291,10 @@ function buildCalculationInput(
   if (alias.profileId) {
     const profile = getProfileById(alias.profileId);
     if (!profile || profile.mode !== "standard") return null;
-    // HEA/IPE etc. use single-dim keys ("120"); tees use multi-dim ("30x4").
-    const key = dims.length === 0 ? "" : dims.map(fmt).join("x");
+    // HEA/IPE etc. use single-dim keys ("120"); tees use multi-dim ("30x4"),
+    // and accept the catalog's own equal-leg spelling ("100x100x10").
+    const key =
+      dims.length === 0 ? "" : canonicalSizeText(alias.fam, dims.map(fmt).join("x"));
     if (!key) return null;
     const targetSizeId = `${alias.alias}${key}`;
     const match = profile.sizes.find((s) => s.id === targetSizeId);
@@ -531,6 +535,26 @@ function peelPieces(rest: string): string[] | null {
  * families (free-form dims) only split when exactly ONE boundary works —
  * ambiguity (flat "40x412m": 40x4+12m vs 40x41+2m) keeps the word whole.
  */
+/**
+ * EN 10055 tees are equal-leg, so the catalog spells them `T 100x100x10` while
+ * the size table keys them `t100x10`. The app was therefore rejecting its own
+ * display label: `t100x100x10` matched the size `t100x10` as a prefix and the
+ * leftovers peeled into a length of 0 and a quantity of 10.
+ *
+ * Collapsing the repeated leg is unambiguous for this family - every size in
+ * the table has its two legs equal.
+ */
+function canonicalTeeSize(sizeText: string): string {
+  const parts = sizeText.split(/[x\u00d7]/);
+  if (parts.length !== 3) return sizeText;
+  if (parts[0] !== parts[1]) return sizeText;
+  return `${parts[0]}x${parts[2]}`;
+}
+
+function canonicalSizeText(fam: CommandFamily, sizeText: string): string {
+  return fam === "tee" ? canonicalTeeSize(sizeText) : sizeText;
+}
+
 function splitProfileToken(token: string, aliasKey: string): string[] | null {
   const alias = findAliasByKey(aliasKey);
   if (!alias) return null;
@@ -538,7 +562,7 @@ function splitProfileToken(token: string, aliasKey: string): string[] | null {
   if (!rest) return null;
   // Sheet-like families bake length into the size token — never split.
   if (SHEET_LIKE_FAMILIES.has(alias.fam)) return null;
-  const restNorm = rest.toLowerCase().replace(/×/g, "x");
+  const restNorm = canonicalSizeText(alias.fam, rest.toLowerCase().replace(/×/g, "x"));
 
   if (alias.profileId) {
     const profile = getProfileById(alias.profileId);
@@ -770,11 +794,61 @@ function suggestForUnknownSize(
   return nearestFrom(size, texts, 1);
 }
 
+/**
+ * A comma between two digits is a decimal separator, which is how most of
+ * Europe — and the app's own Bosnian locale — writes a number. The price token
+ * has always accepted it (`@2,5/kg` prices at 2.50) while every other token
+ * rejected it, so `hea120 6,5m` died where `hea120 6m @2,5/kg` worked.
+ *
+ * Normalizing once here covers lengths, sizes, arithmetic and targets in one
+ * place. Only the parsed copy is rewritten; the chip still shows what the user
+ * typed.
+ */
+function normalizeDecimalComma(token: string): string {
+  return token.replace(/(\d),(\d)/g, "$1.$2");
+}
+
+/**
+ * Point the issue at the field the engine actually rejected.
+ *
+ * Every engine failure used to surface as `invalidGeometry` carrying the size
+ * text, so `hea120 6m x10001` told the user there was something wrong with
+ * HEA 120 — a perfectly valid size — when the quantity was the problem. Being
+ * pointed at the correct token is worse than silence: it sends the user to
+ * edit the one part of the line that was right.
+ */
+function issueForEngineField(
+  field: string | undefined,
+  size: string,
+  lengthRaw: number | null,
+  lengthUnit: LengthUnit,
+  qty: number | null,
+): { code: CommandParseIssueCode; token: string } {
+  if (field === "length") {
+    return { code: "invalidLength", token: lengthRaw != null ? `${lengthRaw}${lengthUnit}` : "" };
+  }
+  if (field === "quantity") {
+    return { code: "invalidQty", token: qty != null ? `x${qty}` : "" };
+  }
+  if (
+    field === "unitPrice" ||
+    field === "wastePercent" ||
+    field === "vatPercent" ||
+    field === "customDensityKgPerM3" ||
+    field === "priceUnit" ||
+    field === "materialGradeId"
+  ) {
+    return { code: "invalidSetting", token: field };
+  }
+  // selectedSizeId, manualDimensions.*, profileId — genuinely about the shape.
+  return { code: "invalidGeometry", token: size };
+}
+
 export function cmdParse(
   query: string,
   settings: CommandParserSettings,
 ): CommandParseResult {
-  const toks = cmdTokenize(query).map((t) => t.toLowerCase());
+  const toks = cmdTokenize(query).map((t) => normalizeDecimalComma(t.toLowerCase()));
   // The trailing token is still being typed unless the query ends with
   // whitespace — never flag it, or every keystroke would raise an issue.
   const lastTokenCommitted = /\s$/.test(query);
@@ -800,7 +874,10 @@ export function cmdParse(
     if (!alias) {
       const aliasMatch = tk.match(new RegExp(`^(${COMMAND_ALIAS_RE})(.*)$`));
       if (aliasMatch) {
-        const found = findAliasByPrefix(aliasMatch[1]);
+        // Pass the whole token: the alias only counts when what follows it
+        // could be a size, so `titanium120` reads as an unknown word rather
+        // than a tee called "itanium120".
+        const found = findAliasByPrefix(tk);
         if (found) {
           alias = found;
           aliasCommitted = committed;
@@ -816,7 +893,15 @@ export function cmdParse(
     }
     const price = parsePriceToken(tk);
     if (price) {
-      pricingOverride = { ...(pricingOverride ?? {}), ...price };
+      // First one wins, like every other slot. A second rate used to overwrite
+      // the first, so `@2/kg @3/kg` priced at 3 while a duplicate length or
+      // grade kept the first — two rules for the same situation. The loser is
+      // shadowed below so the chip says it had no effect.
+      if (pricingOverride) {
+        if (committed) shadowed.push(i);
+        continue;
+      }
+      pricingOverride = { ...price };
       continue;
     }
     // Arithmetic first: `6m-50mm` would otherwise fall through to the
@@ -958,8 +1043,7 @@ export function cmdParse(
     if (response && !response.ok) {
       const first = response.issues[0];
       issues.push({
-        code: "invalidGeometry",
-        token: size,
+        ...issueForEngineField(first?.field, size, lengthRaw, lengthUnit, qty),
         message: first?.message ?? "Invalid dimensions.",
         messageKey: first?.messageKey,
         messageValues: first?.messageValues,
@@ -1102,6 +1186,12 @@ export function cmdParse(
     valid: calc != null,
     issues,
     shadowedTokenIndexes: shadowed,
+    // Only worth saying once the line names a real profile — "hea" on the way
+    // to "hea120" is not yet a procurement question.
+    availability:
+      alias && hasSize && calc
+        ? materialAvailability(calc.input.profileId, effectiveGradeId)
+        : null,
     pricing: effectivePricing,
     target,
     priceOverride: pricingOverride
@@ -1120,7 +1210,9 @@ export function cmdClassifyToken(tok: string): CommandTokenKind {
   // `6m-50mm` reads as a length, `x2+3` as a quantity — the arithmetic is a
   // way of writing the value, not a different kind of thing.
   if (isArithmeticToken(x)) return QTY_EXPR_LEAD.test(x) ? "qty" : "len";
-  if (new RegExp(`^(${COMMAND_ALIAS_RE})`).test(x)) return "profile";
+  // Anchored: the alias only counts when a size could follow it, so a word
+  // that merely starts with one is unknown rather than a profile.
+  if (findAliasByPrefix(x)) return "profile";
   if (QTY_RE.test(x)) return "qty";
   if (parsePriceToken(x)) return "price";
   if (findGradeByAlias(x)) return "grade";

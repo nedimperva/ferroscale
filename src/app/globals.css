@@ -6,6 +6,10 @@
      chrome laid on it (rails, headers, side panels); everything else groups
      with a hairline rather than a new colour. */
   --background: #f4f3f0;
+  /* The full-bleed app screen behind the command shell. A token rather than a
+     JS value so the server and the client render identical markup — deriving
+     it from the theme hook made every dark-mode load a hydration mismatch. */
+  --screen: #f4f0e7;
   --surface: #fbfaf8;
   --surface-raised: #fbfaf8;
   --surface-inset: #eceae4;
@@ -18,7 +22,7 @@
   --foreground: #191817;
   --foreground-secondary: #57544e;
   --muted: #6f6b64;
-  --muted-faint: #8b8781;
+  --muted-faint: #726d66;
 
   /* ── Borders ──
      `faint` divides rows, plain divides controls, `strong` is the dashed
@@ -106,6 +110,7 @@
 
   /* ── Neutral / Surface ── */
   --background: #171614;
+  --screen: #161109;
   --surface: #1e1d1a;
   --surface-raised: #1e1d1a;
   --surface-inset: #272521;
@@ -116,7 +121,7 @@
   --foreground: #f0eee9;
   --foreground-secondary: #b9b4aa;
   --muted: #979188;
-  --muted-faint: #7b756c;
+  --muted-faint: #8b857b;
 
   /* ── Borders ── */
   --border: #38352f;

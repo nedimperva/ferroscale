@@ -2,6 +2,8 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "@/i18n/navigation";
+import { getAppTabFromPathname } from "@/lib/app-shell";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
@@ -21,6 +23,8 @@ import {
   cmdAppendLineItem,
   cmdDetectStage,
   cmdParseLine,
+  cmdPasteIntoLine,
+  cmdSplitLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
@@ -39,6 +43,7 @@ import { CommandGlyph } from "./command-glyph";
 import {
   applyIssueSuggestion,
   computeGhost,
+  formatAvailability,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
@@ -61,7 +66,7 @@ import {
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
-import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
+import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import {
@@ -101,6 +106,11 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 const HERO_FONT_WEIGHT = 400;
 // Trailing space so the demo query renders fully chipped on first load.
 const DEMO_QUERY = "hea120 6m x2 s235 ";
+/**
+ * The rate getDefaultInput() seeds. Matching it means nobody has said what
+ * steel costs yet, so every currency figure on screen is a placeholder.
+ */
+const SEEDED_UNIT_PRICE = 1.2;
 /** Set after the first visit, so the demo query greets newcomers only. */
 const ONBOARDED_KEY = "ferroscale-onboarded";
 
@@ -200,12 +210,12 @@ export function CommandShell() {
   const touchedRef = useRef(false);
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
-  const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const massTolerancePercent = useSyncExternalStore(
     massTolerancePercentStore.subscribe,
     massTolerancePercentStore.getSnapshot,
     massTolerancePercentStore.getServerSnapshot,
   );
+  const pathname = usePathname();
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
   /** Which Library tab the next open lands on — the palette navigates here. */
   const [libraryTab, setLibraryTab] = useState<
@@ -307,6 +317,57 @@ export function CommandShell() {
     return () => window.removeEventListener("resize", fit);
   }, []);
 
+  // Deep links on a phone. The workspace reads the route into its own tab, but
+  // the phone shell ignored it: /saved, /projects and /settings all rendered
+  // the calculator while the tab title still said "Settings". A bookmark or a
+  // link shared with someone holding a phone landed on the wrong screen.
+  //
+  // The phone has no tabs — those views live in sheets — so the route opens
+  // the matching sheet instead. Runs once the viewport is known, and only for
+  // a route that names one.
+  const routedTab = getAppTabFromPathname(pathname);
+  const routeHandledRef = useRef(false);
+  useEffect(() => {
+    if (!isPhoneViewport || routeHandledRef.current) return;
+    if (!routedTab || routedTab === "calculator") return;
+    routeHandledRef.current = true;
+    // setState-in-effect is intentional, same as the persisted-state hydration
+    // below: the viewport width is not known during SSR, so first paint has to
+    // match the server's sheet-less render before the route is applied.
+    if (routedTab === "settings") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSheet("settings");
+      return;
+    }
+    setLibraryTab(routedTab === "projects" ? "projects" : "saved");
+    setSheet("library");
+  }, [isPhoneViewport, routedTab]);
+
+  // Closing the sheet returns the address bar to the calculator, so Back and a
+  // refresh agree with what is on screen. replaceState, like the workspace —
+  // no navigation, nothing remounts.
+  const resetRouteToCalculator = useCallback(() => {
+    if (typeof window === "undefined") return;
+    let base = window.location.pathname;
+    for (const suffix of ["/saved", "/projects", "/settings"]) {
+      if (base.endsWith(suffix)) {
+        base = base.slice(0, -suffix.length);
+        break;
+      }
+    }
+    const stripped = base.replace(/\/+$/, "");
+    window.history.replaceState(
+      null,
+      "",
+      `${stripped === "" ? "/" : stripped}${window.location.search}`,
+    );
+  }, []);
+
+  const closeSheet = useCallback(() => {
+    setSheet(null);
+    if (isPhoneViewport) resetRouteToCalculator();
+  }, [isPhoneViewport, resetRouteToCalculator]);
+
   // A line can hold several `+`-joined items. `p` is the one being typed —
   // every existing behaviour (chips, suggestions, save, compare) acts on it,
   // and a one-item line is exactly what it always was.
@@ -316,6 +377,27 @@ export function CommandShell() {
   );
   const p: CommandParseResult = line.items[line.activeIndex].parse;
   const targetNote = commandTargetNote(p);
+
+  /**
+   * Has anyone told the app what steel costs? The seeded rate is a
+   * placeholder, so until it moves — or the line carries its own `@rate`, or
+   * the price book has one for this grade — every currency figure on screen is
+   * derived from a number the user never entered.
+   */
+  const rateIsUserSupplied =
+    p.priceOverride != null ||
+    shared.unitPrice !== SEEDED_UNIT_PRICE ||
+    priceBook.rates[p.gradeId ?? ""] != null;
+
+  /**
+   * The hero used to open on PRICE, so a first-time visitor met a large
+   * EUR figure computed from the seeded rate, set in the same type as the
+   * weight beside it. The weight is always real; the price is only real once
+   * a rate exists. An explicit weightAsMain still wins, and anyone who has set
+   * a rate sees exactly what they saw before.
+   */
+  const mode =
+    modeOverride ?? (weightAsMain || !rateIsUserSupplied ? "weight" : "price");
   /** The item under the caret, as the suggestion engine should see it. */
   const activeQuery = useMemo(() => activeItemText(query), [query]);
 
@@ -1328,7 +1410,45 @@ export function CommandShell() {
     group.tokens[0] ||
     partialToken ||
     String(group.item + 1);
-  const screenBg = dark ? "#161109" : "#f4f0e7";
+  // A CSS variable, not a theme-derived literal: the class that selects it is
+  // set before first paint by the inline script in the root layout, so the
+  // server and the client emit the same style string. Reading `dark` here made
+  // the server render the light value and the client the dark one, which
+  // failed hydration and made React throw away and rebuild the whole shell.
+  const screenBg = "var(--screen)";
+
+  /**
+   * Read the clipboard onto the line. The workspace gets a cut list through
+   * onPaste on its text input, but the phone shell has no text input at all —
+   * the keypad is the input — so pasting a cut list, or a query out of a chat
+   * message, was impossible on exactly the device people hold next to the
+   * steel. This is that path, as an explicit action.
+   */
+  const pasteFromClipboard = useCallback(async () => {
+    let text = "";
+    try {
+      text = (await navigator.clipboard?.readText?.()) ?? "";
+    } catch {
+      // Denied, or no clipboard API — say so rather than doing nothing.
+    }
+    if (!text.trim()) {
+      showToast(t("toast.pasteFailed"));
+      return;
+    }
+    const list = cmdPasteIntoLine(query, text);
+    if (list) {
+      setQuery(list);
+      markExternalValueChange();
+      touchedRef.current = true;
+      showToast(t("toast.pasted", { count: cmdSplitLine(list).length }));
+      return;
+    }
+    // A single line replaces what is there, the same as typing it would.
+    const next = text.trim();
+    setQuery(/\s$/.test(next) ? next : `${next} `);
+    markExternalValueChange();
+    touchedRef.current = true;
+  }, [query, showToast, t]);
 
   // Saved-library actions, identical on every viewport.
   const editingEntry = editingSavedId
@@ -1456,6 +1576,7 @@ export function CommandShell() {
           onSave={doSave}
           onSaveElsewhere={() => setDestination({ entry: null })}
           onLogSession={logToSession}
+          rateIsUserSupplied={rateIsUserSupplied}
           onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
@@ -1518,22 +1639,28 @@ export function CommandShell() {
                   }}
                 />
               </div>
-              <span className="text-[17px] font-extrabold tracking-tight">
+              {/* The phone shell's only title, and so the page's h1. The
+                  workspace gets one from DeskViewHeader; this surface had
+                  none, which left the whole app without a heading outline. */}
+              <h1 className="text-[17px] font-extrabold tracking-tight">
                 FerroScale
-              </span>
+              </h1>
             </div>
             <div className="flex gap-2">
               <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
-                {dark ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                    <circle cx="12" cy="12" r="4.5" />
-                    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
-                  </svg>
-                )}
+                {/* Both glyphs ship and CSS picks one. Choosing in JS from the
+                    resolved theme meant the server drew the moon and a
+                    dark-mode client drew the sun, which failed hydration and
+                    made React discard and rebuild the whole shell. The `.dark`
+                    class is on <html> before first paint, so the right glyph is
+                    the first one drawn. */}
+                <svg aria-hidden="true" className="hidden dark:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <circle cx="12" cy="12" r="4.5" />
+                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
+                </svg>
+                <svg aria-hidden="true" className="block dark:hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
+                </svg>
               </IconBtn>
               <IconBtn onClick={() => setSheet("library")} ariaLabel={t("nav.library")}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -1548,6 +1675,16 @@ export function CommandShell() {
               </IconBtn>
             </div>
           </div>
+
+          {/* Free height is split above and below the answer instead of all of
+              it falling below. On a 390x844 phone roughly a third of the screen
+              sat empty between the session ribbon and the suggestion strip
+              while the figure was pinned to the very top — the hardest place to
+              reach one-handed. Both spacers are flex-1, so on a short screen
+              they collapse and nothing moves. The split is weighted 1:2 so the
+              answer lands in the upper third rather than dead centre — still
+              the first thing you see, but within reach of a thumb. */}
+          <div className="flex-[1] min-h-0" />
 
           {/* HERO */}
           <div className="px-[18px] pt-1.5 flex-shrink-0">
@@ -1571,7 +1708,9 @@ export function CommandShell() {
                       aria-pressed={active}
                       className="fs-track-label rounded-none text-[10.5px] font-bold"
                       style={{
-                        padding: "4px 12px",
+                        // 5px of vertical padding puts the control at 25px, over
+                        // the 24px floor in WCAG 2.5.8. It measured 23px.
+                        padding: "5px 12px",
                         border: active
                           ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
                           : "1px solid var(--border-faint)",
@@ -1628,7 +1767,10 @@ export function CommandShell() {
                 {isW && p.totalKg != null && (
                   <span
                     className="font-mono text-[20px]"
-                    style={{ color: "var(--accent)" }}
+                    // The hero unit is 20-22px at a normal weight, which WCAG
+                    // does not count as large text, so it needs the 4.5:1 token
+                    // rather than the 4.33:1 signal colour.
+                    style={{ color: "var(--accent-text)" }}
                   >
                     {fsWeightUnit()}
                   </span>
@@ -1663,7 +1805,17 @@ export function CommandShell() {
                     <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
                     m × <span className="text-foreground-secondary">{p.realQty}</span>
                     {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                    {/* The assumption travels with the figure — see the
+                        workspace hero for why. */}
+                    {mode === "price" && !rateIsUserSupplied
+                      ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
+                      : ""}
                   </span>
+                  {p.availability && (
+                    <AvailabilityBadge>
+                      {formatAvailability(t, p.availability, p.gradeLabel).badge}
+                    </AvailabilityBadge>
+                  )}
                   {targetNote && (
                     <TargetBadge>
                       {t(
@@ -1732,7 +1884,7 @@ export function CommandShell() {
                   className="font-mono text-[10px] uppercase"
                   style={{
                     letterSpacing: 1.6,
-                    color: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                    color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
                   }}
                 >
                   {p.valid ? t("status.live") : t("status.waiting")}
@@ -1807,9 +1959,9 @@ export function CommandShell() {
             className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-none flex-shrink-0"
             style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
           >
-            <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+            <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
               {t("desktop.session")}
-            </span>
+            </h2>
             {/* The total in whichever unit the hero is showing, then how many
                 lines it came from. Showing weight and money side by side made
                 the row two lines tall as soon as the session had anything in
@@ -1855,7 +2007,7 @@ export function CommandShell() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-[6px]" />
+          <div className="flex-[2] min-h-[6px]" />
 
           {/* SUGGESTION BAR */}
           {/* The gap under the strip has to clear the query line's 3px focus
@@ -1863,20 +2015,30 @@ export function CommandShell() {
               glow and the two read as one collided control. */}
           <div className="pb-2.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
-              <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
+              <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
                 {formatCommandHint(t, sug.hint)}
-              </span>
-              {query !== "" && (
+              </h2>
+              <span className="ml-auto flex items-center -mr-3">
                 <button
                   type="button"
-                  onClick={newCalc}
+                  onClick={pasteFromClipboard}
+                  aria-label={t("common.paste")}
                   // Padding + negative margin grows the tap target without
                   // shifting the layout.
-                  className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5 -mr-3"
+                  className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
                 >
-                  {t("common.clear")}
+                  {t("common.paste")}
                 </button>
-              )}
+                {query !== "" && (
+                  <button
+                    type="button"
+                    onClick={newCalc}
+                    className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
+                  >
+                    {t("common.clear")}
+                  </button>
+                )}
+              </span>
             </div>
             <div className="relative">
             <div
@@ -1976,6 +2138,17 @@ export function CommandShell() {
               className="pointer-events-none absolute inset-x-0 bottom-0 h-4"
               style={{
                 background: `linear-gradient(to bottom, transparent, ${screenBg})`,
+              }}
+            />
+            {/* The strip scrolls sideways, so the fade that says "there is
+                more" belongs on the right edge. Without it the last chip was
+                simply cut mid-word and the row read as clipped, not
+                scrollable. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-8"
+              style={{
+                background: `linear-gradient(to right, transparent, ${screenBg})`,
               }}
             />
             </div>
@@ -2163,7 +2336,7 @@ export function CommandShell() {
               }}
               defaultUnit={defaultUnit}
               onSetDefaultUnit={defaultUnitStore.set}
-              onClose={() => setSheet(null)}
+              onClose={closeSheet}
             />
           )}
           {effectiveSheet === "library" && (
@@ -2178,7 +2351,7 @@ export function CommandShell() {
               compareItems={compareItems}
               projects={projects}
               onClose={() => {
-                setSheet(null);
+                closeSheet();
                 setLibraryTab(null);
               }}
               sessionTape={quickHistory}

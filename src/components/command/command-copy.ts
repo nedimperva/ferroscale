@@ -14,6 +14,7 @@ import type {
   CommandParseResult,
   CommandSuggestion,
   CommandSuggestionItem,
+  MaterialAvailability,
 } from "@ferroscale/metal-core";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
@@ -79,12 +80,36 @@ export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): strin
         size: String(issue.params?.size ?? issue.token),
       });
     case "invalidQty":
-      return t("issues.invalidQty");
+      return localizedEngineMessage(t, issue) ?? t("issues.invalidQty");
     case "invalidExpression":
       return t("issues.invalidExpression", { token: issue.token });
+    case "invalidLength":
+      return localizedEngineMessage(t, issue) ?? t("issues.invalidLength", { token: issue.token });
+    case "invalidSetting":
+      return localizedEngineMessage(t, issue) ?? t("issues.invalidSetting");
     case "invalidGeometry":
-      // Engine validation messages are not localized yet — show them as-is.
-      return issue.message;
+      return localizedEngineMessage(t, issue) ?? issue.message;
+  }
+}
+
+/**
+ * Engine validation issues carry a `validation.*` key and their own values.
+ * Translate it where we have the string; fall back to the engine's own English
+ * rather than showing a raw key.
+ */
+function localizedEngineMessage(t: CommandT, issue: CommandParseIssue): string | null {
+  const key = issue.messageKey;
+  if (!key?.startsWith("validation.")) return null;
+  const name = key.slice("validation.".length);
+  const values: Record<string, string | number> = {};
+  for (const [k, v] of Object.entries(issue.messageValues ?? {})) {
+    values[k] = typeof v === "number" ? v : String(v);
+  }
+  try {
+    const text = t(`validation.${name}`, values);
+    return text.includes(`validation.${name}`) ? null : text;
+  } catch {
+    return null;
   }
 }
 
@@ -105,6 +130,8 @@ export function formatCommandHint(t: CommandT, hint: string): string {
       return t("suggest.pieces");
     case "Grade (optional)":
       return t("suggest.gradeOptional");
+    case "Refine":
+      return t("suggest.refine");
     case "Ready":
       return t("suggest.ready");
     default:
@@ -255,4 +282,28 @@ function formatProfileLabel(t: CommandT, label: string): string {
     default:
       return label;
   }
+}
+
+/**
+ * The short badge label and the full sentence for an availability note. Both
+ * surfaces share this so the phone and the workspace never drift apart on what
+ * a "To order" badge actually means.
+ */
+export function formatAvailability(
+  t: CommandT,
+  availability: MaterialAvailability,
+  gradeLabel: string | null,
+): { badge: string; detail: string } {
+  if (availability.code === "madeToOrder") {
+    return {
+      badge: t("availability.madeToOrder"),
+      detail: t("availability.madeToOrderDetail"),
+    };
+  }
+  return {
+    badge: t("availability.notInSeries"),
+    detail: availability.referenceLabel
+      ? t("availability.notInSeriesDetail")
+      : t("availability.notInSeriesDetailAlloy", { grade: gradeLabel ?? "" }),
+  };
 }

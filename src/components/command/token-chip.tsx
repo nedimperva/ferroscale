@@ -141,7 +141,11 @@ export function TokenChip({
         type="button"
         onClick={onRemove}
         aria-label={t("token.remove", { token: tok })}
-        className="flex items-center justify-center w-7 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
+        // A hairline between edit and delete, and a wider target. The two sat
+        // flush at 60px and 28px with no boundary, so on a phone — gloves, one
+        // hand — deleting the token you meant to edit was a likely miss.
+        style={{ borderLeft: "1px solid var(--border-faint)" }}
+        className="flex items-center justify-center w-8 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
       >
         ×
       </button>

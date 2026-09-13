@@ -7,6 +7,7 @@ import type {
   PriceUnit,
 } from "../calculator/types";
 import type { DimensionKey, ProfileId } from "../datasets/types";
+import type { MaterialAvailability } from "../datasets/availability";
 
 /** The pricing fields of CalculationInput that Command needs for live totals. */
 export interface CommandPricing {
@@ -112,6 +113,11 @@ export interface CommandParseResult {
   shadowedTokenIndexes: number[];
   /** Echo of the pricing settings used (for sheet display). */
   pricing: CommandPricing;
+  /**
+   * Non-null when this profile is not ordinary stock in the chosen material.
+   * Advisory only — the mass is still right, and the line stays valid.
+   */
+  availability: MaterialAvailability | null;
   /** Non-null when the query asked for a target instead of an input. */
   target: CommandTarget | null;
   /** Non-null when the query contains an inline price token. */
@@ -127,7 +133,11 @@ export type CommandParseIssueCode =
   | "unknownSize"
   | "invalidQty"
   | "invalidExpression"
-  | "invalidGeometry";
+  | "invalidGeometry"
+  /** The length is out of range — not a problem with the profile or its size. */
+  | "invalidLength"
+  /** Waste, VAT, density or a rate is out of range; the line itself is fine. */
+  | "invalidSetting";
 
 /**
  * Structured feedback for input the parser could not act on. `message` is a

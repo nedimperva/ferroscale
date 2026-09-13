@@ -148,6 +148,8 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
   const vatAmount = input.includeVat ? subtotalWithWasteAmount * (input.vatPercent / 100) : 0;
   const grandTotalAmount = subtotalWithWasteAmount + vatAmount;
 
+  // m², not mm² — see RoundingConfig.surfaceDecimals.
+  const surfaceDecimals = input.rounding.surfaceDecimals ?? 2;
   const { perimeterMm, expression: perimeterExpression } = resolvePerimeterMm(input);
   let unitSurfaceAreaM2: number | null = null;
   let surfaceAreaM2: number | null = null;
@@ -260,8 +262,8 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
       formulaLabel: profile.formulaLabel,
       datasetVersion: DATASET_VERSION,
       referenceLabels: references,
-      surfaceAreaM2: surfaceAreaM2 != null ? roundTo(surfaceAreaM2, input.rounding.dimensionDecimals) : null,
-      unitSurfaceAreaM2: unitSurfaceAreaM2 != null ? roundTo(unitSurfaceAreaM2, input.rounding.dimensionDecimals) : null,
+      surfaceAreaM2: surfaceAreaM2 != null ? roundTo(surfaceAreaM2, surfaceDecimals) : null,
+      unitSurfaceAreaM2: unitSurfaceAreaM2 != null ? roundTo(unitSurfaceAreaM2, surfaceDecimals) : null,
       breakdownRows: rows.map((row) => ({
         ...row,
         value: roundTo(

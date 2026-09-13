@@ -67,14 +67,12 @@ function RailButton({
 }
 
 export function DeskRail({
-  dark,
   view,
   setView,
   counts,
   onNew,
   onToggleTheme,
 }: {
-  dark: boolean;
   view: DeskView;
   setView: (v: DeskView) => void;
   counts: { saved: number; projects: number; compare: number };
@@ -100,9 +98,16 @@ export function DeskRail({
         onClick={onNew}
         title={t("common.new")}
         aria-label={t("common.new")}
-        className="cursor-pointer"
-        style={{ width: 22, height: 22, border: 0, background: "var(--accent)", marginBottom: 20 }}
-      />
+        className="cursor-pointer flex items-center justify-center"
+        // The mark stays 22px; the button around it is 28 so the target clears
+        // the 24px floor in WCAG 2.5.8 without the mark changing size.
+        style={{ width: 28, height: 28, border: 0, background: "transparent", padding: 0, marginBottom: 17 }}
+      >
+        <span
+          aria-hidden="true"
+          style={{ width: 22, height: 22, background: "var(--accent)", display: "block" }}
+        />
+      </button>
 
       <div className="flex flex-col items-center" style={{ gap: 4 }}>
         <RailButton
@@ -139,7 +144,18 @@ export function DeskRail({
           active={false}
           onClick={onToggleTheme}
           label={t("aria.toggleTheme")}
-          icon={<DeskIcon name={dark ? "sun" : "moon"} size={17} />}
+          icon={
+            // Both glyphs, CSS picks — see the phone toggle for why choosing
+            // in JS from the resolved theme fails hydration.
+            <>
+              <span className="hidden dark:block">
+                <DeskIcon name="sun" size={17} />
+              </span>
+              <span className="block dark:hidden">
+                <DeskIcon name="moon" size={17} />
+              </span>
+            </>
+          }
         />
         <RailButton
           active={view === "settings"}
@@ -182,7 +198,12 @@ export function DeskViewHeader({
       }}
     >
       {leading}
-      <span className="fs-title text-[17px] text-foreground whitespace-nowrap">{title}</span>
+      {/* The view's name is the page's heading. It was a span, so the whole
+          workspace shipped without a single h1 — a screen reader had no
+          document outline to navigate and the indexed page had no heading.
+          fs-title carries the styling, so the tag swap changes nothing
+          visually. */}
+      <h1 className="fs-title text-[17px] text-foreground whitespace-nowrap">{title}</h1>
       {subtitle && (
         <span className="font-mono text-[10.5px] uppercase text-muted truncate" style={{ letterSpacing: 1.4 }}>
           {subtitle}

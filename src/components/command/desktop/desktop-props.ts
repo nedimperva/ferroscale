@@ -52,6 +52,11 @@ export interface CommandDesktopProps {
   onSaveElsewhere: () => void;
   /** Log the current line onto the session tape without bookmarking it. */
   onLogSession: () => void;
+  /**
+   * False while the pricing rate is still the seeded placeholder, which the
+   * hero uses to decide whether a currency figure can be the headline.
+   */
+  rateIsUserSupplied: boolean;
   /** Copy a clean, paste-ready text summary of the current result. */
   onCopySummary: () => void;
   onShareLink: () => void;

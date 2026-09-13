@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { calculateMetal } from "@/lib/calculator/engine";
 import type { CalculationInput } from "@/lib/calculator/types";
-import { getProfileById } from "@/lib/datasets/profiles/index";
 import { toMillimeters } from "@/lib/calculator/units";
+import { QA_BENCHMARK_ROWS } from "@/lib/qa/benchmark";
 
 interface ProfileCase {
   profileId: CalculationInput["profileId"];
   selectedSizeId?: string;
   manualDimensions: CalculationInput["manualDimensions"];
 }
+
+/** S235JR, the density every benchmark case is priced at. */
+const S235JR_DENSITY = 7850;
 
 const ROUNDING = {
   weightDecimals: 6,
@@ -219,11 +222,21 @@ function computeAreaMm2(testCase: ProfileCase): number {
       return (a + b - t) * t;
     }
     default: {
-      const profile = getProfileById(testCase.profileId);
-      if (!profile || profile.mode !== "standard") {
-        return 0;
+      // Standard profiles have no formula to re-implement - the area IS the
+      // catalog. Reading it back off the dataset would make this assertion a
+      // tautology, so the oracle is the published mass per metre in
+      // QA_BENCHMARK_ROWS, which is transcribed from EN tables and never
+      // generated from the app.
+      const reference = QA_BENCHMARK_ROWS.find(
+        (row) => row.profileId === testCase.profileId && row.selectedSizeId === testCase.selectedSizeId,
+      );
+      if (!reference) {
+        throw new Error(
+          `No independent reference for ${testCase.profileId}/${testCase.selectedSizeId}. ` +
+            "Add its published catalog mass to QA_BENCHMARK_ROWS - do not fall back to the dataset.",
+        );
       }
-      return profile.sizes.find((size) => size.id === testCase.selectedSizeId)!.areaMm2;
+      return (reference.expectedKgPerM * 1_000_000) / S235JR_DENSITY;
     }
   }
 }
@@ -234,7 +247,7 @@ describe("calculateMetal", () => {
     const quantities = [1, 3, 10];
     const wastes = [0, 5];
     const vatPercents = [0, 21];
-    const density = 7850;
+    const density = S235JR_DENSITY;
 
     let caseCount = 0;
 

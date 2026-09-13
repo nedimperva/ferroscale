@@ -4,7 +4,8 @@
       "title": "FerroScale",
       "description": "Kalkulator mase i cijene metala za EN standardne i prilagođene profile. Precizne procjene s provjerljivim formulama.",
       "applicationName": "FerroScale",
-      "openGraphDescription": "Izračunajte masu i cijenu za EN profile uz provjerljive formule i reference."
+      "openGraphDescription": "Izračunajte masu i cijenu za EN profile uz provjerljive formule i reference.",
+      "ogTagline": "Masa i cijena metala, iz jedne otkucane linije."
     },
     "saved": {
       "title": "Sačuvano - FerroScale",
@@ -140,7 +141,8 @@
       "search": "Pretraži",
       "more": "Više radnji",
       "add": "Dodaj",
-      "addProjectLong": "Dodaj u projekat"
+      "addProjectLong": "Dodaj u projekat",
+      "paste": "Zalijepi"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -167,7 +169,9 @@
       "partAdded": "Dodano kao dio sklopa {name}",
       "templateAdded": "Dodano u šablon {name}",
       "addedItemsToSession": "{count} stavki dodano u sesiju",
-      "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop"
+      "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop",
+      "pasteFailed": "Nema šta zalijepiti",
+      "pasted": "Zalijepljeno {count} redova"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -266,7 +270,10 @@
       "unknownSize": "Ne postoji {profile} veličina \"{size}\"",
       "invalidQty": "Količina mora biti najmanje 1",
       "invalidExpression": "To ne ostavlja ništa: \"{token}\"",
-      "didYouMean": "Jeste li mislili {suggestion}?"
+      "didYouMean": "Jeste li mislili {suggestion}?",
+      "invalidLength": "Dužina izvan opsega: \"{token}\"",
+      "invalidSetting": "Postavka je izvan opsega — provjerite Postavke",
+      "invalidQtyRange": "Količina mora biti cijeli broj, 1 do {max}"
     },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
@@ -295,7 +302,8 @@
       "grade": "Kvalitet",
       "massBand": "Opseg mase {percent}",
       "assembly": "Sklop · {count, plural, one {# dio} other {# dijela}}",
-      "assemblyParts": "Dijelovi sklopa"
+      "assemblyParts": "Dijelovi sklopa",
+      "defaultRate": "zadana cijena"
     },
     "settings": {
       "mainResult": "Glavni rezultat",
@@ -1001,6 +1009,34 @@
       },
       "noTargets": "Ništa se ne poklapa.",
       "templateItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}"
+    },
+    "validation": {
+      "angleThickness": "Debljina ({thicknessMm} mm) mora biti manja od kraćeg kraka ({shorterLegMm} mm).",
+      "customDensityRange": "Vlastita gustoća mora biti između {min} i {max} kg/m³.",
+      "customDensityRequired": "Unesite vrijednost vlastite gustoće.",
+      "dimensionRange": "Ta dimenzija mora biti između {min} mm i {max} mm.",
+      "dimensionRequired": "Ta dimenzija je obavezna.",
+      "lengthRange": "Dužina mora biti između 1 mm i {max} mm.",
+      "materialInvalid": "Odaberite ispravnu klasu materijala.",
+      "pipeWall": "Debljina stijenke ({wallMm} mm) mora biti manja od polovine vanjskog promjera ({halfOdMm} mm).",
+      "profileInvalid": "Odaberite ispravan tip profila.",
+      "profileNotFound": "Profil nije pronađen.",
+      "quantityRange": "Količina mora biti cijeli broj između 1 i {max}.",
+      "rectangularWall": "Debljina stijenke ({wallMm} mm) mora biti manja od polovine širine i visine ({maxWallMm} mm).",
+      "sizeInvalid": "Odabrana dimenzija nije ispravna za ovaj profil.",
+      "sizeRequired": "Odaberite standardnu EN dimenziju.",
+      "squareWall": "Debljina stijenke ({wallMm} mm) mora biti manja od polovine stranice ({halfSideMm} mm).",
+      "unitPriceRange": "Jedinična cijena mora biti između 0 i {max}.",
+      "vatRange": "Postotak PDV-a mora biti između 0 i 35.",
+      "wasteRange": "Postotak otpada mora biti između 0 i 100."
+    },
+    "availability": {
+      "madeToOrder": "Po narudžbi",
+      "notInSeries": "Nije skladišno",
+      "madeToOrderDetail": "Lasersko vareno po narudžbi, nije toplovaljano sa skladišta. Isti EN 10365 presjek, pa je masa tačna — rok isporuke i cijena nisu čelični.",
+      "notInSeriesDetail": "Ovo su dimenzije čeličnih profila; aluminij se ekstrudira u vlastitu seriju (EN 755). Masa je tačna za oblik, ali to nije skladišni profil.",
+      "notInSeriesDetailAlloy": "{grade} se drži kao lim, ploča, šipka i cijev, ne kao profil. Masa je tačna za oblik, ali ovo nije skladišni oblik.",
+      "checkRate": "Provjerite cijenu — cjenovnik je po klasi."
     }
   },
   "contact": {
@@ -1067,6 +1103,8 @@
     "colStatus": "Status",
     "pass": "PROLAZI",
     "fail": "NE PROLAZI",
-    "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni."
+    "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni.",
+    "coverage": "Pokriva {covered} od {total} EN dimenzija",
+    "unverifiedNote": "{count} EN dimenzija je izostavljeno iz ove tabele jer se pohranjena površina i objavljena kataloška masa ne poklapaju. Navedene su u izvoru benchmarka i čekaju provjeru u katalogu."
   }
 }
