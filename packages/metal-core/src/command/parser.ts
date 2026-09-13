@@ -892,7 +892,15 @@ export function cmdParse(
     }
     const price = parsePriceToken(tk);
     if (price) {
-      pricingOverride = { ...(pricingOverride ?? {}), ...price };
+      // First one wins, like every other slot. A second rate used to overwrite
+      // the first, so `@2/kg @3/kg` priced at 3 while a duplicate length or
+      // grade kept the first — two rules for the same situation. The loser is
+      // shadowed below so the chip says it had no effect.
+      if (pricingOverride) {
+        if (committed) shadowed.push(i);
+        continue;
+      }
+      pricingOverride = { ...price };
       continue;
     }
     // Arithmetic first: `6m-50mm` would otherwise fall through to the

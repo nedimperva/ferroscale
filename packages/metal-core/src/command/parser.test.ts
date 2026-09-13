@@ -879,3 +879,38 @@ describe("tee sizes accept the catalog spelling", () => {
     expect(cmdParse("hea120 6m ", settings).totalKg).toBeCloseTo(119.351, 2);
   });
 });
+
+describe("duplicate tokens resolve the same way for every slot", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("keeps the first rate, as it keeps the first length and grade", () => {
+    const twoRates = cmdParse("hea120 6m @2/kg @3/kg ", settings);
+    const oneRate = cmdParse("hea120 6m @2/kg ", settings);
+    expect(twoRates.totalAmount).toBeCloseTo(oneRate.totalAmount!, 6);
+  });
+
+  it("marks the rate that had no effect", () => {
+    expect(cmdParse("hea120 6m @2/kg @3/kg ", settings).shadowedTokenIndexes).toContain(3);
+  });
+
+  it("still applies a single rate", () => {
+    expect(cmdParse("hea120 6m @2/kg ", settings).totalAmount).toBeCloseTo(238.7, 1);
+  });
+
+  it("keeps the first of a duplicate length and grade", () => {
+    expect(cmdParse("hea120 6m 4m ", settings).lengthM).toBe(6);
+    expect(cmdParse("hea120 6m s235 s355 ", settings).gradeLabel).toBe("S235");
+  });
+});
