@@ -124,6 +124,13 @@ When adding a new profile:
 5. Add engine test cases (the benchmark oracle in `engine.test.ts`
    re-implements each formula independently — keep it independent)
 
+**Adding a standard EN size takes two edits**: the size table, *and* its
+published catalog mass in `QA_BENCHMARK_ROWS` (`src/lib/qa/benchmark.ts`).
+A coverage test fails otherwise. Never satisfy it by copying the app's own
+output — for standard profiles that reference is the only independent check
+the engine benchmark has, and reading the area back off the dataset is
+exactly the bug that let five wrong channel areas ship.
+
 ### The three list surfaces
 
 Settings, Projects and Parts are each one component rendered twice: full on
