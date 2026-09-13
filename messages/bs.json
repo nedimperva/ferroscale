@@ -4,7 +4,8 @@
       "title": "FerroScale",
       "description": "Kalkulator mase i cijene metala za EN standardne i prilagođene profile. Precizne procjene s provjerljivim formulama.",
       "applicationName": "FerroScale",
-      "openGraphDescription": "Izračunajte masu i cijenu za EN profile uz provjerljive formule i reference."
+      "openGraphDescription": "Izračunajte masu i cijenu za EN profile uz provjerljive formule i reference.",
+      "ogTagline": "Masa i cijena metala, iz jedne otkucane linije."
     },
     "saved": {
       "title": "Sačuvano - FerroScale",

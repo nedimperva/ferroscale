@@ -4,7 +4,8 @@
       "title": "FerroScale",
       "description": "Metal weight and price calculator for EN standard and custom profiles. Accurate estimates with traceable formulas.",
       "applicationName": "FerroScale",
-      "openGraphDescription": "Calculate weight and price for EN profile types with traceable formulas and references."
+      "openGraphDescription": "Calculate weight and price for EN profile types with traceable formulas and references.",
+      "ogTagline": "Metal weight and price, from a typed line."
     },
     "saved": {
       "title": "Saved - FerroScale",
