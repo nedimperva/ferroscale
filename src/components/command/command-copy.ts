@@ -129,6 +129,8 @@ export function formatCommandHint(t: CommandT, hint: string): string {
       return t("suggest.pieces");
     case "Grade (optional)":
       return t("suggest.gradeOptional");
+    case "Refine":
+      return t("suggest.refine");
     case "Ready":
       return t("suggest.ready");
     default:

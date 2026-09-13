@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { cmdParse, cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
-import { buildCommandSummary } from "./command-copy";
+import { buildCommandSummary, formatCommandHint } from "./command-copy";
 import { buildShareCardModel } from "./line-summary";
 
 const SETTINGS: CommandParserSettings = {
@@ -81,5 +81,34 @@ describe("buildShareCardModel", () => {
     expect(card.items[0].label).toContain("HEA 120");
     expect(card.items[1].label).toContain("IPE 200");
     expect(card.weight).toContain("506.98");
+  });
+});
+
+describe("formatCommandHint covers every hint cmdSuggest emits", () => {
+  // The switch falls through to the raw English hint, so a hint missing from
+  // it renders untranslated. "Refine" did exactly that: the Bosnian UI showed
+  // REFINE beside OBRIŠI and MASA, while command.suggest.refine ("Doradi") sat
+  // unused in both message files - and i18n:check passed, because it compares
+  // key parity, not usage.
+  const HINTS = [
+    "Profiles",
+    "Pick a profile",
+    "Length",
+    "Pieces",
+    "Grade (optional)",
+    "Ready",
+    "Refine",
+  ];
+
+  it("translates all of them", () => {
+    const seen: string[] = [];
+    const t = ((key: string) => {
+      seen.push(key);
+      return `t:${key}`;
+    }) as Parameters<typeof formatCommandHint>[0];
+    for (const hint of HINTS) {
+      expect(formatCommandHint(t, hint), `"${hint}" fell through untranslated`).toMatch(/^t:/);
+    }
+    expect(seen).toHaveLength(HINTS.length);
   });
 });
