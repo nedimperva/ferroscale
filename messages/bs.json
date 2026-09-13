@@ -141,7 +141,8 @@
       "search": "Pretraži",
       "more": "Više radnji",
       "add": "Dodaj",
-      "addProjectLong": "Dodaj u projekat"
+      "addProjectLong": "Dodaj u projekat",
+      "paste": "Zalijepi"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -168,7 +169,9 @@
       "partAdded": "Dodano kao dio sklopa {name}",
       "templateAdded": "Dodano u šablon {name}",
       "addedItemsToSession": "{count} stavki dodano u sesiju",
-      "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop"
+      "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop",
+      "pasteFailed": "Nema šta zalijepiti",
+      "pasted": "Zalijepljeno {count} redova"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",

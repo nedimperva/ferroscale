@@ -141,7 +141,8 @@
       "search": "Search",
       "more": "More actions",
       "add": "Add",
-      "addProjectLong": "Add to project"
+      "addProjectLong": "Add to project",
+      "paste": "Paste"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -168,7 +169,9 @@
       "partAdded": "Added as a part of {name}",
       "templateAdded": "Added to template {name}",
       "addedItemsToSession": "{count} items added to session",
-      "savedAssembly": "{count, plural, one {# line} other {# lines}} saved as one assembly"
+      "savedAssembly": "{count, plural, one {# line} other {# lines}} saved as one assembly",
+      "pasteFailed": "Nothing to paste",
+      "pasted": "Pasted {count} rows"
     },
     "aria": {
       "toggleTheme": "Toggle theme",

@@ -23,6 +23,8 @@ import {
   cmdAppendLineItem,
   cmdDetectStage,
   cmdParseLine,
+  cmdPasteIntoLine,
+  cmdSplitLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
@@ -1409,6 +1411,39 @@ export function CommandShell() {
     String(group.item + 1);
   const screenBg = dark ? "#161109" : "#f4f0e7";
 
+  /**
+   * Read the clipboard onto the line. The workspace gets a cut list through
+   * onPaste on its text input, but the phone shell has no text input at all —
+   * the keypad is the input — so pasting a cut list, or a query out of a chat
+   * message, was impossible on exactly the device people hold next to the
+   * steel. This is that path, as an explicit action.
+   */
+  const pasteFromClipboard = useCallback(async () => {
+    let text = "";
+    try {
+      text = (await navigator.clipboard?.readText?.()) ?? "";
+    } catch {
+      // Denied, or no clipboard API — say so rather than doing nothing.
+    }
+    if (!text.trim()) {
+      showToast(t("toast.pasteFailed"));
+      return;
+    }
+    const list = cmdPasteIntoLine(query, text);
+    if (list) {
+      setQuery(list);
+      markExternalValueChange();
+      touchedRef.current = true;
+      showToast(t("toast.pasted", { count: cmdSplitLine(list).length }));
+      return;
+    }
+    // A single line replaces what is there, the same as typing it would.
+    const next = text.trim();
+    setQuery(/\s$/.test(next) ? next : `${next} `);
+    markExternalValueChange();
+    touchedRef.current = true;
+  }, [query, showToast, t]);
+
   // Saved-library actions, identical on every viewport.
   const editingEntry = editingSavedId
     ? savedEntries.find((entry) => entry.id === editingSavedId) ?? null
@@ -1956,6 +1991,14 @@ export function CommandShell() {
               <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
                 {formatCommandHint(t, sug.hint)}
               </h2>
+              <button
+                type="button"
+                onClick={pasteFromClipboard}
+                aria-label={t("common.paste")}
+                className={`${query !== "" ? "" : "ml-auto "}bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5`}
+              >
+                {t("common.paste")}
+              </button>
               {query !== "" && (
                 <button
                   type="button"
