@@ -197,3 +197,68 @@ describe("cmdPasteIntoLine", () => {
     expect(parsed.valid).toBe(true);
   });
 });
+
+describe("cmdParsePastedList — the quantity column", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("reads a tab-separated cut list's trailing count as the piece count", () => {
+    const line = cmdParsePastedList("HEA120\t6m\t2\nIPE200\t4m\t3");
+    expect(line).toBe("HEA120 6m x2 + IPE200 4m x3 ");
+  });
+
+  it("totals a pasted cut list the same as the typed equivalent", () => {
+    const pasted = cmdParseLine(cmdParsePastedList("HEA120\t6m\t2\nIPE200\t4m\t3")!, settings);
+    const typed = cmdParseLine("HEA120 6m x2 + IPE200 4m x3", settings);
+    expect(pasted.totalKg).toBeCloseTo(typed.totalKg!, 6);
+    expect(pasted.totalKg).toBeCloseTo(506.98, 1);
+  });
+
+  it("handles semicolon and comma columns the same way", () => {
+    expect(cmdParsePastedList("HEA120;6m;2\nIPE200;4m;3")).toBe("HEA120 6m x2 + IPE200 4m x3 ");
+    expect(cmdParsePastedList("HEA120,6m,2\nIPE200,4m,3")).toBe("HEA120 6m x2 + IPE200 4m x3 ");
+  });
+
+  it("reads a plain-text list with no column separators", () => {
+    expect(cmdParsePastedList("HEA120 6m 2\nIPE200 4m 3")).toBe("HEA120 6m x2 + IPE200 4m x3 ");
+  });
+
+  it("leaves a count that already carries a quantity marker alone", () => {
+    expect(cmdParsePastedList("HEA120\t6m\tx2\nIPE200\t4m\tx3")).toBe("HEA120 6m x2 + IPE200 4m x3 ");
+  });
+
+  it("does not invent a count for a two-column row", () => {
+    expect(cmdParsePastedList("HEA120\t6m\nIPE200\t4m")).toBe("HEA120 6m + IPE200 4m ");
+  });
+
+  it("leaves a trailing grade or size token alone", () => {
+    expect(cmdParsePastedList("HEA120\t6m\ts235\nIPE200\t4m\ts355")).toBe(
+      "HEA120 6m s235 + IPE200 4m s355 ",
+    );
+    expect(cmdParsePastedList("plt\t1500x3000x3\t316\nplt\t1500x3000x5\t316")).toBe(
+      "plt 1500x3000x3 316 + plt 1500x3000x5 316 ",
+    );
+  });
+
+  it("leaves a count outside the engine's quantity range alone", () => {
+    expect(cmdParsePastedList("HEA120\t6m\t99999\nIPE200\t4m\t3")).toBe(
+      "HEA120 6m 99999 + IPE200 4m x3 ",
+    );
+  });
+
+  it("still returns null for anything that is not multi-row", () => {
+    expect(cmdParsePastedList("hea120 6m x2")).toBeNull();
+    expect(cmdParsePastedList("")).toBeNull();
+  });
+});

@@ -1,3 +1,4 @@
+import { findGradeByAlias } from "./aliases";
 import { cmdParse } from "./parser";
 import type { CommandParseIssue, CommandParseResult, CommandParserSettings } from "./types";
 
@@ -142,18 +143,62 @@ export function cmdReplaceLineItem(query: string, index: number, text: string): 
  * should produce the line the user would otherwise have typed, not a single
  * unparseable blob.
  *
- * Rows are joined with the separator; blank rows and anything a spreadsheet
- * puts between columns (tabs, semicolons, commas) collapse to spaces, since
- * the grammar is order-tolerant and reads `HEA120 6m 2` the same either way.
- * Returns null when there is nothing multi-row about the text, so an ordinary
- * paste stays an ordinary paste.
+ * Rows are joined with the separator; blank rows collapse away. Anything a
+ * spreadsheet puts between columns (tabs, semicolons, commas) marks a column
+ * boundary rather than becoming a space, because the last column of a cut list
+ * is the piece count and the grammar has no other way to know that: a bare
+ * number reads as a length, so `HEA120 6m 2` would price one piece and discard
+ * the 2 without a word. Returns null when there is nothing multi-row about the
+ * text, so an ordinary paste stays an ordinary paste.
  */
 export const MAX_PASTED_ITEMS = 20;
+
+/** Column separators a spreadsheet or an email puts between cells. */
+const PASTED_CELL_SEPARATOR_RE = /[\t;,]+/;
+/** The grammar's own quantity markers — a cell already carrying one is done. */
+const QTY_MARKED_RE = /^[x×*]/i;
+/** A plain count: no unit, no decimal, inside the engine's quantity range. */
+const BARE_COUNT_RE = /^\d{1,5}$/;
+const MAX_QTY = 10_000;
+
+function isBareCount(cell: string): boolean {
+  if (!BARE_COUNT_RE.test(cell)) return false;
+  // Several grades are spelled as bare numbers — 304, 316, 6060, 6082, 7075.
+  // A cut list's last column is far more often "316" the steel than "316" the
+  // piece count, and reading a grade as a quantity would be the same class of
+  // silent error this function exists to remove.
+  if (findGradeByAlias(cell)) return false;
+  const value = Number(cell);
+  return value >= 1 && value <= MAX_QTY;
+}
+
+/**
+ * A cut-list row is profile / length / count. Only the trailing cell is
+ * promoted, and only when the row has enough cells to have a length of its own
+ * — a two-cell `HEA120 6m` has no count to find, and reading its `6m` as one
+ * would be worse than leaving it alone.
+ */
+function normalizePastedRow(row: string): string {
+  let cells = row.split(PASTED_CELL_SEPARATOR_RE).map((cell) => cell.trim()).filter(Boolean);
+  // A plain-text list has no column separators at all; fall back to whitespace
+  // so `HEA120 6m 2` pasted out of an email reads the same as the same row
+  // pasted out of a spreadsheet.
+  if (cells.length === 1) {
+    cells = cells[0].split(/\s+/).filter(Boolean);
+  }
+  if (cells.length >= 3) {
+    const last = cells[cells.length - 1];
+    if (isBareCount(last) && !QTY_MARKED_RE.test(last)) {
+      cells[cells.length - 1] = `x${last}`;
+    }
+  }
+  return cells.join(" ").replace(/\s+/g, " ").trim();
+}
 
 export function cmdParsePastedList(text: string): string | null {
   const rows = (text ?? "")
     .split(/\r?\n/)
-    .map((row) => row.replace(/[\t;,]+/g, " ").replace(/\s+/g, " ").trim())
+    .map(normalizePastedRow)
     .filter(Boolean);
   if (rows.length < 2) return null;
   // A paste far longer than a line anyone would work with is a mis-paste; take
