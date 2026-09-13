@@ -299,7 +299,8 @@
       "grade": "Grade",
       "massBand": "Mass band {percent}",
       "assembly": "Assembly · {count, plural, one {# part} other {# parts}}",
-      "assemblyParts": "Assembly parts"
+      "assemblyParts": "Assembly parts",
+      "defaultRate": "default rate"
     },
     "settings": {
       "mainResult": "Main result",

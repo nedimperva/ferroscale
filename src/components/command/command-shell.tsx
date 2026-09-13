@@ -103,6 +103,11 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 const HERO_FONT_WEIGHT = 400;
 // Trailing space so the demo query renders fully chipped on first load.
 const DEMO_QUERY = "hea120 6m x2 s235 ";
+/**
+ * The rate getDefaultInput() seeds. Matching it means nobody has said what
+ * steel costs yet, so every currency figure on screen is a placeholder.
+ */
+const SEEDED_UNIT_PRICE = 1.2;
 /** Set after the first visit, so the demo query greets newcomers only. */
 const ONBOARDED_KEY = "ferroscale-onboarded";
 
@@ -202,7 +207,6 @@ export function CommandShell() {
   const touchedRef = useRef(false);
   // weightAsMain decides the default hero metric; the toggle is a local override.
   const [modeOverride, setModeOverride] = useState<"weight" | "price" | null>(null);
-  const mode = modeOverride ?? (weightAsMain ? "weight" : "price");
   const massTolerancePercent = useSyncExternalStore(
     massTolerancePercentStore.subscribe,
     massTolerancePercentStore.getSnapshot,
@@ -370,6 +374,27 @@ export function CommandShell() {
   );
   const p: CommandParseResult = line.items[line.activeIndex].parse;
   const targetNote = commandTargetNote(p);
+
+  /**
+   * Has anyone told the app what steel costs? The seeded rate is a
+   * placeholder, so until it moves — or the line carries its own `@rate`, or
+   * the price book has one for this grade — every currency figure on screen is
+   * derived from a number the user never entered.
+   */
+  const rateIsUserSupplied =
+    p.priceOverride != null ||
+    shared.unitPrice !== SEEDED_UNIT_PRICE ||
+    priceBook.rates[p.gradeId ?? ""] != null;
+
+  /**
+   * The hero used to open on PRICE, so a first-time visitor met a large
+   * EUR figure computed from the seeded rate, set in the same type as the
+   * weight beside it. The weight is always real; the price is only real once
+   * a rate exists. An explicit weightAsMain still wins, and anyone who has set
+   * a rate sees exactly what they saw before.
+   */
+  const mode =
+    modeOverride ?? (weightAsMain || !rateIsUserSupplied ? "weight" : "price");
   /** The item under the caret, as the suggestion engine should see it. */
   const activeQuery = useMemo(() => activeItemText(query), [query]);
 
@@ -1510,6 +1535,7 @@ export function CommandShell() {
           onSave={doSave}
           onSaveElsewhere={() => setDestination({ entry: null })}
           onLogSession={logToSession}
+          rateIsUserSupplied={rateIsUserSupplied}
           onCopySummary={copySummary}
           onShareLink={shareLink}
           onNew={newCalc}
@@ -1722,6 +1748,11 @@ export function CommandShell() {
                     <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
                     m × <span className="text-foreground-secondary">{p.realQty}</span>
                     {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                    {/* The assumption travels with the figure — see the
+                        workspace hero for why. */}
+                    {mode === "price" && !rateIsUserSupplied
+                      ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
+                      : ""}
                   </span>
                   {targetNote && (
                     <TargetBadge>

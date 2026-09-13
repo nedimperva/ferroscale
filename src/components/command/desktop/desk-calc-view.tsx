@@ -154,6 +154,7 @@ export function DeskCalcView({
   sym,
   mode,
   onSetMode,
+  rateIsUserSupplied,
   parserSettings,
   shared,
   defaultUnit,
@@ -706,6 +707,13 @@ export function DeskCalcView({
                       <span className="text-foreground-secondary">{p.lengthM}</span> m ×{" "}
                       <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                      {/* When the money on screen comes from the seeded rate,
+                          say so next to it. The weight is measured; the price
+                          is an assumption, and it should travel with the
+                          figure rather than hide in the breakdown panel. */}
+                      {!isW && !rateIsUserSupplied
+                        ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
+                        : ""}
                     </span>
                     {targetNote && (
                       <TargetBadge>
