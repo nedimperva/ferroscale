@@ -1409,7 +1409,12 @@ export function CommandShell() {
     group.tokens[0] ||
     partialToken ||
     String(group.item + 1);
-  const screenBg = dark ? "#161109" : "#f4f0e7";
+  // A CSS variable, not a theme-derived literal: the class that selects it is
+  // set before first paint by the inline script in the root layout, so the
+  // server and the client emit the same style string. Reading `dark` here made
+  // the server render the light value and the client the dark one, which
+  // failed hydration and made React throw away and rebuild the whole shell.
+  const screenBg = "var(--screen)";
 
   /**
    * Read the clipboard onto the line. The workspace gets a cut list through
@@ -1642,16 +1647,19 @@ export function CommandShell() {
             </div>
             <div className="flex gap-2">
               <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
-                {dark ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                    <circle cx="12" cy="12" r="4.5" />
-                    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
-                  </svg>
-                )}
+                {/* Both glyphs ship and CSS picks one. Choosing in JS from the
+                    resolved theme meant the server drew the moon and a
+                    dark-mode client drew the sun, which failed hydration and
+                    made React discard and rebuild the whole shell. The `.dark`
+                    class is on <html> before first paint, so the right glyph is
+                    the first one drawn. */}
+                <svg aria-hidden="true" className="hidden dark:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                  <circle cx="12" cy="12" r="4.5" />
+                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
+                </svg>
+                <svg aria-hidden="true" className="block dark:hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
+                </svg>
               </IconBtn>
               <IconBtn onClick={() => setSheet("library")} ariaLabel={t("nav.library")}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -1758,7 +1766,10 @@ export function CommandShell() {
                 {isW && p.totalKg != null && (
                   <span
                     className="font-mono text-[20px]"
-                    style={{ color: "var(--accent)" }}
+                    // The hero unit is 20-22px at a normal weight, which WCAG
+                    // does not count as large text, so it needs the 4.5:1 token
+                    // rather than the 4.33:1 signal colour.
+                    style={{ color: "var(--accent-text)" }}
                   >
                     {fsWeightUnit()}
                   </span>

@@ -67,14 +67,12 @@ function RailButton({
 }
 
 export function DeskRail({
-  dark,
   view,
   setView,
   counts,
   onNew,
   onToggleTheme,
 }: {
-  dark: boolean;
   view: DeskView;
   setView: (v: DeskView) => void;
   counts: { saved: number; projects: number; compare: number };
@@ -146,7 +144,18 @@ export function DeskRail({
           active={false}
           onClick={onToggleTheme}
           label={t("aria.toggleTheme")}
-          icon={<DeskIcon name={dark ? "sun" : "moon"} size={17} />}
+          icon={
+            // Both glyphs, CSS picks — see the phone toggle for why choosing
+            // in JS from the resolved theme fails hydration.
+            <>
+              <span className="hidden dark:block">
+                <DeskIcon name="sun" size={17} />
+              </span>
+              <span className="block dark:hidden">
+                <DeskIcon name="moon" size={17} />
+              </span>
+            </>
+          }
         />
         <RailButton
           active={view === "settings"}

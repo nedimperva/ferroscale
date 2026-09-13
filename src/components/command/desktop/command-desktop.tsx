@@ -173,7 +173,6 @@ export function CommandDesktop(props: CommandDesktopProps) {
        what the answer needs. */
     <div className="flex flex-1 min-w-0 overflow-hidden">
       <DeskRail
-        dark={props.dark}
         view={view}
         setView={setView}
         counts={counts}

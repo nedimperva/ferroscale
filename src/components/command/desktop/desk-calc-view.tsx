@@ -684,7 +684,7 @@ export function DeskCalcView({
                   {heroVal}
                 </span>
                 {isW && p.totalKg != null && (
-                  <span className="font-mono text-[22px]" style={{ color: "var(--accent)" }}>
+                  <span className="font-mono text-[22px]" style={{ color: "var(--accent-text)" }}>
                     {fsWeightUnit()}
                   </span>
                 )}
