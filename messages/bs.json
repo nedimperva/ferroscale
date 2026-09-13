@@ -1029,6 +1029,14 @@
       "unitPriceRange": "Jedinična cijena mora biti između 0 i {max}.",
       "vatRange": "Postotak PDV-a mora biti između 0 i 35.",
       "wasteRange": "Postotak otpada mora biti između 0 i 100."
+    },
+    "availability": {
+      "madeToOrder": "Po narudžbi",
+      "notInSeries": "Nije skladišno",
+      "madeToOrderDetail": "Lasersko vareno po narudžbi, nije toplovaljano sa skladišta. Isti EN 10365 presjek, pa je masa tačna — rok isporuke i cijena nisu čelični.",
+      "notInSeriesDetail": "Ovo su dimenzije čeličnih profila; aluminij se ekstrudira u vlastitu seriju (EN 755). Masa je tačna za oblik, ali to nije skladišni profil.",
+      "notInSeriesDetailAlloy": "{grade} se drži kao lim, ploča, šipka i cijev, ne kao profil. Masa je tačna za oblik, ali ovo nije skladišni oblik.",
+      "checkRate": "Provjerite cijenu — cjenovnik je po klasi."
     }
   },
   "contact": {

@@ -43,6 +43,7 @@ import { CommandGlyph } from "./command-glyph";
 import {
   applyIssueSuggestion,
   computeGhost,
+  formatAvailability,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
@@ -65,7 +66,7 @@ import {
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
-import { CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
+import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import {
@@ -1810,6 +1811,11 @@ export function CommandShell() {
                       ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
                       : ""}
                   </span>
+                  {p.availability && (
+                    <AvailabilityBadge>
+                      {formatAvailability(t, p.availability, p.gradeLabel).badge}
+                    </AvailabilityBadge>
+                  )}
                   {targetNote && (
                     <TargetBadge>
                       {t(

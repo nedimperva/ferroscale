@@ -14,6 +14,7 @@ import type {
   CommandParseResult,
   CommandSuggestion,
   CommandSuggestionItem,
+  MaterialAvailability,
 } from "@ferroscale/metal-core";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
@@ -281,4 +282,28 @@ function formatProfileLabel(t: CommandT, label: string): string {
     default:
       return label;
   }
+}
+
+/**
+ * The short badge label and the full sentence for an availability note. Both
+ * surfaces share this so the phone and the workspace never drift apart on what
+ * a "To order" badge actually means.
+ */
+export function formatAvailability(
+  t: CommandT,
+  availability: MaterialAvailability,
+  gradeLabel: string | null,
+): { badge: string; detail: string } {
+  if (availability.code === "madeToOrder") {
+    return {
+      badge: t("availability.madeToOrder"),
+      detail: t("availability.madeToOrderDetail"),
+    };
+  }
+  return {
+    badge: t("availability.notInSeries"),
+    detail: availability.referenceLabel
+      ? t("availability.notInSeriesDetail")
+      : t("availability.notInSeriesDetailAlloy", { grade: gradeLabel ?? "" }),
+  };
 }

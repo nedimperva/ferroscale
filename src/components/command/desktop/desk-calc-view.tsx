@@ -18,6 +18,7 @@ import { KIND_BG } from "../command-constants";
 import {
   applyIssueSuggestion,
   computeGhost,
+  formatAvailability,
   formatCommandHint,
   formatCommandIssue,
   formatCommandParseName,
@@ -30,7 +31,7 @@ import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { DeskViewHeader } from "./desk-rail";
-import { PricingBadge, TargetBadge } from "../command-atoms";
+import { AvailabilityBadge, PricingBadge, TargetBadge } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
@@ -715,6 +716,11 @@ export function DeskCalcView({
                         ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
                         : ""}
                     </span>
+                    {p.availability && (
+                      <AvailabilityBadge>
+                        {formatAvailability(t, p.availability, p.gradeLabel).badge}
+                      </AvailabilityBadge>
+                    )}
                     {targetNote && (
                       <TargetBadge>
                         {t(
@@ -1172,6 +1178,22 @@ function DeskBreakdown({
             <div className="font-mono text-[11px] text-muted mt-0.5">
               {focus.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
             </div>
+            {/* The badge on the hero says "to order"; this is where there is
+                room to say what that means and why the rate will not carry
+                over from the steel price book. */}
+            {focus.availability && (
+              <p
+                className="text-[11px] leading-[1.45] mt-2 mb-0 px-2 py-1.5 rounded"
+                style={{
+                  background: "var(--amber-surface)",
+                  color: "var(--amber-text)",
+                  border: "1px solid var(--amber-border)",
+                }}
+              >
+                {formatAvailability(t, focus.availability, focus.gradeLabel).detail}{" "}
+                {t("availability.checkRate")}
+              </p>
+            )}
           </div>
           <div style={{ paddingTop: 6 }}>
             {geometry.map((row) => (

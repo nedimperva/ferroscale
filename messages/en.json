@@ -1029,6 +1029,14 @@
       "unitPriceRange": "Unit price must be between 0 and {max}.",
       "vatRange": "VAT percent must be between 0 and 35.",
       "wasteRange": "Waste percent must be between 0 and 100."
+    },
+    "availability": {
+      "madeToOrder": "To order",
+      "notInSeries": "Not stocked",
+      "madeToOrderDetail": "Laser-welded to order, not hot-rolled stock. Same EN 10365 section, so the mass is right — the lead time and the rate are not the steel ones.",
+      "notInSeriesDetail": "These are steel section dimensions; aluminium is extruded to its own series (EN 755). The mass is right for the shape, but it is not a stock profile.",
+      "notInSeriesDetailAlloy": "{grade} is stocked as plate, sheet, bar and tube, not as sections. The mass is right for the shape, but this is not a stock form.",
+      "checkRate": "Check the rate — the price book is per grade."
     }
   },
   "contact": {

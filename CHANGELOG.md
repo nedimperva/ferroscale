@@ -60,6 +60,16 @@ returned a confidently wrong number with no error state.
 
 ### Added
 
+- **An availability note when a profile is not stock in the chosen material.**
+  Stainless EN sections exist but are [laser-welded to
+  order](https://www.montanstahl.com/processing/production-technologies/laser-welding/)
+  (EN 10365 dimensions, EN 10034 tolerances, EN 10088-3 grades) rather than
+  hot-rolled; aluminium is not rolled or extruded to steel section dimensions
+  at all, since HEA/IPE/UPN are steel standards and aluminium extrusions follow
+  EN 755. Both used to price as quietly as an S235 beam. The line is never
+  blocked — the mass is correct either way — and the note points at the rate,
+  which is where the real surprise is. Bars, tubes, plate, sheet and angle are
+  stocked in all three families and stay silent
 - **The decimal comma works in lengths and sizes**, not just in the price
   token. `hea120 6,5m` used to fail with no message
 - **Aliases people actually type**: `rd`, `round`, `pipe`, `tube`, `plate`,

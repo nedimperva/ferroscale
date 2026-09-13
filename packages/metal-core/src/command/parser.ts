@@ -10,6 +10,7 @@ import type {
 import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./arith";
 import type { LengthExpression } from "./arith";
 import { getProfileById } from "../datasets/profiles";
+import { materialAvailability } from "../datasets/availability";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
   COMMAND_ALIAS_RE,
@@ -1185,6 +1186,12 @@ export function cmdParse(
     valid: calc != null,
     issues,
     shadowedTokenIndexes: shadowed,
+    // Only worth saying once the line names a real profile — "hea" on the way
+    // to "hea120" is not yet a procurement question.
+    availability:
+      alias && hasSize && calc
+        ? materialAvailability(calc.input.profileId, effectiveGradeId)
+        : null,
     pricing: effectivePricing,
     target,
     priceOverride: pricingOverride

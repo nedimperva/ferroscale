@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
-import { formatCommandParseName } from "../command-copy";
+import { formatAvailability, formatCommandParseName } from "../command-copy";
 import { buildBreakdownRows } from "../breakdown-rows";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
@@ -145,6 +145,22 @@ export function CommandResultBreakdown({
           <span className="text-xs font-semibold text-muted">· {focus.gradeLabel}</span>
         )}
       </div>
+      {/* The phone's badge has room for two words; the sheet is where the
+          sentence fits. Opened from BREAKDOWN, so it is on the path someone
+          takes when they are about to act on the number. */}
+      {focus.availability && (
+        <p
+          className="text-[11.5px] leading-[1.45] mt-0 mb-3 px-3 py-2 rounded-lg"
+          style={{
+            background: "var(--amber-surface)",
+            color: "var(--amber-text)",
+            border: "1px solid var(--amber-border)",
+          }}
+        >
+          {formatAvailability(t, focus.availability, focus.gradeLabel).detail}{" "}
+          {t("availability.checkRate")}
+        </p>
+      )}
       {rows && (
       <div className="rounded-2xl border border-border-faint bg-[var(--surface)] flex items-center justify-center px-4 py-4 mb-3">
         <ProfileDrawing p={focus} className="w-full flex flex-col items-center" />

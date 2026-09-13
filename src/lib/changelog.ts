@@ -36,6 +36,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Expanded metal cited a hydrogen-embrittlement testing standard, and corrugated sheet asked for cover width while its formula wanted developed width, understating mass by 5-15%"
     ],
     added: [
+      "A note when a profile is not ordinary stock in the material you picked. Stainless EN sections are real but laser-welded to order, and aluminium is not rolled to steel section dimensions at all — both used to price as quietly as an S235 beam. Nothing is blocked: the mass is right either way, and the note points at the rate, which is where the real surprise is",
       "The decimal comma works everywhere. `hea120 6,5m` reads as 6.5 m — it used to fail silently while `@2,5/kg` worked",
       "The names people actually type now work: rd, round, pipe, tube, plate, sheet, flat, tee, angle — and al, alu and inox for the materials",
       "A phone can paste. The keypad shell had no text field at all, so a cut list or a query from a chat message could not be pasted on the device most likely to be holding one",
@@ -67,6 +68,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Expanded metal je citirao standard za ispitivanje vodikove krhkosti, a valoviti lim je tražio pokrivnu širinu dok mu formula traži razvijenu, umanjujući masu za 5-15%"
     ],
     added_bs: [
+      "Napomena kada profil nije uobičajeno skladišni u materijalu koji ste izabrali. Nehrđajući EN profili postoje ali se lasersko vare po narudžbi, a aluminij se uopšte ne valja u dimenzije čeličnih profila — oboje se ranije obračunavalo jednako tiho kao S235 nosač. Ništa nije blokirano: masa je tačna u svakom slučaju, a napomena upućuje na cijenu, gdje je pravo iznenađenje",
       "Decimalni zarez radi svuda. `hea120 6,5m` čita se kao 6,5 m — ranije je tiho otkazivao dok je `@2,5/kg` radio",
       "Nazivi koje ljudi zaista kucaju sada rade: rd, round, pipe, tube, plate, sheet, flat, tee, angle — te al, alu i inox za materijale",
       "Telefon može zalijepiti. Tastatura na ekranu nije imala nikakvo tekstualno polje, pa se lista rezanja ili upit iz poruke nisu mogli zalijepiti na uređaju koji ih najčešće drži",

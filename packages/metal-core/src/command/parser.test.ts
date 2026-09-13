@@ -914,3 +914,46 @@ describe("duplicate tokens resolve the same way for every slot", () => {
     expect(cmdParse("hea120 6m s235 s355 ", settings).gradeLabel).toBe("S235");
   });
 });
+
+describe("availability rides along with the result", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("never blocks the line — the mass is still right", () => {
+    const stainless = cmdParse("heb400 6m 316 ", settings);
+    expect(stainless.valid).toBe(true);
+    expect(stainless.issues).toEqual([]);
+    expect(stainless.availability?.level).toBe("madeToOrder");
+    // Laser-welded stainless HEB uses the EN 10365 geometry, so the mass is the
+    // steel one scaled by density — not an approximation.
+    expect(stainless.kgm).toBeCloseTo((19782 * 8000) / 1e6, 4);
+  });
+
+  it("flags an aluminium EN section", () => {
+    const al = cmdParse("hea400 6m 6060 ", settings);
+    expect(al.valid).toBe(true);
+    expect(al.availability?.level).toBe("notInSeries");
+  });
+
+  it("stays quiet for steel, and for stock shapes in any material", () => {
+    expect(cmdParse("hea400 6m s355 ", settings).availability).toBeNull();
+    expect(cmdParse("chs60.3x3.2 6m 316 ", settings).availability).toBeNull();
+    expect(cmdParse("plt1500x3000x3 6060 ", settings).availability).toBeNull();
+  });
+
+  it("says nothing until the line names a real size", () => {
+    expect(cmdParse("hea 316 ", settings).availability).toBeNull();
+    expect(cmdParse("hea999 6m 316 ", settings).availability).toBeNull();
+  });
+});
