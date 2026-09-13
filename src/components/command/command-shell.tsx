@@ -2,6 +2,8 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname } from "@/i18n/navigation";
+import { getAppTabFromPathname } from "@/lib/app-shell";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
@@ -206,6 +208,7 @@ export function CommandShell() {
     massTolerancePercentStore.getSnapshot,
     massTolerancePercentStore.getServerSnapshot,
   );
+  const pathname = usePathname();
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
   /** Which Library tab the next open lands on — the palette navigates here. */
   const [libraryTab, setLibraryTab] = useState<
@@ -306,6 +309,57 @@ export function CommandShell() {
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
   }, []);
+
+  // Deep links on a phone. The workspace reads the route into its own tab, but
+  // the phone shell ignored it: /saved, /projects and /settings all rendered
+  // the calculator while the tab title still said "Settings". A bookmark or a
+  // link shared with someone holding a phone landed on the wrong screen.
+  //
+  // The phone has no tabs — those views live in sheets — so the route opens
+  // the matching sheet instead. Runs once the viewport is known, and only for
+  // a route that names one.
+  const routedTab = getAppTabFromPathname(pathname);
+  const routeHandledRef = useRef(false);
+  useEffect(() => {
+    if (!isPhoneViewport || routeHandledRef.current) return;
+    if (!routedTab || routedTab === "calculator") return;
+    routeHandledRef.current = true;
+    // setState-in-effect is intentional, same as the persisted-state hydration
+    // below: the viewport width is not known during SSR, so first paint has to
+    // match the server's sheet-less render before the route is applied.
+    if (routedTab === "settings") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSheet("settings");
+      return;
+    }
+    setLibraryTab(routedTab === "projects" ? "projects" : "saved");
+    setSheet("library");
+  }, [isPhoneViewport, routedTab]);
+
+  // Closing the sheet returns the address bar to the calculator, so Back and a
+  // refresh agree with what is on screen. replaceState, like the workspace —
+  // no navigation, nothing remounts.
+  const resetRouteToCalculator = useCallback(() => {
+    if (typeof window === "undefined") return;
+    let base = window.location.pathname;
+    for (const suffix of ["/saved", "/projects", "/settings"]) {
+      if (base.endsWith(suffix)) {
+        base = base.slice(0, -suffix.length);
+        break;
+      }
+    }
+    const stripped = base.replace(/\/+$/, "");
+    window.history.replaceState(
+      null,
+      "",
+      `${stripped === "" ? "/" : stripped}${window.location.search}`,
+    );
+  }, []);
+
+  const closeSheet = useCallback(() => {
+    setSheet(null);
+    if (isPhoneViewport) resetRouteToCalculator();
+  }, [isPhoneViewport, resetRouteToCalculator]);
 
   // A line can hold several `+`-joined items. `p` is the one being typed —
   // every existing behaviour (chips, suggestions, save, compare) acts on it,
@@ -2163,7 +2217,7 @@ export function CommandShell() {
               }}
               defaultUnit={defaultUnit}
               onSetDefaultUnit={defaultUnitStore.set}
-              onClose={() => setSheet(null)}
+              onClose={closeSheet}
             />
           )}
           {effectiveSheet === "library" && (
@@ -2178,7 +2232,7 @@ export function CommandShell() {
               compareItems={compareItems}
               projects={projects}
               onClose={() => {
-                setSheet(null);
+                closeSheet();
                 setLibraryTab(null);
               }}
               sessionTape={quickHistory}
