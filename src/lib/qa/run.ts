@@ -1,8 +1,10 @@
 import { calculateMetal } from "@/lib/calculator/engine";
 import { DATASET_VERSION } from "@/lib/datasets/version";
+import { PROFILE_DEFINITIONS } from "@/lib/datasets/profiles/index";
 import {
   QA_BENCHMARK_ROWS,
   QA_TOLERANCE_PCT,
+  QA_UNVERIFIED_SIZES,
   benchmarkRowToInput,
   type QaBenchmarkRow,
 } from "./benchmark";
@@ -22,6 +24,12 @@ export interface QaReport {
   allPass: boolean;
   tolerancePct: number;
   datasetVersion: string;
+  /** EN standard sizes carrying an independent reference. */
+  coveredSizes: number;
+  /** EN standard sizes in the datasets, checked or not. */
+  totalSizes: number;
+  /** Sizes whose reference and stored area disagree and are not yet settled. */
+  unverifiedSizes: number;
 }
 
 /** Run every benchmark row through the live engine and compare. Pure. */
@@ -37,6 +45,16 @@ export function runFormulaQa(): QaReport {
   });
 
   const failCount = rows.filter((r) => !r.pass).length;
+  const totalSizes = PROFILE_DEFINITIONS.reduce(
+    (sum, profile) => sum + (profile.mode === "standard" ? profile.sizes.length : 0),
+    0,
+  );
+  const coveredSizes = new Set(
+    QA_BENCHMARK_ROWS.filter((row) => row.selectedSizeId).map(
+      (row) => `${row.profileId}/${row.selectedSizeId}`,
+    ),
+  ).size;
+
   return {
     rows,
     passCount: rows.length - failCount,
@@ -45,5 +63,8 @@ export function runFormulaQa(): QaReport {
     allPass: failCount === 0,
     tolerancePct: QA_TOLERANCE_PCT,
     datasetVersion: DATASET_VERSION,
+    coveredSizes,
+    totalSizes,
+    unverifiedSizes: QA_UNVERIFIED_SIZES.length,
   };
 }

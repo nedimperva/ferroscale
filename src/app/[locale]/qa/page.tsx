@@ -52,6 +52,12 @@ export default async function QaPage({ params }: QaPageProps) {
           {t("maxDelta")}: {report.maxDeltaPct.toFixed(3)}% · {t("tolerance")}: {report.tolerancePct}%
         </span>
         <span className="font-mono text-xs text-muted">
+          {t("coverage", {
+            covered: report.coveredSizes,
+            total: report.totalSizes,
+          })}
+        </span>
+        <span className="font-mono text-xs text-muted">
           {t("dataset")}: {report.datasetVersion}
         </span>
       </div>
@@ -95,7 +101,8 @@ export default async function QaPage({ params }: QaPageProps) {
         </table>
       </div>
 
-      <p className="mt-4 text-xs text-muted leading-relaxed">{t("note")}</p>
+      <p className="mt-4 text-xs text-muted leading-relaxed">{t("note")}{" "}
+        {report.unverifiedSizes > 0 && t("unverifiedNote", { count: report.unverifiedSizes })}</p>
     </div>
   );
 }

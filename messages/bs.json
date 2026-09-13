@@ -1067,6 +1067,8 @@
     "colStatus": "Status",
     "pass": "PROLAZI",
     "fail": "NE PROLAZI",
-    "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni."
+    "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni.",
+    "coverage": "Pokriva {covered} od {total} EN dimenzija",
+    "unverifiedNote": "{count} EN dimenzija je izostavljeno iz ove tabele jer se pohranjena površina i objavljena kataloška masa ne poklapaju. Navedene su u izvoru benchmarka i čekaju provjeru u katalogu."
   }
 }

@@ -1067,6 +1067,8 @@
     "colStatus": "Status",
     "pass": "PASS",
     "fail": "FAIL",
-    "note": "Reference values are deliberately independent of the app's datasets: standard profiles use published catalog masses, manual profiles use hand-computed cross-section formulas. The same checks run in CI on every change."
+    "note": "Reference values are deliberately independent of the app's datasets: standard profiles use published catalog masses, manual profiles use hand-computed cross-section formulas. The same checks run in CI on every change.",
+    "coverage": "Covers {covered} of {total} EN sizes",
+    "unverifiedNote": "{count} EN sizes are held back from this table because their stored area and their published catalog mass disagree. They are listed in the benchmark source and are pending a catalog check."
   }
 }
