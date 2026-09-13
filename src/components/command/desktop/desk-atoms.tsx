@@ -97,14 +97,21 @@ export function Kbd({ children }: { children: React.ReactNode }) {
 export function SectionLabel({
   children,
   className = "",
+  as: Tag = "span",
 }: {
   children: React.ReactNode;
   className?: string;
+  /**
+   * "h2" when the label heads a real section of the view. The app shipped
+   * without a single heading, so a screen reader had no outline to navigate
+   * by; the styling lives in the class, so the tag is free to be honest.
+   */
+  as?: "span" | "h2";
 }) {
   return (
-    <span className={`font-mono text-[10px] uppercase text-muted ${className}`} style={{ letterSpacing: 1.6 }}>
+    <Tag className={`font-mono text-[10px] uppercase text-muted ${className}`} style={{ letterSpacing: 1.6 }}>
       {children}
-    </span>
+    </Tag>
   );
 }
 

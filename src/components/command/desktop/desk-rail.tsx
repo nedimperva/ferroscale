@@ -189,7 +189,12 @@ export function DeskViewHeader({
       }}
     >
       {leading}
-      <span className="fs-title text-[17px] text-foreground whitespace-nowrap">{title}</span>
+      {/* The view's name is the page's heading. It was a span, so the whole
+          workspace shipped without a single h1 — a screen reader had no
+          document outline to navigate and the indexed page had no heading.
+          fs-title carries the styling, so the tag swap changes nothing
+          visually. */}
+      <h1 className="fs-title text-[17px] text-foreground whitespace-nowrap">{title}</h1>
       {subtitle && (
         <span className="font-mono text-[10.5px] uppercase text-muted truncate" style={{ letterSpacing: 1.4 }}>
           {subtitle}

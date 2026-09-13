@@ -68,9 +68,9 @@ export function NearbySpecs({
 
   return (
     <div className="flex flex-col gap-1.5" style={{ paddingTop: 10 }}>
-      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+      <h2 className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
         {t("nearby.title")}
-      </div>
+      </h2>
       <ul className="flex flex-col gap-1" aria-label={t("nearby.title")}>
         {alternatives.map((row) => {
           const kgm = formatKgm(row.massPerMeterKg);

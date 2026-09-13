@@ -1572,9 +1572,12 @@ export function CommandShell() {
                   }}
                 />
               </div>
-              <span className="text-[17px] font-extrabold tracking-tight">
+              {/* The phone shell's only title, and so the page's h1. The
+                  workspace gets one from DeskViewHeader; this surface had
+                  none, which left the whole app without a heading outline. */}
+              <h1 className="text-[17px] font-extrabold tracking-tight">
                 FerroScale
-              </span>
+              </h1>
             </div>
             <div className="flex gap-2">
               <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
@@ -1863,9 +1866,9 @@ export function CommandShell() {
             className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-none flex-shrink-0"
             style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
           >
-            <span className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+            <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
               {t("desktop.session")}
-            </span>
+            </h2>
             {/* The total in whichever unit the hero is showing, then how many
                 lines it came from. Showing weight and money side by side made
                 the row two lines tall as soon as the session had anything in
@@ -1919,9 +1922,9 @@ export function CommandShell() {
               glow and the two read as one collided control. */}
           <div className="pb-2.5">
             <div className="flex items-center gap-2 px-[18px] pb-1.5">
-              <span className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
+              <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
                 {formatCommandHint(t, sug.hint)}
-              </span>
+              </h2>
               {query !== "" && (
                 <button
                   type="button"

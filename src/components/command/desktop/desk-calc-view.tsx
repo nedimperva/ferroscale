@@ -497,11 +497,11 @@ export function DeskCalcView({
         {/* SUGGESTIONS */}
         <div className="mt-3">
           <div className="flex items-center gap-3 flex-wrap mb-2">
-            <div
+            <h2
               className="fs-track-label text-[10px] font-bold text-muted uppercase"
             >
               {formatCommandHint(t, sug.hint)}
-            </div>
+            </h2>
             <span className="ml-auto">
               <CommandKeyHints
                 valid={p.valid}
@@ -905,7 +905,7 @@ export function DeskCalcView({
             style={{ borderTop: "1px solid var(--foreground)", paddingTop: 10 }}
           >
             <div className="flex items-baseline gap-2.5 mb-1.5 flex-shrink-0">
-              <SectionLabel>{t("desktop.session")}</SectionLabel>
+              <SectionLabel as="h2">{t("desktop.session")}</SectionLabel>
               <span className="font-mono text-[10px] text-muted-faint">
                 {t("desktop.sessionSub")}
               </span>
@@ -1142,9 +1142,9 @@ function DeskBreakdown({
       {line.multi ? (
         <AssemblyParts line={line} selected={picked} onSelect={onPick} />
       ) : (
-        <div className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
+        <h2 className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
           {t("desktop.breakdown")}
-        </div>
+        </h2>
       )}
       {rows && r ? (
         <>
