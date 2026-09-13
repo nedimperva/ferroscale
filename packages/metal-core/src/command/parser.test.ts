@@ -797,3 +797,43 @@ describe("aliases people actually type", () => {
     expect(findAliasByProfileId("pipe")?.alias).toBe("chs");
   });
 });
+
+describe("decimal comma", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+  const kg = (q: string) => cmdParse(q, settings).totalKg;
+
+  it("reads a comma length the same as a dot length", () => {
+    expect(kg("hea120 6,5m ")).toBeCloseTo(kg("hea120 6.5m ")!, 6);
+    expect(kg("hea120 6,5m ")).toBeCloseTo(129.297, 2);
+  });
+
+  it("reads a comma inside a size", () => {
+    expect(kg("chs60,3x3,2 6m ")).toBeCloseTo(kg("chs60.3x3.2 6m ")!, 6);
+  });
+
+  it("reads a comma in a bare-number length", () => {
+    expect(kg("hea120 6,5 ")).toBeCloseTo(kg("hea120 6.5 ")!, 6);
+  });
+
+  it("keeps the price token working", () => {
+    const withComma = cmdParse("hea120 6m @2,5/kg ", settings);
+    const withDot = cmdParse("hea120 6m @2.5/kg ", settings);
+    expect(withComma.totalAmount).toBeCloseTo(withDot.totalAmount!, 6);
+  });
+
+  it("raises no issue for a comma length", () => {
+    expect(cmdParse("hea120 6,5m ", settings).issues).toEqual([]);
+  });
+});

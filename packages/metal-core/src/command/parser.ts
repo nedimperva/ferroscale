@@ -772,6 +772,20 @@ function suggestForUnknownSize(
 }
 
 /**
+ * A comma between two digits is a decimal separator, which is how most of
+ * Europe — and the app's own Bosnian locale — writes a number. The price token
+ * has always accepted it (`@2,5/kg` prices at 2.50) while every other token
+ * rejected it, so `hea120 6,5m` died where `hea120 6m @2,5/kg` worked.
+ *
+ * Normalizing once here covers lengths, sizes, arithmetic and targets in one
+ * place. Only the parsed copy is rewritten; the chip still shows what the user
+ * typed.
+ */
+function normalizeDecimalComma(token: string): string {
+  return token.replace(/(\d),(\d)/g, "$1.$2");
+}
+
+/**
  * Point the issue at the field the engine actually rejected.
  *
  * Every engine failure used to surface as `invalidGeometry` carrying the size
@@ -811,7 +825,7 @@ export function cmdParse(
   query: string,
   settings: CommandParserSettings,
 ): CommandParseResult {
-  const toks = cmdTokenize(query).map((t) => t.toLowerCase());
+  const toks = cmdTokenize(query).map((t) => normalizeDecimalComma(t.toLowerCase()));
   // The trailing token is still being typed unless the query ends with
   // whitespace — never flag it, or every keystroke would raise an issue.
   const lastTokenCommitted = /\s$/.test(query);
