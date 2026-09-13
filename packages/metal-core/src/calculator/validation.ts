@@ -46,10 +46,16 @@ export function validateCalculationInput(input: CalculationInput): ValidationIss
     }
   }
 
-  if (!Number.isFinite(input.quantity) || input.quantity <= 0 || input.quantity > MAX_QUANTITY) {
+  // Pieces are discrete: 2.5 lengths of HEA 120 is not a thing you can order,
+  // and accepting it returned a plausible mass for an impossible line.
+  if (
+    !Number.isInteger(input.quantity) ||
+    input.quantity <= 0 ||
+    input.quantity > MAX_QUANTITY
+  ) {
     issues.push({
       field: "quantity",
-      message: `Quantity must be between 1 and ${MAX_QUANTITY}.`,
+      message: `Quantity must be a whole number between 1 and ${MAX_QUANTITY}.`,
       messageKey: "validation.quantityRange",
       messageValues: { max: MAX_QUANTITY },
     });
