@@ -262,3 +262,58 @@ describe("cmdParsePastedList — the quantity column", () => {
     expect(cmdParsePastedList("")).toBeNull();
   });
 });
+
+describe("cmdSplitLine — comma and semicolon boundaries", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("splits a comma-separated list into items", () => {
+    const line = cmdParseLine("hea120 6m x2, ipe200 4m x3", settings);
+    expect(line.items).toHaveLength(2);
+    expect(line.multi).toBe(true);
+    expect(line.totalKg).toBeCloseTo(506.98, 1);
+  });
+
+  it("totals a comma list the same as the + equivalent", () => {
+    const comma = cmdParseLine("hea120 6m x2, ipe200 4m x3", settings);
+    const plus = cmdParseLine("hea120 6m x2 + ipe200 4m x3", settings);
+    expect(comma.totalKg).toBeCloseTo(plus.totalKg!, 6);
+  });
+
+  it("no longer lets a later item fill an earlier item's quantity slot", () => {
+    const line = cmdParseLine("hea120 6m x2, ipe200 4m x3", settings);
+    expect(line.items[0].parse.realQty).toBe(2);
+    expect(line.items[1].parse.realQty).toBe(3);
+  });
+
+  it("splits on semicolons too", () => {
+    expect(cmdSplitLine("hea120 6m; ipe200 4m")).toHaveLength(2);
+  });
+
+  it("keeps a decimal comma inside its number", () => {
+    expect(cmdSplitLine("hea120 6,5m")).toHaveLength(1);
+    expect(cmdSplitLine("hea120 6m @2,5/kg")).toHaveLength(1);
+  });
+
+  it("still treats a glued plus as arithmetic", () => {
+    expect(cmdSplitLine("hea120 6m x2+3")).toHaveLength(1);
+    expect(cmdSplitLine("hea120 6m-50mm")).toHaveLength(1);
+  });
+
+  it("keeps offsets usable for splicing an item back in", () => {
+    expect(cmdReplaceLineItem("hea120 6m, ipe200 4m", 1, " upn200 5m")).toBe(
+      "hea120 6m, upn200 5m",
+    );
+  });
+});

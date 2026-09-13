@@ -54,10 +54,19 @@ interface RawSegment {
 }
 
 /**
- * Split on `+` and keep each piece's offsets. Offsets are into the original
- * string — including whatever whitespace surrounded the separator — so an edit
- * to one item can be spliced back without disturbing the others.
+ * Split a line into items and keep each piece's offsets. Offsets are into the
+ * original string — including whatever whitespace surrounded the separator —
+ * so an edit to one item can be spliced back without disturbing the others.
+ *
+ * `+` is the separator the app writes. Commas and semicolons are accepted on
+ * the way in because that is how people write a cut list in a chat message or
+ * an email, and reading one as a single item produced a confidently wrong
+ * number: in `hea120 6m x2, ipe200 4m x3` the `x2,` failed to tokenize, which
+ * left the quantity slot open for the *second* item's `x3` to fill, and the
+ * line totalled three HEA 120 and nothing else.
  */
+const ITEM_SEPARATORS = new Set([COMMAND_ITEM_SEPARATOR, ",", ";"]);
+
 /**
  * A `+` glued between a character and a digit is arithmetic (`x2+3`), not a
  * separator. A new item always opens with a profile alias — a letter — so
@@ -72,15 +81,29 @@ function isArithmeticPlus(raw: string, index: number): boolean {
   return /\d/.test(after);
 }
 
+/**
+ * A comma with a digit on both sides is a decimal separator (`6,5m`), not an
+ * item boundary — most of Europe writes lengths and rates that way, and the
+ * price token has always accepted it.
+ */
+function isDecimalComma(raw: string, index: number): boolean {
+  return /\d/.test(raw[index - 1] ?? "") && /\d/.test(raw[index + 1] ?? "");
+}
+
+function isItemBoundary(raw: string, index: number): boolean {
+  const char = raw[index];
+  if (!ITEM_SEPARATORS.has(char)) return false;
+  if (char === COMMAND_ITEM_SEPARATOR) return !isArithmeticPlus(raw, index);
+  if (char === ",") return !isDecimalComma(raw, index);
+  return true;
+}
+
 export function cmdSplitLine(query: string): RawSegment[] {
   const raw = query ?? "";
   const out: RawSegment[] = [];
   let start = 0;
   for (let i = 0; i <= raw.length; i++) {
-    if (i < raw.length) {
-      if (raw[i] !== COMMAND_ITEM_SEPARATOR) continue;
-      if (isArithmeticPlus(raw, i)) continue;
-    }
+    if (i < raw.length && !isItemBoundary(raw, i)) continue;
     out.push({ text: raw.slice(start, i), start, end: i });
     start = i + 1;
   }
