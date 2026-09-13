@@ -1667,6 +1667,16 @@ export function CommandShell() {
             </div>
           </div>
 
+          {/* Free height is split above and below the answer instead of all of
+              it falling below. On a 390x844 phone roughly a third of the screen
+              sat empty between the session ribbon and the suggestion strip
+              while the figure was pinned to the very top — the hardest place to
+              reach one-handed. Both spacers are flex-1, so on a short screen
+              they collapse and nothing moves. The split is weighted 1:2 so the
+              answer lands in the upper third rather than dead centre — still
+              the first thing you see, but within reach of a thumb. */}
+          <div className="flex-[1] min-h-0" />
+
           {/* HERO */}
           <div className="px-[18px] pt-1.5 flex-shrink-0">
             {/* The mode switch rides in the hero's label row rather than taking
@@ -1980,7 +1990,7 @@ export function CommandShell() {
             </button>
           </div>
 
-          <div className="flex-1 min-h-[6px]" />
+          <div className="flex-[2] min-h-[6px]" />
 
           {/* SUGGESTION BAR */}
           {/* The gap under the strip has to clear the query line's 3px focus
@@ -1991,25 +2001,27 @@ export function CommandShell() {
               <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
                 {formatCommandHint(t, sug.hint)}
               </h2>
-              <button
-                type="button"
-                onClick={pasteFromClipboard}
-                aria-label={t("common.paste")}
-                className={`${query !== "" ? "" : "ml-auto "}bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5`}
-              >
-                {t("common.paste")}
-              </button>
-              {query !== "" && (
+              <span className="ml-auto flex items-center -mr-3">
                 <button
                   type="button"
-                  onClick={newCalc}
+                  onClick={pasteFromClipboard}
+                  aria-label={t("common.paste")}
                   // Padding + negative margin grows the tap target without
                   // shifting the layout.
-                  className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5 -mr-3"
+                  className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
                 >
-                  {t("common.clear")}
+                  {t("common.paste")}
                 </button>
-              )}
+                {query !== "" && (
+                  <button
+                    type="button"
+                    onClick={newCalc}
+                    className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
+                  >
+                    {t("common.clear")}
+                  </button>
+                )}
+              </span>
             </div>
             <div className="relative">
             <div
@@ -2109,6 +2121,17 @@ export function CommandShell() {
               className="pointer-events-none absolute inset-x-0 bottom-0 h-4"
               style={{
                 background: `linear-gradient(to bottom, transparent, ${screenBg})`,
+              }}
+            />
+            {/* The strip scrolls sideways, so the fade that says "there is
+                more" belongs on the right edge. Without it the last chip was
+                simply cut mid-word and the row read as clipped, not
+                scrollable. */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-8"
+              style={{
+                background: `linear-gradient(to right, transparent, ${screenBg})`,
               }}
             />
             </div>
