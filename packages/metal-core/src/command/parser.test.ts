@@ -837,3 +837,45 @@ describe("decimal comma", () => {
     expect(cmdParse("hea120 6,5m ", settings).issues).toEqual([]);
   });
 });
+
+describe("tee sizes accept the catalog spelling", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("reads T 100x100x10 the same as t100x10", () => {
+    const square = cmdParse("t100x100x10 6m ", settings);
+    const short = cmdParse("t100x10 6m ", settings);
+    expect(square.totalKg).toBeCloseTo(short.totalKg!, 6);
+    expect(square.realQty).toBe(1);
+    expect(square.lengthM).toBe(6);
+    expect(square.issues).toEqual([]);
+  });
+
+  it("reads the spaced catalog form too", () => {
+    expect(cmdParse("t 100x100x10 6m ", settings).totalKg).toBeCloseTo(
+      cmdParse("t100x10 6m ", settings).totalKg!,
+      6,
+    );
+  });
+
+  it("leaves an unequal-leg spelling to fail as an unknown size", () => {
+    expect(cmdParse("t100x80x10 6m ", settings).issues.map((i) => i.code)).toContain(
+      "unknownSize",
+    );
+  });
+
+  it("does not disturb single-dimension beam sizes", () => {
+    expect(cmdParse("hea120 6m ", settings).totalKg).toBeCloseTo(119.351, 2);
+  });
+});

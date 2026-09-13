@@ -290,8 +290,10 @@ function buildCalculationInput(
   if (alias.profileId) {
     const profile = getProfileById(alias.profileId);
     if (!profile || profile.mode !== "standard") return null;
-    // HEA/IPE etc. use single-dim keys ("120"); tees use multi-dim ("30x4").
-    const key = dims.length === 0 ? "" : dims.map(fmt).join("x");
+    // HEA/IPE etc. use single-dim keys ("120"); tees use multi-dim ("30x4"),
+    // and accept the catalog's own equal-leg spelling ("100x100x10").
+    const key =
+      dims.length === 0 ? "" : canonicalSizeText(alias.fam, dims.map(fmt).join("x"));
     if (!key) return null;
     const targetSizeId = `${alias.alias}${key}`;
     const match = profile.sizes.find((s) => s.id === targetSizeId);
@@ -532,6 +534,26 @@ function peelPieces(rest: string): string[] | null {
  * families (free-form dims) only split when exactly ONE boundary works —
  * ambiguity (flat "40x412m": 40x4+12m vs 40x41+2m) keeps the word whole.
  */
+/**
+ * EN 10055 tees are equal-leg, so the catalog spells them `T 100x100x10` while
+ * the size table keys them `t100x10`. The app was therefore rejecting its own
+ * display label: `t100x100x10` matched the size `t100x10` as a prefix and the
+ * leftovers peeled into a length of 0 and a quantity of 10.
+ *
+ * Collapsing the repeated leg is unambiguous for this family - every size in
+ * the table has its two legs equal.
+ */
+function canonicalTeeSize(sizeText: string): string {
+  const parts = sizeText.split(/[x\u00d7]/);
+  if (parts.length !== 3) return sizeText;
+  if (parts[0] !== parts[1]) return sizeText;
+  return `${parts[0]}x${parts[2]}`;
+}
+
+function canonicalSizeText(fam: CommandFamily, sizeText: string): string {
+  return fam === "tee" ? canonicalTeeSize(sizeText) : sizeText;
+}
+
 function splitProfileToken(token: string, aliasKey: string): string[] | null {
   const alias = findAliasByKey(aliasKey);
   if (!alias) return null;
@@ -539,7 +561,7 @@ function splitProfileToken(token: string, aliasKey: string): string[] | null {
   if (!rest) return null;
   // Sheet-like families bake length into the size token — never split.
   if (SHEET_LIKE_FAMILIES.has(alias.fam)) return null;
-  const restNorm = rest.toLowerCase().replace(/×/g, "x");
+  const restNorm = canonicalSizeText(alias.fam, rest.toLowerCase().replace(/×/g, "x"));
 
   if (alias.profileId) {
     const profile = getProfileById(alias.profileId);
