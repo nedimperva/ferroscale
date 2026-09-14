@@ -147,7 +147,7 @@ test.describe("Mass tolerance", () => {
     await typeQuery(page, "hea120 6m x2 ");
     // The breakdown carries the range on every viewport...
     await expect(page.getByText(/Mass band ±4%/)).toBeVisible();
-    await expect(page.getByText("229.15 – 248.25 kg")).toBeVisible();
+    await expect(page.getByText("229.15 – 248.25 kg", { exact: true })).toBeVisible();
 
     // ...and the hero gains the band when weight is the headline metric.
     await page.getByRole("button", { name: "WEIGHT" }).click();
