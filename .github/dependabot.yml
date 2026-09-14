@@ -11,7 +11,14 @@ updates:
     groups:
       dev-dependencies:
         patterns: ["*"]
-        exclude-patterns: ["next", "react", "react-dom", "next-intl"]
+        exclude-patterns: ["next", "react*", "@types/react*", "next-intl"]
+      react:
+        patterns: ["react*", "@types/react*"]
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
