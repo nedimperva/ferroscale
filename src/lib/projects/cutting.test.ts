@@ -3,6 +3,7 @@ import {
   extractProjectCutGroups,
   computeProjectProcurementSummary,
   generateSupplierRfqText,
+  getProfileSectionLabel,
 } from "./cutting";
 import type { Project } from "@/hooks/useProjects";
 
@@ -336,4 +337,355 @@ describe("extractProjectCutGroups", () => {
     expect(rfq).toContain("HEA 120");
     expect(rfq).toContain("SUMMARY:");
   });
+
+  it("differentiates different manual profile sizes in cut groups and RFQ order", () => {
+    const project: Project = {
+      id: "p-sizes",
+      name: "Truss Structure",
+      createdAt: "2026-08-01T10:00:00.000Z",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      calculations: [
+        {
+          id: "c-angle-small",
+          timestamp: "2026-08-01T10:00:00.000Z",
+          input: {
+            useCustomDensity: false,
+            rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
+            profileId: "angle",
+            materialGradeId: "steel-s235jr",
+            manualDimensions: {
+              legA: { value: 50, unit: "mm" },
+              legB: { value: 50, unit: "mm" },
+              thickness: { value: 5, unit: "mm" },
+            },
+            length: { value: 2, unit: "m" },
+            quantity: 4,
+            priceBasis: "weight",
+            priceUnit: "kg",
+            unitPrice: 2,
+            currency: "EUR",
+            wastePercent: 0,
+            includeVat: false,
+            vatPercent: 0,
+          },
+          result: {
+            profileId: "angle",
+            profileLabel: "Angle",
+            gradeLabel: "S235JR",
+            densityKgPerM3: 7850,
+            areaMm2: 475,
+            lengthMm: 2000,
+            quantity: 4,
+            unitWeightKg: 7.46,
+            totalWeightKg: 29.84,
+            totalWeightLb: 65.79,
+            unitPriceAmount: 2,
+            subtotalAmount: 59.68,
+            wasteAmount: 0,
+            subtotalWithWasteAmount: 59.68,
+            vatAmount: 0,
+            grandTotalAmount: 59.68,
+            currency: "EUR",
+            priceBasis: "weight",
+            priceUnit: "kg",
+            formulaLabel: "Manual",
+            breakdownRows: [],
+            surfaceAreaM2: null,
+            unitSurfaceAreaM2: null,
+            datasetVersion: "1.0",
+            referenceLabels: [],
+          },
+          normalizedProfile: { formatVersion: 1, iconKey: "bars", shortLabel: "Angle 50x50x5", canonicalKey: "k1" },
+        },
+        {
+          id: "c-angle-large",
+          timestamp: "2026-08-01T10:05:00.000Z",
+          input: {
+            useCustomDensity: false,
+            rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
+            profileId: "angle",
+            materialGradeId: "steel-s235jr",
+            manualDimensions: {
+              legA: { value: 100, unit: "mm" },
+              legB: { value: 100, unit: "mm" },
+              thickness: { value: 10, unit: "mm" },
+            },
+            length: { value: 3, unit: "m" },
+            quantity: 2,
+            priceBasis: "weight",
+            priceUnit: "kg",
+            unitPrice: 2,
+            currency: "EUR",
+            wastePercent: 0,
+            includeVat: false,
+            vatPercent: 0,
+          },
+          result: {
+            profileId: "angle",
+            profileLabel: "Angle",
+            gradeLabel: "S235JR",
+            densityKgPerM3: 7850,
+            areaMm2: 1900,
+            lengthMm: 3000,
+            quantity: 2,
+            unitWeightKg: 44.75,
+            totalWeightKg: 89.5,
+            totalWeightLb: 197.3,
+            unitPriceAmount: 2,
+            subtotalAmount: 179,
+            wasteAmount: 0,
+            subtotalWithWasteAmount: 179,
+            vatAmount: 0,
+            grandTotalAmount: 179,
+            currency: "EUR",
+            priceBasis: "weight",
+            priceUnit: "kg",
+            formulaLabel: "Manual",
+            breakdownRows: [],
+            surfaceAreaM2: null,
+            unitSurfaceAreaM2: null,
+            datasetVersion: "1.0",
+            referenceLabels: [],
+          },
+          normalizedProfile: { formatVersion: 1, iconKey: "bars", shortLabel: "Angle 100x100x10", canonicalKey: "k2" },
+        },
+      ],
+    };
+
+    const groups = extractProjectCutGroups(project);
+    expect(groups.length).toBe(2);
+
+    const smallAngle = groups.find((g) => g.label.includes("Angle 50x50x5"));
+    const largeAngle = groups.find((g) => g.label.includes("Angle 100x100x10"));
+    expect(smallAngle).toBeDefined();
+    expect(largeAngle).toBeDefined();
+    expect(smallAngle?.pieces[0].lengthMm).toBe(2000);
+    expect(smallAngle?.pieces[0].quantity).toBe(4);
+    expect(largeAngle?.pieces[0].lengthMm).toBe(3000);
+    expect(largeAngle?.pieces[0].quantity).toBe(2);
+
+    const summary = computeProjectProcurementSummary(project);
+    const rfq = generateSupplierRfqText(summary, project.name);
+    expect(rfq).toContain("Angle 50x50x5 · S235JR");
+    expect(rfq).toContain("Angle 100x100x10 · S235JR");
+    expect(rfq).not.toMatch(/^\s*\d+\.\s+Angle\s+·/m);
+  });
+
+  it("extracts individual cut pieces without squaring piece counts in templates", () => {
+    const project: Project = {
+      id: "p-template-scale",
+      name: "Balcony Railing",
+      createdAt: "2026-08-01T10:00:00.000Z",
+      updatedAt: "2026-08-01T10:00:00.000Z",
+      calculations: [
+        {
+          id: "c-composite-tpl",
+          timestamp: "2026-08-01T10:00:00.000Z",
+          templateName: "Stair Tread",
+          quantityMultiplier: 4,
+          input: {
+            useCustomDensity: false,
+            rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
+            profileId: "angle",
+            materialGradeId: "steel-s235jr",
+            manualDimensions: {
+              legA: { value: 50, unit: "mm" },
+              legB: { value: 50, unit: "mm" },
+              thickness: { value: 5, unit: "mm" },
+            },
+            length: { value: 1.5, unit: "m" },
+            quantity: 8,
+            priceBasis: "weight",
+            priceUnit: "kg",
+            unitPrice: 2,
+            currency: "EUR",
+            wastePercent: 0,
+            includeVat: false,
+            vatPercent: 0,
+          },
+          result: {
+            profileId: "angle",
+            profileLabel: "Angle 50x50x5",
+            gradeLabel: "S235JR",
+            densityKgPerM3: 7850,
+            areaMm2: 475,
+            lengthMm: 1500,
+            quantity: 8,
+            unitWeightKg: 5.59,
+            totalWeightKg: 44.72,
+            totalWeightLb: 98.59,
+            unitPriceAmount: 2,
+            subtotalAmount: 89.44,
+            wasteAmount: 0,
+            subtotalWithWasteAmount: 89.44,
+            vatAmount: 0,
+            grandTotalAmount: 89.44,
+            currency: "EUR",
+            priceBasis: "weight",
+            priceUnit: "kg",
+            formulaLabel: "Manual",
+            breakdownRows: [],
+            surfaceAreaM2: null,
+            unitSurfaceAreaM2: null,
+            datasetVersion: "1.0",
+            referenceLabels: [],
+          },
+          normalizedProfile: { formatVersion: 1, iconKey: "bars", shortLabel: "Angle 50x50x5", canonicalKey: "k3" },
+          templateParts: [
+            {
+              id: "part-1",
+              name: "Step Bracket",
+              input: {
+                useCustomDensity: false,
+                rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
+                profileId: "angle",
+                materialGradeId: "steel-s235jr",
+                manualDimensions: {
+                  legA: { value: 50, unit: "mm" },
+                  legB: { value: 50, unit: "mm" },
+                  thickness: { value: 5, unit: "mm" },
+                },
+                length: { value: 1.5, unit: "m" },
+                quantity: 8, // 2 per unit * 4 units = 8
+                priceBasis: "weight",
+                priceUnit: "kg",
+                unitPrice: 2,
+                currency: "EUR",
+                wastePercent: 0,
+                includeVat: false,
+                vatPercent: 0,
+              },
+              result: {
+                profileId: "angle",
+                profileLabel: "Angle",
+                gradeLabel: "S235JR",
+                densityKgPerM3: 7850,
+                areaMm2: 475,
+                lengthMm: 1500,
+                quantity: 8,
+                unitWeightKg: 5.59,
+                totalWeightKg: 44.72,
+                totalWeightLb: 98.59,
+                unitPriceAmount: 2,
+                subtotalAmount: 89.44,
+                wasteAmount: 0,
+                subtotalWithWasteAmount: 89.44,
+                vatAmount: 0,
+                grandTotalAmount: 89.44,
+                currency: "EUR",
+                priceBasis: "weight",
+                priceUnit: "kg",
+                formulaLabel: "Manual",
+                breakdownRows: [],
+                surfaceAreaM2: null,
+                unitSurfaceAreaM2: null,
+                datasetVersion: "1.0",
+                referenceLabels: [],
+              },
+              normalizedProfile: { formatVersion: 1, iconKey: "bars", shortLabel: "Angle 50x50x5", canonicalKey: "k4" },
+            },
+          ],
+        },
+      ],
+    };
+
+    const groups = extractProjectCutGroups(project);
+    expect(groups.length).toBe(1);
+    expect(groups[0].label).toContain("Angle 50x50x5");
+    expect(groups[0].totalPieces).toBe(8);
+    expect(groups[0].pieces.length).toBe(1);
+    expect(groups[0].pieces[0].lengthMm).toBe(1500);
+    expect(groups[0].pieces[0].quantity).toBe(8); // exactly 8 pieces, NOT 8 * 4 = 32
+  });
 });
+
+describe("getProfileSectionLabel", () => {
+  it("formats section labels with explicit dimensions for manual and standard profiles", () => {
+    // Angle
+    const angleLabel = getProfileSectionLabel({
+      profileId: "angle",
+      manualDimensions: {
+        legA: { value: 50, unit: "mm" },
+        legB: { value: 50, unit: "mm" },
+        thickness: { value: 5, unit: "mm" },
+      },
+    });
+    expect(angleLabel).toBe("Angle 50x50x5");
+
+    // Flat Bar
+    const flatLabel = getProfileSectionLabel({
+      profileId: "flat_bar",
+      manualDimensions: {
+        width: { value: 40, unit: "mm" },
+        thickness: { value: 5, unit: "mm" },
+      },
+    });
+    expect(flatLabel).toBe("Flat Bar 40x5");
+
+    // SHS
+    const shsLabel = getProfileSectionLabel({
+      profileId: "square_hollow",
+      manualDimensions: {
+        side: { value: 40, unit: "mm" },
+        thickness: { value: 3, unit: "mm" },
+      },
+    });
+    expect(shsLabel).toBe("SHS 40x40x3");
+
+    // RHS
+    const rhsLabel = getProfileSectionLabel({
+      profileId: "rectangular_tube",
+      manualDimensions: {
+        height: { value: 50, unit: "mm" },
+        width: { value: 30, unit: "mm" },
+        wallThickness: { value: 2, unit: "mm" },
+      },
+    });
+    expect(rhsLabel).toBe("RHS 30x50x2");
+
+    // CHS
+    const chsLabel = getProfileSectionLabel({
+      profileId: "pipe",
+      manualDimensions: {
+        outerDiameter: { value: 20, unit: "mm" },
+        wallThickness: { value: 2, unit: "mm" },
+      },
+    });
+    expect(chsLabel).toBe("CHS 20x2");
+
+    // Round Bar
+    const roundLabel = getProfileSectionLabel({
+      profileId: "round_bar",
+      manualDimensions: {
+        diameter: { value: 20, unit: "mm" },
+      },
+    });
+    expect(roundLabel).toBe("Round Bar Ø20");
+
+    // Square Bar
+    const squareLabel = getProfileSectionLabel({
+      profileId: "square_bar",
+      manualDimensions: {
+        side: { value: 20, unit: "mm" },
+      },
+    });
+    expect(squareLabel).toBe("Square Bar 20x20");
+
+    // Plate
+    const plateLabel = getProfileSectionLabel({
+      profileId: "plate",
+      manualDimensions: {
+        thickness: { value: 4, unit: "mm" },
+      },
+    });
+    expect(plateLabel).toBe("Plate 4 mm");
+
+    // Standard profile with result
+    const heaLabel = getProfileSectionLabel(
+      { profileId: "beam_hea_en" },
+      { profileId: "beam_hea_en", profileLabel: "HEA 120" },
+    );
+    expect(heaLabel).toBe("HEA 120");
+  });
+});
+

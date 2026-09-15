@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useProjects } from "@/hooks/useProjects";
 import { getBuiltinAssemblyTemplates } from "@/hooks/useAssemblyTemplates";
+import { calculateMetal, type CalculationInput } from "@ferroscale/metal-core";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { extractProjectCutGroups } from "@/lib/projects/cutting";
 
 describe("Project Assembly Templates and Multipliers", () => {
   it("inserts a template with multiplier into a project and scales all constituent cuts, labor, and costs", () => {
@@ -117,4 +120,138 @@ describe("Project Assembly Templates and Multipliers", () => {
     expect(tubes.input.quantity).toBe(100); // 20 * 5 = 100
     expect(project.laborHours).toBeCloseTo(1.2 * 5, 2);
   });
+
+  it("scales a composite calculation with templateParts preserving piece lengths and updating piece counts", () => {
+    const { result } = renderHook(() => useProjects());
+
+    let projectId = "";
+    act(() => {
+      const p = result.current.createProject("Composite Assembly Test");
+      projectId = p.id;
+    });
+
+    const part1Input: CalculationInput = {
+      useCustomDensity: false,
+      rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
+      profileId: "angle",
+      materialGradeId: "steel-s235jr",
+      manualDimensions: {
+        legA: { value: 50, unit: "mm" },
+        legB: { value: 50, unit: "mm" },
+        thickness: { value: 5, unit: "mm" },
+      },
+      length: { value: 1200, unit: "mm" },
+      quantity: 2,
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 0,
+    };
+    const part1Res = calculateMetal(part1Input);
+    expect(part1Res.ok).toBe(true);
+
+    const part2Input: CalculationInput = {
+      useCustomDensity: false,
+      rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
+      profileId: "flat_bar",
+      materialGradeId: "steel-s235jr",
+      manualDimensions: {
+        width: { value: 40, unit: "mm" },
+        thickness: { value: 5, unit: "mm" },
+      },
+      length: { value: 600, unit: "mm" },
+      quantity: 4,
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 0,
+    };
+    const part2Res = calculateMetal(part2Input);
+    expect(part2Res.ok).toBe(true);
+    if (!part1Res.ok || !part2Res.ok) throw new Error("Calculation failed");
+
+    act(() => {
+      const ok = result.current.addTemplateCalculation(
+        projectId,
+        "Custom Truss",
+        [
+          {
+            id: "p1",
+            name: "Angle Chords",
+            input: part1Input,
+            result: part1Res.result!,
+            normalizedProfile: normalizeProfileSnapshot(part1Input),
+          },
+          {
+            id: "p2",
+            name: "Flat Web",
+            input: part2Input,
+            result: part2Res.result!,
+            normalizedProfile: normalizeProfileSnapshot(part2Input),
+          },
+        ],
+        1,
+      );
+      expect(ok).toBe(true);
+    });
+
+    let project = result.current.projects.find((p) => p.id === projectId)!;
+    expect(project.calculations.length).toBe(1);
+    const trussCalc = project.calculations[0];
+    expect(trussCalc.templateParts?.length).toBe(2);
+
+    // Tag the composite calculation with an assembly label
+    act(() => {
+      result.current.updateItemAssembly(projectId, trussCalc.id, "Roof Trusses");
+    });
+
+    // Scale sub-assembly "Roof Trusses" by 3x
+    act(() => {
+      const scaled = result.current.scaleSubAssembly(projectId, "Roof Trusses", 3);
+      expect(scaled).toBe(true);
+    });
+
+    project = result.current.projects.find((p) => p.id === projectId)!;
+    const scaledCalc = project.calculations[0];
+    expect(scaledCalc.quantityMultiplier).toBe(3);
+    expect(scaledCalc.templateParts?.length).toBe(2);
+
+    const scaledPart1 = scaledCalc.templateParts![0];
+    const scaledPart2 = scaledCalc.templateParts![1];
+
+    // Quantities scaled: 2 * 3 = 6, 4 * 3 = 12
+    expect(scaledPart1.input.quantity).toBe(6);
+    expect(scaledPart2.input.quantity).toBe(12);
+
+    // Lengths MUST remain invariant: 1200mm and 600mm (NOT 3600mm or 1800mm)
+    expect(scaledPart1.input.length.value).toBe(1200);
+    expect(scaledPart2.input.length.value).toBe(600);
+
+    // Weights must be ~3x original
+    expect(scaledPart1.result.totalWeightKg).toBeCloseTo(part1Res.result!.totalWeightKg * 3, 1);
+    expect(scaledPart2.result.totalWeightKg).toBeCloseTo(part2Res.result!.totalWeightKg * 3, 1);
+
+    // Verify cut list piece extraction
+    const groups = extractProjectCutGroups(project);
+    expect(groups.length).toBe(2);
+
+    const angleGroup = groups.find((g) => g.label.includes("Angle 50x50x5"))!;
+    expect(angleGroup).toBeDefined();
+    expect(angleGroup.totalPieces).toBe(6);
+    expect(angleGroup.pieces[0].lengthMm).toBe(1200);
+    expect(angleGroup.pieces[0].quantity).toBe(6);
+
+    const flatGroup = groups.find((g) => g.label.includes("Flat Bar 40x5"))!;
+    expect(flatGroup).toBeDefined();
+    expect(flatGroup.totalPieces).toBe(12);
+    expect(flatGroup.pieces[0].lengthMm).toBe(600);
+    expect(flatGroup.pieces[0].quantity).toBe(12);
+  });
 });
+

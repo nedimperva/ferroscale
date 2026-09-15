@@ -8,6 +8,7 @@ import {
   type CalculationInput,
 } from "@ferroscale/metal-core";
 import { toMillimeters } from "@/lib/calculator/units";
+import { getProfileById } from "@/lib/datasets/profiles";
 
 export type CutGroupKind = "1d_bar" | "2d_plate";
 
@@ -80,6 +81,118 @@ function getPlateThicknessMm(input: CalculationInput): number {
   return t ? toMillimeters(t.value, t.unit) : 1;
 }
 
+function formatDim(val: number): string {
+  if (!Number.isFinite(val)) return "?";
+  if (Number.isInteger(val)) return String(val);
+  return Number(val.toFixed(2)).toString();
+}
+
+function dimMm(input: Partial<CalculationInput>, key: string): number | null {
+  const dim = input.manualDimensions?.[key as keyof typeof input.manualDimensions];
+  if (!dim) return null;
+  const val = toMillimeters(dim.value, dim.unit);
+  return Number.isFinite(val) ? val : null;
+}
+
+export function getProfileSectionLabel(
+  input: Partial<CalculationInput>,
+  result?: { profileId?: string; profileLabel?: string } | null,
+): string {
+  if (!input.profileId) {
+    return result?.profileLabel || "";
+  }
+  const profile = getProfileById(input.profileId);
+  if (profile?.mode === "standard") {
+    if (input.selectedSizeId) {
+      const size = profile.sizes.find((s) => s.id === input.selectedSizeId);
+      if (size) return size.label;
+    }
+    if (result?.profileLabel && result.profileLabel !== profile.label) return result.profileLabel;
+    return profile.sizes[0]?.label ?? profile.label;
+  }
+
+  switch (input.profileId) {
+    case "angle": {
+      const a = dimMm(input, "legA");
+      const b = dimMm(input, "legB");
+      const t = dimMm(input, "thickness");
+      if (a != null && b != null && t != null) {
+        return `Angle ${formatDim(a)}x${formatDim(b)}x${formatDim(t)}`;
+      }
+      break;
+    }
+    case "flat_bar": {
+      const w = dimMm(input, "width");
+      const t = dimMm(input, "thickness");
+      if (w != null && t != null) {
+        return `Flat Bar ${formatDim(w)}x${formatDim(t)}`;
+      }
+      break;
+    }
+    case "square_hollow": {
+      const s = dimMm(input, "side") ?? dimMm(input, "width");
+      const t = dimMm(input, "wallThickness") ?? dimMm(input, "thickness");
+      if (s != null && t != null) {
+        return `SHS ${formatDim(s)}x${formatDim(s)}x${formatDim(t)}`;
+      }
+      break;
+    }
+    case "rectangular_tube": {
+      const w = dimMm(input, "width");
+      const h = dimMm(input, "height");
+      const t = dimMm(input, "wallThickness") ?? dimMm(input, "thickness");
+      if (w != null && h != null && t != null) {
+        return `RHS ${formatDim(w)}x${formatDim(h)}x${formatDim(t)}`;
+      }
+      break;
+    }
+    case "pipe": {
+      const od = dimMm(input, "outerDiameter") ?? dimMm(input, "diameter");
+      const t = dimMm(input, "wallThickness") ?? dimMm(input, "thickness");
+      if (od != null && t != null) {
+        return `CHS ${formatDim(od)}x${formatDim(t)}`;
+      }
+      break;
+    }
+    case "round_bar": {
+      const d = dimMm(input, "diameter");
+      if (d != null) {
+        return `Round Bar Ø${formatDim(d)}`;
+      }
+      break;
+    }
+    case "square_bar": {
+      const s = dimMm(input, "side");
+      if (s != null) {
+        return `Square Bar ${formatDim(s)}x${formatDim(s)}`;
+      }
+      break;
+    }
+    case "sheet":
+    case "plate": {
+      const t = dimMm(input, "thickness");
+      if (t != null) {
+        return `${input.profileId === "sheet" ? "Sheet" : "Plate"} ${formatDim(t)} mm`;
+      }
+      break;
+    }
+    case "chequered_plate": {
+      const t = dimMm(input, "thickness");
+      const p = dimMm(input, "patternHeight");
+      if (t != null && p != null) {
+        return `Chequered Plate ${formatDim(t)}+${formatDim(p)} mm`;
+      } else if (t != null) {
+        return `Chequered Plate ${formatDim(t)} mm`;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return result?.profileLabel || profile?.label || input.profileId;
+}
+
 function extractCalculationPieces(calc: ProjectCalculation): Array<{
   groupKey: string;
   kind: CutGroupKind;
@@ -101,13 +214,13 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
 
   // Multi-part assembly template
   if (calc.templateParts && calc.templateParts.length > 0) {
-    const mult = calc.quantityMultiplier ?? 1;
     return calc.templateParts.flatMap((part, idx) => {
       const partResult = part.result;
       const partInput = part.input;
       const profileId = partResult.profileId;
       const lengthMm = partResult.lengthMm;
-      const quantity = Math.max(1, partResult.quantity * mult);
+      // partResult.quantity in recalculatedParts already incorporates any multiplier
+      const quantity = Math.max(1, partResult.quantity);
       const isPlate = isPlateProfile(profileId);
 
       if (isPlate) {
@@ -143,8 +256,9 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
         };
       }
 
-      const groupKey = `${partResult.profileId}:${partResult.profileLabel}:${partResult.gradeLabel}`;
-      const groupLabel = `${partResult.profileLabel} · ${partResult.gradeLabel}`;
+      const sectionLabel = getProfileSectionLabel(partInput, partResult);
+      const groupKey = `${profileId}:${sectionLabel}:${partResult.gradeLabel}`;
+      const groupLabel = `${sectionLabel} · ${partResult.gradeLabel}`;
       const lengthM = lengthMm / 1000;
       const kgPerMeter = lengthM > 0 ? partResult.unitWeightKg / lengthM : 0;
 
@@ -158,7 +272,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
         unitWeightKg: partResult.unitWeightKg,
         barPiece: {
           id: `${calc.id}-part-${idx + 1}`,
-          label: part.name || `${partResult.profileLabel} (${calc.templateName ?? "Assembly"})`,
+          label: part.name || `${sectionLabel} (${calc.templateName ?? "Assembly"})`,
           lengthMm,
           quantity,
         },
@@ -209,8 +323,9 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
     ];
   }
 
-  const groupKey = `${result.profileId}:${result.profileLabel}:${result.gradeLabel}`;
-  const groupLabel = `${result.profileLabel} · ${result.gradeLabel}`;
+  const sectionLabel = getProfileSectionLabel(input, result);
+  const groupKey = `${profileId}:${sectionLabel}:${result.gradeLabel}`;
+  const groupLabel = `${sectionLabel} · ${result.gradeLabel}`;
   const lengthM = lengthMm / 1000;
   const kgPerMeter = lengthM > 0 ? result.unitWeightKg / lengthM : 0;
 
@@ -225,7 +340,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
       unitWeightKg: result.unitWeightKg,
       barPiece: {
         id: calc.id,
-        label: calc.note || result.profileLabel,
+        label: calc.note || sectionLabel,
         lengthMm,
         quantity,
       },

@@ -1033,7 +1033,7 @@ export function useProjects(): UseProjectsReturn {
           name: part.name,
           input: adjustedInput,
           result: calc.result,
-          normalizedProfile: part.normalizedProfile,
+          normalizedProfile: normalizeProfileSnapshot(adjustedInput),
         });
       }
       if (recalculatedParts.length === 0) return false;
@@ -1127,7 +1127,7 @@ export function useProjects(): UseProjectsReturn {
           timestamp: now,
           input: nextInput,
           result: calc.result,
-          normalizedProfile: item.normalizedProfile ?? normalizeProfileSnapshot(nextInput),
+          normalizedProfile: normalizeProfileSnapshot(nextInput),
           assembly: asmTag,
           note: item.note,
         });
@@ -1191,6 +1191,61 @@ export function useProjects(): UseProjectsReturn {
         if (asm !== targetAsm) return c;
 
         hasMatching = true;
+
+        // Composite template calculation with parts
+        if (c.templateParts && c.templateParts.length > 0) {
+          const recalculatedParts: ProjectTemplatePart[] = [];
+          for (const part of c.templateParts) {
+            const nextPartQty = Math.max(1, Math.round((part.input.quantity || 1) * mult));
+            const nextPartInput = { ...part.input, quantity: nextPartQty };
+            const partCalc = calculateMetal(nextPartInput);
+            if (!partCalc.ok) continue;
+            recalculatedParts.push({
+              id: part.id,
+              name: part.name,
+              input: nextPartInput,
+              result: partCalc.result,
+              normalizedProfile: normalizeProfileSnapshot(nextPartInput),
+            });
+          }
+          if (recalculatedParts.length === 0) return c;
+
+          let totalWeightKg = 0;
+          let totalCost = 0;
+          let totalSurface = 0;
+          for (const p of recalculatedParts) {
+            totalWeightKg += p.result.totalWeightKg;
+            totalCost += p.result.grandTotalAmount;
+            if (p.result.surfaceAreaM2 != null) totalSurface += p.result.surfaceAreaM2;
+          }
+          totalWeightKg = Math.round(totalWeightKg * 100) / 100;
+          totalCost = Math.round(totalCost * 100) / 100;
+          totalSurface = Math.round(totalSurface * 100) / 100;
+
+          const representative = recalculatedParts[0];
+          const syntheticResult: CalculationResult = {
+            ...representative.result,
+            totalWeightKg,
+            grandTotalAmount: totalCost,
+            surfaceAreaM2: totalSurface > 0 ? totalSurface : null,
+            unitWeightKg: representative.result.unitWeightKg,
+            subtotalAmount: totalCost,
+            wasteAmount: 0,
+            vatAmount: 0,
+          };
+
+          const nextQuantityMultiplier = Math.max(1, Math.round((c.quantityMultiplier || 1) * mult));
+
+          return {
+            ...c,
+            input: representative.input,
+            result: syntheticResult,
+            normalizedProfile: representative.normalizedProfile,
+            templateParts: recalculatedParts,
+            quantityMultiplier: nextQuantityMultiplier,
+          };
+        }
+
         const nextQty = Math.max(1, Math.round((c.input.quantity || 1) * mult));
         if (nextQty === c.input.quantity) return c;
 
@@ -1202,6 +1257,7 @@ export function useProjects(): UseProjectsReturn {
           ...c,
           input: nextInput,
           result: res.result,
+          normalizedProfile: normalizeProfileSnapshot(nextInput),
         };
       });
 
@@ -1244,7 +1300,7 @@ export function useProjects(): UseProjectsReturn {
           timestamp: now,
           input: nextInput,
           result: calc.result,
-          normalizedProfile: item.normalizedProfile ?? normalizeProfileSnapshot(nextInput),
+          normalizedProfile: normalizeProfileSnapshot(nextInput),
           assembly: asmTag,
           note: item.note,
         });

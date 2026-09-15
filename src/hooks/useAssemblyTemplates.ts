@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { cmdParse } from "@ferroscale/metal-core";
+import { calculateMetal, cmdParse } from "@ferroscale/metal-core";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import { normalizeProfileSnapshot, type NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import type { ProjectAdditionalCost, ProjectCategory } from "@/hooks/useProjects";
@@ -49,15 +49,19 @@ const DEFAULT_PARSER_SETTINGS = {
   defaultLengthUnit: "m" as const,
 };
 
-export function createItemFromCommand(cmd: string, quantity = 1, note?: string): AssemblyTemplateItem | null {
+export function createItemFromCommand(cmd: string, quantity?: number, note?: string): AssemblyTemplateItem | null {
   const parsed = cmdParse(cmd, DEFAULT_PARSER_SETTINGS);
   if (!parsed.calc) return null;
+  const q = Math.max(1, quantity !== undefined ? quantity : (parsed.calc.input.quantity || 1));
+  const input = { ...parsed.calc.input, quantity: q };
+  const calc = calculateMetal(input);
+  const result = calc.ok ? calc.result : { ...parsed.calc.result, quantity: q };
   return {
     id: crypto.randomUUID(),
-    input: { ...parsed.calc.input, quantity },
-    result: { ...parsed.calc.result, quantity },
-    normalizedProfile: normalizeProfileSnapshot(parsed.calc.input),
-    quantity,
+    input,
+    result,
+    normalizedProfile: normalizeProfileSnapshot(input),
+    quantity: q,
     note,
   };
 }

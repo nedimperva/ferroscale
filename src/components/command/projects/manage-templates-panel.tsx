@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { calculateMetal, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import {
   createItemFromCommand,
   type AssemblyTemplate,
@@ -200,7 +201,7 @@ export function ManageTemplatesPanel({ api }: { api: UseAssemblyTemplatesReturn 
   const handleAddCut = useCallback(() => {
     const raw = newCmd.trim();
     if (!raw || !draft) return;
-    const item = createItemFromCommand(raw, 1);
+    const item = createItemFromCommand(raw);
     if (!item) {
       setCmdError(true);
       return;
@@ -577,9 +578,19 @@ export function ManageTemplatesPanel({ api }: { api: UseAssemblyTemplatesReturn 
                               disabled={isBuiltin}
                               onClick={() =>
                                 patchDraft({
-                                  items: draft.items.map((it, i) =>
-                                    i === index ? { ...it, quantity: Math.max(1, (it.quantity || 1) - 1) } : it,
-                                  ),
+                                  items: draft.items.map((it, i) => {
+                                    if (i !== index) return it;
+                                    const nextQty = Math.max(1, (it.quantity || 1) - 1);
+                                    const nextInput = { ...it.input, quantity: nextQty };
+                                    const calc = calculateMetal(nextInput);
+                                    return {
+                                      ...it,
+                                      quantity: nextQty,
+                                      input: nextInput,
+                                      result: calc.ok ? calc.result : { ...it.result, quantity: nextQty },
+                                      normalizedProfile: normalizeProfileSnapshot(nextInput),
+                                    };
+                                  }),
                                 })
                               }
                               className="w-11 h-11 md:w-7 md:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] text-foreground font-extrabold text-base leading-none flex items-center justify-center cursor-pointer disabled:opacity-40"
@@ -595,11 +606,19 @@ export function ManageTemplatesPanel({ api }: { api: UseAssemblyTemplatesReturn 
                               disabled={isBuiltin}
                               onClick={() =>
                                 patchDraft({
-                                  items: draft.items.map((it, i) =>
-                                    i === index
-                                      ? { ...it, quantity: Math.min(10000, (it.quantity || 1) + 1) }
-                                      : it,
-                                  ),
+                                  items: draft.items.map((it, i) => {
+                                    if (i !== index) return it;
+                                    const nextQty = Math.min(10000, (it.quantity || 1) + 1);
+                                    const nextInput = { ...it.input, quantity: nextQty };
+                                    const calc = calculateMetal(nextInput);
+                                    return {
+                                      ...it,
+                                      quantity: nextQty,
+                                      input: nextInput,
+                                      result: calc.ok ? calc.result : { ...it.result, quantity: nextQty },
+                                      normalizedProfile: normalizeProfileSnapshot(nextInput),
+                                    };
+                                  }),
                                 })
                               }
                               className="w-11 h-11 md:w-7 md:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] text-foreground font-extrabold text-base leading-none flex items-center justify-center cursor-pointer disabled:opacity-40"

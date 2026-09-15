@@ -65,6 +65,8 @@ returned a confidently wrong number with no error state.
 - **Mobile keypad Tweak flow.** Tapping Tweak now pulls the active length token and clears it with a trailing space, allowing immediate input of a new length without appending dead or shadowed tokens
 - **Service Worker offline fallback.** Fixed stale-while-revalidate fetch handler to return a valid 503 response on offline fetch failures rather than resolving a null Promise that caused browser TypeErrors
 - **Accessibility & Contrast.** Dark mode `--muted-faint` lifted to `#958f85` (>4.6:1 WCAG AA), token-chip delete button touch hit target expanded, mobile hero button provided with `aria-haspopup="dialog"` and accessible labels, and schema.org `WebApplication` JSON-LD structured data added
+- **Template scaling piece count multiplier.** Scaling a fabrication template or sub-assembly now multiplies piece counts rather than stretching cut lengths, preserving individual part dimensions and preventing 1D cut nesting rejections from oversized stock bars
+- **Material order & cut list profile dimension distinction.** Cut groups, procurement aggregates, and supplier RFQ documents now output explicit cross-section dimensions (e.g. `Angle 50x50x5`, `Flat Bar 40x5`, `SHS 40x40x3`, `RHS 50x30x2`, `Plate 4 mm`) instead of grouping distinct profiles under generic family names
 
 ### Added
 

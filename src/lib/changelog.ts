@@ -41,7 +41,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Plates and sheets display mass per area (kg/m²) in breakdown and glance cards rather than linear mass per metre",
       "Mobile keypad Tweak pulls the active length token and clears it with a trailing space so typing immediately sets a new length instead of appending dead shadowed tokens",
       "Service Worker stale-while-revalidate fetch handler catches offline network failures and returns 503 instead of a null Promise causing TypeError",
-      "Dark mode --muted-faint contrast lifted to #958f85 (>4.6:1 WCAG AA), token-chip delete touch target expanded, and hero breakdown button given accessible dialog attributes"
+      "Dark mode --muted-faint contrast lifted to #958f85 (>4.6:1 WCAG AA), token-chip delete touch target expanded, and hero breakdown button given accessible dialog attributes",
+      "Template scaling multiplies piece counts rather than scaling cut lengths, preserving individual part lengths so the 1D cut optimizer nests parts accurately without oversized bar rejections",
+      "Material orders, cut groups, and supplier RFQ exports distinguish cross-section dimensions (e.g. Angle 50x50x5, Flat Bar 40x5, SHS 40x40x3) instead of grouping distinct profiles under generic family labels"
     ],
     added: [
       "A note when a profile is not ordinary stock in the material you picked. Stainless EN sections are real but laser-welded to order, and aluminium is not rolled to steel section dimensions at all — both used to price as quietly as an S235 beam. Nothing is blocked: the mass is right either way, and the note points at the rate, which is where the real surprise is",
@@ -82,7 +84,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Ploče i limovi prikazuju masu po površini (kg/m²) u raščlanjivanju i brzim karticama umjesto linearne mase po metru",
       "Tipka 'Mijenjaj' na mobilnoj tastaturi povlači token dužine tako da kucanje odmah postavlja novu dužinu umjesto dodavanja nevažećih tokena",
       "Service Worker stale-while-revalidate rukovalac hvata mrežne greške bez interneta i vraća 503 umjesto null Promise-a koji je izazivao TypeError",
-      "Poboljšan kontrast --muted-faint u tamnoj temi na #958f85 (>4,6:1 WCAG AA), povećana dodirna površina za brisanje čipova, te dodane pristupačne oznake dijaloga na dugme rezultata"
+      "Poboljšan kontrast --muted-faint u tamnoj temi na #958f85 (>4,6:1 WCAG AA), povećana dodirna površina za brisanje čipova, te dodane pristupačne oznake dijaloga na dugme rezultata",
+      "Skaliranje šablona množi broj komada umjesto dužine reza, čuvajući stvarne dužine pojedinačnih dijelova tako da 1D optimizator rezanja tačno uklapa profile bez grešaka prevelike dužine",
+      "Narudžbenice materijala, grupe rezanja i RFQ upiti dobavljačima jasno navode dimenzije poprečnog presjeka (npr. Ugaonik 50x50x5, Plosnati 40x5, SHS 40x40x3) umjesto spajanja različitih profila pod opće nazive porodica"
     ],
     added_bs: [
       "Napomena kada profil nije uobičajeno skladišni u materijalu koji ste izabrali. Nehrđajući EN profili postoje ali se lasersko vare po narudžbi, a aluminij se uopšte ne valja u dimenzije čeličnih profila — oboje se ranije obračunavalo jednako tiho kao S235 nosač. Ništa nije blokirano: masa je tačna u svakom slučaju, a napomena upućuje na cijenu, gdje je pravo iznenađenje",
