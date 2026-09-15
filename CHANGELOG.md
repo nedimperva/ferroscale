@@ -57,6 +57,14 @@ returned a confidently wrong number with no error state.
   testing); corrugated sheet asked for cover width while its formula wants
   developed width, understating mass by 5–15%; chequered plate presented a rule
   of thumb as EN 10363
+- **Two-dimension equal-leg angle parsing.** Queries like `l50x5 6m` previously assigned thickness to `legB`, failing geometry validation. Now correctly sets `legA = 50`, `legB = 50`, `thickness = 5`
+- **Tee profile suggestion chip size.** Corrected invalid chip `100x11` to standard EN 10055 size `100x10`
+- **IPN 80 cross-section area corrected to 758 mm².** Reconciled with EN 10024 / DIN 1025-1 catalog mass 5.95 kg/m; `QA_BENCHMARK_ROWS` updated and `DATASET_VERSION` bumped to `2026.09.2`
+- **Breakdown volume precision.** Small volumes in cubic metres (<0.001 m³) in calculation breakdown rows no longer truncate to 0.0000 m³
+- **Plates and sheets mass per unit area.** Breakdown and fold glance cells now display kg/m² for sheet-like families rather than arbitrary linear kg/m
+- **Mobile keypad Tweak flow.** Tapping Tweak now pulls the active length token and clears it with a trailing space, allowing immediate input of a new length without appending dead or shadowed tokens
+- **Service Worker offline fallback.** Fixed stale-while-revalidate fetch handler to return a valid 503 response on offline fetch failures rather than resolving a null Promise that caused browser TypeErrors
+- **Accessibility & Contrast.** Dark mode `--muted-faint` lifted to `#958f85` (>4.6:1 WCAG AA), token-chip delete button touch hit target expanded, mobile hero button provided with `aria-haspopup="dialog"` and accessible labels, and schema.org `WebApplication` JSON-LD structured data added
 
 ### Added
 
