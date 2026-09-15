@@ -46,7 +46,6 @@ export const QA_TOLERANCE_PCT = 0.5;
  *   T 30x30x4 1.12% - T 40x40x5 0.55%
  */
 export const QA_UNVERIFIED_SIZES: string[] = [
-  "beam_ipn_en/ipn80",
   "beam_ipn_en/ipn120",
   "beam_ipn_en/ipn320",
   "beam_hem_en/hem140",
@@ -90,6 +89,7 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   { id: "ipe600", label: "IPE 600", profileId: "beam_ipe_en", selectedSizeId: "ipe600", expectedKgPerM: 122, source: "EN 10365 catalog" },
 
   /* ---- IPN (EN 10024) ---- */
+  { id: "ipn80", label: "IPN 80", profileId: "beam_ipn_en", selectedSizeId: "ipn80", expectedKgPerM: 5.95, source: "EN 10024 catalog" },
   { id: "ipn100", label: "IPN 100", profileId: "beam_ipn_en", selectedSizeId: "ipn100", expectedKgPerM: 8.34, source: "EN 10024 catalog" },
   { id: "ipn140", label: "IPN 140", profileId: "beam_ipn_en", selectedSizeId: "ipn140", expectedKgPerM: 14.3, source: "EN 10024 catalog" },
   { id: "ipn160", label: "IPN 160", profileId: "beam_ipn_en", selectedSizeId: "ipn160", expectedKgPerM: 17.9, source: "EN 10024 catalog" },

@@ -44,7 +44,7 @@ export const BEAM_PROFILES: StandardProfileDefinition[] = [
     formulaLabel: "A from EN size table",
     referenceLabel: "EN 10024",
     sizes: [
-      { id: "ipn80", label: "IPN 80", areaMm2: 786, perimeterMm: 304, referenceLabel: "EN 10024" },
+      { id: "ipn80", label: "IPN 80", areaMm2: 758, perimeterMm: 304, referenceLabel: "EN 10024" },
       { id: "ipn100", label: "IPN 100", areaMm2: 1058, perimeterMm: 370, referenceLabel: "EN 10024" },
       { id: "ipn120", label: "IPN 120", areaMm2: 1422, perimeterMm: 439, referenceLabel: "EN 10024" },
       { id: "ipn140", label: "IPN 140", areaMm2: 1826, perimeterMm: 502, referenceLabel: "EN 10024" },
