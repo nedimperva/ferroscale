@@ -283,6 +283,7 @@
     },
     "result": {
       "massPerMetre": "Mass per metre",
+      "massPerArea": "Mass per area",
       "length": "Length",
       "pieces": "Pieces",
       "perPiece": "Per piece",

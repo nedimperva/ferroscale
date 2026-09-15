@@ -283,6 +283,7 @@
     },
     "result": {
       "massPerMetre": "Masa po metru",
+      "massPerArea": "Masa po površini",
       "length": "Dužina",
       "pieces": "Komadi",
       "perPiece": "Po komadu",

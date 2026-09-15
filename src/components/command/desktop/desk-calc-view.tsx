@@ -8,7 +8,14 @@ import {
   cmdClassifyToken,
   cmdPasteIntoLine,
 } from "@ferroscale/metal-core";
-import { fsMoney, fsWeight, fsWeightUnit, getMaterialGradeById } from "@ferroscale/metal-core";
+import {
+  fsMoney,
+  fsWeight,
+  fsWeightUnit,
+  getMaterialGradeById,
+  SHEET_LIKE_FAMILIES,
+  toMillimeters,
+} from "@ferroscale/metal-core";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
@@ -95,10 +102,24 @@ function PanelIconBtn({
  */
 function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
   const t = useTranslations("command");
+  const isSheet = Boolean(p.alias && SHEET_LIKE_FAMILIES.has(p.alias.fam));
+  const widthEntry = p.calc?.input.manualDimensions?.width;
+  const widthM = widthEntry ? toMillimeters(widthEntry.value, widthEntry.unit) / 1000 : 0;
+  const areaM2 = widthM > 0 && p.lengthM ? widthM * p.lengthM : 0;
+  const massPerAreaVal = areaM2 > 0 && p.calc ? p.calc.result.unitWeightKg / areaM2 : null;
+
+  const massLabel = isSheet && massPerAreaVal != null ? t("result.massPerArea") : t("result.massPerMetre");
+  const massValue =
+    p.valid && isSheet && massPerAreaVal != null
+      ? `${massPerAreaVal.toFixed(2)} kg/m²`
+      : p.valid && p.kgm != null
+      ? `${p.kgm.toFixed(2)} kg/m`
+      : "—";
+
   const cells: { label: string; value: string }[] = [
     {
-      label: t("result.massPerMetre"),
-      value: p.valid && p.kgm != null ? `${p.kgm.toFixed(2)} kg/m` : "—",
+      label: massLabel,
+      value: massValue,
     },
     {
       label: t("desktop.perPieceLabel"),
@@ -1147,7 +1168,10 @@ function DeskBreakdown({
   // The expanded right column keeps a tighter subset: kg/m is already in the
   // glance row, density lives in the header, and per-piece price / subtotal
   // stay sheet-only.
-  const geometry = rows?.geometry.filter((row) => row.id !== "density" && row.id !== "massPerMetre") ?? [];
+  const geometry =
+    rows?.geometry.filter(
+      (row) => row.id !== "density" && row.id !== "massPerMetre" && row.id !== "massPerArea",
+    ) ?? [];
   const pricing =
     rows?.pricing.filter((row) => row.id !== "perPiecePrice" && row.id !== "subtotal") ?? [];
 

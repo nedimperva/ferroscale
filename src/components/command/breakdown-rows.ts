@@ -1,4 +1,11 @@
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import {
+  CURRENCY_SYMBOLS,
+  fsMoney,
+  fsWeight,
+  fsWeightUnit,
+  SHEET_LIKE_FAMILIES,
+  toMillimeters,
+} from "@ferroscale/metal-core";
 import type { CommandParseResult } from "@ferroscale/metal-core";
 import { massBand } from "./mass-band";
 
@@ -12,6 +19,7 @@ type CommandT = (key: string, values?: Record<string, string | number>) => strin
 
 export type BreakdownRowId =
   | "massPerMetre"
+  | "massPerArea"
   | "length"
   | "pieces"
   | "perPieceWeight"
@@ -58,8 +66,19 @@ export function buildBreakdownRows(
   const r = p.calc.result;
   const sym = CURRENCY_SYMBOLS[r.currency] ?? "€";
 
+  const isSheet = Boolean(p.alias && SHEET_LIKE_FAMILIES.has(p.alias.fam));
+  const widthEntry = p.calc.input.manualDimensions?.width;
+  const widthM = widthEntry ? toMillimeters(widthEntry.value, widthEntry.unit) / 1000 : 0;
+  const areaM2 = widthM > 0 && p.lengthM ? widthM * p.lengthM : 0;
+  const massPerAreaVal = areaM2 > 0 ? r.unitWeightKg / areaM2 : null;
+
+  const massRateRow: BreakdownRow =
+    isSheet && massPerAreaVal != null
+      ? { id: "massPerArea", label: t("result.massPerArea"), value: `${massPerAreaVal.toFixed(2)} kg/m²` }
+      : { id: "massPerMetre", label: t("result.massPerMetre"), value: `${p.kgm.toFixed(2)} kg/m` };
+
   const geometry: BreakdownRow[] = [
-    { id: "massPerMetre", label: t("result.massPerMetre"), value: `${p.kgm.toFixed(2)} kg/m` },
+    massRateRow,
     { id: "length", label: t("result.length"), value: `${p.lengthM} m` },
     { id: "pieces", label: t("result.pieces"), value: `× ${p.realQty}` },
     {
