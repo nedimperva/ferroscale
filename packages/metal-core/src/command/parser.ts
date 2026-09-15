@@ -366,8 +366,8 @@ function buildCalculationInput(
     }
     case "angle": {
       const a = dims[0];
-      const b = dims[1] ?? dims[0];
-      const t = dims[2] ?? dims[1];
+      const b = dims.length >= 3 ? dims[1] : dims[0];
+      const t = dims.length >= 3 ? dims[2] : dims[1];
       if (!a || !b || !t) return null;
       setDim("legA", a);
       setDim("legB", b);

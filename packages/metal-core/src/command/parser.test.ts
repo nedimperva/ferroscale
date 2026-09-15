@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calculateMetal } from "@ferroscale/metal-core";
 import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "./parser";
-import { findAliasByProfileId } from "./aliases";
+import { COMMAND_SIZES, findAliasByProfileId } from "./aliases";
 import type { CommandParserSettings, CommandPricing } from "./types";
 
 const PRICING: CommandPricing = {
@@ -216,6 +216,25 @@ describe("cmdParse", () => {
     expect(p.alias?.fam).toBe("tee");
     expect(p.calc!.input.profileId).toBe("tee_en");
     expect(p.calc!.input.selectedSizeId).toBe("t30x4");
+  });
+
+  it("parses 2-dimension angle shorthand as equal-leg angle", () => {
+    const p2 = cmdParse("l50x5 6m", mkSettings());
+    const p3 = cmdParse("l50x50x5 6m", mkSettings());
+    expect(p2.valid).toBe(true);
+    expect(p3.valid).toBe(true);
+    expect(p2.calc!.input.manualDimensions.legA).toEqual({ value: 50, unit: "mm" });
+    expect(p2.calc!.input.manualDimensions.legB).toEqual({ value: 50, unit: "mm" });
+    expect(p2.calc!.input.manualDimensions.thickness).toEqual({ value: 5, unit: "mm" });
+    expect(p2.totalKg).toBeCloseTo(p3.totalKg!, 4);
+  });
+
+  it("ensures all curated tee sizes correspond to valid EN sizes", () => {
+    for (const size of COMMAND_SIZES.tee) {
+      const p = cmdParse(`t${size} 6m`, mkSettings());
+      expect(p.valid).toBe(true);
+      expect(p.issues.filter((i) => i.code === "unknownSize")).toHaveLength(0);
+    }
   });
 });
 
