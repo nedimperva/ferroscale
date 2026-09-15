@@ -33,7 +33,15 @@ export const CHANGELOG: ChangelogEntry[] = [
       "On a phone, opening Parts, Projects or Settings by link showed the calculator instead, while the tab title said otherwise",
       "Muted text failed contrast in both themes, and the LIVE badge and two controls sat under the minimum readable and tappable sizes",
       "REFINE stayed in English in the Bosnian interface — the translation existed and was never reached",
-      "Expanded metal cited a hydrogen-embrittlement testing standard, and corrugated sheet asked for cover width while its formula wanted developed width, understating mass by 5-15%"
+      "Expanded metal cited a hydrogen-embrittlement testing standard, and corrugated sheet asked for cover width while its formula wanted developed width, understating mass by 5-15%",
+      "Equal-leg angle parsing with two dimensions (`l50x5 6m`) previously assigned thickness to `legB`, causing geometry rejection. Now correctly sets equal legs `legA = 50`, `legB = 50`, `thickness = 5`",
+      "Tee profile suggestion chip `100x11` corrected to EN 10055 standard catalog size `100x10`",
+      "IPN 80 cross-section area updated to 758 mm² (catalog mass 5.95 kg/m per EN 10024 / DIN 1025-1); benchmark coverage updated and DATASET_VERSION bumped to 2026.09.2",
+      "Breakdown rows preserve precision for small volumes in cubic metres (<0.001 m³) rather than truncating to 0.0000 m³",
+      "Plates and sheets display mass per area (kg/m²) in breakdown and glance cards rather than linear mass per metre",
+      "Mobile keypad Tweak pulls the active length token and clears it with a trailing space so typing immediately sets a new length instead of appending dead shadowed tokens",
+      "Service Worker stale-while-revalidate fetch handler catches offline network failures and returns 503 instead of a null Promise causing TypeError",
+      "Dark mode --muted-faint contrast lifted to #958f85 (>4.6:1 WCAG AA), token-chip delete touch target expanded, and hero breakdown button given accessible dialog attributes"
     ],
     added: [
       "A note when a profile is not ordinary stock in the material you picked. Stainless EN sections are real but laser-welded to order, and aluminium is not rolled to steel section dimensions at all — both used to price as quietly as an S235 beam. Nothing is blocked: the mass is right either way, and the note points at the rate, which is where the real surprise is",
@@ -65,7 +73,15 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Na telefonu je otvaranje Dijelova, Projekata ili Postavki preko linka prikazivalo kalkulator, dok je naslov kartice govorio drugačije",
       "Prigušeni tekst nije zadovoljavao kontrast ni u jednoj temi, a LIVE oznaka i dvije kontrole bile su ispod minimalne čitljive i dodirljive veličine",
       "REFINE je ostajao na engleskom u bosanskom sučelju — prijevod je postojao i nikad se nije koristio",
-      "Expanded metal je citirao standard za ispitivanje vodikove krhkosti, a valoviti lim je tražio pokrivnu širinu dok mu formula traži razvijenu, umanjujući masu za 5-15%"
+      "Expanded metal je citirao standard za ispitivanje vodikove krhkosti, a valoviti lim je tražio pokrivnu širinu dok mu formula traži razvijenu, umanjujući masu za 5-15%",
+      "Parsiranje ugaonog profila sa dvije dimenzije (`l50x5 6m`) ranije je dodjeljivalo debljinu za `legB`; sada ispravno postavlja jednake krakove `legA = 50`, `legB = 50`, `thickness = 5`",
+      "Čip prijedloga za T profil `100x11` ispravljen na EN 10055 standardnu katalošku dimenziju `100x10`",
+      "Površina presjeka za IPN 80 usklađena na 758 mm² (kataloška masa 5,95 kg/m po EN 10024 / DIN 1025-1); pokrivenost provjere ažurirana i DATASET_VERSION podignut na 2026.09.2",
+      "Redovi raščlanjivanja zadržavaju preciznost za male zapremine u kubnim metrima (<0,001 m³) umjesto zaokruživanja na 0,0000 m³",
+      "Ploče i limovi prikazuju masu po površini (kg/m²) u raščlanjivanju i brzim karticama umjesto linearne mase po metru",
+      "Tipka 'Mijenjaj' na mobilnoj tastaturi povlači token dužine tako da kucanje odmah postavlja novu dužinu umjesto dodavanja nevažećih tokena",
+      "Service Worker stale-while-revalidate rukovalac hvata mrežne greške bez interneta i vraća 503 umjesto null Promise-a koji je izazivao TypeError",
+      "Poboljšan kontrast --muted-faint u tamnoj temi na #958f85 (>4,6:1 WCAG AA), povećana dodirna površina za brisanje čipova, te dodane pristupačne oznake dijaloga na dugme rezultata"
     ],
     added_bs: [
       "Napomena kada profil nije uobičajeno skladišni u materijalu koji ste izabrali. Nehrđajući EN profili postoje ali se lasersko vare po narudžbi, a aluminij se uopšte ne valja u dimenzije čeličnih profila — oboje se ranije obračunavalo jednako tiho kao S235 nosač. Ništa nije blokirano: masa je tačna u svakom slučaju, a napomena upućuje na cijenu, gdje je pravo iznenađenje",

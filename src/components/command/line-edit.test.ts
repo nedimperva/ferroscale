@@ -10,6 +10,7 @@ import {
   removeLineToken,
   replaceItemTokenKind,
   replaceLineToken,
+  tweakActiveItem,
 } from "./line-edit";
 
 describe("lineChips", () => {
@@ -150,3 +151,23 @@ describe("pullLastChip", () => {
     expect(pullLastChip("hea120 6m + ")).toBe("hea120 6m + ");
   });
 });
+
+describe("tweakActiveItem", () => {
+  it("pulls the active length token into the partial for editing", () => {
+    expect(tweakActiveItem("hea120 6m ")).toBe("hea120 6m");
+    expect(tweakActiveItem("hea120 6m")).toBe("hea120 6m");
+  });
+
+  it("pulls length to the end while preserving other tokens", () => {
+    expect(tweakActiveItem("hea120 6m x2 s235 ")).toBe("hea120 x2 s235 6m");
+  });
+
+  it("operates only on the active item in a multi-item line", () => {
+    expect(tweakActiveItem("hea120 6m + ipe200 4m ")).toBe("hea120 6m + ipe200 4m");
+  });
+
+  it("falls back to pullLastChip when no length token is present", () => {
+    expect(tweakActiveItem("hea120 ")).toBe("hea120");
+  });
+});
+

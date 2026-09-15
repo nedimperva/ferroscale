@@ -63,6 +63,7 @@ import {
   lineExpandedIndex,
   removeLineToken,
   replaceLineToken,
+  tweakActiveItem,
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
@@ -1739,6 +1740,8 @@ export function CommandShell() {
               type="button"
               disabled={!p.valid}
               onClick={() => p.valid && setSheet("result")}
+              aria-haspopup="dialog"
+              aria-label={p.valid ? t("aria.openBreakdown") : undefined}
               className="block w-full text-left p-0 m-0 bg-transparent border-0"
               style={{ cursor: p.valid ? "pointer" : "default" }}
             >
@@ -2277,7 +2280,10 @@ export function CommandShell() {
             onBackToken={onBackToken}
             onEnter={onEnter}
             onNew={newCalc}
-            onTweak={() => setKeypadOverride("numpad")}
+            onTweak={() => {
+              setQuery((q) => tweakActiveItem(q));
+              setKeypadOverride("numpad");
+            }}
             onShare={shareLink}
             onLetters={() => setKeypadOverride("letters")}
             onNumbers={() => setKeypadOverride("numpad")}
@@ -2444,6 +2450,8 @@ function MetricStrip({
       type="button"
       onClick={onOpen}
       disabled={!p.valid}
+      aria-haspopup="dialog"
+      aria-label={p.valid ? t("aria.openBreakdown") : undefined}
       className="flex items-center gap-3 w-full mt-2.5 rounded-button text-left border border-border-faint"
       style={{
         padding: "7px 11px",

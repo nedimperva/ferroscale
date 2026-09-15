@@ -177,7 +177,8 @@
       "toggleTheme": "Promijeni temu",
       "closeSheet": "Zatvori panel",
       "liveResult": "Rezultat: {value}",
-      "addToSession": "Dodaj ovu liniju u sesiju"
+      "addToSession": "Dodaj ovu liniju u sesiju",
+      "openBreakdown": "Otvori detalje rezultata"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",
@@ -283,6 +284,7 @@
     },
     "result": {
       "massPerMetre": "Masa po metru",
+      "massPerArea": "Masa po površini",
       "length": "Dužina",
       "pieces": "Komadi",
       "perPiece": "Po komadu",

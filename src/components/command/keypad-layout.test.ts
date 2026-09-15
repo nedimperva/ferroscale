@@ -94,4 +94,9 @@ describe("commandKeypadInsert", () => {
   it("lets a unit glue onto the number under the caret", () => {
     expect(insert("hea120 6", "mm ")).toBe("hea120 6mm ");
   });
+
+  it("replaces a completed length token when a new digit is typed", () => {
+    expect(insert("hea120 6m", "4")).toBe("hea120 4");
+    expect(insert("hea120 6000mm", "3")).toBe("hea120 3");
+  });
 });

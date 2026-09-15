@@ -264,13 +264,22 @@ export function calculateMetal(input: CalculationInput): CalculationResponse {
       referenceLabels: references,
       surfaceAreaM2: surfaceAreaM2 != null ? roundTo(surfaceAreaM2, surfaceDecimals) : null,
       unitSurfaceAreaM2: unitSurfaceAreaM2 != null ? roundTo(unitSurfaceAreaM2, surfaceDecimals) : null,
-      breakdownRows: rows.map((row) => ({
-        ...row,
-        value: roundTo(
-          row.value,
-          row.unit === CURRENCY_SYMBOLS[input.currency] ? input.rounding.priceDecimals : input.rounding.dimensionDecimals,
-        ),
-      })),
+      breakdownRows: rows.map((row) => {
+        let decimals = input.rounding.dimensionDecimals;
+        if (row.unit === CURRENCY_SYMBOLS[input.currency]) {
+          decimals = input.rounding.priceDecimals;
+        } else if (row.unit === "m3") {
+          decimals = Math.max(input.rounding.dimensionDecimals, 6);
+        } else if (row.unit === "kg") {
+          decimals = input.rounding.weightDecimals;
+        } else if (row.unit === "m2") {
+          decimals = surfaceDecimals;
+        }
+        return {
+          ...row,
+          value: roundTo(row.value, decimals),
+        };
+      }),
     },
   };
 }

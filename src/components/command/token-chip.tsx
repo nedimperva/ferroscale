@@ -145,7 +145,7 @@ export function TokenChip({
         // flush at 60px and 28px with no boundary, so on a phone — gloves, one
         // hand — deleting the token you meant to edit was a likely miss.
         style={{ borderLeft: "1px solid var(--border-faint)" }}
-        className="flex items-center justify-center w-8 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
+        className="flex items-center justify-center min-w-[36px] px-2 rounded-r-md text-[14px] leading-none hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
       >
         ×
       </button>
