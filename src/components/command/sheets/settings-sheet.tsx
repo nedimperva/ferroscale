@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -54,6 +54,7 @@ interface CommandDocSection {
 
 export function CommandDocsSection({ className = "mt-4" }: { className?: string }) {
   const t = useTranslations("command");
+  const tFaq = useTranslations("faq");
   const sections = Object.values(
     t.raw("docs.sections") as Record<string, CommandDocSection>,
   );
@@ -85,6 +86,21 @@ export function CommandDocsSection({ className = "mt-4" }: { className?: string 
               </ul>
             </article>
           ))}
+        </div>
+        <div className="p-3 border-t border-[var(--border-faint)] bg-[var(--surface-raised)] flex items-center justify-between">
+          <Link
+            href="/faq"
+            className="text-xs font-semibold text-foreground hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1.5"
+          >
+            <span>{tFaq("navLink")}</span>
+            <span aria-hidden="true">→</span>
+          </Link>
+          <Link
+            href="/qa"
+            className="text-xs text-muted hover:text-foreground transition-colors"
+          >
+            Formula QA
+          </Link>
         </div>
       </div>
     </section>

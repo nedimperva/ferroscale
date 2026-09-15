@@ -14,8 +14,25 @@ async function getPreferredLocale(): Promise<AppLocale> {
   return routing.defaultLocale;
 }
 
-export default async function RootRedirectPage() {
-  const locale = await getPreferredLocale();
+interface RootRedirectPageProps {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}
 
-  redirect(`/${locale}`);
+export default async function RootRedirectPage({ searchParams }: RootRedirectPageProps) {
+  const locale = await getPreferredLocale();
+  const sp = searchParams ? await searchParams : {};
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(sp)) {
+    if (typeof value === "string") {
+      params.set(key, value);
+    } else if (Array.isArray(value)) {
+      for (const v of value) {
+        params.append(key, v);
+      }
+    }
+  }
+
+  const queryStr = params.toString();
+  redirect(`/${locale}${queryStr ? `?${queryStr}` : ""}`);
 }

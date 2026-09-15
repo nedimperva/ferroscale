@@ -22,6 +22,10 @@
     "contact": {
       "title": "Kontakt - FerroScale",
       "description": "Pošaljite prijavu ili nas kontaktirajte u vezi FerroScale aplikacije."
+    },
+    "faq": {
+      "title": "Česta pitanja o proračunu težine metala - FerroScale",
+      "description": "Formule, praktični primjeri i odgovori za proračun težine čeličnih, inox i aluminijskih profila."
     }
   },
   "loading": {
@@ -1108,5 +1112,283 @@
     "note": "Referentne vrijednosti su namjerno nezavisne od podataka aplikacije: standardni profili koriste objavljene kataloške mase, a ručni profili ručno izračunate formule presjeka. Iste provjere se izvršavaju u CI-ju pri svakoj izmjeni.",
     "coverage": "Pokriva {covered} od {total} EN dimenzija",
     "unverifiedNote": "{count} EN dimenzija je izostavljeno iz ove tabele jer se pohranjena površina i objavljena kataloška masa ne poklapaju. Navedene su u izvoru benchmarka i čekaju provjeru u katalogu."
+  },
+  "faq": {
+    "title": "Česta pitanja o proračunu težine metala",
+    "subtitle": "Formule s provjerljivim porijeklom, radionička pravila i praktični primjeri za evropske standardne profile, cijevi i limove.",
+    "back": "Nazad na kalkulator",
+    "navLink": "Česta pitanja o proračunu",
+    "searchPlaceholder": "Pretražite formule i profile (npr. cijev, hea, lim, gustina)...",
+    "searchAria": "Pretražite pitanja i formule proračuna",
+    "noResultsTitle": "Nema pitanja koja odgovaraju pretrazi",
+    "noResultsDesc": "Pokušajte pretražiti drugi pojam kao što su \"lim\", \"cijev\", \"S235\" ili \"gustina\".",
+    "clearSearch": "Očisti pretragu",
+    "expandAll": "Otvori sve",
+    "collapseAll": "Zatvori sve",
+    "questionsCount": "{count} pitanja",
+    "categories": {
+      "all": "Sve teme",
+      "general": "Osnovni principi",
+      "sheets": "Limovi i ploče",
+      "tubes": "Šuplji profili i cijevi",
+      "bars": "Puni profili i šipke",
+      "beams": "Nosači i L-profili",
+      "materials": "Legure i gustine",
+      "tolerances": "Tolerancije i otpad"
+    },
+    "quickCheatSheet": {
+      "title": "Standardne formule za čelik (pri 7,85 kg/dm³)",
+      "subtitle": "Brza radionička matematika za procjenu težine",
+      "clickToTest": "Kliknite na formulu za test u provjerivaču i skok na odgovor",
+      "plateTitle": "Limovi i ploče",
+      "plateFormula": "t (mm) × 7,85 kg/m²",
+      "roundBarTitle": "Puna okrugla šipka",
+      "roundBarFormula": "d² (mm) ÷ 162,2 kg/m",
+      "roundTubeTitle": "Okrugla cijev",
+      "roundTubeFormula": "(D - t) × t × 0,02466 kg/m",
+      "squareTubeTitle": "Kvadratna cijev",
+      "squareTubeFormula": "(H + W - 2t) × 2t × 0,00785 kg/m",
+      "flatBarTitle": "Plosnati čelik",
+      "flatBarFormula": "W × T × 0,00785 kg/m",
+      "densityRatiosTitle": "Koeficijenti materijala",
+      "densityRatios": "Alu: ×0,344 · Inox 304: ×1,010 · Mesing: ×1,121"
+    },
+    "sandbox": {
+      "title": "Interaktivni provjerivač formula",
+      "subtitle": "Odaberite profil da vidite svaki korak matematičkog proračuna",
+      "shapeSheet": "Lim / Ploča",
+      "shapeRoundBar": "Okrugla šipka",
+      "shapeRoundTube": "Okrugla cijev",
+      "shapeRectTube": "Pravougaona cijev",
+      "shapeFlatBar": "Plosnati čelik",
+      "shapeSquareBar": "Kvadratna šipka",
+      "shapeAngle": "Ugaoni profil (L-profil)",
+      "shapeBeam": "I/H Nosač (HEA/IPE/HEB)",
+      "shapeChannel": "U-profil (UPN/UPE)",
+      "shapeTee": "T-profil (T-bar)",
+      "shapeHexBar": "Šesterokutna šipka",
+      "shapeChequered": "Rebrasti lim",
+      "shapeGalv": "Dodatak cinka",
+      "shapePaint": "Površina za farbanje",
+      "beamSize": "Standardni EN nosač",
+      "channelSize": "Standardni EN U-profil",
+      "teeSize": "Standardni EN T-profil",
+      "hexSize": "Otvor ključa (s)",
+      "profile": "Oblik profila",
+      "material": "Materijal / Kvalitet",
+      "steel": "Čelik (S235JR - 7,85 g/cm³)",
+      "stainless": "Inox (1.4301 / 304 - 7,93 g/cm³)",
+      "aluminum": "Aluminijum (6060 - 2,70 g/cm³)",
+      "thickness": "Debljina (t)",
+      "width": "Širina (w / b)",
+      "height": "Visina (h)",
+      "length": "Dužina (L)",
+      "diameter": "Prečnik (d / D)",
+      "side": "Stranica (s)",
+      "legA": "Krak A",
+      "legB": "Krak B",
+      "step1Area": "1. Površina poprečnog presjeka",
+      "step2Linear": "2. Masa po dužini ili površini",
+      "step3Total": "3. Ukupna izračunata masa",
+      "command": "Odgovarajuća FerroScale komanda",
+      "copy": "Kopiraj komandu",
+      "copied": "Kopirano!",
+      "openInApp": "Isprobaj u kalkulatoru"
+    },
+    "labels": {
+      "formula": "Mjerodavna formula",
+      "explanation": "Principi i mehanika",
+      "example": "Praktični radionički primjer",
+      "workshopTip": "Radionički savjet",
+      "ferroscaleSyntax": "FerroScale komanda",
+      "tryCommand": "Isprobaj upit u kalkulatoru",
+      "expandDetails": "Prikaži detalje",
+      "collapseDetails": "Zatvori",
+      "testInSandbox": "Testiraj u verifikatoru",
+      "jumpToAnswer": "Pročitaj odgovor",
+      "testFormula": "Testiraj u verifikatoru"
+    },
+    "items": {
+      "generalFormula": {
+        "question": "Kako se računa težina bilo kojeg metalnog profila iz njegovih dimenzija?",
+        "summary": "Težina je proizvod zapremine i specifične gustine materijala: Masa = Zapremina × Gustina.",
+        "formula": "Masa (kg) = Površina (mm²) × Dužina (m) × Gustina (g/cm³) ÷ 1.000",
+        "explanation": "Svaki proračun mase metala slijedi isti fizički zakon. Prvo se izračuna površina poprečnog presjeka profila u kvadratnim milimetrima (mm²). Množenjem s dužinom dobija se zapremina. Množenjem zapremine sa specifičnom gustinom legure dobija se ukupna masa.",
+        "example": "Čelična šipka S235 presjeka 1.000 mm², dužine 6 metara: 1.000 × 6 × 7,85 ÷ 1.000 = 47,10 kg.",
+        "tip": "Standardna gustina ugljeničnog konstrukcionog čelika je 7.850 kg/m³ (7,85 g/cm³ ili kg/dm³). Pamćenje broja 7,85 temelj je svih čeličnih proračuna.",
+        "command": "bar1000 6m s235"
+      },
+      "sheetPlate": {
+        "question": "Kako se računa težina čeličnih limova i ploča?",
+        "summary": "Čelični lim debljine 1 mm teži tačno 7,85 kg po kvadratnom metru.",
+        "formula": "Masa (kg) = Debljina (mm) × Širina (m) × Dužina (m) × 7,85 kg/m²",
+        "explanation": "Budući da se površina izražava u kvadratnim metrima, proračuni za limove koriste faktor površinske mase: 1 mm čeličnog lima teži 7,85 kg/m². Lim debljine 5 mm teži 5 × 7,85 = 39,25 kg/m², a lim debljine 8 mm teži 62,80 kg/m².",
+        "example": "Standardna tabla 2.000 × 1.000 mm (2 m²) lima debljine 5 mm: 5 × 2,0 × 1,0 × 7,85 = 78,50 kg.",
+        "tip": "Standardni komercijalni formati limova u Evropi su 2000×1000 mm (mali format), 2500×1250 mm (srednji format) i 3000×1500 mm (veliki format).",
+        "command": "sht5 2000x1000 s235"
+      },
+      "roundBar": {
+        "question": "Koja je formula i radionička prečica za težinu pune okrugle šipke?",
+        "summary": "Kvadrat prečnika pomnožen sa 0,006165 daje kg po dužnom metru za čelik.",
+        "formula": "kg/m = d² × 0,006165  (ili prečica: d² ÷ 162,2)",
+        "explanation": "Površina kružnog presjeka je π × (d/2)². Množenjem sa gustinom čelika 0,00785 g/mm³ izraz se pojednostavljuje na d² × (π/4 × 0,00785) ≈ d² × 0,0061654. U radionicama, dijeljenje d² sa 162 omogućava izuzetno brzu procjenu napamet.",
+        "example": "Čelična šipka Ø20 mm: 20² ÷ 162 = 400 ÷ 162 ≈ 2,47 kg/m. Za šipku od 6 m: 2,47 × 6 = 14,82 kg.",
+        "tip": "Za nerđajući čelik (inox 304) koristite d² ÷ 160,5. Za aluminijum podijelite sa 471.",
+        "command": "rd20 6m"
+      },
+      "roundTube": {
+        "question": "Kako se računa težina okruglih cijevi?",
+        "summary": "Oduzmite debljinu zida od vanjskog prečnika, pomnožite sa debljinom zida i 0,02466.",
+        "formula": "kg/m = (Vanjski prečnik - Debljina zida) × Debljina zida × 0,02466",
+        "explanation": "Površina kružnog prstena je π × (D - t) × t. Uvrštavanjem standardne gustine čelika (7,85 g/cm³) konstanta postaje π × 0,00785 ≈ 0,02466. Ova formula eliminiše potrebu za odvojenim računanjem vanjskog i unutrašnjeg kruga.",
+        "example": "Standardna cijev EN 10255 dimenzija 60,3 mm sa zidom 3,2 mm: (60,3 - 3,2) × 3,2 × 0,02466 = 57,1 × 3,2 × 0,02466 = 4,507 kg/m.",
+        "tip": "Nominalni prečnik cijevi (DN / NPS) označava unutrašnji prolaz, a ne vanjski prečnik. Prije računanja uvijek provjerite stvarni vanjski prečnik u mm.",
+        "command": "tube60.3x3.2 6m"
+      },
+      "boxSection": {
+        "question": "Kako se računa težina kvadratnih i pravougaonih cijevi (HOP / VOP)?",
+        "summary": "Obim pomnožen sa debljinom zida i 0,00785 kg/m, uz korekciju za zaobljenja uglova.",
+        "formula": "kg/m ≈ (Visina + Širina - 2 × Debljina) × 2 × Debljina × 0,00785",
+        "explanation": "Za šuplje kutijaste profile, srednja linija obima je 2 × (H + W - 2t). Množenjem sa debljinom dobija se površina metala. Hladno oblikovani profili (EN 10219) imaju vanjske radijuse ugla ≈ 2t, dok toplo oblikovani (EN 10210) imaju radijuse ≈ 1,5t.",
+        "example": "Cijev 100×50×4 mm: (100 + 50 - 8) × 8 × 0,00785 ≈ 8,92 kg/m. Tačna EN geometrija s radijusima daje 8,77 kg/m. Za 6 m = 52,62 kg.",
+        "tip": "Hladno oblikovane kutijaste cijevi (EN 10219) su neznatno lakše od toplo valjanih (EN 10210) jer hladno savijanje pravi veće radijuse na uglovima.",
+        "command": "tub100x50x4 6m"
+      },
+      "structuralBeams": {
+        "question": "Zašto konstrukcijski nosači (HEA, HEB, IPE, UPN) zahtijevaju kataloške mase umjesto jednostavnih pravougaonika?",
+        "summary": "Standardni nosači imaju zaobljenja u korijenu i nagibe prirubnica koji dodaju 5% do 15% mase.",
+        "formula": "Masa = Objavljena EN kataloška masa kg/m × Dužina (m)",
+        "explanation": "Evropski konstrukcijski nosači (EN 10025, EN 10034, EN 10365, DIN 1025) su toplo valjani sa konstrukcijskim radijusima (r1) na spoju prirubnice i rebra, kao i kosinama na unutrašnjoj strani prirubnica kod IPN i UPN profila. Računanje preko 3 pravougaonika značajno potcjenjuje stvarnu težinu.",
+        "example": "HEA 120 nosač ima katalošku masu 19,9 kg/m. Nosač dužine 6 metara teži 119,40 kg. Naivni proračun od tri pravougaonika daje samo 18,2 kg/m — greška od 8,5%!",
+        "tip": "FerroScale u svojoj QA provjeri upoređuje 131 standardnu EN dimenziju sa zvaničnim evropskim kataloškim masama.",
+        "command": "hea120 6m"
+      },
+      "angleIron": {
+        "question": "Kako se računa težina jednakokrakih i raznokrakih L-profila?",
+        "summary": "Zbir krakova umanjen za debljinu, pomnožen sa debljinom i 0,00785 kg/m.",
+        "formula": "kg/m ≈ (Krak A + Krak B - Debljina) × Debljina × 0,00785",
+        "explanation": "Nominalna površina L-profila je (A + B - t) × t. Standardni valjani profili (EN 10056-1) uključuju unutrašnji radijus u korijenu (r1) i radijuse na krajevima (r2), što blago povećava masu.",
+        "example": "Jednakokraki ugaonik L 50×50×5 mm: (50 + 50 - 5) × 5 × 0,00785 = 95 × 5 × 0.00785 ≈ 3,73 kg/m. Sa radijusom korijena prema EN 10056, kataloška težina je 3,77 kg/m.",
+        "tip": "U FerroScale aplikaciji, unos 'l50x5 6m' automatski prepoznaje dvije dimenzije kao jednakokraki ugaonik L 50×50×5.",
+        "command": "l50x5 6m"
+      },
+      "densitiesComparison": {
+        "question": "Koji su koeficijenti gustine za inox, aluminijum i mesing u poređenju sa čelikom?",
+        "summary": "Aluminijum je ~66% lakši od čelika; inox je ~1% do 2% teži; mesing je ~12% teži.",
+        "formula": "Aluminijum ≈ Čelik × 0,344 | Inox 304 ≈ Čelik × 1,010 | Mesing ≈ Čelik × 1,121",
+        "explanation": "Ugljenični čelik (S235, S275, S355) ima gustinu 7,85 g/cm³. Inox 304 (1.4301) ima gustinu 7,93 g/cm³. Inox 316L (1.4404) je 8,00 g/cm³. Aluminijum 6060/6082 ima 2,70 g/cm³. Mesing je 8,50–8,80 g/cm³.",
+        "example": "Cijev 50×50×3 mm dužine 6 m od čelika S235 teži 26,1 kg. Potpuno ista dimenzija od aluminijuma 6060 teži samo 8,98 kg.",
+        "tip": "Aluminijumski profili štede oko dvije trećine mase čelika, što ih čini optimalnim za fasade, lake konstrukcije i auto-industriju.",
+        "command": "tub50x50x3 6m alu"
+      },
+      "rollingTolerances": {
+        "question": "Zašto se isporučena težina čelika razlikuje od teoretske izračunate težine?",
+        "summary": "EN standardi valjanja dozvoljavaju odstupanja u debljini i dimenzijama do ±10%.",
+        "formula": "Dozvoljena odstupanja: ±2% do ±10% prema EN 10051 (limovi) i EN 10034 (nosači)",
+        "explanation": "Čeličane valjaju profile u okviru standardizovanih tolerancijskih polja. Habanje valjaka, toplotno skupljanje i kalibracija valjaoničke pruge znače da stvarna debljina može biti malo iznad ili ispod nominalne. U veleprodaji se čelik često fakturiše po stvarnoj vagi.",
+        "example": "Nominalni lim debljine 10 mm isporučen s dozvoljenom tolerancijom od +0,4 mm teži 81,64 kg/m² umjesto teoretskih 78,50 kg/m² (+4%).",
+        "tip": "U FerroScale postavkama možete podesiti procenat tolerancije mase (npr. +2,5%) kako biste zaštitili ponude od težeg isporučenog materijala.",
+        "command": "hea160 12m"
+      },
+      "cuttingWaste": {
+        "question": "Kako treba uračunati otpad od rezanja i širinu reza (kerf) u kalkulacije?",
+        "summary": "Dodajte 3–5 mm po rezu testere i 5%–10% rezerve za neupotrebljive ostatke.",
+        "formula": "Potrebna sirovina = ∑(Dužina komada + Širina reza) + Rezerva za otpatke",
+        "explanation": "Trakaste i kružne testere pri svakom rezu skidaju 2,5 mm do 4,5 mm materijala u vidu opiljaka (kerf). Također, nabavka šipki od 6 m ili 12 m stvara neiskoristive krajeve (odreske). Projekat koji traži 100 m profila obično zahtijeva narudžbu od 106–110 m šipki.",
+        "example": "Rezanje 14 komada od 400 mm iz šipke od 6.000 mm: 14 × 400 = 5.600 mm. Sa 14 rezova od 3 mm (42 mm), ukupno je potrošeno 5.642 mm, a preostaje neiskoristivi otpadak od 358 mm.",
+        "tip": "Iskoristite ugrađeni 1D optimizator rezanja u FerroScale projektima kako biste smanjili otpad i vidjeli raspored rezanja.",
+        "command": "+ ipe200 4m x3"
+      },
+      "flatBar": {
+        "question": "Kako se računa težina plosnatog čelika (flaha)?",
+        "summary": "Širina pomnožena sa debljinom i gustinom čelika (0,00785 kg/m po mm²).",
+        "formula": "kg/m = Širina (mm) × Debljina (mm) × 0,00785",
+        "explanation": "Poprečni presjek plosnatog čelika je jednostavan pravougaonik širine × debljine (mm²). Množenjem sa gustinom čelika (7,85 g/cm³ ÷ 1.000) dobija se 0,00785 kg po metru. Ova jednostavna formula važi za vučeni flah, toplo valjani plosnati čelik (EN 10058) i široki plosnati čelik (EN 10048).",
+        "example": "Plosnati čelik 50×10 mm: 50 × 10 × 0,00785 = 500 × 0,00785 = 3,93 kg/m. Šipka od 6 metara teži 3,93 × 6 = 23,58 kg.",
+        "tip": "Za inox plosnati čelik (1.4301) pomnožite širinu × debljinu × 0,00793. Za aluminijum (6060) pomnožite sa 0,00270.",
+        "command": "flat50x10 6m"
+      },
+      "squareBar": {
+        "question": "Kako se računa težina pune kvadratne čelične šipke?",
+        "summary": "Kvadrat stranice pomnožen sa 0,00785 kg/m.",
+        "formula": "kg/m = Stranica² (mm) × 0,00785  (ili prečica: Stranica² ÷ 127,4)",
+        "explanation": "Puna kvadratna šipka ima površinu poprečnog presjeka s × s mm². Pomnožena sa nominalnom gustinom 0,00785 kg/(mm²·m), masa raste sa kvadratom stranice. Standardne dimenzije prate EN 10059 za toplo valjane kvadratne šipke.",
+        "example": "Kvadratna šipka 20×20 mm: 20² × 0,00785 = 400 × 0,00785 = 3,14 kg/m. Za komercijalnu dužinu od 6 m: 3,14 × 6 = 18,84 kg.",
+        "tip": "Kvadratne šipke se široko koriste u bravariji, kovanom gvožđu, mašinskim klinovima i osovinama. Hladno vučene šipke imaju oštrije ivice od toplo valjanih.",
+        "command": "sq20 6m"
+      },
+      "hexBar": {
+        "question": "Kako se računa težina šestougaone (heksagonalne) šipke?",
+        "summary": "Kvadrat otvora ključa pomnožen sa 0,00680 kg/m.",
+        "formula": "kg/m = Otvor ključa² (s u mm) × 0,00680",
+        "explanation": "Pravilni šestougao sa rastojanjem među paralelnim stranicama 's' ima površinu A = (√3 / 2) × s² ≈ 0,8660 × s². Množenjem sa gustinom čelika (0,00785) dobija se 0,8660 × 0,00785 ≈ 0,006798 kg/m. Šestougaone šipke su standardna sirovina za vijke, matice i spojnice prema EN 10278 / EN 10061.",
+        "example": "Šestougaona šipka s = 24 mm (standardna glava M16 vijka): 24² × 0,00680 = 576 × 0,00680 = 3,92 kg/m. Šipka od 3 metra teži 11,76 kg.",
+        "tip": "Šestougaoni profil uvijek mjerite između paralelnih ravnih stranica (otvor ključa), a ne preko dijagonalnih vrhova.",
+        "command": "hex24 3m"
+      },
+      "teeProfile": {
+        "question": "Kako se računa težina konstrukcijskih T-profila?",
+        "summary": "Površina prirubnice plus površina rebra, uz korekciju za radijuse EN 10055.",
+        "formula": "kg/m ≈ [b × tf + (h - tf) × tw] × 0,00785",
+        "explanation": "Standardni toplo valjani T-profili (EN 10055) sastoje se od horizontalne prirubnice (b × tf) i vertikalnog rebra (h - tf) × tw. Toplo valjani profili imaju zaobljenje u korijenu koje dodaje oko 1,5% do 3% mase u odnosu na teorijski oštre ivice.",
+        "example": "T-profil 60×60×7 mm: (60 × 7 + (60 - 7) × 7) × 0,00785 = (420 + 371) × 0,00785 = 791 × 0,00785 ≈ 6,21 kg/m. Standardna kataloška masa prema EN 10055 je 6,23 kg/m.",
+        "tip": "U FerroScale aplikaciji unos 't60x60x7 6m' ili 't60x7 6m' direktno računa tačnu masu prema EN 10055.",
+        "command": "t60x60x7 6m"
+      },
+      "channelSection": {
+        "question": "Kako se računaju U-profili (UPN i UPE nosači)?",
+        "summary": "UPN ima nagib prirubnica od 8%; UPE ima paralelne prirubnice s manjom težinom i većom nosivošću.",
+        "formula": "Masa = Objavljena EN kataloška masa kg/m × Dužina (m)",
+        "explanation": "Evropski standardni U-profili dolaze u dva glavna oblika: UPN (sa kosim prirubnicama prema DIN 1026-1) i UPE (sa paralelnim prirubnicama prema EN 10365 / EN 10279). Zbog nagiba od 8% i velikih unutrašnjih radijusa kod UPN-a, proračun preko običnih pravougaonika stvara znatne greške.",
+        "example": "UPN 160 ima katalošku masu 18,8 kg/m (šipka od 12 m = 225,6 kg). UPE 160 sa paralelnim prirubnicama ima masu 17,0 kg/m (12 m = 204,0 kg), štedeći 9,5% težine uz bolje nalijeganje vijaka.",
+        "tip": "FerroScale koristi verifikovane standardne tabele za sve dimenzije UPN i UPE profila.",
+        "command": "upn160 12m"
+      },
+      "chequeredPlate": {
+        "question": "Kako se računa težina rebrastog (suzastog) lima za gazišta?",
+        "summary": "Dodajte približno 2,0 do 3,0 kg/m² na težinu osnovne glatke ploče za uzorak rebra.",
+        "formula": "Masa (kg) = [Osnovna debljina (mm) × 7,85 + Dodatak za rebro (2,5 kg/m²)] × Površina (m²)",
+        "explanation": "Rebrasti limovi (suzasti / bademasti / lentilasti) imaju valjane protuklizne reljefe na jednoj strani. Visina suze nije uključena u nominalnu debljinu podloge; u evropskoj praksi se na masu glatkog lima dodaje između 2,0 i 3,0 kg/m² (najčešće 2,4–2,5 kg/m²).",
+        "example": "Suzasti lim debljine 4 mm formata 2.000 × 1.000 mm (2 m²): Osnovni lim je 4 × 7,85 = 31,40 kg/m². Rebro dodaje 2,50 kg/m², dajući 33,90 kg/m². Cijela tabla teži 33,90 × 2 = 67,80 kg.",
+        "tip": "U FerroScale kalkulatoru upotrijebite prefiks 'chq' (npr. 'chq4 2000x1000') za automatski proračun rebrastog lima.",
+        "command": "chq4 2000x1000"
+      },
+      "expandedMetal": {
+        "question": "Kako se računa težina istegnutog (ekstrudiranog/prosečenog) metala?",
+        "summary": "Masa zavisi od debljine lima, širine rebra (mostića) i koraka oka (duža/kraća dijagonala).",
+        "formula": "kg/m² ≈ Debljina lima (mm) × 7,85 × (2 × Širina mostića ÷ Kraća dijagonala oka)",
+        "explanation": "Istegnuti metal se proizvodi istovremenim prorezivanjem i rastezanjem ravnog lima bez ikakvog gubitka materijala. Zato je masa po kvadratnom metru jednaka masi polaznog lima pomnoženoj sa omjerom površine metala i otvora oka.",
+        "example": "Mreža od 2 mm lima sa širinom mostića 2,5 mm na koraku oka od 20 mm: (2 × 7,85) × (2 × 2,5 ÷ 20) = 15,70 × 0,25 = 3,925 kg/m².",
+        "tip": "Valjani (spljošteni) istegnuti metal ima glatku površinu iste težine, ali je debljina profilisanog sloja poravnata u jednu ravan.",
+        "command": "exp2 2000x1000"
+      },
+      "corrugatedSheet": {
+        "question": "Kako se računa težina trapeznih i valovitih krovnih limova?",
+        "summary": "Masa ravnog lima množi se sa faktorom razvijene širine profila (obično 1,15 do 1,25).",
+        "formula": "kg/m² (Pokrivna površina) = Debljina (mm) × 7,85 × Faktor razvijenosti (~1,18)",
+        "explanation": "Profilisanje trapeznih ili sinusnih talasa zahtijeva širu traku čelika od konačne pokrivne širine. Za standardni valoviti lim faktor razvijenosti iznosi 1,18 do 1,22. Proračun se mora vršiti preko razvijene širine trake ili množenjem pokrivne površine ovim faktorom.",
+        "example": "Pocinkovani trapezni lim 0,75 mm: Masa ravnog lima = 0,75 × 7,85 = 5,89 kg/m². Uz faktor razvijenosti 1,20, masa po kvadratnom metru pokrivenog krova je 5,89 × 1,20 = 7,07 kg/m².",
+        "tip": "Ne miješajte pokrivnu širinu (nakon preklopa) sa ukupnom širinom lima. Uvijek uračunajte preklop od 100–150 mm.",
+        "command": "corr0.75 3000x1000"
+      },
+      "galvanizingWeight": {
+        "question": "Koliko dodatne težine toplo cinkovanje dodaje čeliku?",
+        "summary": "Toplo cinkovanje obično dodaje 3% do 7% na masu crnog čelika (oko 300 do 600 g/m²).",
+        "formula": "Pocinkovana masa ≈ Masa crnog čelika × (1,03 do 1,07)  (ili +500 g/m² površine)",
+        "explanation": "Toplo cinkovanje (EN ISO 1461) podrazumijeva potapanje čelika u rastopljeni cink na ~450°C. Cink reaguje sa gvožđem formirajući legurne slojeve. Za profile debljine zida >6 mm standardni sloj je 85 µm (~610 g/m² vanjske i unutrašnje površine). Smireni čelici sa povišenim silicijumom mogu primiti i do 10% cinka.",
+        "example": "Čelična konstrukcija od 1.000 kg sa debljinama profila 5–8 mm: Cinkovanje dodaje oko 45 kg cinka, dajući ukupnu otpremnu masu od oko 1.045 kg.",
+        "tip": "Šuplji profili (cijevi) moraju imati otvore za odzračivanje i oticanje cinka; cink oblaže i vanjsku i unutrašnju stranu cijevi, što udvostručuje površinu prevlake.",
+        "command": "+ hea140 6m x4"
+      },
+      "paintSurfaceArea": {
+        "question": "Kako se računa vanjska površina za farbanje i zaštitu čelika?",
+        "summary": "Površina u m² po dužnom metru jednaka je vanjskom obimu presjeka u mm podijeljenom sa 1.000.",
+        "formula": "Površina za bojenje (m²) = Vanjski obim (mm) ÷ 1.000 × Dužina (m)",
+        "explanation": "Procjena temeljnih premaza, završnih zaštitnih boja (ISO 12944) i protivpožarne zaštite zahtijeva poznavanje površine. Za standardne nosače katalozi navode površinu po dužnom metru (m²/m). Za pravougaone cijevi vanjski obim je 2 × (Visina + Širina) mm.",
+        "example": "Pravougaona cijev 100×50 mm ima vanjski obim 2 × (100 + 50) = 300 mm. Za dužinu od 6 m: 300 ÷ 1.000 × 6 = 1,80 m² površine za farbanje.",
+        "tip": "FerroScale automatski računa i prikazuje površinu za farbanje u m² za svaki profil u pregledu kalkulacije i ponudama projekta.",
+        "command": "tub100x50x4 6m"
+      }
+    }
   }
 }

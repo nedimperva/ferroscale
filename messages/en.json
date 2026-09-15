@@ -22,6 +22,10 @@
     "contact": {
       "title": "Contact - FerroScale",
       "description": "Send a report or get in touch about FerroScale."
+    },
+    "faq": {
+      "title": "Metal Weight Calculation FAQ - FerroScale",
+      "description": "Formulas, practical examples, and answers for calculating weight of steel, stainless, and aluminum profiles."
     }
   },
   "loading": {
@@ -1108,5 +1112,283 @@
     "note": "Reference values are deliberately independent of the app's datasets: standard profiles use published catalog masses, manual profiles use hand-computed cross-section formulas. The same checks run in CI on every change.",
     "coverage": "Covers {covered} of {total} EN sizes",
     "unverifiedNote": "{count} EN sizes are held back from this table because their stored area and their published catalog mass disagree. They are listed in the benchmark source and are pending a catalog check."
+  },
+  "faq": {
+    "title": "Metal Weight Calculation FAQ",
+    "subtitle": "Traceable formulas, workshop rules of thumb, and worked examples for European standard profiles, tubes, and sheets.",
+    "back": "Back to calculator",
+    "navLink": "Calculation FAQ",
+    "searchPlaceholder": "Search formulas, profiles (e.g. tube, hea, sheet, density)...",
+    "searchAria": "Search calculation questions and formulas",
+    "noResultsTitle": "No questions matched your search",
+    "noResultsDesc": "Try searching for a different term like \"sheet\", \"tube\", \"S235\", or \"density\".",
+    "clearSearch": "Clear search",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "questionsCount": "{count} questions",
+    "categories": {
+      "all": "All Topics",
+      "general": "Core Principles",
+      "sheets": "Plates & Sheets",
+      "tubes": "Hollow Sections",
+      "bars": "Solid Bars",
+      "beams": "Beams & Structural",
+      "materials": "Alloys & Densities",
+      "tolerances": "Tolerances & Scrap"
+    },
+    "quickCheatSheet": {
+      "title": "Standard Steel Formulas (at 7.85 kg/dm³)",
+      "subtitle": "Essential workshop math for rapid estimation",
+      "clickToTest": "Click formula to test in verifier & jump to answer",
+      "plateTitle": "Plates & Sheets",
+      "plateFormula": "t (mm) × 7.85 kg/m²",
+      "roundBarTitle": "Solid Round Bar",
+      "roundBarFormula": "d² (mm) ÷ 162.2 kg/m",
+      "roundTubeTitle": "Round Pipe / Tube",
+      "roundTubeFormula": "(D - t) × t × 0.02466 kg/m",
+      "squareTubeTitle": "Square / Box Tube",
+      "squareTubeFormula": "(H + W - 2t) × 2t × 0.00785 kg/m",
+      "flatBarTitle": "Flat Bar",
+      "flatBarFormula": "W × T × 0.00785 kg/m",
+      "densityRatiosTitle": "Material Multipliers",
+      "densityRatios": "Alu: ×0.344 · Inox 304: ×1.010 · Brass: ×1.121"
+    },
+    "sandbox": {
+      "title": "Interactive Formula Verifier",
+      "subtitle": "Select a profile to trace each step of the calculation math",
+      "shapeSheet": "Sheet / Plate",
+      "shapeRoundBar": "Round Bar",
+      "shapeRoundTube": "Round Pipe / Tube",
+      "shapeRectTube": "Rectangular Tube",
+      "shapeFlatBar": "Flat Bar",
+      "shapeSquareBar": "Square Bar",
+      "shapeAngle": "Angle (L-profile)",
+      "shapeBeam": "I/H Beam (HEA/IPE/HEB)",
+      "shapeChannel": "Channel (UPN/UPE)",
+      "shapeTee": "Tee Section (T-bar)",
+      "shapeHexBar": "Hexagonal Bar",
+      "shapeChequered": "Chequered Plate",
+      "shapeGalv": "Galvanizing Pickup",
+      "shapePaint": "Paint Surface Area",
+      "beamSize": "Standard EN Beam",
+      "channelSize": "Standard EN Channel",
+      "teeSize": "Standard EN Tee",
+      "hexSize": "Across-Flats Width (s)",
+      "profile": "Profile shape",
+      "material": "Material / Grade",
+      "steel": "Steel (S235JR - 7.85 g/cm³)",
+      "stainless": "Stainless (1.4301 / 304 - 7.93 g/cm³)",
+      "aluminum": "Aluminium (6060 - 2.70 g/cm³)",
+      "thickness": "Thickness (t)",
+      "width": "Width (w / b)",
+      "height": "Height (h)",
+      "length": "Length (L)",
+      "diameter": "Diameter (d / D)",
+      "side": "Side (s)",
+      "legA": "Leg A",
+      "legB": "Leg B",
+      "step1Area": "1. Cross-section area",
+      "step2Linear": "2. Linear or surface mass",
+      "step3Total": "3. Total calculated mass",
+      "command": "Equivalent FerroScale command",
+      "copy": "Copy command",
+      "copied": "Copied!",
+      "openInApp": "Try in calculator"
+    },
+    "labels": {
+      "formula": "Governing Formula",
+      "explanation": "Principles & Mechanics",
+      "example": "Worked Workshop Example",
+      "workshopTip": "Fabrication Tip",
+      "ferroscaleSyntax": "FerroScale Command",
+      "tryCommand": "Try query in calculator",
+      "expandDetails": "Expand Answer",
+      "collapseDetails": "Collapse",
+      "testInSandbox": "Test in Verifier",
+      "jumpToAnswer": "Read QA Answer",
+      "testFormula": "Test in Verifier"
+    },
+    "items": {
+      "generalFormula": {
+        "question": "How is the weight of any metal profile calculated from its dimensions?",
+        "summary": "Weight is the product of volume and material density: Mass = Volume × Density.",
+        "formula": "Mass (kg) = Area (mm²) × Length (m) × Density (g/cm³) ÷ 1,000",
+        "explanation": "Every metal weight calculation follows the same physical law. First, calculate the cross-sectional area of the profile in square millimetres (mm²). Multiplying by length gives volume. Multiplying volume by the alloy density yields total mass.",
+        "example": "An S235 steel bar with 1,000 mm² cross-section, 6 metres long: 1,000 × 6 × 7.85 ÷ 1,000 = 47.10 kg.",
+        "tip": "Standard carbon steel density is 7,850 kg/m³ (7.85 g/cm³ or kg/dm³). Remembering 7.85 is the cornerstone of all steel calculations.",
+        "command": "bar1000 6m s235"
+      },
+      "sheetPlate": {
+        "question": "How do you calculate the weight of steel sheets and plates?",
+        "summary": "1 mm thick carbon steel sheet weighs exactly 7.85 kg per square metre.",
+        "formula": "Mass (kg) = Thickness (mm) × Width (m) × Length (m) × 7.85 kg/m²",
+        "explanation": "Because area is measured in square metres, sheet calculations use the area density factor: 1 mm of steel plate weighs 7.85 kg/m². A 5 mm plate weighs 5 × 7.85 = 39.25 kg/m², and an 8 mm plate weighs 62.80 kg/m².",
+        "example": "A standard 2,000 × 1,000 mm (2 m²) plate of 5 mm steel: 5 × 2.0 × 1.0 × 7.85 = 78.50 kg.",
+        "tip": "Standard commercial sheet formats in Europe are 2000×1000 mm (small format), 2500×1250 mm (medium format), and 3000×1500 mm (large format).",
+        "command": "sht5 2000x1000 s235"
+      },
+      "roundBar": {
+        "question": "What is the formula and workshop shortcut for solid round bar weight?",
+        "summary": "Diameter squared multiplied by 0.006165 gives kg per metre for steel.",
+        "formula": "kg/m = d² × 0.006165  (or shortcut: d² ÷ 162.2)",
+        "explanation": "The cross-sectional area of a circle is π × (d/2)². Multiplying by steel density 0.00785 g/mm³ simplifies to d² × (π/4 × 0.00785) ≈ d² × 0.0061654. In workshops, dividing d² by 162 provides a fast mental calculation.",
+        "example": "A Ø20 mm steel rod: 20² ÷ 162 = 400 ÷ 162 ≈ 2.47 kg/m. For a 6 m rod: 2.47 × 6 = 14.82 kg.",
+        "tip": "For stainless steel 304, use d² ÷ 160.5. For aluminium, divide by 471 instead.",
+        "command": "rd20 6m"
+      },
+      "roundTube": {
+        "question": "How do you calculate the weight of hollow circular pipes and tubes?",
+        "summary": "Subtract wall thickness from outside diameter, multiply by wall thickness and 0.02466.",
+        "formula": "kg/m = (Outside Diameter - Wall Thickness) × Wall Thickness × 0.02466",
+        "explanation": "The annulus area is π × (D - t) × t. Substituting standard steel density (7.85 g/cm³) reduces the constant to π × 0.00785 ≈ 0.02466. This formula avoids calculating inner and outer circle areas separately.",
+        "example": "A standard EN 10255 tube 60.3 mm OD with 3.2 mm wall: (60.3 - 3.2) × 3.2 × 0.02466 = 57.1 × 3.2 × 0.02466 = 4.507 kg/m.",
+        "tip": "Nominal pipe size (DN / NPS) refers to internal bore, not outside diameter. Always verify outside diameter (OD) in mm before calculating.",
+        "command": "tube60.3x3.2 6m"
+      },
+      "boxSection": {
+        "question": "How is the weight of square and rectangular hollow sections (SHS / RHS) calculated?",
+        "summary": "Perimeter times wall thickness times 0.00785 kg/m, adjusted for corner radiuses.",
+        "formula": "kg/m ≈ (Height + Width - 2 × Thickness) × 2 × Thickness × 0.00785",
+        "explanation": "For hollow box sections, the perimeter centerline length is 2 × (H + W - 2t). Multiplying by thickness gives metal area. Cold-formed sections (EN 10219) have outer corner radii ≈ 2t; hot-finished (EN 10210) have radii ≈ 1.5t.",
+        "example": "Tube 100×50×4 mm: (100 + 50 - 8) × 8 × 0.00785 ≈ 8.92 kg/m. Exact EN geometry with corner radiuses yields 8.77 kg/m. Over 6 m = 52.62 kg.",
+        "tip": "Cold-formed rectangular tubes (EN 10219) are slightly lighter than hot-finished ones (EN 10210) because cold forming creates larger outside corner radiuses.",
+        "command": "tub100x50x4 6m"
+      },
+      "structuralBeams": {
+        "question": "Why do structural I-beams (HEA, HEB, IPE, UPN) require catalog masses rather than simple rectangles?",
+        "summary": "Standard beams have root fillet radiuses and flange tapers that add 5% to 15% more mass.",
+        "formula": "Mass = Published EN standard kg/m × Length (m)",
+        "explanation": "European structural beams (EN 10025, EN 10034, EN 10365, DIN 1025) are hot-rolled with structural transition fillets (r1) where flanges meet the web, as well as flange slope tapers on IPN and UPN sections. Approximating beams as 3 rectangles understates actual weight and structural capacity.",
+        "example": "An HEA 120 beam has catalog mass 19.9 kg/m. A 6-metre beam weighs 119.40 kg. Naive three-rectangle math yields only 18.2 kg/m — an 8.5% error!",
+        "tip": "FerroScale cross-checks 131 standard EN profile sizes against published European catalog masses in its QA benchmark suite.",
+        "command": "hea120 6m"
+      },
+      "angleIron": {
+        "question": "How do you calculate the weight of equal and unequal leg angles?",
+        "summary": "Sum of legs minus thickness, multiplied by thickness and 0.00785 kg/m.",
+        "formula": "kg/m ≈ (Leg A + Leg B - Thickness) × Thickness × 0.00785",
+        "explanation": "The nominal cross-sectional area of an L-profile is (A + B - t) × t. Standard rolled angles (EN 10056-1) also include an inside root radius (r1) and toe radius (r2) which slightly increase mass.",
+        "example": "Equal angle L 50×50×5 mm: (50 + 50 - 5) × 5 × 0.00785 = 95 × 5 × 0.00785 ≈ 3.73 kg/m. With the EN 10056 root fillet, standard catalog weight is 3.77 kg/m.",
+        "tip": "In FerroScale, typing 'l50x5 6m' automatically treats two dimensions as an equal-leg angle L 50×50×5.",
+        "command": "l50x5 6m"
+      },
+      "densitiesComparison": {
+        "question": "What are the density factors for stainless steel, aluminium, and brass compared to carbon steel?",
+        "summary": "Aluminium is ~66% lighter than steel; stainless is ~1% to 2% heavier; brass is ~12% heavier.",
+        "formula": "Aluminium ≈ Steel × 0.344 | Stainless 304 ≈ Steel × 1.010 | Brass ≈ Steel × 1.121",
+        "explanation": "Standard carbon steel (S235, S275, S355) has density 7.85 g/cm³. Stainless 304 (1.4301) has density 7.93 g/cm³. Stainless 316L (1.4404) is 8.00 g/cm³. Aluminium 6060/6082 is 2.70 g/cm³. Brass is 8.50–8.80 g/cm³.",
+        "example": "A 6 m tube 50×50×3 mm in S235 steel weighs 26.1 kg. The exact same tube in aluminium 6060 weighs only 8.98 kg.",
+        "tip": "Aluminium profiles save roughly 2/3 of steel weight, making them optimal for weight-sensitive facades, framing, and automotive assemblies.",
+        "command": "tub50x50x3 6m alu"
+      },
+      "rollingTolerances": {
+        "question": "Why does delivered steel weight differ from theoretical calculated weight?",
+        "summary": "EN rolling standards allow permissible thickness and dimensional variations up to ±10%.",
+        "formula": "Permissible variation: ±2% to ±10% per EN 10051 (sheets) and EN 10034 (beams)",
+        "explanation": "Steel mills roll profiles within standardized tolerance bands. Wear on rolling mill rollers, thermal shrinkage during cooling, and mill calibration mean actual delivered thickness may be slightly above or below nominal gauge. In commercial trade, structural steel is often invoiced by actual scale weight.",
+        "example": "A nominal 10 mm plate delivered with +0.4 mm allowable mill tolerance weighs 81.64 kg/m² instead of the theoretical 78.50 kg/m² (+4%).",
+        "tip": "In FerroScale Settings, you can configure a Mass Tolerance Percentage (e.g. +2.5%) to safeguard quotes against heavier delivered stock.",
+        "command": "hea160 12m"
+      },
+      "cuttingWaste": {
+        "question": "How should cutting scrap and kerf losses be accounted for in metal estimates?",
+        "summary": "Add 3–5 mm kerf per saw cut and 5%–10% scrap margin for unusable drops.",
+        "formula": "Required Stock = ∑(Parts Length + Saw Kerf) + Unusable Drop Margin",
+        "explanation": "Bandsaws and cold circular saws remove 2.5 mm to 4.5 mm of material on every cut (saw kerf). In addition, purchasing 6 m or 12 m commercial stock bars produces remnant drops that cannot fit remaining required parts. A project requiring 100 m of profiles typically requires purchasing 106–110 m of commercial bars.",
+        "example": "Cutting 14 pieces of 400 mm from a 6,000 mm bar: 14 × 400 = 5,600 mm. With 14 saw cuts of 3 mm (42 mm), total consumed is 5,642 mm, leaving an unusable drop of 358 mm.",
+        "tip": "Use FerroScale's built-in 1D Cutting Stock Optimizer under Projects to minimize scrap drops and visualize the exact cutting layout.",
+        "command": "+ ipe200 4m x3"
+      },
+      "flatBar": {
+        "question": "How do you calculate the weight of flat steel bars and strips?",
+        "summary": "Width times thickness times steel density (0.00785 kg/m per mm²).",
+        "formula": "kg/m = Width (mm) × Thickness (mm) × 0.00785",
+        "explanation": "Flat bar cross-section is a simple rectangle of width × thickness (mm²). Multiplying by steel density (7.85 g/cm³ ÷ 1,000) yields 0.00785 kg per metre. This straightforward formula applies to cold-drawn flats, hot-rolled flats (EN 10058), and universal wide flats (EN 10048).",
+        "example": "Flat bar 50×10 mm: 50 × 10 × 0.00785 = 500 × 0.00785 = 3.93 kg/m. A 6-metre bar weighs 3.93 × 6 = 23.58 kg.",
+        "tip": "For stainless steel flat bar (1.4301), multiply width × thickness × 0.00793. For aluminium (6060/6082), multiply by 0.00270.",
+        "command": "flat50x10 6m"
+      },
+      "squareBar": {
+        "question": "How is the weight of solid square steel bar calculated?",
+        "summary": "Side dimension squared multiplied by 0.00785 kg/m.",
+        "formula": "kg/m = Side² (mm) × 0.00785  (or shortcut: Side² ÷ 127.4)",
+        "explanation": "A solid square bar has cross-sectional area s × s mm². Multiplied by nominal density 0.00785 kg/(mm²·m), weight increases with the square of the side width. Standard sizes follow EN 10059 for hot-rolled square bars.",
+        "example": "Square bar 20×20 mm: 20² × 0.00785 = 400 × 0.00785 = 3.14 kg/m. For a 6 m stock length: 3.14 × 6 = 18.84 kg.",
+        "tip": "Square bars are widely used in architectural wrought iron, machine keys, and tooling shafts. Cold-drawn square bars have sharper corner radii than hot-rolled bars.",
+        "command": "sq20 6m"
+      },
+      "hexBar": {
+        "question": "How do you calculate the weight of hexagonal steel bars?",
+        "summary": "Across-flats dimension squared multiplied by 0.00680 kg/m.",
+        "formula": "kg/m = Across-Flats Size² (s in mm) × 0.00680",
+        "explanation": "A regular hexagon with distance across flats 's' has cross-sectional area A = (√3 / 2) × s² ≈ 0.8660 × s². Multiplying by steel density (0.00785) gives 0.8660 × 0.00785 ≈ 0.006798 kg/m. Hex bars are standard stock for machined fasteners, bolts, and fittings per EN 10278 / EN 10061.",
+        "example": "Hex bar s = 24 mm (standard M16 bolt head size): 24² × 0.00680 = 576 × 0.00680 = 3.92 kg/m. A 3-metre bar weighs 11.76 kg.",
+        "tip": "Always measure hexagonal stock across the parallel flats (wrench size), not corner-to-corner across vertices.",
+        "command": "hex24 3m"
+      },
+      "teeProfile": {
+        "question": "How do you calculate the weight of structural T-bars and tee sections?",
+        "summary": "Flange area plus web area, with catalog adjustments for EN 10055 root fillets.",
+        "formula": "kg/m ≈ [b × tf + (h - tf) × tw] × 0.00785",
+        "explanation": "Standard hot-rolled equal and unequal flange tees (EN 10055) have a horizontal flange (b × tf) and vertical stem (h - tf) × tw. Hot-rolled tees feature a generous root radius that adds approximately 1.5% to 3% mass compared to sharp-cornered math.",
+        "example": "Tee 60×60×7 mm: (60 × 7 + (60 - 7) × 7) × 0.00785 = (420 + 371) × 0.00785 = 791 × 0.00785 ≈ 6.21 kg/m. Standard EN 10055 catalog mass is 6.23 kg/m.",
+        "tip": "In FerroScale, typing 't60x60x7 6m' or 't60x7 6m' calculates the true EN 10055 mass directly.",
+        "command": "t60x60x7 6m"
+      },
+      "channelSection": {
+        "question": "How are structural channels (UPN and UPE) calculated?",
+        "summary": "UPN has 8% tapered flanges; UPE has parallel flanges with lighter weight and higher efficiency.",
+        "formula": "Mass = Published EN standard kg/m × Length (m)",
+        "explanation": "Standard European channels come in two main profiles: UPN (tapered flange per DIN 1026-1) and UPE (parallel flange per EN 10365 / EN 10279). Because UPN flanges taper inward at an 8% slope and have large inner fillets, calculating by flat rectangles produces substantial errors.",
+        "example": "UPN 160 has catalog mass 18.8 kg/m (12 m bar = 225.6 kg). Parallel-flange UPE 160 has catalog mass 17.0 kg/m (12 m bar = 204.0 kg), saving 9.5% weight while offering superior bolt-clamping surfaces.",
+        "tip": "FerroScale uses verified standard tables for all UPN and UPE sizes, avoiding geometric approximation shortcuts.",
+        "command": "upn160 12m"
+      },
+      "chequeredPlate": {
+        "question": "How does tear-drop or diamond chequered floor plate weight differ from smooth plate?",
+        "summary": "Add approximately 2.0 to 3.0 kg/m² for the raised tread pattern onto base plate mass.",
+        "formula": "Mass (kg) = [Base Thickness (mm) × 7.85 + Pattern Allowance (2.5 kg/m²)] × Area (m²)",
+        "explanation": "Chequered (durbar / tear-drop / lentil) steel floor plates have raised non-slip patterns rolled into one surface. The pattern thickness is not included in nominal base plate gauge; instead, European practice adds between 2.0 and 3.0 kg/m² (typically 2.4–2.5 kg/m²) to the smooth base plate weight.",
+        "example": "A 4 mm tear-drop plate (2,000 × 1,000 mm = 2 m²): Base plate is 4 × 7.85 = 31.40 kg/m². Pattern adds 2.50 kg/m², giving 33.90 kg/m². Total plate weighs 33.90 × 2 = 67.80 kg.",
+        "tip": "In FerroScale, use the 'chq' prefix (e.g. 'chq4 2000x1000') to automatically calculate plates with verified pattern allowance.",
+        "command": "chq4 2000x1000"
+      },
+      "expandedMetal": {
+        "question": "How is expanded metal mesh weight calculated?",
+        "summary": "Weight is determined by sheet thickness, strand width, and long-way / short-way mesh pitch.",
+        "formula": "kg/m² ≈ Sheet Thickness (mm) × 7.85 × (2 × Strand Width ÷ Short Pitch SWM)",
+        "explanation": "Expanded metal mesh is manufactured by slitting and stretching flat sheet simultaneously. Because no metal is lost in the process, mesh mass per square metre equals the original sheet mass multiplied by the ratio of strand metal area to diamond pitch area.",
+        "example": "Mesh made from 2 mm steel with 2.5 mm strand width on 20 mm short pitch (SWM): (2 × 7.85) × (2 × 2.5 ÷ 20) = 15.70 × 0.25 = 3.925 kg/m².",
+        "tip": "Flattened expanded metal (passed through cold-reducing rolls) has a smooth, flat surface with identical weight but slightly reduced thickness.",
+        "command": "exp2 2000x1000"
+      },
+      "corrugatedSheet": {
+        "question": "How do you calculate corrugated metal roofing and wall cladding sheets?",
+        "summary": "Multiply flat sheet weight by the profile development stretch factor (typically 1.15 to 1.25).",
+        "formula": "kg/m² (Cover Area) = Base Thickness (mm) × 7.85 × Development Factor (~1.18)",
+        "explanation": "Forming trapezoidal or sinusoidal corrugations requires a wider flat steel strip than the finished cover width. For standard 76/18 sinusoidal roofing, the development stretch factor is approximately 1.18 to 1.22. Calculations must use developed strip width or multiply nominal cover area by this geometric expansion factor.",
+        "example": "A 0.75 mm galvanized trapezoidal sheet: Base sheet weight = 0.75 × 7.85 = 5.89 kg/m². With a 1.20 profile stretch factor, weight per square metre of roof cover is 5.89 × 1.20 = 7.07 kg/m².",
+        "tip": "Do not confuse cover width (width after overlap on the roof) with overall manufacturing width. Allow 100–150 mm for side and end overlaps.",
+        "command": "corr0.75 3000x1000"
+      },
+      "galvanizingWeight": {
+        "question": "How much extra weight does hot-dip galvanizing add to steelwork?",
+        "summary": "Hot-dip galvanizing typically adds 3% to 7% additional mass (approx. 300 to 600 g/m²).",
+        "formula": "Galvanized Mass ≈ Black Steel Mass × (1.03 to 1.07)  (or +500 g/m² of surface)",
+        "explanation": "Hot-dip galvanizing (EN ISO 1461) immerses fabricated steel into molten zinc at ~450°C. Zinc reacts with iron to form a series of zinc-iron alloy layers topped by pure zinc. For steel sections with wall thickness >6 mm, the standard minimum coating is 85 µm (~610 g/m² of external and internal surface). Silicon-killed steels can produce thicker coatings adding up to 10% mass.",
+        "example": "A 1,000 kg structural steel frame with typical profile thicknesses of 5–8 mm: Galvanizing adds ~45 kg of zinc, giving a total finished shipping weight of ~1,045 kg.",
+        "tip": "Structural hollow sections (tubes and RHS) must have internal drain/vent holes drilled; zinc coats both inside and outside surfaces, doubling the coating area.",
+        "command": "+ hea140 6m x4"
+      },
+      "paintSurfaceArea": {
+        "question": "How do you calculate external surface area for painting and fireproofing steel?",
+        "summary": "Surface area in m² per metre is outer cross-section perimeter in mm divided by 1,000.",
+        "formula": "Paint Area (m²) = Outer Perimeter (mm) ÷ 1,000 × Length (m)",
+        "explanation": "Estimating primer, protective paint coatings (ISO 12944), and intumescent fireproofing requires knowing the exposed surface area. For standard beams and columns, published tables list surface area per linear metre (Am/V or m²/m). For custom rectangular tubes, outer perimeter is 2 × (Height + Width) mm.",
+        "example": "A 100×50 mm rectangular tube has outer perimeter 2 × (100 + 50) = 300 mm. Over a 6 m length: 300 ÷ 1,000 × 6 = 1.80 m² of surface area.",
+        "tip": "FerroScale automatically tracks and displays surface paint area in m² for every profile in your calculation breakdown and project quotes.",
+        "command": "tub100x50x4 6m"
+      }
+    }
   }
 }

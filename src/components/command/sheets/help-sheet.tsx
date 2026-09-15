@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { COMMAND_ALIASES, COMMAND_GRADES } from "@ferroscale/metal-core";
 import { SheetShell } from "./sheet-shell";
 
@@ -82,6 +83,7 @@ export function CommandHelpSheet({
   onTryExample: (query: string) => void;
 }) {
   const t = useTranslations("command");
+  const tFaq = useTranslations("faq");
   const profiles = COMMAND_ALIASES.filter((a) => a.alias !== "sht");
   const grades = COMMAND_GRADES.slice(0, 6);
 
@@ -157,6 +159,17 @@ export function CommandHelpSheet({
           <Token key={grade.id}>{grade.aliases[0]}</Token>
         ))}
         <span className="text-[11.5px] text-muted self-center">{t("help.moreGrades")}</span>
+      </div>
+
+      <div className="mt-5 pt-3 border-t border-[var(--border-faint)]">
+        <Link
+          href="/faq"
+          onClick={onClose}
+          className="flex items-center justify-between p-2.5 border border-[var(--border-faint)] bg-[var(--surface-raised)] hover:border-[var(--border)] transition-colors text-xs text-foreground font-medium"
+        >
+          <span>{tFaq("navLink")}</span>
+          <span aria-hidden="true" className="text-muted">→</span>
+        </Link>
       </div>
     </SheetShell>
   );

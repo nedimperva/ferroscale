@@ -87,6 +87,8 @@ returned a confidently wrong number with no error state.
 - **An Open Graph image**, generated per locale from `next/og`
 - **`/qa` states its coverage** and names the seven sizes held back pending a
   catalog check, instead of an unqualified "All checks pass"
+- **Frequently Asked Questions (FAQ) guide for metal weight calculations (`/faq`)**:
+  Interactive formula verifier with step-by-step mathematical traces, formula cheat sheet, search filtering by profile type and alloy, worked workshop examples, and one-click execution in the FerroScale command bar
 - **Canonical URL, `og:url`, `x-default` hreflang**, and a consistent
   production base-URL fallback across layout, robots and sitemap
 

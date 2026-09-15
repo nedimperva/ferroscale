@@ -49,7 +49,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The names people actually type now work: rd, round, pipe, tube, plate, sheet, flat, tee, angle — and al, alu and inox for the materials",
       "A phone can paste. The keypad shell had no text field at all, so a cut list or a query from a chat message could not be pasted on the device most likely to be holding one",
       "Shared links have a preview card, drawn in the app's own language with a worked example on it",
-      "The QA page says how much of the dataset it actually covers, and names the sizes held back pending a catalog check"
+      "The QA page says how much of the dataset it actually covers, and names the sizes held back pending a catalog check",
+      "Frequently Asked Questions (FAQ) guide for metal weight calculations with step-by-step formula explanations, workshop rules of thumb, cheatsheet, search, and an interactive calculation verifier"
     ],
     changed: [
       "The headline figure is the weight until someone sets a rate. It used to open on a price computed from a placeholder rate nobody had entered, in the same type as the measured weight beside it — and when the money is shown on a placeholder rate, the rate is now printed beside it",
@@ -89,7 +90,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Nazivi koje ljudi zaista kucaju sada rade: rd, round, pipe, tube, plate, sheet, flat, tee, angle — te al, alu i inox za materijale",
       "Telefon može zalijepiti. Tastatura na ekranu nije imala nikakvo tekstualno polje, pa se lista rezanja ili upit iz poruke nisu mogli zalijepiti na uređaju koji ih najčešće drži",
       "Podijeljeni linkovi imaju sličicu za pregled, nacrtanu jezikom same aplikacije, s primjerom na njoj",
-      "QA stranica kaže koliki dio skupa podataka zaista pokriva i imenuje dimenzije koje čekaju provjeru u katalogu"
+      "QA stranica kaže koliki dio skupa podataka zaista pokriva i imenuje dimenzije koje čekaju provjeru u katalogu",
+      "Sekcija često postavljanih pitanja (FAQ) o proračunu težine metala sa korak-po-korak formulama, radioničkim pravilima, brzim pregledom, pretragom i interaktivnim provjerivačem formula"
     ],
     changed_bs: [
       "Glavni broj je masa dok neko ne postavi cijenu. Ranije se otvarao na cijeni izračunatoj iz zadane vrijednosti koju niko nije unio, istim pismom kao izmjerena masa pored nje — a kada se novac prikazuje po zadanoj cijeni, ta cijena je sada ispisana uz njega",
