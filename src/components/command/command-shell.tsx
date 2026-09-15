@@ -63,6 +63,7 @@ import {
   lineExpandedIndex,
   removeLineToken,
   replaceLineToken,
+  tweakActiveItem,
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
@@ -2277,7 +2278,10 @@ export function CommandShell() {
             onBackToken={onBackToken}
             onEnter={onEnter}
             onNew={newCalc}
-            onTweak={() => setKeypadOverride("numpad")}
+            onTweak={() => {
+              setQuery((q) => tweakActiveItem(q));
+              setKeypadOverride("numpad");
+            }}
             onShare={shareLink}
             onLetters={() => setKeypadOverride("letters")}
             onNumbers={() => setKeypadOverride("numpad")}

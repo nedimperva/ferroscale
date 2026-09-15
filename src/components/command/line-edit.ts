@@ -184,3 +184,22 @@ export function pullLastChip(query: string): string {
   if (tokens.length === 0) return query;
   return editLineToken(query, item, tokens.length - 1);
 }
+
+/**
+ * Prepare an item for editing on mobile keypad "Tweak":
+ * If the active item contains a length token, remove it and leave a trailing
+ * space so the user can immediately type a new length or pick a length chip.
+ * Otherwise, pull the item's last chip under the caret as the partial.
+ */
+export function tweakActiveItem(query: string): string {
+  const segments = cmdSplitLine(query);
+  const item = segments.length - 1;
+  if (item < 0 || item >= segments.length) return query;
+  const tokens = cmdTokenize(segments[item].text);
+  const lenIndex = tokens.findIndex((t) => cmdClassifyToken(t) === "len");
+  if (lenIndex >= 0) {
+    const next = removeLineToken(query, item, lenIndex);
+    return /\s$/.test(next) || next === "" ? next : `${next} `;
+  }
+  return pullLastChip(query);
+}

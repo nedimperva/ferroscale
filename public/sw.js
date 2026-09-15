@@ -166,7 +166,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cached = await cache.match(request);
-      const networkPromise = fetch(request)
+      const fetchPromise = fetch(request)
         .then((response) => {
           if (response.ok) {
             cache.put(request, response.clone());
@@ -175,7 +175,13 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => null);
 
-      return cached || networkPromise || new Response("Offline", { status: 503, statusText: "Offline" });
+      if (cached) {
+        event.waitUntil(fetchPromise);
+        return cached;
+      }
+
+      const networkResponse = await fetchPromise;
+      return networkResponse || new Response("Offline", { status: 503, statusText: "Offline" });
     }),
   );
 });
