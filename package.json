@@ -6,10 +6,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "prebuild": "node scripts/inject-sw-version.mjs",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "eslint",
     "generate:icons": "node scripts/generate-icons.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",

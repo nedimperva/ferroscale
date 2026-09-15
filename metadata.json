@@ -1,0 +1,6 @@
+{
+  "name": "FerroScale",
+  "description": "Metal profile weight and price estimation calculator for European standard profiles, sheets, and tubes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
