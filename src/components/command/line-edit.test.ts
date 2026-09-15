@@ -153,17 +153,17 @@ describe("pullLastChip", () => {
 });
 
 describe("tweakActiveItem", () => {
-  it("removes the active length token leaving a trailing space for immediate typing", () => {
-    expect(tweakActiveItem("hea120 6m ")).toBe("hea120 ");
-    expect(tweakActiveItem("hea120 6m")).toBe("hea120 ");
+  it("pulls the active length token into the partial for editing", () => {
+    expect(tweakActiveItem("hea120 6m ")).toBe("hea120 6m");
+    expect(tweakActiveItem("hea120 6m")).toBe("hea120 6m");
   });
 
-  it("preserves other tokens like quantity and grade when removing length", () => {
-    expect(tweakActiveItem("hea120 6m x2 s235 ")).toBe("hea120 x2 s235 ");
+  it("pulls length to the end while preserving other tokens", () => {
+    expect(tweakActiveItem("hea120 6m x2 s235 ")).toBe("hea120 x2 s235 6m");
   });
 
   it("operates only on the active item in a multi-item line", () => {
-    expect(tweakActiveItem("hea120 6m + ipe200 4m ")).toBe("hea120 6m + ipe200 ");
+    expect(tweakActiveItem("hea120 6m + ipe200 4m ")).toBe("hea120 6m + ipe200 4m");
   });
 
   it("falls back to pullLastChip when no length token is present", () => {

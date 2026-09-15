@@ -68,6 +68,12 @@ export function commandKeypadInsert(
     if (query === "" || /\s$/.test(query)) return query;
     return `${query} `;
   }
+  if (!/\s$/.test(query) && /^[0-9]$/.test(ch)) {
+    const last = query.trim().split(/\s+/).pop() || "";
+    if (last && cmdClassifyToken(last) === "len" && /[a-z]$/i.test(last)) {
+      return `${query.slice(0, -last.length)}${ch}`;
+    }
+  }
   if (shouldAdvanceBefore(query, ch, parsed)) return `${query} ${ch}`;
   return `${query}${ch}`;
 }
