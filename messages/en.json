@@ -1114,6 +1114,7 @@
     "unverifiedNote": "{count} EN sizes are held back from this table because their stored area and their published catalog mass disagree. They are listed in the benchmark source and are pending a catalog check."
   },
   "faq": {
+    "badge": "Engineering Reference",
     "title": "Metal Weight Calculation FAQ",
     "subtitle": "Traceable formulas, workshop rules of thumb, and worked examples for European standard profiles, tubes, and sheets.",
     "back": "Back to calculator",
@@ -1123,8 +1124,17 @@
     "noResultsTitle": "No questions matched your search",
     "noResultsDesc": "Try searching for a different term like \"sheet\", \"tube\", \"S235\", or \"density\".",
     "clearSearch": "Clear search",
-    "expandAll": "Expand all",
-    "collapseAll": "Collapse all",
+    "searchInAllCategories": "Search in all categories",
+    "standardsBadge": "EN / ISO Standards",
+    "verifierBadge": "Step-by-step Verifier",
+    "keyboardHint": "Press / to search",
+    "themeToggle": "Toggle theme",
+    "nav": {
+      "calculator": "Calculator",
+      "qa": "Formula QA",
+      "contact": "Contact"
+    },
+    "footer": "FerroScale Precision Metal Engineering",
     "questionsCount": "{count} questions",
     "categories": {
       "all": "All Topics",
@@ -1135,23 +1145,6 @@
       "beams": "Beams & Structural",
       "materials": "Alloys & Densities",
       "tolerances": "Tolerances & Scrap"
-    },
-    "quickCheatSheet": {
-      "title": "Standard Steel Formulas (at 7.85 kg/dm³)",
-      "subtitle": "Essential workshop math for rapid estimation",
-      "clickToTest": "Click formula to test in verifier & jump to answer",
-      "plateTitle": "Plates & Sheets",
-      "plateFormula": "t (mm) × 7.85 kg/m²",
-      "roundBarTitle": "Solid Round Bar",
-      "roundBarFormula": "d² (mm) ÷ 162.2 kg/m",
-      "roundTubeTitle": "Round Pipe / Tube",
-      "roundTubeFormula": "(D - t) × t × 0.02466 kg/m",
-      "squareTubeTitle": "Square / Box Tube",
-      "squareTubeFormula": "(H + W - 2t) × 2t × 0.00785 kg/m",
-      "flatBarTitle": "Flat Bar",
-      "flatBarFormula": "W × T × 0.00785 kg/m",
-      "densityRatiosTitle": "Material Multipliers",
-      "densityRatios": "Alu: ×0.344 · Inox 304: ×1.010 · Brass: ×1.121"
     },
     "sandbox": {
       "title": "Interactive Formula Verifier",
@@ -1389,6 +1382,91 @@
         "tip": "FerroScale automatically tracks and displays surface paint area in m² for every profile in your calculation breakdown and project quotes.",
         "command": "tub100x50x4 6m"
       }
-    }
+    },
+    "dataSheet": {
+      "heading": "Standard profile data sheet",
+      "eyebrow": "Profile · formula · worked example — carbon steel 7.85 kg/dm³",
+      "multipliers": "Alu ×0.344 · Inox 304 ×1.010 · Brass ×1.121",
+      "empty": "No profile matches that search.",
+      "rows": {
+        "sheetPlate": {
+          "name": "Plate & sheet",
+          "formula": "t × W × L × 7.85 kg/m²",
+          "example": "5 mm, 2000 × 1000 → 78.50 kg"
+        },
+        "chequeredPlate": {
+          "name": "Chequered plate",
+          "formula": "(t × 7.85 + 2.5) kg/m²",
+          "example": "4 mm tread, 2000 × 1000 → 67.80 kg"
+        },
+        "expandedMetal": {
+          "name": "Expanded mesh",
+          "formula": "t × 7.85 × (2·sw ÷ pitch) kg/m²",
+          "example": "2 mm, 2.5 strand, 20 pitch → 3.93 kg/m²"
+        },
+        "corrugatedSheet": {
+          "name": "Corrugated sheet",
+          "formula": "t × 7.85 × development factor",
+          "example": "0.75 mm × 1.20 → 7.07 kg/m²"
+        },
+        "roundBar": {
+          "name": "Round bar",
+          "formula": "d² ÷ 162.2 kg/m",
+          "example": "Ø20, 6 m → 14.80 kg"
+        },
+        "squareBar": {
+          "name": "Square bar",
+          "formula": "a² × 0.00785 kg/m",
+          "example": "20 × 20, 6 m → 18.84 kg"
+        },
+        "flatBar": {
+          "name": "Flat bar",
+          "formula": "W × T × 0.00785 kg/m",
+          "example": "50 × 10, 6 m → 23.55 kg"
+        },
+        "hexBar": {
+          "name": "Hexagon bar",
+          "formula": "AF² × 0.006798 kg/m",
+          "example": "AF 24, 3 m → 11.75 kg"
+        },
+        "roundTube": {
+          "name": "Round tube",
+          "formula": "(OD − t) × t × 0.02466 kg/m",
+          "example": "60.3 × 3.2, 6 m → 27.04 kg"
+        },
+        "boxSection": {
+          "name": "Box section SHS / RHS",
+          "formula": "(H + W − 2t) × 2t × 0.00785",
+          "example": "100 × 50 × 4, 6 m → 53.51 kg"
+        },
+        "angleIron": {
+          "name": "Angle (L profile)",
+          "formula": "(a + b − t) × t × 0.00785",
+          "example": "50 × 50 × 5, 6 m → 22.37 kg"
+        },
+        "structuralBeams": {
+          "name": "Beam HEA / HEB / IPE",
+          "formula": "catalog kg/m × length",
+          "example": "HEA 120 — 19.9 kg/m, 6 m → 119.40 kg"
+        },
+        "channelSection": {
+          "name": "Channel UPN / UPE",
+          "formula": "catalog kg/m × length",
+          "example": "UPN 160 — 18.8 kg/m, 12 m → 225.60 kg"
+        },
+        "teeProfile": {
+          "name": "Tee profile",
+          "formula": "catalog kg/m × length",
+          "example": "T 60×60×7 — 6.23 kg/m, 6 m → 37.38 kg"
+        }
+      }
+    },
+    "verifierStrip": {
+      "title": "Trace the math step by step for any profile",
+      "subtitle": "— area, then kg/m, then total.",
+      "open": "Open verifier",
+      "close": "Close"
+    },
+    "answersHeading": "How each formula is derived"
   }
 }

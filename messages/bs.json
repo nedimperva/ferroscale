@@ -1114,6 +1114,7 @@
     "unverifiedNote": "{count} EN dimenzija je izostavljeno iz ove tabele jer se pohranjena površina i objavljena kataloška masa ne poklapaju. Navedene su u izvoru benchmarka i čekaju provjeru u katalogu."
   },
   "faq": {
+    "badge": "Inženjerska referenca",
     "title": "Česta pitanja o proračunu težine metala",
     "subtitle": "Formule s provjerljivim porijeklom, radionička pravila i praktični primjeri za evropske standardne profile, cijevi i limove.",
     "back": "Nazad na kalkulator",
@@ -1123,8 +1124,17 @@
     "noResultsTitle": "Nema pitanja koja odgovaraju pretrazi",
     "noResultsDesc": "Pokušajte pretražiti drugi pojam kao što su \"lim\", \"cijev\", \"S235\" ili \"gustina\".",
     "clearSearch": "Očisti pretragu",
-    "expandAll": "Otvori sve",
-    "collapseAll": "Zatvori sve",
+    "searchInAllCategories": "Pretraži u svim kategorijama",
+    "standardsBadge": "EN / ISO Standardi",
+    "verifierBadge": "Provjera korak-po-korak",
+    "keyboardHint": "Pritisnite / za pretragu",
+    "themeToggle": "Promijeni temu",
+    "nav": {
+      "calculator": "Kalkulator",
+      "qa": "Formula QA",
+      "contact": "Kontakt"
+    },
+    "footer": "FerroScale precizni inžinjering metala",
     "questionsCount": "{count} pitanja",
     "categories": {
       "all": "Sve teme",
@@ -1135,23 +1145,6 @@
       "beams": "Nosači i L-profili",
       "materials": "Legure i gustine",
       "tolerances": "Tolerancije i otpad"
-    },
-    "quickCheatSheet": {
-      "title": "Standardne formule za čelik (pri 7,85 kg/dm³)",
-      "subtitle": "Brza radionička matematika za procjenu težine",
-      "clickToTest": "Kliknite na formulu za test u provjerivaču i skok na odgovor",
-      "plateTitle": "Limovi i ploče",
-      "plateFormula": "t (mm) × 7,85 kg/m²",
-      "roundBarTitle": "Puna okrugla šipka",
-      "roundBarFormula": "d² (mm) ÷ 162,2 kg/m",
-      "roundTubeTitle": "Okrugla cijev",
-      "roundTubeFormula": "(D - t) × t × 0,02466 kg/m",
-      "squareTubeTitle": "Kvadratna cijev",
-      "squareTubeFormula": "(H + W - 2t) × 2t × 0,00785 kg/m",
-      "flatBarTitle": "Plosnati čelik",
-      "flatBarFormula": "W × T × 0,00785 kg/m",
-      "densityRatiosTitle": "Koeficijenti materijala",
-      "densityRatios": "Alu: ×0,344 · Inox 304: ×1,010 · Mesing: ×1,121"
     },
     "sandbox": {
       "title": "Interaktivni provjerivač formula",
@@ -1389,6 +1382,91 @@
         "tip": "FerroScale automatski računa i prikazuje površinu za farbanje u m² za svaki profil u pregledu kalkulacije i ponudama projekta.",
         "command": "tub100x50x4 6m"
       }
-    }
+    },
+    "dataSheet": {
+      "heading": "Tabela standardnih profila",
+      "eyebrow": "Profil · formula · praktični primjer — ugljični čelik 7.85 kg/dm³",
+      "multipliers": "Alu ×0.344 · Inox 304 ×1.010 · Mesing ×1.121",
+      "empty": "Nijedan profil ne odgovara pretrazi.",
+      "rows": {
+        "sheetPlate": {
+          "name": "Lim i ploča",
+          "formula": "t × Š × D × 7.85 kg/m²",
+          "example": "5 mm, 2000 × 1000 → 78.50 kg"
+        },
+        "chequeredPlate": {
+          "name": "Rebrasti lim",
+          "formula": "(t × 7.85 + 2.5) kg/m²",
+          "example": "4 mm rebro, 2000 × 1000 → 67.80 kg"
+        },
+        "expandedMetal": {
+          "name": "Rastegnuta mreža",
+          "formula": "t × 7.85 × (2·tr ÷ korak) kg/m²",
+          "example": "2 mm, traka 2.5, korak 20 → 3.93 kg/m²"
+        },
+        "corrugatedSheet": {
+          "name": "Valoviti lim",
+          "formula": "t × 7.85 × faktor razvijanja",
+          "example": "0.75 mm × 1.20 → 7.07 kg/m²"
+        },
+        "roundBar": {
+          "name": "Okrugla šipka",
+          "formula": "d² ÷ 162.2 kg/m",
+          "example": "Ø20, 6 m → 14.80 kg"
+        },
+        "squareBar": {
+          "name": "Kvadratna šipka",
+          "formula": "a² × 0.00785 kg/m",
+          "example": "20 × 20, 6 m → 18.84 kg"
+        },
+        "flatBar": {
+          "name": "Pljosnata šipka",
+          "formula": "Š × D × 0.00785 kg/m",
+          "example": "50 × 10, 6 m → 23.55 kg"
+        },
+        "hexBar": {
+          "name": "Šestougaona šipka",
+          "formula": "OK² × 0.006798 kg/m",
+          "example": "OK 24, 3 m → 11.75 kg"
+        },
+        "roundTube": {
+          "name": "Okrugla cijev",
+          "formula": "(VP − t) × t × 0.02466 kg/m",
+          "example": "60.3 × 3.2, 6 m → 27.04 kg"
+        },
+        "boxSection": {
+          "name": "Kutijasti profil SHS / RHS",
+          "formula": "(H + Š − 2t) × 2t × 0.00785",
+          "example": "100 × 50 × 4, 6 m → 53.51 kg"
+        },
+        "angleIron": {
+          "name": "Ugaonik (L profil)",
+          "formula": "(a + b − t) × t × 0.00785",
+          "example": "50 × 50 × 5, 6 m → 22.37 kg"
+        },
+        "structuralBeams": {
+          "name": "Nosač HEA / HEB / IPE",
+          "formula": "kataloških kg/m × dužina",
+          "example": "HEA 120 — 19.9 kg/m, 6 m → 119.40 kg"
+        },
+        "channelSection": {
+          "name": "U-profil UPN / UPE",
+          "formula": "kataloških kg/m × dužina",
+          "example": "UPN 160 — 18.8 kg/m, 12 m → 225.60 kg"
+        },
+        "teeProfile": {
+          "name": "T-profil",
+          "formula": "kataloških kg/m × dužina",
+          "example": "T 60×60×7 — 6.23 kg/m, 6 m → 37.38 kg"
+        }
+      }
+    },
+    "verifierStrip": {
+      "title": "Prati proračun korak po korak za bilo koji profil",
+      "subtitle": "— presjek, zatim kg/m, zatim ukupno.",
+      "open": "Otvori verifikator",
+      "close": "Zatvori"
+    },
+    "answersHeading": "Kako se svaka formula izvodi"
   }
 }

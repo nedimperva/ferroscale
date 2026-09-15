@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useId, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
+import { useTheme } from "@/hooks/useTheme";
+import { DeskIcon } from "@/components/command/desktop/desk-atoms";
 
 type FaqCategoryId =
   | "all"
@@ -41,6 +43,27 @@ const FAQ_ITEMS: FaqItemMeta[] = [
   { id: "cuttingWaste", category: "tolerances" },
   { id: "galvanizingWeight", category: "tolerances" },
   { id: "paintSurfaceArea", category: "tolerances" },
+];
+
+// The data sheet at the top of the page: every profile that has a governing
+// formula, in the order a fabricator scans for one. The six remaining FAQ
+// items (general principles, densities, tolerances, waste, galvanizing, paint)
+// are not profiles and appear only as questions.
+const DATA_SHEET_ROWS: string[] = [
+  "sheetPlate",
+  "chequeredPlate",
+  "expandedMetal",
+  "corrugatedSheet",
+  "roundBar",
+  "squareBar",
+  "flatBar",
+  "hexBar",
+  "roundTube",
+  "boxSection",
+  "angleIron",
+  "structuralBeams",
+  "channelSection",
+  "teeProfile",
 ];
 
 const CATEGORIES: FaqCategoryId[] = [
@@ -170,16 +193,17 @@ export function FaqView() {
   const locale = useLocale() as AppLocale;
   const router = useRouter();
   const pathname = usePathname();
+  const { setTheme, resolvedTheme } = useTheme();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<FaqCategoryId>("all");
 
-  // Default initial open questions
-  const [openIds, setOpenIds] = useState<Set<string>>(
-    () => new Set(["generalFormula", "sheetPlate", "roundBar", "roundTube", "boxSection", "flatBar"]),
-  );
+  // One answer at a time: the data sheet above already carries every formula,
+  // so an open answer is something the reader asked for rather than the default.
+  const [openId, setOpenId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [highlightVerifier, setHighlightVerifier] = useState(false);
+  const [verifierOpen, setVerifierOpen] = useState(false);
 
   // Sandbox state
   const [shape, setShape] = useState<ShapeType>("roundTube");
@@ -198,6 +222,26 @@ export function FaqView() {
   const [hexSize, setHexSize] = useState("24");
 
   const searchInputId = useId();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut: '/' focuses search; 'Escape' clears search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      const isInputActive = activeTag === "input" || activeTag === "textarea" || activeTag === "select";
+
+      if (e.key === "/" && !isInputActive) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === "Escape" && document.activeElement === searchInputRef.current) {
+        setSearchQuery("");
+        searchInputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const switchLocale = useCallback(
     (nextLocale: AppLocale) => {
@@ -208,26 +252,11 @@ export function FaqView() {
   );
 
   const toggleOpen = useCallback((id: string) => {
-    setOpenIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
-  const expandAll = useCallback(() => {
-    setOpenIds(new Set(FAQ_ITEMS.map((item) => item.id)));
-  }, []);
-
-  const collapseAll = useCallback(() => {
-    setOpenIds(new Set());
+    setOpenId((prev) => (prev === id ? null : id));
   }, []);
 
   const loadIntoVerifier = useCallback((preset: Partial<SandboxPreset>) => {
+    setVerifierOpen(true);
     if (preset.shape) setShape(preset.shape);
     if (preset.material) setMaterial(preset.material);
     if (preset.thickness !== undefined) setThickness(preset.thickness);
@@ -246,26 +275,31 @@ export function FaqView() {
     setHighlightVerifier(true);
     setTimeout(() => setHighlightVerifier(false), 1800);
 
+    // The panel may still be collapsed on this frame, so wait for it to mount.
     if (typeof document !== "undefined") {
-      const el = document.getElementById("sandbox-heading");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      requestAnimationFrame(() => {
+        const el = document.getElementById("sandbox-heading");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
     }
   }, []);
 
+  // Opening a data-sheet row clears the filters so the answer cannot be
+  // scrolled to while a category or query is hiding it.
   const jumpToQuestion = useCallback((questionId: string) => {
-    setOpenIds((prev) => {
-      const next = new Set(prev);
-      next.add(questionId);
-      return next;
-    });
+    setOpenId(questionId);
+    setSelectedCategory("all");
+    setSearchQuery("");
 
     if (typeof document !== "undefined") {
-      const elem = document.getElementById(`faq-${questionId}`);
-      if (elem) {
-        elem.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      requestAnimationFrame(() => {
+        const elem = document.getElementById(`faq-${questionId}`);
+        if (elem) {
+          elem.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
     }
   }, []);
 
@@ -354,6 +388,29 @@ export function FaqView() {
       }
     }
     return counts;
+  }, [searchQuery, t]);
+
+  // The data sheet answers to the search box but not to the topic filter:
+  // the topics name kinds of question, not kinds of profile.
+  const dataSheetRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return DATA_SHEET_ROWS;
+
+    return DATA_SHEET_ROWS.filter((id) => {
+      const name = t(`dataSheet.rows.${id}.name`).toLowerCase();
+      const formula = t(`dataSheet.rows.${id}.formula`).toLowerCase();
+      const example = t(`dataSheet.rows.${id}.example`).toLowerCase();
+      const question = t(`items.${id}.question`).toLowerCase();
+      const command = t(`items.${id}.command`).toLowerCase();
+
+      return (
+        name.includes(query) ||
+        formula.includes(query) ||
+        example.includes(query) ||
+        question.includes(query) ||
+        command.includes(query)
+      );
+    });
   }, [searchQuery, t]);
 
   // Filter items based on category and search query
@@ -585,31 +642,50 @@ export function FaqView() {
       {/* Top breadcrumb & navigation bar */}
       <nav
         aria-label="FAQ Navigation"
-        className="flex items-center justify-between gap-4 pb-4 border-b border-[var(--border)]"
+        className="flex items-center justify-between gap-4 pb-4 border-b border-[var(--border-faint)]"
       >
         <Link
-          href={`/${locale}`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground transition-colors hover:text-[var(--accent)]"
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-foreground transition-colors hover:text-[var(--accent)]"
         >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          {t("back")}
+          <span
+            aria-hidden="true"
+            className="w-3.5 h-3.5 bg-[var(--accent)] inline-block flex-shrink-0"
+          />
+          <span>← {t("back")}</span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
-            href={`/${locale}/qa`}
+            href="/qa"
             className="text-xs font-medium text-foreground-secondary hover:text-foreground transition-colors hidden sm:inline"
           >
-            Formula QA
+            {t("nav.qa")}
           </Link>
           <Link
-            href={`/${locale}/contact`}
+            href="/contact"
             className="text-xs font-medium text-foreground-secondary hover:text-foreground transition-colors hidden sm:inline"
           >
-            Contact
+            {t("nav.contact")}
           </Link>
+
+          {/* Theme toggle */}
+          <button
+            type="button"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            title={t("themeToggle")}
+            aria-label={t("themeToggle")}
+            className="p-1 border border-[var(--border)] bg-[var(--surface)] text-foreground-secondary hover:text-foreground hover:border-[var(--border-strong)] transition-colors cursor-pointer"
+          >
+            <span className="hidden dark:block">
+              <DeskIcon name="sun" size={15} />
+            </span>
+            <span className="block dark:hidden">
+              <DeskIcon name="moon" size={15} />
+            </span>
+          </button>
+
+          {/* Language toggle */}
           <div className="inline-flex border border-[var(--border)] p-0.5 text-[11px] font-mono bg-[var(--surface)]">
             <button
               type="button"
@@ -637,235 +713,164 @@ export function FaqView() {
         </div>
       </nav>
 
-      {/* Hero Header */}
-      <header className="py-8 border-b border-[var(--border)]">
-        <div className="flex items-center gap-2 mb-2 font-mono text-[11px] uppercase tracking-wider text-foreground-secondary">
-          <span>{t("badge")}</span>
-          <span>·</span>
-          <span>EN / ISO STANDARDS</span>
+      {/* Hero header — the search rides with the title instead of taking its own band */}
+      <header className="flex flex-col gap-6 pt-10 pb-7 md:flex-row md:items-end md:justify-between md:gap-8">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-3 font-mono text-[11px] uppercase tracking-wider text-foreground-secondary">
+            <span>{t("badge")}</span>
+            <span>·</span>
+            <span>{t("standardsBadge")}</span>
+          </div>
+          <h1 className="fs-title text-2xl sm:text-3xl leading-tight text-foreground">
+            {t("title")}
+          </h1>
+          <p className="mt-3 text-sm text-foreground-secondary max-w-xl leading-relaxed text-pretty">
+            {t("subtitle")}
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground fs-title">
-          {t("title")}
-        </h1>
-        <p className="mt-2 text-sm text-foreground-secondary max-w-2xl leading-relaxed">
-          {t("subtitle")}
-        </p>
+
+        <div className="relative w-full md:w-[17rem] md:flex-shrink-0">
+          <label htmlFor={searchInputId} className="sr-only">
+            {t("searchAria")}
+          </label>
+          <input
+            id={searchInputId}
+            ref={searchInputRef}
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("searchPlaceholder")}
+            className="w-full px-3 py-2 pr-9 text-xs border border-[var(--border)] bg-[var(--surface)] text-foreground placeholder:text-muted focus:outline-none focus:border-[var(--foreground)]"
+          />
+          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label={t("clearSearch")}
+                className="text-xs text-muted hover:text-foreground font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            ) : (
+              <kbd
+                aria-hidden="true"
+                className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono border border-[var(--border)] text-muted bg-[var(--surface-raised)]"
+              >
+                /
+              </kbd>
+            )}
+          </div>
+        </div>
       </header>
 
-      {/* Quick Cheat Sheet Cards */}
-      <section aria-labelledby="cheat-sheet-heading" className="my-8">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 id="cheat-sheet-heading" className="text-xs font-mono font-bold uppercase tracking-wider text-foreground">
-              {t("quickCheatSheet.title")}
-            </h2>
-            <p className="text-xs text-foreground-secondary mt-0.5">
-              {t("quickCheatSheet.subtitle")}
-            </p>
-          </div>
+      {/* Standard profile data sheet — the page's lead content */}
+      <section aria-labelledby="data-sheet-heading">
+        <h2 id="data-sheet-heading" className="sr-only">
+          {t("dataSheet.heading")}
+        </h2>
+
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2 border-b border-[var(--foreground)]">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted font-medium">
+            {t("dataSheet.eyebrow")}
+          </span>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--accent-text)] font-medium">
+            {t("dataSheet.multipliers")}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {/* Card 1: Plates & Sheets */}
-          <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] transition-colors flex flex-col justify-between group">
-            <div>
-              <div className="text-[11px] font-mono text-foreground-secondary uppercase tracking-wider font-semibold">
-                {t("quickCheatSheet.plateTitle")}
-              </div>
-              <div className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
-                {t("quickCheatSheet.plateFormula")}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border)] text-[10.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => loadIntoVerifier({ shape: "sheet", thickness: "5", width: "1000", lengthM: "2", material: "steel" })}
-                className="text-foreground hover:text-[var(--accent)] font-semibold cursor-pointer"
-              >
-                {t("labels.testInSandbox")} ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => jumpToQuestion("sheetPlate")}
-                className="text-foreground-secondary hover:text-foreground underline cursor-pointer"
-              >
-                {t("labels.jumpToAnswer")} ↓
-              </button>
-            </div>
-          </div>
+        {dataSheetRows.map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => jumpToQuestion(id)}
+            className="group grid w-full grid-cols-[minmax(0,1fr)_1.25rem] items-baseline gap-x-4 gap-y-0.5 border-t border-[var(--border-faint)] py-2.5 text-left transition-colors hover:bg-[var(--surface-inset)] cursor-pointer md:grid-cols-[11rem_16rem_minmax(0,1fr)_1.25rem] md:gap-y-0"
+          >
+            <span className="col-start-1 text-[13px] font-medium text-foreground">
+              {t(`dataSheet.rows.${id}.name`)}
+            </span>
+            <span className="col-start-1 font-mono text-xs text-foreground tabular-nums md:col-start-2">
+              {t(`dataSheet.rows.${id}.formula`)}
+            </span>
+            <span className="col-start-1 font-mono text-[11.5px] text-muted tabular-nums md:col-start-3">
+              {t(`dataSheet.rows.${id}.example`)}
+            </span>
+            <span
+              aria-hidden="true"
+              className="row-start-1 col-start-2 text-right font-mono text-xs text-[var(--border-strong)] transition-colors group-hover:text-[var(--accent)] md:col-start-4"
+            >
+              →
+            </span>
+          </button>
+        ))}
 
-          {/* Card 2: Solid Round Bar */}
-          <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] transition-colors flex flex-col justify-between group">
-            <div>
-              <div className="text-[11px] font-mono text-foreground-secondary uppercase tracking-wider font-semibold">
-                {t("quickCheatSheet.roundBarTitle")}
-              </div>
-              <div className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
-                {t("quickCheatSheet.roundBarFormula")}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border)] text-[10.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => loadIntoVerifier({ shape: "roundBar", diameter: "20", lengthM: "6", material: "steel" })}
-                className="text-foreground hover:text-[var(--accent)] font-semibold cursor-pointer"
-              >
-                {t("labels.testInSandbox")} ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => jumpToQuestion("roundBar")}
-                className="text-foreground-secondary hover:text-foreground underline cursor-pointer"
-              >
-                {t("labels.jumpToAnswer")} ↓
-              </button>
-            </div>
+        {dataSheetRows.length === 0 && (
+          <div className="border-t border-[var(--border-faint)] py-4 text-xs text-muted">
+            {t("dataSheet.empty")}
           </div>
+        )}
 
-          {/* Card 3: Round Pipe / Tube */}
-          <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] transition-colors flex flex-col justify-between group">
-            <div>
-              <div className="text-[11px] font-mono text-foreground-secondary uppercase tracking-wider font-semibold">
-                {t("quickCheatSheet.roundTubeTitle")}
-              </div>
-              <div className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
-                {t("quickCheatSheet.roundTubeFormula")}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border)] text-[10.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => loadIntoVerifier({ shape: "roundTube", diameter: "60.3", thickness: "3.2", lengthM: "6", material: "steel" })}
-                className="text-foreground hover:text-[var(--accent)] font-semibold cursor-pointer"
-              >
-                {t("labels.testInSandbox")} ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => jumpToQuestion("roundTube")}
-                className="text-foreground-secondary hover:text-foreground underline cursor-pointer"
-              >
-                {t("labels.jumpToAnswer")} ↓
-              </button>
-            </div>
-          </div>
-
-          {/* Card 4: Square / Box Tube */}
-          <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] transition-colors flex flex-col justify-between group">
-            <div>
-              <div className="text-[11px] font-mono text-foreground-secondary uppercase tracking-wider font-semibold">
-                {t("quickCheatSheet.squareTubeTitle")}
-              </div>
-              <div className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
-                {t("quickCheatSheet.squareTubeFormula")}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border)] text-[10.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => loadIntoVerifier({ shape: "rectTube", width: "100", height: "50", thickness: "4", lengthM: "6", material: "steel" })}
-                className="text-foreground hover:text-[var(--accent)] font-semibold cursor-pointer"
-              >
-                {t("labels.testInSandbox")} ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => jumpToQuestion("boxSection")}
-                className="text-foreground-secondary hover:text-foreground underline cursor-pointer"
-              >
-                {t("labels.jumpToAnswer")} ↓
-              </button>
-            </div>
-          </div>
-
-          {/* Card 5: Flat Bar */}
-          <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] transition-colors flex flex-col justify-between group">
-            <div>
-              <div className="text-[11px] font-mono text-foreground-secondary uppercase tracking-wider font-semibold">
-                {t("quickCheatSheet.flatBarTitle")}
-              </div>
-              <div className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
-                {t("quickCheatSheet.flatBarFormula")}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border)] text-[10.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => loadIntoVerifier({ shape: "flatBar", width: "50", thickness: "10", lengthM: "6", material: "steel" })}
-                className="text-foreground hover:text-[var(--accent)] font-semibold cursor-pointer"
-              >
-                {t("labels.testInSandbox")} ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => jumpToQuestion("flatBar")}
-                className="text-foreground-secondary hover:text-foreground underline cursor-pointer"
-              >
-                {t("labels.jumpToAnswer")} ↓
-              </button>
-            </div>
-          </div>
-
-          {/* Card 6: Material Multipliers */}
-          <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] transition-colors flex flex-col justify-between group">
-            <div>
-              <div className="text-[11px] font-mono text-foreground-secondary uppercase tracking-wider font-semibold">
-                {t("quickCheatSheet.densityRatiosTitle")}
-              </div>
-              <div className="mt-1.5 font-mono text-xs font-bold text-[var(--accent)]">
-                {t("quickCheatSheet.densityRatios")}
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[var(--border)] text-[10.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => {
-                  const nextMat = material === "steel" ? "stainless" : material === "stainless" ? "aluminum" : "steel";
-                  loadIntoVerifier({ shape: "rectTube", material: nextMat, width: "50", height: "50", thickness: "3", lengthM: "6" });
-                }}
-                className="text-foreground hover:text-[var(--accent)] font-semibold cursor-pointer"
-              >
-                {t("labels.testInSandbox")} ({material}) ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => jumpToQuestion("densitiesComparison")}
-                className="text-foreground-secondary hover:text-foreground underline cursor-pointer"
-              >
-                {t("labels.jumpToAnswer")} ↓
-              </button>
-            </div>
-          </div>
-        </div>
+        <div className="border-b border-[var(--border-faint)]" />
       </section>
 
-      {/* Interactive Sandbox: Formula Verifier */}
+      {/* Formula verifier — one strip until it is asked for */}
+      {!verifierOpen && (
+        <button
+          type="button"
+          onClick={() => setVerifierOpen(true)}
+          className="mt-4 flex w-full flex-wrap items-center justify-between gap-3 bg-[var(--surface-inset)] px-4 py-3 text-left transition-colors hover:bg-[var(--surface)] hover:shadow-[inset_0_0_0_1px_var(--border)] cursor-pointer"
+        >
+          <span className="flex flex-wrap items-center gap-2.5">
+            <span aria-hidden="true" className="inline-block w-2.5 h-2.5 bg-[var(--foreground)] flex-shrink-0" />
+            <span className="text-[13.5px] font-medium text-foreground">
+              {t("verifierStrip.title")}
+            </span>
+            <span className="text-[13px] text-foreground-secondary">
+              {t("verifierStrip.subtitle")}
+            </span>
+          </span>
+          <span className="whitespace-nowrap text-xs font-semibold text-[var(--accent-text)]">
+            {t("verifierStrip.open")} ↓
+          </span>
+        </button>
+      )}
+
+      {verifierOpen && (
       <section
         aria-labelledby="sandbox-heading"
-        className={`mb-12 border transition-all ${
+        className={`mt-4 border transition-all ${
           highlightVerifier
-            ? "border-[var(--accent)] ring-2 ring-[var(--accent)] shadow-sm bg-[var(--surface)]"
+            ? "border-[var(--foreground)] ring-1 ring-[var(--foreground)] bg-[var(--surface)]"
             : "border-[var(--border)] bg-[var(--surface)]"
         }`}
       >
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[var(--border)] bg-[var(--surface-raised)] flex flex-wrap items-center justify-between gap-2">
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[var(--border-faint)] bg-[var(--surface-raised)] flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 id="sandbox-heading" className="text-sm font-bold text-foreground flex items-center gap-2">
-              <span className="inline-block w-2.5 h-2.5 bg-[var(--accent)]" />
+            <h2 id="sandbox-heading" className="fs-title text-base sm:text-lg text-foreground flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block w-2.5 h-2.5 bg-[var(--foreground)]" />
               {t("sandbox.title")}
             </h2>
             <p className="text-xs text-foreground-secondary mt-0.5">{t("sandbox.subtitle")}</p>
           </div>
-          <span className="font-mono text-[10px] text-foreground font-semibold tracking-wider uppercase border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5">
-            STEP-BY-STEP VERIFIER
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-[10px] text-muted font-semibold tracking-wider uppercase border border-[var(--border-faint)] bg-[var(--surface)] px-2 py-0.5">
+              {t("verifierBadge")}
+            </span>
+            <button
+              type="button"
+              onClick={() => setVerifierOpen(false)}
+              className="px-2 py-0.5 text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+            >
+              {t("verifierStrip.close")} ↑
+            </button>
+          </div>
         </div>
 
         <div className="p-4 sm:p-5">
           {/* Shape & Material selectors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-[11px] font-mono text-foreground font-bold uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-mono text-muted font-semibold uppercase tracking-wider mb-1.5">
                 {t("sandbox.profile")}
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
@@ -893,14 +898,14 @@ export function FaqView() {
                       key={key}
                       type="button"
                       onClick={() => setShape(key)}
-                      className={`px-2 py-1.5 text-xs text-left border transition-all cursor-pointer flex items-center justify-between gap-1 ${
+                      className={`px-2 py-1.5 text-xs text-left border transition-colors cursor-pointer flex items-center justify-between gap-1 ${
                         isActive
-                          ? "border-[var(--foreground)] bg-[var(--surface-inset)] font-bold text-foreground ring-1 ring-[var(--foreground)]"
-                          : "border-[var(--border)] bg-[var(--surface)] text-foreground hover:border-[var(--foreground)] hover:bg-[var(--surface-raised)] font-medium"
+                          ? "border-[var(--foreground)] bg-[var(--surface-inset)] font-bold text-foreground"
+                          : "border-[var(--border)] bg-[var(--surface)] text-foreground hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)] font-medium"
                       }`}
                     >
                       <span className="truncate">{label}</span>
-                      {isActive && <span className="w-1.5 h-1.5 bg-[var(--accent)] flex-shrink-0" />}
+                      {isActive && <span className="w-1.5 h-1.5 bg-[var(--foreground)] flex-shrink-0" />}
                     </button>
                   );
                 })}
@@ -908,7 +913,7 @@ export function FaqView() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-mono text-foreground font-bold uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-mono text-muted font-semibold uppercase tracking-wider mb-1.5">
                 {t("sandbox.material")}
               </label>
               <div className="flex flex-col gap-1.5">
@@ -925,14 +930,14 @@ export function FaqView() {
                       key={key}
                       type="button"
                       onClick={() => setMaterial(key)}
-                      className={`px-3 py-1.5 text-xs text-left border transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                      className={`px-3 py-1.5 text-xs text-left border transition-colors cursor-pointer flex items-center justify-between gap-2 ${
                         isActive
-                          ? "border-[var(--foreground)] bg-[var(--surface-inset)] font-bold text-foreground ring-1 ring-[var(--foreground)]"
-                          : "border-[var(--border)] bg-[var(--surface)] text-foreground hover:border-[var(--foreground)] hover:bg-[var(--surface-raised)] font-medium"
+                          ? "border-[var(--foreground)] bg-[var(--surface-inset)] font-bold text-foreground"
+                          : "border-[var(--border)] bg-[var(--surface)] text-foreground hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)] font-medium"
                       }`}
                     >
                       <span>{label}</span>
-                      {isActive && <span className="w-1.5 h-1.5 bg-[var(--accent)] flex-shrink-0" />}
+                      {isActive && <span className="w-1.5 h-1.5 bg-[var(--foreground)] flex-shrink-0" />}
                     </button>
                   );
                 })}
@@ -1248,18 +1253,18 @@ export function FaqView() {
           {/* Trace Results Box */}
           <div className="p-4 border border-[var(--border)] bg-[var(--surface-inset)] flex flex-col gap-3 font-mono">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1 border-b border-[var(--border-faint)] pb-2">
-              <span className="text-foreground-secondary font-medium">{t("sandbox.step1Area")}:</span>
-              <span className="font-semibold text-foreground">{calculationTrace.step1Formula}</span>
+              <span className="text-muted font-medium">{t("sandbox.step1Area")}:</span>
+              <span className="font-semibold text-foreground tabular-nums">{calculationTrace.step1Formula}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1 border-b border-[var(--border-faint)] pb-2">
-              <span className="text-foreground-secondary font-medium">{t("sandbox.step2Linear")}:</span>
-              <span className="font-semibold text-foreground">{calculationTrace.step2Formula}</span>
+              <span className="text-muted font-medium">{t("sandbox.step2Linear")}:</span>
+              <span className="font-semibold text-foreground tabular-nums">{calculationTrace.step2Formula}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between text-sm gap-1 pt-1">
               <span className="font-bold text-foreground">{t("sandbox.step3Total")}:</span>
-              <span className="text-xl font-bold tracking-tight text-[var(--accent)]">
+              <span className="text-2xl font-bold tracking-tight text-[var(--accent)] tabular-nums">
                 {calculationTrace.totalMass.toLocaleString(locale, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -1269,12 +1274,12 @@ export function FaqView() {
             </div>
 
             {/* Generated Command Line Token */}
-            <div className="mt-2 pt-3 border-t border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="mt-2 pt-3 border-t border-[var(--border-faint)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2 overflow-x-auto py-1">
-                <span className="text-[11px] text-foreground-secondary font-mono uppercase tracking-wider">
+                <span className="text-[11px] text-muted font-mono uppercase tracking-wider">
                   {t("sandbox.command")}:
                 </span>
-                <code className="text-xs font-bold px-2.5 py-1 bg-[var(--surface)] border border-[var(--border)] text-foreground">
+                <code className="text-xs font-mono font-bold px-2.5 py-1 bg-[var(--surface)] border border-[var(--border)] text-foreground">
                   {calculationTrace.commandStr}
                 </code>
               </div>
@@ -1283,13 +1288,13 @@ export function FaqView() {
                 <button
                   type="button"
                   onClick={() => copyToClipboard(calculationTrace.commandStr, "sandbox")}
-                  className="px-3 py-1 text-xs border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-medium cursor-pointer"
+                  className="px-3 py-1 text-xs border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-medium cursor-pointer"
                 >
                   {copiedId === "sandbox" ? t("sandbox.copied") : t("sandbox.copy")}
                 </button>
                 <Link
-                  href={`/${locale}?q=${encodeURIComponent(calculationTrace.commandStr)}`}
-                  className="px-3.5 py-1 text-xs font-semibold bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 transition-opacity"
+                  href={`/?q=${encodeURIComponent(calculationTrace.commandStr)}`}
+                  className="px-3.5 py-1 text-xs font-bold bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 transition-opacity"
                 >
                   {t("sandbox.openInApp")} →
                 </Link>
@@ -1298,57 +1303,24 @@ export function FaqView() {
           </div>
         </div>
       </section>
+      )}
 
-      {/* Search & Category Filter Section */}
-      <section aria-labelledby="faq-list-heading" className="space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md">
-            <label htmlFor={searchInputId} className="sr-only">
-              {t("searchAria")}
-            </label>
-            <input
-              id={searchInputId}
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="w-full px-3.5 py-2 text-xs border border-[var(--border)] bg-[var(--surface)] text-foreground placeholder:text-foreground-secondary focus:outline-none focus:border-[var(--foreground)]"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                aria-label={t("clearSearch")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-foreground-secondary hover:text-foreground font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={expandAll}
-              className="px-3 py-1.5 text-xs border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-medium cursor-pointer"
-            >
-              {t("expandAll")} ({FAQ_ITEMS.length})
-            </button>
-            <button
-              type="button"
-              onClick={collapseAll}
-              className="px-3 py-1.5 text-xs border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-medium cursor-pointer"
-            >
-              {t("collapseAll")}
-            </button>
-          </div>
+      {/* Derivations — how each formula in the data sheet is reached */}
+      <section aria-labelledby="faq-list-heading" className="mt-12">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2.5 border-b border-[var(--foreground)]">
+          <h2 id="faq-list-heading" className="fs-title text-lg sm:text-xl text-foreground">
+            {t("answersHeading")}
+          </h2>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted font-medium">
+            {t("questionsCount", { count: filteredItems.length })}
+          </span>
         </div>
 
-        {/* Category Pills */}
+        {/* Topic filter — plain text, so it reads as a filter rather than a toolbar */}
         <div
           role="tablist"
           aria-label="FAQ Categories"
-          className="flex flex-wrap gap-1.5 pb-2 border-b border-[var(--border)]"
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-3.5 pb-1"
         >
           {CATEGORIES.map((cat) => {
             const isSelected = selectedCategory === cat;
@@ -1356,57 +1328,38 @@ export function FaqView() {
             return (
               <button
                 key={cat}
+                type="button"
                 role="tab"
                 aria-selected={isSelected}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1 text-xs whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 ${
+                className={`text-xs transition-colors cursor-pointer whitespace-nowrap ${
                   isSelected
-                    ? "bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] font-bold shadow-xs"
-                    : "bg-[var(--surface)] text-foreground-secondary border-[var(--border)] hover:border-[var(--foreground)] hover:text-foreground hover:bg-[var(--surface-raised)] font-medium"
+                    ? "text-foreground font-semibold shadow-[inset_0_-2px_0_0_var(--foreground)] pb-1"
+                    : "text-foreground-secondary hover:text-foreground pb-1"
                 }`}
               >
-                <span>{t(`categories.${cat}`)}</span>
-                <span
-                  className={`text-[10px] font-mono px-1 py-0.2 ${
-                    isSelected
-                      ? "bg-[var(--background)] text-[var(--foreground)] font-bold"
-                      : "bg-[var(--surface-inset)] text-foreground-secondary"
-                  }`}
-                >
-                  {count}
-                </span>
+                <span>{t(`categories.${cat}`)}</span>{" "}
+                <span className="font-mono text-[11px] text-muted tabular-nums">{count}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Count info */}
-        <div className="flex items-center justify-between text-[11px] font-mono text-foreground-secondary">
-          <span>{t("questionsCount", { count: filteredItems.length })}</span>
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="underline hover:text-foreground cursor-pointer"
-            >
-              {t("clearSearch")}
-            </button>
-          )}
-        </div>
-
         {/* Empty state */}
         {filteredItems.length === 0 && (
-          <div className="p-8 text-center border border-[var(--border)] bg-[var(--surface)]">
-            <h3 className="text-sm font-bold text-foreground">{t("noResultsTitle")}</h3>
-            <p className="text-xs text-foreground-secondary mt-1">{t("noResultsDesc")}</p>
-            <div className="mt-3 flex items-center justify-center gap-2">
+          <div className="border-t border-b border-[var(--border-faint)] py-7">
+            <h3 className="text-sm font-semibold text-foreground">{t("noResultsTitle")}</h3>
+            <p className="text-xs text-foreground-secondary mt-1.5 max-w-md leading-relaxed">
+              {t("noResultsDesc")}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("all");
                 }}
-                className="px-3 py-1 text-xs border border-[var(--border)] text-foreground hover:bg-[var(--surface-raised)] cursor-pointer"
+                className="px-3 py-1.5 text-xs border border-[var(--border)] bg-[var(--surface)] text-foreground hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)] transition-colors cursor-pointer"
               >
                 {t("clearSearch")}
               </button>
@@ -1414,20 +1367,19 @@ export function FaqView() {
                 <button
                   type="button"
                   onClick={() => setSelectedCategory("all")}
-                  className="px-3 py-1 text-xs bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 cursor-pointer"
+                  className="px-3 py-1.5 text-xs bg-[var(--action)] text-[var(--action-contrast)] font-semibold hover:opacity-90 transition-opacity cursor-pointer"
                 >
-                  Search in all categories
+                  {t("searchInAllCategories")}
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {/* Accordion Questions List */}
-        <div className="divide-y divide-[var(--border)] border border-[var(--border)] bg-[var(--surface)]">
+        {/* Answers — one open at a time, flattened to a reading order */}
+        <div className="mt-1.5">
           {filteredItems.map((item) => {
-            // If user is actively searching, auto-expand matching questions so they see answers immediately!
-            const isOpen = searchQuery.trim().length > 0 ? true : openIds.has(item.id);
+            const isOpen = openId === item.id;
             const question = t(`items.${item.id}.question`);
             const summary = t(`items.${item.id}.summary`);
             const formula = t(`items.${item.id}.formula`);
@@ -1438,140 +1390,86 @@ export function FaqView() {
             const preset = FAQ_SANDBOX_PRESETS[item.id];
 
             return (
-              <article
-                key={item.id}
-                id={`faq-${item.id}`}
-                className="transition-colors scroll-mt-6"
-              >
+              <article key={item.id} id={`faq-${item.id}`} className="scroll-mt-6">
                 <button
                   type="button"
                   onClick={() => toggleOpen(item.id)}
                   aria-expanded={isOpen}
                   aria-controls={`faq-answer-${item.id}`}
-                  className={`w-full text-left px-4 py-3.5 sm:px-5 sm:py-4 flex items-start justify-between gap-4 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--foreground)] cursor-pointer group ${
-                    isOpen ? "bg-[var(--surface-raised)] border-l-2 border-l-[var(--accent)]" : "hover:bg-[var(--surface-raised)]"
+                  className={`flex w-full items-baseline justify-between gap-5 border-t py-4 text-left transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--foreground)] cursor-pointer group ${
+                    isOpen
+                      ? "border-[var(--foreground)] text-foreground"
+                      : "border-[var(--border-faint)] text-foreground hover:text-[var(--accent-text)]"
                   }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-foreground font-semibold px-2 py-0.5 border border-[var(--border)] bg-[var(--surface-inset)]">
-                        {t(`categories.${item.category}`)}
-                      </span>
-                    </div>
-                    <h3
-                      className={`text-sm sm:text-[15px] font-bold leading-snug transition-colors ${
-                        isOpen ? "text-[var(--accent)]" : "text-foreground group-hover:text-[var(--accent)]"
-                      }`}
-                    >
-                      {question}
-                    </h3>
-                    {!isOpen && (
-                      <div className="mt-1.5 flex flex-col sm:flex-row sm:items-baseline gap-2">
-                        <p className="text-xs text-foreground-secondary line-clamp-1 flex-1">
-                          {summary}
-                        </p>
-                        <span className="font-mono text-[11px] text-[var(--accent)] font-semibold whitespace-nowrap hidden sm:inline">
-                          {formula.length > 50 ? formula.slice(0, 48) + "..." : formula}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0 mt-1">
-                    <span className="text-[11px] font-mono font-medium px-2 py-0.5 border border-[var(--border)] bg-[var(--surface)] text-foreground group-hover:bg-[var(--surface-raised)] hidden sm:inline">
-                      {isOpen ? t("labels.collapseDetails") : t("labels.expandDetails")}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className={`font-mono text-base font-bold text-foreground transition-transform duration-150 ${
-                        isOpen ? "rotate-45 text-[var(--accent)]" : ""
-                      }`}
-                    >
-                      +
-                    </span>
-                  </div>
+                  <span
+                    className={`text-sm sm:text-[15px] leading-snug ${isOpen ? "font-semibold" : ""}`}
+                  >
+                    {question}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`font-mono text-sm flex-shrink-0 transition-transform duration-150 ${
+                      isOpen ? "rotate-45 text-foreground" : "text-[var(--border-strong)]"
+                    }`}
+                  >
+                    +
+                  </span>
                 </button>
 
                 {isOpen && (
                   <div
                     id={`faq-answer-${item.id}`}
-                    className="px-4 pb-5 sm:px-5 sm:pb-6 pt-3 space-y-3.5 border-t border-[var(--border)] bg-[var(--surface-inset)]"
+                    className="flex max-w-2xl flex-col gap-4 pt-1 pb-7"
                   >
-                    {/* Primary Answer & Explanation Card */}
-                    <div className="p-3.5 sm:p-4 border border-[var(--border)] bg-[var(--surface)] border-l-2 border-l-[var(--accent)] space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-[10.5px] font-mono text-foreground font-bold uppercase tracking-wider">
-                        <span className="w-1.5 h-1.5 bg-[var(--accent)] inline-block" />
-                        {t("labels.explanation")}
-                      </div>
-                      <p className="text-[12.5px] sm:text-[13px] text-foreground-secondary leading-relaxed font-normal">
-                        {explanation}
-                      </p>
+                    <p className="text-[15px] leading-relaxed text-foreground">{summary}</p>
+
+                    <div className="font-mono text-[13px] sm:text-sm tabular-nums bg-[var(--surface-inset)] px-4 py-3 leading-relaxed text-foreground overflow-x-auto">
+                      {formula}
                     </div>
 
-                    {/* Formula Box */}
-                    <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] font-mono">
-                      <div className="text-[10px] uppercase tracking-wider text-foreground-secondary font-bold mb-1">
-                        {t("labels.formula")}
-                      </div>
-                      <div className="text-xs sm:text-[13px] font-bold text-[var(--accent)] overflow-x-auto py-0.5">
-                        {formula}
-                      </div>
-                    </div>
+                    <p className="text-sm leading-relaxed text-foreground-secondary">{explanation}</p>
 
-                    {/* Worked Example */}
-                    <div className="p-3.5 border border-[var(--border)] bg-[var(--surface)] font-mono">
-                      <div className="text-[10px] uppercase tracking-wider text-foreground-secondary font-bold mb-1">
+                    <p className="text-sm leading-relaxed text-foreground-secondary tabular-nums">
+                      <span className="block mb-1 font-mono text-[10px] uppercase tracking-wider text-muted font-medium">
                         {t("labels.example")}
-                      </div>
-                      <p className="text-[12px] sm:text-[12.5px] text-foreground leading-relaxed">
-                        {example}
-                      </p>
-                    </div>
+                      </span>
+                      {example}
+                    </p>
 
-                    {/* Practical Fabrication Tip */}
-                    <div className="flex items-start gap-2.5 text-xs sm:text-[12px] text-foreground bg-[var(--surface)] p-3 border border-[var(--border)]">
-                      <span className="mt-1 h-1.5 w-1.5 bg-[var(--accent)] flex-shrink-0" />
-                      <div>
-                        <strong className="text-foreground font-bold">{t("labels.workshopTip")}: </strong>
-                        <span className="text-foreground-secondary">{tip}</span>
-                      </div>
-                    </div>
+                    <p className="text-sm leading-relaxed text-foreground-secondary">
+                      <strong className="text-foreground font-semibold">
+                        {t("labels.workshopTip")} —{" "}
+                      </strong>
+                      {tip}
+                    </p>
 
-                    {/* Interactive Action Launcher: Test in Verifier + Command Launcher */}
-                    <div className="pt-3 border-t border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2 overflow-x-auto">
-                        <span className="text-[11px] font-mono text-foreground-secondary font-semibold">
-                          {t("labels.ferroscaleSyntax")}:
-                        </span>
-                        <code className="text-xs font-mono font-bold px-2 py-0.5 bg-[var(--surface)] border border-[var(--border)] text-foreground">
-                          {command}
-                        </code>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {preset && (
-                          <button
-                            type="button"
-                            onClick={() => loadIntoVerifier(preset)}
-                            className="px-3 py-1 text-xs border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--foreground)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-semibold cursor-pointer"
-                          >
-                            {t("labels.testInSandbox")} ↑
-                          </button>
-                        )}
+                    <div className="flex flex-wrap items-center gap-3 pt-0.5">
+                      <code className="font-mono text-[13px] px-2.5 py-1.5 bg-[var(--surface)] border border-[var(--border)] text-foreground">
+                        {command}
+                      </code>
+                      <Link
+                        href={`/?q=${encodeURIComponent(command)}`}
+                        className="px-3.5 py-2 text-[13px] font-semibold bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 transition-opacity"
+                      >
+                        {t("labels.tryCommand")} →
+                      </Link>
+                      {preset && (
                         <button
                           type="button"
-                          onClick={() => copyToClipboard(command, item.id)}
-                          className="px-3 py-1 text-xs border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-medium cursor-pointer"
+                          onClick={() => loadIntoVerifier(preset)}
+                          className="text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
                         >
-                          {copiedId === item.id ? t("sandbox.copied") : t("sandbox.copy")}
+                          {t("labels.testInSandbox")} ↑
                         </button>
-                        <Link
-                          href={`/${locale}?q=${encodeURIComponent(command)}`}
-                          className="px-3.5 py-1 text-xs font-semibold bg-[var(--foreground)] text-[var(--background)] hover:opacity-90 transition-opacity"
-                        >
-                          {t("labels.tryCommand")} →
-                        </Link>
-                      </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(command, item.id)}
+                        className="text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        {copiedId === item.id ? t("sandbox.copied") : t("sandbox.copy")}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1579,22 +1477,25 @@ export function FaqView() {
             );
           })}
         </div>
+
+        {filteredItems.length > 0 && <div className="border-b border-[var(--border-faint)]" />}
       </section>
 
+
       {/* Footer Navigation */}
-      <footer className="mt-12 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-foreground-secondary">
+      <footer className="mt-12 pt-6 border-t border-[var(--border-faint)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-foreground-secondary">
         <div>
-          <span>FerroScale Precision Metal Engineering &copy; {new Date().getFullYear()}</span>
+          <span>{t("footer")} &copy; {new Date().getFullYear()}</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href={`/${locale}`} className="hover:text-foreground transition-colors font-medium">
-            Calculator
+          <Link href="/" className="hover:text-foreground transition-colors font-medium">
+            {t("nav.calculator")}
           </Link>
-          <Link href={`/${locale}/qa`} className="hover:text-foreground transition-colors font-medium">
-            Formula QA
+          <Link href="/qa" className="hover:text-foreground transition-colors font-medium">
+            {t("nav.qa")}
           </Link>
-          <Link href={`/${locale}/contact`} className="hover:text-foreground transition-colors font-medium">
-            Contact
+          <Link href="/contact" className="hover:text-foreground transition-colors font-medium">
+            {t("nav.contact")}
           </Link>
         </div>
       </footer>
