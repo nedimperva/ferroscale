@@ -1740,6 +1740,8 @@ export function CommandShell() {
               type="button"
               disabled={!p.valid}
               onClick={() => p.valid && setSheet("result")}
+              aria-haspopup="dialog"
+              aria-label={p.valid ? t("aria.openBreakdown") : undefined}
               className="block w-full text-left p-0 m-0 bg-transparent border-0"
               style={{ cursor: p.valid ? "pointer" : "default" }}
             >
@@ -2448,6 +2450,8 @@ function MetricStrip({
       type="button"
       onClick={onOpen}
       disabled={!p.valid}
+      aria-haspopup="dialog"
+      aria-label={p.valid ? t("aria.openBreakdown") : undefined}
       className="flex items-center gap-3 w-full mt-2.5 rounded-button text-left border border-border-faint"
       style={{
         padding: "7px 11px",

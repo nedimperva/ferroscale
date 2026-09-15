@@ -177,7 +177,8 @@
       "toggleTheme": "Toggle theme",
       "closeSheet": "Close sheet",
       "liveResult": "Result: {value}",
-      "addToSession": "Add this line to the session"
+      "addToSession": "Add this line to the session",
+      "openBreakdown": "Open result breakdown"
     },
     "nav": {
       "workspace": "WORKSPACE",
