@@ -21,6 +21,8 @@ import {
 import {
   defaultPaintCoverageStore,
   defaultPaintPriceStore,
+  defaultUnitStore,
+  sharedCalcSettingsStore,
 } from "@/lib/settings-stores";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
@@ -560,7 +562,20 @@ function QuickAddCommandBar({
     const q = query.trim();
     if (!q) return null;
     try {
-      return cmdParse(q);
+      const shared = sharedCalcSettingsStore.getSnapshot();
+      return cmdParse(q, {
+        pricing: {
+          priceBasis: shared.priceBasis,
+          priceUnit: shared.priceUnit,
+          unitPrice: shared.unitPrice,
+          currency: shared.currency,
+          wastePercent: shared.wastePercent,
+          includeVat: shared.includeVat,
+          vatPercent: shared.vatPercent,
+        },
+        defaultGradeId: shared.defaultGradeId,
+        defaultLengthUnit: defaultUnitStore.getSnapshot(),
+      });
     } catch {
       return null;
     }

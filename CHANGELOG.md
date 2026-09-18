@@ -91,6 +91,8 @@ returned a confidently wrong number with no error state.
   catalog check, instead of an unqualified "All checks pass"
 - **Frequently Asked Questions (FAQ) guide for metal weight calculations (`/faq`)**:
   Interactive formula verifier with step-by-step mathematical traces, formula cheat sheet, search filtering by profile type and alloy, worked workshop examples, and one-click execution in the FerroScale command bar
+- **Clean-slate onboarding & visual discovery tiles.** Pristine start without forced demo calculations, providing 5 visual family cards (Beams, Square Tubes, Rectangular Tubes, Round Pipes, Plates) for 3-tap calculations without typing, plus an on-demand "Try demo" chip
+- **Live mass preview in Project quick-add.** Typing commands inside a project shows immediate calculated weight feedback before adding
 - **Canonical URL, `og:url`, `x-default` hreflang**, and a consistent
   production base-URL fallback across layout, robots and sitemap
 
@@ -106,6 +108,9 @@ returned a confidently wrong number with no error state.
 - **Every screen has a heading outline** — the app had zero headings
 - **The cutting optimisers load with their tab**: main chunk 500.6 → 420.5 kB
   raw (120.9 → 102.6 kB gzip)
+- **Streamlined calculator action bar.** Consolidated 7 fragmented icon buttons into 3 clear primary intents: Copy Summary (primary ink action), Favorite toggle, and Add to Project, with secondary utilities in an overflow menu
+- **Frictionless Save destinations.** Clarified and focused the save overlay directly on project selection and creation
+- **Project in-line add flow.** Clicking "+ Add Item" in a project focuses the in-line command bar directly instead of silently dumping background calculator state
 - `sitemap.lastModified` derives from the dataset version instead of `new
   Date()` per request; Archivo drops the unused weight 900; five unreferenced
   Next.js starter assets removed from `public/`

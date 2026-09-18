@@ -52,7 +52,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A phone can paste. The keypad shell had no text field at all, so a cut list or a query from a chat message could not be pasted on the device most likely to be holding one",
       "Shared links have a preview card, drawn in the app's own language with a worked example on it",
       "The QA page says how much of the dataset it actually covers, and names the sizes held back pending a catalog check",
-      "Frequently Asked Questions (FAQ) guide for metal weight calculations with step-by-step formula explanations, workshop rules of thumb, cheatsheet, search, and an interactive calculation verifier"
+      "Frequently Asked Questions (FAQ) guide for metal weight calculations with step-by-step formula explanations, workshop rules of thumb, cheatsheet, search, and an interactive calculation verifier",
+      "Clean-slate onboarding with visual profile discovery tiles (Beams, Square Tubes, Rectangular Tubes, Round Pipes, Plates) enabling instant 3-tap calculations without typing, plus an optional 'Try demo' calculation chip",
+      "Live mass preview feedback badge inside Project Detail's inline quick-add bar"
     ],
     changed: [
       "The headline figure is the weight until someone sets a rate. It used to open on a price computed from a placeholder rate nobody had entered, in the same type as the measured weight beside it — and when the money is shown on a placeholder rate, the rate is now printed beside it",
@@ -60,7 +62,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The suggestion strip fades on the right, where it scrolls, instead of only at the bottom",
       "Token chips separate their delete from their edit, so the two are no longer flush",
       "Every screen has a heading outline — the app had none at all, which left a screen reader nothing to navigate by",
-      "The cutting optimisers load when their tab opens rather than before your first calculation, taking 80 kB off the first load"
+      "The cutting optimisers load when their tab opens rather than before your first calculation, taking 80 kB off the first load",
+      "Streamlined calculator action bar: consolidated 7 fragmented buttons into 3 primary intents (Copy Summary, Favorite toggle, Add to Project) and a tidy overflow menu",
+      "Simplified save destination workflow directly focusing on Project selection and creation when adding to projects",
+      "Project Detail's '+ Add Item' button now directly focuses the inline command bar instead of inheriting or redirecting to the background calculator"
     ],
     fixed_bs: [
       "UPN 320 i UPE 300, 330, 360 i 400 bili su 7-15% lakši. Dvije nezavisne provjere — rekonstrukcija iz nominalnih EN dimenzija i objavljena kataloška masa — složile su se protiv pohranjenih vrijednosti; 12 m UPN 320 nudio se 104 kg ispod stvarne mase",
@@ -95,7 +100,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Telefon može zalijepiti. Tastatura na ekranu nije imala nikakvo tekstualno polje, pa se lista rezanja ili upit iz poruke nisu mogli zalijepiti na uređaju koji ih najčešće drži",
       "Podijeljeni linkovi imaju sličicu za pregled, nacrtanu jezikom same aplikacije, s primjerom na njoj",
       "QA stranica kaže koliki dio skupa podataka zaista pokriva i imenuje dimenzije koje čekaju provjeru u katalogu",
-      "Sekcija često postavljanih pitanja (FAQ) o proračunu težine metala sa korak-po-korak formulama, radioničkim pravilima, brzim pregledom, pretragom i interaktivnim provjerivačem formula"
+      "Sekcija često postavljanih pitanja (FAQ) o proračunu težine metala sa korak-po-korak formulama, radioničkim pravilima, brzim pregledom, pretragom i interaktivnim provjerivačem formula",
+      "Početni ekran čistog unosa sa vizuelnim karticama profila (Nosači, Kvadratne cijevi, Pravougaone cijevi, Okrugle cijevi, Limovi) koji omogućava izračun u 3 dodira bez kucanja, uz diskretno dugme za isprobavanje demo izračuna",
+      "Prikaz trenutne mase u traci brzog dodavanja unutar detalja projekta"
     ],
     changed_bs: [
       "Glavni broj je masa dok neko ne postavi cijenu. Ranije se otvarao na cijeni izračunatoj iz zadane vrijednosti koju niko nije unio, istim pismom kao izmjerena masa pored nje — a kada se novac prikazuje po zadanoj cijeni, ta cijena je sada ispisana uz njega",
@@ -103,7 +110,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Traka prijedloga blijedi desno, gdje se i pomiče, a ne samo pri dnu",
       "Čipovi odvajaju brisanje od uređivanja, pa dvije mete više nisu spojene",
       "Svaki ekran ima strukturu naslova — aplikacija ih nije imala nijedan, pa čitač ekrana nije imao po čemu se kretati",
-      "Optimizatori rezanja učitavaju se kad se otvori njihova kartica, a ne prije prvog računanja, čime prvo učitavanje gubi 80 kB"
+      "Optimizatori rezanja učitavaju se kad se otvori njihova kartica, a ne prije prvog računanja, čime prvo učitavanje gubi 80 kB",
+      "Pojednostavljena traka akcija kalkulatora: 7 razbacanih dugmadi objedinjeno u 3 jasne akcije (Kopiraj sažetak, Spremi/Favorit, Dodaj u projekt) uz uredan padajući meni",
+      "Pojednostavljen proces spremanja sa direktnim fokusom na odabir i kreiranje projekta pri dodavanju stavki",
+      "Dugme '+ Stavka' u detaljima projekta sada direktno fokusira polje za brzi unos umjesto nasljeđivanja ili preusmjeravanja na pozadinski kalkulator"
     ],
   },
   {
