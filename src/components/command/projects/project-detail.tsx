@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   PROJECT_CATEGORIES,
   PROJECT_STATUSES,
@@ -556,6 +556,16 @@ function QuickAddCommandBar({
   const [query, setQuery] = useState("");
   const [error, setError] = useState(false);
 
+  const preview = useMemo(() => {
+    const q = query.trim();
+    if (!q) return null;
+    try {
+      return cmdParse(q);
+    } catch {
+      return null;
+    }
+  }, [query]);
+
   const handleAdd = () => {
     const q = query.trim();
     if (!q) return;
@@ -589,6 +599,7 @@ function QuickAddCommandBar({
         </select>
       )}
       <input
+        id="project-quick-add-input"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -602,6 +613,11 @@ function QuickAddCommandBar({
         className="flex-1 h-11 sm:h-8 min-w-[200px] rounded-chip border border-[var(--border-faint)] bg-[var(--surface-inset)] px-2.5 text-xs font-mono text-foreground placeholder:text-muted-faint outline-none"
         style={{ borderColor: error ? "var(--red-interactive)" : undefined }}
       />
+      {preview?.calc && (
+        <span className="font-mono text-[11px] font-bold px-2 py-1 rounded-none bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)] whitespace-nowrap">
+          {fsWeight(preview.calc.result.totalWeightKg)} {fsWeightUnit()}
+        </span>
+      )}
       <button
         type="button"
         onClick={handleAdd}
@@ -1627,7 +1643,15 @@ export function ProjectDetail({
             </button>
             <button
               type="button"
-              onClick={() => actions.onAddItem(project.id)}
+              onClick={() => {
+                const input = document.getElementById("project-quick-add-input");
+                if (input) {
+                  input.focus();
+                  input.scrollIntoView({ behavior: "smooth", block: "center" });
+                } else {
+                  actions.onAddItem(project.id);
+                }
+              }}
               className="inline-flex items-center gap-1.5 sm:gap-2 rounded-button font-bold text-[12px] sm:text-[12px] cursor-pointer active:scale-95 transition-all shadow-xs"
               style={{
                 padding: "8px 12px",
