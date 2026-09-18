@@ -47,6 +47,21 @@
     "installButton": "Install app"
   },
   "command": {
+    "discovery": {
+      "title": "Select a profile to begin",
+      "subtitle": "Tap a shape to start calculating, or explore EN standards",
+      "beams": "Beams",
+      "beamsSub": "HEA, HEB, IPE",
+      "squareTubes": "Square Tubes",
+      "squareTubesSub": "SHS, box sections",
+      "rectangularTubes": "Rectangular Tubes",
+      "rectangularTubesSub": "RHS, box sections",
+      "roundPipes": "Round Pipes",
+      "roundPipesSub": "CHS, hollow tubes",
+      "plates": "Plates",
+      "platesSub": "Sheets & flat plates",
+      "tryDemo": "Try demo calculation (HEA 120 6m ×2) →"
+    },
     "quote": {
       "title": "Quote",
       "item": "Item",

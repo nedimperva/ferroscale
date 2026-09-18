@@ -101,12 +101,12 @@ import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
+import { DEMO_QUERY } from "./command-constants";
+
 // The phone's headline figure. Mono at a regular weight, like the workspace's
 // — same rule everywhere: numbers are mono, and at this size they carry
 // without extra weight.
 const HERO_FONT_WEIGHT = 400;
-// Trailing space so the demo query renders fully chipped on first load.
-const DEMO_QUERY = "hea120 6m x2 s235 ";
 /**
  * The rate getDefaultInput() seeds. Matching it means nobody has said what
  * steel costs yet, so every currency figure on screen is a placeholder.
@@ -205,8 +205,8 @@ export function CommandShell() {
   // `refresh` closes the read gap when a project dialog has added one.
   const templatesApi = useAssemblyTemplates();
 
-  const [query, setQuery] = useState(DEMO_QUERY);
-  // The URL only mirrors the query once the user has replaced the demo query
+  const [query, setQuery] = useState("");
+  // The URL only mirrors the query once the user has entered a calculation
   // (or arrived via a share link) — a pristine visit keeps a clean URL.
   const touchedRef = useRef(false);
   // weightAsMain decides the default hero metric; the toggle is a local override.
@@ -282,7 +282,7 @@ export function CommandShell() {
   // address bar prices the same for whoever it's sent to.
   useEffect(() => {
     if (!touchedRef.current) {
-      if (query === DEMO_QUERY) return;
+      if (!query.trim() || query === DEMO_QUERY) return;
       touchedRef.current = true;
     }
     const id = window.setTimeout(() => {
@@ -420,7 +420,7 @@ export function CommandShell() {
   }, []);
   useEffect(() => {
     if (!p.valid) return;
-    if (!touchedRef.current && query === DEMO_QUERY) return;
+    if (!touchedRef.current && (!query.trim() || query === DEMO_QUERY)) return;
     const id = window.setTimeout(() => {
       // Record the canonical query, not the raw text: this drops half-typed
       // trailing tokens (a lone "@", an incomplete grade) so mid-edit pauses

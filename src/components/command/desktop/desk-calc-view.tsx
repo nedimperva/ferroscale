@@ -43,6 +43,8 @@ import { commandTargetNote } from "../target-note";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { massBand } from "../mass-band";
+import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
+import { DEMO_QUERY } from "../command-constants";
 import {
   editLineToken,
   lineChipPrefix,
@@ -517,9 +519,24 @@ export function DeskCalcView({
           )}
         </label>
 
-        {/* SUGGESTIONS */}
-        <div className="mt-3">
-          <div className="flex items-center gap-3 flex-wrap mb-2">
+        {query.trim() === "" ? (
+          <div className="mt-4">
+            <ProfileDiscoveryTiles
+              onSelectProfile={(prefix) => {
+                setQuery(prefix);
+                focusInputAtEnd();
+              }}
+              onTryDemo={() => {
+                setQuery(DEMO_QUERY);
+                focusInputAtEnd();
+              }}
+              compact={compact}
+            />
+          </div>
+        ) : (
+          /* SUGGESTIONS */
+          <div className="mt-3">
+            <div className="flex items-center gap-3 flex-wrap mb-2">
             <h2
               className="fs-track-label text-[10px] font-bold text-muted uppercase"
             >
@@ -623,6 +640,7 @@ export function DeskCalcView({
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* ───────── dashboard grid ─────────

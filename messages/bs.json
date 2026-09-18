@@ -47,6 +47,21 @@
     "installButton": "Instaliraj aplikaciju"
   },
   "command": {
+    "discovery": {
+      "title": "Izaberite profil za početak",
+      "subtitle": "Kliknite na oblik za trenutni proračun ili pregled EN standarda",
+      "beams": "Nosači",
+      "beamsSub": "HEA, HEB, IPE",
+      "squareTubes": "Kvadratne cijevi",
+      "squareTubesSub": "SHS, kutijasti profili",
+      "rectangularTubes": "Pravougaone cijevi",
+      "rectangularTubesSub": "RHS, kutijasti profili",
+      "roundPipes": "Okrugle cijevi",
+      "roundPipesSub": "CHS, šuplje cijevi",
+      "plates": "Limovi",
+      "platesSub": "Limovi i ravne ploče",
+      "tryDemo": "Isprobaj demo izračun (HEA 120 6m ×2) →"
+    },
     "quote": {
       "title": "Ponuda",
       "item": "Stavka",
