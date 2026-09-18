@@ -259,7 +259,13 @@ export function DestinationSheet({
 
   return (
     <SheetShell
-      title={subject.kind === "line" ? t("saveTo.title") : t("saveTo.sendTitle")}
+      title={
+        initial === "projects"
+          ? t("common.addProjectLong")
+          : subject.kind === "line"
+            ? t("saveTo.title")
+            : t("saveTo.sendTitle")
+      }
       onClose={onClose}
       size="standard"
       icon={
