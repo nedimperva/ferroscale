@@ -39,6 +39,13 @@ const ProjectCutting = dynamic(
   () => import("./project-cutting").then((m) => m.ProjectCutting),
   { ssr: false },
 );
+/** The material order and supplier RFQ — a tab of its own, not a chip
+ *  inside the cut plan, which is where it used to be and where nobody
+ *  looking for "what do I buy" would think to look. */
+const ProjectProcurement = dynamic(
+  () => import("./project-procurement").then((m) => m.ProjectProcurement),
+  { ssr: false },
+);
 import {
   formatActivity,
   formatRelativeTime,
@@ -1102,7 +1109,7 @@ export function ProjectDetail({
 }) {
   const t = useTranslations("command");
   const [editingDetails, setEditingDetails] = useState(false);
-  const [detailTab, setDetailTab] = useState<"items" | "cutting" | "details">("items");
+  const [detailTab, setDetailTab] = useState<"items" | "cutting" | "order" | "details">("items");
   const [notes, setNotes] = useState(project.description ?? "");
   const [pickingAssemblyRow, setPickingAssemblyRow] = useState<(ReturnType<typeof projectItemRows>[number]) | null>(null);
   const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
@@ -1142,9 +1149,10 @@ export function ProjectDetail({
   const hasMultipleAssemblies =
     assemblyGroups.length > 1 || (assemblyGroups.length === 1 && assemblyGroups[0][0] !== "");
 
-  const tabs: { id: "items" | "cutting" | "details"; label: string }[] = [
+  const tabs: { id: "items" | "cutting" | "order" | "details"; label: string }[] = [
     { id: "items", label: t("projects.tabs.items") },
     { id: "cutting", label: t("projects.tabs.cutting") },
+    { id: "order", label: t("projects.tabs.order") },
     ...(compact
       ? ([{ id: "details" as const, label: t("projects.tabs.details") }])
       : []),
@@ -1742,6 +1750,10 @@ export function ProjectDetail({
         {detailTab === "cutting" ? (
           <div className="w-full min-w-0">
             <ProjectCutting project={project} compact={compact} />
+          </div>
+        ) : detailTab === "order" ? (
+          <div className="w-full min-w-0">
+            <ProjectProcurement project={project} compact={compact} />
           </div>
         ) : detailTab === "details" ? (
           <div className="flex flex-col gap-3">

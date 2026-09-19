@@ -70,6 +70,7 @@ import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetB
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { SaveControl } from "./save-control";
+import { ProfileDiscoveryTiles } from "./profile-discovery-tiles";
 import {
   commandKeypadInsert,
   commandKeypadLayout,
@@ -147,6 +148,8 @@ export function CommandShell() {
   const {
     saved: savedEntries,
     ownSaved,
+    removedBuiltins,
+    restoreAllBuiltins,
     saveCalculation,
     getSavedEntry,
     removeSaved,
@@ -1580,6 +1583,8 @@ export function CommandShell() {
           onClearTape={clearHistory}
           saved={savedEntries}
           ownSaved={ownSaved}
+          removedBuiltinCount={removedBuiltins.length}
+          onRestoreBuiltins={restoreAllBuiltins}
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
@@ -1656,7 +1661,7 @@ export function CommandShell() {
                 FerroScale
               </h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
                 {/* Both glyphs ship and CSS picks one. Choosing in JS from the
                     resolved theme meant the server drew the moon and a
@@ -1672,9 +1677,30 @@ export function CommandShell() {
                   <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
                 </svg>
               </IconBtn>
-              <IconBtn onClick={() => setSheet("library")} ariaLabel={t("nav.library")}>
+              {/* The workspace rail's destinations, named the same way. One
+                  bookmark glyph used to stand for Parts, Projects, Compare and
+                  the session tape at once, so the two surfaces disagreed about
+                  what the app even contains. */}
+              <IconBtn
+                onClick={() => {
+                  setLibraryTab("saved");
+                  setSheet("library");
+                }}
+                ariaLabel={t("nav.parts")}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                </svg>
+              </IconBtn>
+              <IconBtn
+                onClick={() => {
+                  setLibraryTab("projects");
+                  setSheet("library");
+                }}
+                ariaLabel={t("nav.projects")}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
                 </svg>
               </IconBtn>
               <IconBtn onClick={() => setSheet("settings")} ariaLabel={t("nav.settings")}>
@@ -2015,7 +2041,30 @@ export function CommandShell() {
             </button>
           </div>
 
-          <div className="flex-[2] min-h-[6px]" />
+          {/* The visual way in, on the surface that has no text field at all.
+              It shipped to the workspace only, which left the phone — the
+              device most likely to be held by someone who has never typed
+              `hea120` in their life — with nothing but a row of chips. It
+              fills the band that was empty on a pristine screen anyway. */}
+          {query.trim() === "" ? (
+            <div className="flex-[2] min-h-0 overflow-y-auto px-[18px] mt-1">
+              <ProfileDiscoveryTiles
+                compact
+                onSelectProfile={(prefix) => {
+                  haptic("tap");
+                  setQuery(prefix);
+                  markExternalValueChange();
+                }}
+                onTryDemo={() => {
+                  haptic("tap");
+                  setQuery(DEMO_QUERY);
+                  markExternalValueChange();
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex-[2] min-h-[6px]" />
+          )}
 
           {/* SUGGESTION BAR */}
           {/* The gap under the strip has to clear the query line's 3px focus
@@ -2360,6 +2409,8 @@ export function CommandShell() {
               mode={mode}
               saved={savedEntries}
               ownSaved={ownSaved}
+              removedBuiltinCount={removedBuiltins.length}
+              onRestoreBuiltins={restoreAllBuiltins}
               compareItems={compareItems}
               projects={projects}
               onClose={() => {

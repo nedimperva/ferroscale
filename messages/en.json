@@ -631,7 +631,8 @@
       "tabs": {
         "items": "Items",
         "cutting": "Cut plan",
-        "details": "Details"
+        "details": "Details",
+        "order": "Order"
       },
       "pipeline": {
         "active": "Active jobs",
@@ -823,18 +824,21 @@
       "filters": {
         "all": "All",
         "parts": "Parts",
-        "assemblies": "Assemblies"
+        "assemblies": "Assemblies",
+        "standards": "Standards"
       },
       "section": {
         "all": "Everything",
         "parts": "Parts",
-        "assemblies": "Assemblies"
+        "assemblies": "Assemblies",
+        "standards": "Standards"
       },
       "project": "Project",
       "addToProjectAria": "Add {name} to a project",
       "emptyFilterTitle": "Nothing of that kind yet",
       "emptyFilterBody": "Widen the filter to see everything you have saved.",
-      "showAll": "Show everything"
+      "showAll": "Show everything",
+      "restoreStandards": "Restore {count} removed"
     },
     "cutting": {
       "title": "Cut plan",

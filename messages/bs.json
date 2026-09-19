@@ -631,7 +631,8 @@
       "tabs": {
         "items": "Stavke",
         "cutting": "Plan rezanja",
-        "details": "Detalji"
+        "details": "Detalji",
+        "order": "Narudžba"
       },
       "pipeline": {
         "active": "Aktivni poslovi",
@@ -823,18 +824,21 @@
       "filters": {
         "all": "Sve",
         "parts": "Dijelovi",
-        "assemblies": "Sklopovi"
+        "assemblies": "Sklopovi",
+        "standards": "Standardi"
       },
       "section": {
         "all": "Sve",
         "parts": "Dijelovi",
-        "assemblies": "Sklopovi"
+        "assemblies": "Sklopovi",
+        "standards": "Standardi"
       },
       "project": "Projekat",
       "addToProjectAria": "Dodaj {name} u projekat",
       "emptyFilterTitle": "Još nema ničega te vrste",
       "emptyFilterBody": "Proširi filter da vidiš sve što si sačuvao.",
-      "showAll": "Prikaži sve"
+      "showAll": "Prikaži sve",
+      "restoreStandards": "Vrati {count} uklonjenih"
     },
     "cutting": {
       "title": "Plan rezanja",

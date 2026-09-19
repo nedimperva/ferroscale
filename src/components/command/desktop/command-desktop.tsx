@@ -157,6 +157,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
     onRemovePart: props.onRemovePartSaved,
     onAddToProject: props.onAddSavedToProject,
     onNew: startNewCalc,
+    removedBuiltinCount: props.removedBuiltinCount,
+    onRestoreBuiltins: props.onRestoreBuiltins,
   };
 
   const counts = {

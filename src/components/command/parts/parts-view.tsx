@@ -39,7 +39,7 @@ import { DeskViewHeader } from "../desktop/desk-rail";
  * multi-part entries were all already there and mostly unsurfaced.
  */
 
-export type PartsFilter = "all" | "parts" | "assemblies";
+export type PartsFilter = "all" | "parts" | "assemblies" | "standards";
 
 export interface PartsActions {
   onPick: (entry: SavedEntry) => void;
@@ -58,6 +58,9 @@ export interface PartsActions {
   /** Put this part (or the whole assembly) into a project. */
   onAddToProject: (entry: SavedEntry) => void;
   onNew?: () => void;
+  /** Standards the user has removed — offered back rather than gone for good. */
+  removedBuiltinCount?: number;
+  onRestoreBuiltins?: () => void;
 }
 
 
@@ -397,11 +400,16 @@ export function PartsView({
 
   const parts = useMemo(() => saved.filter((entry) => !isAssembly(entry)), [saved]);
   const assemblies = useMemo(() => saved.filter(isAssembly), [saved]);
+  // The standards that ship with the app. They are assemblies like any other,
+  // so they are in "all" and "assemblies" too — this chip is for when you want
+  // only them, or only your own work.
+  const standards = useMemo(() => saved.filter((entry) => entry.isBuiltin), [saved]);
   const scope = useMemo(() => {
     if (filter === "parts") return parts;
     if (filter === "assemblies") return assemblies;
+    if (filter === "standards") return standards;
     return saved;
-  }, [filter, saved, parts, assemblies]);
+  }, [filter, saved, parts, assemblies, standards]);
 
   const tags = useMemo(() => collectSavedTags(scope), [scope]);
   const visible = useMemo(() => filterSortSaved(scope, query), [scope, query]);
@@ -469,6 +477,26 @@ export function PartsView({
         count={assemblies.length}
         onClick={() => setFilter("assemblies")}
       />
+      {standards.length > 0 && (
+        <FilterChip
+          active={filter === "standards"}
+          label={t("parts.filters.standards")}
+          count={standards.length}
+          onClick={() => setFilter("standards")}
+        />
+      )}
+      {/* A removed standard is hidden, not destroyed. Without this the only
+          way back would be clearing site data. */}
+      {actions.removedBuiltinCount != null && actions.removedBuiltinCount > 0 && (
+        <button
+          type="button"
+          onClick={actions.onRestoreBuiltins}
+          className="fs-track-wide bg-transparent border-0 text-[10px] font-bold uppercase cursor-pointer"
+          style={{ padding: "4px 6px", color: "var(--accent-text)" }}
+        >
+          {t("parts.restoreStandards", { count: actions.removedBuiltinCount })}
+        </button>
+      )}
     </div>
   );
 

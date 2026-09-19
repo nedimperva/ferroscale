@@ -47,6 +47,9 @@ export interface CommandDesktopProps {
   saved: SavedEntry[];
   /** The user's own entries — what the rail badge counts. */
   ownSaved: SavedEntry[];
+  /** Standards the user removed, and the way to put them back. */
+  removedBuiltinCount: number;
+  onRestoreBuiltins: () => void;
   compareItems: CompareItem[];
   projects: Project[];
   /** Bookmark the line into the library — the ⌘S / Ctrl-S shortcut. */

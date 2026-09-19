@@ -36,6 +36,8 @@ interface CommandLibrarySheetProps {
   saved: SavedEntry[];
   /** The user's own entries — what the tab badge counts. */
   ownSaved: SavedEntry[];
+  removedBuiltinCount: number;
+  onRestoreBuiltins: () => void;
   compareItems: CompareItem[];
   projects: Project[];
   onClose: () => void;
@@ -83,6 +85,8 @@ export function CommandLibraryWorkspace({
   mode,
   saved,
   ownSaved,
+  removedBuiltinCount,
+  onRestoreBuiltins,
   compareItems,
   projects,
   onLoadInput,
@@ -188,6 +192,8 @@ export function CommandLibraryWorkspace({
             onAddPartsByCommand,
             onRemovePart: onRemovePartSaved,
             onAddToProject: onAddSavedToProject,
+            removedBuiltinCount,
+            onRestoreBuiltins,
           }}
         />
       )}
