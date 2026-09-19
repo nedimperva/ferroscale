@@ -951,6 +951,11 @@
       "notInSeriesDetail": "Ovo su dimenzije čeličnih profila; aluminij se ekstrudira u vlastitu seriju (EN 755). Masa je tačna za oblik, ali to nije skladišni profil.",
       "notInSeriesDetailAlloy": "{grade} se drži kao lim, ploča, šipka i cijev, ne kao profil. Masa je tačna za oblik, ali ovo nije skladišni oblik.",
       "checkRate": "Provjerite cijenu — cjenovnik je po klasi."
+    },
+    "save": {
+      "toProject": "Dodaj u {project}",
+      "toLibrary": "Sačuvaj",
+      "elsewhere": "Sačuvaj negdje drugdje"
     }
   },
   "contact": {

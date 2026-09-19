@@ -951,6 +951,11 @@
       "notInSeriesDetail": "These are steel section dimensions; aluminium is extruded to its own series (EN 755). The mass is right for the shape, but it is not a stock profile.",
       "notInSeriesDetailAlloy": "{grade} is stocked as plate, sheet, bar and tube, not as sections. The mass is right for the shape, but this is not a stock form.",
       "checkRate": "Check the rate — the price book is per grade."
+    },
+    "save": {
+      "toProject": "Add to {project}",
+      "toLibrary": "Save",
+      "elsewhere": "Save somewhere else"
     }
   },
   "contact": {

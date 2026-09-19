@@ -43,6 +43,16 @@ export const massTolerancePercentStore = createNumberStore(
   (value) => Math.min(20, Math.max(0, value)),
 );
 export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
+
+/**
+ * The project the user is working out of, remembered across sessions.
+ *
+ * Not a preference — it is what makes the calculator's primary action say
+ * "Add to Gate job" instead of asking where this goes every single time. It
+ * is set whenever something is filed into a project, and the shell ignores it
+ * once that project is gone or archived.
+ */
+export const currentProjectStore = createStringStore<string>("ferroscale-current-project", "");
 /** Shop default when adding a paint coat on a project. The project can override. */
 export const defaultPaintPriceStore = createNumberStore(
   "ferroscale-paint-price",

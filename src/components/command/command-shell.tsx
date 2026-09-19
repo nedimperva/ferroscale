@@ -27,6 +27,7 @@ import {
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
+  currentProjectStore,
   defaultUnitStore,
   massTolerancePercentStore,
   sharedCalcSettingsStore,
@@ -68,6 +69,7 @@ import { useExpandedItem } from "./use-expanded-item";
 import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
+import { SaveControl } from "./save-control";
 import {
   commandKeypadInsert,
   commandKeypadLayout,
@@ -192,6 +194,12 @@ export function CommandShell() {
     updateProjectPaintCoats,
   } = useProjects();
   const priceBook = usePriceBook();
+
+  const currentProjectId = useSyncExternalStore(
+    currentProjectStore.subscribe,
+    currentProjectStore.getSnapshot,
+    currentProjectStore.getServerSnapshot,
+  );
 
   /** The library's multi-part entries — what a project can be built out of. */
   const assembliesInLibrary = useMemo(() => libraryAssemblies(savedEntries), [savedEntries]);
@@ -568,6 +576,21 @@ export function CommandShell() {
   // time, so matching it against one of its own parts would show "saved" on a
   // button that is about to create something.
   const currentSavedEntry = !line.multi && p.calc ? getSavedEntry(p.calc.result) : undefined;
+
+  /**
+   * The job being worked out of: the last project something was filed into,
+   * as long as it is still there and still open. An archived or deleted one
+   * leaves the primary action as a plain save rather than naming a job that
+   * no longer exists.
+   */
+  const currentProject = useMemo(
+    () =>
+      projects.find(
+        (project) =>
+          project.id === currentProjectId && !project.deletedAt && !isArchivedProject(project),
+      ) ?? null,
+    [projects, currentProjectId],
+  );
 
   /** Delete with a 5-second Undo — the tombstone is reversible until then. */
   const removeSavedEntry = useCallback(
@@ -946,6 +969,9 @@ export function CommandShell() {
       }
       setDestination(null);
       const project = projects.find((item) => item.id === projectId);
+      // Filing into a job is what makes it the job you are working out of, so
+      // the calculator's primary action can name it next time.
+      if (ok) currentProjectStore.set(projectId);
       showToast(
         ok
           ? t("toast.addedToProject", { project: project?.name ?? t("common.project") })
@@ -1133,12 +1159,29 @@ export function CommandShell() {
     ],
   );
 
-  /** "Add to project" from the calculator: the same overlay, on that row. */
-  const openProjectModal = useCallback(() => {
+  /** The picker, for everywhere the primary action does not go. */
+  const openDestinations = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
     setDestination({ entry: null });
   }, [p.calc]);
+
+  /**
+   * What the one save control does. With a job in play the line goes into it
+   * — that is what the button says it will do. Without one, Save is the
+   * bookmark it has always been, toggle included.
+   */
+  const primarySave = useCallback(() => {
+    if (!p.calc) {
+      showToast(t("toast.addLength"));
+      return;
+    }
+    if (currentProject) {
+      handlePickProject(currentProject.id, null);
+      return;
+    }
+    doSave();
+  }, [p.calc, currentProject, handlePickProject, doSave, showToast, t]);
 
   /**
    * Turn the session tape into a project in one gesture. The tape already
@@ -1537,7 +1580,6 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
-          onSaveElsewhere={() => setDestination({ entry: null })}
           onLogSession={logToSession}
           rateIsUserSupplied={rateIsUserSupplied}
           onCopySummary={copySummary}
@@ -1548,7 +1590,9 @@ export function CommandShell() {
           onAddCompare={addCompareEntry}
           onRemoveCompare={removeCompareItem}
           onClearCompare={clearCompare}
-          onAddToProject={openProjectModal}
+          onPrimarySave={primarySave}
+          onOpenDestinations={openDestinations}
+          currentProjectName={currentProject?.name ?? null}
           onLoadInput={loadInput}
           onCreateProject={createProject}
           projectActions={projectActions}
@@ -1865,31 +1909,17 @@ export function CommandShell() {
             />
 
             <div className="flex gap-1.5 mt-2">
-              <ActionBtn onClick={doSave} primary={!!currentSavedEntry}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill={currentSavedEntry ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                </svg>
-                {currentSavedEntry ? t("common.saved") : t("common.save")}
-              </ActionBtn>
-              {/* Save bookmarks in one tap; this is where else it can go. */}
-              <button
-                type="button"
-                onClick={() => p.calc && setDestination({ entry: null })}
-                disabled={!p.calc}
-                aria-label={t("saveTo.title")}
-                className="flex items-center justify-center rounded-button flex-shrink-0 disabled:opacity-40"
-                style={{
-                  width: 44,
-                  height: 44,
-                  border: "1px solid var(--border-faint)",
-                  background: "var(--surface)",
-                  color: "var(--foreground)",
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
+              {/* The same control the workspace has, at phone sizes. */}
+              <div className="flex-1 min-w-0">
+                <SaveControl
+                  compact
+                  projectName={currentProject?.name ?? null}
+                  saved={!!currentSavedEntry}
+                  disabled={!p.calc}
+                  onPrimary={primarySave}
+                  onOpenPicker={openDestinations}
+                />
+              </div>
               <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
               <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
               {/* The fold doesn't draw this, but without it the phone can only
@@ -2290,7 +2320,7 @@ export function CommandShell() {
                 setSheet(null);
                 doCompare();
               }}
-              onAddToProject={openProjectModal}
+              onAddToProject={openDestinations}
             />
           )}
           {effectiveSheet === "settings" && (

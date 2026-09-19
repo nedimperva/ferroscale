@@ -44,6 +44,7 @@ import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
+import { SaveControl } from "../save-control";
 import { DEMO_QUERY } from "../command-constants";
 import {
   editLineToken,
@@ -151,7 +152,9 @@ export function DeskCalcView({
   onClearTape,
   onSaveSessionAsProject,
   onSave,
-  onSaveElsewhere,
+  onPrimarySave,
+  onOpenDestinations,
+  currentProjectName,
   currentSaved,
   onOpenHelp,
   onLogSession,
@@ -160,7 +163,6 @@ export function DeskCalcView({
   onNew,
   onSuggest,
   onCompareCurrent,
-  onAddToProject,
   inputRef,
 }: DeskCalcViewProps) {
   const t = useTranslations("command");
@@ -806,7 +808,7 @@ export function DeskCalcView({
             </div>
             <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
               <div className="ml-auto flex items-center gap-2">
-                {/* 1. Primary action: Copy Summary */}
+                {/* Copy the answer — the other thing done with a result. */}
                 <button
                   type="button"
                   onClick={onCopySummary}
@@ -816,9 +818,9 @@ export function DeskCalcView({
                   className="inline-flex items-center gap-[7px] text-[12.5px] font-medium whitespace-nowrap"
                   style={{
                     padding: "8px 16px",
-                    border: "none",
-                    background: p.valid ? "var(--action)" : "var(--border)",
-                    color: p.valid ? "var(--action-contrast)" : "var(--muted)",
+                    border: "1px solid var(--border)",
+                    background: "transparent",
+                    color: p.valid ? "var(--foreground)" : "var(--muted)",
                     cursor: p.valid ? "pointer" : "default",
                   }}
                 >
@@ -826,60 +828,14 @@ export function DeskCalcView({
                   {t("common.copySummary")}
                 </button>
 
-                {/* 2. Favorite Toggle */}
-                <button
-                  type="button"
-                  onClick={onSave}
+                {/* Where it goes — one control, same as the phone's. */}
+                <SaveControl
+                  projectName={currentProjectName}
+                  saved={currentSaved}
                   disabled={!p.valid}
-                  aria-pressed={currentSaved}
-                  title={currentSaved ? t("common.saved") : t("common.save")}
-                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap"
-                  style={{
-                    padding: "8px 14px",
-                    border: "1px solid var(--border)",
-                    background: currentSaved ? "var(--surface-raised)" : "transparent",
-                    color: !p.valid
-                      ? "var(--muted)"
-                      : currentSaved
-                        ? "var(--foreground)"
-                        : "var(--foreground)",
-                    cursor: p.valid ? "pointer" : "default",
-                  }}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill={currentSaved ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                  </svg>
-                  {currentSaved ? t("common.saved") : t("common.save")}
-                </button>
-
-                {/* 3. Add to Project */}
-                <button
-                  type="button"
-                  onClick={onAddToProject}
-                  disabled={!p.valid}
-                  title={t("common.addProjectLong")}
-                  aria-label={t("common.addProjectLong")}
-                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap"
-                  style={{
-                    padding: "8px 14px",
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    color: !p.valid ? "var(--muted)" : "var(--foreground)",
-                    cursor: p.valid ? "pointer" : "default",
-                  }}
-                >
-                  <DeskIcon name="plus" stroke="currentColor" />
-                  {t("common.addProjectLong")}
-                </button>
+                  onPrimary={onPrimarySave}
+                  onOpenPicker={onOpenDestinations}
+                />
 
                 {/* 4. More actions overflow */}
                 <div ref={moreMenuRef} className="relative">
@@ -943,17 +899,6 @@ export function DeskCalcView({
                       >
                         <DeskIcon name="link" stroke="currentColor" />
                         {t("common.shareLink")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMoreOpen(false);
-                          onSaveElsewhere();
-                        }}
-                        className="flex items-center gap-2 px-3 py-2 text-[12px] text-left hover:bg-[var(--surface-raised)] text-[var(--foreground)] border-0 bg-transparent cursor-pointer"
-                      >
-                        <DeskIcon name="saved" />
-                        {t("saveTo.title")}
                       </button>
                     </div>
                   )}
