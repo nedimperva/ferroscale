@@ -197,7 +197,8 @@
       "closeSheet": "Zatvori panel",
       "liveResult": "Rezultat: {value}",
       "addToSession": "Dodaj ovu liniju u sesiju",
-      "openBreakdown": "Otvori detalje rezultata"
+      "openBreakdown": "Otvori detalje rezultata",
+      "openSession": "Otvori traku sesije"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",

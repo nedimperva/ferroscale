@@ -197,7 +197,8 @@
       "closeSheet": "Close sheet",
       "liveResult": "Result: {value}",
       "addToSession": "Add this line to the session",
-      "openBreakdown": "Open result breakdown"
+      "openBreakdown": "Open result breakdown",
+      "openSession": "Open the session tape"
     },
     "nav": {
       "workspace": "WORKSPACE",

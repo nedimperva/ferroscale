@@ -1205,6 +1205,9 @@ export function CommandShell() {
       .reverse()
       .map((line) => ({ input: line.calc!.input, result: line.calc!.result }));
     addCalculations(project.id, entries);
+    // The tape became the job, so it is the job — the next line's primary
+    // action files into it instead of asking again.
+    currentProjectStore.set(project.id);
     haptic("commit");
     showToast(t("toast.sessionSaved", { count: entries.length, project: name }));
   }, [quickHistory, parserSettings, createProject, addCalculations, showToast, t]);
@@ -1947,49 +1950,59 @@ export function CommandShell() {
             </div>
           </div>
 
-          {/* SESSION RIBBON — the tape's running total, one tap from the
-              library, with + to add the current line. Recents moved into the
-              library's session tab; this is what the phone gets instead. */}
+          {/* SESSION RIBBON — the tape, at phone size. It carries the same two
+              actions the workspace pane does: open it, or turn it into a
+              project. Nothing typed is lost by not deciding where it goes,
+              which is the point of the tape. */}
           <div
-            className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-none flex-shrink-0"
-            style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
+            className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
+            style={{ padding: "7px 8px 7px 11px", border: "1px dashed var(--border-strong)" }}
           >
-            <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
-              {t("desktop.session")}
-            </h2>
-            {/* The total in whichever unit the hero is showing, then how many
-                lines it came from. Showing weight and money side by side made
-                the row two lines tall as soon as the session had anything in
-                it, and truncating a number mid-digit is worse than omitting it
-                — the full breakdown is one tap away in the session tab. */}
-            <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
-              {sessionSummary.count === 0
-                ? "—"
-                : isW
-                  ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
-                  : `${sym}${fsMoney(sessionSummary.amount)}`}
-            </span>
-            <span className="font-mono text-[11.5px] text-muted truncate min-w-0">
-              {sessionSummary.count > 0
-                ? t("library.calcCount", { count: sessionSummary.count })
-                : ""}
-            </span>
             <button
               type="button"
               onClick={() => {
                 setLibraryTab("session");
                 setSheet("library");
               }}
-              className="fs-track-wide ml-auto flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase text-muted-faint"
-              style={{ padding: "4px 6px" }}
+              aria-label={t("aria.openSession")}
+              className="flex items-center gap-2.5 min-w-0 flex-1 bg-transparent border-0 p-0 text-left cursor-pointer"
             >
-              {t("common.open")} ›
+              <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+                {t("desktop.session")}
+              </h2>
+              {/* The total in whichever unit the hero is showing, then how many
+                  lines it came from. Showing weight and money side by side made
+                  the row two lines tall as soon as the session had anything in
+                  it, and truncating a number mid-digit is worse than omitting
+                  it — the full breakdown is one tap away. */}
+              <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
+                {sessionSummary.count === 0
+                  ? "—"
+                  : isW
+                    ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                    : `${sym}${fsMoney(sessionSummary.amount)}`}
+              </span>
+              <span className="font-mono text-[11.5px] text-muted truncate min-w-0">
+                {sessionSummary.count > 0
+                  ? t("library.calcCount", { count: sessionSummary.count })
+                  : ""}
+              </span>
             </button>
+            {sessionSummary.count > 0 && (
+              <button
+                type="button"
+                onClick={saveSessionAsProject}
+                className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
+                style={{ padding: "6px 7px", color: "var(--accent-text)" }}
+              >
+                {t("desktop.saveSessionAsProject")}
+              </button>
+            )}
             <button
               type="button"
               onClick={logToSession}
               aria-label={t("aria.addToSession")}
-              className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none"
+              className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
               style={{
                 width: 28,
                 height: 28,
