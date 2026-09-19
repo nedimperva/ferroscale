@@ -160,7 +160,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
   };
 
   const counts = {
-    saved: props.saved.length,
+    saved: props.ownSaved.length,
     // Archived projects are not in the list the tab opens, so counting them
     // in the badge would promise rows that are not there.
     projects: props.projects.filter((project) => !isArchivedProject(project)).length,

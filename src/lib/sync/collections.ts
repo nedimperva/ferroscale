@@ -15,7 +15,6 @@ import {
 } from "@/hooks/useProjects";
 import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
-import type { AssemblyTemplate, AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
 import { notifySyncedCollectionDirty } from "./registry";
@@ -65,6 +64,29 @@ function normalizeTemplatePart(raw: unknown): TemplatePart | null {
   };
 }
 
+function normalizeAdditionalCosts(raw: unknown): ProjectAdditionalCost[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out = raw
+    .filter(
+      (c): c is ProjectAdditionalCost =>
+        Boolean(
+          c &&
+            typeof c === "object" &&
+            typeof (c as ProjectAdditionalCost).id === "string" &&
+            typeof (c as ProjectAdditionalCost).label === "string" &&
+            typeof (c as ProjectAdditionalCost).amount === "number",
+        ),
+    )
+    .map((c) => ({
+      id: c.id,
+      label: c.label.trim(),
+      amount: Math.max(0, Number(c.amount) || 0),
+      category: c.category,
+    }))
+    .filter((c) => c.label.length > 0);
+  return out.length > 0 ? out : undefined;
+}
+
 export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<SavedEntry>;
@@ -101,6 +123,17 @@ export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
     updatedAt: candidate.updatedAt ?? candidate.lastUsedAt ?? candidate.timestamp,
     deletedAt: candidate.deletedAt,
     isAssembly: candidate.isAssembly === true || undefined,
+    // What a project inherits from this entry. Dropping these here is what
+    // used to make a template's labour and hardware vanish on reload.
+    category: PROJECT_CATEGORIES.includes(candidate.category as ProjectCategory)
+      ? candidate.category
+      : undefined,
+    laborHours:
+      typeof candidate.laborHours === "number" && Number.isFinite(candidate.laborHours)
+        ? Math.max(0, candidate.laborHours)
+        : undefined,
+    additionalCosts: normalizeAdditionalCosts(candidate.additionalCosts),
+    isBuiltin: candidate.isBuiltin === true || undefined,
     parts,
     input: parts[0].input,
     result: parts[0].result,
@@ -123,19 +156,7 @@ export function normalizeProject(raw: unknown): Project | null {
     };
   });
 
-  const normalizedAdditionalCosts = Array.isArray(candidate.additionalCosts)
-    ? candidate.additionalCosts
-        .filter(
-          (c): c is ProjectAdditionalCost =>
-            Boolean(c && typeof c === "object" && typeof c.id === "string" && typeof c.label === "string" && typeof c.amount === "number"),
-        )
-        .map((c) => ({
-          id: c.id,
-          label: c.label.trim(),
-          amount: Math.max(0, Number(c.amount) || 0),
-          category: c.category,
-        }))
-    : undefined;
+  const normalizedAdditionalCosts = normalizeAdditionalCosts(candidate.additionalCosts);
 
   return {
     id: candidate.id,
@@ -346,94 +367,4 @@ export function createSavedPart(
     result,
     normalizedProfile: normalizeProfileSnapshot(input),
   };
-}
-
-export function normalizeAssemblyTemplate(raw: unknown): AssemblyTemplate | null {
-  if (!raw || typeof raw !== "object") return null;
-  const candidate = raw as Partial<AssemblyTemplate>;
-  const id = typeof candidate.id === "string" ? candidate.id : "";
-  const name = typeof candidate.name === "string" ? candidate.name.trim() : "";
-  if (!id || !name) return null;
-  const createdAt = typeof candidate.createdAt === "string" ? candidate.createdAt : nowIso();
-  const updatedAt = typeof candidate.updatedAt === "string" ? candidate.updatedAt : createdAt;
-  const deletedAt = typeof candidate.deletedAt === "string" ? candidate.deletedAt : undefined;
-  const description = typeof candidate.description === "string" ? candidate.description : undefined;
-  const category =
-    typeof candidate.category === "string" && (PROJECT_CATEGORIES as readonly string[]).includes(candidate.category)
-      ? (candidate.category as ProjectCategory)
-      : undefined;
-  const laborHours =
-    Number.isFinite(Number(candidate.laborHours)) && Number(candidate.laborHours) >= 0
-      ? Number(candidate.laborHours)
-      : undefined;
-  const additionalCosts = Array.isArray(candidate.additionalCosts)
-    ? (candidate.additionalCosts
-        .map((cost) => {
-          if (!cost || typeof cost !== "object") return null;
-          const c = cost as Partial<ProjectAdditionalCost>;
-          const label = typeof c.label === "string" ? c.label.trim() : "";
-          const amount = Number(c.amount);
-          if (!label || !Number.isFinite(amount) || amount < 0) return null;
-          return {
-            id: typeof c.id === "string" ? c.id : crypto.randomUUID(),
-            label,
-            amount,
-            category: typeof c.category === "string" ? (c.category as ProjectAdditionalCost["category"]) : undefined,
-          };
-        })
-        .filter(Boolean) as ProjectAdditionalCost[])
-    : undefined;
-
-  const rawItems = Array.isArray(candidate.items) ? candidate.items : [];
-  const items: AssemblyTemplateItem[] = [];
-  for (const item of rawItems) {
-    if (!item || typeof item !== "object") continue;
-    const it = item as Partial<AssemblyTemplateItem>;
-    if (!it.input || !it.result) continue;
-    const quantity = Math.max(1, Math.min(10000, Number(it.quantity) || 1));
-    items.push({
-      id: typeof it.id === "string" ? it.id : crypto.randomUUID(),
-      input: it.input,
-      result: it.result,
-      normalizedProfile: it.normalizedProfile ?? normalizeProfileSnapshot(it.input),
-      quantity,
-      note: typeof it.note === "string" ? it.note : undefined,
-    });
-  }
-
-  return {
-    id,
-    name,
-    description,
-    category,
-    items,
-    laborHours,
-    additionalCosts,
-    createdAt,
-    updatedAt,
-    deletedAt,
-    isBuiltin: Boolean(candidate.isBuiltin),
-  };
-}
-
-export function normalizeAssemblyTemplates(raw: unknown): AssemblyTemplate[] {
-  if (!Array.isArray(raw)) return [];
-  const out: AssemblyTemplate[] = [];
-  const seen = new Set<string>();
-  for (const entry of raw) {
-    const normalized = normalizeAssemblyTemplate(entry);
-    if (!normalized || seen.has(normalized.id)) continue;
-    seen.add(normalized.id);
-    out.push(normalized);
-  }
-  return out;
-}
-
-export function loadAssemblyTemplates(): AssemblyTemplate[] {
-  return normalizeAssemblyTemplates(loadArrayFromStorage<unknown>(SYNC_STORAGE_KEYS.templates));
-}
-
-export function persistAssemblyTemplates(entries: AssemblyTemplate[], options?: PersistOptions): void {
-  persistToStorage(SYNC_STORAGE_KEYS.templates, entries);
-  maybeNotify("saved", options?.markDirty ?? true);
 }

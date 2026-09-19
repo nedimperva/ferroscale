@@ -5,7 +5,7 @@ import type {
   ProjectCategory,
   ProjectStatus,
 } from "@/hooks/useProjects";
-import type { AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
+import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
 import type { ProjectPaintCoat } from "@/lib/projects/paint";
 
 /**
@@ -15,6 +15,13 @@ import type { ProjectPaintCoat } from "@/lib/projects/paint";
  * components four times over was the alternative.
  */
 export interface ProjectActions {
+  /**
+   * The library's multi-part entries, for the "insert an assembly" picker.
+   * Data rather than a callback, but it rides in the same bag for the same
+   * reason: the shell owns the one `useSaved` instance, and a second one
+   * mounted down here would hold its own snapshot and silently drift.
+   */
+  libraryAssemblies?: SavedEntry[];
   onCreate: (name: string) => Project | void;
   onRename: (id: string, name: string) => void;
   onUpdateMeta: (
@@ -53,9 +60,10 @@ export interface ProjectActions {
   onAddItem: (projectId: string) => boolean;
   /** Add a query directly to the project using fast inline command parser. */
   onQuickAddItem?: (projectId: string, query: string, assembly?: string) => boolean;
-  onInsertTemplate?: (
+  /** Drop a library assembly into the project, scaled. */
+  onInsertAssembly?: (
     projectId: string,
-    template: AssemblyTemplate,
+    entry: SavedEntry,
     multiplier: number,
     customAssemblyName?: string,
   ) => boolean;
@@ -64,10 +72,17 @@ export interface ProjectActions {
     assemblyName: string,
     multiplier: number,
   ) => boolean;
-  onCreateFromTemplate?: (
+  onCreateFromAssembly?: (
     name: string,
-    template: AssemblyTemplate,
+    entry: SavedEntry,
     multiplier?: number,
   ) => Project | void;
+  /** Send a project's sub-assembly back to the library as a reusable entry. */
+  onSaveAssemblyToLibrary?: (
+    name: string,
+    parts: TemplatePart[],
+    description?: string,
+    category?: ProjectCategory,
+  ) => void;
   onPrintQuote: (project: Project) => void;
 }

@@ -27,7 +27,7 @@ import { DeskIcon } from "../desktop/desk-atoms";
 import { DeskViewHeader } from "../desktop/desk-rail";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
-import { AssemblyTemplateModal } from "./assembly-template-modal";
+import { InsertAssemblyModal } from "./insert-assembly-modal";
 
 /**
  * One cell of the pipeline band. The four of them share a rule above and
@@ -789,9 +789,10 @@ export function ProjectList({
       </div>
 
       {showTemplateModal && (
-        <AssemblyTemplateModal
-          onInsert={(tpl, mult) => {
-            const created = actions.onCreateFromTemplate?.(tpl.name, tpl, mult);
+        <InsertAssemblyModal
+          assemblies={actions.libraryAssemblies ?? []}
+          onInsert={(entry, mult) => {
+            const created = actions.onCreateFromAssembly?.(entry.name, entry, mult);
             if (created && typeof created === "object" && "id" in created) {
               onOpenProject(created.id);
             }

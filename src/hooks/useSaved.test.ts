@@ -4,6 +4,7 @@ import { renderHook, act } from "@testing-library/react";
 import { cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { isAssemblyEntry, useSaved, type TemplatePartDraft } from "./useSaved";
+import { getBuiltinLibraryEntries } from "@/lib/saved/builtins";
 
 const SETTINGS: CommandParserSettings = {
   pricing: {
@@ -267,5 +268,95 @@ describe("useSaved — what counts as an assembly", () => {
     const { result } = renderHook(() => useSaved());
     const id = seedEntry(result);
     expect(isAssemblyEntry(result.current.saved.find((e) => e.id === id)!)).toBe(false);
+  });
+});
+
+describe("useSaved — the standards that ship with the app", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("lists the built-ins without storing them", () => {
+    const { result } = renderHook(() => useSaved());
+    const builtins = getBuiltinLibraryEntries();
+
+    expect(builtins.length).toBeGreaterThan(0);
+    expect(result.current.saved).toHaveLength(builtins.length);
+    // Nothing on disk yet: a standard is merged in on read, not persisted.
+    expect(localStorage.getItem("ferroscale-saved-v2")).toBeNull();
+    // ...and badges count the user's own work, which is none of it.
+    expect(result.current.ownSaved).toHaveLength(0);
+  });
+
+  it("carries the labour and hardware a project inherits", () => {
+    const tread = getBuiltinLibraryEntries().find((e) => e.id === "builtin-stair-tread")!;
+    expect(tread.laborHours).toBeCloseTo(0.35);
+    expect(tread.additionalCosts?.[0].amount).toBeCloseTo(3.2);
+    expect(tread.category).toBe("stairs_railings");
+    // An item's old `note` is the part's name — one field, not two.
+    expect(tread.parts.map((p) => p.name)).toContain("Tread step plate");
+    // Quantity lives in the input, as it does for every other part.
+    expect(tread.parts.find((p) => p.name === "Side fixing brackets")?.input.quantity).toBe(2);
+    expect(isAssemblyEntry(tread)).toBe(true);
+  });
+
+  it("removes a standard as a tombstone and puts it back by dropping the row", () => {
+    const { result } = renderHook(() => useSaved());
+    const total = result.current.saved.length;
+    const target = result.current.saved[0];
+
+    act(() => {
+      result.current.removeSaved(target.id);
+    });
+    expect(result.current.saved).toHaveLength(total - 1);
+    expect(result.current.removedBuiltins.map((e) => e.id)).toEqual([target.id]);
+
+    act(() => {
+      result.current.restoreSaved(target.id);
+    });
+    expect(result.current.saved).toHaveLength(total);
+    expect(result.current.removedBuiltins).toHaveLength(0);
+  });
+
+  it("a removal survives a remount", () => {
+    const first = renderHook(() => useSaved());
+    const target = first.result.current.saved[0];
+    act(() => {
+      first.result.current.removeSaved(target.id);
+    });
+
+    const second = renderHook(() => useSaved());
+    expect(second.result.current.saved.some((e) => e.id === target.id)).toBe(false);
+
+    act(() => {
+      second.result.current.restoreAllBuiltins();
+    });
+    expect(second.result.current.saved.some((e) => e.id === target.id)).toBe(true);
+  });
+
+  it("duplicating a standard gives an editable entry of your own", () => {
+    const { result } = renderHook(() => useSaved());
+    const source = result.current.saved[0];
+
+    act(() => {
+      result.current.duplicateSaved(source.id);
+    });
+
+    const copy = result.current.ownSaved[0];
+    expect(copy).toBeDefined();
+    expect(copy.isBuiltin).toBeUndefined();
+    expect(copy.name).toBe(`${source.name} (Copy)`);
+    expect(copy.parts).toHaveLength(source.parts.length);
+    // New part ids, so editing the copy cannot touch the standard.
+    expect(copy.parts[0].id).not.toBe(source.parts[0].id);
+  });
+
+  it("the save toggle ignores the standards", () => {
+    const { result } = renderHook(() => useSaved());
+    const standardCut = result.current.saved[0].result;
+    // A line matching a standard's first cut is not "already saved" — pressing
+    // Save on it must create an entry, not delete a standard.
+    expect(result.current.isSaved(standardCut)).toBe(false);
+    expect(result.current.getSavedEntry(standardCut)).toBeUndefined();
   });
 });

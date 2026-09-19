@@ -48,11 +48,11 @@ import {
   toDateInputValue,
 } from "./project-model";
 import type { ProjectActions } from "./project-actions";
-import { AssemblyTemplateModal } from "./assembly-template-modal";
+import { InsertAssemblyModal } from "./insert-assembly-modal";
 import { SheetShell } from "../sheets/sheet-shell";
 import { ScaleAssemblyModal } from "./scale-assembly-modal";
-import { SaveAssemblyTemplateModal } from "./save-assembly-template-modal";
-import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
+import { SaveAssemblyToLibraryModal } from "./save-assembly-modal";
+import type { TemplatePart } from "@/hooks/useSaved";
 
 /** The one number that matters, with the cost breakdown beneath it. Six
  *  equal-weight tiles made the grand total no easier to find than the item
@@ -1101,7 +1101,6 @@ export function ProjectDetail({
   compact?: boolean;
 }) {
   const t = useTranslations("command");
-  const { saveTemplate } = useAssemblyTemplates();
   const [editingDetails, setEditingDetails] = useState(false);
   const [detailTab, setDetailTab] = useState<"items" | "cutting" | "details">("items");
   const [notes, setNotes] = useState(project.description ?? "");
@@ -1109,7 +1108,7 @@ export function ProjectDetail({
   const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [scalingAssembly, setScalingAssembly] = useState<{ name: string; count: number } | null>(null);
-  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: AssemblyTemplateItem[] } | null>(null);
+  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: TemplatePart[] } | null>(null);
 
   const summary = projectSummary(project, marginPercent);
   const rows = projectItemRows(project);
@@ -1351,15 +1350,15 @@ export function ProjectDetail({
           const asmWeight = asmRows.reduce((s, r) => s + r.weightKg, 0);
           const asmCost = asmRows.reduce((s, r) => s + r.amount, 0);
           const saveAsTemplate = () => {
-            const templateItems: AssemblyTemplateItem[] = asmRows.map((r) => ({
+            const parts: TemplatePart[] = asmRows.map((r) => ({
               id: crypto.randomUUID(),
+              // The row's note is the part's name — one field, not two.
+              name: r.calc.note?.trim() || r.calc.result.profileLabel,
               input: r.calc.input,
               result: r.calc.result,
               normalizedProfile: r.calc.normalizedProfile,
-              quantity: r.calc.input.quantity || 1,
-              note: r.calc.note,
             }));
-            setSavingTemplateAsm({ name: asmName, items: templateItems });
+            setSavingTemplateAsm({ name: asmName, items: parts });
           };
 
           // Add / Scale / Save as three labelled chips forced a horizontal
@@ -1816,11 +1815,12 @@ export function ProjectDetail({
         />
       )}
 
-      {/* Assembly Template Insertion Modal */}
+      {/* Drop a library assembly into this project */}
       {showTemplateModal && (
-        <AssemblyTemplateModal
-          onInsert={(template, mult, asmName) => {
-            actions.onInsertTemplate?.(project.id, template, mult, asmName);
+        <InsertAssemblyModal
+          assemblies={actions.libraryAssemblies ?? []}
+          onInsert={(entry, mult, asmName) => {
+            actions.onInsertAssembly?.(project.id, entry, mult, asmName);
           }}
           onClose={() => setShowTemplateModal(false)}
         />
@@ -1838,18 +1838,13 @@ export function ProjectDetail({
         />
       )}
 
-      {/* Save Sub-Assembly as Reusable Template Modal */}
+      {/* Save this sub-assembly back into the library */}
       {savingTemplateAsm && (
-        <SaveAssemblyTemplateModal
+        <SaveAssemblyToLibraryModal
           assemblyName={savingTemplateAsm.name}
           items={savingTemplateAsm.items}
           onSave={(name, description, category) => {
-            saveTemplate({
-              name,
-              description,
-              category,
-              items: savingTemplateAsm.items,
-            });
+            actions.onSaveAssemblyToLibrary?.(name, savingTemplateAsm.items, description, category);
           }}
           onClose={() => setSavingTemplateAsm(null)}
         />

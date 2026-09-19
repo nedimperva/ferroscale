@@ -3,18 +3,19 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { PROJECT_CATEGORIES, type ProjectCategory } from "@/hooks/useProjects";
-import type { AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
+import type { TemplatePart } from "@/hooks/useSaved";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { SheetShell } from "../sheets/sheet-shell";
 
-export function SaveAssemblyTemplateModal({
+/** Save a project's sub-assembly back into the library as a reusable entry. */
+export function SaveAssemblyToLibraryModal({
   assemblyName,
   items,
   onSave,
   onClose,
 }: {
   assemblyName: string;
-  items: AssemblyTemplateItem[];
+  items: TemplatePart[];
   onSave: (name: string, description?: string, category?: ProjectCategory) => void;
   onClose: () => void;
 }) {
@@ -122,7 +123,7 @@ export function SaveAssemblyTemplateModal({
                 key={it.id}
                 className="px-2 py-0.5 rounded-md text-[10.5px] font-mono bg-[var(--surface)] text-foreground border border-[var(--border-faint)]"
               >
-                {it.quantity}× {it.result.profileLabel}
+                {it.input.quantity}× {it.result.profileLabel}
               </span>
             ))}
           </div>

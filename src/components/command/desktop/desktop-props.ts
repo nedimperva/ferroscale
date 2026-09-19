@@ -45,6 +45,8 @@ export interface CommandDesktopProps {
   /** Turn everything on the tape into a project, in one action. */
   onSaveSessionAsProject: () => void;
   saved: SavedEntry[];
+  /** The user's own entries — what the rail badge counts. */
+  ownSaved: SavedEntry[];
   compareItems: CompareItem[];
   projects: Project[];
   onSave: () => void;

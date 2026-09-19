@@ -7,10 +7,9 @@ import { getAppTabFromPathname } from "@/lib/app-shell";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
-import type { SavedEntry, TemplatePartDraft } from "@/hooks/useSaved";
+import { libraryAssemblies } from "./projects/insert-assembly-modal";
+import type { SavedEntry, TemplatePart, TemplatePartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
-import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
@@ -151,6 +150,7 @@ export function CommandShell() {
   // App-wide libraries (saves, compare, projects).
   const {
     saved: savedEntries,
+    ownSaved,
     saveCalculation,
     getSavedEntry,
     removeSaved,
@@ -198,10 +198,9 @@ export function CommandShell() {
     updateProjectPaintCoats,
   } = useProjects();
   const priceBook = usePriceBook();
-  // The save overlay offers the template library as a destination, so the
-  // shell holds an instance too. Writes go through disk (see the hook), and
-  // `refresh` closes the read gap when a project dialog has added one.
-  const templatesApi = useAssemblyTemplates();
+
+  /** The library's multi-part entries — what a project can be built out of. */
+  const assembliesInLibrary = useMemo(() => libraryAssemblies(savedEntries), [savedEntries]);
 
   const [query, setQuery] = useState("");
   // The URL only mirrors the query once the user has entered a calculation
@@ -240,11 +239,6 @@ export function CommandShell() {
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
-  // A project dialog may have written templates since this instance loaded.
-  const refreshTemplates = templatesApi.refresh;
-  useEffect(() => {
-    if (destination) refreshTemplates();
-  }, [destination, refreshTemplates]);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   /** Letters / number pad chosen by hand. Cleared when the active item empties. */
   const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
@@ -966,56 +960,6 @@ export function CommandShell() {
     ],
   );
 
-  /**
-   * The subject as template items: a live line becomes one item per cut, a
-   * saved entry contributes its parts at today's rates — the same repricing a
-   * project gets, since a template is quoted long after it was written.
-   */
-  const templateItemsFor = useCallback(
-    (entry: SavedEntry | null): AssemblyTemplateItem[] => {
-      const parts = entry
-        ? repriceSavedEntry(entry)
-        : currentLineDrafts().map((draft) => ({
-            input: draft.input,
-            result: draft.result,
-            normalizedProfile: normalizeProfileSnapshot(draft.input),
-          }));
-      return parts.map((part) => ({
-        id: crypto.randomUUID(),
-        input: part.input,
-        result: part.result,
-        normalizedProfile: part.normalizedProfile,
-        quantity: part.input.quantity ?? 1,
-      }));
-    },
-    [repriceSavedEntry, currentLineDrafts],
-  );
-
-  const saveAsTemplate = useCallback(
-    (name: string, entry: SavedEntry | null) => {
-      const items = templateItemsFor(entry);
-      if (items.length === 0) return;
-      templatesApi.saveTemplate({ name, items });
-      haptic("commit");
-      setDestination(null);
-      showToast(t("templates.templateSaved"));
-    },
-    [templateItemsFor, templatesApi, showToast, t],
-  );
-
-  const appendToTemplate = useCallback(
-    (templateId: string, entry: SavedEntry | null) => {
-      const target = templatesApi.customTemplates.find((tpl) => tpl.id === templateId);
-      const items = templateItemsFor(entry);
-      if (!target || items.length === 0) return;
-      templatesApi.updateTemplate(templateId, { items: [...target.items, ...items] });
-      haptic("commit");
-      setDestination(null);
-      showToast(t("toast.templateAdded", { name: target.name }));
-    },
-    [templateItemsFor, templatesApi, showToast, t],
-  );
-
   const addCompareEntry = useCallback(
     (input: CalculationInput, result: CalculationResult) => {
       if (isInCompare(result)) {
@@ -1113,12 +1057,28 @@ export function CommandShell() {
         );
         return ok;
       },
-      onInsertTemplate: (projectId, template, multiplier, customAssemblyName) => {
-        const ok = insertAssemblyTemplate(projectId, template, multiplier, customAssemblyName);
+      libraryAssemblies: assembliesInLibrary,
+      onInsertAssembly: (projectId, entry, multiplier, customAssemblyName) => {
+        const ok = insertAssemblyTemplate(projectId, entry, multiplier, customAssemblyName);
         if (ok) {
-          showToast(t("projects.templateInserted", { name: template.name, mult: multiplier }));
+          showToast(t("projects.templateInserted", { name: entry.name, mult: multiplier }));
         }
         return ok;
+      },
+      onSaveAssemblyToLibrary: (name, parts: TemplatePart[], description, category) => {
+        if (parts.length === 0) return;
+        const entry = saveCalculation(
+          parts[0].input,
+          parts[0].result,
+          name,
+          description,
+          undefined,
+          parts.map((part) => ({ name: part.name, input: part.input, result: part.result })),
+          true,
+        );
+        if (category) updateSaved(entry.id, { category });
+        haptic("commit");
+        showToast(t("templates.templateSaved"));
       },
       onScaleSubAssembly: (projectId, assemblyName, multiplier) => {
         const ok = scaleSubAssembly(projectId, assemblyName, multiplier);
@@ -1127,8 +1087,8 @@ export function CommandShell() {
         }
         return ok;
       },
-      onCreateFromTemplate: (name, template, multiplier) => {
-        const project = createProjectFromTemplate(name, template, multiplier);
+      onCreateFromAssembly: (name, entry, multiplier) => {
+        const project = createProjectFromTemplate(name, entry, multiplier);
         showToast(t("projects.templateProjectCreated", { name: project.name }));
         return project;
       },
@@ -1154,6 +1114,9 @@ export function CommandShell() {
       updateProjectPaintCoats,
       loadInput,
       addCalculation,
+      assembliesInLibrary,
+      saveCalculation,
+      updateSaved,
       insertAssemblyTemplate,
       scaleSubAssembly,
       createProjectFromTemplate,
@@ -1508,12 +1471,9 @@ export function CommandShell() {
           initial={destination.initial}
           parts={partTargets(savedEntries)}
           assemblies={assemblyTargets(savedEntries).filter((item) => item.id !== entry?.id)}
-          templates={templatesApi.customTemplates}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
           onAppendTo={appendLineTo}
-          onSaveAsTemplate={(name) => saveAsTemplate(name, entry)}
-          onAppendToTemplate={(templateId) => appendToTemplate(templateId, entry)}
           onAddToProject={(projectId) => handlePickProject(projectId, entry)}
           onCreateProject={createProject}
           onClose={() => setDestination(null)}
@@ -1570,6 +1530,7 @@ export function CommandShell() {
           onRemoveTapeEntry={removeHistoryEntry}
           onClearTape={clearHistory}
           saved={savedEntries}
+          ownSaved={ownSaved}
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
@@ -2352,6 +2313,7 @@ export function CommandShell() {
               defaultUnit={defaultUnit}
               mode={mode}
               saved={savedEntries}
+              ownSaved={ownSaved}
               compareItems={compareItems}
               projects={projects}
               onClose={() => {

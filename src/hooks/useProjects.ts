@@ -17,7 +17,7 @@ import {
   totalPaint,
   type ProjectPaintCoat,
 } from "@/lib/projects/paint";
-import type { AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
+import type { SavedEntry } from "@/hooks/useSaved";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -627,9 +627,15 @@ export interface UseProjectsReturn {
     entries: Array<{ input: CalculationInput; result: CalculationResult }>,
   ) => void;
   addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
+  /**
+   * Drop a library assembly into a project: its cuts become items tagged with
+   * the assembly's name, and its labour and hardware are added on top. The
+   * source is a plain library entry — "template" was the same record in a
+   * store of its own.
+   */
   insertAssemblyTemplate: (
     projectId: string,
-    template: AssemblyTemplate,
+    entry: SavedEntry,
     multiplier: number,
     customAssemblyName?: string,
   ) => boolean;
@@ -640,7 +646,7 @@ export interface UseProjectsReturn {
   ) => boolean;
   createProjectFromTemplate: (
     name: string,
-    template: AssemblyTemplate,
+    entry: SavedEntry,
     multiplier?: number,
   ) => Project;
   removeCalculation: (projectId: string, calcId: string) => void;
@@ -1103,23 +1109,23 @@ export function useProjects(): UseProjectsReturn {
   const insertAssemblyTemplate = useCallback(
     (
       projectId: string,
-      template: AssemblyTemplate,
+      entry: SavedEntry,
       multiplier: number,
       customAssemblyName?: string,
     ): boolean => {
       const mult = Math.max(1, Math.floor(multiplier || 1));
-      if (!template.items || template.items.length === 0) return false;
+      if (!entry.parts || entry.parts.length === 0) return false;
 
       const project = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
       if (!project || project.calculations.length >= MAX_CALCS_PER_PROJECT) return false;
 
       const now = new Date().toISOString();
-      const asmTag = customAssemblyName?.trim() || template.name;
+      const asmTag = customAssemblyName?.trim() || entry.name;
 
       const newCalcs: ProjectCalculation[] = [];
-      for (const item of template.items) {
-        const itemQty = Math.max(1, Math.floor((item.quantity || 1) * mult));
-        const nextInput = { ...item.input, quantity: itemQty };
+      for (const part of entry.parts) {
+        const itemQty = Math.max(1, Math.floor((part.input.quantity || 1) * mult));
+        const nextInput = { ...part.input, quantity: itemQty };
         const calc = calculateMetal(nextInput);
         if (!calc.ok) continue;
         newCalcs.push({
@@ -1129,7 +1135,7 @@ export function useProjects(): UseProjectsReturn {
           result: calc.result,
           normalizedProfile: normalizeProfileSnapshot(nextInput),
           assembly: asmTag,
-          note: item.note,
+          note: part.name,
         });
       }
 
@@ -1137,14 +1143,14 @@ export function useProjects(): UseProjectsReturn {
 
       // Scale labor hours
       let nextLaborHours = project.laborHours;
-      if (template.laborHours !== undefined && template.laborHours > 0) {
-        nextLaborHours = (project.laborHours ?? 0) + template.laborHours * mult;
+      if (entry.laborHours !== undefined && entry.laborHours > 0) {
+        nextLaborHours = (project.laborHours ?? 0) + entry.laborHours * mult;
       }
 
       // Scale additional costs
       let nextAdditionalCosts = project.additionalCosts;
-      if (template.additionalCosts && template.additionalCosts.length > 0) {
-        const scaledCosts: ProjectAdditionalCost[] = template.additionalCosts.map((c) => ({
+      if (entry.additionalCosts && entry.additionalCosts.length > 0) {
+        const scaledCosts: ProjectAdditionalCost[] = entry.additionalCosts.map((c) => ({
           id: crypto.randomUUID(),
           label: mult > 1 ? `${c.label} (×${mult})` : c.label,
           amount: Math.round(c.amount * mult * 100) / 100,
@@ -1159,14 +1165,14 @@ export function useProjects(): UseProjectsReturn {
           return withActivity(
             {
               ...p,
-              category: p.category || template.category,
+              category: p.category || entry.category,
               calculations: [...p.calculations, ...newCalcs],
               laborHours: nextLaborHours,
               additionalCosts: nextAdditionalCosts,
               updatedAt: now,
             },
             "itemAdded",
-            { detail: `${template.name} (×${mult})` },
+            { detail: `${entry.name} (×${mult})` },
           );
         }),
       );
@@ -1283,16 +1289,16 @@ export function useProjects(): UseProjectsReturn {
   );
 
   const createProjectFromTemplate = useCallback(
-    (name: string, template: AssemblyTemplate, multiplier = 1): Project => {
+    (name: string, entry: SavedEntry, multiplier = 1): Project => {
       const mult = Math.max(1, Math.floor(multiplier || 1));
       const now = new Date().toISOString();
       const newId = crypto.randomUUID();
-      const asmTag = template.name;
+      const asmTag = entry.name;
 
       const newCalcs: ProjectCalculation[] = [];
-      for (const item of template.items) {
-        const itemQty = Math.max(1, Math.floor((item.quantity || 1) * mult));
-        const nextInput = { ...item.input, quantity: itemQty };
+      for (const part of entry.parts) {
+        const itemQty = Math.max(1, Math.floor((part.input.quantity || 1) * mult));
+        const nextInput = { ...part.input, quantity: itemQty };
         const calc = calculateMetal(nextInput);
         if (!calc.ok) continue;
         newCalcs.push({
@@ -1302,12 +1308,12 @@ export function useProjects(): UseProjectsReturn {
           result: calc.result,
           normalizedProfile: normalizeProfileSnapshot(nextInput),
           assembly: asmTag,
-          note: item.note,
+          note: part.name,
         });
       }
 
-      const scaledCosts: ProjectAdditionalCost[] | undefined = template.additionalCosts
-        ? template.additionalCosts.map((c) => ({
+      const scaledCosts: ProjectAdditionalCost[] | undefined = entry.additionalCosts
+        ? entry.additionalCosts.map((c) => ({
             id: crypto.randomUUID(),
             label: mult > 1 ? `${c.label} (×${mult})` : c.label,
             amount: Math.round(c.amount * mult * 100) / 100,
@@ -1317,13 +1323,13 @@ export function useProjects(): UseProjectsReturn {
 
       const project: Project = {
         id: newId,
-        name: name.trim() || template.name,
-        category: template.category,
-        description: template.description,
+        name: name.trim() || entry.name,
+        category: entry.category,
+        description: entry.notes,
         createdAt: now,
         updatedAt: now,
         calculations: newCalcs,
-        laborHours: template.laborHours ? template.laborHours * mult : undefined,
+        laborHours: entry.laborHours ? entry.laborHours * mult : undefined,
         laborRatePerHour: 45,
         additionalCosts: scaledCosts,
         activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useProjects } from "@/hooks/useProjects";
-import { getBuiltinAssemblyTemplates } from "@/hooks/useAssemblyTemplates";
+import { getBuiltinLibraryEntries } from "@/lib/saved/builtins";
 import { calculateMetal, type CalculationInput } from "@ferroscale/metal-core";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { extractProjectCutGroups } from "@/lib/projects/cutting";
@@ -17,7 +17,7 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const stairTreadTemplate = getBuiltinAssemblyTemplates().find((t) => t.id === "builtin-stair-tread")!;
+    const stairTreadTemplate = getBuiltinLibraryEntries().find((t) => t.id === "builtin-stair-tread")!;
     expect(stairTreadTemplate).toBeDefined();
 
     // Insert 15x Stair Step Treads into the project
@@ -73,7 +73,7 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const postTemplate = getBuiltinAssemblyTemplates().find((t) => t.id === "builtin-railing-post")!;
+    const postTemplate = getBuiltinLibraryEntries().find((t) => t.id === "builtin-railing-post")!;
 
     // Insert 4x Posts
     act(() => {
@@ -102,7 +102,7 @@ describe("Project Assembly Templates and Multipliers", () => {
   it("creates a new project directly from a fabrication template", () => {
     const { result } = renderHook(() => useProjects());
 
-    const fenceTemplate = getBuiltinAssemblyTemplates().find((t) => t.id === "builtin-fence-panel")!;
+    const fenceTemplate = getBuiltinLibraryEntries().find((t) => t.id === "builtin-fence-panel")!;
 
     let newProjId = "";
     act(() => {

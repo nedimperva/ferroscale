@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import type { AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
 import type { Project } from "@/hooks/useProjects";
 import { isAssemblyEntry, type SavedEntry } from "@/hooks/useSaved";
 import { SheetShell } from "./sheet-shell";
@@ -21,7 +20,7 @@ import { SheetShell } from "./sheet-shell";
  * saved entry is already in the library, so the rows that would re-create it
  * are absent rather than disabled.
  */
-export type DestinationKind = "parts" | "assemblies" | "templates" | "projects";
+export type DestinationKind = "parts" | "assemblies" | "projects";
 
 /** The row that creates something rather than appending to it. */
 const NEW = "::new";
@@ -55,7 +54,6 @@ interface KindDef {
 const KINDS: KindDef[] = [
   { id: "parts", icon: "M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z", lineOnly: true, defaultsToNew: true, shortcut: false, createFromEntry: false },
   { id: "assemblies", icon: "M12 2.5l9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 17l9 5 9-5", lineOnly: false, defaultsToNew: true, shortcut: true, createFromEntry: false },
-  { id: "templates", icon: "M4 5h7v7H4zM13 5h7v4h-7zM13 13h7v6h-7zM4 16h7v3H4z", lineOnly: false, defaultsToNew: true, shortcut: false, createFromEntry: true },
   { id: "projects", icon: "M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z", lineOnly: false, defaultsToNew: false, shortcut: true, createFromEntry: true },
 ];
 
@@ -84,13 +82,10 @@ export function DestinationSheet({
   subject,
   parts,
   assemblies,
-  templates,
   projects,
   initial,
   onSaveNew,
   onAppendTo,
-  onSaveAsTemplate,
-  onAppendToTemplate,
   onAddToProject,
   onCreateProject,
   onClose,
@@ -99,17 +94,10 @@ export function DestinationSheet({
   /** Entries "into a part" can target — everything not already an assembly. */
   parts: SavedEntry[];
   assemblies: SavedEntry[];
-  /**
-   * Only the user's own templates. The standards that ship with the app are
-   * read-only, so offering them as somewhere to append would be a dead end.
-   */
-  templates: AssemblyTemplate[];
   projects: Project[];
   initial?: DestinationKind;
   onSaveNew: (name: string, asAssembly: boolean) => void;
   onAppendTo: (entryId: string) => void;
-  onSaveAsTemplate: (name: string) => void;
-  onAppendToTemplate: (templateId: string) => void;
   onAddToProject: (projectId: string) => void;
   onCreateProject: (name: string) => Project;
   onClose: () => void;
@@ -160,12 +148,6 @@ export function DestinationSheet({
       assemblies: assemblies.map((entry) =>
         asRow(entry, t("saveTo.partsCount", { count: entry.parts.length })),
       ),
-      templates: templates.map((template) => ({
-        id: template.id,
-        name: template.name,
-        meta: t("saveTo.templateItems", { count: template.items.length }),
-        updatedAt: template.updatedAt,
-      })),
       projects: projects.map((project) => ({
         id: project.id,
         name: project.name,
@@ -173,7 +155,7 @@ export function DestinationSheet({
         updatedAt: project.updatedAt,
       })),
     };
-  }, [parts, assemblies, templates, projects, t]);
+  }, [parts, assemblies, projects, t]);
 
   const pool = useMemo(() => (def ? rowsFor[def.id] : []), [def, rowsFor]);
 
@@ -218,20 +200,12 @@ export function DestinationSheet({
         onAddToProject(onCreateProject(trimmedName).id);
         return;
       }
-      if (def.id === "templates") {
-        onSaveAsTemplate(trimmedName);
-        return;
-      }
       onSaveNew(trimmedName || subject.defaultName, def.id === "assemblies");
       return;
     }
     if (!chosen) return;
     if (def.id === "projects") {
       onAddToProject(chosen.id);
-      return;
-    }
-    if (def.id === "templates") {
-      onAppendToTemplate(chosen.id);
       return;
     }
     onAppendTo(chosen.id);
