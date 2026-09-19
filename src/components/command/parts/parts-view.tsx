@@ -398,18 +398,21 @@ export function PartsView({
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
 
-  const parts = useMemo(() => saved.filter((entry) => !isAssembly(entry)), [saved]);
-  const assemblies = useMemo(() => saved.filter(isAssembly), [saved]);
-  // The standards that ship with the app. They are assemblies like any other,
-  // so they are in "all" and "assemblies" too — this chip is for when you want
-  // only them, or only your own work.
+  // The standards that ship with the app are library entries like any other,
+  // but they are not the user's work: mixing them into "all" would mean a
+  // library that is never empty, no empty state to teach the Save button
+  // with, and counts that overstate what you have actually kept. They get a
+  // chip of their own instead.
+  const own = useMemo(() => saved.filter((entry) => !entry.isBuiltin), [saved]);
   const standards = useMemo(() => saved.filter((entry) => entry.isBuiltin), [saved]);
+  const parts = useMemo(() => own.filter((entry) => !isAssembly(entry)), [own]);
+  const assemblies = useMemo(() => own.filter(isAssembly), [own]);
   const scope = useMemo(() => {
     if (filter === "parts") return parts;
     if (filter === "assemblies") return assemblies;
     if (filter === "standards") return standards;
-    return saved;
-  }, [filter, saved, parts, assemblies, standards]);
+    return own;
+  }, [filter, own, parts, assemblies, standards]);
 
   const tags = useMemo(() => collectSavedTags(scope), [scope]);
   const visible = useMemo(() => filterSortSaved(scope, query), [scope, query]);
@@ -462,7 +465,7 @@ export function PartsView({
       <FilterChip
         active={filter === "all"}
         label={t("parts.filters.all")}
-        count={saved.length}
+        count={own.length}
         onClick={() => setFilter("all")}
       />
       <FilterChip
@@ -523,7 +526,7 @@ export function PartsView({
             }}
           >
             {t("parts.showAll")}
-            <span className="font-mono text-[11px]">{saved.length}</span>
+            <span className="font-mono text-[11px]">{own.length}</span>
           </button>
         ) : (
           actions.onNew && (

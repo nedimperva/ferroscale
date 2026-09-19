@@ -1,9 +1,16 @@
 import { test, expect } from "@playwright/test";
 
+/**
+ * A share link carrying the query these tests used to get for free: the app
+ * seeded a demo line on every visit until the clean-slate onboarding landed,
+ * and a pristine screen has no live result to measure.
+ */
+const DEMO_LINK = "/en?q=hea120+6m+x2";
+
 // Desktop Chrome (1280px) renders the wide two-pane command workspace.
 test.describe("Command bar", () => {
   test("loads with the demo query and a live result", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.getByText("hea120", { exact: true })).toBeVisible();
     await expect(page.getByText(/kg\/m ×/).first()).toBeVisible();
@@ -157,7 +164,7 @@ test.describe("Phone fold (390x844)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test("the whole screen fits without scrolling", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     const fits = await page.evaluate(
       () => document.documentElement.scrollHeight <= window.innerHeight,
@@ -166,7 +173,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("the fold carries hero, session ribbon, query line and keypad at once", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.getByText("Breakdown", { exact: false }).first()).toBeVisible();
     await expect(page.getByText("SESSION", { exact: true }).first()).toBeVisible();
@@ -176,7 +183,7 @@ test.describe("Phone fold (390x844)", () => {
   test("the keypad sits flush on the bottom edge, with no band of screen under it", async ({
     page,
   }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // The shell used to size its column with `100dvh` inside a `fixed inset-0`
     // parent; where the two disagree the keys float above a strip of screen
@@ -188,7 +195,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("the suggestion strip stays one row, whatever the stage offers", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // Wrapping to a second row made the strip's height depend on the chip
     // count, and the overflow was clipped by the query line beneath it.
@@ -198,7 +205,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("the suggestion chips clear the query line's focus ring", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // The query line draws a 3px ring outside its border box. At the old
     // 6px gap the chips sat on that glow and the two read as one collided
@@ -293,8 +300,8 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("filling the session doesn't move anything", async ({ page }) => {
-    const ribbon = () => page.getByText("SESSION", { exact: true }).locator("..");
-    await page.goto("/en");
+    const ribbon = () => page.locator("[data-session-ribbon]");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     const empty = await ribbon().boundingBox();
 
@@ -306,7 +313,7 @@ test.describe("Phone fold (390x844)", () => {
         JSON.stringify(["ipe200 4m x3", "rnd20 3m x5", "shs40x40x3 6m x8", "hea120 6m x2"]),
       );
     });
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     const full = await ribbon().boundingBox();
 
@@ -315,7 +322,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("every library tab label is readable, not clipped", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Parts" }).click();
@@ -460,7 +467,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
   test("a live line shows New / Tweak / Share, not the letter pad", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "actions");
     await expect(page.getByRole("button", { name: "New", exact: true })).toBeVisible();

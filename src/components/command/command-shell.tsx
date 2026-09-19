@@ -208,6 +208,13 @@ export function CommandShell() {
   const assembliesInLibrary = useMemo(() => libraryAssemblies(savedEntries), [savedEntries]);
 
   const [query, setQuery] = useState("");
+  /**
+   * Whether the line that this visit starts on is settled. A `?q=` share link
+   * and the last query this device ran are both applied in an effect, so the
+   * first paint always has an empty bar — and anything that only shows on an
+   * empty bar would flash before the line arrived.
+   */
+  const [queryHydrated, setQueryHydrated] = useState(false);
   // The URL only mirrors the query once the user has entered a calculation
   // (or arrived via a share link) — a pristine visit keeps a clean URL.
   const touchedRef = useRef(false);
@@ -513,6 +520,7 @@ export function CommandShell() {
           window.localStorage.setItem(ONBOARDED_KEY, "1");
         } catch { /* noop */ }
       }
+      setQueryHydrated(true);
       return;
     }
     setQuery(`${sharedQuery} `);
@@ -526,6 +534,7 @@ export function CommandShell() {
       sharedCalcSettingsStore.update(linkPricing);
       showToast(t("toast.linkPricingApplied"));
     }
+    setQueryHydrated(true);
   }, [showToast, t]);
 
   // Copy the hero metric itself (e.g. "141.2 kg" / "€169.44") — the query
@@ -1522,7 +1531,10 @@ export function CommandShell() {
       return (
         <DestinationSheet
           subject={subject}
-          entries={savedEntries.filter((item) => item.id !== entry?.id)}
+          // Only the user's own entries: a standard is not stored until it
+          // is removed, so appending to one would silently do nothing. To
+          // build on a standard you duplicate it first.
+          entries={ownSaved.filter((item) => item.id !== entry?.id)}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
           onAppendTo={appendLineTo}
@@ -1981,8 +1993,17 @@ export function CommandShell() {
               project. Nothing typed is lost by not deciding where it goes,
               which is the point of the tape. */}
           <div
+            data-session-ribbon=""
             className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
-            style={{ padding: "7px 8px 7px 11px", border: "1px dashed var(--border-strong)" }}
+            // A fixed height, because everything on this screen is laid out by
+            // flex spacers: a row that grows when the tape fills pushes the
+            // answer up the screen as you work. Its tallest control is the
+            // 28px "+", so 44 holds it with room either side.
+            style={{
+              height: 44,
+              padding: "0 8px 0 11px",
+              border: "1px dashed var(--border-strong)",
+            }}
           >
             <button
               type="button"
@@ -2046,7 +2067,7 @@ export function CommandShell() {
               device most likely to be held by someone who has never typed
               `hea120` in their life — with nothing but a row of chips. It
               fills the band that was empty on a pristine screen anyway. */}
-          {query.trim() === "" ? (
+          {queryHydrated && query.trim() === "" ? (
             <div className="flex-[2] min-h-0 overflow-y-auto px-[18px] mt-1">
               <ProfileDiscoveryTiles
                 compact
