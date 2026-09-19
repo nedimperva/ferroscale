@@ -2,15 +2,13 @@ import { manualDimensionsToMm, toMillimeters } from "@ferroscale/metal-core";
 import type { CommandSizePreset } from "@ferroscale/metal-core";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { ProfileId } from "@/lib/datasets/types";
-import type { DimensionPreset } from "@/hooks/usePresets";
 import type { SavedEntry } from "@/hooks/useSaved";
 
 /**
- * Size chips used to come from a separate "presets" collection that had a
- * store and a sync slot but no UI. A saved part already is a size (plus a
- * grade and a length). This builds the suggestion callback from Parts, and
- * still folds in any leftover DimensionPreset records so an old synced
- * collection does not vanish.
+ * Size chips come from the library. A saved part already is a size (plus a
+ * grade and a length), so it is the only source here — the separate "presets"
+ * collection this replaced had a store and a sync slot but never a way to
+ * write to it.
  */
 
 const MAX_PER_PROFILE = 6;
@@ -21,15 +19,6 @@ function inputToPreset(input: CalculationInput, label?: string): CommandSizePres
     selectedSizeId: input.selectedSizeId,
     manualDimensionsMm: manualDimensionsToMm(input.manualDimensions),
     lengthValue: toMillimeters(input.length.value, input.length.unit),
-  };
-}
-
-function leftoverToPreset(preset: DimensionPreset): CommandSizePreset {
-  return {
-    label: preset.label,
-    selectedSizeId: preset.selectedSizeId,
-    manualDimensionsMm: preset.manualDimensionsMm,
-    lengthValue: preset.lengthValue,
   };
 }
 
@@ -48,12 +37,11 @@ function usedAt(entry: SavedEntry): number {
 }
 
 /**
- * Ranked size lookup for `cmdSuggest`. Pinned parts first, then most used,
- * then leftover presets. Duplicates (same size id / same dims) collapse.
+ * Ranked size lookup for `cmdSuggest`. Pinned parts first, then most used.
+ * Duplicates (same size id / same dims) collapse.
  */
 export function buildSizePresetLookup(
   saved: SavedEntry[],
-  leftover: DimensionPreset[] = [],
 ): (profileId: ProfileId) => CommandSizePreset[] {
   const ranked: Array<{ profileId: ProfileId; preset: CommandSizePreset }> = [];
 
@@ -75,13 +63,6 @@ export function buildSizePresetLookup(
         ),
       });
     }
-  }
-
-  for (const preset of leftover) {
-    ranked.push({
-      profileId: preset.profileId,
-      preset: leftoverToPreset(preset),
-    });
   }
 
   const byProfile = new Map<ProfileId, CommandSizePreset[]>();

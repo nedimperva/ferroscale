@@ -3,13 +3,11 @@ import {
   getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
-  loadPresets,
   loadPriceBook,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
   persistCompareItems,
-  persistPresets,
   persistPriceBook,
   persistProjects,
   persistQuickHistory,
@@ -81,7 +79,6 @@ export function buildLocalSyncSnapshot(deviceId: string): SyncSnapshotV1 {
     collections: {
       saved: { items: loadSavedEntries() },
       projects: { items: loadProjects() },
-      presets: { items: loadPresets() },
       compare: {
         updatedAt: getCompareUpdatedAt(),
         items: loadCompareItems(),
@@ -106,7 +103,6 @@ export function mergeSnapshots(local: SyncSnapshotV1, remote: SyncSnapshotV1, de
     collections: {
       saved: mergeEntityPayload(local.collections.saved, remote.collections.saved),
       projects: mergeEntityPayload(local.collections.projects, remote.collections.projects),
-      presets: mergeEntityPayload(local.collections.presets, remote.collections.presets),
       compare: mergeListPayload(local.collections.compare, remote.collections.compare),
       quickHistory: mergeListPayload(local.collections.quickHistory, remote.collections.quickHistory),
       priceBook: mergeListPayload(local.collections.priceBook, remote.collections.priceBook),
@@ -117,7 +113,6 @@ export function mergeSnapshots(local: SyncSnapshotV1, remote: SyncSnapshotV1, de
 export function applySnapshotToLocal(snapshot: SyncSnapshotV1): void {
   persistSavedEntries(snapshot.collections.saved.items, { markDirty: false });
   persistProjects(snapshot.collections.projects.items, { markDirty: false });
-  persistPresets(snapshot.collections.presets.items, { markDirty: false });
   persistCompareItems(snapshot.collections.compare.items, {
     markDirty: false,
     updatedAt: snapshot.collections.compare.updatedAt,

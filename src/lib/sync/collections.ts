@@ -4,7 +4,6 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CompareItem } from "@/hooks/useCompare";
-import type { DimensionPreset } from "@/hooks/usePresets";
 import {
   PROJECT_CATEGORIES,
   PROJECT_STATUSES,
@@ -189,25 +188,6 @@ export function normalizeProject(raw: unknown): Project | null {
   };
 }
 
-export function normalizePreset(raw: unknown): DimensionPreset | null {
-  if (!raw || typeof raw !== "object") return null;
-  const candidate = raw as Partial<DimensionPreset>;
-  if (!candidate.id || !candidate.profileId || !candidate.label || !candidate.createdAt) {
-    return null;
-  }
-  return {
-    id: candidate.id,
-    profileId: candidate.profileId,
-    label: candidate.label,
-    manualDimensionsMm: candidate.manualDimensionsMm ?? {},
-    selectedSizeId: candidate.selectedSizeId,
-    lengthValue: candidate.lengthValue,
-    createdAt: candidate.createdAt,
-    updatedAt: candidate.updatedAt ?? new Date(candidate.createdAt).toISOString(),
-    deletedAt: candidate.deletedAt,
-  };
-}
-
 function normalizeCompareItem(raw: unknown): CompareItem | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<CompareItem>;
@@ -231,12 +211,6 @@ export function normalizeProjects(entries: unknown[]): Project[] {
   return entries
     .map((entry) => normalizeProject(entry))
     .filter((entry): entry is Project => Boolean(entry));
-}
-
-export function normalizePresets(entries: unknown[]): DimensionPreset[] {
-  return entries
-    .map((entry) => normalizePreset(entry))
-    .filter((entry): entry is DimensionPreset => Boolean(entry));
 }
 
 export function normalizeCompareItems(entries: unknown[]): CompareItem[] {
@@ -267,15 +241,6 @@ export function loadProjects(): Project[] {
 export function persistProjects(entries: Project[], options?: PersistOptions): void {
   persistToStorage(SYNC_STORAGE_KEYS.projects, entries);
   maybeNotify("projects", options?.markDirty ?? true);
-}
-
-export function loadPresets(): DimensionPreset[] {
-  return normalizePresets(loadArrayFromStorage<unknown>(SYNC_STORAGE_KEYS.presets));
-}
-
-export function persistPresets(entries: DimensionPreset[], options?: PersistOptions): void {
-  persistToStorage(SYNC_STORAGE_KEYS.presets, entries);
-  maybeNotify("presets", options?.markDirty ?? true);
 }
 
 export function loadCompareItems(): CompareItem[] {

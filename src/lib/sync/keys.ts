@@ -22,7 +22,6 @@ export const SYNC_STORAGE_KEYS = {
   saved: "ferroscale-saved-v2",
   savedLegacy: "ferroscale-saved-v1",
   projects: "ferroscale-projects-v2",
-  presets: "ferroscale-presets-v1",
   compare: "ferroscale-compare-v2",
   quickHistory: "ferroscale-quick-history",
   priceBook: "ferroscale-price-book-v1",

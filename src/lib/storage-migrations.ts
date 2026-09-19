@@ -11,9 +11,20 @@ const RENAMES: Array<[oldKey: string, newKey: string]> = [
   ["advanced-calc-compare-limit-v1", "ferroscale-compare-limit-v1"],
 ];
 
+/**
+ * Collections the app no longer has. `presets` was a size-shortcut store with
+ * a sync slot and no way to write to it — a saved part is a size, so the
+ * library does the job. Dropping the key stops it riding along in every
+ * backup and snapshot.
+ */
+const DROPPED: string[] = ["ferroscale-presets-v1"];
+
 export function migrateLegacyStorageKeys(): void {
   if (typeof window === "undefined") return;
   try {
+    for (const key of DROPPED) {
+      localStorage.removeItem(key);
+    }
     for (const [oldKey, newKey] of RENAMES) {
       const value = localStorage.getItem(oldKey);
       if (value !== null) {

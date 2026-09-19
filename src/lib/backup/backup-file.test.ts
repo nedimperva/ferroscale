@@ -105,7 +105,6 @@ describe("backup-file", () => {
       data: {
         saved: [],
         projects: [],
-        presets: [],
         compare: { updatedAt: "2026-08-10T12:00:00.000Z", items: [] },
         quickHistory: { updatedAt: "2026-08-10T12:00:00.000Z", items: ["hea120 6m"] },
         priceBook: { updatedAt: "2026-08-10T12:00:00.000Z", items: [] },
@@ -150,7 +149,6 @@ describe("backup-file", () => {
       data: {
         saved: [],
         projects: [backupProject],
-        presets: [],
         compare: { updatedAt: "2026-08-05T12:00:00.000Z", items: [] },
         quickHistory: { updatedAt: "2026-08-05T12:00:00.000Z", items: [] },
         priceBook: { updatedAt: "2026-08-05T12:00:00.000Z", items: [] },

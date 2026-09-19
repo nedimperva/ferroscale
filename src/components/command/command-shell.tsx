@@ -12,7 +12,6 @@ import { useCompare } from "@/hooks/useCompare";
 import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
-import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
@@ -149,7 +148,7 @@ export function CommandShell() {
     defaultUnitStore.getServerSnapshot,
   );
 
-  // App-wide libraries (saves, compare, projects, presets).
+  // App-wide libraries (saves, compare, projects).
   const {
     saved: savedEntries,
     saveCalculation,
@@ -198,7 +197,6 @@ export function CommandShell() {
     updateCalculationNote,
     updateProjectPaintCoats,
   } = useProjects();
-  const { presets } = usePresets();
   const priceBook = usePriceBook();
   // The save overlay offers the template library as a destination, so the
   // shell holds an instance too. Writes go through disk (see the hook), and
@@ -451,11 +449,11 @@ export function CommandShell() {
 
   // `p` is handed over so the suggestion engine doesn't parse the same query
   // a second time on every keystroke.
-  // Parts are the size presets. A leftover DimensionPreset collection still
-  // folds in so old synced data is not dropped; nothing new is written there.
+  // Library entries are the size suggestions: a saved part already is a size,
+  // a grade and a length, so nothing else has to store one.
   const sizePresetsForProfile = useMemo(
-    () => buildSizePresetLookup(savedEntries, presets),
-    [savedEntries, presets],
+    () => buildSizePresetLookup(savedEntries),
+    [savedEntries],
   );
   const sug = useMemo(
     () => cmdSuggest(activeQuery, parserSettings, sizePresetsForProfile, usageSource, p),
