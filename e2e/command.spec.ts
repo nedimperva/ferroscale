@@ -321,6 +321,68 @@ test.describe("Phone fold (390x844)", () => {
     expect(full!.y).toBe(empty!.y);
   });
 
+  test("the save control says its whole label, not a letter", async ({ page }) => {
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // Four equal-width buttons left the one control with words on it about
+    // 60px, and "Save" came out as "S". It takes the row now; the rest are
+    // icons.
+    const clipped = await page.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll("button")).find((b) =>
+        /^(Save|Saved|Add to )/.test(b.getAttribute("title") ?? ""),
+      );
+      const span = btn?.querySelector("span");
+      if (!span) return "no save control";
+      return span.scrollWidth > span.clientWidth + 1 ? span.textContent : null;
+    });
+    expect(clipped).toBeNull();
+  });
+
+  test("a pristine screen leads with the profile tiles, at a usable size", async ({ page }) => {
+    await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    const tiles = page.locator("[data-testid=\"profile-discovery\"]");
+    await expect(tiles).toBeVisible();
+    // They used to queue below a hero full of placeholder dashes, which on
+    // this screen left them about enough room for their own heading.
+    const box = await tiles.boundingBox();
+    expect(box!.height).toBeGreaterThan(260);
+    await expect(page.getByRole("button", { name: /Beams/ })).toBeVisible();
+  });
+
+  test("nothing on the session row overlaps anything else", async ({ page }) => {
+    await page.addInitScript(() => {
+      const now = new Date().toISOString();
+      localStorage.setItem(
+        "ferroscale-projects-v2",
+        JSON.stringify([
+          { id: "p1", name: "Mezzanine handrail, west stair", createdAt: now, updatedAt: now, calculations: [] },
+        ]),
+      );
+      localStorage.setItem("ferroscale-current-project", "p1");
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["ipe200 4m x3", "shs40x40x3 6m x8"]),
+      );
+    });
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // The total and the "→ project" button are both nowrap: the row used to
+    // let them draw over one another rather than give way.
+    const escaped = await page.evaluate(() => {
+      const row = document.querySelector("[data-session-ribbon]");
+      if (!row) return ["no ribbon"];
+      const r = row.getBoundingClientRect();
+      return Array.from(row.querySelectorAll("*"))
+        .filter((el) => {
+          const b = el.getBoundingClientRect();
+          return b.right > r.right + 1 || b.left < r.left - 1;
+        })
+        .map((el) => el.textContent?.slice(0, 20) ?? "");
+    });
+    expect(escaped).toEqual([]);
+  });
+
   test("every library tab label is readable, not clipped", async ({ page }) => {
     await page.goto(DEMO_LINK);
     await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));

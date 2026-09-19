@@ -20,6 +20,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.27.0",
     date: "2026-09-19",
     changed: [
+      "On a phone the save control takes the action row and the rest are icons. Four equal buttons left the one control with words on it about 60px to say them in, and \"Save\" came out as a bookmark and the letter S",
+      "A pristine phone screen leads with the profile tiles. They used to queue below a hero full of placeholder dashes — a mode switch, a \"—\", a \"—/pc\" strip and four disabled buttons — which left them about enough room for their own heading",
       "One save control, not four. A bookmark toggle, an \"Add to project\" button and a \"Save to…\" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do (\"Add to Gate job\", or \"Save\"), and its caret opens everywhere else",
       "The destination picker is one list. It used to ask what kind of thing first — four rows, each with its own nested list — then which one: two steps on a phone, a rail beside a scroller on a desktop. Now every project and every library entry is in one flat list, newest first, one press to file. Type to filter, arrow keys and Enter to drive it, and the search field has focus when it opens",
       "The app remembers which job you are working out of. File something into a project and the calculator's primary action names that project until you file somewhere else — including after turning a session tape into one",
@@ -35,6 +37,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
     ],
     fixed: [
+      "The session row let its total draw over the button beside it on a phone, instead of giving way",
       "Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now",
       "Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part",
       "On a phone, opening a share link flashed the profile tiles for a frame before the line arrived",
@@ -43,6 +46,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
     ],
     changed_bs: [
+      "Na telefonu kontrola za čuvanje zauzima red radnji, a ostalo su ikone. Četiri jednaka dugmeta ostavljala su jedinoj kontroli s riječima oko 60px, pa je „Sačuvaj\" ispalo kao oznaka i slovo S",
+      "Prazan ekran telefona počinje pločicama profila. Prije su bile stisnute ispod zaglavlja punog praznih crtica",
       "Jedna kontrola za čuvanje umjesto četiri. Prekidač oznake, dugme „Dodaj u projekat\" i stavka „Sačuvaj u…\" skrivena u meniju — sve je izgledalo kao čuvanje i sve je značilo nešto drugo. Sada postoji jedno dugme, isto na oba ekrana: riječima kaže šta će uraditi („Dodaj u Kapija\" ili „Sačuvaj\"), a strelica otvara sve ostalo",
       "Izbor odredišta je jedna lista. Prije se prvo pitalo koja vrsta — četiri reda, svaki sa svojom ugniježđenom listom — pa tek onda koja tačno. Sada su svi projekti i sve stavke biblioteke u jednoj listi, najnovije prvo, jedan pritisak. Kucajte za filtriranje, strelice i Enter za kretanje",
       "Aplikacija pamti na kojem poslu radite. Nakon što nešto pošaljete u projekat, glavna akcija kalkulatora imenuje taj projekat dok ne pošaljete negdje drugdje",
@@ -58,6 +63,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
     ],
     fixed_bs: [
+      "Red sesije je na telefonu dozvoljavao da ukupna težina prelazi preko dugmeta pored, umjesto da se skrati",
       "Šabloni sklopova se nikada nisu sinhronizovali — skladište se označavalo izmijenjenim, a ništa se nije slalo",
       "Dodavanje reza sačuvanom dijelu bilježi da je to sklop, pa ga uklanjanje dijela ne vraća tiho u običan dio",
       "Na telefonu je otvaranje dijeljene veze na trenutak prikazivalo pločice profila prije nego što stigne linija",

@@ -476,7 +476,6 @@
       "newProjectName": "New project name...",
       "emptyProjects": "No projects yet. Create one above, or tap + Project on a result.",
       "emptyProject": "Empty project",
-      "calcCount": "{count, plural, one {# calc} other {# calcs}}",
       "noCalculationsYet": "No calculations yet.",
       "noProjectsCreateAbove": "No projects yet. Create one above to get started.",
       "newProject": "New project",
@@ -505,7 +504,8 @@
       "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
       "saveAsProject": "Save as project",
       "anotherItem": "+ item",
-      "anotherItemAria": "Add another item to the line"
+      "anotherItemAria": "Add another item to the line",
+      "saveSessionAsProjectShort": "→ PROJECT"
     },
     "suggest": {
       "standardSize": "standard size",

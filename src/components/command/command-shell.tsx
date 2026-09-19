@@ -77,6 +77,7 @@ import {
   type CommandKeypadOverride,
 } from "./keypad-layout";
 import { CommandDesktop } from "./desktop/command-desktop";
+import { DeskIcon } from "./desktop/desk-atoms";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import type { ProjectActions } from "./projects/project-actions";
 import { CommandResultSheet } from "./sheets/result-sheet";
@@ -1724,367 +1725,470 @@ export function CommandShell() {
             </div>
           </div>
 
-          {/* Free height is split above and below the answer instead of all of
-              it falling below. On a 390x844 phone roughly a third of the screen
-              sat empty between the session ribbon and the suggestion strip
-              while the figure was pinned to the very top — the hardest place to
-              reach one-handed. Both spacers are flex-1, so on a short screen
-              they collapse and nothing moves. The split is weighted 1:2 so the
-              answer lands in the upper third rather than dead centre — still
-              the first thing you see, but within reach of a thumb. */}
-          <div className="flex-[1] min-h-0" />
+          {/*
+            A pristine bar has no answer to show, so the whole top of this
+            screen — the mode switch, the figure, the per-piece strip, four
+            disabled actions — is placeholders: a dash, a dash, "—/pc", and
+            buttons that do nothing. The tiles were squeezed in underneath
+            all of it by a flex spacer, which on a 390x844 phone with the
+            keypad up left them about enough room for their own heading.
 
-          {/* HERO */}
-          <div className="px-[18px] pt-1.5 flex-shrink-0">
-            {/* The mode switch rides in the hero's label row rather than taking
-                a full-width row of its own — the fold's single biggest saving. */}
-            <div className="flex items-center justify-between mb-0.5">
-              {/* Names the metric rather than the mode — the highlighted pill
-                  already says which mode is on. */}
-              <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
-                {isW ? t("preview.totalWeight") : t("preview.totalCost")}
-              </span>
-              <div className="flex gap-1">
-                {(["weight", "price"] as const).map((m) => {
-                  const active = mode === m;
-                  const isWeight = m === "weight";
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setModeOverride(m)}
-                      aria-pressed={active}
-                      className="fs-track-label rounded-none text-[10.5px] font-bold"
-                      style={{
-                        // 5px of vertical padding puts the control at 25px, over
-                        // the 24px floor in WCAG 2.5.8. It measured 23px.
-                        padding: "5px 12px",
-                        border: active
-                          ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
-                          : "1px solid var(--border-faint)",
-                        background: active
-                          ? isWeight
-                            ? "var(--accent-surface)"
-                            : "var(--blue-surface)"
-                          : "transparent",
-                        color: active
-                          ? isWeight
-                            ? "var(--accent-text)"
-                            : "var(--blue-text)"
-                          : "var(--muted)",
-                      }}
-                    >
-                      {/* Same words as the desktop toggle — the concept is
-                          one, so the label is one (KG/€ read as units). */}
-                      {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={!p.valid}
-              onClick={() => p.valid && setSheet("result")}
-              aria-haspopup="dialog"
-              aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-              className="block w-full text-left p-0 m-0 bg-transparent border-0"
-              style={{ cursor: p.valid ? "pointer" : "default" }}
-            >
-              <div className="flex items-baseline gap-2">
-                {!isW && p.totalAmount != null && (
-                  <span
-                    className="font-mono text-[30px] leading-none"
-                    style={{
-                      color: "var(--muted)",
-                      fontWeight: HERO_FONT_WEIGHT,
-                    }}
-                  >
-                    {sym}
-                  </span>
-                )}
-                <span
-                  className="font-mono leading-[0.88] tracking-[-2.8px] fs-display-num"
-                  style={{
-                    fontSize: 56,
-                    fontWeight: HERO_FONT_WEIGHT,
-                    color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
-                  }}
-                >
-                  {heroVal}
-                </span>
-                {isW && p.totalKg != null && (
-                  <span
-                    className="font-mono text-[20px]"
-                    // The hero unit is 20-22px at a normal weight, which WCAG
-                    // does not count as large text, so it needs the 4.5:1 token
-                    // rather than the 4.33:1 signal colour.
-                    style={{ color: "var(--accent-text)" }}
-                  >
-                    {fsWeightUnit()}
-                  </span>
-                )}
-                {band && (
-                  <span
-                    className="fs-track-wide font-mono text-[11px] text-muted self-end pb-2 ml-1"
-                    >
-                    {band.percentLabel}
-                  </span>
-                )}
-                {p.valid && (
-                  <span className="ml-auto self-center text-muted-faint">
-                    <Chev />
-                  </span>
-                )}
-              </div>
-            </button>
-
-            <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
-              {line.multi ? (
-                <span className="font-mono text-[12px] text-muted">
-                  {t("result.assembly", { count: line.items.length })}
-                </span>
-              ) : p.valid && p.kgm != null ? (
-                <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
-                  <span>
-                    <span className="text-foreground-secondary">
-                      {p.kgm.toFixed(2)}
-                    </span>{" "}
-                    kg/m ×{" "}
-                    <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
-                    m × <span className="text-foreground-secondary">{p.realQty}</span>
-                    {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
-                    {/* The assumption travels with the figure — see the
-                        workspace hero for why. */}
-                    {mode === "price" && !rateIsUserSupplied
-                      ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
-                      : ""}
-                  </span>
-                  {p.availability && (
-                    <AvailabilityBadge>
-                      {formatAvailability(t, p.availability, p.gradeLabel).badge}
-                    </AvailabilityBadge>
-                  )}
-                  {targetNote && (
-                    <TargetBadge>
-                      {t(
-                        `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
-                        { target: targetNote.target },
-                      )}
-                      {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
-                    </TargetBadge>
-                  )}
-                  {!isW && p.pricing.wastePercent > 0 && (
-                    <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
-                  )}
-                  {!isW && p.pricing.includeVat && (
-                    <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
-                  )}
-                </span>
-              ) : p.issues.length > 0 ? (
-                <span
-                  className="fs-drop font-mono text-[12px] flex items-center gap-2 flex-wrap"
-                  style={{ color: "var(--amber-text)" }}
-                  role="status"
-                >
-                  <span>{formatCommandIssue(t, p.issues[0])}</span>
-                  {p.issues[0].suggestion && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setQuery(
-                          applyIssueSuggestion(
-                            query,
-                            p.issues[0].token,
-                            p.issues[0].suggestion!,
-                          ),
-                        );
-                        // no-op on phone: the keypad owns the caret
-                      }}
-                      className="rounded-none font-bold"
-                      style={{
-                        padding: "2px 9px",
-                        background: "var(--accent-surface)",
-                        color: "var(--accent-text)",
-                        border: "1px solid var(--accent-border)",
-                      }}
-                    >
-                      {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
-                    </button>
-                  )}
-                </span>
-              ) : (
-                <span className="font-mono text-[12px] text-muted-faint">
-                  {p.alias
-                    ? p.hasSize
-                      ? t("hint.addLength")
-                      : t("hint.addSize")
-                    : t("hint.startProfile")}
-                </span>
-              )}
-              <span className="ml-auto flex items-center gap-1.5">
-                <span
-                  className="w-1.5 h-1.5"
-                  style={{
-                    background: p.valid ? "var(--accent)" : "var(--muted-faint)",
-                  }}
-                />
-                <span
-                  className="font-mono text-[10px] uppercase"
-                  style={{
-                    letterSpacing: 1.6,
-                    color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
-                  }}
-                >
-                  {p.valid ? t("status.live") : t("status.waiting")}
-                </span>
-              </span>
-            </div>
-
-            <MetricStrip
-              p={p}
-              isWeight={isW}
-              sym={sym}
-              onOpen={() => p.valid && setSheet("result")}
-            />
-
-            <div className="flex gap-1.5 mt-2">
-              {/* The same control the workspace has, at phone sizes. */}
-              <div className="flex-1 min-w-0">
-                <SaveControl
+            So when there is nothing to show, the way in takes the space
+            instead of queueing behind it. The tape only appears if it has
+            something on it; an empty one was another dash.
+          */}
+          {queryHydrated && query.trim() === "" ? (
+            <>
+              <div className="flex-1 min-h-0 overflow-y-auto px-[18px] pt-2">
+                <ProfileDiscoveryTiles
                   compact
-                  projectName={currentProject?.name ?? null}
-                  saved={!!currentSavedEntry}
-                  disabled={!p.calc}
-                  onPrimary={primarySave}
-                  onOpenPicker={openDestinations}
+                  hideTitle
+                  onSelectProfile={(prefix) => {
+                    haptic("tap");
+                    setQuery(prefix);
+                    markExternalValueChange();
+                  }}
+                  onTryDemo={() => {
+                    haptic("tap");
+                    setQuery(DEMO_QUERY);
+                    markExternalValueChange();
+                  }}
                 />
               </div>
-              <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
-              <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
-              {/* The fold doesn't draw this, but without it the phone can only
-                  view a multi-item line, never start one. */}
+              {sessionSummary.count > 0 && (
+                <>
+            {/* SESSION RIBBON — the tape, at phone size. It carries the same two
+                actions the workspace pane does: open it, or turn it into a
+                project. Nothing typed is lost by not deciding where it goes,
+                which is the point of the tape. */}
+            <div
+              data-session-ribbon=""
+              className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
+              // A fixed height, because everything on this screen is laid out by
+              // flex spacers: a row that grows when the tape fills pushes the
+              // answer up the screen as you work. Its tallest control is the
+              // 28px "+", so 44 holds it with room either side.
+              style={{
+                height: 44,
+                padding: "0 8px 0 11px",
+                border: "1px dashed var(--border-strong)",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => {
-                  haptic("tap");
-                  setQuery((q) => cmdAppendLineItem(q));
+                  setLibraryTab("session");
+                  setSheet("library");
                 }}
-                disabled={!p.valid}
-                aria-label={t("suggest.addItem")}
-                className="flex items-center justify-center rounded-button text-[16px] font-bold leading-none"
+                aria-label={t("aria.openSession")}
+                // overflow-hidden, because the figure and the label inside are
+                // both nowrap: without it a long total simply drew over the
+                // button to its right instead of giving way.
+                className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden bg-transparent border-0 p-0 text-left cursor-pointer"
+              >
+                <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+                  {t("desktop.session")}
+                </h2>
+                {/* The total in whichever unit the hero is showing, then how many
+                    lines it came from. Showing weight and money side by side made
+                    the row two lines tall as soon as the session had anything in
+                    it, and truncating a number mid-digit is worse than omitting
+                    it — the full breakdown is one tap away. */}
+                <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
+                  {sessionSummary.count === 0
+                    ? "—"
+                    : isW
+                      ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                      : `${sym}${fsMoney(sessionSummary.amount)}`}
+                </span>
+                {/* No line count here. It only ever had a value when the
+                    "→ project" button was showing too, and the two together do
+                    not fit a 390px row — it came out as "2 c…". The count is
+                    on the session tab, one tap away. */}
+              </button>
+              {sessionSummary.count > 0 && (
+                <button
+                  type="button"
+                  onClick={saveSessionAsProject}
+                  className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
+                  style={{ padding: "6px 7px", color: "var(--accent-text)" }}
+                >
+                  {t("desktop.saveSessionAsProjectShort")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={logToSession}
+                aria-label={t("aria.addToSession")}
+                className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
                 style={{
-                  width: 44,
-                  height: 44,
-                  border: "1px dashed var(--border-strong)",
-                  background: "transparent",
-                  color: "var(--muted)",
-                  opacity: p.valid ? 1 : 0.4,
+                  width: 28,
+                  height: 28,
+                  border: "1px solid var(--accent-border)",
+                  background: "var(--accent-surface)",
+                  color: "var(--accent-text)",
                 }}
               >
                 +
               </button>
             </div>
-          </div>
 
-          {/* SESSION RIBBON — the tape, at phone size. It carries the same two
-              actions the workspace pane does: open it, or turn it into a
-              project. Nothing typed is lost by not deciding where it goes,
-              which is the point of the tape. */}
-          <div
-            data-session-ribbon=""
-            className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
-            // A fixed height, because everything on this screen is laid out by
-            // flex spacers: a row that grows when the tape fills pushes the
-            // answer up the screen as you work. Its tallest control is the
-            // 28px "+", so 44 holds it with room either side.
-            style={{
-              height: 44,
-              padding: "0 8px 0 11px",
-              border: "1px dashed var(--border-strong)",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setLibraryTab("session");
-                setSheet("library");
-              }}
-              aria-label={t("aria.openSession")}
-              className="flex items-center gap-2.5 min-w-0 flex-1 bg-transparent border-0 p-0 text-left cursor-pointer"
-            >
-              <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
-                {t("desktop.session")}
-              </h2>
-              {/* The total in whichever unit the hero is showing, then how many
-                  lines it came from. Showing weight and money side by side made
-                  the row two lines tall as soon as the session had anything in
-                  it, and truncating a number mid-digit is worse than omitting
-                  it — the full breakdown is one tap away. */}
-              <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
-                {sessionSummary.count === 0
-                  ? "—"
-                  : isW
-                    ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
-                    : `${sym}${fsMoney(sessionSummary.amount)}`}
-              </span>
-              <span className="font-mono text-[11.5px] text-muted truncate min-w-0">
-                {sessionSummary.count > 0
-                  ? t("library.calcCount", { count: sessionSummary.count })
-                  : ""}
-              </span>
-            </button>
-            {sessionSummary.count > 0 && (
+            {/* The visual way in, on the surface that has no text field at all.
+                It shipped to the workspace only, which left the phone — the
+                device most likely to be held by someone who has never typed
+                `hea120` in their life — with nothing but a row of chips. It
+                fills the band that was empty on a pristine screen anyway. */}
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Free height is split above and below the answer instead of
+                  all of it falling below. On a 390x844 phone roughly a third
+                  of the screen sat empty between the session ribbon and the
+                  suggestion strip while the figure was pinned to the very
+                  top — the hardest place to reach one-handed. Both spacers
+                  are flex, so on a short screen they collapse and nothing
+                  moves. The split is weighted 1:2 so the answer lands in the
+                  upper third rather than dead centre. */}
+              <div className="flex-[1] min-h-0" />
+            {/* HERO */}
+            <div className="px-[18px] pt-1.5 flex-shrink-0">
+              {/* The mode switch rides in the hero's label row rather than taking
+                  a full-width row of its own — the fold's single biggest saving. */}
+              <div className="flex items-center justify-between mb-0.5">
+                {/* Names the metric rather than the mode — the highlighted pill
+                    already says which mode is on. */}
+                <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+                  {isW ? t("preview.totalWeight") : t("preview.totalCost")}
+                </span>
+                <div className="flex gap-1">
+                  {(["weight", "price"] as const).map((m) => {
+                    const active = mode === m;
+                    const isWeight = m === "weight";
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setModeOverride(m)}
+                        aria-pressed={active}
+                        className="fs-track-label rounded-none text-[10.5px] font-bold"
+                        style={{
+                          // 5px of vertical padding puts the control at 25px, over
+                          // the 24px floor in WCAG 2.5.8. It measured 23px.
+                          padding: "5px 12px",
+                          border: active
+                            ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
+                            : "1px solid var(--border-faint)",
+                          background: active
+                            ? isWeight
+                              ? "var(--accent-surface)"
+                              : "var(--blue-surface)"
+                            : "transparent",
+                          color: active
+                            ? isWeight
+                              ? "var(--accent-text)"
+                              : "var(--blue-text)"
+                            : "var(--muted)",
+                        }}
+                      >
+                        {/* Same words as the desktop toggle — the concept is
+                            one, so the label is one (KG/€ read as units). */}
+                        {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <button
                 type="button"
-                onClick={saveSessionAsProject}
-                className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
-                style={{ padding: "6px 7px", color: "var(--accent-text)" }}
+                disabled={!p.valid}
+                onClick={() => p.valid && setSheet("result")}
+                aria-haspopup="dialog"
+                aria-label={p.valid ? t("aria.openBreakdown") : undefined}
+                className="block w-full text-left p-0 m-0 bg-transparent border-0"
+                style={{ cursor: p.valid ? "pointer" : "default" }}
               >
-                {t("desktop.saveSessionAsProject")}
+                <div className="flex items-baseline gap-2">
+                  {!isW && p.totalAmount != null && (
+                    <span
+                      className="font-mono text-[30px] leading-none"
+                      style={{
+                        color: "var(--muted)",
+                        fontWeight: HERO_FONT_WEIGHT,
+                      }}
+                    >
+                      {sym}
+                    </span>
+                  )}
+                  <span
+                    className="font-mono leading-[0.88] tracking-[-2.8px] fs-display-num"
+                    style={{
+                      fontSize: 56,
+                      fontWeight: HERO_FONT_WEIGHT,
+                      color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
+                    }}
+                  >
+                    {heroVal}
+                  </span>
+                  {isW && p.totalKg != null && (
+                    <span
+                      className="font-mono text-[20px]"
+                      // The hero unit is 20-22px at a normal weight, which WCAG
+                      // does not count as large text, so it needs the 4.5:1 token
+                      // rather than the 4.33:1 signal colour.
+                      style={{ color: "var(--accent-text)" }}
+                    >
+                      {fsWeightUnit()}
+                    </span>
+                  )}
+                  {band && (
+                    <span
+                      className="fs-track-wide font-mono text-[11px] text-muted self-end pb-2 ml-1"
+                      >
+                      {band.percentLabel}
+                    </span>
+                  )}
+                  {p.valid && (
+                    <span className="ml-auto self-center text-muted-faint">
+                      <Chev />
+                    </span>
+                  )}
+                </div>
               </button>
-            )}
-            <button
-              type="button"
-              onClick={logToSession}
-              aria-label={t("aria.addToSession")}
-              className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
+
+              <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
+                {line.multi ? (
+                  <span className="font-mono text-[12px] text-muted">
+                    {t("result.assembly", { count: line.items.length })}
+                  </span>
+                ) : p.valid && p.kgm != null ? (
+                  <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      <span className="text-foreground-secondary">
+                        {p.kgm.toFixed(2)}
+                      </span>{" "}
+                      kg/m ×{" "}
+                      <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
+                      m × <span className="text-foreground-secondary">{p.realQty}</span>
+                      {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                      {/* The assumption travels with the figure — see the
+                          workspace hero for why. */}
+                      {mode === "price" && !rateIsUserSupplied
+                        ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
+                        : ""}
+                    </span>
+                    {p.availability && (
+                      <AvailabilityBadge>
+                        {formatAvailability(t, p.availability, p.gradeLabel).badge}
+                      </AvailabilityBadge>
+                    )}
+                    {targetNote && (
+                      <TargetBadge>
+                        {t(
+                          `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                          { target: targetNote.target },
+                        )}
+                        {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
+                      </TargetBadge>
+                    )}
+                    {!isW && p.pricing.wastePercent > 0 && (
+                      <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
+                    )}
+                    {!isW && p.pricing.includeVat && (
+                      <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
+                    )}
+                  </span>
+                ) : p.issues.length > 0 ? (
+                  <span
+                    className="fs-drop font-mono text-[12px] flex items-center gap-2 flex-wrap"
+                    style={{ color: "var(--amber-text)" }}
+                    role="status"
+                  >
+                    <span>{formatCommandIssue(t, p.issues[0])}</span>
+                    {p.issues[0].suggestion && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuery(
+                            applyIssueSuggestion(
+                              query,
+                              p.issues[0].token,
+                              p.issues[0].suggestion!,
+                            ),
+                          );
+                          // no-op on phone: the keypad owns the caret
+                        }}
+                        className="rounded-none font-bold"
+                        style={{
+                          padding: "2px 9px",
+                          background: "var(--accent-surface)",
+                          color: "var(--accent-text)",
+                          border: "1px solid var(--accent-border)",
+                        }}
+                      >
+                        {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
+                      </button>
+                    )}
+                  </span>
+                ) : (
+                  <span className="font-mono text-[12px] text-muted-faint">
+                    {p.alias
+                      ? p.hasSize
+                        ? t("hint.addLength")
+                        : t("hint.addSize")
+                      : t("hint.startProfile")}
+                  </span>
+                )}
+                <span className="ml-auto flex items-center gap-1.5">
+                  <span
+                    className="w-1.5 h-1.5"
+                    style={{
+                      background: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                    }}
+                  />
+                  <span
+                    className="font-mono text-[10px] uppercase"
+                    style={{
+                      letterSpacing: 1.6,
+                      color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
+                    }}
+                  >
+                    {p.valid ? t("status.live") : t("status.waiting")}
+                  </span>
+                </span>
+              </div>
+
+              <MetricStrip
+                p={p}
+                isWeight={isW}
+                sym={sym}
+                onOpen={() => p.valid && setSheet("result")}
+              />
+
+              {/* The save control takes the row; the other three are icons.
+                  All four used to share the width equally, which left the one
+                  control that has something to say — "Add to Gate job", or even
+                  just "Save" — with about 60px to say it in, and it came out as
+                  a bookmark and the letter S. Compare and Share have glyphs that
+                  carry them; the primary action is the one that needs words. */}
+              <div className="flex gap-1.5 mt-2">
+                <div className="flex-1 min-w-0">
+                  <SaveControl
+                    compact
+                    projectName={currentProject?.name ?? null}
+                    saved={!!currentSavedEntry}
+                    disabled={!p.calc}
+                    onPrimary={primarySave}
+                    onOpenPicker={openDestinations}
+                  />
+                </div>
+                <PhoneIconBtn onClick={doCompare} label={t("nav.compare")}>
+                  <DeskIcon name="compare" size={16} />
+                </PhoneIconBtn>
+                <PhoneIconBtn onClick={shareLink} label={t("common.share")}>
+                  <DeskIcon name="link" size={16} stroke="currentColor" />
+                </PhoneIconBtn>
+                {/* The fold doesn't draw this, but without it the phone can only
+                    view a multi-item line, never start one. */}
+                <PhoneIconBtn
+                  onClick={() => {
+                    haptic("tap");
+                    setQuery((q) => cmdAppendLineItem(q));
+                  }}
+                  disabled={!p.valid}
+                  label={t("suggest.addItem")}
+                  dashed
+                >
+                  <span className="text-[17px] font-bold leading-none">+</span>
+                </PhoneIconBtn>
+              </div>
+            </div>
+
+            {/* SESSION RIBBON — the tape, at phone size. It carries the same two
+                actions the workspace pane does: open it, or turn it into a
+                project. Nothing typed is lost by not deciding where it goes,
+                which is the point of the tape. */}
+            <div
+              data-session-ribbon=""
+              className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
+              // A fixed height, because everything on this screen is laid out by
+              // flex spacers: a row that grows when the tape fills pushes the
+              // answer up the screen as you work. Its tallest control is the
+              // 28px "+", so 44 holds it with room either side.
               style={{
-                width: 28,
-                height: 28,
-                border: "1px solid var(--accent-border)",
-                background: "var(--accent-surface)",
-                color: "var(--accent-text)",
+                height: 44,
+                padding: "0 8px 0 11px",
+                border: "1px dashed var(--border-strong)",
               }}
             >
-              +
-            </button>
-          </div>
-
-          {/* The visual way in, on the surface that has no text field at all.
-              It shipped to the workspace only, which left the phone — the
-              device most likely to be held by someone who has never typed
-              `hea120` in their life — with nothing but a row of chips. It
-              fills the band that was empty on a pristine screen anyway. */}
-          {queryHydrated && query.trim() === "" ? (
-            <div className="flex-[2] min-h-0 overflow-y-auto px-[18px] mt-1">
-              <ProfileDiscoveryTiles
-                compact
-                onSelectProfile={(prefix) => {
-                  haptic("tap");
-                  setQuery(prefix);
-                  markExternalValueChange();
+              <button
+                type="button"
+                onClick={() => {
+                  setLibraryTab("session");
+                  setSheet("library");
                 }}
-                onTryDemo={() => {
-                  haptic("tap");
-                  setQuery(DEMO_QUERY);
-                  markExternalValueChange();
+                aria-label={t("aria.openSession")}
+                // overflow-hidden, because the figure and the label inside are
+                // both nowrap: without it a long total simply drew over the
+                // button to its right instead of giving way.
+                className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden bg-transparent border-0 p-0 text-left cursor-pointer"
+              >
+                <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+                  {t("desktop.session")}
+                </h2>
+                {/* The total in whichever unit the hero is showing, then how many
+                    lines it came from. Showing weight and money side by side made
+                    the row two lines tall as soon as the session had anything in
+                    it, and truncating a number mid-digit is worse than omitting
+                    it — the full breakdown is one tap away. */}
+                <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
+                  {sessionSummary.count === 0
+                    ? "—"
+                    : isW
+                      ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                      : `${sym}${fsMoney(sessionSummary.amount)}`}
+                </span>
+                {/* No line count here. It only ever had a value when the
+                    "→ project" button was showing too, and the two together do
+                    not fit a 390px row — it came out as "2 c…". The count is
+                    on the session tab, one tap away. */}
+              </button>
+              {sessionSummary.count > 0 && (
+                <button
+                  type="button"
+                  onClick={saveSessionAsProject}
+                  className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
+                  style={{ padding: "6px 7px", color: "var(--accent-text)" }}
+                >
+                  {t("desktop.saveSessionAsProjectShort")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={logToSession}
+                aria-label={t("aria.addToSession")}
+                className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
+                style={{
+                  width: 28,
+                  height: 28,
+                  border: "1px solid var(--accent-border)",
+                  background: "var(--accent-surface)",
+                  color: "var(--accent-text)",
                 }}
-              />
+              >
+                +
+              </button>
             </div>
-          ) : (
-            <div className="flex-[2] min-h-[6px]" />
+
+            {/* The visual way in, on the surface that has no text field at all.
+                It shipped to the workspace only, which left the phone — the
+                device most likely to be held by someone who has never typed
+                `hea120` in their life — with nothing but a row of chips. It
+                fills the band that was empty on a pristine screen anyway. */}
+              <div className="flex-[2] min-h-[6px]" />
+            </>
           )}
 
           {/* SUGGESTION BAR */}
@@ -2553,26 +2657,42 @@ function MetricStrip({
 }
 
 /** One of the three equal actions under the hero (Save / Compare / Share). */
-function ActionBtn({
+/**
+ * A 44px square on the phone's action row. Everything beside the save control
+ * is one of these: the row has about 350px and the one control with words on
+ * it needs most of them.
+ */
+function PhoneIconBtn({
   onClick,
-  primary,
+  label,
+  disabled,
+  dashed,
   children,
 }: {
   onClick: () => void;
-  primary?: boolean;
+  label: string;
+  disabled?: boolean;
+  /** The "another item" button, which is an invitation rather than an action. */
+  dashed?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-button text-[12px] font-bold"
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="flex flex-shrink-0 items-center justify-center rounded-button cursor-pointer disabled:cursor-default"
       style={{
+        width: 44,
         height: 44,
-        letterSpacing: 0.4,
-        border: `1px solid ${primary ? "var(--accent-border)" : "var(--border-faint)"}`,
-        background: primary ? "var(--accent-surface)" : "var(--surface)",
-        color: primary ? "var(--accent-text)" : "var(--foreground-secondary)",
+        border: dashed
+          ? "1px dashed var(--border-strong)"
+          : "1px solid var(--border-faint)",
+        background: dashed ? "transparent" : "var(--surface)",
+        color: dashed ? "var(--muted)" : "var(--foreground-secondary)",
+        opacity: disabled ? 0.4 : 1,
       }}
     >
       {children}

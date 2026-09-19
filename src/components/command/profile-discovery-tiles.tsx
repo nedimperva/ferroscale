@@ -54,23 +54,32 @@ export function ProfileDiscoveryTiles({
   onSelectProfile,
   onTryDemo,
   compact,
+  hideTitle,
 }: {
   onSelectProfile: (prefix: string) => void;
   onTryDemo: () => void;
   compact?: boolean;
+  /**
+   * Drop the heading. On the phone the suggestion strip below already says
+   * "pick a profile", and the same sentence twice on one screen is worse than
+   * the tiles going unlabelled — they carry their own names.
+   */
+  hideTitle?: boolean;
 }) {
   const t = useTranslations("command");
 
   return (
     <div className="flex flex-col gap-3 py-2" data-testid="profile-discovery">
-      <div className="flex items-center justify-between">
-        <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
-          {t("discovery.title")}
-        </span>
-        <span className="font-mono text-[10px] text-muted-faint hidden sm:inline">
-          {t("discovery.subtitle")}
-        </span>
-      </div>
+      {!hideTitle && (
+        <div className="flex items-center justify-between">
+          <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+            {t("discovery.title")}
+          </span>
+          <span className="font-mono text-[10px] text-muted-faint hidden sm:inline">
+            {t("discovery.subtitle")}
+          </span>
+        </div>
+      )}
 
       <div
         className={`grid gap-2 ${

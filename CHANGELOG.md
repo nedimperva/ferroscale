@@ -14,6 +14,8 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- On a phone the save control takes the action row and the rest are icons. Four equal buttons left the one control with words on it about 60px to say them in, and "Save" came out as a bookmark and the letter S
+- A pristine phone screen leads with the profile tiles. They used to queue below a hero full of placeholder dashes — a mode switch, a "—", a "—/pc" strip and four disabled buttons — which left them about enough room for their own heading
 - One save control, not four. A bookmark toggle, an "Add to project" button and a "Save to…" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do ("Add to Gate job", or "Save"), and its caret opens everywhere else
 - The destination picker is one list. It used to ask what kind of thing first — four rows, each with its own nested list — then which one: two steps on a phone, a rail beside a scroller on a desktop. Now every project and every library entry is in one flat list, newest first, one press to file. Type to filter, arrow keys and Enter to drive it, and the search field has focus when it opens
 - The app remembers which job you are working out of. File something into a project and the calculator's primary action names that project until you file somewhere else — including after turning a session tape into one
@@ -31,6 +33,7 @@ three and four levels down came up to where they are named.
 
 ### Fixed
 
+- The session row let its total draw over the button beside it on a phone, instead of giving way
 - Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now
 - Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part
 - On a phone, opening a share link flashed the profile tiles for a frame before the line arrived

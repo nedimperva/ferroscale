@@ -476,7 +476,6 @@
       "newProjectName": "Naziv novog projekta...",
       "emptyProjects": "Još nema projekata. Kreirajte jedan iznad ili dodirnite + Projekat na rezultatu.",
       "emptyProject": "Prazan projekat",
-      "calcCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "noCalculationsYet": "Još nema izračuna.",
       "noProjectsCreateAbove": "Još nema projekata. Kreirajte jedan iznad za početak.",
       "newProject": "Novi projekat",
@@ -505,7 +504,8 @@
       "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
       "saveAsProject": "Sačuvaj kao projekat",
       "anotherItem": "+ stavka",
-      "anotherItemAria": "Dodaj još jednu stavku u liniju"
+      "anotherItemAria": "Dodaj još jednu stavku u liniju",
+      "saveSessionAsProjectShort": "→ PROJEKAT"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
