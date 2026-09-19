@@ -17,6 +17,56 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.27.0",
+    date: "2026-09-19",
+    changed: [
+      "One save control, not four. A bookmark toggle, an \"Add to project\" button and a \"Save to…\" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do (\"Add to Gate job\", or \"Save\"), and its caret opens everywhere else",
+      "The destination picker is one list. It used to ask what kind of thing first — four rows, each with its own nested list — then which one: two steps on a phone, a rail beside a scroller on a desktop. Now every project and every library entry is in one flat list, newest first, one press to file. Type to filter, arrow keys and Enter to drive it, and the search field has focus when it opens",
+      "The app remembers which job you are working out of. File something into a project and the calculator's primary action names that project until you file somewhere else — including after turning a session tape into one",
+      "Parts, assemblies and templates are one library. A template was a multi-part saved entry in a store of its own, with its own picker and its own editor buried inside a project. Now an assembly in the library is what you drop into a project, and there is one place to rename, re-cost and delete one",
+      "The material order is a tab of the project, beside Items and Cut plan. \"What do I need to buy\" was a chip inside the cut-plan tab — three levels down, behind a question it is not a sub-question of",
+      "The session tape carries the same weight on both surfaces: the phone's ribbon has \"save as project\" on it rather than two taps inside a sheet, and opening the tape is the whole left side of the row",
+      "The phone's navigation matches the workspace's. One bookmark glyph used to stand for Parts, Projects, Compare and the session tape at once",
+      "The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before"
+    ],
+    added: [
+      "The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life",
+      "An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited",
+      "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
+    ],
+    fixed: [
+      "Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now",
+      "Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part",
+      "On a phone, opening a share link flashed the profile tiles for a frame before the line arrived",
+      "The session ribbon grew as the tape filled, pushing the answer up the screen while you worked",
+      "Overlays opened with focus on their close button — the one control nobody opens an overlay to use",
+      "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
+    ],
+    changed_bs: [
+      "Jedna kontrola za čuvanje umjesto četiri. Prekidač oznake, dugme „Dodaj u projekat\" i stavka „Sačuvaj u…\" skrivena u meniju — sve je izgledalo kao čuvanje i sve je značilo nešto drugo. Sada postoji jedno dugme, isto na oba ekrana: riječima kaže šta će uraditi („Dodaj u Kapija\" ili „Sačuvaj\"), a strelica otvara sve ostalo",
+      "Izbor odredišta je jedna lista. Prije se prvo pitalo koja vrsta — četiri reda, svaki sa svojom ugniježđenom listom — pa tek onda koja tačno. Sada su svi projekti i sve stavke biblioteke u jednoj listi, najnovije prvo, jedan pritisak. Kucajte za filtriranje, strelice i Enter za kretanje",
+      "Aplikacija pamti na kojem poslu radite. Nakon što nešto pošaljete u projekat, glavna akcija kalkulatora imenuje taj projekat dok ne pošaljete negdje drugdje",
+      "Dijelovi, sklopovi i šabloni su jedna biblioteka. Šablon je bio višedijelna sačuvana stavka u vlastitom skladištu, sa vlastitim izborom i vlastitim uređivačem zakopanim u projektu",
+      "Narudžba materijala je kartica projekta, uz Stavke i Plan rezanja, umjesto pločice unutar plana rezanja",
+      "Traka sesije jednako je važna na oba ekrana: telefonska traka ima „sačuvaj kao projekat\" na sebi umjesto dva dodira unutar lista",
+      "Navigacija na telefonu odgovara radnoj površini. Jedna ikona oznake je prije značila Dijelove, Projekte, Poređenje i traku sesije odjednom",
+      "Standardi koji dolaze uz aplikaciju su u biblioteci, pod vlastitom pločicom, a ne samo unutar dijaloga u projektu. Uklanjanje se može poništiti"
+    ],
+    added_bs: [
+      "Vizuelne pločice profila su na telefonu — ekranu koji uopšte nema tekstualno polje",
+      "Sklop nosi djelatnost, sate rada i okov koje projekat nasljeđuje od njega, uredive tamo gdje se i sklop uređuje",
+      "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
+    ],
+    fixed_bs: [
+      "Šabloni sklopova se nikada nisu sinhronizovali — skladište se označavalo izmijenjenim, a ništa se nije slalo",
+      "Dodavanje reza sačuvanom dijelu bilježi da je to sklop, pa ga uklanjanje dijela ne vraća tiho u običan dio",
+      "Na telefonu je otvaranje dijeljene veze na trenutak prikazivalo pločice profila prije nego što stigne linija",
+      "Traka sesije rasla je kako se punila i gurala odgovor prema vrhu ekrana",
+      "Preklapajući prozori otvarali su se sa fokusom na dugmetu za zatvaranje",
+      "End-to-end testovi bili su crveni od 3.26: devet testova čekalo je rezultat na ekranu koji ga više ne postavlja"
+    ],
+  },
+  {
     version: "3.26.0",
     date: "2026-09-13",
     fixed: [

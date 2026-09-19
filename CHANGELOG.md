@@ -5,6 +5,41 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.27.0] - 2026-09-19
+
+A flow release. The app could do the work; deciding where each answer went
+was the work. Five buckets a calculation could land in became three, seven
+controls that all looked like saving became one, and the features that were
+three and four levels down came up to where they are named.
+
+### Changed
+
+- One save control, not four. A bookmark toggle, an "Add to project" button and a "Save to…" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do ("Add to Gate job", or "Save"), and its caret opens everywhere else
+- The destination picker is one list. It used to ask what kind of thing first — four rows, each with its own nested list — then which one: two steps on a phone, a rail beside a scroller on a desktop. Now every project and every library entry is in one flat list, newest first, one press to file. Type to filter, arrow keys and Enter to drive it, and the search field has focus when it opens
+- The app remembers which job you are working out of. File something into a project and the calculator's primary action names that project until you file somewhere else — including after turning a session tape into one
+- Parts, assemblies and templates are one library. A template was a multi-part saved entry in a store of its own, with its own picker and its own editor buried inside a project. Now an assembly in the library is what you drop into a project, and there is one place to rename, re-cost and delete one
+- The material order is a tab of the project, beside Items and Cut plan. "What do I need to buy" was a chip inside the cut-plan tab — three levels down, behind a question it is not a sub-question of
+- The session tape carries the same weight on both surfaces: the phone's ribbon has "save as project" on it rather than two taps inside a sheet, and opening the tape is the whole left side of the row
+- The phone's navigation matches the workspace's. One bookmark glyph used to stand for Parts, Projects, Compare and the session tape at once
+- The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before
+
+### Added
+
+- The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life
+- An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited
+- A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word
+
+### Fixed
+
+- Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now
+- Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part
+- On a phone, opening a share link flashed the profile tiles for a frame before the line arrived
+- The session ribbon grew as the tape filled, pushing the answer up the screen while you worked
+- Overlays opened with focus on their close button — the one control nobody opens an overlay to use
+- The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one
+
+---
+
 ## [3.26.0] - 2026-09-13
 
 An accuracy and correctness release. Five EN channel sizes were wrong, and
