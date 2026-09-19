@@ -436,6 +436,9 @@ export function useSaved(): UseSavedReturn {
           return {
             ...entry,
             updatedAt,
+            // Adding a cut to a part is how you say "this is an assembly".
+            // Recording the intent keeps it one after a part is removed again.
+            isAssembly: true,
             parts: [...entry.parts, nextPart],
           };
         }),
@@ -454,7 +457,12 @@ export function useSaved(): UseSavedReturn {
         previous.map((entry) => {
           if (entry.id !== id || entry.deletedAt) return entry;
           const normalizedParts = parts.map((part) => createSavedPart(part.name, part.input, part.result));
-          return { ...entry, updatedAt, parts: [...entry.parts, ...normalizedParts] };
+          return {
+            ...entry,
+            updatedAt,
+            isAssembly: true,
+            parts: [...entry.parts, ...normalizedParts],
+          };
         }),
       );
       return true;

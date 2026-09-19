@@ -79,13 +79,7 @@ import type { ProjectActions } from "./projects/project-actions";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { SavedEditSheet } from "./sheets/saved-edit-sheet";
-import {
-  DestinationSheet,
-  assemblyTargets,
-  partTargets,
-  type DestinationKind,
-  type DestinationSubject,
-} from "./sheets/destination-sheet";
+import { DestinationSheet, type DestinationSubject } from "./sheets/destination-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import {
   buildShareUrl,
@@ -233,9 +227,7 @@ export function CommandShell() {
    * A null subject means it is closed. It replaces the save picker, the
    * project picker and the rename-after-save sheet.
    */
-  const [destination, setDestination] = useState<
-    { entry: SavedEntry | null; initial?: DestinationKind } | null
-  >(null);
+  const [destination, setDestination] = useState<{ entry: SavedEntry | null } | null>(null);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
@@ -936,10 +928,21 @@ export function CommandShell() {
         } else if (parts.length === 1) {
           ok = addCalculation(projectId, parts[0].input, parts[0].result);
         }
-      } else if (p.calc) {
-        ok = addCalculation(projectId, p.calc.input, p.calc.result);
       } else {
-        return;
+        // A `+`-joined line is several cuts, and every one of them belongs in
+        // the project. This used to file the active item only, so two thirds
+        // of a three-item line went quietly missing.
+        const drafts = currentLineDrafts();
+        if (drafts.length === 0) return;
+        if (drafts.length === 1) {
+          ok = addCalculation(projectId, drafts[0].input, drafts[0].result);
+        } else {
+          addCalculations(
+            projectId,
+            drafts.map((draft) => ({ input: draft.input, result: draft.result })),
+          );
+          ok = true;
+        }
       }
       setDestination(null);
       const project = projects.find((item) => item.id === projectId);
@@ -950,9 +953,10 @@ export function CommandShell() {
       );
     },
     [
-      p,
+      currentLineDrafts,
       repriceSavedEntry,
       addCalculation,
+      addCalculations,
       addTemplateCalculation,
       projects,
       showToast,
@@ -1133,7 +1137,7 @@ export function CommandShell() {
   const openProjectModal = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
-    setDestination({ entry: null, initial: "projects" });
+    setDestination({ entry: null });
   }, [p.calc]);
 
   /**
@@ -1431,7 +1435,7 @@ export function CommandShell() {
     },
     onAddSavedToProject: (entry: SavedEntry) => {
       setSheet(null);
-      setDestination({ entry, initial: "projects" });
+      setDestination({ entry });
     },
   };
   const helpSheet = effectiveSheet === "help" ? (
@@ -1464,13 +1468,12 @@ export function CommandShell() {
             meta: p.calc ? `${fsWeight(p.calc.result.totalWeightKg)} ${fsWeightUnit()}` : "",
             glyph: ">_",
             defaultName: formatCommandParseName(t, p) ?? p.calc?.result.profileLabel ?? "",
+            multi: line.multi,
           };
       return (
         <DestinationSheet
           subject={subject}
-          initial={destination.initial}
-          parts={partTargets(savedEntries)}
-          assemblies={assemblyTargets(savedEntries).filter((item) => item.id !== entry?.id)}
+          entries={savedEntries.filter((item) => item.id !== entry?.id)}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
           onAppendTo={appendLineTo}
