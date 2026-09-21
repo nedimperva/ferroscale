@@ -98,11 +98,10 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   "assembly templates" are all `SavedEntry`: `parts.length > 1` (or an
   explicit `isAssembly`) makes it an assembly, and `category`,
   `laborHours` and `additionalCosts` are what a project inherits when one
-  is inserted. The standards that ship with the app live in
-  `src/lib/saved/builtins.ts`, are merged in on read rather than stored,
-  and a removed one is persisted as an ordinary tombstone carrying its id.
-  `saved` is the whole list; `ownSaved` is the user's own entries and is
-  what every badge and count reads.
+  is inserted. Nothing ships in it — the app has no built-in entries, so
+  `saved` is the whole list and every count is the user's own work.
+  `storage-migrations.ts` clears rows left by the release that did ship
+  five.
 - **Adding a field to a synced entity takes two edits**: the type in its hook,
   *and* `normalizeProject`/`normalizeSavedEntry` in `src/lib/sync/collections.ts`.
   Those normalizers are whitelists — a field they do not name is dropped on
@@ -159,8 +158,11 @@ never has its own copy of a list, so a column means the same thing on both.
 - **Parts** (the old Saved) — `parts/parts-view.tsx`. Parts vs Assemblies is
   derived, not stored: an entry with `parts.length > 1` is an assembly.
   History reads `useQuickHistory`. `sheets/saved-edit-sheet.tsx` is the one
-  editor for an entry, including an assembly's trade, hours and hardware;
-  `projects/insert-assembly-modal.tsx` only picks and scales one.
+  editor for an entry, including an assembly's trade, hours and hardware.
+  `projects/insert-assembly-modal.tsx` picks and scales one, in either of
+  two voices (`mode="insert"` into the open project, `mode="create"` to
+  start a project from it); both entry points hide themselves while the
+  library holds no assembly to offer.
 
 ### API routes
 

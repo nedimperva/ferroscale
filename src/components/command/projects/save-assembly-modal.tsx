@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { PROJECT_CATEGORIES, type ProjectCategory } from "@/hooks/useProjects";
-import type { TemplatePart } from "@/hooks/useSaved";
+import type { SavedPart } from "@/hooks/useSaved";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { SheetShell } from "../sheets/sheet-shell";
 
@@ -15,7 +15,7 @@ export function SaveAssemblyToLibraryModal({
   onClose,
 }: {
   assemblyName: string;
-  items: TemplatePart[];
+  items: SavedPart[];
   onSave: (name: string, description?: string, category?: ProjectCategory) => void;
   onClose: () => void;
 }) {
@@ -32,7 +32,7 @@ export function SaveAssemblyToLibraryModal({
 
   return (
     <SheetShell
-      title={t("templates.saveTemplateTitle")}
+      title={t("assembly.saveTitle")}
       onClose={onClose}
       size="compact"
       icon={
@@ -42,7 +42,7 @@ export function SaveAssemblyToLibraryModal({
       }
       subtitle={
         <p className="text-[11.5px] text-muted mt-1">
-          {t("templates.saveTemplateSubtitle", { count: items.length })}
+          {t("assembly.saveSubtitle", { count: items.length })}
         </p>
       }
       footer={
@@ -69,7 +69,7 @@ export function SaveAssemblyToLibraryModal({
         {/* Template Name Input */}
         <div className="space-y-1">
           <label className="text-xs font-bold text-foreground">
-            {t("templates.templateNameLabel")}:
+            {t("assembly.nameLabel")}:
           </label>
           <input
             value={name}
@@ -101,12 +101,12 @@ export function SaveAssemblyToLibraryModal({
         {/* Description */}
         <div className="space-y-1">
           <label className="text-xs font-bold text-foreground">
-            {t("templates.descriptionLabel")}:
+            {t("assembly.descriptionLabel")}:
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder={t("templates.descriptionPlaceholder")}
+            placeholder={t("assembly.descriptionPlaceholder")}
             rows={2}
             className="w-full p-2.5 rounded-xl text-xs sm:text-sm bg-[var(--surface-inset)] border border-[var(--border-faint)] text-foreground outline-none resize-none leading-relaxed"
           />
@@ -115,7 +115,7 @@ export function SaveAssemblyToLibraryModal({
         {/* Included Items Preview */}
         <div className="space-y-1">
           <div className="text-[10px] font-bold text-muted uppercase tracking-wider">
-            {t("templates.includedItems")}:
+            {t("assembly.includedItems")}:
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1.5 rounded-xl bg-[var(--surface-raised)] border border-[var(--border-faint)]">
             {items.map((it) => (

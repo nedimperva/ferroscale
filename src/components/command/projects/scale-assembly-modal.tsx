@@ -28,7 +28,7 @@ export function ScaleAssemblyModal({
 
   return (
     <SheetShell
-      title={t("templates.scaleAssemblyTitle")}
+      title={t("assembly.scaleTitle")}
       onClose={onClose}
       size="compact"
       icon={
@@ -55,7 +55,7 @@ export function ScaleAssemblyModal({
             onClick={handleConfirm}
             className="flex-1 h-11 sm:h-10 rounded-button bg-[var(--action)] text-[var(--action-contrast)] text-xs font-bold cursor-pointer"
           >
-            {t("templates.applyScale", { mult: multiplier })}
+            {t("assembly.applyScale", { mult: multiplier })}
           </button>
         </div>
       }
@@ -64,7 +64,7 @@ export function ScaleAssemblyModal({
         {/* Quick Multiplier Buttons */}
         <div className="space-y-2">
           <label className="text-[11px] font-bold text-muted uppercase tracking-wider">
-            {t("templates.scaleFactorLabel")}:
+            {t("assembly.scaleFactorLabel")}:
           </label>
           <div className="grid grid-cols-4 gap-1.5">
             {[2, 3, 4, 0.5].map((val) => (
@@ -118,7 +118,7 @@ export function ScaleAssemblyModal({
         </div>
 
         <p className="text-[11px] text-muted-faint leading-relaxed">
-          {t("templates.scaleAssemblyHint")}
+          {t("assembly.scaleHint")}
         </p>
 
       </div>

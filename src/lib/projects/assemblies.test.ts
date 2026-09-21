@@ -46,7 +46,7 @@ const FENCE_PANEL = libraryAssembly(
   { category: "gates_fences", laborHours: 1.2 },
 );
 
-describe("Project Assembly Templates and Multipliers", () => {
+describe("Library assemblies inserted into a project", () => {
   it("inserts a template with multiplier into a project and scales all constituent cuts, labor, and costs", () => {
     const { result } = renderHook(() => useProjects());
 
@@ -56,13 +56,13 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const stairTreadTemplate = STAIR_TREAD;
+    const stairTread = STAIR_TREAD;
 
     // Insert 15x Stair Step Treads into the project
     act(() => {
-      const ok = result.current.insertAssemblyTemplate(
+      const ok = result.current.insertAssembly(
         projectId,
-        stairTreadTemplate,
+        stairTread,
         15,
         "Stair Treads",
       );
@@ -111,11 +111,11 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const postTemplate = RAILING_POST;
+    const railingPost = RAILING_POST;
 
     // Insert 4x Posts
     act(() => {
-      result.current.insertAssemblyTemplate(projectId, postTemplate, 4, "Columns");
+      result.current.insertAssembly(projectId, railingPost, 4, "Columns");
     });
 
     let project = result.current.projects.find((p) => p.id === projectId)!;
@@ -140,11 +140,11 @@ describe("Project Assembly Templates and Multipliers", () => {
   it("creates a new project directly from a fabrication template", () => {
     const { result } = renderHook(() => useProjects());
 
-    const fenceTemplate = FENCE_PANEL;
+    const fencePanel = FENCE_PANEL;
 
     let newProjId = "";
     act(() => {
-      const p = result.current.createProjectFromTemplate("Warehouse Perimeter Fence", fenceTemplate, 5);
+      const p = result.current.createProjectFromAssembly("Warehouse Perimeter Fence", fencePanel, 5);
       newProjId = p.id;
     });
 
@@ -215,7 +215,7 @@ describe("Project Assembly Templates and Multipliers", () => {
     if (!part1Res.ok || !part2Res.ok) throw new Error("Calculation failed");
 
     act(() => {
-      const ok = result.current.addTemplateCalculation(
+      const ok = result.current.addAssemblyParts(
         projectId,
         "Custom Truss",
         [

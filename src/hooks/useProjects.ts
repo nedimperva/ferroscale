@@ -626,14 +626,14 @@ export interface UseProjectsReturn {
     projectId: string,
     entries: Array<{ input: CalculationInput; result: CalculationResult }>,
   ) => void;
-  addTemplateCalculation: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
+  addAssemblyParts: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
   /**
    * Drop a library assembly into a project: its cuts become items tagged with
    * the assembly's name, and its labour and hardware are added on top. The
    * source is a plain library entry — "template" was the same record in a
    * store of its own.
    */
-  insertAssemblyTemplate: (
+  insertAssembly: (
     projectId: string,
     entry: SavedEntry,
     multiplier: number,
@@ -644,7 +644,7 @@ export interface UseProjectsReturn {
     assemblyName: string,
     multiplier: number,
   ) => boolean;
-  createProjectFromTemplate: (
+  createProjectFromAssembly: (
     name: string,
     entry: SavedEntry,
     multiplier?: number,
@@ -1016,7 +1016,7 @@ export function useProjects(): UseProjectsReturn {
     [setProjects],
   );
 
-  const addTemplateCalculation = useCallback(
+  const addAssemblyParts = useCallback(
     (
       projectId: string,
       tplName: string,
@@ -1106,7 +1106,7 @@ export function useProjects(): UseProjectsReturn {
     [setProjects],
   );
 
-  const insertAssemblyTemplate = useCallback(
+  const insertAssembly = useCallback(
     (
       projectId: string,
       entry: SavedEntry,
@@ -1288,7 +1288,7 @@ export function useProjects(): UseProjectsReturn {
     [setProjects],
   );
 
-  const createProjectFromTemplate = useCallback(
+  const createProjectFromAssembly = useCallback(
     (name: string, entry: SavedEntry, multiplier = 1): Project => {
       const mult = Math.max(1, Math.floor(multiplier || 1));
       const now = new Date().toISOString();
@@ -1442,10 +1442,10 @@ export function useProjects(): UseProjectsReturn {
     duplicateProject,
     addCalculation,
     addCalculations,
-    addTemplateCalculation,
-    insertAssemblyTemplate,
+    addAssemblyParts,
+    insertAssembly,
     scaleSubAssembly,
-    createProjectFromTemplate,
+    createProjectFromAssembly,
     removeCalculation,
     updateCalculationQuantity,
     updateCalculationNote,

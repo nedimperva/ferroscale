@@ -156,7 +156,7 @@ export function SavedEditSheet({
 
               <label className="flex flex-col gap-1.5">
                 <span className={labelClass} style={{ letterSpacing: 1 }}>
-                  {t("templates.laborHoursLabel")}
+                  {t("assembly.laborHoursLabel")}
                 </span>
                 <input
                   value={laborHours}
@@ -170,7 +170,7 @@ export function SavedEditSheet({
 
             <div className="flex flex-col gap-1.5">
               <span className={labelClass} style={{ letterSpacing: 1 }}>
-                {t("templates.extraCostsLabel")}
+                {t("assembly.extraCostsLabel")}
               </span>
               {costs.map((cost, index) => (
                 <div key={cost.id} className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export function SavedEditSheet({
                         prev.map((row, i) => (i === index ? { ...row, label: e.target.value } : row)),
                       )
                     }
-                    placeholder={t("templates.newCostLabel")}
+                    placeholder={t("assembly.newCostLabel")}
                     className={`${fieldClass} h-10 flex-1 min-w-0`}
                   />
                   <input
@@ -220,7 +220,7 @@ export function SavedEditSheet({
                 }
                 className="h-10 rounded-button border border-dashed border-border-strong bg-transparent text-[12px] font-semibold text-muted cursor-pointer"
               >
-                {t("templates.addCostLine")}
+                {t("assembly.addCostLine")}
               </button>
             </div>
           </>

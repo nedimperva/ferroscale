@@ -2,7 +2,7 @@ import { calculateMetal, cmdParse } from "@ferroscale/metal-core";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { ProjectAdditionalCost, ProjectCategory } from "@/hooks/useProjects";
-import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 
 /**
  * Library assemblies for tests, built from the same command syntax the bar
@@ -28,7 +28,7 @@ const SETTINGS = {
 /** `[command, quantity, part name]` — the shape an assembly's cuts come in. */
 export type PartSpec = [command: string, quantity: number, name: string];
 
-export function libraryPart([command, quantity, name]: PartSpec, id: string): TemplatePart {
+export function libraryPart([command, quantity, name]: PartSpec, id: string): SavedPart {
   const parsed = cmdParse(command, SETTINGS);
   if (!parsed.calc) throw new Error(`fixture does not parse: ${command}`);
   const qty = Math.max(1, Math.floor(quantity || parsed.calc.input.quantity || 1));

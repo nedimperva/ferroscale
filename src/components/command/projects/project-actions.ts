@@ -5,7 +5,7 @@ import type {
   ProjectCategory,
   ProjectStatus,
 } from "@/hooks/useProjects";
-import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import type { ProjectPaintCoat } from "@/lib/projects/paint";
 
 /**
@@ -80,7 +80,7 @@ export interface ProjectActions {
   /** Send a project's sub-assembly back to the library as a reusable entry. */
   onSaveAssemblyToLibrary?: (
     name: string,
-    parts: TemplatePart[],
+    parts: SavedPart[],
     description?: string,
     category?: ProjectCategory,
   ) => void;

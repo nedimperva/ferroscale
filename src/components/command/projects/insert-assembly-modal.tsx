@@ -7,6 +7,7 @@ import { isAssemblyEntry, type SavedEntry } from "@/hooks/useSaved";
 import { PROJECT_CATEGORIES } from "@/hooks/useProjects";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { SheetShell } from "../sheets/sheet-shell";
+import { EmptyState } from "../empty-state";
 
 /**
  * Pick a library assembly, scale it, drop it into a project.
@@ -19,18 +20,26 @@ import { SheetShell } from "../sheets/sheet-shell";
  */
 export function InsertAssemblyModal({
   assemblies,
+  mode = "insert",
   onInsert,
   onClose,
 }: {
   /** Multi-part library entries — the only ones there is anything to scale. */
   assemblies: SavedEntry[];
+  /**
+   * The same picker does two jobs: dropping an assembly into the project you
+   * are in, and starting a project from one. They are not the same sentence,
+   * so the title, the name field and the commit button say which it is.
+   */
+  mode?: "insert" | "create";
   onInsert: (entry: SavedEntry, multiplier: number, customAssemblyName?: string) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("command");
+  const creating = mode === "create";
   return (
     <SheetShell
-      title={t("templates.modalTitle")}
+      title={creating ? t("assembly.createTitle") : t("assembly.insertTitle")}
       onClose={onClose}
       size="wide"
       bare
@@ -41,11 +50,16 @@ export function InsertAssemblyModal({
       }
       subtitle={
         <p className="text-[11px] sm:text-xs text-muted mt-0.5 truncate">
-          {t("templates.modalSubtitle")}
+          {creating ? t("assembly.createSubtitle") : t("assembly.insertSubtitle")}
         </p>
       }
     >
-      <BrowseAssembliesBody assemblies={assemblies} onInsert={onInsert} onClose={onClose} />
+      <BrowseAssembliesBody
+        assemblies={assemblies}
+        creating={creating}
+        onInsert={onInsert}
+        onClose={onClose}
+      />
     </SheetShell>
   );
 }
@@ -57,10 +71,12 @@ export function libraryAssemblies(saved: SavedEntry[]): SavedEntry[] {
 
 function BrowseAssembliesBody({
   assemblies,
+  creating,
   onInsert,
   onClose,
 }: {
   assemblies: SavedEntry[];
+  creating: boolean;
   onInsert: (entry: SavedEntry, multiplier: number, customAssemblyName?: string) => void;
   onClose: () => void;
 }) {
@@ -152,7 +168,7 @@ function BrowseAssembliesBody({
             boxShadow: mobileTab === "list" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
           }}
         >
-          1. {t("templates.selectTemplateTab")} ({filtered.length})
+          1. {t("assembly.pickTab")} ({filtered.length})
         </button>
         <button
           type="button"
@@ -164,7 +180,7 @@ function BrowseAssembliesBody({
             boxShadow: mobileTab === "preview" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
           }}
         >
-          <span>2. {t("templates.configureTab")}</span>
+          <span>2. {t("assembly.configureTab")}</span>
           {preview && (
             <span className="px-1.5 py-0.2 rounded-none text-[10px] bg-[var(--accent-surface)] text-[var(--accent-text)] font-mono">
               ×{preview.mult}
@@ -186,7 +202,7 @@ function BrowseAssembliesBody({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("templates.searchPlaceholder")}
+              placeholder={t("assembly.search")}
               className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-inset)] border border-[var(--border-faint)] text-foreground placeholder:text-muted-faint outline-none"
             />
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px] touch-pan-x">
@@ -218,8 +234,15 @@ function BrowseAssembliesBody({
             </div>
           </div>
 
-          {/* Template List */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+            {filtered.length === 0 && (
+              <EmptyState
+                compact
+                icon={<DeskIcon name="layers" />}
+                title={t("assembly.emptyTitle")}
+                body={t("assembly.emptyBody")}
+              />
+            )}
             {filtered.map((tpl) => {
               const isSelected = selected?.id === tpl.id;
               return (
@@ -302,7 +325,7 @@ function BrowseAssembliesBody({
               <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] space-y-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <label className="text-xs font-bold text-foreground">
-                    {t("templates.multiplierLabel")}:
+                    {t("assembly.multiplierLabel")}:
                   </label>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {[1, 5, 10, 15, 20].map((val) => (
@@ -355,7 +378,7 @@ function BrowseAssembliesBody({
               {/* Target Sub-Assembly Name */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground">
-                  {t("templates.targetAssemblyLabel")}:
+                  {creating ? t("assembly.projectName") : t("assembly.targetName")}:
                 </label>
                 <input
                   value={customAsmName}
@@ -364,14 +387,14 @@ function BrowseAssembliesBody({
                   className="w-full h-9 px-3 rounded-xl text-xs bg-[var(--surface)] border border-[var(--border-faint)] text-foreground outline-none font-semibold"
                 />
                 <p className="text-[10.5px] text-muted-faint">
-                  {t("templates.targetAssemblyHint")}
+                  {creating ? t("assembly.projectNameHint") : t("assembly.targetNameHint")}
                 </p>
               </div>
 
               {/* Scaled Preview Bill of Materials */}
               <div className="space-y-2">
                 <div className="text-[10.5px] font-bold text-muted uppercase tracking-wider">
-                  {t("templates.scaledBreakdown", { mult: preview.mult })}
+                  {t("assembly.scaledBreakdown", { mult: preview.mult })}
                 </div>
                 <div className="rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] overflow-hidden">
                   <div className="divide-y divide-[var(--border-faint)]">
@@ -448,22 +471,29 @@ function BrowseAssembliesBody({
                   }}
                   className="flex-1 h-10 rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-inset)] text-xs font-bold text-foreground cursor-pointer transition-colors"
                 >
-                  {mobileTab === "preview" ? `← ${t("templates.selectTemplateTab")}` : t("common.cancel")}
+                  {mobileTab === "preview" ? `← ${t("assembly.pickTab")}` : t("common.cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={handleInsert}
                   className="flex-1 h-10 rounded-xl bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 text-xs font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
                 >
-                  <span>+ {t("templates.insertAction", { count: preview.mult })}</span>
+                  <span>
+                    {creating
+                      ? t("assembly.createAction", { count: preview.mult })
+                      : `+ ${t("assembly.insertAction", { count: preview.mult })}`}
+                  </span>
                 </button>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-xs text-muted text-center max-w-[220px] leading-relaxed">
-                {t("templates.noAssembliesHint")}
-              </p>
+            <div className="flex-1 flex items-center justify-center p-4">
+              <EmptyState
+                compact
+                icon={<DeskIcon name="layers" />}
+                title={t("assembly.emptyTitle")}
+                body={t("assembly.emptyBody")}
+              />
             </div>
           )}
         </div>

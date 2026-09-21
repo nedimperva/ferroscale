@@ -40,13 +40,13 @@ export interface SavedEntry {
   laborHours?: number;
   additionalCosts?: ProjectAdditionalCost[];
   deletedAt?: string;
-  parts: TemplatePart[];
+  parts: SavedPart[];
   input: CalculationInput;
   result: CalculationResult;
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-export interface TemplatePart {
+export interface SavedPart {
   id: string;
   name: string;
   input: CalculationInput;
@@ -54,7 +54,7 @@ export interface TemplatePart {
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-export interface TemplatePartDraft {
+export interface SavedPartDraft {
   name: string;
   input: CalculationInput;
   result: CalculationResult;
@@ -87,7 +87,7 @@ export interface UseSavedReturn {
     name: string,
     notes?: string,
     tags?: string[],
-    parts?: TemplatePartDraft[],
+    parts?: SavedPartDraft[],
     asAssembly?: boolean,
   ) => SavedEntry;
   removeSaved: (id: string) => void;
@@ -103,7 +103,7 @@ export interface UseSavedReturn {
     result: CalculationResult,
     partName?: string,
   ) => boolean;
-  appendPartsToSaved: (id: string, parts: TemplatePartDraft[]) => boolean;
+  appendPartsToSaved: (id: string, parts: SavedPartDraft[]) => boolean;
   removePartFromSaved: (id: string, partId: string) => boolean;
   reorderPartInSaved: (id: string, partId: string, direction: -1 | 1) => boolean;
   updateSaved: (
@@ -158,7 +158,7 @@ export function useSaved(): UseSavedReturn {
       name: string,
       notes?: string,
       tags?: string[],
-      parts?: TemplatePartDraft[],
+      parts?: SavedPartDraft[],
       asAssembly?: boolean,
     ) => {
       const timestamp = new Date().toISOString();
@@ -381,7 +381,7 @@ export function useSaved(): UseSavedReturn {
   );
 
   const appendPartsToSaved = useCallback(
-    (id: string, parts: TemplatePartDraft[]) => {
+    (id: string, parts: SavedPartDraft[]) => {
       if (parts.length === 0) return false;
       if (!allSaved.some((entry) => entry.id === id && !entry.deletedAt)) return false;
       const updatedAt = new Date().toISOString();

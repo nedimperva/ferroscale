@@ -197,6 +197,34 @@ test.describe("Session", () => {
 });
 
 test.describe("Assemblies", () => {
+  test("a project can be started from a library assembly, once there is one", async ({ page }) => {
+    await page.goto("/en/projects");
+    // The app ships with no assemblies, so there is nothing to start from and
+    // the button that would open an empty picker is not drawn.
+    await expect(page.getByRole("button", { name: "From assembly" })).toHaveCount(0);
+
+    // Save a two-cut line into the library as one assembly.
+    await page.goto("/en");
+    await typeQuery(page, "hea140 3m + plt200x160x12 x2 ");
+    await page.getByRole("button", { name: "Save somewhere else" }).click();
+    // Named after the cut that leads it, not whichever one the caret was on.
+    await page.getByText("Save to library as one assembly").click();
+    await expect(page.getByLabel("Save to library as one assembly")).toHaveValue("HEA 140 +1");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    // Now it is offered, and the picker starts a project rather than adding
+    // to one — the same dialog, saying which of the two it is doing.
+    await page.goto("/en/projects");
+    await page.getByRole("button", { name: "From assembly" }).first().click();
+    await expect(page.getByText("Start from an assembly")).toBeVisible();
+    await page.getByRole("textbox", { name: "" }).nth(1).fill("Warehouse mezzanine");
+    await page.getByRole("button", { name: /Create project/ }).click();
+
+    // The project is named what was typed, and carries both cuts.
+    await expect(page.getByText("Warehouse mezzanine").first()).toBeVisible();
+    await expect(page.getByText(/^2 items$/).first()).toBeVisible();
+  });
+
   test("a saved entry can hold several parts and sums them", async ({ page }) => {
     await page.goto("/en");
 

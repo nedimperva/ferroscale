@@ -8,7 +8,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
 import { libraryAssemblies } from "./projects/insert-assembly-modal";
-import type { SavedEntry, TemplatePart, TemplatePartDraft } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPart, SavedPartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
 import { usePriceBook } from "@/hooks/usePriceBook";
@@ -185,10 +185,10 @@ export function CommandShell() {
     duplicateProject,
     addCalculation,
     addCalculations,
-    addTemplateCalculation,
-    insertAssemblyTemplate,
+    addAssemblyParts,
+    insertAssembly,
     scaleSubAssembly,
-    createProjectFromTemplate,
+    createProjectFromAssembly,
     removeCalculation,
     updateCalculationQuantity,
     updateCalculationNote,
@@ -618,6 +618,25 @@ export function CommandShell() {
   );
 
   /**
+   * What a multi-cut line is called before anyone names it.
+   *
+   * It used to be whatever the *active* cut was called, so saving
+   * "hea140 3m + plt200x160x12 x2" from the picker produced an assembly named
+   * "Plate 200×160×12" — the item the caret happened to be on, not the thing
+   * being saved. The first cut plus a count is at least recognisable in a
+   * list, and searchable by the profile that leads it.
+   */
+  const assemblyDefaultName = useCallback(() => {
+    const first = line.items[0]?.parse;
+    const lead = first
+      ? formatCommandParseName(t, first) ?? first.calc?.result.profileLabel ?? ""
+      : "";
+    const more = line.items.length - 1;
+    if (!lead) return t("saved.assemblyName", { count: line.items.length });
+    return more > 0 ? t("saved.assemblyDefaultName", { first: lead, more }) : lead;
+  }, [line, t]);
+
+  /**
    * Save is a toggle: bookmark the line, or un-bookmark it if it's already
    * there. It used to no-op on a duplicate and still report "Saved".
    */
@@ -653,7 +672,7 @@ export function CommandShell() {
     const entry = saveCalculation(
       p.calc.input,
       p.calc.result,
-      line.multi ? t("saved.assemblyName", { count: line.items.length }) : autoName,
+      line.multi ? assemblyDefaultName() : autoName,
       undefined,
       undefined,
       parts,
@@ -678,6 +697,7 @@ export function CommandShell() {
   }, [
     p,
     line,
+    assemblyDefaultName,
     getSavedEntry,
     removeSavedEntry,
     saveCalculation,
@@ -739,7 +759,7 @@ export function CommandShell() {
    * The parts of the current line, as drafts. One item for a plain line, one
    * per item for a multi-item one — the same shape `doSave` already builds.
    */
-  const currentLineDrafts = useCallback((): TemplatePartDraft[] => {
+  const currentLineDrafts = useCallback((): SavedPartDraft[] => {
     if (!p.calc) return [];
     if (!line.multi) {
       return [{
@@ -957,7 +977,7 @@ export function CommandShell() {
       if (entry) {
         const parts = repriceSavedEntry(entry);
         if (parts.length > 1 || isAssemblyEntry(entry)) {
-          ok = addTemplateCalculation(projectId, entry.name, parts, 1);
+          ok = addAssemblyParts(projectId, entry.name, parts, 1);
         } else if (parts.length === 1) {
           ok = addCalculation(projectId, parts[0].input, parts[0].result);
         }
@@ -993,7 +1013,7 @@ export function CommandShell() {
       repriceSavedEntry,
       addCalculation,
       addCalculations,
-      addTemplateCalculation,
+      addAssemblyParts,
       projects,
       showToast,
       t,
@@ -1099,13 +1119,13 @@ export function CommandShell() {
       },
       libraryAssemblies: assembliesInLibrary,
       onInsertAssembly: (projectId, entry, multiplier, customAssemblyName) => {
-        const ok = insertAssemblyTemplate(projectId, entry, multiplier, customAssemblyName);
+        const ok = insertAssembly(projectId, entry, multiplier, customAssemblyName);
         if (ok) {
           showToast(t("projects.templateInserted", { name: entry.name, mult: multiplier }));
         }
         return ok;
       },
-      onSaveAssemblyToLibrary: (name, parts: TemplatePart[], description, category) => {
+      onSaveAssemblyToLibrary: (name, parts: SavedPart[], description, category) => {
         if (parts.length === 0) return;
         const entry = saveCalculation(
           parts[0].input,
@@ -1118,7 +1138,7 @@ export function CommandShell() {
         );
         if (category) updateSaved(entry.id, { category });
         haptic("commit");
-        showToast(t("templates.templateSaved"));
+        showToast(t("assembly.saved"));
       },
       onScaleSubAssembly: (projectId, assemblyName, multiplier) => {
         const ok = scaleSubAssembly(projectId, assemblyName, multiplier);
@@ -1128,7 +1148,7 @@ export function CommandShell() {
         return ok;
       },
       onCreateFromAssembly: (name, entry, multiplier) => {
-        const project = createProjectFromTemplate(name, entry, multiplier);
+        const project = createProjectFromAssembly(name, entry, multiplier);
         showToast(t("projects.templateProjectCreated", { name: project.name }));
         return project;
       },
@@ -1157,9 +1177,9 @@ export function CommandShell() {
       assembliesInLibrary,
       saveCalculation,
       updateSaved,
-      insertAssemblyTemplate,
+      insertAssembly,
       scaleSubAssembly,
-      createProjectFromTemplate,
+      createProjectFromAssembly,
       logQuotePrinted,
       p.calc,
       parserSettings,
@@ -1523,7 +1543,9 @@ export function CommandShell() {
             label: query.trim() || p.calc?.result.profileLabel || "",
             meta: p.calc ? `${fsWeight(p.calc.result.totalWeightKg)} ${fsWeightUnit()}` : "",
             glyph: ">_",
-            defaultName: formatCommandParseName(t, p) ?? p.calc?.result.profileLabel ?? "",
+            defaultName: line.multi
+              ? assemblyDefaultName()
+              : formatCommandParseName(t, p) ?? p.calc?.result.profileLabel ?? "",
             multi: line.multi,
           };
       return (

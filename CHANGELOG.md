@@ -14,6 +14,9 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- The five standards that shipped with the app are gone. They were a template collection's built-ins, and keeping them meant a library that was never empty, no empty state to teach the Save button with, a "Standards" filter, a restore-all affordance and counts that had to be split in two to stay honest. The library holds what you put in it
+- "Template" is not a word the app uses any more. There is one library, and the thing you take from it into a project is an assembly — the picker, the save dialog and every label say so
+- The assembly picker knows which of its two jobs it is doing: "Insert an assembly" into the project you are in, or "Start from an assembly" when it is making one. In the second the name field names the project, which it used to collect and then ignore
 - On a phone the save control takes the action row and the rest are icons. Four equal buttons left the one control with words on it about 60px to say them in, and "Save" came out as a bookmark and the letter S
 - A pristine phone screen leads with the profile tiles. They used to queue below a hero full of placeholder dashes — a mode switch, a "—", a "—/pc" strip and four disabled buttons — which left them about enough room for their own heading
 - One save control, not four. A bookmark toggle, an "Add to project" button and a "Save to…" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do ("Add to Gate job", or "Save"), and its caret opens everywhere else
@@ -33,6 +36,8 @@ three and four levels down came up to where they are named.
 
 ### Fixed
 
+- A multi-cut line saved from the picker was named after whichever cut the caret was on — "hea140 3m + plt200x160x12 x2" came out as "Plate 200×160×12". It is named after the cut that leads it now, plus how many more
+- The two ways into the assembly picker are hidden while the library has no assembly to offer, instead of opening an empty dialog
 - The session row let its total draw over the button beside it on a phone, instead of giving way
 - Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now
 - Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part

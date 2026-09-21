@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import { getDefaultInput } from "@/lib/calculator/input-storage";
 import { buildSizePresetLookup } from "./size-presets";
 
-function part(profileId: SavedEntry["input"]["profileId"], sizeId: string, name: string): TemplatePart {
+function part(profileId: SavedEntry["input"]["profileId"], sizeId: string, name: string): SavedPart {
   const input = {
     ...getDefaultInput(),
     profileId,
@@ -14,12 +14,12 @@ function part(profileId: SavedEntry["input"]["profileId"], sizeId: string, name:
     id: sizeId,
     name,
     input,
-    result: { profileLabel: name } as TemplatePart["result"],
-    normalizedProfile: { shortLabel: name } as TemplatePart["normalizedProfile"],
+    result: { profileLabel: name } as SavedPart["result"],
+    normalizedProfile: { shortLabel: name } as SavedPart["normalizedProfile"],
   };
 }
 
-function saved(overrides: Partial<SavedEntry> & { parts: TemplatePart[] }): SavedEntry {
+function saved(overrides: Partial<SavedEntry> & { parts: SavedPart[] }): SavedEntry {
   const first = overrides.parts[0];
   return {
     id: overrides.id ?? "s1",

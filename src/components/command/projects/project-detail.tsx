@@ -59,7 +59,7 @@ import { InsertAssemblyModal } from "./insert-assembly-modal";
 import { SheetShell } from "../sheets/sheet-shell";
 import { ScaleAssemblyModal } from "./scale-assembly-modal";
 import { SaveAssemblyToLibraryModal } from "./save-assembly-modal";
-import type { TemplatePart } from "@/hooks/useSaved";
+import type { SavedPart } from "@/hooks/useSaved";
 
 /** The one number that matters, with the cost breakdown beneath it. Six
  *  equal-weight tiles made the grand total no easier to find than the item
@@ -1115,7 +1115,7 @@ export function ProjectDetail({
   const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [scalingAssembly, setScalingAssembly] = useState<{ name: string; count: number } | null>(null);
-  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: TemplatePart[] } | null>(null);
+  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: SavedPart[] } | null>(null);
 
   const summary = projectSummary(project, marginPercent);
   const rows = projectItemRows(project);
@@ -1358,7 +1358,7 @@ export function ProjectDetail({
           const asmWeight = asmRows.reduce((s, r) => s + r.weightKg, 0);
           const asmCost = asmRows.reduce((s, r) => s + r.amount, 0);
           const saveAsTemplate = () => {
-            const parts: TemplatePart[] = asmRows.map((r) => ({
+            const parts: SavedPart[] = asmRows.map((r) => ({
               id: crypto.randomUUID(),
               // The row's note is the part's name — one field, not two.
               name: r.calc.note?.trim() || r.calc.result.profileLabel,
@@ -1384,14 +1384,14 @@ export function ProjectDetail({
               : []),
             {
               id: "scale",
-              label: t("templates.scaleAssemblyTitle"),
+              label: t("assembly.scaleTitle"),
               onSelect: () => setScalingAssembly({ name: asmName, count: asmRows.length }),
             },
             ...(asmRows.length > 0
               ? [
                   {
                     id: "save",
-                    label: t("templates.saveAsTemplateButton"),
+                    label: t("assembly.saveHint"),
                     onSelect: saveAsTemplate,
                   },
                 ]
@@ -1456,17 +1456,17 @@ export function ProjectDetail({
                           t("projects.addToThisAssembly", { name: asmName }),
                         )}
                       {groupChip(
-                        t("templates.scaleButton"),
+                        t("assembly.scaleButton"),
                         "bolt",
                         () => setScalingAssembly({ name: asmName, count: asmRows.length }),
-                        t("templates.scaleAssemblyTitle"),
+                        t("assembly.scaleTitle"),
                       )}
                       {asmRows.length > 0 &&
                         groupChip(
-                          t("templates.saveTemplateButton"),
+                          t("assembly.saveButton"),
                           "bookmark",
                           saveAsTemplate,
-                          t("templates.saveAsTemplateButton"),
+                          t("assembly.saveHint"),
                         )}
                     </div>
                     <span className="flex-1" />
@@ -1648,6 +1648,10 @@ export function ProjectDetail({
               </svg>
               <span>{t("quote.short")}</span>
             </button>
+            {/* Nothing to insert until the library holds an assembly, and a
+                button that opens an empty dialog teaches nothing. It appears
+                the moment you save one. */}
+            {(actions.libraryAssemblies?.length ?? 0) > 0 && (
             <button
               type="button"
               onClick={() => setShowTemplateModal(true)}
@@ -1658,11 +1662,12 @@ export function ProjectDetail({
                 background: "var(--surface-raised)",
                 color: "var(--foreground)",
               }}
-              title={t("templates.modalTitle")}
+              title={t("assembly.insertTitle")}
             >
               <DeskIcon name="layers" />
-              <span>{t("templates.addTemplateButton")}</span>
+              <span>{t("assembly.addButton")}</span>
             </button>
+            )}
             <button
               type="button"
               onClick={() => {

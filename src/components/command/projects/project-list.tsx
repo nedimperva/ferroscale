@@ -416,6 +416,8 @@ export function ProjectList({
 
   const newProjectButton = (
     <div className="flex items-center gap-1.5 flex-shrink-0">
+      {/* Only once there is an assembly to start from. */}
+      {(actions.libraryAssemblies?.length ?? 0) > 0 && (
       <button
         type="button"
         onClick={() => setShowTemplateModal(true)}
@@ -427,11 +429,12 @@ export function ProjectList({
           background: "transparent",
           color: "var(--foreground-secondary)",
         }}
-        title={t("templates.newFromTemplate")}
+        title={t("assembly.newFromAssembly")}
       >
         <DeskIcon name="layers" />
-        <span>{t("templates.fromTemplateButton")}</span>
+        <span>{t("assembly.fromButton")}</span>
       </button>
+      )}
       <button
         type="button"
         onClick={() => setCreating((v) => !v)}
@@ -790,9 +793,12 @@ export function ProjectList({
 
       {showTemplateModal && (
         <InsertAssemblyModal
+          mode="create"
           assemblies={actions.libraryAssemblies ?? []}
-          onInsert={(entry, mult) => {
-            const created = actions.onCreateFromAssembly?.(entry.name, entry, mult);
+          onInsert={(entry, mult, name) => {
+            // The name field is the project's in this mode, so honour it
+            // rather than silently naming the project after the assembly.
+            const created = actions.onCreateFromAssembly?.(name?.trim() || entry.name, entry, mult);
             if (created && typeof created === "object" && "id" in created) {
               onOpenProject(created.id);
             }

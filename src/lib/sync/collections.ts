@@ -14,7 +14,7 @@ import {
   type ProjectStatus,
 } from "@/hooks/useProjects";
 import { normalizePaintCoats } from "@/lib/projects/paint";
-import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
 import { notifySyncedCollectionDirty } from "./registry";
@@ -51,9 +51,9 @@ function maybeNotify(collectionKey: SyncEntityCollectionKey | SyncListCollection
   });
 }
 
-function normalizeTemplatePart(raw: unknown): TemplatePart | null {
+function normalizeTemplatePart(raw: unknown): SavedPart | null {
   if (!raw || typeof raw !== "object") return null;
-  const candidate = raw as Partial<TemplatePart>;
+  const candidate = raw as Partial<SavedPart>;
   if (!candidate.input || !candidate.result) return null;
   return {
     id: candidate.id ?? crypto.randomUUID(),
@@ -97,10 +97,10 @@ export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
   const normalizedParts = Array.isArray(candidate.parts)
     ? candidate.parts
         .map((part) => normalizeTemplatePart(part))
-        .filter((part): part is TemplatePart => Boolean(part))
+        .filter((part): part is SavedPart => Boolean(part))
     : [];
 
-  const fallbackPart: TemplatePart = {
+  const fallbackPart: SavedPart = {
     id: crypto.randomUUID(),
     name: candidate.result.profileLabel,
     input: candidate.input,
@@ -358,7 +358,7 @@ export function createSavedPart(
   name: string,
   input: CalculationInput,
   result: CalculationResult,
-): TemplatePart {
+): SavedPart {
   return {
     id: crypto.randomUUID(),
     name: name.trim() || result.profileLabel,

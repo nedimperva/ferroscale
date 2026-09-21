@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
-import { isAssemblyEntry, useSaved, type TemplatePartDraft } from "./useSaved";
+import { isAssemblyEntry, useSaved, type SavedPartDraft } from "./useSaved";
 
 const SETTINGS: CommandParserSettings = {
   pricing: {
@@ -24,7 +24,7 @@ const SETTINGS: CommandParserSettings = {
  * line goes through the same parser the command bar uses, and every item on it
  * becomes a part.
  */
-function draftsFromCommand(command: string): TemplatePartDraft[] {
+function draftsFromCommand(command: string): SavedPartDraft[] {
   return cmdParseLine(command, SETTINGS)
     .items.map((item) => item.parse)
     .filter((parse) => parse.calc)
