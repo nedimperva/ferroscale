@@ -383,6 +383,32 @@ test.describe("Phone fold (390x844)", () => {
     expect(escaped).toEqual([]);
   });
 
+  test("the breakdown carries three controls, not nine", async ({ page }) => {
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /breakdown/i }).first().click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    // It was nine buttons over three rows, with "Copy summary" drawn twice and
+    // both "Save" and "+ Project" leading to the save control that is now
+    // right here. Same three the calculator carries, in the same order.
+    const actions = await dialog.evaluate((el) =>
+      Array.from(el.querySelectorAll("button"))
+        .map((b) => (b.textContent || b.getAttribute("aria-label") || "").trim())
+        .filter((label) =>
+          /^(Copy|Save|Saved|Add to|Share|Compare|New|More actions)/.test(label),
+        ),
+    );
+    expect(actions).toEqual(["Copy summary", "Save", "Save somewhere else", "More actions"]);
+
+    // Nothing is lost — the rest is one press away.
+    await dialog.getByRole("button", { name: "More actions" }).click();
+    for (const item of ["Copy value", "Share link", "Compare", "New calculation"]) {
+      await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+    }
+  });
+
   test("every library tab label is readable, not clipped", async ({ page }) => {
     await page.goto(DEMO_LINK);
     await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));

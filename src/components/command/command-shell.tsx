@@ -2535,8 +2535,12 @@ export function CommandShell() {
               query={query}
               setQuery={setQuery}
               onClose={() => setSheet(null)}
-              onSave={doSave}
-              onSaveElsewhere={() => setDestination({ entry: null })}
+              onPrimarySave={() => {
+                setSheet(null);
+                primarySave();
+              }}
+              onSaveElsewhere={openDestinations}
+              currentProjectName={currentProject?.name ?? null}
               isSaved={!!currentSavedEntry}
               onCopyValue={() => {
                 setSheet(null);
@@ -2558,7 +2562,6 @@ export function CommandShell() {
                 setSheet(null);
                 doCompare();
               }}
-              onAddToProject={openDestinations}
             />
           )}
           {effectiveSheet === "settings" && (

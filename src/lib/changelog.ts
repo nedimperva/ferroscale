@@ -20,6 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.27.0",
     date: "2026-09-19",
     changed: [
+      "The mobile breakdown carries three controls instead of nine. It was three rows of buttons with \"Copy summary\" drawn twice, and both \"Save\" and \"+ Project\" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it",
       "Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own \"+ Assembly\" offered a count — the same act, two answers depending on which door you used",
       "Both doors now land the same way: one project item per cut, tagged with the assembly's name. From the library it used to arrive as a single rolled-up row whose cuts could not be edited",
       "The five standards that shipped with the app are gone. They were a template collection's built-ins, and keeping them meant a library that was never empty, no empty state to teach the Save button with, a \"Standards\" filter, a restore-all affordance and counts that had to be split in two to stay honest. The library holds what you put in it",
@@ -42,6 +43,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
     ],
     fixed: [
+      "A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen",
       "An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them",
       "Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part",
       "The end-to-end suite is green again. Fourteen tests — every accessibility scan among them — waited for a result on a screen that stopped seeding one in 3.26, so axe had not actually run on any surface since",
@@ -56,6 +58,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
     ],
     changed_bs: [
+      "Mobilni prikaz razrade nosi tri kontrole umjesto devet. Bila su tri reda dugmadi s „Kopiraj sažetak\" nacrtanim dvaput",
       "Prebacivanje sklopa iz biblioteke u projekat sada pita koliko komada. Prije je uvijek dodavalo tačno jedan, dok je „+ Sklop\" unutar projekta nudio količinu",
       "Oba puta sada završavaju isto: po jedna stavka projekta za svaki rez, označena nazivom sklopa",
       "Pet standarda koji su dolazili uz aplikaciju su uklonjeni. Biblioteka sadrži ono što u nju stavite",
@@ -78,6 +81,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
     ],
     fixed_bs: [
+      "Meni ⋯ otvoren dok se pomjeranje još smirivalo zatvarao bi se istog trena. Sada prati svoj red i zatvara se tek kada red napusti ekran",
       "Sklop prebačen iz biblioteke u projekat stizao je bez sati rada, troškova okova i djelatnosti koje nosi",
       "Slanje sačuvanog dijela u sačuvani sklop dodavalo je ono što je bilo u komandnoj traci umjesto samog dijela",
       "End-to-end testovi su ponovo zeleni. Četrnaest testova, među njima i svi testovi pristupačnosti, čekalo je rezultat na ekranu koji ga više ne postavlja",

@@ -14,6 +14,7 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- The mobile breakdown carries three controls instead of nine. It was three rows of buttons with "Copy summary" drawn twice, and both "Save" and "+ Project" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it
 - Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own "+ Assembly" offered a count — the same act, two answers depending on which door you used
 - Both doors now land the same way: one project item per cut, tagged with the assembly's name. From the library it used to arrive as a single rolled-up row whose cuts could not be edited
 - The five standards that shipped with the app are gone. They were a template collection's built-ins, and keeping them meant a library that was never empty, no empty state to teach the Save button with, a "Standards" filter, a restore-all affordance and counts that had to be split in two to stay honest. The library holds what you put in it
@@ -38,6 +39,7 @@ three and four levels down came up to where they are named.
 
 ### Fixed
 
+- A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen
 - An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them
 - Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part
 - The end-to-end suite is green again. Fourteen tests — every accessibility scan among them — waited for a result on a screen that stopped seeding one in 3.26, so axe had not actually run on any surface since

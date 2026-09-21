@@ -47,32 +47,41 @@ export function RowMenu({
   const panelRef = useRef<HTMLDivElement | null>(null);
 
   /**
-   * Placed on the click that opens it, from the trigger's rect and the height
-   * the item count implies. Measuring the rendered panel instead would mean
-   * painting it once in the wrong place — the flicker is more visible than the
-   * pixel or two the estimate can be out by.
+   * Where the panel goes, from the trigger's rect and the height the item
+   * count implies. Measuring the rendered panel instead would mean painting it
+   * once in the wrong place — the flicker is more visible than the pixel or
+   * two the estimate can be out by.
    *
    * It sits below the trigger, and flips above when it would run off-screen.
+   * Null when the trigger is not on screen at all, which is the one case where
+   * there is nothing sensible to anchor to.
    */
+  const placement = useCallback(() => {
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    if (rect.bottom < 0 || rect.top > window.innerHeight) return null;
+    const height = items.length * ITEM_HEIGHT + 2;
+    const below = rect.bottom + 5;
+    const flip = below + height > window.innerHeight - VIEWPORT_MARGIN;
+    const rawLeft = align === "end" ? rect.right - MENU_WIDTH : rect.left;
+    return {
+      top: flip ? Math.max(VIEWPORT_MARGIN, rect.top - 5 - height) : below,
+      left: Math.min(
+        Math.max(VIEWPORT_MARGIN, rawLeft),
+        window.innerWidth - MENU_WIDTH - VIEWPORT_MARGIN,
+      ),
+    };
+  }, [align, items.length]);
+
   const toggle = useCallback(() => {
     setOpen((wasOpen) => {
       if (wasOpen) return false;
-      const rect = triggerRef.current?.getBoundingClientRect();
-      if (!rect) return false;
-      const height = items.length * ITEM_HEIGHT + 2;
-      const below = rect.bottom + 5;
-      const flip = below + height > window.innerHeight - VIEWPORT_MARGIN;
-      const rawLeft = align === "end" ? rect.right - MENU_WIDTH : rect.left;
-      setPosition({
-        top: flip ? Math.max(VIEWPORT_MARGIN, rect.top - 5 - height) : below,
-        left: Math.min(
-          Math.max(VIEWPORT_MARGIN, rawLeft),
-          window.innerWidth - MENU_WIDTH - VIEWPORT_MARGIN,
-        ),
-      });
+      const next = placement();
+      if (!next) return false;
+      setPosition(next);
       return true;
     });
-  }, [align, items.length]);
+  }, [placement]);
 
   useEffect(() => {
     if (!open) return;
@@ -130,9 +139,19 @@ export function RowMenu({
           break;
       }
     };
-    // A portalled panel does not travel with its row, so any scroll or resize
-    // would leave it stranded mid-page. Closing is honest and cheap.
-    const onReflow = () => setOpen(false);
+    /**
+     * A portalled panel does not travel with its row, so it has to be put back
+     * where the trigger now is. This used to close instead, which sounds
+     * cheaper until you open the menu while a scroll is still settling — a tap
+     * near the bottom of a sheet on a phone does exactly that — and the menu
+     * vanishes the moment it appears. It only closes when the trigger has
+     * actually left the screen.
+     */
+    const onReflow = () => {
+      const next = placement();
+      if (next) setPosition(next);
+      else setOpen(false);
+    };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     window.addEventListener("scroll", onReflow, true);
@@ -143,7 +162,7 @@ export function RowMenu({
       window.removeEventListener("scroll", onReflow, true);
       window.removeEventListener("resize", onReflow);
     };
-  }, [open]);
+  }, [open, placement]);
 
   const panel = open && position && typeof document !== "undefined" && (
     createPortal(

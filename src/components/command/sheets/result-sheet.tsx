@@ -10,6 +10,8 @@ import { buildBreakdownRows } from "../breakdown-rows";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { SheetShell } from "./sheet-shell";
+import { SaveControl } from "../save-control";
+import { RowMenu } from "../row-menu";
 import { haptic } from "@/lib/haptics";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 
@@ -45,9 +47,12 @@ interface CommandResultSheetProps {
   /** The whole line, so a multi-item breakdown can say which item it is. */
   line?: CommandLine;
   onClose: () => void;
-  onSave: () => void;
-  /** Open the destination picker instead of the one-tap bookmark. */
+  /** The one save control's primary: file into the current job, or bookmark. */
+  onPrimarySave: () => void;
+  /** Its caret: the full destination picker. */
   onSaveElsewhere?: () => void;
+  /** The job being worked out of, which the primary action names. */
+  currentProjectName?: string | null;
   /** Whether this exact calculation is already bookmarked (Save toggles). */
   isSaved: boolean;
   onCopyValue: () => void;
@@ -55,7 +60,6 @@ interface CommandResultSheetProps {
   onShareLink: () => void;
   onNew: () => void;
   onCompare: () => void;
-  onAddToProject: () => void;
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
 }
@@ -65,7 +69,8 @@ interface CommandResultSheetProps {
 export function CommandResultBreakdown({
   p,
   line,
-  onSave,
+  onPrimarySave,
+  currentProjectName,
   onSaveElsewhere,
   isSaved,
   onCopyValue,
@@ -73,7 +78,6 @@ export function CommandResultBreakdown({
   onShareLink,
   onNew,
   onCompare,
-  onAddToProject,
   query,
   setQuery,
   columns = 1,
@@ -197,72 +201,34 @@ export function CommandResultBreakdown({
           }}
         />
       )}
-      <div className="flex gap-2 mt-4">
-        <button
-          type="button"
-          onClick={onSave}
-          aria-pressed={isSaved}
-          className="flex-1 h-11 rounded-button font-bold text-sm"
-          style={
-            isSaved
-              ? {
-                  background: "var(--accent-surface)",
-                  color: "var(--accent-text)",
-                  border: "1px solid var(--accent-border)",
-                }
-              : { background: "var(--action)", color: "var(--action-contrast)" }
-          }
-        >
-          {isSaved ? t("common.saved") : t("common.save")}
-        </button>
-        {onSaveElsewhere && (
-          <button
-            type="button"
-            onClick={onSaveElsewhere}
-            aria-label={t("saveTo.title")}
-            title={t("saveTo.title")}
-            className="h-11 rounded-button flex items-center justify-center flex-shrink-0"
-            style={{
-              width: 44,
-              border: "1px solid var(--border-faint)",
-              background: "var(--surface)",
-              color: "var(--foreground)",
-            }}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-        )}
+      {/* The same three controls the calculator itself carries, in the same
+          order. This was nine buttons over three rows — Copy summary drawn
+          twice, "+ Project" and "Save" both leading to the save control that
+          is now right here, and "New" given equal weight to all of it. */}
+      <div className="flex items-center gap-2 mt-4">
         {onCopySummary && (
-          <button type="button" onClick={onCopySummary} className={secondaryBtn}>
+          <button type="button" onClick={onCopySummary} className={`${secondaryBtn} flex-1`}>
             {t("common.copySummary")}
           </button>
         )}
-        <button type="button" onClick={onNew} className={secondaryBtn}>
-          {t("common.new")}
-        </button>
-      </div>
-      <div className="flex gap-2 mt-2">
-        <button type="button" onClick={onCopyValue} className={secondaryBtn}>
-          {t("common.copyValue")}
-        </button>
-        {onCopySummary && (
-          <button type="button" onClick={onCopySummary} className={secondaryBtn}>
-            {t("common.copySummary")}
-          </button>
-        )}
-        <button type="button" onClick={onShareLink} className={secondaryBtn}>
-          {t("common.share")}
-        </button>
-      </div>
-      <div className="flex gap-2 mt-2">
-        <button type="button" onClick={onCompare} className={secondaryBtn}>
-          {t("common.compare")}
-        </button>
-        <button type="button" onClick={onAddToProject} className={secondaryBtn}>
-          {t("common.addProject")}
-        </button>
+        <div className="flex-1 min-w-0">
+          <SaveControl
+            compact
+            projectName={currentProjectName ?? null}
+            saved={isSaved}
+            onPrimary={onPrimarySave}
+            onOpenPicker={onSaveElsewhere ?? (() => {})}
+          />
+        </div>
+        <RowMenu
+          ariaLabel={t("common.more")}
+          items={[
+            { id: "value", label: t("common.copyValue"), onSelect: onCopyValue },
+            { id: "share", label: t("common.shareLink"), onSelect: onShareLink },
+            { id: "compare", label: t("common.compare"), onSelect: onCompare },
+            { id: "new", label: t("common.newCalculation"), onSelect: onNew },
+          ]}
+        />
       </div>
     </>
   );
