@@ -20,6 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.27.0",
     date: "2026-09-19",
     changed: [
+      "Clean-slate discovery cards provide instant 1-tap access to all 20 profile options grouped by product family (Beams & Structural, Plates & Sheets including chequered plate CHQ, Tubes & Pipes, and Bars & Sections), with single-row monospace codes",
       "Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was \"Rename, notes and tags\", then briefly \"Edit name, labour & hardware\" — both of them a list of fields where a verb belonged",
       "The entry editor fits a phone. The category select was showing \"Main Structure / G\", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned",
       "A library row on a phone puts its actions on a second line. Four of them beside a name left the name reading \"HEA …\"",
@@ -63,6 +64,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
     ],
     changed_bs: [
+      "Početne kartice profila pružaju brzi pristup za svih 20 profila grupisano po porodicama (nosači, limovi i ploče uključujući rebrasti lim CHQ, cijevi i šipke), sa kompaktnim jednorednim kodovima",
       "Uređivanje stavke biblioteke je dugme u njenom redu, ne stavka u meniju, i zove se Uredi",
       "Uređivač stavke sada stane na telefon: kategorija i sati rada dobijaju svaki svoj red, stavka troška ima naziv u jednom redu a cijenu u sljedećem, a Sačuvaj i Otkaži su prikvačeni",
       "Red biblioteke na telefonu stavlja svoje radnje u drugi red",

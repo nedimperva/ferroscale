@@ -286,5 +286,16 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
       expect(currentQuery(h)).toContain("hea");
     });
   });
+
+  it("allows picking sub-options like chq directly from discovery tiles", async () => {
+    const h = await renderCommandShell({ query: "" });
+    const chqBtn = screen.getByRole("button", { name: /chq/i });
+    expect(chqBtn).toBeDefined();
+
+    await h.user.click(chqBtn);
+    await waitFor(() => {
+      expect(currentQuery(h)).toContain("chq");
+    });
+  });
 });
 

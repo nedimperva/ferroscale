@@ -14,6 +14,7 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- Clean-slate discovery cards provide instant 1-tap access to all 20 profile options grouped by product family (Beams & Structural, Plates & Sheets including chequered plate CHQ, Tubes & Pipes, and Bars & Sections), with single-row monospace codes
 - Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was "Rename, notes and tags", then briefly "Edit name, labour & hardware" — both of them a list of fields where a verb belonged
 - The entry editor fits a phone. The category select was showing "Main Structure / G", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned
 - A library row on a phone puts its actions on a second line. Four of them beside a name left the name reading "HEA …"
