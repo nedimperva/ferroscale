@@ -60,10 +60,12 @@ import {
   editLineToken,
   lineChips,
   lineExpandedIndex,
+  removeLineItem,
   removeLineToken,
   replaceLineToken,
   tweakActiveItem,
 } from "./line-edit";
+import { SegmentedRail } from "./segmented-rail";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
 import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
@@ -1483,12 +1485,6 @@ export function CommandShell() {
     }
   }, [query, expandedIndex]);
 
-  /** One chip standing in for a whole item, labelled as the hero numbers it. */
-  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
-    line.items[group.item]?.parse.name ||
-    group.tokens[0] ||
-    partialToken ||
-    String(group.item + 1);
   // A CSS variable, not a theme-derived literal: the class that selects it is
   // set before first paint by the inline script in the root layout, so the
   // server and the client emit the same style string. Reading `dark` here made
@@ -2394,6 +2390,31 @@ export function CommandShell() {
           {/* QUERY AREA */}
           {/* QUERY LINE — chips plus the caret; the keypad below types into it */}
             <div className="px-[14px] pb-2">
+              {chips.groups.length > 1 && (
+                <div className="mb-2">
+                  <SegmentedRail
+                    line={line}
+                    groups={chips.groups}
+                    expandedIndex={expandedIndex}
+                    onSelectTab={(idx) => {
+                      setExpandedItem(idx);
+                    }}
+                    onRemoveItem={(idx) => {
+                      const next = removeLineItem(query, idx);
+                      setQuery(next);
+                      if (expandedIndex >= idx && expandedIndex > 0) {
+                        setExpandedItem(expandedIndex - 1);
+                      }
+                    }}
+                    onAddItem={() => {
+                      const next = cmdAppendLineItem(query);
+                      setQuery(next);
+                      setExpandedItem(chips.groups.length);
+                    }}
+                    compact
+                  />
+                </div>
+              )}
               <div
                 ref={queryLineRef}
                 data-query-line=""
@@ -2422,65 +2443,33 @@ export function CommandShell() {
                   style={{ color: "var(--accent)" }}
                   aria-hidden="true"
                 >
-                  {p.alias ? (
-                    <CommandGlyph fam={p.alias.fam} alias={p.alias.alias} size={18} />
-                  ) : (
-                    "›"
-                  )}
+                  {(() => {
+                    const activeAlias = line.items[expandedIndex]?.parse.alias ?? p.alias;
+                    return activeAlias ? (
+                      <CommandGlyph fam={activeAlias.fam} alias={activeAlias.alias} size={18} />
+                    ) : (
+                      "›"
+                    );
+                  })()}
                 </span>
                 {chipCount === 0 && !partialToken && (
                   <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">
                     {t("query.placeholder")}
                   </span>
                 )}
-                {chips.groups.map((group) => (
-                  <Fragment key={group.item}>
-                    {group.item > 0 && (
-                      <span
-                        className="font-mono text-sm font-bold px-0.5"
-                        style={{ color: "var(--muted-faint)" }}
-                        aria-hidden="true"
-                      >
-                        +
-                      </span>
-                    )}
-                    {group.item === expandedIndex ? (
-                      group.tokens.map((tok, i) => (
-                        <TokenChip
-                          key={`${tok}-${i}`}
-                          // Only an item opened by hand needs seeking to; the
-                          // last item is where the caret already is.
-                          anchor={i === 0 && group.item !== chips.groups.length - 1}
-                          tok={tok}
-                          kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                          shadowed={line.items[group.item]?.parse.shadowedTokenIndexes.includes(i)}
-                          onEdit={() => editTokenAt(group.item, i)}
-                          onRemove={() => removeTokenAt(group.item, i)}
-                          onReplace={(next) => replaceTokenAt(group.item, i, next)}
-                        />
-                      ))
-                    ) : group.tokens.length === 0 ? null : (
-                      <button
-                        type="button"
-                        onClick={() => setExpandedItem(group.item)}
-                        aria-label={t("query.expandItem", {
-                          index: group.item + 1,
-                          name: collapsedItemLabel(group),
-                        })}
-                        className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-sm font-semibold whitespace-nowrap"
-                        style={{
-                          padding: "5px 10px",
-                          border: "1px solid var(--border-faint)",
-                          background: "var(--surface-inset)",
-                          color: "var(--foreground-secondary)",
-                        }}
-                      >
-                        <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
-                        {collapsedItemLabel(group)}
-                        <span className="text-[10px] text-muted-faint">▸</span>
-                      </button>
-                    )}
-                  </Fragment>
+                {(chips.groups[expandedIndex]?.tokens ?? []).map((tok, i) => (
+                  <TokenChip
+                    key={`${tok}-${i}`}
+                    // Only an item opened by hand needs seeking to; the
+                    // last item is where the caret already is.
+                    anchor={i === 0 && expandedIndex !== chips.groups.length - 1}
+                    tok={tok}
+                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                    shadowed={line.items[expandedIndex]?.parse.shadowedTokenIndexes.includes(i)}
+                    onEdit={() => editTokenAt(expandedIndex, i)}
+                    onRemove={() => removeTokenAt(expandedIndex, i)}
+                    onReplace={(next) => replaceTokenAt(expandedIndex, i, next)}
+                  />
                 ))}
                 {partialToken && (
                   <span className="font-mono text-sm font-semibold text-foreground flex-shrink-0">

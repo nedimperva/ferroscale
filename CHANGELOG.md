@@ -14,6 +14,7 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- The command bar typing line displays only the tokens for the active item, eliminating inline plus signs and collapsed grey pills from the typing box
 - Clean-slate discovery cards provide instant 1-tap access to all 20 profile options grouped by product family (Beams & Structural, Plates & Sheets including chequered plate CHQ, Tubes & Pipes, and Bars & Sections), with single-row monospace codes
 - Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was "Rename, notes and tags", then briefly "Edit name, labour & hardware" — both of them a list of fields where a verb belonged
 - The entry editor fits a phone. The category select was showing "Main Structure / G", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned
@@ -38,6 +39,7 @@ three and four levels down came up to where they are named.
 
 ### Added
 
+- Multi-item lines feature segmented item rail tabs directly above the command line to switch items, monitor item weights, delete items, and append new items with 1 click
 - Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile
 - The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life
 - An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited

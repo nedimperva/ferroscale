@@ -45,6 +45,7 @@ import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
+import { SegmentedRail } from "../segmented-rail";
 import { SaveControl } from "../save-control";
 import { DEMO_QUERY } from "../command-constants";
 import {
@@ -53,6 +54,7 @@ import {
   lineChips,
   lineExpandedIndex,
   pullLastChip,
+  removeLineItem,
   removeLineToken,
 } from "../line-edit";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
@@ -192,6 +194,9 @@ export function DeskCalcView({
   const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
+  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
+
   // Which `+` item the glance row and the breakdown describe. Picked from
   // the assembly list in the right rail, not repeated under the hero.
   const [picked, setPicked] = useState(line.activeIndex);
@@ -201,7 +206,11 @@ export function DeskCalcView({
     setPicked(line.activeIndex);
   }
   const focusParse: CommandParseResult =
-    line.multi && line.items[picked]?.parse.valid ? line.items[picked].parse : p;
+    line.multi && line.items[expandedIndex]?.parse.valid
+      ? line.items[expandedIndex].parse
+      : line.multi && line.items[picked]?.parse.valid
+        ? line.items[picked].parse
+        : p;
   const leadAlias =
     focusParse.alias ?? (partial ? findAliasByPrefix(partial.toLowerCase()) : null);
 
@@ -234,14 +243,6 @@ export function DeskCalcView({
     return () => window.removeEventListener("mousedown", handleDown);
   }, [moreOpen]);
 
-  /**
-   * Same rule as the phone: only the item being typed is spelled out as
-   * chips. Finished `+` items collapse to one grey chip so "+ another item"
-   * does not flood the bar. Tap a grey chip to open that item.
-   */
-  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
-  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
-
   const keepExpanded = (item: number, next: string) => {
     lockExpanded(item, next);
     setQuery(next);
@@ -253,11 +254,6 @@ export function DeskCalcView({
   const editTokenAt = (item: number, idx: number) => {
     keepExpanded(item, editLineToken(query, item, idx));
   };
-  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
-    line.items[group.item]?.parse.name ||
-    group.tokens[0] ||
-    partial ||
-    String(group.item + 1);
 
   // Hero metric counts up when the query settles (see useCountUp). Weight
   // always counts up in exact kilograms (no tonne conversion).
@@ -310,6 +306,37 @@ export function DeskCalcView({
 
       {/* ───────── command line — full width ───────── */}
       <div className="flex-shrink-0" style={{ padding: compact ? "14px 16px 0" : "18px 20px 0" }}>
+        {chips.groups.length > 1 && (
+          <div className="mb-2">
+            <SegmentedRail
+              line={line}
+              groups={chips.groups}
+              expandedIndex={expandedIndex}
+              onSelectTab={(idx) => {
+                setExpandedItem(idx);
+                setPicked(idx);
+                focusInputAtEnd();
+              }}
+              onRemoveItem={(idx) => {
+                const next = removeLineItem(query, idx);
+                setQuery(next);
+                if (expandedIndex >= idx && expandedIndex > 0) {
+                  setExpandedItem(expandedIndex - 1);
+                  setPicked(expandedIndex - 1);
+                }
+                focusInputAtEnd();
+              }}
+              onAddItem={() => {
+                const next = cmdAppendLineItem(query);
+                setQuery(next);
+                setExpandedItem(chips.groups.length);
+                setPicked(chips.groups.length);
+                focusInputAtEnd();
+              }}
+              compact={compact}
+            />
+          </div>
+        )}
         {/* An ink edge, not an accent glow. The bar is the one thing on the
             screen you always type into, so it is drawn like a rule rather
             than lit like a notification — which leaves the accent free to
@@ -334,50 +361,15 @@ export function DeskCalcView({
               "›"
             )}
           </span>
-          {chips.groups.map((group) => (
-            <Fragment key={group.item}>
-              {group.item > 0 && (
-                <span
-                  className="font-mono text-[17px] font-bold px-0.5"
-                  style={{ color: "var(--muted-faint)" }}
-                  aria-hidden="true"
-                >
-                  +
-                </span>
-              )}
-              {group.item === expandedIndex ? (
-                group.tokens.map((tok, i) => (
-                  <DeskTokenChip
-                    key={`${tok}-${i}`}
-                    tok={tok}
-                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                    shadowed={line.items[group.item]?.parse.shadowedTokenIndexes.includes(i)}
-                    onEdit={() => editTokenAt(group.item, i)}
-                    onRemove={() => removeTokenAt(group.item, i)}
-                  />
-                ))
-              ) : group.tokens.length === 0 ? null : (
-                <button
-                  type="button"
-                  onClick={() => setExpandedItem(group.item)}
-                  aria-label={t("query.expandItem", {
-                    index: group.item + 1,
-                    name: collapsedItemLabel(group),
-                  })}
-                  className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-[13.5px] font-semibold whitespace-nowrap"
-                  style={{
-                    padding: "5px 10px",
-                    border: "1px solid var(--border-faint)",
-                    background: "var(--surface-inset)",
-                    color: "var(--foreground-secondary)",
-                  }}
-                >
-                  <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
-                  {collapsedItemLabel(group)}
-                  <span className="text-[10px] text-muted-faint">▸</span>
-                </button>
-              )}
-            </Fragment>
+          {(chips.groups[expandedIndex]?.tokens ?? []).map((tok, i) => (
+            <DeskTokenChip
+              key={`${tok}-${i}`}
+              tok={tok}
+              kindClass={KIND_BG[cmdClassifyToken(tok)]}
+              shadowed={line.items[expandedIndex]?.parse.shadowedTokenIndexes.includes(i)}
+              onEdit={() => editTokenAt(expandedIndex, i)}
+              onRemove={() => removeTokenAt(expandedIndex, i)}
+            />
           ))}
           <GhostField
             ref={inputRef}
@@ -1060,7 +1052,10 @@ export function DeskCalcView({
             p={focusParse}
             line={line}
             picked={picked}
-            onPick={setPicked}
+            onPick={(idx) => {
+              setPicked(idx);
+              setExpandedItem(idx);
+            }}
             query={query}
             setQuery={setQuery}
           />

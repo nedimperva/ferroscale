@@ -59,9 +59,6 @@ export function lineExpandedIndex(
   if (expandedItem != null && expandedItem >= 0 && expandedItem < groups.length) {
     return expandedItem;
   }
-  for (let i = groups.length - 1; i >= 0; i--) {
-    if (groups[i].tokens.length > 0) return i;
-  }
   return Math.max(0, groups.length - 1);
 }
 
@@ -88,6 +85,15 @@ function withItemTokens(
 
 export function removeLineToken(query: string, item: number, token: number): string {
   return withItemTokens(query, item, (tokens) => tokens.filter((_, i) => i !== token));
+}
+
+/** Remove an entire item segment from a multi-item line. */
+export function removeLineItem(query: string, itemIndex: number): string {
+  const segments = cmdSplitLine(query);
+  if (itemIndex < 0 || itemIndex >= segments.length) return query;
+  if (segments.length <= 1) return "";
+  const remaining = segments.filter((_, i) => i !== itemIndex);
+  return remaining.map((s) => s.text.trim()).join(" + ");
 }
 
 /** Swap one token in place — used by the chip stepper so a nudge does not

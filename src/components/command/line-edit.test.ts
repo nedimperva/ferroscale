@@ -7,6 +7,7 @@ import {
   lineChips,
   lineExpandedIndex,
   pullLastChip,
+  removeLineItem,
   removeLineToken,
   replaceItemTokenKind,
   replaceLineToken,
@@ -51,9 +52,9 @@ describe("lineExpandedIndex", () => {
     expect(lineExpandedIndex(groups, 0)).toBe(0);
   });
 
-  it("falls back to the last item that still has chips", () => {
+  it("defaults to the active item at the caret", () => {
     const { groups } = lineChips("hea120 6m + ipe200 4m + ");
-    expect(lineExpandedIndex(groups, null)).toBe(1);
+    expect(lineExpandedIndex(groups, null)).toBe(2);
   });
 });
 
@@ -168,6 +169,32 @@ describe("tweakActiveItem", () => {
 
   it("falls back to pullLastChip when no length token is present", () => {
     expect(tweakActiveItem("hea120 ")).toBe("hea120");
+  });
+});
+
+describe("removeLineItem", () => {
+  it("removes a middle item from a 3-item query", () => {
+    const q = "hea120 6m x2 + upn140 4m x4 + plt1000x2000x5";
+    expect(removeLineItem(q, 1)).toBe("hea120 6m x2 + plt1000x2000x5");
+  });
+
+  it("removes the first item from a multi-item query", () => {
+    const q = "hea120 6m x2 + upn140 4m x4 + plt1000x2000x5";
+    expect(removeLineItem(q, 0)).toBe("upn140 4m x4 + plt1000x2000x5");
+  });
+
+  it("removes the last item from a multi-item query", () => {
+    const q = "hea120 6m x2 + upn140 4m x4 + plt1000x2000x5";
+    expect(removeLineItem(q, 2)).toBe("hea120 6m x2 + upn140 4m x4");
+  });
+
+  it("clears the query when removing the only item", () => {
+    expect(removeLineItem("hea120 6m", 0)).toBe("");
+  });
+
+  it("returns original query if index is out of bounds", () => {
+    expect(removeLineItem("hea120 6m + upn140 4m", 5)).toBe("hea120 6m + upn140 4m");
+    expect(removeLineItem("hea120 6m + upn140 4m", -1)).toBe("hea120 6m + upn140 4m");
   });
 });
 

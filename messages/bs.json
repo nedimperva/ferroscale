@@ -224,7 +224,9 @@
       "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
       "aria": "FerroScale komandni upit",
       "acceptGhost": "Dovrši: {text}",
-      "expandItem": "Stavka {index}, {name} — prikaži tokene"
+      "expandItem": "Stavka {index}, {name} — prikaži tokene",
+      "addItem": "Dodaj stavku",
+      "removeItem": "Ukloni stavku {index}"
     },
     "keypad": {
       "space": "razmak",
