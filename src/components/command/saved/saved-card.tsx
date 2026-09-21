@@ -155,7 +155,7 @@ export function SavedThumb({ model, size = 46 }: { model: SavedCardModel; size?:
       ) : model.fam ? (
         <CommandGlyph
           fam={model.fam}
-          alias={model.parsed?.alias?.alias ?? model.entry.profileId ?? model.entry.parts[0]?.profileId}
+          alias={model.entry.input?.profileId ?? model.entry.parts[0]?.input?.profileId}
           size={Math.round(size * 0.5)}
         />
       ) : null}
