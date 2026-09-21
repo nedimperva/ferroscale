@@ -552,7 +552,7 @@
       "pin": "Pin to top",
       "unpin": "Unpin",
       "duplicate": "Duplicate",
-      "edit": "Rename, notes and tags",
+      "edit": "Edit",
       "details": "Show details",
       "noBreakdown": "no live breakdown for this entry",
       "partCount": "{count, plural, one {# part} other {# parts}}",
@@ -590,7 +590,6 @@
       "assemblyExtras": "Goes with this assembly",
       "assemblyExtrasHint": "Carried into any project you drop this assembly into, scaled by the quantity.",
       "assemblyDefaultName": "{first} +{more}",
-      "editAssembly": "Edit name, labour & hardware",
       "editAssemblyTitle": "Edit assembly"
     },
     "projects": {
@@ -804,7 +803,9 @@
       "addToProjectAria": "Add {name} to a project",
       "emptyFilterTitle": "Nothing of that kind yet",
       "emptyFilterBody": "Widen the filter to see everything you have saved.",
-      "showAll": "Show everything"
+      "showAll": "Show everything",
+      "editAria": "Edit {name}",
+      "moreAria": "More actions for {name}"
     },
     "cutting": {
       "title": "Cut plan",
@@ -966,7 +967,8 @@
       "createSubtitle": "A new project, built from one in your library.",
       "createAction": "Create project (×{count})",
       "projectName": "Project name",
-      "projectNameHint": "The cuts are grouped under this name inside the project too."
+      "projectNameHint": "The cuts are grouped under this name inside the project too.",
+      "costAmount": "Amount"
     }
   },
   "contact": {

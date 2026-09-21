@@ -224,10 +224,9 @@ test.describe("Assemblies", () => {
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
-    await page.getByRole("button", { name: "HEA 140 +1", exact: true }).click();
-    // "Rename, notes and tags" said nothing about the two fields a project
-    // inherits, so they might as well not have been there.
-    await page.getByRole("menuitem", { name: "Edit name, labour & hardware" }).click();
+    // Editing is a button on the row, not a menu item behind a label that
+    // named none of the fields a project inherits.
+    await page.getByRole("button", { name: "Edit HEA 140 +1" }).click();
     await expect(page.getByRole("dialog", { name: "Edit assembly" })).toBeVisible();
 
     await page.getByLabel("Labour hours").fill("1.5");
@@ -237,8 +236,7 @@ test.describe("Assemblies", () => {
     await page.getByRole("button", { name: "Save changes" }).click();
 
     // They survive the round trip, which is what a project will read.
-    await page.getByRole("button", { name: "HEA 140 +1", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Edit name, labour & hardware" }).click();
+    await page.getByRole("button", { name: "Edit HEA 140 +1" }).click();
     await expect(page.getByLabel("Labour hours")).toHaveValue("1.5");
     await expect(page.locator('input[value="8x M16 bolts"]')).toHaveCount(1);
   });
@@ -280,7 +278,9 @@ test.describe("Assemblies", () => {
 
     await typeQuery(page, "shs40x40x3 4m x10 ");
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
-    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    // The ⋯ trigger answers to "More actions for …": it used to carry the
+    // entry's own name, which the row's open button already has.
+    await page.getByRole("button", { name: "More actions for HEA 120" }).click();
     await page.getByRole("menuitem", { name: "Add a part" }).click();
 
     // The row is now an assembly: two parts, summed. Parts and assemblies share

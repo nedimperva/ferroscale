@@ -552,7 +552,7 @@
       "pin": "Zakači na vrh",
       "unpin": "Otkači",
       "duplicate": "Dupliraj",
-      "edit": "Naziv, bilješke i oznake",
+      "edit": "Uredi",
       "details": "Prikaži detalje",
       "noBreakdown": "nema živog pregleda za ovu stavku",
       "partCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
@@ -590,7 +590,6 @@
       "assemblyExtras": "Ide uz ovaj sklop",
       "assemblyExtrasHint": "Prenosi se u svaki projekat u koji ubacite ovaj sklop, skalirano po količini.",
       "assemblyDefaultName": "{first} +{more}",
-      "editAssembly": "Uredi naziv, rad i okov",
       "editAssemblyTitle": "Uredi sklop"
     },
     "projects": {
@@ -804,7 +803,9 @@
       "addToProjectAria": "Dodaj {name} u projekat",
       "emptyFilterTitle": "Još nema ničega te vrste",
       "emptyFilterBody": "Proširi filter da vidiš sve što si sačuvao.",
-      "showAll": "Prikaži sve"
+      "showAll": "Prikaži sve",
+      "editAria": "Uredi {name}",
+      "moreAria": "Više radnji za {name}"
     },
     "cutting": {
       "title": "Plan rezanja",
@@ -966,7 +967,8 @@
       "createSubtitle": "Novi projekat, napravljen od sklopa iz vaše biblioteke.",
       "createAction": "Napravi projekat (×{count})",
       "projectName": "Naziv projekta",
-      "projectNameHint": "Rezovi se i unutar projekta grupišu pod ovim nazivom."
+      "projectNameHint": "Rezovi se i unutar projekta grupišu pod ovim nazivom.",
+      "costAmount": "Iznos"
     }
   },
   "contact": {

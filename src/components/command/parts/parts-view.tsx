@@ -208,9 +208,30 @@ function PartsRow({
     </button>
   );
 
+  const editButton = (
+    <button
+      type="button"
+      onClick={() => actions.onEdit(entry)}
+      aria-label={t("parts.editAria", { name: entry.name })}
+      title={t("saved.edit")}
+      className="text-[12px] cursor-pointer flex-shrink-0 flex items-center gap-1.5"
+      style={{
+        padding: "5px 11px",
+        border: "1px solid var(--border)",
+        background: "transparent",
+        color: "var(--foreground-secondary)",
+      }}
+    >
+      <DeskIcon name="pencil" />
+      <span>{t("saved.edit")}</span>
+    </button>
+  );
+
   const menu = (
     <RowMenu
-      ariaLabel={entry.name}
+      // Not the entry's name: the row's own button already answers to that,
+      // so a screen reader heard two identical controls side by side.
+      ariaLabel={t("parts.moreAria", { name: entry.name })}
       items={[
         {
           id: "pin",
@@ -218,11 +239,6 @@ function PartsRow({
           onSelect: () => actions.onTogglePin(entry),
         },
         { id: "compare", label: t("saved.addToCompare"), onSelect: () => actions.onAddCompare(entry) },
-        {
-          id: "edit",
-          label: isAssembly(entry) ? t("saved.editAssembly") : t("saved.edit"),
-          onSelect: () => actions.onEdit(entry),
-        },
         { id: "duplicate", label: t("saved.duplicate"), onSelect: () => actions.onDuplicate(entry) },
         ...(actions.onAddPart && actions.canAddCurrentLine
           ? [{ id: "addPart", label: t("saved.addPart"), onSelect: () => actions.onAddPart?.(entry) }]
@@ -297,14 +313,17 @@ function PartsRow({
 
   if (compact) {
     return (
+      // Four actions and a name do not share 390px: the name came out as
+      // "HEA …" over "HEA + Plat…". The row takes two lines here — the thing
+      // you are looking for gets the width, and every action keeps its word.
       <div
-        className="flex items-center gap-2 border-t border-border-faint first:border-t-0"
+        className="flex flex-col gap-2 border-t border-border-faint first:border-t-0"
         style={{ padding: "10px 8px 10px 12px" }}
       >
         <button
           type="button"
           onClick={() => actions.onPick(entry)}
-          className="flex min-w-0 flex-1 flex-col gap-0.5 border-0 bg-transparent p-0 text-left cursor-pointer"
+          className="flex min-w-0 flex-col gap-0.5 border-0 bg-transparent p-0 text-left cursor-pointer"
         >
           <span className="flex min-w-0 items-center gap-2">
             <SavedThumb model={model} size={24} />
@@ -320,9 +339,12 @@ function PartsRow({
             </span>
           </span>
         </button>
-        {useButton}
-        {projectButton}
-        {menu}
+        <div className="flex items-center gap-2">
+          {useButton}
+          {projectButton}
+          {editButton}
+          <span className="ml-auto">{menu}</span>
+        </div>
       </div>
     );
   }
@@ -363,6 +385,7 @@ function PartsRow({
       <div role="cell" className="flex items-center gap-2 flex-shrink-0">
         {useButton}
         {projectButton}
+        {editButton}
         {menu}
       </div>
     </div>

@@ -20,6 +20,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.27.0",
     date: "2026-09-19",
     changed: [
+      "Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was \"Rename, notes and tags\", then briefly \"Edit name, labour & hardware\" — both of them a list of fields where a verb belonged",
+      "The entry editor fits a phone. The category select was showing \"Main Structure / G\", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned",
+      "A library row on a phone puts its actions on a second line. Four of them beside a name left the name reading \"HEA …\"",
       "An assembly's labour hours and hardware are edited where its name is, and the menu that opens it says so. They used to live in a template manager buried inside a project; for a while after that they were behind an item called \"Rename, notes and tags\", which named none of them",
       "The mobile breakdown carries three controls instead of nine. It was three rows of buttons with \"Copy summary\" drawn twice, and both \"Save\" and \"+ Project\" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it",
       "Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own \"+ Assembly\" offered a count — the same act, two answers depending on which door you used",
@@ -44,6 +47,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
     ],
     fixed: [
+      "The ⋯ on a library row announced itself with the entry's name, which is also what the row's own open button is called — two controls, one name, side by side",
       "A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen",
       "An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them",
       "Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part",
@@ -59,6 +63,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
     ],
     changed_bs: [
+      "Uređivanje stavke biblioteke je dugme u njenom redu, ne stavka u meniju, i zove se Uredi",
+      "Uređivač stavke sada stane na telefon: kategorija i sati rada dobijaju svaki svoj red, stavka troška ima naziv u jednom redu a cijenu u sljedećem, a Sačuvaj i Otkaži su prikvačeni",
+      "Red biblioteke na telefonu stavlja svoje radnje u drugi red",
       "Sati rada i okov sklopa uređuju se tamo gdje i njegov naziv, a meni koji to otvara sada to i kaže",
       "Mobilni prikaz razrade nosi tri kontrole umjesto devet. Bila su tri reda dugmadi s „Kopiraj sažetak\" nacrtanim dvaput",
       "Prebacivanje sklopa iz biblioteke u projekat sada pita koliko komada. Prije je uvijek dodavalo tačno jedan, dok je „+ Sklop\" unutar projekta nudio količinu",
@@ -83,6 +90,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
     ],
     fixed_bs: [
+      "Dugme ⋯ u redu biblioteke predstavljalo se nazivom stavke, istim kojim se predstavlja i dugme za otvaranje tog reda",
       "Meni ⋯ otvoren dok se pomjeranje još smirivalo zatvarao bi se istog trena. Sada prati svoj red i zatvara se tek kada red napusti ekran",
       "Sklop prebačen iz biblioteke u projekat stizao je bez sati rada, troškova okova i djelatnosti koje nosi",
       "Slanje sačuvanog dijela u sačuvani sklop dodavalo je ono što je bilo u komandnoj traci umjesto samog dijela",

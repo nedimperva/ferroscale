@@ -14,6 +14,9 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was "Rename, notes and tags", then briefly "Edit name, labour & hardware" — both of them a list of fields where a verb belonged
+- The entry editor fits a phone. The category select was showing "Main Structure / G", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned
+- A library row on a phone puts its actions on a second line. Four of them beside a name left the name reading "HEA …"
 - An assembly's labour hours and hardware are edited where its name is, and the menu that opens it says so. They used to live in a template manager buried inside a project; for a while after that they were behind an item called "Rename, notes and tags", which named none of them
 - The mobile breakdown carries three controls instead of nine. It was three rows of buttons with "Copy summary" drawn twice, and both "Save" and "+ Project" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it
 - Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own "+ Assembly" offered a count — the same act, two answers depending on which door you used

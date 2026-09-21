@@ -383,6 +383,34 @@ test.describe("Phone fold (390x844)", () => {
     expect(escaped).toEqual([]);
   });
 
+  test("a library row offers editing without a menu, name intact", async ({ page }) => {
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /^Save$/ }).click();
+    await page.getByRole("button", { name: "Parts" }).click();
+
+    // Scoped to the sheet: the command line's token chips are "Edit hea120"
+    // and friends, which a loose /^Edit / would sweep up.
+    const sheet = page.getByRole("dialog", { name: "Parts" });
+    const editRow = sheet.getByRole("button", { name: "Edit HEA 120" });
+    // Four actions and a name do not share 390px on one line — the row takes
+    // two here, so the name is readable and every action keeps its word.
+    await expect(editRow).toBeVisible();
+    const clipped = await page.evaluate(() => {
+      const dialogs = Array.from(document.querySelectorAll('[role="dialog"]'));
+      const sheet = dialogs[dialogs.length - 1];
+      return Array.from(sheet?.querySelectorAll("span,button") ?? [])
+        .filter((el) => el.scrollWidth > el.clientWidth + 1)
+        .map((el) => (el.textContent ?? "").trim());
+    });
+    expect(clipped).toEqual([]);
+
+    await editRow.click();
+    await expect(page.getByRole("dialog", { name: "Edit saved calculation" })).toBeVisible();
+    // Save and Cancel are pinned, not scrolled off the end of the form.
+    await expect(page.getByRole("button", { name: "Save changes" })).toBeVisible();
+  });
+
   test("the breakdown carries three controls, not nine", async ({ page }) => {
     await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
