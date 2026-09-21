@@ -2,6 +2,12 @@ import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 /**
+ * A share link carrying a live result — the app stopped seeding a demo query
+ * when clean-slate onboarding landed, so a bare /en has nothing to measure.
+ */
+const DEMO_LINK = "/en?q=hea120+6m+x2";
+
+/**
  * The quoting layer: per-grade rates, margin on top of cost, and turning a
  * session into a project.
  */
@@ -86,7 +92,10 @@ test.describe("Desktop fold", () => {
   test("+ item starts a second item from the desktop action row", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 ");
-    await page.getByRole("button", { name: "Add another item to the line" }).click();
+    // Starting a second item lives in the overflow beside the save control —
+    // the row itself is for the things done to a finished line.
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("button", { name: "+ item" }).click();
     // Not typeQuery: that helper presses ⌘K first, which would clear the line
     // the button just extended.
     await page
@@ -163,7 +172,7 @@ test.describe("Mass tolerance", () => {
 
 test.describe("Margin", () => {
   test("adds a sell price to the breakdown without touching cost", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("Total cost", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Sell price/)).toHaveCount(0);
 
@@ -197,6 +206,69 @@ test.describe("Session", () => {
 });
 
 test.describe("Assemblies", () => {
+  test("the way into the library is offered before the library has anything in it", async ({ page }) => {
+    await page.goto("/en/projects");
+    // Hiding these until an assembly existed meant the feature vanished for
+    // anyone who had not already used it, with nothing left to learn it from.
+    await expect(page.getByRole("button", { name: "From assembly" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "From assembly" }).first().click();
+    await expect(page.getByText("No assemblies yet").first()).toBeVisible();
+    await expect(page.getByText(/Save a line with several cuts/).first()).toBeVisible();
+  });
+
+  test("an assembly's labour and hardware are named where they are edited", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea140 3m + plt200x160x12 x2 ");
+    await page.getByRole("button", { name: "Save somewhere else" }).click();
+    await page.getByText("Save to library as one assembly").click();
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    // Editing is a button on the row, not a menu item behind a label that
+    // named none of the fields a project inherits.
+    await page.getByRole("button", { name: "Edit HEA 140 +1" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit assembly" })).toBeVisible();
+
+    await page.getByLabel("Labour hours").fill("1.5");
+    await page.getByRole("button", { name: "Add a cost line" }).click();
+    await page.getByPlaceholder("New cost line").fill("8x M16 bolts");
+    await page.locator('input[inputmode="decimal"]').last().fill("9.60");
+    await page.getByRole("button", { name: "Save changes" }).click();
+
+    // They survive the round trip, which is what a project will read.
+    await page.getByRole("button", { name: "Edit HEA 140 +1" }).click();
+    await expect(page.getByLabel("Labour hours")).toHaveValue("1.5");
+    await expect(page.locator('input[value="8x M16 bolts"]')).toHaveCount(1);
+  });
+
+  test("a project can be started from a library assembly, once there is one", async ({ page }) => {
+    await page.goto("/en/projects");
+    // The app ships with no assemblies, so there is nothing to start from and
+    // the button that would open an empty picker is not drawn.
+    await expect(page.getByRole("button", { name: "From assembly" })).toHaveCount(0);
+
+    // Save a two-cut line into the library as one assembly.
+    await page.goto("/en");
+    await typeQuery(page, "hea140 3m + plt200x160x12 x2 ");
+    await page.getByRole("button", { name: "Save somewhere else" }).click();
+    // Named after the cut that leads it, not whichever one the caret was on.
+    await page.getByText("Save to library as one assembly").click();
+    await expect(page.getByLabel("Save to library as one assembly")).toHaveValue("HEA 140 +1");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    // Now it is offered, and the picker starts a project rather than adding
+    // to one — the same dialog, saying which of the two it is doing.
+    await page.goto("/en/projects");
+    await page.getByRole("button", { name: "From assembly" }).first().click();
+    await expect(page.getByText("Start from an assembly")).toBeVisible();
+    await page.getByRole("textbox", { name: "" }).nth(1).fill("Warehouse mezzanine");
+    await page.getByRole("button", { name: /Create project/ }).click();
+
+    // The project is named what was typed, and carries both cuts.
+    await expect(page.getByText("Warehouse mezzanine").first()).toBeVisible();
+    await expect(page.getByText(/^2 items$/).first()).toBeVisible();
+  });
+
   test("a saved entry can hold several parts and sums them", async ({ page }) => {
     await page.goto("/en");
 
@@ -206,7 +278,9 @@ test.describe("Assemblies", () => {
 
     await typeQuery(page, "shs40x40x3 4m x10 ");
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
-    await page.getByRole("button", { name: "HEA 120", exact: true }).click();
+    // The ⋯ trigger answers to "More actions for …": it used to carry the
+    // entry's own name, which the row's open button already has.
+    await page.getByRole("button", { name: "More actions for HEA 120" }).click();
     await page.getByRole("menuitem", { name: "Add a part" }).click();
 
     // The row is now an assembly: two parts, summed. Parts and assemblies share
@@ -246,11 +320,11 @@ test.describe("Assemblies", () => {
     // a touch screen never reveals a hover-only action.
     await page.getByRole("button", { name: "Add HEA 120 to a project" }).click();
 
-    // One overlay: it opens on Projects with the list already beside the rail,
-    // and a project can be created without leaving for a second sheet.
-    await page.getByRole("button", { name: /^Start a new project/ }).click();
-    await page.getByPlaceholder("New project name...").fill("Mezzanine");
-    await page.getByRole("button", { name: "Add to project", exact: true }).click();
+    // One flat list of destinations: the row that creates a project names it
+    // in place, with no second sheet and no kind to pick first.
+    await page.getByRole("button", { name: /^New project/ }).click();
+    await page.getByLabel("New project", { exact: true }).fill("Mezzanine");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
 
     await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
     await page.getByRole("button", { name: /^Open project Mezzanine/ }).click();
@@ -265,9 +339,9 @@ test.describe("Assemblies", () => {
 
     await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
     await page.getByRole("button", { name: "Add HEA 120 to a project" }).click();
-    await page.getByRole("button", { name: /^Start a new project/ }).click();
-    await page.getByPlaceholder("New project name...").fill("Gate");
-    await page.getByRole("button", { name: "Add to project", exact: true }).click();
+    await page.getByRole("button", { name: /^New project/ }).click();
+    await page.getByLabel("New project", { exact: true }).fill("Gate");
+    await page.getByRole("button", { name: "Create", exact: true }).click();
 
     await page.getByRole("button", { name: /^Projects\s*1$/ }).click();
     await page.getByRole("button", { name: /^Open project Gate/ }).click();

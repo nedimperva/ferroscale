@@ -90,7 +90,6 @@ describe("mergeSnapshots", () => {
           ],
         },
         projects: { items: [] },
-        presets: { items: [] },
         compare: {
           updatedAt: "2026-03-31T10:00:00.000Z",
           items: [{ id: "cmp-local" } as never],
@@ -127,7 +126,6 @@ describe("mergeSnapshots", () => {
           ],
         },
         projects: { items: [] },
-        presets: { items: [] },
         compare: {
           updatedAt: "2026-03-31T11:00:00.000Z",
           items: [{ id: "cmp-remote" } as never],

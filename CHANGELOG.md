@@ -5,6 +5,60 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.27.0] - 2026-09-19
+
+A flow release. The app could do the work; deciding where each answer went
+was the work. Five buckets a calculation could land in became three, seven
+controls that all looked like saving became one, and the features that were
+three and four levels down came up to where they are named.
+
+### Changed
+
+- Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was "Rename, notes and tags", then briefly "Edit name, labour & hardware" — both of them a list of fields where a verb belonged
+- The entry editor fits a phone. The category select was showing "Main Structure / G", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned
+- A library row on a phone puts its actions on a second line. Four of them beside a name left the name reading "HEA …"
+- An assembly's labour hours and hardware are edited where its name is, and the menu that opens it says so. They used to live in a template manager buried inside a project; for a while after that they were behind an item called "Rename, notes and tags", which named none of them
+- The mobile breakdown carries three controls instead of nine. It was three rows of buttons with "Copy summary" drawn twice, and both "Save" and "+ Project" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it
+- Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own "+ Assembly" offered a count — the same act, two answers depending on which door you used
+- Both doors now land the same way: one project item per cut, tagged with the assembly's name. From the library it used to arrive as a single rolled-up row whose cuts could not be edited
+- The five standards that shipped with the app are gone. They were a template collection's built-ins, and keeping them meant a library that was never empty, no empty state to teach the Save button with, a "Standards" filter, a restore-all affordance and counts that had to be split in two to stay honest. The library holds what you put in it
+- "Template" is not a word the app uses any more. There is one library, and the thing you take from it into a project is an assembly — the picker, the save dialog and every label say so
+- The assembly picker knows which of its two jobs it is doing: "Insert an assembly" into the project you are in, or "Start from an assembly" when it is making one. In the second the name field names the project, which it used to collect and then ignore
+- On a phone the save control takes the action row and the rest are icons. Four equal buttons left the one control with words on it about 60px to say them in, and "Save" came out as a bookmark and the letter S
+- A pristine phone screen leads with the profile tiles. They used to queue below a hero full of placeholder dashes — a mode switch, a "—", a "—/pc" strip and four disabled buttons — which left them about enough room for their own heading
+- One save control, not four. A bookmark toggle, an "Add to project" button and a "Save to…" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do ("Add to Gate job", or "Save"), and its caret opens everywhere else
+- The destination picker is one list. It used to ask what kind of thing first — four rows, each with its own nested list — then which one: two steps on a phone, a rail beside a scroller on a desktop. Now every project and every library entry is in one flat list, newest first, one press to file. Type to filter, arrow keys and Enter to drive it, and the search field has focus when it opens
+- The app remembers which job you are working out of. File something into a project and the calculator's primary action names that project until you file somewhere else — including after turning a session tape into one
+- Parts, assemblies and templates are one library. A template was a multi-part saved entry in a store of its own, with its own picker and its own editor buried inside a project. Now an assembly in the library is what you drop into a project, and there is one place to rename, re-cost and delete one
+- The material order is a tab of the project, beside Items and Cut plan. "What do I need to buy" was a chip inside the cut-plan tab — three levels down, behind a question it is not a sub-question of
+- The session tape carries the same weight on both surfaces: the phone's ribbon has "save as project" on it rather than two taps inside a sheet, and opening the tape is the whole left side of the row
+- The phone's navigation matches the workspace's. One bookmark glyph used to stand for Parts, Projects, Compare and the session tape at once
+- The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before
+
+### Added
+
+- The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life
+- An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited
+- A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word
+
+### Fixed
+
+- A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen
+- An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them
+- Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part
+- The end-to-end suite is green again. Fourteen tests — every accessibility scan among them — waited for a result on a screen that stopped seeding one in 3.26, so axe had not actually run on any surface since
+- A multi-cut line saved from the picker was named after whichever cut the caret was on — "hea140 3m + plt200x160x12 x2" came out as "Plate 200×160×12". It is named after the cut that leads it now, plus how many more
+- The assembly picker says what fills it when the library is empty, rather than opening blank
+- The session row let its total draw over the button beside it on a phone, instead of giving way
+- Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now
+- Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part
+- On a phone, opening a share link flashed the profile tiles for a frame before the line arrived
+- The session ribbon grew as the tape filled, pushing the answer up the screen while you worked
+- Overlays opened with focus on their close button — the one control nobody opens an overlay to use
+- The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one
+
+---
+
 ## [3.26.0] - 2026-09-13
 
 An accuracy and correctness release. Five EN channel sizes were wrong, and
@@ -91,6 +145,8 @@ returned a confidently wrong number with no error state.
   catalog check, instead of an unqualified "All checks pass"
 - **Frequently Asked Questions (FAQ) guide for metal weight calculations (`/faq`)**:
   Interactive formula verifier with step-by-step mathematical traces, formula cheat sheet, search filtering by profile type and alloy, worked workshop examples, and one-click execution in the FerroScale command bar
+- **Clean-slate onboarding & visual discovery tiles.** Pristine start without forced demo calculations, providing 5 visual family cards (Beams, Square Tubes, Rectangular Tubes, Round Pipes, Plates) for 3-tap calculations without typing, plus an on-demand "Try demo" chip
+- **Live mass preview in Project quick-add.** Typing commands inside a project shows immediate calculated weight feedback before adding
 - **Canonical URL, `og:url`, `x-default` hreflang**, and a consistent
   production base-URL fallback across layout, robots and sitemap
 
@@ -106,6 +162,9 @@ returned a confidently wrong number with no error state.
 - **Every screen has a heading outline** — the app had zero headings
 - **The cutting optimisers load with their tab**: main chunk 500.6 → 420.5 kB
   raw (120.9 → 102.6 kB gzip)
+- **Streamlined calculator action bar.** Consolidated 7 fragmented icon buttons into 3 clear primary intents: Copy Summary (primary ink action), Favorite toggle, and Add to Project, with secondary utilities in an overflow menu
+- **Frictionless Save destinations.** Clarified and focused the save overlay directly on project selection and creation
+- **Project in-line add flow.** Clicking "+ Add Item" in a project focuses the in-line command bar directly instead of silently dumping background calculator state
 - `sitemap.lastModified` derives from the dataset version instead of `new
   Date()` per request; Archivo drops the unused weight 900; five unreferenced
   Next.js starter assets removed from `public/`

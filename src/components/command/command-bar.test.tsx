@@ -275,5 +275,16 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
       expect(h.getAllByText(/assembly · 2 parts/).length).toBeGreaterThan(0);
     });
   });
+
+  it("shows discovery tiles on clean slate and allows trying demo", async () => {
+    const h = await renderCommandShell({ query: "" });
+    expect(screen.getByTestId("profile-discovery")).toBeDefined();
+    expect(screen.getByRole("button", { name: /Beams/i })).toBeDefined();
+
+    await h.user.click(screen.getByRole("button", { name: /Beams/i }));
+    await waitFor(() => {
+      expect(currentQuery(h)).toContain("hea");
+    });
+  });
 });
 

@@ -47,6 +47,21 @@
     "installButton": "Instaliraj aplikaciju"
   },
   "command": {
+    "discovery": {
+      "title": "Izaberite profil za početak",
+      "subtitle": "Kliknite na oblik za trenutni proračun ili pregled EN standarda",
+      "beams": "Nosači",
+      "beamsSub": "HEA, HEB, IPE",
+      "squareTubes": "Kvadratne cijevi",
+      "squareTubesSub": "SHS, kutijasti profili",
+      "rectangularTubes": "Pravougaone cijevi",
+      "rectangularTubesSub": "RHS, kutijasti profili",
+      "roundPipes": "Okrugle cijevi",
+      "roundPipesSub": "CHS, šuplje cijevi",
+      "plates": "Limovi",
+      "platesSub": "Limovi i ravne ploče",
+      "tryDemo": "Isprobaj demo izračun (HEA 120 6m ×2) →"
+    },
     "quote": {
       "title": "Ponuda",
       "item": "Stavka",
@@ -146,7 +161,9 @@
       "more": "Više radnji",
       "add": "Dodaj",
       "addProjectLong": "Dodaj u projekat",
-      "paste": "Zalijepi"
+      "paste": "Zalijepi",
+      "less": "Jedan manje",
+      "moreOne": "Jedan više"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",
@@ -182,7 +199,8 @@
       "closeSheet": "Zatvori panel",
       "liveResult": "Rezultat: {value}",
       "addToSession": "Dodaj ovu liniju u sesiju",
-      "openBreakdown": "Otvori detalje rezultata"
+      "openBreakdown": "Otvori detalje rezultata",
+      "openSession": "Otvori traku sesije"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",
@@ -460,7 +478,6 @@
       "newProjectName": "Naziv novog projekta...",
       "emptyProjects": "Još nema projekata. Kreirajte jedan iznad ili dodirnite + Projekat na rezultatu.",
       "emptyProject": "Prazan projekat",
-      "calcCount": "{count, plural, one {# izračun} few {# izračuna} other {# izračuna}}",
       "noCalculationsYet": "Još nema izračuna.",
       "noProjectsCreateAbove": "Još nema projekata. Kreirajte jedan iznad za početak.",
       "newProject": "Novi projekat",
@@ -489,7 +506,8 @@
       "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
       "saveAsProject": "Sačuvaj kao projekat",
       "anotherItem": "+ stavka",
-      "anotherItemAria": "Dodaj još jednu stavku u liniju"
+      "anotherItemAria": "Dodaj još jednu stavku u liniju",
+      "saveSessionAsProjectShort": "→ PROJEKAT"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
@@ -534,7 +552,7 @@
       "pin": "Zakači na vrh",
       "unpin": "Otkači",
       "duplicate": "Dupliraj",
-      "edit": "Naziv, bilješke i oznake",
+      "edit": "Uredi",
       "details": "Prikaži detalje",
       "noBreakdown": "nema živog pregleda za ovu stavku",
       "partCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
@@ -568,80 +586,11 @@
       "tagsHint": "Odvojeno zarezom, najviše {max}.",
       "assemblyName": "Sklop ({count} dijelova)",
       "addPartPlaceholder": "hea140 3m x2 s235",
-      "addPartFailed": "Nije moguće pročitati taj rez — provjeri komandu."
-    },
-    "templates": {
-      "modalTitle": "Modularni šabloni sklopova",
-      "modalSubtitle": "Izaberite standardni fabrički šablon ili umetnite sa prilagođenim množiocem količine.",
-      "searchPlaceholder": "Pretraži šablone, profile, rezove…",
-      "selectTemplateTab": "Odaberi šablon",
-      "configureTab": "Konfiguriši i ubaci",
-      "addTemplateButton": "+ Šablon",
-      "fromTemplateButton": "Iz šablona",
-      "newFromTemplate": "Započni projekat iz fabričkog šablona",
-      "multiplierLabel": "Množilac količine",
-      "targetAssemblyLabel": "Naziv podsklopa",
-      "targetAssemblyHint": "Svi generisani rezovi i komponente biće grupisani pod ovim podsklopom.",
-      "scaledBreakdown": "Skalirani sastav materijala (×{mult})",
-      "insertAction": "Ubaci ×{count} u projekat",
-      "scaleButton": "Skaliraj",
-      "scaleAssemblyTitle": "Skaliraj podsklop",
-      "scaleFactorLabel": "Faktor skaliranja",
-      "scaleAssemblyHint": "Množi broj komada svih rezova u ovom podsklopu izabranim faktorom.",
-      "applyScale": "Primijeni skaliranje (×{mult})",
-      "saveTemplateButton": "Sačuvaj kao šablon",
-      "saveAsTemplateButton": "Sačuvaj podsklop kao višekratni šablon",
-      "saveTemplateTitle": "Sačuvaj kao šablon sklopa",
-      "saveTemplateSubtitle": "Sačuvaj ovaj sklop od {count} stavki u biblioteku šablona za brzu ponovnu upotrebu.",
-      "templateNameLabel": "Naziv šablona",
-      "descriptionLabel": "Opis (opcionalno)",
-      "descriptionPlaceholder": "npr. Dimenzije, namjena, specifikacije okova...",
-      "includedItems": "Uključene komponente",
-      "browseTab": "Pregled",
-      "manageTab": "Uredi",
-      "manageSubtitle": "Preimenuj, prekalkuliši i ukloni šablone iz svoje biblioteke.",
-      "manageAria": "Uredi šablone sklopova",
-      "yourTemplates": "Tvoji šabloni",
-      "standardTemplates": "Standard EN",
-      "templatesStep": "Šabloni",
-      "editStep": "Uredi",
-      "viewStep": "Pregled",
-      "noCustomTemplates": "Još nemaš vlastitih šablona",
-      "noCustomTemplatesHint": "Sačuvaj podsklop iz bilo kojeg projekta ili dupliciraj neki od standarda ispod da dobiješ kopiju koju možeš uređivati.",
-      "noTemplatesAtAll": "Biblioteka je prazna",
-      "noTemplatesAtAllHint": "Vrati neki standard ispod ili sačuvaj podsklop iz projekta.",
-      "editTemplate": "Uredi šablon",
-      "editTemplateHint": "Izmjene važe svugdje gdje se ovaj šablon ubaci od sada.",
-      "builtinStandard": "Ugrađeni standard",
-      "statusSaved": "Sačuvano",
-      "statusUnsaved": "Nesačuvane izmjene",
-      "statusReadOnly": "Samo za čitanje",
-      "builtinBanner": "Ugrađeni standardi dolaze uz aplikaciju. Dupliciraj ovaj da dobiješ kopiju koju možeš preimenovati, prekalkulisati i preurediti.",
-      "duplicateToEdit": "Dupliciraj za uređivanje",
-      "duplicateAction": "Dupliciraj kao kopiju za uređivanje",
-      "copyLabel": "kopija",
-      "components": "Komponente",
-      "componentsSummary": "{cuts} rezova · {pieces} komada",
-      "addCut": "Dodaj rez",
-      "addCutPlaceholder": "plt 200x160x12 x2 s235",
-      "addCutFailed": "Nije moguće pročitati taj rez — provjeri komandu.",
-      "laborHoursLabel": "Radni sati",
-      "extraCostsLabel": "Okov i dodatni troškovi",
-      "addCostLine": "Dodaj stavku troška",
-      "newCostLabel": "Nova stavka troška",
-      "deleteConfirm": "Obrisati ovaj šablon?",
-      "deleteConfirmHint": "Uklanja se iz svakog izbornika projekata.",
-      "removeStandardConfirm": "Ukloniti ovaj standard?",
-      "removeStandardHint": "Sakriva se iz izbornika — možeš ga vratiti bilo kada.",
-      "removeStandardAction": "Ukloni standard",
-      "removedStandards": "Uklonjeni standardi",
-      "restoreAll": "Vrati sve",
-      "templateSaved": "Šablon sačuvan",
-      "templateDeleted": "Šablon obrisan",
-      "standardRemoved": "Standard uklonjen",
-      "standardRestored": "Standard vraćen",
-      "copyCreated": "Kopija za uređivanje kreirana",
-      "nothingSelected": "Izaberi šablon lijevo da ga urediš."
+      "addPartFailed": "Nije moguće pročitati taj rez — provjeri komandu.",
+      "assemblyExtras": "Ide uz ovaj sklop",
+      "assemblyExtrasHint": "Prenosi se u svaki projekat u koji ubacite ovaj sklop, skalirano po količini.",
+      "assemblyDefaultName": "{first} +{more}",
+      "editAssemblyTitle": "Uredi sklop"
     },
     "projects": {
       "templateInserted": "Ubačen šablon {name} (×{mult}) u projekat",
@@ -650,7 +599,8 @@
       "tabs": {
         "items": "Stavke",
         "cutting": "Plan rezanja",
-        "details": "Detalji"
+        "details": "Detalji",
+        "order": "Narudžba"
       },
       "pipeline": {
         "active": "Aktivni poslovi",
@@ -853,7 +803,9 @@
       "addToProjectAria": "Dodaj {name} u projekat",
       "emptyFilterTitle": "Još nema ničega te vrste",
       "emptyFilterBody": "Proširi filter da vidiš sve što si sačuvao.",
-      "showAll": "Prikaži sve"
+      "showAll": "Prikaži sve",
+      "editAria": "Uredi {name}",
+      "moreAria": "Više radnji za {name}"
     },
     "cutting": {
       "title": "Plan rezanja",
@@ -930,91 +882,19 @@
     "saveTo": {
       "title": "Sačuvaj ovu liniju",
       "sendTitle": "Dodaj u…",
-      "whereLabel": "Gdje ide",
-      "sendLabel": "Pošalji u",
-      "recentLabel": "Nedavno",
-      "kind": {
-        "parts": "Dijelovi",
-        "assemblies": "Sklopovi",
-        "projects": "Projekti",
-        "templates": "Šabloni"
-      },
-      "kindBody": {
-        "parts": "Sačuvaj zasebno ili dodaj u dio koji već imaš.",
-        "assemblies": "Započni novi ili dodaj u sklop koji si već napravio.",
-        "projects": "Odmah na posao, bez biblioteke.",
-        "templates": "Sačuvaj kao sklop koji možeš ubaciti na bilo koji posao."
-      },
-      "count": {
-        "parts": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
-        "assemblies": "{count, plural, one {# sklop} few {# sklopa} other {# sklopova}}",
-        "projects": "{count, plural, one {# posao} few {# posla} other {# poslova}}",
-        "templates": "{count, plural, one {# šablon} few {# šablona} other {# šablona}}"
-      },
-      "new": {
-        "parts": "Sačuvaj kao novi dio",
-        "assemblies": "Započni novi sklop",
-        "projects": "Započni novi projekat",
-        "templates": "Sačuvaj kao novi šablon"
-      },
-      "newBody": {
-        "parts": "Samostalna specifikacija, zasebno u biblioteci.",
-        "assemblies": "Ova linija postaje njegov prvi dio.",
-        "projects": "Otvara posao sa ovom linijom na njemu.",
-        "templates": "Sklop za ponovnu upotrebu, spreman za posao."
-      },
-      "name": {
-        "parts": "Naziv dijela",
-        "assemblies": "Naziv sklopa",
-        "projects": "Naziv projekta",
-        "templates": "Naziv šablona"
-      },
-      "existing": {
-        "parts": "Tvoji dijelovi",
-        "assemblies": "Tvoji sklopovi",
-        "projects": "Tvoji projekti",
-        "templates": "Tvoji šabloni"
-      },
-      "commit": {
-        "parts": "Sačuvaj dio",
-        "assemblies": "Dodaj u sklop",
-        "projects": "Dodaj u projekat",
-        "templates": "Sačuvaj šablon"
-      },
-      "pick": {
-        "parts": "Izaberi dio kojem dodaješ ili započni novi",
-        "assemblies": "Izaberi sklop kojem dodaješ ili započni novi",
-        "projects": "Izaberi projekat ili započni novi",
-        "templates": "Izaberi šablon kojem dodaješ ili započni novi"
-      },
-      "nameItFirst": {
-        "parts": "Prvo imenuj dio",
-        "assemblies": "Prvo imenuj sklop",
-        "projects": "Prvo imenuj projekat",
-        "templates": "Prvo imenuj šablon"
-      },
-      "summaryNew": {
-        "parts": "Novi dio „{name}“",
-        "assemblies": "Novi sklop „{name}“, 1 dio",
-        "projects": "Novi projekat „{name}“",
-        "templates": "Novi šablon „{name}“"
-      },
-      "summaryInto": {
-        "parts": "U {name} — postaje sklop",
-        "assemblies": "U {name}",
-        "projects": "Na {name}",
-        "templates": "U {name}"
-      },
-      "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+      "search": "Pretraži projekte i biblioteku…",
+      "newProject": "Novi projekat",
+      "newProjectBody": "Pokreće projekat s ovim u njemu.",
+      "newPart": "Sačuvaj u biblioteku",
+      "newPartBody": "Zadržite ovaj rez za ponovnu upotrebu i prijedloge veličina.",
+      "newAssembly": "Sačuvaj u biblioteku kao jedan sklop",
+      "newAssemblyBody": "Svi rezovi s linije, zajedno.",
+      "sectionProjects": "Projekti",
+      "sectionLibrary": "Biblioteka",
       "projectItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
-      "search": {
-        "parts": "Pretraži svoje dijelove…",
-        "assemblies": "Pretraži svoje sklopove…",
-        "projects": "Pretraži projekte…",
-        "templates": "Pretraži svoje šablone…"
-      },
-      "noTargets": "Ništa se ne poklapa.",
-      "templateItems": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}"
+      "partsCount": "{count, plural, one {# dio} few {# dijela} other {# dijelova}}",
+      "onePart": "Dio",
+      "noTargets": "Ništa ne odgovara tome."
     },
     "validation": {
       "angleThickness": "Debljina ({thicknessMm} mm) mora biti manja od kraćeg kraka ({shorterLegMm} mm).",
@@ -1043,6 +923,52 @@
       "notInSeriesDetail": "Ovo su dimenzije čeličnih profila; aluminij se ekstrudira u vlastitu seriju (EN 755). Masa je tačna za oblik, ali to nije skladišni profil.",
       "notInSeriesDetailAlloy": "{grade} se drži kao lim, ploča, šipka i cijev, ne kao profil. Masa je tačna za oblik, ali ovo nije skladišni oblik.",
       "checkRate": "Provjerite cijenu — cjenovnik je po klasi."
+    },
+    "save": {
+      "toProject": "Dodaj u {project}",
+      "toLibrary": "Sačuvaj",
+      "elsewhere": "Sačuvaj negdje drugdje"
+    },
+    "assembly": {
+      "insertTitle": "Ubaci sklop",
+      "insertSubtitle": "Jedan iz vaše biblioteke, u količini koju ovaj posao traži.",
+      "search": "Pretraži sklopove, rezove, profile…",
+      "pickTab": "Izaberi",
+      "configureTab": "Količina i naziv",
+      "addButton": "+ Sklop",
+      "fromButton": "Iz sklopa",
+      "newFromAssembly": "Pokreni projekat iz sklopa u vašoj biblioteci",
+      "multiplierLabel": "Koliko",
+      "targetName": "Naziv podsklopa",
+      "targetNameHint": "Svaki rez koji ovo dodaje grupiše se pod ovim nazivom.",
+      "scaledBreakdown": "Šta ovo dodaje (×{mult})",
+      "insertAction": "Dodaj ×{count} u projekat",
+      "scaleButton": "Skaliraj",
+      "scaleTitle": "Skaliraj podsklop",
+      "scaleFactorLabel": "Pomnoži sa",
+      "scaleHint": "Množi broj komada svakog reza u ovom podsklopu.",
+      "applyScale": "Primijeni ×{mult}",
+      "saveButton": "Sačuvaj u biblioteku",
+      "saveHint": "Zadrži ovaj podsklop u biblioteci za ponovnu upotrebu",
+      "saveTitle": "Sačuvaj u biblioteku",
+      "saveSubtitle": "Zadrži ovaj sklop od {count} reza za ponovnu upotrebu u bilo kojem projektu.",
+      "nameLabel": "Naziv sklopa",
+      "descriptionLabel": "Bilješke (opcionalno)",
+      "descriptionPlaceholder": "npr. dimenzije, namjena, okov",
+      "includedItems": "Uključeni rezovi",
+      "laborHoursLabel": "Sati rada",
+      "extraCostsLabel": "Okov i dodatni troškovi",
+      "addCostLine": "Dodaj stavku troška",
+      "newCostLabel": "Nova stavka troška",
+      "saved": "Sačuvano u biblioteku",
+      "emptyTitle": "Još nema sklopova",
+      "emptyBody": "Sačuvajte liniju s više rezova ili podsklop iz projekta i pojavit će se ovdje.",
+      "createTitle": "Počni od sklopa",
+      "createSubtitle": "Novi projekat, napravljen od sklopa iz vaše biblioteke.",
+      "createAction": "Napravi projekat (×{count})",
+      "projectName": "Naziv projekta",
+      "projectNameHint": "Rezovi se i unutar projekta grupišu pod ovim nazivom.",
+      "costAmount": "Iznos"
     }
   },
   "contact": {

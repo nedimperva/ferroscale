@@ -1,9 +1,16 @@
 import { test, expect } from "@playwright/test";
 
+/**
+ * A share link carrying the query these tests used to get for free: the app
+ * seeded a demo line on every visit until the clean-slate onboarding landed,
+ * and a pristine screen has no live result to measure.
+ */
+const DEMO_LINK = "/en?q=hea120+6m+x2";
+
 // Desktop Chrome (1280px) renders the wide two-pane command workspace.
 test.describe("Command bar", () => {
   test("loads with the demo query and a live result", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.getByText("hea120", { exact: true })).toBeVisible();
     await expect(page.getByText(/kg\/m ×/).first()).toBeVisible();
@@ -157,7 +164,7 @@ test.describe("Phone fold (390x844)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test("the whole screen fits without scrolling", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     const fits = await page.evaluate(
       () => document.documentElement.scrollHeight <= window.innerHeight,
@@ -166,7 +173,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("the fold carries hero, session ribbon, query line and keypad at once", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.getByText("Breakdown", { exact: false }).first()).toBeVisible();
     await expect(page.getByText("SESSION", { exact: true }).first()).toBeVisible();
@@ -176,7 +183,7 @@ test.describe("Phone fold (390x844)", () => {
   test("the keypad sits flush on the bottom edge, with no band of screen under it", async ({
     page,
   }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // The shell used to size its column with `100dvh` inside a `fixed inset-0`
     // parent; where the two disagree the keys float above a strip of screen
@@ -188,7 +195,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("the suggestion strip stays one row, whatever the stage offers", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // Wrapping to a second row made the strip's height depend on the chip
     // count, and the overflow was clipped by the query line beneath it.
@@ -198,7 +205,7 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("the suggestion chips clear the query line's focus ring", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     // The query line draws a 3px ring outside its border box. At the old
     // 6px gap the chips sat on that glow and the two read as one collided
@@ -293,8 +300,8 @@ test.describe("Phone fold (390x844)", () => {
   });
 
   test("filling the session doesn't move anything", async ({ page }) => {
-    const ribbon = () => page.getByText("SESSION", { exact: true }).locator("..");
-    await page.goto("/en");
+    const ribbon = () => page.locator("[data-session-ribbon]");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     const empty = await ribbon().boundingBox();
 
@@ -306,7 +313,7 @@ test.describe("Phone fold (390x844)", () => {
         JSON.stringify(["ipe200 4m x3", "rnd20 3m x5", "shs40x40x3 6m x8", "hea120 6m x2"]),
       );
     });
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     const full = await ribbon().boundingBox();
 
@@ -314,8 +321,124 @@ test.describe("Phone fold (390x844)", () => {
     expect(full!.y).toBe(empty!.y);
   });
 
-  test("every library tab label is readable, not clipped", async ({ page }) => {
+  test("the save control says its whole label, not a letter", async ({ page }) => {
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // Four equal-width buttons left the one control with words on it about
+    // 60px, and "Save" came out as "S". It takes the row now; the rest are
+    // icons.
+    const clipped = await page.evaluate(() => {
+      const btn = Array.from(document.querySelectorAll("button")).find((b) =>
+        /^(Save|Saved|Add to )/.test(b.getAttribute("title") ?? ""),
+      );
+      const span = btn?.querySelector("span");
+      if (!span) return "no save control";
+      return span.scrollWidth > span.clientWidth + 1 ? span.textContent : null;
+    });
+    expect(clipped).toBeNull();
+  });
+
+  test("a pristine screen leads with the profile tiles, at a usable size", async ({ page }) => {
     await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    const tiles = page.locator("[data-testid=\"profile-discovery\"]");
+    await expect(tiles).toBeVisible();
+    // They used to queue below a hero full of placeholder dashes, which on
+    // this screen left them about enough room for their own heading.
+    const box = await tiles.boundingBox();
+    expect(box!.height).toBeGreaterThan(260);
+    await expect(page.getByRole("button", { name: /Beams/ })).toBeVisible();
+  });
+
+  test("nothing on the session row overlaps anything else", async ({ page }) => {
+    await page.addInitScript(() => {
+      const now = new Date().toISOString();
+      localStorage.setItem(
+        "ferroscale-projects-v2",
+        JSON.stringify([
+          { id: "p1", name: "Mezzanine handrail, west stair", createdAt: now, updatedAt: now, calculations: [] },
+        ]),
+      );
+      localStorage.setItem("ferroscale-current-project", "p1");
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["ipe200 4m x3", "shs40x40x3 6m x8"]),
+      );
+    });
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // The total and the "→ project" button are both nowrap: the row used to
+    // let them draw over one another rather than give way.
+    const escaped = await page.evaluate(() => {
+      const row = document.querySelector("[data-session-ribbon]");
+      if (!row) return ["no ribbon"];
+      const r = row.getBoundingClientRect();
+      return Array.from(row.querySelectorAll("*"))
+        .filter((el) => {
+          const b = el.getBoundingClientRect();
+          return b.right > r.right + 1 || b.left < r.left - 1;
+        })
+        .map((el) => el.textContent?.slice(0, 20) ?? "");
+    });
+    expect(escaped).toEqual([]);
+  });
+
+  test("a library row offers editing without a menu, name intact", async ({ page }) => {
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /^Save$/ }).click();
+    await page.getByRole("button", { name: "Parts" }).click();
+
+    // Scoped to the sheet: the command line's token chips are "Edit hea120"
+    // and friends, which a loose /^Edit / would sweep up.
+    const sheet = page.getByRole("dialog", { name: "Parts" });
+    const editRow = sheet.getByRole("button", { name: "Edit HEA 120" });
+    // Four actions and a name do not share 390px on one line — the row takes
+    // two here, so the name is readable and every action keeps its word.
+    await expect(editRow).toBeVisible();
+    const clipped = await page.evaluate(() => {
+      const dialogs = Array.from(document.querySelectorAll('[role="dialog"]'));
+      const sheet = dialogs[dialogs.length - 1];
+      return Array.from(sheet?.querySelectorAll("span,button") ?? [])
+        .filter((el) => el.scrollWidth > el.clientWidth + 1)
+        .map((el) => (el.textContent ?? "").trim());
+    });
+    expect(clipped).toEqual([]);
+
+    await editRow.click();
+    await expect(page.getByRole("dialog", { name: "Edit saved calculation" })).toBeVisible();
+    // Save and Cancel are pinned, not scrolled off the end of the form.
+    await expect(page.getByRole("button", { name: "Save changes" })).toBeVisible();
+  });
+
+  test("the breakdown carries three controls, not nine", async ({ page }) => {
+    await page.goto(DEMO_LINK);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: /breakdown/i }).first().click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    // It was nine buttons over three rows, with "Copy summary" drawn twice and
+    // both "Save" and "+ Project" leading to the save control that is now
+    // right here. Same three the calculator carries, in the same order.
+    const actions = await dialog.evaluate((el) =>
+      Array.from(el.querySelectorAll("button"))
+        .map((b) => (b.textContent || b.getAttribute("aria-label") || "").trim())
+        .filter((label) =>
+          /^(Copy|Save|Saved|Add to|Share|Compare|New|More actions)/.test(label),
+        ),
+    );
+    expect(actions).toEqual(["Copy summary", "Save", "Save somewhere else", "More actions"]);
+
+    // Nothing is lost — the rest is one press away.
+    await dialog.getByRole("button", { name: "More actions" }).click();
+    for (const item of ["Copy value", "Share link", "Compare", "New calculation"]) {
+      await expect(page.getByRole("menuitem", { name: item })).toBeVisible();
+    }
+  });
+
+  test("every library tab label is readable, not clipped", async ({ page }) => {
+    await page.goto(DEMO_LINK);
     await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Parts" }).click();
@@ -460,7 +583,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
   test("a live line shows New / Tweak / Share, not the letter pad", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "actions");
     await expect(page.getByRole("button", { name: "New", exact: true })).toBeVisible();
@@ -468,7 +591,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   });
 
   test("Tweak opens the number pad; Done puts the bar back", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
     await expect(page.getByRole("button", { name: "ABC" })).toBeVisible();
@@ -477,11 +600,13 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   });
 
   test("New clears the line and brings the letter pad back", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "New", exact: true }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
     await expect(page.getByRole("button", { name: "q", exact: true })).toBeVisible();
-    await expect(page.getByText("WAITING")).toBeVisible();
+    // A cleared bar shows the way back in, not a hero reading "—" over a
+    // WAITING badge: there is nothing to be waiting for yet.
+    await expect(page.locator('[data-testid="profile-discovery"]')).toBeVisible();
   });
 
   test("a size-ready query opens on the number pad", async ({ page }) => {
@@ -493,7 +618,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   });
 
   test("a finished size and the next length stay two tokens", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "New", exact: true }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
     for (const key of ["h", "e", "a"]) {

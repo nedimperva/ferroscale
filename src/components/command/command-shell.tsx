@@ -7,16 +7,14 @@ import { getAppTabFromPathname } from "@/lib/app-shell";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
-import type { SavedEntry, TemplatePartDraft } from "@/hooks/useSaved";
+import { libraryAssemblies } from "./projects/insert-assembly-modal";
+import type { SavedEntry, SavedPart, SavedPartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
-import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
-import { usePresets } from "@/hooks/usePresets";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
-import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
+import { calculateMetal, cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
   cmdSuggest,
   cmdApplyInsert,
@@ -29,6 +27,7 @@ import {
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
 import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
+  currentProjectStore,
   defaultUnitStore,
   massTolerancePercentStore,
   sharedCalcSettingsStore,
@@ -70,24 +69,21 @@ import { useExpandedItem } from "./use-expanded-item";
 import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
+import { SaveControl } from "./save-control";
+import { ProfileDiscoveryTiles } from "./profile-discovery-tiles";
 import {
   commandKeypadInsert,
   commandKeypadLayout,
   type CommandKeypadOverride,
 } from "./keypad-layout";
 import { CommandDesktop } from "./desktop/command-desktop";
+import { DeskIcon } from "./desktop/desk-atoms";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import type { ProjectActions } from "./projects/project-actions";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { SavedEditSheet } from "./sheets/saved-edit-sheet";
-import {
-  DestinationSheet,
-  assemblyTargets,
-  partTargets,
-  type DestinationKind,
-  type DestinationSubject,
-} from "./sheets/destination-sheet";
+import { DestinationSheet, type DestinationSubject } from "./sheets/destination-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import {
   buildShareUrl,
@@ -101,12 +97,12 @@ import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
+import { DEMO_QUERY } from "./command-constants";
+
 // The phone's headline figure. Mono at a regular weight, like the workspace's
 // — same rule everywhere: numbers are mono, and at this size they carry
 // without extra weight.
 const HERO_FONT_WEIGHT = 400;
-// Trailing space so the demo query renders fully chipped on first load.
-const DEMO_QUERY = "hea120 6m x2 s235 ";
 /**
  * The rate getDefaultInput() seeds. Matching it means nobody has said what
  * steel costs yet, so every currency figure on screen is a placeholder.
@@ -149,7 +145,7 @@ export function CommandShell() {
     defaultUnitStore.getServerSnapshot,
   );
 
-  // App-wide libraries (saves, compare, projects, presets).
+  // App-wide libraries (saves, compare, projects).
   const {
     saved: savedEntries,
     saveCalculation,
@@ -189,24 +185,34 @@ export function CommandShell() {
     duplicateProject,
     addCalculation,
     addCalculations,
-    addTemplateCalculation,
-    insertAssemblyTemplate,
+    insertAssembly,
     scaleSubAssembly,
-    createProjectFromTemplate,
+    createProjectFromAssembly,
     removeCalculation,
     updateCalculationQuantity,
     updateCalculationNote,
     updateProjectPaintCoats,
   } = useProjects();
-  const { presets } = usePresets();
   const priceBook = usePriceBook();
-  // The save overlay offers the template library as a destination, so the
-  // shell holds an instance too. Writes go through disk (see the hook), and
-  // `refresh` closes the read gap when a project dialog has added one.
-  const templatesApi = useAssemblyTemplates();
 
-  const [query, setQuery] = useState(DEMO_QUERY);
-  // The URL only mirrors the query once the user has replaced the demo query
+  const currentProjectId = useSyncExternalStore(
+    currentProjectStore.subscribe,
+    currentProjectStore.getSnapshot,
+    currentProjectStore.getServerSnapshot,
+  );
+
+  /** The library's multi-part entries — what a project can be built out of. */
+  const assembliesInLibrary = useMemo(() => libraryAssemblies(savedEntries), [savedEntries]);
+
+  const [query, setQuery] = useState("");
+  /**
+   * Whether the line that this visit starts on is settled. A `?q=` share link
+   * and the last query this device ran are both applied in an effect, so the
+   * first paint always has an empty bar — and anything that only shows on an
+   * empty bar would flash before the line arrived.
+   */
+  const [queryHydrated, setQueryHydrated] = useState(false);
+  // The URL only mirrors the query once the user has entered a calculation
   // (or arrived via a share link) — a pristine visit keeps a clean URL.
   const touchedRef = useRef(false);
   // weightAsMain decides the default hero metric; the toggle is a local override.
@@ -236,17 +242,10 @@ export function CommandShell() {
    * A null subject means it is closed. It replaces the save picker, the
    * project picker and the rename-after-save sheet.
    */
-  const [destination, setDestination] = useState<
-    { entry: SavedEntry | null; initial?: DestinationKind } | null
-  >(null);
+  const [destination, setDestination] = useState<{ entry: SavedEntry | null } | null>(null);
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
-  // A project dialog may have written templates since this instance loaded.
-  const refreshTemplates = templatesApi.refresh;
-  useEffect(() => {
-    if (destination) refreshTemplates();
-  }, [destination, refreshTemplates]);
   const [isPhoneViewport, setIsPhoneViewport] = useState(false);
   /** Letters / number pad chosen by hand. Cleared when the active item empties. */
   const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
@@ -282,7 +281,7 @@ export function CommandShell() {
   // address bar prices the same for whoever it's sent to.
   useEffect(() => {
     if (!touchedRef.current) {
-      if (query === DEMO_QUERY) return;
+      if (!query.trim() || query === DEMO_QUERY) return;
       touchedRef.current = true;
     }
     const id = window.setTimeout(() => {
@@ -420,7 +419,7 @@ export function CommandShell() {
   }, []);
   useEffect(() => {
     if (!p.valid) return;
-    if (!touchedRef.current && query === DEMO_QUERY) return;
+    if (!touchedRef.current && (!query.trim() || query === DEMO_QUERY)) return;
     const id = window.setTimeout(() => {
       // Record the canonical query, not the raw text: this drops half-typed
       // trailing tokens (a lone "@", an incomplete grade) so mid-edit pauses
@@ -451,11 +450,11 @@ export function CommandShell() {
 
   // `p` is handed over so the suggestion engine doesn't parse the same query
   // a second time on every keystroke.
-  // Parts are the size presets. A leftover DimensionPreset collection still
-  // folds in so old synced data is not dropped; nothing new is written there.
+  // Library entries are the size suggestions: a saved part already is a size,
+  // a grade and a length, so nothing else has to store one.
   const sizePresetsForProfile = useMemo(
-    () => buildSizePresetLookup(savedEntries, presets),
-    [savedEntries, presets],
+    () => buildSizePresetLookup(savedEntries),
+    [savedEntries],
   );
   const sug = useMemo(
     () => cmdSuggest(activeQuery, parserSettings, sizePresetsForProfile, usageSource, p),
@@ -518,6 +517,7 @@ export function CommandShell() {
           window.localStorage.setItem(ONBOARDED_KEY, "1");
         } catch { /* noop */ }
       }
+      setQueryHydrated(true);
       return;
     }
     setQuery(`${sharedQuery} `);
@@ -531,6 +531,7 @@ export function CommandShell() {
       sharedCalcSettingsStore.update(linkPricing);
       showToast(t("toast.linkPricingApplied"));
     }
+    setQueryHydrated(true);
   }, [showToast, t]);
 
   // Copy the hero metric itself (e.g. "141.2 kg" / "€169.44") — the query
@@ -585,6 +586,21 @@ export function CommandShell() {
   // button that is about to create something.
   const currentSavedEntry = !line.multi && p.calc ? getSavedEntry(p.calc.result) : undefined;
 
+  /**
+   * The job being worked out of: the last project something was filed into,
+   * as long as it is still there and still open. An archived or deleted one
+   * leaves the primary action as a plain save rather than naming a job that
+   * no longer exists.
+   */
+  const currentProject = useMemo(
+    () =>
+      projects.find(
+        (project) =>
+          project.id === currentProjectId && !project.deletedAt && !isArchivedProject(project),
+      ) ?? null,
+    [projects, currentProjectId],
+  );
+
   /** Delete with a 5-second Undo — the tombstone is reversible until then. */
   const removeSavedEntry = useCallback(
     (entry: SavedEntry) => {
@@ -599,6 +615,25 @@ export function CommandShell() {
     },
     [removeSaved, restoreSaved, showActionToast, showToast, t],
   );
+
+  /**
+   * What a multi-cut line is called before anyone names it.
+   *
+   * It used to be whatever the *active* cut was called, so saving
+   * "hea140 3m + plt200x160x12 x2" from the picker produced an assembly named
+   * "Plate 200×160×12" — the item the caret happened to be on, not the thing
+   * being saved. The first cut plus a count is at least recognisable in a
+   * list, and searchable by the profile that leads it.
+   */
+  const assemblyDefaultName = useCallback(() => {
+    const first = line.items[0]?.parse;
+    const lead = first
+      ? formatCommandParseName(t, first) ?? first.calc?.result.profileLabel ?? ""
+      : "";
+    const more = line.items.length - 1;
+    if (!lead) return t("saved.assemblyName", { count: line.items.length });
+    return more > 0 ? t("saved.assemblyDefaultName", { first: lead, more }) : lead;
+  }, [line, t]);
 
   /**
    * Save is a toggle: bookmark the line, or un-bookmark it if it's already
@@ -636,7 +671,7 @@ export function CommandShell() {
     const entry = saveCalculation(
       p.calc.input,
       p.calc.result,
-      line.multi ? t("saved.assemblyName", { count: line.items.length }) : autoName,
+      line.multi ? assemblyDefaultName() : autoName,
       undefined,
       undefined,
       parts,
@@ -661,6 +696,7 @@ export function CommandShell() {
   }, [
     p,
     line,
+    assemblyDefaultName,
     getSavedEntry,
     removeSavedEntry,
     saveCalculation,
@@ -722,7 +758,7 @@ export function CommandShell() {
    * The parts of the current line, as drafts. One item for a plain line, one
    * per item for a multi-item one — the same shape `doSave` already builds.
    */
-  const currentLineDrafts = useCallback((): TemplatePartDraft[] => {
+  const currentLineDrafts = useCallback((): SavedPartDraft[] => {
     if (!p.calc) return [];
     if (!line.multi) {
       return [{
@@ -765,20 +801,6 @@ export function CommandShell() {
       });
     },
     [p, line, currentLineDrafts, saveCalculation, pushHistory, showActionToast, t],
-  );
-
-  const appendLineTo = useCallback(
-    (entryId: string) => {
-      const drafts = currentLineDrafts();
-      const target = savedEntries.find((entry) => entry.id === entryId);
-      if (drafts.length === 0 || !target) return;
-      if (!appendPartsToSaved(entryId, drafts)) return;
-      haptic("commit");
-      for (const item of line.items) pushHistory(item.text.trim());
-      setDestination(null);
-      showToast(t("toast.partAdded", { name: target.name }));
-    },
-    [currentLineDrafts, savedEntries, appendPartsToSaved, line, pushHistory, showToast, t],
   );
 
   const duplicateSavedEntry = useCallback(
@@ -930,27 +952,93 @@ export function CommandShell() {
   );
 
   /**
+   * Fold the picker's subject into a library entry.
+   *
+   * It used to always append whatever was on the command bar, even when the
+   * subject was a saved entry being sent somewhere — so "put this part into
+   * that assembly" quietly appended the line instead of the part.
+   */
+  const appendSubjectTo = useCallback(
+    (entryId: string, source: SavedEntry | null, count = 1) => {
+      const mult = Math.max(1, Math.floor(count) || 1);
+      const target = savedEntries.find((entry) => entry.id === entryId);
+      if (!target) return;
+      const base = source
+        ? repriceSavedEntry(source).map((part) => ({
+            name: part.name ?? part.result.profileLabel,
+            input: part.input,
+            result: part.result,
+          }))
+        : currentLineDrafts();
+      if (base.length === 0) return;
+      const drafts = Array.from({ length: mult }, () => base).flat();
+      if (!appendPartsToSaved(entryId, drafts)) return;
+      haptic("commit");
+      if (!source) for (const item of line.items) pushHistory(item.text.trim());
+      setDestination(null);
+      showToast(t("toast.partAdded", { name: target.name }));
+    },
+    [
+      currentLineDrafts,
+      repriceSavedEntry,
+      savedEntries,
+      appendPartsToSaved,
+      line,
+      pushHistory,
+      showToast,
+      t,
+    ],
+  );
+
+  /**
    * Commit whatever the picker was opened for. A saved entry with one part is
    * an ordinary item; an assembly goes in as a template entry so the project
    * keeps it as one named line with its parts behind it, the way it was saved.
    */
   const handlePickProject = useCallback(
-    (projectId: string, entry: SavedEntry | null) => {
+    (projectId: string, entry: SavedEntry | null, count = 1) => {
+      const mult = Math.max(1, Math.floor(count) || 1);
       let ok = false;
       if (entry) {
         const parts = repriceSavedEntry(entry);
         if (parts.length > 1 || isAssemblyEntry(entry)) {
-          ok = addTemplateCalculation(projectId, entry.name, parts, 1);
+          // The same door the project's own "+ Assembly" uses: one item per
+          // cut, tagged with the assembly's name. This used to be a second
+          // shape — a single composite row holding the parts inside it —
+          // which meant the same assembly looked different depending on which
+          // way you came in, could not have its cuts edited, and arrived
+          // without the labour hours and hardware the assembly carries.
+          ok = insertAssembly(projectId, entry, mult, entry.name);
         } else if (parts.length === 1) {
-          ok = addCalculation(projectId, parts[0].input, parts[0].result);
+          // A single part scales by its own quantity: five of a cut that is
+          // already ×2 is ten pieces, which is what "five of these" means.
+          const input = { ...parts[0].input, quantity: (parts[0].input.quantity || 1) * mult };
+          const calc = calculateMetal(input);
+          ok = calc.ok
+            ? addCalculation(projectId, input, calc.result)
+            : addCalculation(projectId, parts[0].input, parts[0].result);
         }
-      } else if (p.calc) {
-        ok = addCalculation(projectId, p.calc.input, p.calc.result);
       } else {
-        return;
+        // A `+`-joined line is several cuts, and every one of them belongs in
+        // the project. This used to file the active item only, so two thirds
+        // of a three-item line went quietly missing.
+        const drafts = currentLineDrafts();
+        if (drafts.length === 0) return;
+        if (drafts.length === 1) {
+          ok = addCalculation(projectId, drafts[0].input, drafts[0].result);
+        } else {
+          addCalculations(
+            projectId,
+            drafts.map((draft) => ({ input: draft.input, result: draft.result })),
+          );
+          ok = true;
+        }
       }
       setDestination(null);
       const project = projects.find((item) => item.id === projectId);
+      // Filing into a job is what makes it the job you are working out of, so
+      // the calculator's primary action can name it next time.
+      if (ok) currentProjectStore.set(projectId);
       showToast(
         ok
           ? t("toast.addedToProject", { project: project?.name ?? t("common.project") })
@@ -958,64 +1046,15 @@ export function CommandShell() {
       );
     },
     [
-      p,
+      currentLineDrafts,
       repriceSavedEntry,
       addCalculation,
-      addTemplateCalculation,
+      addCalculations,
+      insertAssembly,
       projects,
       showToast,
       t,
     ],
-  );
-
-  /**
-   * The subject as template items: a live line becomes one item per cut, a
-   * saved entry contributes its parts at today's rates — the same repricing a
-   * project gets, since a template is quoted long after it was written.
-   */
-  const templateItemsFor = useCallback(
-    (entry: SavedEntry | null): AssemblyTemplateItem[] => {
-      const parts = entry
-        ? repriceSavedEntry(entry)
-        : currentLineDrafts().map((draft) => ({
-            input: draft.input,
-            result: draft.result,
-            normalizedProfile: normalizeProfileSnapshot(draft.input),
-          }));
-      return parts.map((part) => ({
-        id: crypto.randomUUID(),
-        input: part.input,
-        result: part.result,
-        normalizedProfile: part.normalizedProfile,
-        quantity: part.input.quantity ?? 1,
-      }));
-    },
-    [repriceSavedEntry, currentLineDrafts],
-  );
-
-  const saveAsTemplate = useCallback(
-    (name: string, entry: SavedEntry | null) => {
-      const items = templateItemsFor(entry);
-      if (items.length === 0) return;
-      templatesApi.saveTemplate({ name, items });
-      haptic("commit");
-      setDestination(null);
-      showToast(t("templates.templateSaved"));
-    },
-    [templateItemsFor, templatesApi, showToast, t],
-  );
-
-  const appendToTemplate = useCallback(
-    (templateId: string, entry: SavedEntry | null) => {
-      const target = templatesApi.customTemplates.find((tpl) => tpl.id === templateId);
-      const items = templateItemsFor(entry);
-      if (!target || items.length === 0) return;
-      templatesApi.updateTemplate(templateId, { items: [...target.items, ...items] });
-      haptic("commit");
-      setDestination(null);
-      showToast(t("toast.templateAdded", { name: target.name }));
-    },
-    [templateItemsFor, templatesApi, showToast, t],
   );
 
   const addCompareEntry = useCallback(
@@ -1115,12 +1154,28 @@ export function CommandShell() {
         );
         return ok;
       },
-      onInsertTemplate: (projectId, template, multiplier, customAssemblyName) => {
-        const ok = insertAssemblyTemplate(projectId, template, multiplier, customAssemblyName);
+      libraryAssemblies: assembliesInLibrary,
+      onInsertAssembly: (projectId, entry, multiplier, customAssemblyName) => {
+        const ok = insertAssembly(projectId, entry, multiplier, customAssemblyName);
         if (ok) {
-          showToast(t("projects.templateInserted", { name: template.name, mult: multiplier }));
+          showToast(t("projects.templateInserted", { name: entry.name, mult: multiplier }));
         }
         return ok;
+      },
+      onSaveAssemblyToLibrary: (name, parts: SavedPart[], description, category) => {
+        if (parts.length === 0) return;
+        const entry = saveCalculation(
+          parts[0].input,
+          parts[0].result,
+          name,
+          description,
+          undefined,
+          parts.map((part) => ({ name: part.name, input: part.input, result: part.result })),
+          true,
+        );
+        if (category) updateSaved(entry.id, { category });
+        haptic("commit");
+        showToast(t("assembly.saved"));
       },
       onScaleSubAssembly: (projectId, assemblyName, multiplier) => {
         const ok = scaleSubAssembly(projectId, assemblyName, multiplier);
@@ -1129,8 +1184,8 @@ export function CommandShell() {
         }
         return ok;
       },
-      onCreateFromTemplate: (name, template, multiplier) => {
-        const project = createProjectFromTemplate(name, template, multiplier);
+      onCreateFromAssembly: (name, entry, multiplier) => {
+        const project = createProjectFromAssembly(name, entry, multiplier);
         showToast(t("projects.templateProjectCreated", { name: project.name }));
         return project;
       },
@@ -1156,9 +1211,12 @@ export function CommandShell() {
       updateProjectPaintCoats,
       loadInput,
       addCalculation,
-      insertAssemblyTemplate,
+      assembliesInLibrary,
+      saveCalculation,
+      updateSaved,
+      insertAssembly,
       scaleSubAssembly,
-      createProjectFromTemplate,
+      createProjectFromAssembly,
       logQuotePrinted,
       p.calc,
       parserSettings,
@@ -1168,12 +1226,29 @@ export function CommandShell() {
     ],
   );
 
-  /** "Add to project" from the calculator: the same overlay, on that row. */
-  const openProjectModal = useCallback(() => {
+  /** The picker, for everywhere the primary action does not go. */
+  const openDestinations = useCallback(() => {
     if (!p.calc) return;
     setSheet(null);
-    setDestination({ entry: null, initial: "projects" });
+    setDestination({ entry: null });
   }, [p.calc]);
+
+  /**
+   * What the one save control does. With a job in play the line goes into it
+   * — that is what the button says it will do. Without one, Save is the
+   * bookmark it has always been, toggle included.
+   */
+  const primarySave = useCallback(() => {
+    if (!p.calc) {
+      showToast(t("toast.addLength"));
+      return;
+    }
+    if (currentProject) {
+      handlePickProject(currentProject.id, null);
+      return;
+    }
+    doSave();
+  }, [p.calc, currentProject, handlePickProject, doSave, showToast, t]);
 
   /**
    * Turn the session tape into a project in one gesture. The tape already
@@ -1197,6 +1272,9 @@ export function CommandShell() {
       .reverse()
       .map((line) => ({ input: line.calc!.input, result: line.calc!.result }));
     addCalculations(project.id, entries);
+    // The tape became the job, so it is the job — the next line's primary
+    // action files into it instead of asking again.
+    currentProjectStore.set(project.id);
     haptic("commit");
     showToast(t("toast.sessionSaved", { count: entries.length, project: name }));
   }, [quickHistory, parserSettings, createProject, addCalculations, showToast, t]);
@@ -1470,7 +1548,7 @@ export function CommandShell() {
     },
     onAddSavedToProject: (entry: SavedEntry) => {
       setSheet(null);
-      setDestination({ entry, initial: "projects" });
+      setDestination({ entry });
     },
   };
   const helpSheet = effectiveSheet === "help" ? (
@@ -1496,27 +1574,26 @@ export function CommandShell() {
             meta: `${entry.parts.length > 1 ? t("saveTo.partsCount", { count: entry.parts.length }) + " · " : ""}${t("saved.usedCount", { count: entry.useCount })}`,
             glyph: entry.normalizedProfile?.iconKey?.slice(0, 3).toUpperCase() ?? "PT",
             defaultName: entry.name,
+            scalable: true,
           }
         : {
             kind: "line",
             label: query.trim() || p.calc?.result.profileLabel || "",
             meta: p.calc ? `${fsWeight(p.calc.result.totalWeightKg)} ${fsWeightUnit()}` : "",
             glyph: ">_",
-            defaultName: formatCommandParseName(t, p) ?? p.calc?.result.profileLabel ?? "",
+            defaultName: line.multi
+              ? assemblyDefaultName()
+              : formatCommandParseName(t, p) ?? p.calc?.result.profileLabel ?? "",
+            multi: line.multi,
           };
       return (
         <DestinationSheet
           subject={subject}
-          initial={destination.initial}
-          parts={partTargets(savedEntries)}
-          assemblies={assemblyTargets(savedEntries).filter((item) => item.id !== entry?.id)}
-          templates={templatesApi.customTemplates}
+          entries={savedEntries.filter((item) => item.id !== entry?.id)}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
-          onAppendTo={appendLineTo}
-          onSaveAsTemplate={(name) => saveAsTemplate(name, entry)}
-          onAppendToTemplate={(templateId) => appendToTemplate(templateId, entry)}
-          onAddToProject={(projectId) => handlePickProject(projectId, entry)}
+          onAppendTo={(entryId, count) => appendSubjectTo(entryId, entry, count)}
+          onAddToProject={(projectId, count) => handlePickProject(projectId, entry, count)}
           onCreateProject={createProject}
           onClose={() => setDestination(null)}
         />
@@ -1575,7 +1652,6 @@ export function CommandShell() {
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
-          onSaveElsewhere={() => setDestination({ entry: null })}
           onLogSession={logToSession}
           rateIsUserSupplied={rateIsUserSupplied}
           onCopySummary={copySummary}
@@ -1586,7 +1662,9 @@ export function CommandShell() {
           onAddCompare={addCompareEntry}
           onRemoveCompare={removeCompareItem}
           onClearCompare={clearCompare}
-          onAddToProject={openProjectModal}
+          onPrimarySave={primarySave}
+          onOpenDestinations={openDestinations}
+          currentProjectName={currentProject?.name ?? null}
           onLoadInput={loadInput}
           onCreateProject={createProject}
           projectActions={projectActions}
@@ -1647,7 +1725,7 @@ export function CommandShell() {
                 FerroScale
               </h1>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
                 {/* Both glyphs ship and CSS picks one. Choosing in JS from the
                     resolved theme meant the server drew the moon and a
@@ -1663,9 +1741,30 @@ export function CommandShell() {
                   <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
                 </svg>
               </IconBtn>
-              <IconBtn onClick={() => setSheet("library")} ariaLabel={t("nav.library")}>
+              {/* The workspace rail's destinations, named the same way. One
+                  bookmark glyph used to stand for Parts, Projects, Compare and
+                  the session tape at once, so the two surfaces disagreed about
+                  what the app even contains. */}
+              <IconBtn
+                onClick={() => {
+                  setLibraryTab("saved");
+                  setSheet("library");
+                }}
+                ariaLabel={t("nav.parts")}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                </svg>
+              </IconBtn>
+              <IconBtn
+                onClick={() => {
+                  setLibraryTab("projects");
+                  setSheet("library");
+                }}
+                ariaLabel={t("nav.projects")}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
                 </svg>
               </IconBtn>
               <IconBtn onClick={() => setSheet("settings")} ariaLabel={t("nav.settings")}>
@@ -1677,340 +1776,471 @@ export function CommandShell() {
             </div>
           </div>
 
-          {/* Free height is split above and below the answer instead of all of
-              it falling below. On a 390x844 phone roughly a third of the screen
-              sat empty between the session ribbon and the suggestion strip
-              while the figure was pinned to the very top — the hardest place to
-              reach one-handed. Both spacers are flex-1, so on a short screen
-              they collapse and nothing moves. The split is weighted 1:2 so the
-              answer lands in the upper third rather than dead centre — still
-              the first thing you see, but within reach of a thumb. */}
-          <div className="flex-[1] min-h-0" />
+          {/*
+            A pristine bar has no answer to show, so the whole top of this
+            screen — the mode switch, the figure, the per-piece strip, four
+            disabled actions — is placeholders: a dash, a dash, "—/pc", and
+            buttons that do nothing. The tiles were squeezed in underneath
+            all of it by a flex spacer, which on a 390x844 phone with the
+            keypad up left them about enough room for their own heading.
 
-          {/* HERO */}
-          <div className="px-[18px] pt-1.5 flex-shrink-0">
-            {/* The mode switch rides in the hero's label row rather than taking
-                a full-width row of its own — the fold's single biggest saving. */}
-            <div className="flex items-center justify-between mb-0.5">
-              {/* Names the metric rather than the mode — the highlighted pill
-                  already says which mode is on. */}
-              <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
-                {isW ? t("preview.totalWeight") : t("preview.totalCost")}
-              </span>
-              <div className="flex gap-1">
-                {(["weight", "price"] as const).map((m) => {
-                  const active = mode === m;
-                  const isWeight = m === "weight";
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setModeOverride(m)}
-                      aria-pressed={active}
-                      className="fs-track-label rounded-none text-[10.5px] font-bold"
-                      style={{
-                        // 5px of vertical padding puts the control at 25px, over
-                        // the 24px floor in WCAG 2.5.8. It measured 23px.
-                        padding: "5px 12px",
-                        border: active
-                          ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
-                          : "1px solid var(--border-faint)",
-                        background: active
-                          ? isWeight
-                            ? "var(--accent-surface)"
-                            : "var(--blue-surface)"
-                          : "transparent",
-                        color: active
-                          ? isWeight
-                            ? "var(--accent-text)"
-                            : "var(--blue-text)"
-                          : "var(--muted)",
-                      }}
-                    >
-                      {/* Same words as the desktop toggle — the concept is
-                          one, so the label is one (KG/€ read as units). */}
-                      {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={!p.valid}
-              onClick={() => p.valid && setSheet("result")}
-              aria-haspopup="dialog"
-              aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-              className="block w-full text-left p-0 m-0 bg-transparent border-0"
-              style={{ cursor: p.valid ? "pointer" : "default" }}
-            >
-              <div className="flex items-baseline gap-2">
-                {!isW && p.totalAmount != null && (
-                  <span
-                    className="font-mono text-[30px] leading-none"
-                    style={{
-                      color: "var(--muted)",
-                      fontWeight: HERO_FONT_WEIGHT,
-                    }}
-                  >
-                    {sym}
-                  </span>
-                )}
-                <span
-                  className="font-mono leading-[0.88] tracking-[-2.8px] fs-display-num"
-                  style={{
-                    fontSize: 56,
-                    fontWeight: HERO_FONT_WEIGHT,
-                    color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
+            So when there is nothing to show, the way in takes the space
+            instead of queueing behind it. The tape only appears if it has
+            something on it; an empty one was another dash.
+          */}
+          {queryHydrated && query.trim() === "" ? (
+            <>
+              <div className="flex-1 min-h-0 overflow-y-auto px-[18px] pt-2">
+                <ProfileDiscoveryTiles
+                  compact
+                  hideTitle
+                  onSelectProfile={(prefix) => {
+                    haptic("tap");
+                    setQuery(prefix);
+                    markExternalValueChange();
                   }}
-                >
-                  {heroVal}
-                </span>
-                {isW && p.totalKg != null && (
-                  <span
-                    className="font-mono text-[20px]"
-                    // The hero unit is 20-22px at a normal weight, which WCAG
-                    // does not count as large text, so it needs the 4.5:1 token
-                    // rather than the 4.33:1 signal colour.
-                    style={{ color: "var(--accent-text)" }}
-                  >
-                    {fsWeightUnit()}
-                  </span>
-                )}
-                {band && (
-                  <span
-                    className="fs-track-wide font-mono text-[11px] text-muted self-end pb-2 ml-1"
-                    >
-                    {band.percentLabel}
-                  </span>
-                )}
-                {p.valid && (
-                  <span className="ml-auto self-center text-muted-faint">
-                    <Chev />
-                  </span>
-                )}
-              </div>
-            </button>
-
-            <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
-              {line.multi ? (
-                <span className="font-mono text-[12px] text-muted">
-                  {t("result.assembly", { count: line.items.length })}
-                </span>
-              ) : p.valid && p.kgm != null ? (
-                <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
-                  <span>
-                    <span className="text-foreground-secondary">
-                      {p.kgm.toFixed(2)}
-                    </span>{" "}
-                    kg/m ×{" "}
-                    <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
-                    m × <span className="text-foreground-secondary">{p.realQty}</span>
-                    {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
-                    {/* The assumption travels with the figure — see the
-                        workspace hero for why. */}
-                    {mode === "price" && !rateIsUserSupplied
-                      ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
-                      : ""}
-                  </span>
-                  {p.availability && (
-                    <AvailabilityBadge>
-                      {formatAvailability(t, p.availability, p.gradeLabel).badge}
-                    </AvailabilityBadge>
-                  )}
-                  {targetNote && (
-                    <TargetBadge>
-                      {t(
-                        `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
-                        { target: targetNote.target },
-                      )}
-                      {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
-                    </TargetBadge>
-                  )}
-                  {!isW && p.pricing.wastePercent > 0 && (
-                    <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
-                  )}
-                  {!isW && p.pricing.includeVat && (
-                    <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
-                  )}
-                </span>
-              ) : p.issues.length > 0 ? (
-                <span
-                  className="fs-drop font-mono text-[12px] flex items-center gap-2 flex-wrap"
-                  style={{ color: "var(--amber-text)" }}
-                  role="status"
-                >
-                  <span>{formatCommandIssue(t, p.issues[0])}</span>
-                  {p.issues[0].suggestion && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setQuery(
-                          applyIssueSuggestion(
-                            query,
-                            p.issues[0].token,
-                            p.issues[0].suggestion!,
-                          ),
-                        );
-                        // no-op on phone: the keypad owns the caret
-                      }}
-                      className="rounded-none font-bold"
-                      style={{
-                        padding: "2px 9px",
-                        background: "var(--accent-surface)",
-                        color: "var(--accent-text)",
-                        border: "1px solid var(--accent-border)",
-                      }}
-                    >
-                      {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
-                    </button>
-                  )}
-                </span>
-              ) : (
-                <span className="font-mono text-[12px] text-muted-faint">
-                  {p.alias
-                    ? p.hasSize
-                      ? t("hint.addLength")
-                      : t("hint.addSize")
-                    : t("hint.startProfile")}
-                </span>
-              )}
-              <span className="ml-auto flex items-center gap-1.5">
-                <span
-                  className="w-1.5 h-1.5"
-                  style={{
-                    background: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                  onTryDemo={() => {
+                    haptic("tap");
+                    setQuery(DEMO_QUERY);
+                    markExternalValueChange();
                   }}
                 />
-                <span
-                  className="font-mono text-[10px] uppercase"
-                  style={{
-                    letterSpacing: 1.6,
-                    color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
-                  }}
-                >
-                  {p.valid ? t("status.live") : t("status.waiting")}
-                </span>
-              </span>
-            </div>
-
-            <MetricStrip
-              p={p}
-              isWeight={isW}
-              sym={sym}
-              onOpen={() => p.valid && setSheet("result")}
-            />
-
-            <div className="flex gap-1.5 mt-2">
-              <ActionBtn onClick={doSave} primary={!!currentSavedEntry}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill={currentSavedEntry ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                </svg>
-                {currentSavedEntry ? t("common.saved") : t("common.save")}
-              </ActionBtn>
-              {/* Save bookmarks in one tap; this is where else it can go. */}
-              <button
-                type="button"
-                onClick={() => p.calc && setDestination({ entry: null })}
-                disabled={!p.calc}
-                aria-label={t("saveTo.title")}
-                className="flex items-center justify-center rounded-button flex-shrink-0 disabled:opacity-40"
-                style={{
-                  width: 44,
-                  height: 44,
-                  border: "1px solid var(--border-faint)",
-                  background: "var(--surface)",
-                  color: "var(--foreground)",
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              </button>
-              <ActionBtn onClick={doCompare}>{t("nav.compare")}</ActionBtn>
-              <ActionBtn onClick={shareLink}>{t("common.share")}</ActionBtn>
-              {/* The fold doesn't draw this, but without it the phone can only
-                  view a multi-item line, never start one. */}
+              </div>
+              {sessionSummary.count > 0 && (
+                <>
+            {/* SESSION RIBBON — the tape, at phone size. It carries the same two
+                actions the workspace pane does: open it, or turn it into a
+                project. Nothing typed is lost by not deciding where it goes,
+                which is the point of the tape. */}
+            <div
+              data-session-ribbon=""
+              className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
+              // A fixed height, because everything on this screen is laid out by
+              // flex spacers: a row that grows when the tape fills pushes the
+              // answer up the screen as you work. Its tallest control is the
+              // 28px "+", so 44 holds it with room either side.
+              style={{
+                height: 44,
+                padding: "0 8px 0 11px",
+                border: "1px dashed var(--border-strong)",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => {
-                  haptic("tap");
-                  setQuery((q) => cmdAppendLineItem(q));
+                  setLibraryTab("session");
+                  setSheet("library");
                 }}
-                disabled={!p.valid}
-                aria-label={t("suggest.addItem")}
-                className="flex items-center justify-center rounded-button text-[16px] font-bold leading-none"
+                aria-label={t("aria.openSession")}
+                // overflow-hidden, because the figure and the label inside are
+                // both nowrap: without it a long total simply drew over the
+                // button to its right instead of giving way.
+                className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden bg-transparent border-0 p-0 text-left cursor-pointer"
+              >
+                <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+                  {t("desktop.session")}
+                </h2>
+                {/* The total in whichever unit the hero is showing, then how many
+                    lines it came from. Showing weight and money side by side made
+                    the row two lines tall as soon as the session had anything in
+                    it, and truncating a number mid-digit is worse than omitting
+                    it — the full breakdown is one tap away. */}
+                <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
+                  {sessionSummary.count === 0
+                    ? "—"
+                    : isW
+                      ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                      : `${sym}${fsMoney(sessionSummary.amount)}`}
+                </span>
+                {/* No line count here. It only ever had a value when the
+                    "→ project" button was showing too, and the two together do
+                    not fit a 390px row — it came out as "2 c…". The count is
+                    on the session tab, one tap away. */}
+              </button>
+              {sessionSummary.count > 0 && (
+                <button
+                  type="button"
+                  onClick={saveSessionAsProject}
+                  className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
+                  style={{ padding: "6px 7px", color: "var(--accent-text)" }}
+                >
+                  {t("desktop.saveSessionAsProjectShort")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={logToSession}
+                aria-label={t("aria.addToSession")}
+                className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
                 style={{
-                  width: 44,
-                  height: 44,
-                  border: "1px dashed var(--border-strong)",
-                  background: "transparent",
-                  color: "var(--muted)",
-                  opacity: p.valid ? 1 : 0.4,
+                  width: 28,
+                  height: 28,
+                  border: "1px solid var(--accent-border)",
+                  background: "var(--accent-surface)",
+                  color: "var(--accent-text)",
                 }}
               >
                 +
               </button>
             </div>
-          </div>
 
-          {/* SESSION RIBBON — the tape's running total, one tap from the
-              library, with + to add the current line. Recents moved into the
-              library's session tab; this is what the phone gets instead. */}
-          <div
-            className="flex items-center gap-2.5 mx-[18px] mt-2 rounded-none flex-shrink-0"
-            style={{ padding: "7px 11px", border: "1px dashed var(--border-strong)" }}
-          >
-            <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
-              {t("desktop.session")}
-            </h2>
-            {/* The total in whichever unit the hero is showing, then how many
-                lines it came from. Showing weight and money side by side made
-                the row two lines tall as soon as the session had anything in
-                it, and truncating a number mid-digit is worse than omitting it
-                — the full breakdown is one tap away in the session tab. */}
-            <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
-              {sessionSummary.count === 0
-                ? "—"
-                : isW
-                  ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
-                  : `${sym}${fsMoney(sessionSummary.amount)}`}
-            </span>
-            <span className="font-mono text-[11.5px] text-muted truncate min-w-0">
-              {sessionSummary.count > 0
-                ? t("library.calcCount", { count: sessionSummary.count })
-                : ""}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setLibraryTab("session");
-                setSheet("library");
-              }}
-              className="fs-track-wide ml-auto flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase text-muted-faint"
-              style={{ padding: "4px 6px" }}
-            >
-              {t("common.open")} ›
-            </button>
-            <button
-              type="button"
-              onClick={logToSession}
-              aria-label={t("aria.addToSession")}
-              className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none"
+            {/* The visual way in, on the surface that has no text field at all.
+                It shipped to the workspace only, which left the phone — the
+                device most likely to be held by someone who has never typed
+                `hea120` in their life — with nothing but a row of chips. It
+                fills the band that was empty on a pristine screen anyway. */}
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Free height is split above and below the answer instead of
+                  all of it falling below. On a 390x844 phone roughly a third
+                  of the screen sat empty between the session ribbon and the
+                  suggestion strip while the figure was pinned to the very
+                  top — the hardest place to reach one-handed. Both spacers
+                  are flex, so on a short screen they collapse and nothing
+                  moves. The split is weighted 1:2 so the answer lands in the
+                  upper third rather than dead centre. */}
+              <div className="flex-[1] min-h-0" />
+            {/* HERO */}
+            <div className="px-[18px] pt-1.5 flex-shrink-0">
+              {/* The mode switch rides in the hero's label row rather than taking
+                  a full-width row of its own — the fold's single biggest saving. */}
+              <div className="flex items-center justify-between mb-0.5">
+                {/* Names the metric rather than the mode — the highlighted pill
+                    already says which mode is on. */}
+                <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+                  {isW ? t("preview.totalWeight") : t("preview.totalCost")}
+                </span>
+                <div className="flex gap-1">
+                  {(["weight", "price"] as const).map((m) => {
+                    const active = mode === m;
+                    const isWeight = m === "weight";
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setModeOverride(m)}
+                        aria-pressed={active}
+                        className="fs-track-label rounded-none text-[10.5px] font-bold"
+                        style={{
+                          // 5px of vertical padding puts the control at 25px, over
+                          // the 24px floor in WCAG 2.5.8. It measured 23px.
+                          padding: "5px 12px",
+                          border: active
+                            ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
+                            : "1px solid var(--border-faint)",
+                          background: active
+                            ? isWeight
+                              ? "var(--accent-surface)"
+                              : "var(--blue-surface)"
+                            : "transparent",
+                          color: active
+                            ? isWeight
+                              ? "var(--accent-text)"
+                              : "var(--blue-text)"
+                            : "var(--muted)",
+                        }}
+                      >
+                        {/* Same words as the desktop toggle — the concept is
+                            one, so the label is one (KG/€ read as units). */}
+                        {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={!p.valid}
+                onClick={() => p.valid && setSheet("result")}
+                aria-haspopup="dialog"
+                aria-label={p.valid ? t("aria.openBreakdown") : undefined}
+                className="block w-full text-left p-0 m-0 bg-transparent border-0"
+                style={{ cursor: p.valid ? "pointer" : "default" }}
+              >
+                <div className="flex items-baseline gap-2">
+                  {!isW && p.totalAmount != null && (
+                    <span
+                      className="font-mono text-[30px] leading-none"
+                      style={{
+                        color: "var(--muted)",
+                        fontWeight: HERO_FONT_WEIGHT,
+                      }}
+                    >
+                      {sym}
+                    </span>
+                  )}
+                  <span
+                    className="font-mono leading-[0.88] tracking-[-2.8px] fs-display-num"
+                    style={{
+                      fontSize: 56,
+                      fontWeight: HERO_FONT_WEIGHT,
+                      color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
+                    }}
+                  >
+                    {heroVal}
+                  </span>
+                  {isW && p.totalKg != null && (
+                    <span
+                      className="font-mono text-[20px]"
+                      // The hero unit is 20-22px at a normal weight, which WCAG
+                      // does not count as large text, so it needs the 4.5:1 token
+                      // rather than the 4.33:1 signal colour.
+                      style={{ color: "var(--accent-text)" }}
+                    >
+                      {fsWeightUnit()}
+                    </span>
+                  )}
+                  {band && (
+                    <span
+                      className="fs-track-wide font-mono text-[11px] text-muted self-end pb-2 ml-1"
+                      >
+                      {band.percentLabel}
+                    </span>
+                  )}
+                  {p.valid && (
+                    <span className="ml-auto self-center text-muted-faint">
+                      <Chev />
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
+                {line.multi ? (
+                  <span className="font-mono text-[12px] text-muted">
+                    {t("result.assembly", { count: line.items.length })}
+                  </span>
+                ) : p.valid && p.kgm != null ? (
+                  <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      <span className="text-foreground-secondary">
+                        {p.kgm.toFixed(2)}
+                      </span>{" "}
+                      kg/m ×{" "}
+                      <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
+                      m × <span className="text-foreground-secondary">{p.realQty}</span>
+                      {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
+                      {/* The assumption travels with the figure — see the
+                          workspace hero for why. */}
+                      {mode === "price" && !rateIsUserSupplied
+                        ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
+                        : ""}
+                    </span>
+                    {p.availability && (
+                      <AvailabilityBadge>
+                        {formatAvailability(t, p.availability, p.gradeLabel).badge}
+                      </AvailabilityBadge>
+                    )}
+                    {targetNote && (
+                      <TargetBadge>
+                        {t(
+                          `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                          { target: targetNote.target },
+                        )}
+                        {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
+                      </TargetBadge>
+                    )}
+                    {!isW && p.pricing.wastePercent > 0 && (
+                      <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
+                    )}
+                    {!isW && p.pricing.includeVat && (
+                      <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
+                    )}
+                  </span>
+                ) : p.issues.length > 0 ? (
+                  <span
+                    className="fs-drop font-mono text-[12px] flex items-center gap-2 flex-wrap"
+                    style={{ color: "var(--amber-text)" }}
+                    role="status"
+                  >
+                    <span>{formatCommandIssue(t, p.issues[0])}</span>
+                    {p.issues[0].suggestion && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuery(
+                            applyIssueSuggestion(
+                              query,
+                              p.issues[0].token,
+                              p.issues[0].suggestion!,
+                            ),
+                          );
+                          // no-op on phone: the keypad owns the caret
+                        }}
+                        className="rounded-none font-bold"
+                        style={{
+                          padding: "2px 9px",
+                          background: "var(--accent-surface)",
+                          color: "var(--accent-text)",
+                          border: "1px solid var(--accent-border)",
+                        }}
+                      >
+                        {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
+                      </button>
+                    )}
+                  </span>
+                ) : (
+                  <span className="font-mono text-[12px] text-muted-faint">
+                    {p.alias
+                      ? p.hasSize
+                        ? t("hint.addLength")
+                        : t("hint.addSize")
+                      : t("hint.startProfile")}
+                  </span>
+                )}
+                <span className="ml-auto flex items-center gap-1.5">
+                  <span
+                    className="w-1.5 h-1.5"
+                    style={{
+                      background: p.valid ? "var(--accent)" : "var(--muted-faint)",
+                    }}
+                  />
+                  <span
+                    className="font-mono text-[10px] uppercase"
+                    style={{
+                      letterSpacing: 1.6,
+                      color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
+                    }}
+                  >
+                    {p.valid ? t("status.live") : t("status.waiting")}
+                  </span>
+                </span>
+              </div>
+
+              <MetricStrip
+                p={p}
+                isWeight={isW}
+                sym={sym}
+                onOpen={() => p.valid && setSheet("result")}
+              />
+
+              {/* The save control takes the row; the other three are icons.
+                  All four used to share the width equally, which left the one
+                  control that has something to say — "Add to Gate job", or even
+                  just "Save" — with about 60px to say it in, and it came out as
+                  a bookmark and the letter S. Compare and Share have glyphs that
+                  carry them; the primary action is the one that needs words. */}
+              <div className="flex gap-1.5 mt-2">
+                <div className="flex-1 min-w-0">
+                  <SaveControl
+                    compact
+                    projectName={currentProject?.name ?? null}
+                    saved={!!currentSavedEntry}
+                    disabled={!p.calc}
+                    onPrimary={primarySave}
+                    onOpenPicker={openDestinations}
+                  />
+                </div>
+                <PhoneIconBtn onClick={doCompare} label={t("nav.compare")}>
+                  <DeskIcon name="compare" size={16} />
+                </PhoneIconBtn>
+                <PhoneIconBtn onClick={shareLink} label={t("common.share")}>
+                  <DeskIcon name="link" size={16} stroke="currentColor" />
+                </PhoneIconBtn>
+                {/* The fold doesn't draw this, but without it the phone can only
+                    view a multi-item line, never start one. */}
+                <PhoneIconBtn
+                  onClick={() => {
+                    haptic("tap");
+                    setQuery((q) => cmdAppendLineItem(q));
+                  }}
+                  disabled={!p.valid}
+                  label={t("suggest.addItem")}
+                  dashed
+                >
+                  <span className="text-[17px] font-bold leading-none">+</span>
+                </PhoneIconBtn>
+              </div>
+            </div>
+
+            {/* SESSION RIBBON — the tape, at phone size. It carries the same two
+                actions the workspace pane does: open it, or turn it into a
+                project. Nothing typed is lost by not deciding where it goes,
+                which is the point of the tape. */}
+            <div
+              data-session-ribbon=""
+              className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
+              // A fixed height, because everything on this screen is laid out by
+              // flex spacers: a row that grows when the tape fills pushes the
+              // answer up the screen as you work. Its tallest control is the
+              // 28px "+", so 44 holds it with room either side.
               style={{
-                width: 28,
-                height: 28,
-                border: "1px solid var(--accent-border)",
-                background: "var(--accent-surface)",
-                color: "var(--accent-text)",
+                height: 44,
+                padding: "0 8px 0 11px",
+                border: "1px dashed var(--border-strong)",
               }}
             >
-              +
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setLibraryTab("session");
+                  setSheet("library");
+                }}
+                aria-label={t("aria.openSession")}
+                // overflow-hidden, because the figure and the label inside are
+                // both nowrap: without it a long total simply drew over the
+                // button to its right instead of giving way.
+                className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden bg-transparent border-0 p-0 text-left cursor-pointer"
+              >
+                <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
+                  {t("desktop.session")}
+                </h2>
+                {/* The total in whichever unit the hero is showing, then how many
+                    lines it came from. Showing weight and money side by side made
+                    the row two lines tall as soon as the session had anything in
+                    it, and truncating a number mid-digit is worse than omitting
+                    it — the full breakdown is one tap away. */}
+                <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
+                  {sessionSummary.count === 0
+                    ? "—"
+                    : isW
+                      ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
+                      : `${sym}${fsMoney(sessionSummary.amount)}`}
+                </span>
+                {/* No line count here. It only ever had a value when the
+                    "→ project" button was showing too, and the two together do
+                    not fit a 390px row — it came out as "2 c…". The count is
+                    on the session tab, one tap away. */}
+              </button>
+              {sessionSummary.count > 0 && (
+                <button
+                  type="button"
+                  onClick={saveSessionAsProject}
+                  className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
+                  style={{ padding: "6px 7px", color: "var(--accent-text)" }}
+                >
+                  {t("desktop.saveSessionAsProjectShort")}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={logToSession}
+                aria-label={t("aria.addToSession")}
+                className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
+                style={{
+                  width: 28,
+                  height: 28,
+                  border: "1px solid var(--accent-border)",
+                  background: "var(--accent-surface)",
+                  color: "var(--accent-text)",
+                }}
+              >
+                +
+              </button>
+            </div>
 
-          <div className="flex-[2] min-h-[6px]" />
+            {/* The visual way in, on the surface that has no text field at all.
+                It shipped to the workspace only, which left the phone — the
+                device most likely to be held by someone who has never typed
+                `hea120` in their life — with nothing but a row of chips. It
+                fills the band that was empty on a pristine screen anyway. */}
+              <div className="flex-[2] min-h-[6px]" />
+            </>
+          )}
 
           {/* SUGGESTION BAR */}
           {/* The gap under the strip has to clear the query line's 3px focus
@@ -2305,8 +2535,12 @@ export function CommandShell() {
               query={query}
               setQuery={setQuery}
               onClose={() => setSheet(null)}
-              onSave={doSave}
-              onSaveElsewhere={() => setDestination({ entry: null })}
+              onPrimarySave={() => {
+                setSheet(null);
+                primarySave();
+              }}
+              onSaveElsewhere={openDestinations}
+              currentProjectName={currentProject?.name ?? null}
               isSaved={!!currentSavedEntry}
               onCopyValue={() => {
                 setSheet(null);
@@ -2328,7 +2562,6 @@ export function CommandShell() {
                 setSheet(null);
                 doCompare();
               }}
-              onAddToProject={openProjectModal}
             />
           )}
           {effectiveSheet === "settings" && (
@@ -2475,26 +2708,42 @@ function MetricStrip({
 }
 
 /** One of the three equal actions under the hero (Save / Compare / Share). */
-function ActionBtn({
+/**
+ * A 44px square on the phone's action row. Everything beside the save control
+ * is one of these: the row has about 350px and the one control with words on
+ * it needs most of them.
+ */
+function PhoneIconBtn({
   onClick,
-  primary,
+  label,
+  disabled,
+  dashed,
   children,
 }: {
   onClick: () => void;
-  primary?: boolean;
+  label: string;
+  disabled?: boolean;
+  /** The "another item" button, which is an invitation rather than an action. */
+  dashed?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-button text-[12px] font-bold"
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className="flex flex-shrink-0 items-center justify-center rounded-button cursor-pointer disabled:cursor-default"
       style={{
+        width: 44,
         height: 44,
-        letterSpacing: 0.4,
-        border: `1px solid ${primary ? "var(--accent-border)" : "var(--border-faint)"}`,
-        background: primary ? "var(--accent-surface)" : "var(--surface)",
-        color: primary ? "var(--accent-text)" : "var(--foreground-secondary)",
+        border: dashed
+          ? "1px dashed var(--border-strong)"
+          : "1px solid var(--border-faint)",
+        background: dashed ? "transparent" : "var(--surface)",
+        color: dashed ? "var(--muted)" : "var(--foreground-secondary)",
+        opacity: disabled ? 0.4 : 1,
       }}
     >
       {children}

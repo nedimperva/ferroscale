@@ -33,11 +33,6 @@ async function showCards(page: Page) {
   await page.getByRole("button", { name: "Card view" }).click();
 }
 
-/** A row's overflow menu, opened by the entry's own name. */
-async function openRowMenu(page: Page, name: string) {
-  await page.getByRole("button", { name, exact: true }).click();
-}
-
 /** Saved cards — the dev overlay also has an "Open …" button, so match the
  *  card's own label ending. */
 const savedCards = (page: Page) => page.getByRole("button", { name: /in the calculator$/ });
@@ -118,8 +113,7 @@ test.describe("Saved library", () => {
     await saveButton(page).click();
     await savedTab(page, 1).click();
 
-    await openRowMenu(page, "HEA 120");
-    await page.getByRole("menuitem", { name: "Rename, notes and tags" }).click();
+    await page.getByRole("button", { name: /^Edit / }).first().click();
     await page.getByLabel(/Name/).fill("Gate post");
     await page.getByRole("button", { name: "Save changes" }).click();
 

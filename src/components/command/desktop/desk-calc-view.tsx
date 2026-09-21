@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import {
   cmdAppendLineItem,
@@ -43,6 +43,9 @@ import { commandTargetNote } from "../target-note";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { massBand } from "../mass-band";
+import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
+import { SaveControl } from "../save-control";
+import { DEMO_QUERY } from "../command-constants";
 import {
   editLineToken,
   lineChipPrefix,
@@ -58,42 +61,6 @@ type DeskCalcViewProps = CommandDesktopProps & {
   inputRef: React.RefObject<HTMLInputElement | null>;
   gotoCompare: () => void;
 };
-
-/** Small square icon button used in the result panel's action cluster. */
-function PanelIconBtn({
-  onClick,
-  disabled,
-  title,
-  ariaLabel,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  title: string;
-  ariaLabel: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      aria-label={ariaLabel}
-      className="flex items-center justify-center text-muted"
-      style={{
-        width: 34,
-        height: 34,
-        border: "1px solid var(--border)",
-        background: "transparent",
-        cursor: disabled ? "default" : "pointer",
-        opacity: disabled ? 0.45 : 1,
-      }}
-    >
-      {children}
-    </button>
-  );
-}
 
 /**
  * The fold's four-cell glance row. Values are pulled from the shared breakdown
@@ -185,7 +152,9 @@ export function DeskCalcView({
   onClearTape,
   onSaveSessionAsProject,
   onSave,
-  onSaveElsewhere,
+  onPrimarySave,
+  onOpenDestinations,
+  currentProjectName,
   currentSaved,
   onOpenHelp,
   onLogSession,
@@ -194,7 +163,6 @@ export function DeskCalcView({
   onNew,
   onSuggest,
   onCompareCurrent,
-  onAddToProject,
   inputRef,
 }: DeskCalcViewProps) {
   const t = useTranslations("command");
@@ -248,6 +216,20 @@ export function DeskCalcView({
     massTolerancePercentStore.getSnapshot,
     massTolerancePercentStore.getServerSnapshot,
   );
+
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handleDown = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", handleDown);
+    return () => window.removeEventListener("mousedown", handleDown);
+  }, [moreOpen]);
 
   /**
    * Same rule as the phone: only the item being typed is spelled out as
@@ -517,9 +499,24 @@ export function DeskCalcView({
           )}
         </label>
 
-        {/* SUGGESTIONS */}
-        <div className="mt-3">
-          <div className="flex items-center gap-3 flex-wrap mb-2">
+        {query.trim() === "" ? (
+          <div className="mt-4">
+            <ProfileDiscoveryTiles
+              onSelectProfile={(prefix) => {
+                setQuery(prefix);
+                focusInputAtEnd();
+              }}
+              onTryDemo={() => {
+                setQuery(DEMO_QUERY);
+                focusInputAtEnd();
+              }}
+              compact={compact}
+            />
+          </div>
+        ) : (
+          /* SUGGESTIONS */
+          <div className="mt-3">
+            <div className="flex items-center gap-3 flex-wrap mb-2">
             <h2
               className="fs-track-label text-[10px] font-bold text-muted uppercase"
             >
@@ -623,6 +620,7 @@ export function DeskCalcView({
             ))}
           </div>
         </div>
+        )}
       </div>
 
       {/* ───────── dashboard grid ─────────
@@ -810,124 +808,101 @@ export function DeskCalcView({
             </div>
             <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
               <div className="ml-auto flex items-center gap-2">
-                {/* Save is a toggle: filled bookmark = this exact line is in
-                    the library, press again to remove it. */}
+                {/* Copy the answer — the other thing done with a result. */}
                 <button
                   type="button"
-                  onClick={onSave}
+                  onClick={onCopySummary}
                   disabled={!p.valid}
-                  aria-pressed={currentSaved}
-                  title={currentSaved ? t("common.saved") : t("common.save")}
-                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap"
+                  title={t("common.copySummary")}
+                  aria-label={t("common.copySummary")}
+                  className="inline-flex items-center gap-[7px] text-[12.5px] font-medium whitespace-nowrap"
                   style={{
                     padding: "8px 16px",
-                    // Ink, not accent: the accent belongs to the figure above.
-                    // Saved reverses into an outline so the state is legible
-                    // without a second colour.
-                    border: p.valid && !currentSaved ? "none" : "1px solid var(--border)",
-                    background: p.valid && !currentSaved ? "var(--foreground)" : "transparent",
-                    color: !p.valid
-                      ? "var(--muted)"
-                      : currentSaved
-                        ? "var(--foreground)"
-                        : "var(--background)",
-                    cursor: p.valid ? "pointer" : "default",
-                  }}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill={currentSaved ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                  </svg>
-                  {currentSaved ? t("common.saved") : t("common.save")}
-                </button>
-                {/* Save bookmarks in one tap; this is where else it can go —
-                    onto an existing part or assembly, or straight onto a job. */}
-                <button
-                  type="button"
-                  onClick={onSaveElsewhere}
-                  disabled={!p.valid}
-                  title={t("saveTo.title")}
-                  aria-label={t("saveTo.title")}
-                  className="inline-flex items-center justify-center"
-                  style={{
-                    width: 32,
-                    height: 34,
                     border: "1px solid var(--border)",
                     background: "transparent",
                     color: p.valid ? "var(--foreground)" : "var(--muted)",
                     cursor: p.valid ? "pointer" : "default",
                   }}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  onClick={onCompareCurrent}
-                  disabled={!p.valid}
-                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap text-foreground"
-                  style={{
-                    padding: "8px 14px",
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    cursor: p.valid ? "pointer" : "default",
-                    opacity: p.valid ? 1 : 0.45,
-                  }}
-                >
-                  <DeskIcon name="compare" />
-                  {t("common.compare")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuery((q) => cmdAppendLineItem(q))}
-                  disabled={!p.valid}
-                  // A spoken "+ item" is cryptic; the suggestion chip keeps
-                  // the short label, this one says what it does.
-                  aria-label={t("desktop.anotherItemAria")}
-                  className="inline-flex items-center gap-[7px] text-[12.5px] whitespace-nowrap text-muted"
-                  style={{
-                    padding: "8px 14px",
-                    border: "1px dashed var(--border)",
-                    background: "transparent",
-                    cursor: p.valid ? "pointer" : "default",
-                    opacity: p.valid ? 1 : 0.45,
-                  }}
-                >
-                  {t("desktop.anotherItem")}
-                </button>
-                <PanelIconBtn
-                  onClick={onCopySummary}
-                  disabled={!p.valid}
-                  title={t("common.copySummary")}
-                  ariaLabel={t("common.copySummary")}
-                >
                   <DeskIcon name="copy" stroke="currentColor" />
-                </PanelIconBtn>
-                <PanelIconBtn
-                  onClick={onAddToProject}
+                  {t("common.copySummary")}
+                </button>
+
+                {/* Where it goes — one control, same as the phone's. */}
+                <SaveControl
+                  projectName={currentProjectName}
+                  saved={currentSaved}
                   disabled={!p.valid}
-                  title={t("common.addProjectLong")}
-                  ariaLabel={t("common.addProjectLong")}
-                >
-                  <DeskIcon name="plus" stroke="currentColor" />
-                </PanelIconBtn>
-                <PanelIconBtn
-                  onClick={onShareLink}
-                  disabled={!p.valid}
-                  title={t("common.shareLink")}
-                  ariaLabel={t("common.shareLink")}
-                >
-                  <DeskIcon name="link" stroke="currentColor" />
-                </PanelIconBtn>
+                  onPrimary={onPrimarySave}
+                  onOpenPicker={onOpenDestinations}
+                />
+
+                {/* 4. More actions overflow */}
+                <div ref={moreMenuRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMoreOpen((v) => !v)}
+                    disabled={!p.valid}
+                    title={t("common.more")}
+                    aria-label={t("common.more")}
+                    aria-expanded={moreOpen}
+                    className="inline-flex items-center justify-center"
+                    style={{
+                      width: 34,
+                      height: 34,
+                      border: "1px solid var(--border)",
+                      background: moreOpen ? "var(--surface-raised)" : "transparent",
+                      color: p.valid ? "var(--foreground)" : "var(--muted)",
+                      cursor: p.valid ? "pointer" : "default",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="2" />
+                      <circle cx="19" cy="12" r="2" />
+                      <circle cx="5" cy="12" r="2" />
+                    </svg>
+                  </button>
+                  {moreOpen && (
+                    <div
+                      className="absolute right-0 bottom-full mb-1 flex flex-col py-1 border border-[var(--border)] bg-[var(--surface)] shadow-md z-20 min-w-[170px]"
+                      style={{ borderRadius: 0 }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          onCompareCurrent();
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 text-[12px] text-left hover:bg-[var(--surface-raised)] text-[var(--foreground)] border-0 bg-transparent cursor-pointer"
+                      >
+                        <DeskIcon name="compare" />
+                        {t("common.compare")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          setQuery((q) => cmdAppendLineItem(q));
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 text-[12px] text-left hover:bg-[var(--surface-raised)] text-[var(--foreground)] border-0 bg-transparent cursor-pointer"
+                      >
+                        <span className="font-mono text-sm leading-none">+</span>
+                        {t("desktop.anotherItem")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          onShareLink();
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 text-[12px] text-left hover:bg-[var(--surface-raised)] text-[var(--foreground)] border-0 bg-transparent cursor-pointer"
+                      >
+                        <DeskIcon name="link" stroke="currentColor" />
+                        {t("common.shareLink")}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -2,12 +2,51 @@
 import { describe, expect, it } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useProjects } from "@/hooks/useProjects";
-import { getBuiltinAssemblyTemplates } from "@/hooks/useAssemblyTemplates";
+import { libraryAssembly } from "@/test/library-fixtures";
 import { calculateMetal, type CalculationInput } from "@ferroscale/metal-core";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { extractProjectCutGroups } from "@/lib/projects/cutting";
 
-describe("Project Assembly Templates and Multipliers", () => {
+/** A tread: a plate, two brackets and a nosing bar, plus what it costs to make. */
+const STAIR_TREAD = libraryAssembly(
+  "asm-stair-tread",
+  "Stair Step Tread (900mm)",
+  [
+    ["plt280x900x4 x1 s235", 1, "Tread step plate"],
+    ["l50x50x5 280mm x2 s235", 2, "Side fixing brackets"],
+    ["flt40x5 900mm x1 s235", 1, "Front nosing bar"],
+  ],
+  {
+    category: "stairs_railings",
+    laborHours: 0.35,
+    additionalCosts: [
+      { id: "cost-tread-bolts", label: "4x M12 Hex Bolts & Washers", amount: 3.2, category: "hardware" },
+    ],
+  },
+);
+
+const RAILING_POST = libraryAssembly(
+  "asm-railing-post",
+  "Railing Post & Base Flange (1m)",
+  [
+    ["shs40x40x3 1m x1 s235", 1, "Main post column"],
+    ["plt120x120x10 x1 s235", 1, "Base anchor flange"],
+    ["plt40x40x3 x1 s235", 1, "Top cap plate"],
+  ],
+  { category: "stairs_railings", laborHours: 0.25 },
+);
+
+const FENCE_PANEL = libraryAssembly(
+  "asm-fence-panel",
+  "Industrial Fence Panel (2.5m)",
+  [
+    ["rhs50x30x2 2.5m x2 s235", 2, "Top & bottom horizontal rails"],
+    ["chs20x2 1.2m x20 s235", 20, "Vertical round tubes"],
+  ],
+  { category: "gates_fences", laborHours: 1.2 },
+);
+
+describe("Library assemblies inserted into a project", () => {
   it("inserts a template with multiplier into a project and scales all constituent cuts, labor, and costs", () => {
     const { result } = renderHook(() => useProjects());
 
@@ -17,14 +56,13 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const stairTreadTemplate = getBuiltinAssemblyTemplates().find((t) => t.id === "builtin-stair-tread")!;
-    expect(stairTreadTemplate).toBeDefined();
+    const stairTread = STAIR_TREAD;
 
     // Insert 15x Stair Step Treads into the project
     act(() => {
-      const ok = result.current.insertAssemblyTemplate(
+      const ok = result.current.insertAssembly(
         projectId,
-        stairTreadTemplate,
+        stairTread,
         15,
         "Stair Treads",
       );
@@ -73,11 +111,11 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const postTemplate = getBuiltinAssemblyTemplates().find((t) => t.id === "builtin-railing-post")!;
+    const railingPost = RAILING_POST;
 
     // Insert 4x Posts
     act(() => {
-      result.current.insertAssemblyTemplate(projectId, postTemplate, 4, "Columns");
+      result.current.insertAssembly(projectId, railingPost, 4, "Columns");
     });
 
     let project = result.current.projects.find((p) => p.id === projectId)!;
@@ -102,11 +140,11 @@ describe("Project Assembly Templates and Multipliers", () => {
   it("creates a new project directly from a fabrication template", () => {
     const { result } = renderHook(() => useProjects());
 
-    const fenceTemplate = getBuiltinAssemblyTemplates().find((t) => t.id === "builtin-fence-panel")!;
+    const fencePanel = FENCE_PANEL;
 
     let newProjId = "";
     act(() => {
-      const p = result.current.createProjectFromTemplate("Warehouse Perimeter Fence", fenceTemplate, 5);
+      const p = result.current.createProjectFromAssembly("Warehouse Perimeter Fence", fencePanel, 5);
       newProjId = p.id;
     });
 
@@ -122,14 +160,10 @@ describe("Project Assembly Templates and Multipliers", () => {
   });
 
   it("scales a composite calculation with templateParts preserving piece lengths and updating piece counts", () => {
-    const { result } = renderHook(() => useProjects());
-
-    let projectId = "";
-    act(() => {
-      const p = result.current.createProject("Composite Assembly Test");
-      projectId = p.id;
-    });
-
+    // A composite row — one project item holding its parts inside it — is the
+    // shape an older version wrote when an assembly was added from the
+    // library. Nothing creates one now, so this seeds it the way it would be
+    // read off disk: the point is that scaling still handles it.
     const part1Input: CalculationInput = {
       useCustomDensity: false,
       rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
@@ -151,7 +185,6 @@ describe("Project Assembly Templates and Multipliers", () => {
       vatPercent: 0,
     };
     const part1Res = calculateMetal(part1Input);
-    expect(part1Res.ok).toBe(true);
 
     const part2Input: CalculationInput = {
       useCustomDensity: false,
@@ -173,34 +206,52 @@ describe("Project Assembly Templates and Multipliers", () => {
       vatPercent: 0,
     };
     const part2Res = calculateMetal(part2Input);
+    expect(part1Res.ok).toBe(true);
     expect(part2Res.ok).toBe(true);
     if (!part1Res.ok || !part2Res.ok) throw new Error("Calculation failed");
 
-    act(() => {
-      const ok = result.current.addTemplateCalculation(
-        projectId,
-        "Custom Truss",
-        [
-          {
-            id: "p1",
-            name: "Angle Chords",
-            input: part1Input,
-            result: part1Res.result!,
-            normalizedProfile: normalizeProfileSnapshot(part1Input),
-          },
-          {
-            id: "p2",
-            name: "Flat Web",
-            input: part2Input,
-            result: part2Res.result!,
-            normalizedProfile: normalizeProfileSnapshot(part2Input),
-          },
-        ],
-        1,
-      );
-      expect(ok).toBe(true);
-    });
+    const now = new Date().toISOString();
+    const projectId = "composite-project";
+    localStorage.setItem(
+      "ferroscale-projects-v2",
+      JSON.stringify([
+        {
+          id: projectId,
+          name: "Composite Assembly Test",
+          createdAt: now,
+          updatedAt: now,
+          calculations: [
+            {
+              id: "composite-1",
+              timestamp: now,
+              input: part1Input,
+              result: part1Res.result,
+              normalizedProfile: normalizeProfileSnapshot(part1Input),
+              templateName: "Custom Truss",
+              quantityMultiplier: 1,
+              templateParts: [
+                {
+                  id: "p1",
+                  name: "Angle Chords",
+                  input: part1Input,
+                  result: part1Res.result,
+                  normalizedProfile: normalizeProfileSnapshot(part1Input),
+                },
+                {
+                  id: "p2",
+                  name: "Flat Web",
+                  input: part2Input,
+                  result: part2Res.result,
+                  normalizedProfile: normalizeProfileSnapshot(part2Input),
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+    );
 
+    const { result } = renderHook(() => useProjects());
     let project = result.current.projects.find((p) => p.id === projectId)!;
     expect(project.calculations.length).toBe(1);
     const trussCalc = project.calculations[0];

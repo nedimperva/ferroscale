@@ -17,7 +17,6 @@ import type { Project } from "@/hooks/useProjects";
 import { extractProjectCutGroups } from "@/lib/projects/cutting";
 import { DeskIcon } from "../desktop/desk-atoms";
 import { EmptyState } from "../empty-state";
-import { ProjectProcurement } from "./project-procurement";
 import { ProjectCutSheetDoc } from "./project-print-docs";
 
 interface ProjectCuttingProps {
@@ -475,7 +474,11 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
   const t = useTranslations("command");
 
   const cutGroups = useMemo(() => extractProjectCutGroups(project), [project]);
-  const [selectedGroupId, setSelectedGroupId] = useState<string>("procurement");
+  // The material order used to be the first chip on this rail — a headline
+  // feature reached by opening a project, opening its Cut plan and then
+  // noticing a tab inside it. It is a tab of the project now, so this rail is
+  // only what it says it is: the sections there are cuts to nest.
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("");
 
   // 1D Bar Optimizer Parameters
   const [stockChoice, setStockChoice] = useState<number>(6000); // 6000, 12000, -1 (mixed), 0 (custom)
@@ -492,12 +495,10 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
 
   const [isPrintingCutSheet, setIsPrintingCutSheet] = useState<boolean>(false);
 
-  const isProcurement = selectedGroupId === "procurement";
-
-  const activeGroup = useMemo(() => {
-    if (isProcurement) return null;
-    return cutGroups.find((g) => g.groupId === selectedGroupId) ?? cutGroups[0] ?? null;
-  }, [cutGroups, selectedGroupId, isProcurement]);
+  const activeGroup = useMemo(
+    () => cutGroups.find((g) => g.groupId === selectedGroupId) ?? cutGroups[0] ?? null,
+    [cutGroups, selectedGroupId],
+  );
 
   const handlePrintCutSheet = () => {
     setIsPrintingCutSheet(true);
@@ -586,32 +587,8 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
 
       {/* Sleek Segmented Group Selector Rail */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-b border-[var(--border-faint)]">
-        {/* Procurement Overview Tab */}
-        <button
-          type="button"
-          onClick={() => setSelectedGroupId("procurement")}
-          className="h-8 px-3.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2"
-          style={{
-            background: isProcurement ? "var(--surface)" : "transparent",
-            color: isProcurement ? "var(--accent-text)" : "var(--muted)",
-            border: isProcurement ? "1px solid var(--accent)" : "1px solid transparent",
-            boxShadow: isProcurement ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
-          }}
-        >
-          <span>📋 {t("cutting.procurementOverview")}</span>
-          <span
-            className="font-mono text-[10px] px-1.5 py-0.2 rounded-md"
-            style={{
-              background: isProcurement ? "var(--accent-surface)" : "var(--surface-inset)",
-              color: isProcurement ? "var(--accent-text)" : "var(--muted)",
-            }}
-          >
-            {cutGroups.length} sections
-          </span>
-        </button>
-
         {cutGroups.map((grp) => {
-          const isSelected = !isProcurement && grp.groupId === (activeGroup?.groupId ?? "");
+          const isSelected = grp.groupId === (activeGroup?.groupId ?? "");
           return (
             <button
               key={grp.groupId}
@@ -640,11 +617,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
         })}
       </div>
 
-      {/* Procurement Overview Screen */}
-      {isProcurement ? (
-        <ProjectProcurement project={project} compact={compact} />
-      ) : (
-        <div className="space-y-3.5">
+      <div className="space-y-3.5">
           {/* Compact Inline Parameter Toolbar */}
           {!is2D ? (
             /* 1D Bar Toolbar */
@@ -970,8 +943,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
               </div>
             )}
           </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -17,6 +17,96 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.27.0",
+    date: "2026-09-19",
+    changed: [
+      "Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was \"Rename, notes and tags\", then briefly \"Edit name, labour & hardware\" — both of them a list of fields where a verb belonged",
+      "The entry editor fits a phone. The category select was showing \"Main Structure / G\", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned",
+      "A library row on a phone puts its actions on a second line. Four of them beside a name left the name reading \"HEA …\"",
+      "An assembly's labour hours and hardware are edited where its name is, and the menu that opens it says so. They used to live in a template manager buried inside a project; for a while after that they were behind an item called \"Rename, notes and tags\", which named none of them",
+      "The mobile breakdown carries three controls instead of nine. It was three rows of buttons with \"Copy summary\" drawn twice, and both \"Save\" and \"+ Project\" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it",
+      "Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own \"+ Assembly\" offered a count — the same act, two answers depending on which door you used",
+      "Both doors now land the same way: one project item per cut, tagged with the assembly's name. From the library it used to arrive as a single rolled-up row whose cuts could not be edited",
+      "The five standards that shipped with the app are gone. They were a template collection's built-ins, and keeping them meant a library that was never empty, no empty state to teach the Save button with, a \"Standards\" filter, a restore-all affordance and counts that had to be split in two to stay honest. The library holds what you put in it",
+      "\"Template\" is not a word the app uses any more. There is one library, and the thing you take from it into a project is an assembly — the picker, the save dialog and every label say so",
+      "The assembly picker knows which of its two jobs it is doing: \"Insert an assembly\" into the project you are in, or \"Start from an assembly\" when it is making one. In the second the name field names the project, which it used to collect and then ignore",
+      "On a phone the save control takes the action row and the rest are icons. Four equal buttons left the one control with words on it about 60px to say them in, and \"Save\" came out as a bookmark and the letter S",
+      "A pristine phone screen leads with the profile tiles. They used to queue below a hero full of placeholder dashes — a mode switch, a \"—\", a \"—/pc\" strip and four disabled buttons — which left them about enough room for their own heading",
+      "One save control, not four. A bookmark toggle, an \"Add to project\" button and a \"Save to…\" item hidden in an overflow menu all looked like saving and all meant different things — and the phone arranged the same three differently again. There is one split button now, the same on both surfaces: it says in words what it will do (\"Add to Gate job\", or \"Save\"), and its caret opens everywhere else",
+      "The destination picker is one list. It used to ask what kind of thing first — four rows, each with its own nested list — then which one: two steps on a phone, a rail beside a scroller on a desktop. Now every project and every library entry is in one flat list, newest first, one press to file. Type to filter, arrow keys and Enter to drive it, and the search field has focus when it opens",
+      "The app remembers which job you are working out of. File something into a project and the calculator's primary action names that project until you file somewhere else — including after turning a session tape into one",
+      "Parts, assemblies and templates are one library. A template was a multi-part saved entry in a store of its own, with its own picker and its own editor buried inside a project. Now an assembly in the library is what you drop into a project, and there is one place to rename, re-cost and delete one",
+      "The material order is a tab of the project, beside Items and Cut plan. \"What do I need to buy\" was a chip inside the cut-plan tab — three levels down, behind a question it is not a sub-question of",
+      "The session tape carries the same weight on both surfaces: the phone's ribbon has \"save as project\" on it rather than two taps inside a sheet, and opening the tape is the whole left side of the row",
+      "The phone's navigation matches the workspace's. One bookmark glyph used to stand for Parts, Projects, Compare and the session tape at once",
+      "The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before"
+    ],
+    added: [
+      "The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life",
+      "An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited",
+      "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
+    ],
+    fixed: [
+      "The ⋯ on a library row announced itself with the entry's name, which is also what the row's own open button is called — two controls, one name, side by side",
+      "A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen",
+      "An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them",
+      "Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part",
+      "The end-to-end suite is green again. Fourteen tests — every accessibility scan among them — waited for a result on a screen that stopped seeding one in 3.26, so axe had not actually run on any surface since",
+      "A multi-cut line saved from the picker was named after whichever cut the caret was on — \"hea140 3m + plt200x160x12 x2\" came out as \"Plate 200×160×12\". It is named after the cut that leads it now, plus how many more",
+      "The assembly picker says what fills it when the library is empty, rather than opening blank",
+      "The session row let its total draw over the button beside it on a phone, instead of giving way",
+      "Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now",
+      "Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part",
+      "On a phone, opening a share link flashed the profile tiles for a frame before the line arrived",
+      "The session ribbon grew as the tape filled, pushing the answer up the screen while you worked",
+      "Overlays opened with focus on their close button — the one control nobody opens an overlay to use",
+      "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
+    ],
+    changed_bs: [
+      "Uređivanje stavke biblioteke je dugme u njenom redu, ne stavka u meniju, i zove se Uredi",
+      "Uređivač stavke sada stane na telefon: kategorija i sati rada dobijaju svaki svoj red, stavka troška ima naziv u jednom redu a cijenu u sljedećem, a Sačuvaj i Otkaži su prikvačeni",
+      "Red biblioteke na telefonu stavlja svoje radnje u drugi red",
+      "Sati rada i okov sklopa uređuju se tamo gdje i njegov naziv, a meni koji to otvara sada to i kaže",
+      "Mobilni prikaz razrade nosi tri kontrole umjesto devet. Bila su tri reda dugmadi s „Kopiraj sažetak\" nacrtanim dvaput",
+      "Prebacivanje sklopa iz biblioteke u projekat sada pita koliko komada. Prije je uvijek dodavalo tačno jedan, dok je „+ Sklop\" unutar projekta nudio količinu",
+      "Oba puta sada završavaju isto: po jedna stavka projekta za svaki rez, označena nazivom sklopa",
+      "Pet standarda koji su dolazili uz aplikaciju su uklonjeni. Biblioteka sadrži ono što u nju stavite",
+      "„Šablon\" više nije riječ koju aplikacija koristi. Postoji jedna biblioteka, a ono što iz nje uzimate u projekat je sklop",
+      "Izbornik sklopova zna koji od dva posla radi: „Ubaci sklop\" u otvoreni projekat ili „Počni od sklopa\" kada pravi novi. U drugom slučaju polje za naziv imenuje projekat",
+      "Na telefonu kontrola za čuvanje zauzima red radnji, a ostalo su ikone. Četiri jednaka dugmeta ostavljala su jedinoj kontroli s riječima oko 60px, pa je „Sačuvaj\" ispalo kao oznaka i slovo S",
+      "Prazan ekran telefona počinje pločicama profila. Prije su bile stisnute ispod zaglavlja punog praznih crtica",
+      "Jedna kontrola za čuvanje umjesto četiri. Prekidač oznake, dugme „Dodaj u projekat\" i stavka „Sačuvaj u…\" skrivena u meniju — sve je izgledalo kao čuvanje i sve je značilo nešto drugo. Sada postoji jedno dugme, isto na oba ekrana: riječima kaže šta će uraditi („Dodaj u Kapija\" ili „Sačuvaj\"), a strelica otvara sve ostalo",
+      "Izbor odredišta je jedna lista. Prije se prvo pitalo koja vrsta — četiri reda, svaki sa svojom ugniježđenom listom — pa tek onda koja tačno. Sada su svi projekti i sve stavke biblioteke u jednoj listi, najnovije prvo, jedan pritisak. Kucajte za filtriranje, strelice i Enter za kretanje",
+      "Aplikacija pamti na kojem poslu radite. Nakon što nešto pošaljete u projekat, glavna akcija kalkulatora imenuje taj projekat dok ne pošaljete negdje drugdje",
+      "Dijelovi, sklopovi i šabloni su jedna biblioteka. Šablon je bio višedijelna sačuvana stavka u vlastitom skladištu, sa vlastitim izborom i vlastitim uređivačem zakopanim u projektu",
+      "Narudžba materijala je kartica projekta, uz Stavke i Plan rezanja, umjesto pločice unutar plana rezanja",
+      "Traka sesije jednako je važna na oba ekrana: telefonska traka ima „sačuvaj kao projekat\" na sebi umjesto dva dodira unutar lista",
+      "Navigacija na telefonu odgovara radnoj površini. Jedna ikona oznake je prije značila Dijelove, Projekte, Poređenje i traku sesije odjednom",
+      "Standardi koji dolaze uz aplikaciju su u biblioteci, pod vlastitom pločicom, a ne samo unutar dijaloga u projektu. Uklanjanje se može poništiti"
+    ],
+    added_bs: [
+      "Vizuelne pločice profila su na telefonu — ekranu koji uopšte nema tekstualno polje",
+      "Sklop nosi djelatnost, sate rada i okov koje projekat nasljeđuje od njega, uredive tamo gdje se i sklop uređuje",
+      "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
+    ],
+    fixed_bs: [
+      "Dugme ⋯ u redu biblioteke predstavljalo se nazivom stavke, istim kojim se predstavlja i dugme za otvaranje tog reda",
+      "Meni ⋯ otvoren dok se pomjeranje još smirivalo zatvarao bi se istog trena. Sada prati svoj red i zatvara se tek kada red napusti ekran",
+      "Sklop prebačen iz biblioteke u projekat stizao je bez sati rada, troškova okova i djelatnosti koje nosi",
+      "Slanje sačuvanog dijela u sačuvani sklop dodavalo je ono što je bilo u komandnoj traci umjesto samog dijela",
+      "End-to-end testovi su ponovo zeleni. Četrnaest testova, među njima i svi testovi pristupačnosti, čekalo je rezultat na ekranu koji ga više ne postavlja",
+      "Linija s više rezova sačuvana iz izbornika dobijala je naziv po rezu na kojem je bio kursor. Sada se imenuje po rezu koji je vodi, plus koliko ih još ima",
+      "Dva ulaza u izbornik sklopova sakrivena su dok biblioteka nema nijedan sklop, umjesto da otvaraju prazan dijalog",
+      "Red sesije je na telefonu dozvoljavao da ukupna težina prelazi preko dugmeta pored, umjesto da se skrati",
+      "Šabloni sklopova se nikada nisu sinhronizovali — skladište se označavalo izmijenjenim, a ništa se nije slalo",
+      "Dodavanje reza sačuvanom dijelu bilježi da je to sklop, pa ga uklanjanje dijela ne vraća tiho u običan dio",
+      "Na telefonu je otvaranje dijeljene veze na trenutak prikazivalo pločice profila prije nego što stigne linija",
+      "Traka sesije rasla je kako se punila i gurala odgovor prema vrhu ekrana",
+      "Preklapajući prozori otvarali su se sa fokusom na dugmetu za zatvaranje",
+      "End-to-end testovi bili su crveni od 3.26: devet testova čekalo je rezultat na ekranu koji ga više ne postavlja"
+    ],
+  },
+  {
     version: "3.26.0",
     date: "2026-09-13",
     fixed: [
@@ -52,7 +142,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A phone can paste. The keypad shell had no text field at all, so a cut list or a query from a chat message could not be pasted on the device most likely to be holding one",
       "Shared links have a preview card, drawn in the app's own language with a worked example on it",
       "The QA page says how much of the dataset it actually covers, and names the sizes held back pending a catalog check",
-      "Frequently Asked Questions (FAQ) guide for metal weight calculations with step-by-step formula explanations, workshop rules of thumb, cheatsheet, search, and an interactive calculation verifier"
+      "Frequently Asked Questions (FAQ) guide for metal weight calculations with step-by-step formula explanations, workshop rules of thumb, cheatsheet, search, and an interactive calculation verifier",
+      "Clean-slate onboarding with visual profile discovery tiles (Beams, Square Tubes, Rectangular Tubes, Round Pipes, Plates) enabling instant 3-tap calculations without typing, plus an optional 'Try demo' calculation chip",
+      "Live mass preview feedback badge inside Project Detail's inline quick-add bar"
     ],
     changed: [
       "The headline figure is the weight until someone sets a rate. It used to open on a price computed from a placeholder rate nobody had entered, in the same type as the measured weight beside it — and when the money is shown on a placeholder rate, the rate is now printed beside it",
@@ -60,7 +152,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The suggestion strip fades on the right, where it scrolls, instead of only at the bottom",
       "Token chips separate their delete from their edit, so the two are no longer flush",
       "Every screen has a heading outline — the app had none at all, which left a screen reader nothing to navigate by",
-      "The cutting optimisers load when their tab opens rather than before your first calculation, taking 80 kB off the first load"
+      "The cutting optimisers load when their tab opens rather than before your first calculation, taking 80 kB off the first load",
+      "Streamlined calculator action bar: consolidated 7 fragmented buttons into 3 primary intents (Copy Summary, Favorite toggle, Add to Project) and a tidy overflow menu",
+      "Simplified save destination workflow directly focusing on Project selection and creation when adding to projects",
+      "Project Detail's '+ Add Item' button now directly focuses the inline command bar instead of inheriting or redirecting to the background calculator"
     ],
     fixed_bs: [
       "UPN 320 i UPE 300, 330, 360 i 400 bili su 7-15% lakši. Dvije nezavisne provjere — rekonstrukcija iz nominalnih EN dimenzija i objavljena kataloška masa — složile su se protiv pohranjenih vrijednosti; 12 m UPN 320 nudio se 104 kg ispod stvarne mase",
@@ -95,7 +190,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Telefon može zalijepiti. Tastatura na ekranu nije imala nikakvo tekstualno polje, pa se lista rezanja ili upit iz poruke nisu mogli zalijepiti na uređaju koji ih najčešće drži",
       "Podijeljeni linkovi imaju sličicu za pregled, nacrtanu jezikom same aplikacije, s primjerom na njoj",
       "QA stranica kaže koliki dio skupa podataka zaista pokriva i imenuje dimenzije koje čekaju provjeru u katalogu",
-      "Sekcija često postavljanih pitanja (FAQ) o proračunu težine metala sa korak-po-korak formulama, radioničkim pravilima, brzim pregledom, pretragom i interaktivnim provjerivačem formula"
+      "Sekcija često postavljanih pitanja (FAQ) o proračunu težine metala sa korak-po-korak formulama, radioničkim pravilima, brzim pregledom, pretragom i interaktivnim provjerivačem formula",
+      "Početni ekran čistog unosa sa vizuelnim karticama profila (Nosači, Kvadratne cijevi, Pravougaone cijevi, Okrugle cijevi, Limovi) koji omogućava izračun u 3 dodira bez kucanja, uz diskretno dugme za isprobavanje demo izračuna",
+      "Prikaz trenutne mase u traci brzog dodavanja unutar detalja projekta"
     ],
     changed_bs: [
       "Glavni broj je masa dok neko ne postavi cijenu. Ranije se otvarao na cijeni izračunatoj iz zadane vrijednosti koju niko nije unio, istim pismom kao izmjerena masa pored nje — a kada se novac prikazuje po zadanoj cijeni, ta cijena je sada ispisana uz njega",
@@ -103,7 +200,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Traka prijedloga blijedi desno, gdje se i pomiče, a ne samo pri dnu",
       "Čipovi odvajaju brisanje od uređivanja, pa dvije mete više nisu spojene",
       "Svaki ekran ima strukturu naslova — aplikacija ih nije imala nijedan, pa čitač ekrana nije imao po čemu se kretati",
-      "Optimizatori rezanja učitavaju se kad se otvori njihova kartica, a ne prije prvog računanja, čime prvo učitavanje gubi 80 kB"
+      "Optimizatori rezanja učitavaju se kad se otvori njihova kartica, a ne prije prvog računanja, čime prvo učitavanje gubi 80 kB",
+      "Pojednostavljena traka akcija kalkulatora: 7 razbacanih dugmadi objedinjeno u 3 jasne akcije (Kopiraj sažetak, Spremi/Favorit, Dodaj u projekt) uz uredan padajući meni",
+      "Pojednostavljen proces spremanja sa direktnim fokusom na odabir i kreiranje projekta pri dodavanju stavki",
+      "Dugme '+ Stavka' u detaljima projekta sada direktno fokusira polje za brzi unos umjesto nasljeđivanja ili preusmjeravanja na pozadinski kalkulator"
     ],
   },
   {

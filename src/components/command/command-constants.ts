@@ -26,3 +26,7 @@ export const KIND_BG: Record<CommandTokenKind, string> = {
   target: "bg-[var(--purple-surface)] text-[var(--purple-text)]",
   unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
 };
+
+/** Default sample query loaded when user tries demo calculation. */
+export const DEMO_QUERY = "hea120 6m x2 s235 ";
+

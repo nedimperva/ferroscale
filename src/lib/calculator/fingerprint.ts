@@ -28,10 +28,3 @@ export function savedFingerprint(result: CalculationResult): string {
   ].join("|");
 }
 
-/**
- * Creates a deduplication fingerprint for a template added to a project.
- * Uses the template name + aggregated totals to prevent duplicate template entries.
- */
-export function templateFingerprint(name: string, totalWeight: number, totalCost: number): string {
-  return `template|${name}|${totalCost}|${totalWeight}`;
-}

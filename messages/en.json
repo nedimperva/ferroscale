@@ -47,6 +47,21 @@
     "installButton": "Install app"
   },
   "command": {
+    "discovery": {
+      "title": "Select a profile to begin",
+      "subtitle": "Tap a shape to start calculating, or explore EN standards",
+      "beams": "Beams",
+      "beamsSub": "HEA, HEB, IPE",
+      "squareTubes": "Square Tubes",
+      "squareTubesSub": "SHS, box sections",
+      "rectangularTubes": "Rectangular Tubes",
+      "rectangularTubesSub": "RHS, box sections",
+      "roundPipes": "Round Pipes",
+      "roundPipesSub": "CHS, hollow tubes",
+      "plates": "Plates",
+      "platesSub": "Sheets & flat plates",
+      "tryDemo": "Try demo calculation (HEA 120 6m ×2) →"
+    },
     "quote": {
       "title": "Quote",
       "item": "Item",
@@ -146,7 +161,9 @@
       "more": "More actions",
       "add": "Add",
       "addProjectLong": "Add to project",
-      "paste": "Paste"
+      "paste": "Paste",
+      "less": "One fewer",
+      "moreOne": "One more"
     },
     "toast": {
       "addLength": "Add length to save",
@@ -182,7 +199,8 @@
       "closeSheet": "Close sheet",
       "liveResult": "Result: {value}",
       "addToSession": "Add this line to the session",
-      "openBreakdown": "Open result breakdown"
+      "openBreakdown": "Open result breakdown",
+      "openSession": "Open the session tape"
     },
     "nav": {
       "workspace": "WORKSPACE",
@@ -460,7 +478,6 @@
       "newProjectName": "New project name...",
       "emptyProjects": "No projects yet. Create one above, or tap + Project on a result.",
       "emptyProject": "Empty project",
-      "calcCount": "{count, plural, one {# calc} other {# calcs}}",
       "noCalculationsYet": "No calculations yet.",
       "noProjectsCreateAbove": "No projects yet. Create one above to get started.",
       "newProject": "New project",
@@ -489,7 +506,8 @@
       "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
       "saveAsProject": "Save as project",
       "anotherItem": "+ item",
-      "anotherItemAria": "Add another item to the line"
+      "anotherItemAria": "Add another item to the line",
+      "saveSessionAsProjectShort": "→ PROJECT"
     },
     "suggest": {
       "standardSize": "standard size",
@@ -534,7 +552,7 @@
       "pin": "Pin to top",
       "unpin": "Unpin",
       "duplicate": "Duplicate",
-      "edit": "Rename, notes and tags",
+      "edit": "Edit",
       "details": "Show details",
       "noBreakdown": "no live breakdown for this entry",
       "partCount": "{count, plural, one {# part} other {# parts}}",
@@ -568,80 +586,11 @@
       "tagsHint": "Comma-separated, up to {max}.",
       "assemblyName": "Assembly ({count} parts)",
       "addPartPlaceholder": "hea140 3m x2 s235",
-      "addPartFailed": "Could not read that cut — check the command."
-    },
-    "templates": {
-      "modalTitle": "Modular Assembly Templates",
-      "modalSubtitle": "Choose a standard fabrication template or insert with a custom quantity multiplier.",
-      "searchPlaceholder": "Search templates, cuts, profiles…",
-      "selectTemplateTab": "Select Template",
-      "configureTab": "Configure & Insert",
-      "addTemplateButton": "+ Template",
-      "fromTemplateButton": "From Template",
-      "newFromTemplate": "Start project from a fabrication template",
-      "multiplierLabel": "Quantity Multiplier",
-      "targetAssemblyLabel": "Sub-Assembly Name",
-      "targetAssemblyHint": "All generated cuts and components will be grouped under this sub-assembly.",
-      "scaledBreakdown": "Scaled Bill of Materials (×{mult})",
-      "insertAction": "Insert ×{count} into Project",
-      "scaleButton": "Scale",
-      "scaleAssemblyTitle": "Scale Sub-Assembly",
-      "scaleFactorLabel": "Multiplier Factor",
-      "scaleAssemblyHint": "Multiplies the piece counts of all member cuts in this sub-assembly by the chosen factor.",
-      "applyScale": "Apply Scale (×{mult})",
-      "saveTemplateButton": "Save as Template",
-      "saveAsTemplateButton": "Save sub-assembly as a reusable template",
-      "saveTemplateTitle": "Save as Assembly Template",
-      "saveTemplateSubtitle": "Save this {count}-item assembly to your template library for quick reuse in any project.",
-      "templateNameLabel": "Template Name",
-      "descriptionLabel": "Description (Optional)",
-      "descriptionPlaceholder": "e.g. Dimensions, purpose, hardware specifications...",
-      "includedItems": "Included Components",
-      "browseTab": "Browse",
-      "manageTab": "Manage",
-      "manageSubtitle": "Rename, re-cost and remove the templates in your library.",
-      "manageAria": "Manage assembly templates",
-      "yourTemplates": "Your templates",
-      "standardTemplates": "Standard EN",
-      "templatesStep": "Templates",
-      "editStep": "Edit",
-      "viewStep": "View",
-      "noCustomTemplates": "No templates of your own yet",
-      "noCustomTemplatesHint": "Save a sub-assembly from any project, or duplicate one of the standards below to get an editable copy.",
-      "noTemplatesAtAll": "Your library is empty",
-      "noTemplatesAtAllHint": "Restore a standard below, or save a sub-assembly from a project.",
-      "editTemplate": "Edit template",
-      "editTemplateHint": "Changes apply everywhere this template is inserted from now on.",
-      "builtinStandard": "Built-in standard",
-      "statusSaved": "Saved",
-      "statusUnsaved": "Unsaved changes",
-      "statusReadOnly": "Read only",
-      "builtinBanner": "Built-in standards ship with the app. Duplicate this one to get a copy you can rename, re-cost and restructure.",
-      "duplicateToEdit": "Duplicate to edit",
-      "duplicateAction": "Duplicate as editable copy",
-      "copyLabel": "copy",
-      "components": "Components",
-      "componentsSummary": "{cuts} cuts · {pieces} pieces",
-      "addCut": "Add cut",
-      "addCutPlaceholder": "plt 200x160x12 x2 s235",
-      "addCutFailed": "Could not read that cut — check the command.",
-      "laborHoursLabel": "Labour hours",
-      "extraCostsLabel": "Hardware & extra costs",
-      "addCostLine": "Add a cost line",
-      "newCostLabel": "New cost line",
-      "deleteConfirm": "Delete this template?",
-      "deleteConfirmHint": "Removed from every project picker.",
-      "removeStandardConfirm": "Remove this standard?",
-      "removeStandardHint": "Hidden from the picker — you can put it back any time.",
-      "removeStandardAction": "Remove standard",
-      "removedStandards": "Removed standards",
-      "restoreAll": "Restore all",
-      "templateSaved": "Template saved",
-      "templateDeleted": "Template deleted",
-      "standardRemoved": "Standard removed",
-      "standardRestored": "Standard restored",
-      "copyCreated": "Editable copy created",
-      "nothingSelected": "Pick a template on the left to edit it."
+      "addPartFailed": "Could not read that cut — check the command.",
+      "assemblyExtras": "Goes with this assembly",
+      "assemblyExtrasHint": "Carried into any project you drop this assembly into, scaled by the quantity.",
+      "assemblyDefaultName": "{first} +{more}",
+      "editAssemblyTitle": "Edit assembly"
     },
     "projects": {
       "templateInserted": "Inserted {name} (×{mult}) into project",
@@ -650,7 +599,8 @@
       "tabs": {
         "items": "Items",
         "cutting": "Cut plan",
-        "details": "Details"
+        "details": "Details",
+        "order": "Order"
       },
       "pipeline": {
         "active": "Active jobs",
@@ -853,7 +803,9 @@
       "addToProjectAria": "Add {name} to a project",
       "emptyFilterTitle": "Nothing of that kind yet",
       "emptyFilterBody": "Widen the filter to see everything you have saved.",
-      "showAll": "Show everything"
+      "showAll": "Show everything",
+      "editAria": "Edit {name}",
+      "moreAria": "More actions for {name}"
     },
     "cutting": {
       "title": "Cut plan",
@@ -930,91 +882,19 @@
     "saveTo": {
       "title": "Save this line",
       "sendTitle": "Add to…",
-      "whereLabel": "Where it goes",
-      "sendLabel": "Send it to",
-      "recentLabel": "Recent",
-      "kind": {
-        "parts": "Parts",
-        "assemblies": "Assemblies",
-        "projects": "Projects",
-        "templates": "Templates"
-      },
-      "kindBody": {
-        "parts": "Save on its own, or add to a part you already have.",
-        "assemblies": "Start a new one, or add to an assembly you have built.",
-        "projects": "Straight onto a job, skipping the library.",
-        "templates": "Keep it as a reusable assembly you can drop onto any job."
-      },
-      "count": {
-        "parts": "{count, plural, one {# part} other {# parts}}",
-        "assemblies": "{count, plural, one {# assembly} other {# assemblies}}",
-        "projects": "{count, plural, one {# job} other {# jobs}}",
-        "templates": "{count, plural, one {# template} other {# templates}}"
-      },
-      "new": {
-        "parts": "Save as a new part",
-        "assemblies": "Start a new assembly",
-        "projects": "Start a new project",
-        "templates": "Save as a new template"
-      },
-      "newBody": {
-        "parts": "A standalone spec, on its own in the library.",
-        "assemblies": "This line becomes its first part.",
-        "projects": "Opens a job with this line on it.",
-        "templates": "A reusable assembly, ready to insert into a job."
-      },
-      "name": {
-        "parts": "Part name",
-        "assemblies": "Assembly name",
-        "projects": "Project name",
-        "templates": "Template name"
-      },
-      "existing": {
-        "parts": "Your parts",
-        "assemblies": "Your assemblies",
-        "projects": "Your projects",
-        "templates": "Your templates"
-      },
-      "commit": {
-        "parts": "Save part",
-        "assemblies": "Add to assembly",
-        "projects": "Add to project",
-        "templates": "Save template"
-      },
-      "pick": {
-        "parts": "Pick a part to add to, or start a new one",
-        "assemblies": "Pick an assembly to add to, or start a new one",
-        "projects": "Pick a project, or start a new one",
-        "templates": "Pick a template to add to, or start a new one"
-      },
-      "nameItFirst": {
-        "parts": "Name the part first",
-        "assemblies": "Name the assembly first",
-        "projects": "Name the project first",
-        "templates": "Name the template first"
-      },
-      "summaryNew": {
-        "parts": "New part “{name}”",
-        "assemblies": "New assembly “{name}”, 1 part",
-        "projects": "New project “{name}”",
-        "templates": "New template “{name}”"
-      },
-      "summaryInto": {
-        "parts": "Into {name} — becomes an assembly",
-        "assemblies": "Into {name}",
-        "projects": "Onto {name}",
-        "templates": "Into {name}"
-      },
-      "partsCount": "{count, plural, one {# part} other {# parts}}",
+      "search": "Search projects and library…",
+      "newProject": "New project",
+      "newProjectBody": "Starts a project with this in it.",
+      "newPart": "Save to library",
+      "newPartBody": "Keep this cut to reuse and to suggest sizes.",
+      "newAssembly": "Save to library as one assembly",
+      "newAssemblyBody": "Every cut on the line, kept together.",
+      "sectionProjects": "Projects",
+      "sectionLibrary": "Library",
       "projectItems": "{count, plural, one {# item} other {# items}}",
-      "search": {
-        "parts": "Search your parts…",
-        "assemblies": "Search your assemblies…",
-        "projects": "Search projects…",
-        "templates": "Search your templates…"
-      },
-      "noTargets": "Nothing matches that.",
-      "templateItems": "{count, plural, one {# item} other {# items}}"
+      "partsCount": "{count, plural, one {# part} other {# parts}}",
+      "onePart": "Part",
+      "noTargets": "Nothing matches that."
     },
     "validation": {
       "angleThickness": "Thickness ({thicknessMm} mm) must be less than the shorter leg ({shorterLegMm} mm).",
@@ -1043,6 +923,52 @@
       "notInSeriesDetail": "These are steel section dimensions; aluminium is extruded to its own series (EN 755). The mass is right for the shape, but it is not a stock profile.",
       "notInSeriesDetailAlloy": "{grade} is stocked as plate, sheet, bar and tube, not as sections. The mass is right for the shape, but this is not a stock form.",
       "checkRate": "Check the rate — the price book is per grade."
+    },
+    "save": {
+      "toProject": "Add to {project}",
+      "toLibrary": "Save",
+      "elsewhere": "Save somewhere else"
+    },
+    "assembly": {
+      "insertTitle": "Insert an assembly",
+      "insertSubtitle": "One from your library, at whatever count this job needs.",
+      "search": "Search assemblies, cuts, profiles…",
+      "pickTab": "Pick one",
+      "configureTab": "Count & name",
+      "addButton": "+ Assembly",
+      "fromButton": "From assembly",
+      "newFromAssembly": "Start a project from an assembly in your library",
+      "multiplierLabel": "How many",
+      "targetName": "Sub-assembly name",
+      "targetNameHint": "Every cut this adds is grouped under this name.",
+      "scaledBreakdown": "What this adds (×{mult})",
+      "insertAction": "Add ×{count} to project",
+      "scaleButton": "Scale",
+      "scaleTitle": "Scale sub-assembly",
+      "scaleFactorLabel": "Multiply by",
+      "scaleHint": "Multiplies the piece count of every cut in this sub-assembly.",
+      "applyScale": "Apply ×{mult}",
+      "saveButton": "Save to library",
+      "saveHint": "Keep this sub-assembly in your library to reuse",
+      "saveTitle": "Save to library",
+      "saveSubtitle": "Keep this {count}-cut assembly to reuse in any project.",
+      "nameLabel": "Assembly name",
+      "descriptionLabel": "Notes (optional)",
+      "descriptionPlaceholder": "e.g. dimensions, purpose, hardware",
+      "includedItems": "Cuts included",
+      "laborHoursLabel": "Labour hours",
+      "extraCostsLabel": "Hardware & extra costs",
+      "addCostLine": "Add a cost line",
+      "newCostLabel": "New cost line",
+      "saved": "Saved to library",
+      "emptyTitle": "No assemblies yet",
+      "emptyBody": "Save a line with several cuts on it, or a sub-assembly from a project, and it lands here.",
+      "createTitle": "Start from an assembly",
+      "createSubtitle": "A new project, built from one in your library.",
+      "createAction": "Create project (×{count})",
+      "projectName": "Project name",
+      "projectNameHint": "The cuts are grouped under this name inside the project too.",
+      "costAmount": "Amount"
     }
   },
   "contact": {

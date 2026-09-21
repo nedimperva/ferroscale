@@ -288,6 +288,13 @@ export function DeskIcon({ name, stroke, size }: { name: string; stroke?: string
           <path d="M18 6L6 18M6 6l12 12" />
         </svg>
       );
+    case "pencil":
+      return (
+        <svg {...common} width={size ?? 14} height={size ?? 14}>
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" />
+        </svg>
+      );
     case "trash":
       return (
         <svg {...common} width={size ?? 14} height={size ?? 14}>

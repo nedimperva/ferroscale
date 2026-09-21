@@ -3,56 +3,43 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import { useAssemblyTemplates, type AssemblyTemplate } from "@/hooks/useAssemblyTemplates";
+import { isAssemblyEntry, type SavedEntry } from "@/hooks/useSaved";
 import { PROJECT_CATEGORIES } from "@/hooks/useProjects";
 import { DeskIcon } from "../desktop/desk-atoms";
-import { ManageTemplatesPanel } from "./manage-templates-panel";
 import { SheetShell } from "../sheets/sheet-shell";
+import { EmptyState } from "../empty-state";
 
-type TemplateMode = "browse" | "manage";
-
-export function AssemblyTemplateModal({
+/**
+ * Pick a library assembly, scale it, drop it into a project.
+ *
+ * It used to be a template browser with a "manage" half bolted on: renaming,
+ * re-costing and deleting a template could only be done here, inside a
+ * project, on records that lived in a store of their own. Templates are
+ * library entries now, so managing one happens in the library like everything
+ * else and this dialog does the one thing its name says.
+ */
+export function InsertAssemblyModal({
+  assemblies,
+  mode = "insert",
   onInsert,
   onClose,
 }: {
-  onInsert: (template: AssemblyTemplate, multiplier: number, customAssemblyName?: string) => void;
+  /** Multi-part library entries — the only ones there is anything to scale. */
+  assemblies: SavedEntry[];
+  /**
+   * The same picker does two jobs: dropping an assembly into the project you
+   * are in, and starting a project from one. They are not the same sentence,
+   * so the title, the name field and the commit button say which it is.
+   */
+  mode?: "insert" | "create";
+  onInsert: (entry: SavedEntry, multiplier: number, customAssemblyName?: string) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("command");
-  // One hook instance for the whole dialog: each call keeps its own React state
-  // over the same storage, so two would silently drift apart.
-  const templatesApi = useAssemblyTemplates();
-  const [mode, setMode] = useState<TemplateMode>("browse");
-
-  const modeToggle = (
-    <div className="hidden sm:flex items-center gap-1.5 p-1.5 rounded-button bg-[var(--surface-inset)] border border-border-faint flex-shrink-0">
-      {(["browse", "manage"] as const).map((value) => (
-        <button
-          key={value}
-          type="button"
-          onClick={() => setMode(value)}
-          aria-pressed={mode === value}
-          className="h-8 px-3.5 rounded-chip text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5"
-          style={{
-            background: mode === value ? "var(--surface)" : "transparent",
-            color: mode === value ? "var(--foreground)" : "var(--muted)",
-            boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-          }}
-        >
-          <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
-          {value === "manage" && templatesApi.customTemplates.length > 0 && (
-            <span className="px-1.5 rounded-none font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
-              {templatesApi.customTemplates.length}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-
+  const creating = mode === "create";
   return (
     <SheetShell
-      title={t("templates.modalTitle")}
+      title={creating ? t("assembly.createTitle") : t("assembly.insertTitle")}
       onClose={onClose}
       size="wide"
       bare
@@ -63,109 +50,88 @@ export function AssemblyTemplateModal({
       }
       subtitle={
         <p className="text-[11px] sm:text-xs text-muted mt-0.5 truncate">
-          {mode === "manage" ? t("templates.manageSubtitle") : t("templates.modalSubtitle")}
+          {creating ? t("assembly.createSubtitle") : t("assembly.insertSubtitle")}
         </p>
       }
-      headerAction={modeToggle}
     >
-      {/* Browse / Manage — full width on a phone, where the header has no room */}
-      <div className="flex sm:hidden items-center gap-1.5 p-1.5 border-b border-border-faint bg-[var(--surface-raised)] flex-shrink-0">
-        {(["browse", "manage"] as const).map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setMode(value)}
-            aria-pressed={mode === value}
-            className="flex-1 h-10 rounded-chip text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5"
-            style={{
-              background: mode === value ? "var(--surface)" : "transparent",
-              color: mode === value ? "var(--foreground)" : "var(--muted)",
-              boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-            }}
-          >
-            <span>{value === "browse" ? t("templates.browseTab") : t("templates.manageTab")}</span>
-            {value === "manage" && templatesApi.customTemplates.length > 0 && (
-              <span className="px-1.5 rounded-none font-mono text-[10px] font-semibold bg-[var(--accent-surface)] text-[var(--accent-text)]">
-                {templatesApi.customTemplates.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
-        {mode === "manage" ? (
-          <ManageTemplatesPanel api={templatesApi} />
-        ) : (
-          <BrowseTemplatesBody templates={templatesApi.templates} onInsert={onInsert} onClose={onClose} />
-        )}
+      <BrowseAssembliesBody
+        assemblies={assemblies}
+        creating={creating}
+        onInsert={onInsert}
+        onClose={onClose}
+      />
     </SheetShell>
   );
 }
 
-function BrowseTemplatesBody({
-  templates,
+/** Every multi-part entry in the library, newest first. */
+export function libraryAssemblies(saved: SavedEntry[]): SavedEntry[] {
+  return saved.filter(isAssemblyEntry);
+}
+
+function BrowseAssembliesBody({
+  assemblies,
+  creating,
   onInsert,
   onClose,
 }: {
-  templates: AssemblyTemplate[];
-  onInsert: (template: AssemblyTemplate, multiplier: number, customAssemblyName?: string) => void;
+  assemblies: SavedEntry[];
+  creating: boolean;
+  onInsert: (entry: SavedEntry, multiplier: number, customAssemblyName?: string) => void;
   onClose: () => void;
 }) {
   const t = useTranslations("command");
 
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState<string>(assemblies[0]?.id ?? "");
   const [multiplier, setMultiplier] = useState<number>(1);
   const [customAsmName, setCustomAsmName] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
   const [mobileTab, setMobileTab] = useState<"list" | "preview">("list");
 
-  const filteredTemplates = useMemo(() => {
-    return templates.filter((tpl) => {
-      if (selectedCategory !== "all" && tpl.category !== selectedCategory) {
+  const filtered = useMemo(() => {
+    return assemblies.filter((entry) => {
+      if (selectedCategory !== "all" && entry.category !== selectedCategory) {
         return false;
       }
       if (search.trim()) {
         const q = search.toLowerCase();
-        const matchesName = tpl.name.toLowerCase().includes(q);
-        const matchesDesc = tpl.description?.toLowerCase().includes(q);
-        const matchesItems = tpl.items.some(
-          (it) =>
-            it.result.profileLabel.toLowerCase().includes(q) ||
-            it.note?.toLowerCase().includes(q),
+        const matchesName = entry.name.toLowerCase().includes(q);
+        const matchesNotes = entry.notes?.toLowerCase().includes(q);
+        const matchesParts = entry.parts.some(
+          (part) =>
+            part.result.profileLabel.toLowerCase().includes(q) ||
+            part.name.toLowerCase().includes(q),
         );
-        if (!matchesName && !matchesDesc && !matchesItems) return false;
+        if (!matchesName && !matchesNotes && !matchesParts) return false;
       }
       return true;
     });
-  }, [templates, selectedCategory, search]);
+  }, [assemblies, selectedCategory, search]);
 
-  const selectedTemplate = useMemo(() => {
-    return (
-      templates.find((t) => t.id === selectedTemplateId) ??
-      filteredTemplates[0] ??
-      templates[0]
-    );
-  }, [templates, selectedTemplateId, filteredTemplates]);
+  const selected = useMemo(
+    () => assemblies.find((entry) => entry.id === selectedId) ?? filtered[0] ?? assemblies[0],
+    [assemblies, selectedId, filtered],
+  );
 
   // Live calculations for the selected template scaled by the multiplier
   const preview = useMemo(() => {
-    if (!selectedTemplate) return null;
+    if (!selected) return null;
     const mult = Math.max(1, Math.floor(multiplier || 1));
 
     let totalWeight = 0;
     let totalMaterialCost = 0;
     let totalPieces = 0;
 
-    for (const item of selectedTemplate.items) {
-      const itemQty = Math.max(1, Math.floor((item.quantity || 1) * mult));
+    for (const part of selected.parts) {
+      const itemQty = Math.max(1, Math.floor((part.input.quantity || 1) * mult));
       totalPieces += itemQty;
-      totalWeight += item.result.unitWeightKg * itemQty;
-      totalMaterialCost += (item.result.grandTotalAmount / (item.result.quantity || 1)) * itemQty;
+      totalWeight += part.result.unitWeightKg * itemQty;
+      totalMaterialCost += (part.result.grandTotalAmount / (part.result.quantity || 1)) * itemQty;
     }
 
-    const totalLaborHours = (selectedTemplate.laborHours ?? 0) * mult;
-    const totalExtraCosts = (selectedTemplate.additionalCosts ?? []).reduce(
+    const totalLaborHours = (selected.laborHours ?? 0) * mult;
+    const totalExtraCosts = (selected.additionalCosts ?? []).reduce(
       (sum, c) => sum + c.amount * mult,
       0,
     );
@@ -178,13 +144,13 @@ function BrowseTemplatesBody({
       totalLaborHours,
       totalExtraCosts,
     };
-  }, [selectedTemplate, multiplier]);
+  }, [selected, multiplier]);
 
   const handleInsert = () => {
-    if (!selectedTemplate) return;
+    if (!selected) return;
     const mult = Math.max(1, Math.floor(multiplier || 1));
-    const asmName = customAsmName.trim() || selectedTemplate.name;
-    onInsert(selectedTemplate, mult, asmName);
+    const asmName = customAsmName.trim() || selected.name;
+    onInsert(selected, mult, asmName);
     onClose();
   };
 
@@ -202,7 +168,7 @@ function BrowseTemplatesBody({
             boxShadow: mobileTab === "list" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
           }}
         >
-          1. {t("templates.selectTemplateTab")} ({filteredTemplates.length})
+          1. {t("assembly.pickTab")} ({filtered.length})
         </button>
         <button
           type="button"
@@ -214,7 +180,7 @@ function BrowseTemplatesBody({
             boxShadow: mobileTab === "preview" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
           }}
         >
-          <span>2. {t("templates.configureTab")}</span>
+          <span>2. {t("assembly.configureTab")}</span>
           {preview && (
             <span className="px-1.5 py-0.2 rounded-none text-[10px] bg-[var(--accent-surface)] text-[var(--accent-text)] font-mono">
               ×{preview.mult}
@@ -236,7 +202,7 @@ function BrowseTemplatesBody({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("templates.searchPlaceholder")}
+              placeholder={t("assembly.search")}
               className="w-full h-9 px-3 rounded-lg text-xs bg-[var(--surface-inset)] border border-[var(--border-faint)] text-foreground placeholder:text-muted-faint outline-none"
             />
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px] touch-pan-x">
@@ -268,15 +234,22 @@ function BrowseTemplatesBody({
             </div>
           </div>
 
-          {/* Template List */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
-            {filteredTemplates.map((tpl) => {
-              const isSelected = selectedTemplate?.id === tpl.id;
+            {filtered.length === 0 && (
+              <EmptyState
+                compact
+                icon={<DeskIcon name="layers" />}
+                title={t("assembly.emptyTitle")}
+                body={t("assembly.emptyBody")}
+              />
+            )}
+            {filtered.map((tpl) => {
+              const isSelected = selected?.id === tpl.id;
               return (
                 <div
                   key={tpl.id}
                   onClick={() => {
-                    setSelectedTemplateId(tpl.id);
+                    setSelectedId(tpl.id);
                     setCustomAsmName(tpl.name);
                     // On mobile, automatically advance to configure tab
                     if (window.innerWidth < 768) {
@@ -299,19 +272,19 @@ function BrowseTemplatesBody({
                       </span>
                     )}
                   </div>
-                  {tpl.description && (
+                  {tpl.notes && (
                     <p className="text-xs text-muted line-clamp-2 leading-relaxed">
-                      {tpl.description}
+                      {tpl.notes}
                     </p>
                   )}
                   {/* Item pills preview */}
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {tpl.items.map((it) => (
+                    {tpl.parts.map((part) => (
                       <span
-                        key={it.id}
+                        key={part.id}
                         className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]"
                       >
-                        {it.quantity}× {it.result.profileLabel}
+                        {part.input.quantity}× {part.result.profileLabel}
                       </span>
                     ))}
                     {tpl.laborHours !== undefined && tpl.laborHours > 0 && (
@@ -332,23 +305,18 @@ function BrowseTemplatesBody({
             mobileTab === "list" ? "hidden md:flex" : "flex"
           }`}
         >
-          {selectedTemplate && preview ? (
+          {selected && preview ? (
             <>
               {/* Template Title & Summary */}
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-extrabold text-sm sm:text-base text-foreground">
-                    {selectedTemplate.name}
+                    {selected.name}
                   </h3>
-                  {selectedTemplate.isBuiltin && (
-                    <span className="px-2 py-0.5 rounded-none text-[10px] font-bold bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
-                      Standard EN
-                    </span>
-                  )}
                 </div>
-                {selectedTemplate.description && (
+                {selected.notes && (
                   <p className="text-xs text-muted leading-relaxed">
-                    {selectedTemplate.description}
+                    {selected.notes}
                   </p>
                 )}
               </div>
@@ -357,7 +325,7 @@ function BrowseTemplatesBody({
               <div className="p-3.5 sm:p-4 rounded-xl bg-[var(--surface)] border border-[var(--border-faint)] space-y-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <label className="text-xs font-bold text-foreground">
-                    {t("templates.multiplierLabel")}:
+                    {t("assembly.multiplierLabel")}:
                   </label>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {[1, 5, 10, 15, 20].map((val) => (
@@ -410,41 +378,41 @@ function BrowseTemplatesBody({
               {/* Target Sub-Assembly Name */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-foreground">
-                  {t("templates.targetAssemblyLabel")}:
+                  {creating ? t("assembly.projectName") : t("assembly.targetName")}:
                 </label>
                 <input
                   value={customAsmName}
                   onChange={(e) => setCustomAsmName(e.target.value)}
-                  placeholder={selectedTemplate.name}
+                  placeholder={selected.name}
                   className="w-full h-9 px-3 rounded-xl text-xs bg-[var(--surface)] border border-[var(--border-faint)] text-foreground outline-none font-semibold"
                 />
                 <p className="text-[10.5px] text-muted-faint">
-                  {t("templates.targetAssemblyHint")}
+                  {creating ? t("assembly.projectNameHint") : t("assembly.targetNameHint")}
                 </p>
               </div>
 
               {/* Scaled Preview Bill of Materials */}
               <div className="space-y-2">
                 <div className="text-[10.5px] font-bold text-muted uppercase tracking-wider">
-                  {t("templates.scaledBreakdown", { mult: preview.mult })}
+                  {t("assembly.scaledBreakdown", { mult: preview.mult })}
                 </div>
                 <div className="rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] overflow-hidden">
                   <div className="divide-y divide-[var(--border-faint)]">
-                    {selectedTemplate.items.map((it) => {
-                      const scaledQty = Math.max(1, Math.floor((it.quantity || 1) * preview.mult));
-                      const itemWeight = it.result.unitWeightKg * scaledQty;
+                    {selected.parts.map((part) => {
+                      const scaledQty = Math.max(1, Math.floor((part.input.quantity || 1) * preview.mult));
+                      const itemWeight = part.result.unitWeightKg * scaledQty;
                       return (
                         <div
-                          key={it.id}
+                          key={part.id}
                           className="flex items-center justify-between px-3 py-2 text-xs"
                         >
                           <div className="min-w-0 pr-2">
                             <span className="font-bold text-foreground block truncate">
-                              {scaledQty}× {it.result.profileLabel}
+                              {scaledQty}× {part.result.profileLabel}
                             </span>
-                            {it.note && (
+                            {part.name && (
                               <span className="block text-[10.5px] text-muted truncate">
-                                {it.note}
+                                {part.name}
                               </span>
                             )}
                           </div>
@@ -454,7 +422,7 @@ function BrowseTemplatesBody({
                         </div>
                       );
                     })}
-                    {selectedTemplate.additionalCosts?.map((cost) => (
+                    {selected.additionalCosts?.map((cost) => (
                       <div
                         key={cost.id}
                         className="flex items-center justify-between px-3 py-2 text-xs bg-[var(--surface-inset)]"
@@ -503,22 +471,29 @@ function BrowseTemplatesBody({
                   }}
                   className="flex-1 h-10 rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] hover:bg-[var(--surface-inset)] text-xs font-bold text-foreground cursor-pointer transition-colors"
                 >
-                  {window.innerWidth < 768 && mobileTab === "preview" ? `← ${t("templates.selectTemplateTab")}` : t("common.cancel")}
+                  {mobileTab === "preview" ? `← ${t("assembly.pickTab")}` : t("common.cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={handleInsert}
                   className="flex-1 h-10 rounded-xl bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 text-xs font-bold shadow-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
                 >
-                  <span>+ {t("templates.insertAction", { count: preview.mult })}</span>
+                  <span>
+                    {creating
+                      ? t("assembly.createAction", { count: preview.mult })
+                      : `+ ${t("assembly.insertAction", { count: preview.mult })}`}
+                  </span>
                 </button>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-xs text-muted text-center max-w-[220px] leading-relaxed">
-                {t("templates.noTemplatesAtAllHint")}
-              </p>
+            <div className="flex-1 flex items-center justify-center p-4">
+              <EmptyState
+                compact
+                icon={<DeskIcon name="layers" />}
+                title={t("assembly.emptyTitle")}
+                body={t("assembly.emptyBody")}
+              />
             </div>
           )}
         </div>

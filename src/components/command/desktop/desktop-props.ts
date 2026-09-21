@@ -47,9 +47,14 @@ export interface CommandDesktopProps {
   saved: SavedEntry[];
   compareItems: CompareItem[];
   projects: Project[];
+  /** Bookmark the line into the library — the ⌘S / Ctrl-S shortcut. */
   onSave: () => void;
-  /** Open the destination picker instead of the one-tap bookmark. */
-  onSaveElsewhere: () => void;
+  /** The one save control's primary: file into the current job, or bookmark. */
+  onPrimarySave: () => void;
+  /** Its caret: the full destination picker. */
+  onOpenDestinations: () => void;
+  /** The job being worked out of, which the primary action names. */
+  currentProjectName: string | null;
   /** Log the current line onto the session tape without bookmarking it. */
   onLogSession: () => void;
   /**
@@ -66,7 +71,6 @@ export interface CommandDesktopProps {
   onAddCompare: (input: CalculationInput, result: CalculationResult) => void;
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
-  onAddToProject: () => void;
   onLoadInput: (input: CalculationInput) => void;
   onCreateProject: (name: string) => Project;
   /** Everything the Projects surface can do to a project. */

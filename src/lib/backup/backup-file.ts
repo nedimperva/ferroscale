@@ -3,16 +3,13 @@ import {
   getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
-  loadPresets,
   loadPriceBook,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
-  normalizePreset,
   normalizeProject,
   normalizeSavedEntry,
   persistCompareItems,
-  persistPresets,
   persistPriceBook,
   persistProjects,
   persistQuickHistory,
@@ -26,7 +23,6 @@ import type { PriceBookEntry } from "@/hooks/usePriceBook";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem as SyncCompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
-import type { DimensionPreset } from "@/hooks/usePresets";
 import {
   defaultPaintCoverageStore,
   defaultPaintPriceStore,
@@ -44,7 +40,6 @@ import { downloadBlob } from "@/lib/csv-utils";
 export interface FerroscaleBackupData {
   saved: SavedEntry[];
   projects: Project[];
-  presets: DimensionPreset[];
   compare: {
     updatedAt: string;
     items: SyncCompareItem[];
@@ -86,7 +81,6 @@ export function buildBackupFile(appVersion = "3.22.0"): FerroscaleBackupFile {
     data: {
       saved: loadSavedEntries(),
       projects: loadProjects(),
-      presets: loadPresets(),
       compare: {
         updatedAt: getCompareUpdatedAt(),
         items: loadCompareItems(),
@@ -137,7 +131,6 @@ export function validateBackupFile(raw: unknown): FerroscaleBackupFile {
   const d = candidate.data as Partial<FerroscaleBackupData>;
   const saved = Array.isArray(d.saved) ? d.saved.map(normalizeSavedEntry).filter(Boolean) as SavedEntry[] : [];
   const projects = Array.isArray(d.projects) ? d.projects.map(normalizeProject).filter(Boolean) as Project[] : [];
-  const presets = Array.isArray(d.presets) ? d.presets.map(normalizePreset).filter(Boolean) as DimensionPreset[] : [];
   const compare = {
     updatedAt: typeof d.compare?.updatedAt === "string" ? d.compare.updatedAt : new Date().toISOString(),
     items: Array.isArray(d.compare?.items) ? d.compare.items : [],
@@ -158,7 +151,6 @@ export function validateBackupFile(raw: unknown): FerroscaleBackupFile {
     data: {
       saved,
       projects,
-      presets,
       compare,
       quickHistory,
       priceBook,
@@ -171,7 +163,6 @@ export interface RestoreSummary {
   savedCount: number;
   projectsCount: number;
   priceBookCount: number;
-  presetsCount: number;
 }
 
 export function restoreBackupFile(
@@ -183,7 +174,6 @@ export function restoreBackupFile(
   if (mode === "replace") {
     persistSavedEntries(d.saved, { markDirty: true });
     persistProjects(d.projects, { markDirty: true });
-    persistPresets(d.presets, { markDirty: true });
     persistCompareItems(d.compare.items, { markDirty: true, updatedAt: d.compare.updatedAt });
     persistQuickHistory(d.quickHistory.items, { markDirty: true, updatedAt: d.quickHistory.updatedAt });
     persistPriceBook(d.priceBook.items, { markDirty: true, updatedAt: d.priceBook.updatedAt });
@@ -191,7 +181,6 @@ export function restoreBackupFile(
     // Merge mode
     const mergedSaved = mergeEntityPayload({ items: loadSavedEntries() }, { items: d.saved });
     const mergedProjects = mergeEntityPayload({ items: loadProjects() }, { items: d.projects });
-    const mergedPresets = mergeEntityPayload({ items: loadPresets() }, { items: d.presets });
     const mergedCompare = mergeListPayload(
       { updatedAt: getCompareUpdatedAt(), items: loadCompareItems() },
       d.compare,
@@ -207,7 +196,6 @@ export function restoreBackupFile(
 
     persistSavedEntries(mergedSaved.items, { markDirty: true });
     persistProjects(mergedProjects.items, { markDirty: true });
-    persistPresets(mergedPresets.items, { markDirty: true });
     persistCompareItems(mergedCompare.items, { markDirty: true, updatedAt: mergedCompare.updatedAt });
     persistQuickHistory(mergedHistory.items, { markDirty: true, updatedAt: mergedHistory.updatedAt });
     persistPriceBook(mergedPriceBook.items, { markDirty: true, updatedAt: mergedPriceBook.updatedAt });
@@ -235,6 +223,5 @@ export function restoreBackupFile(
     savedCount: d.saved.length,
     projectsCount: d.projects.length,
     priceBookCount: d.priceBook.items.length,
-    presetsCount: d.presets.length,
   };
 }

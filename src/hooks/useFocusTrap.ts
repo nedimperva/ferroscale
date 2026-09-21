@@ -54,8 +54,16 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement | null>, enabled: 
 
     container.addEventListener("keydown", onKeyDown);
 
-    // Focus first focusable element
+    // Where focus lands when the overlay opens. The first focusable element
+    // is usually the close button, which is the one control nobody opened the
+    // overlay to use — so a surface can nominate a better one with
+    // `data-autofocus` (a search field, the field you came here to fill in).
     requestAnimationFrame(() => {
+      const preferred = container!.querySelector<HTMLElement>("[data-autofocus]");
+      if (preferred) {
+        preferred.focus();
+        return;
+      }
       const focusable = getFocusableElements();
       if (focusable.length > 0) focusable[0].focus();
     });

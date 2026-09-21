@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
+import type { ProjectAdditionalCost, ProjectCategory } from "@/hooks/useProjects";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { savedFingerprint } from "@/lib/calculator/fingerprint";
 import {
@@ -29,14 +30,23 @@ export interface SavedEntry {
   updatedAt: string;
   /** Set when the entry was deliberately made an assembly; see isAssemblyEntry. */
   isAssembly?: boolean;
+  /**
+   * What a project inherits when this entry is inserted into one. These three
+   * came from the separate template collection: a template was a multi-part
+   * entry that also knew its trade, how long it takes to make and what
+   * hardware it eats. Keeping them here is what let that collection go.
+   */
+  category?: ProjectCategory;
+  laborHours?: number;
+  additionalCosts?: ProjectAdditionalCost[];
   deletedAt?: string;
-  parts: TemplatePart[];
+  parts: SavedPart[];
   input: CalculationInput;
   result: CalculationResult;
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-export interface TemplatePart {
+export interface SavedPart {
   id: string;
   name: string;
   input: CalculationInput;
@@ -44,7 +54,7 @@ export interface TemplatePart {
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-export interface TemplatePartDraft {
+export interface SavedPartDraft {
   name: string;
   input: CalculationInput;
   result: CalculationResult;
@@ -68,6 +78,7 @@ export function isAssemblyEntry(entry: Pick<SavedEntry, "parts" | "isAssembly">)
 /* ------------------------------------------------------------------ */
 
 export interface UseSavedReturn {
+  /** Everything in the library — all of it put there by the user. */
   saved: SavedEntry[];
   /** Returns the created entry so callers can offer "name it" right after. */
   saveCalculation: (
@@ -76,7 +87,7 @@ export interface UseSavedReturn {
     name: string,
     notes?: string,
     tags?: string[],
-    parts?: TemplatePartDraft[],
+    parts?: SavedPartDraft[],
     asAssembly?: boolean,
   ) => SavedEntry;
   removeSaved: (id: string) => void;
@@ -92,12 +103,20 @@ export interface UseSavedReturn {
     result: CalculationResult,
     partName?: string,
   ) => boolean;
-  appendPartsToSaved: (id: string, parts: TemplatePartDraft[]) => boolean;
+  appendPartsToSaved: (id: string, parts: SavedPartDraft[]) => boolean;
   removePartFromSaved: (id: string, partId: string) => boolean;
   reorderPartInSaved: (id: string, partId: string, direction: -1 | 1) => boolean;
   updateSaved: (
     id: string,
-    patch: { name?: string; notes?: string; tags?: string[]; pinned?: boolean },
+    patch: {
+      name?: string;
+      notes?: string;
+      tags?: string[];
+      pinned?: boolean;
+      category?: SavedEntry["category"];
+      laborHours?: number;
+      additionalCosts?: SavedEntry["additionalCosts"];
+    },
   ) => void;
   markSavedUsed: (id: string) => void;
   isSaved: (result: CalculationResult) => boolean;
@@ -139,7 +158,7 @@ export function useSaved(): UseSavedReturn {
       name: string,
       notes?: string,
       tags?: string[],
-      parts?: TemplatePartDraft[],
+      parts?: SavedPartDraft[],
       asAssembly?: boolean,
     ) => {
       const timestamp = new Date().toISOString();
@@ -170,14 +189,17 @@ export function useSaved(): UseSavedReturn {
     [setSavedWithPersist],
   );
 
-  const removeSaved = useCallback((id: string) => {
-    const deletedAt = new Date().toISOString();
-    setSavedWithPersist((previous) =>
-      previous.map((entry) => (
-        entry.id === id && !entry.deletedAt ? markEntityDeleted(entry, deletedAt) : entry
-      )),
-    );
-  }, [setSavedWithPersist]);
+  const removeSaved = useCallback(
+    (id: string) => {
+      const deletedAt = new Date().toISOString();
+      setSavedWithPersist((previous) =>
+        previous.map((entry) =>
+          entry.id === id && !entry.deletedAt ? markEntityDeleted(entry, deletedAt) : entry,
+        ),
+      );
+    },
+    [setSavedWithPersist],
+  );
 
   const removeSavedMany = useCallback(
     (ids: string[]) => {
@@ -185,9 +207,9 @@ export function useSaved(): UseSavedReturn {
       const deletedAt = new Date().toISOString();
       const idSet = new Set(ids);
       setSavedWithPersist((previous) =>
-        previous.map((entry) => (
-          idSet.has(entry.id) && !entry.deletedAt ? markEntityDeleted(entry, deletedAt) : entry
-        )),
+        previous.map((entry) =>
+          idSet.has(entry.id) && !entry.deletedAt ? markEntityDeleted(entry, deletedAt) : entry,
+        ),
       );
     },
     [setSavedWithPersist],
@@ -199,12 +221,13 @@ export function useSaved(): UseSavedReturn {
       if (idSet.size === 0) return;
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
-        previous.map((entry) => (
-          idSet.has(entry.id) && entry.deletedAt
-            // updatedAt must beat the tombstone or a merge would re-delete it.
-            ? { ...entry, deletedAt: undefined, updatedAt }
-            : entry
-        )),
+        previous
+          .map((entry) => (
+            idSet.has(entry.id) && entry.deletedAt
+              // updatedAt must beat the tombstone or a merge would re-delete it.
+              ? { ...entry, deletedAt: undefined, updatedAt }
+              : entry
+          )),
       );
     },
     [setSavedWithPersist],
@@ -226,9 +249,9 @@ export function useSaved(): UseSavedReturn {
 
   const duplicateSaved = useCallback(
     (id: string) => {
+      const source = saved.find((entry) => entry.id === id);
+      if (!source) return;
       setSavedWithPersist((previous) => {
-        const source = previous.find((entry) => entry.id === id && !entry.deletedAt);
-        if (!source) return previous;
         const timestamp = new Date().toISOString();
         const copy: SavedEntry = {
           ...source,
@@ -244,14 +267,14 @@ export function useSaved(): UseSavedReturn {
         return [copy, ...previous];
       });
     },
-    [setSavedWithPersist],
+    [saved, setSavedWithPersist],
   );
 
   const duplicateSavedMany = useCallback(
     (ids: string[]) => {
       if (ids.length === 0) return;
       setSavedWithPersist((previous) => {
-        const byId = new Map(previous.filter((entry) => !entry.deletedAt).map((entry) => [entry.id, entry]));
+          const byId = new Map(saved.map((entry) => [entry.id, entry]));
         const copies = ids
           .map((id) => byId.get(id))
           .filter((entry): entry is SavedEntry => Boolean(entry))
@@ -273,13 +296,21 @@ export function useSaved(): UseSavedReturn {
         return [...copies, ...previous];
       });
     },
-    [setSavedWithPersist],
+    [saved, setSavedWithPersist],
   );
 
   const updateSaved = useCallback(
     (
       id: string,
-      patch: { name?: string; notes?: string; tags?: string[]; pinned?: boolean },
+      patch: {
+      name?: string;
+      notes?: string;
+      tags?: string[];
+      pinned?: boolean;
+      category?: SavedEntry["category"];
+      laborHours?: number;
+      additionalCosts?: SavedEntry["additionalCosts"];
+    },
     ) => {
       const updatedAt = new Date().toISOString();
       setSavedWithPersist((previous) =>
@@ -293,6 +324,17 @@ export function useSaved(): UseSavedReturn {
                 ...(patch.tags !== undefined
                   ? {
                       tags: patch.tags.map((tag) => tag.trim()).filter(Boolean).slice(0, 8),
+                    }
+                  : {}),
+                ...(patch.category !== undefined ? { category: patch.category } : {}),
+                ...(patch.laborHours !== undefined
+                  ? { laborHours: patch.laborHours > 0 ? patch.laborHours : undefined }
+                  : {}),
+                ...(patch.additionalCosts !== undefined
+                  ? {
+                      additionalCosts: patch.additionalCosts?.length
+                        ? patch.additionalCosts
+                        : undefined,
                     }
                   : {}),
                 updatedAt,
@@ -326,6 +368,9 @@ export function useSaved(): UseSavedReturn {
           return {
             ...entry,
             updatedAt,
+            // Adding a cut to a part is how you say "this is an assembly".
+            // Recording the intent keeps it one after a part is removed again.
+            isAssembly: true,
             parts: [...entry.parts, nextPart],
           };
         }),
@@ -336,7 +381,7 @@ export function useSaved(): UseSavedReturn {
   );
 
   const appendPartsToSaved = useCallback(
-    (id: string, parts: TemplatePartDraft[]) => {
+    (id: string, parts: SavedPartDraft[]) => {
       if (parts.length === 0) return false;
       if (!allSaved.some((entry) => entry.id === id && !entry.deletedAt)) return false;
       const updatedAt = new Date().toISOString();
@@ -344,7 +389,12 @@ export function useSaved(): UseSavedReturn {
         previous.map((entry) => {
           if (entry.id !== id || entry.deletedAt) return entry;
           const normalizedParts = parts.map((part) => createSavedPart(part.name, part.input, part.result));
-          return { ...entry, updatedAt, parts: [...entry.parts, ...normalizedParts] };
+          return {
+            ...entry,
+            updatedAt,
+            isAssembly: true,
+            parts: [...entry.parts, ...normalizedParts],
+          };
         }),
       );
       return true;

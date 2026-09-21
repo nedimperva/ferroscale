@@ -25,8 +25,10 @@ vi.mock("@/i18n/navigation", () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+import { DEMO_QUERY } from "@/components/command/command-constants";
+
 /** jsdom has no matchMedia, no clipboard and no layout — fill the gaps. */
-export function installBrowserStubs({ width = 1280 }: { width?: number } = {}) {
+export function installBrowserStubs({ width = 1280, query = DEMO_QUERY }: { width?: number; query?: string } = {}) {
   // Node ≥23 ships an experimental global `localStorage` that stays inert
   // without --localstorage-file, shadowing jsdom's working one. Give the
   // window a Map-backed stand-in so storage behaves on every Node.
@@ -53,8 +55,8 @@ export function installBrowserStubs({ width = 1280 }: { width?: number } = {}) {
   window.localStorage.clear();
   // The shell mirrors the query into the URL, and jsdom keeps that URL across
   // tests in a file — without this reset the next mount hydrates from the
-  // previous test's ?q= instead of the demo query.
-  window.history.replaceState(null, "", "/");
+  // previous test's ?q= instead of the clean slate or test query.
+  window.history.replaceState(null, "", query ? `/?q=${encodeURIComponent(query)}` : "/");
   Object.defineProperty(window, "innerWidth", { value: width, writable: true, configurable: true });
   if (!window.matchMedia) {
     Object.defineProperty(window, "matchMedia", {
@@ -91,7 +93,7 @@ export interface CommandHarness extends RenderResult {
 }
 
 export async function renderCommandShell(
-  options: { width?: number } = {},
+  options: { width?: number; query?: string } = {},
 ): Promise<CommandHarness> {
   installBrowserStubs(options);
   // The shell's stores are module-level singletons that cache their snapshot,

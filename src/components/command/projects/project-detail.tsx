@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
-import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   PROJECT_CATEGORIES,
   PROJECT_STATUSES,
@@ -21,6 +21,8 @@ import {
 import {
   defaultPaintCoverageStore,
   defaultPaintPriceStore,
+  defaultUnitStore,
+  sharedCalcSettingsStore,
 } from "@/lib/settings-stores";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
@@ -37,6 +39,13 @@ const ProjectCutting = dynamic(
   () => import("./project-cutting").then((m) => m.ProjectCutting),
   { ssr: false },
 );
+/** The material order and supplier RFQ — a tab of its own, not a chip
+ *  inside the cut plan, which is where it used to be and where nobody
+ *  looking for "what do I buy" would think to look. */
+const ProjectProcurement = dynamic(
+  () => import("./project-procurement").then((m) => m.ProjectProcurement),
+  { ssr: false },
+);
 import {
   formatActivity,
   formatRelativeTime,
@@ -46,11 +55,11 @@ import {
   toDateInputValue,
 } from "./project-model";
 import type { ProjectActions } from "./project-actions";
-import { AssemblyTemplateModal } from "./assembly-template-modal";
+import { InsertAssemblyModal } from "./insert-assembly-modal";
 import { SheetShell } from "../sheets/sheet-shell";
 import { ScaleAssemblyModal } from "./scale-assembly-modal";
-import { SaveAssemblyTemplateModal } from "./save-assembly-template-modal";
-import { useAssemblyTemplates, type AssemblyTemplateItem } from "@/hooks/useAssemblyTemplates";
+import { SaveAssemblyToLibraryModal } from "./save-assembly-modal";
+import type { SavedPart } from "@/hooks/useSaved";
 
 /** The one number that matters, with the cost breakdown beneath it. Six
  *  equal-weight tiles made the grand total no easier to find than the item
@@ -556,6 +565,29 @@ function QuickAddCommandBar({
   const [query, setQuery] = useState("");
   const [error, setError] = useState(false);
 
+  const preview = useMemo(() => {
+    const q = query.trim();
+    if (!q) return null;
+    try {
+      const shared = sharedCalcSettingsStore.getSnapshot();
+      return cmdParse(q, {
+        pricing: {
+          priceBasis: shared.priceBasis,
+          priceUnit: shared.priceUnit,
+          unitPrice: shared.unitPrice,
+          currency: shared.currency,
+          wastePercent: shared.wastePercent,
+          includeVat: shared.includeVat,
+          vatPercent: shared.vatPercent,
+        },
+        defaultGradeId: shared.defaultGradeId,
+        defaultLengthUnit: defaultUnitStore.getSnapshot(),
+      });
+    } catch {
+      return null;
+    }
+  }, [query]);
+
   const handleAdd = () => {
     const q = query.trim();
     if (!q) return;
@@ -589,6 +621,7 @@ function QuickAddCommandBar({
         </select>
       )}
       <input
+        id="project-quick-add-input"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -602,6 +635,11 @@ function QuickAddCommandBar({
         className="flex-1 h-11 sm:h-8 min-w-[200px] rounded-chip border border-[var(--border-faint)] bg-[var(--surface-inset)] px-2.5 text-xs font-mono text-foreground placeholder:text-muted-faint outline-none"
         style={{ borderColor: error ? "var(--red-interactive)" : undefined }}
       />
+      {preview?.calc && (
+        <span className="font-mono text-[11px] font-bold px-2 py-1 rounded-none bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)] whitespace-nowrap">
+          {fsWeight(preview.calc.result.totalWeightKg)} {fsWeightUnit()}
+        </span>
+      )}
       <button
         type="button"
         onClick={handleAdd}
@@ -1070,15 +1108,14 @@ export function ProjectDetail({
   compact?: boolean;
 }) {
   const t = useTranslations("command");
-  const { saveTemplate } = useAssemblyTemplates();
   const [editingDetails, setEditingDetails] = useState(false);
-  const [detailTab, setDetailTab] = useState<"items" | "cutting" | "details">("items");
+  const [detailTab, setDetailTab] = useState<"items" | "cutting" | "order" | "details">("items");
   const [notes, setNotes] = useState(project.description ?? "");
   const [pickingAssemblyRow, setPickingAssemblyRow] = useState<(ReturnType<typeof projectItemRows>[number]) | null>(null);
   const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [scalingAssembly, setScalingAssembly] = useState<{ name: string; count: number } | null>(null);
-  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: AssemblyTemplateItem[] } | null>(null);
+  const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: SavedPart[] } | null>(null);
 
   const summary = projectSummary(project, marginPercent);
   const rows = projectItemRows(project);
@@ -1112,9 +1149,10 @@ export function ProjectDetail({
   const hasMultipleAssemblies =
     assemblyGroups.length > 1 || (assemblyGroups.length === 1 && assemblyGroups[0][0] !== "");
 
-  const tabs: { id: "items" | "cutting" | "details"; label: string }[] = [
+  const tabs: { id: "items" | "cutting" | "order" | "details"; label: string }[] = [
     { id: "items", label: t("projects.tabs.items") },
     { id: "cutting", label: t("projects.tabs.cutting") },
+    { id: "order", label: t("projects.tabs.order") },
     ...(compact
       ? ([{ id: "details" as const, label: t("projects.tabs.details") }])
       : []),
@@ -1320,15 +1358,15 @@ export function ProjectDetail({
           const asmWeight = asmRows.reduce((s, r) => s + r.weightKg, 0);
           const asmCost = asmRows.reduce((s, r) => s + r.amount, 0);
           const saveAsTemplate = () => {
-            const templateItems: AssemblyTemplateItem[] = asmRows.map((r) => ({
+            const parts: SavedPart[] = asmRows.map((r) => ({
               id: crypto.randomUUID(),
+              // The row's note is the part's name — one field, not two.
+              name: r.calc.note?.trim() || r.calc.result.profileLabel,
               input: r.calc.input,
               result: r.calc.result,
               normalizedProfile: r.calc.normalizedProfile,
-              quantity: r.calc.input.quantity || 1,
-              note: r.calc.note,
             }));
-            setSavingTemplateAsm({ name: asmName, items: templateItems });
+            setSavingTemplateAsm({ name: asmName, items: parts });
           };
 
           // Add / Scale / Save as three labelled chips forced a horizontal
@@ -1346,14 +1384,14 @@ export function ProjectDetail({
               : []),
             {
               id: "scale",
-              label: t("templates.scaleAssemblyTitle"),
+              label: t("assembly.scaleTitle"),
               onSelect: () => setScalingAssembly({ name: asmName, count: asmRows.length }),
             },
             ...(asmRows.length > 0
               ? [
                   {
                     id: "save",
-                    label: t("templates.saveAsTemplateButton"),
+                    label: t("assembly.saveHint"),
                     onSelect: saveAsTemplate,
                   },
                 ]
@@ -1418,17 +1456,17 @@ export function ProjectDetail({
                           t("projects.addToThisAssembly", { name: asmName }),
                         )}
                       {groupChip(
-                        t("templates.scaleButton"),
+                        t("assembly.scaleButton"),
                         "bolt",
                         () => setScalingAssembly({ name: asmName, count: asmRows.length }),
-                        t("templates.scaleAssemblyTitle"),
+                        t("assembly.scaleTitle"),
                       )}
                       {asmRows.length > 0 &&
                         groupChip(
-                          t("templates.saveTemplateButton"),
+                          t("assembly.saveButton"),
                           "bookmark",
                           saveAsTemplate,
-                          t("templates.saveAsTemplateButton"),
+                          t("assembly.saveHint"),
                         )}
                     </div>
                     <span className="flex-1" />
@@ -1620,14 +1658,22 @@ export function ProjectDetail({
                 background: "var(--surface-raised)",
                 color: "var(--foreground)",
               }}
-              title={t("templates.modalTitle")}
+              title={t("assembly.insertTitle")}
             >
               <DeskIcon name="layers" />
-              <span>{t("templates.addTemplateButton")}</span>
+              <span>{t("assembly.addButton")}</span>
             </button>
             <button
               type="button"
-              onClick={() => actions.onAddItem(project.id)}
+              onClick={() => {
+                const input = document.getElementById("project-quick-add-input");
+                if (input) {
+                  input.focus();
+                  input.scrollIntoView({ behavior: "smooth", block: "center" });
+                } else {
+                  actions.onAddItem(project.id);
+                }
+              }}
               className="inline-flex items-center gap-1.5 sm:gap-2 rounded-button font-bold text-[12px] sm:text-[12px] cursor-pointer active:scale-95 transition-all shadow-xs"
               style={{
                 padding: "8px 12px",
@@ -1705,6 +1751,10 @@ export function ProjectDetail({
           <div className="w-full min-w-0">
             <ProjectCutting project={project} compact={compact} />
           </div>
+        ) : detailTab === "order" ? (
+          <div className="w-full min-w-0">
+            <ProjectProcurement project={project} compact={compact} />
+          </div>
         ) : detailTab === "details" ? (
           <div className="flex flex-col gap-3">
             <div
@@ -1777,11 +1827,12 @@ export function ProjectDetail({
         />
       )}
 
-      {/* Assembly Template Insertion Modal */}
+      {/* Drop a library assembly into this project */}
       {showTemplateModal && (
-        <AssemblyTemplateModal
-          onInsert={(template, mult, asmName) => {
-            actions.onInsertTemplate?.(project.id, template, mult, asmName);
+        <InsertAssemblyModal
+          assemblies={actions.libraryAssemblies ?? []}
+          onInsert={(entry, mult, asmName) => {
+            actions.onInsertAssembly?.(project.id, entry, mult, asmName);
           }}
           onClose={() => setShowTemplateModal(false)}
         />
@@ -1799,18 +1850,13 @@ export function ProjectDetail({
         />
       )}
 
-      {/* Save Sub-Assembly as Reusable Template Modal */}
+      {/* Save this sub-assembly back into the library */}
       {savingTemplateAsm && (
-        <SaveAssemblyTemplateModal
+        <SaveAssemblyToLibraryModal
           assemblyName={savingTemplateAsm.name}
           items={savingTemplateAsm.items}
           onSave={(name, description, category) => {
-            saveTemplate({
-              name,
-              description,
-              category,
-              items: savingTemplateAsm.items,
-            });
+            actions.onSaveAssemblyToLibrary?.(name, savingTemplateAsm.items, description, category);
           }}
           onClose={() => setSavingTemplateAsm(null)}
         />

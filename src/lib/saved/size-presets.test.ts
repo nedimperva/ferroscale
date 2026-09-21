@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { DimensionPreset } from "@/hooks/usePresets";
-import type { SavedEntry, TemplatePart } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import { getDefaultInput } from "@/lib/calculator/input-storage";
 import { buildSizePresetLookup } from "./size-presets";
 
-function part(profileId: SavedEntry["input"]["profileId"], sizeId: string, name: string): TemplatePart {
+function part(profileId: SavedEntry["input"]["profileId"], sizeId: string, name: string): SavedPart {
   const input = {
     ...getDefaultInput(),
     profileId,
@@ -15,12 +14,12 @@ function part(profileId: SavedEntry["input"]["profileId"], sizeId: string, name:
     id: sizeId,
     name,
     input,
-    result: { profileLabel: name } as TemplatePart["result"],
-    normalizedProfile: { shortLabel: name } as TemplatePart["normalizedProfile"],
+    result: { profileLabel: name } as SavedPart["result"],
+    normalizedProfile: { shortLabel: name } as SavedPart["normalizedProfile"],
   };
 }
 
-function saved(overrides: Partial<SavedEntry> & { parts: TemplatePart[] }): SavedEntry {
+function saved(overrides: Partial<SavedEntry> & { parts: SavedPart[] }): SavedEntry {
   const first = overrides.parts[0];
   return {
     id: overrides.id ?? "s1",
@@ -79,23 +78,5 @@ describe("buildSizePresetLookup", () => {
 
     expect(lookup("beam_hea_en")[0]).toMatchObject({ selectedSizeId: "hea120", label: "Post" });
     expect(lookup("beam_ipe_en")[0]).toMatchObject({ selectedSizeId: "ipe200", label: "Rail" });
-  });
-
-  it("keeps leftover dimension presets after parts", () => {
-    const leftover: DimensionPreset[] = [
-      {
-        id: "old",
-        profileId: "square_hollow",
-        label: "Old shop size",
-        manualDimensionsMm: { side: 45, wallThickness: 4 },
-        createdAt: 1,
-        updatedAt: "2026-01-01T00:00:00.000Z",
-      },
-    ];
-    const lookup = buildSizePresetLookup([], leftover);
-    expect(lookup("square_hollow")[0]).toMatchObject({
-      label: "Old shop size",
-      manualDimensionsMm: { side: 45, wallThickness: 4 },
-    });
   });
 });

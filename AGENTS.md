@@ -91,9 +91,17 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   `CalculationInput`) and `src/lib/external-stores.ts` factories.
 - Collections (all localStorage + Google Drive sync):
   `useSaved` (`ferroscale-saved-v2`), `useProjects`
-  (`advanced-calc-projects-v2`, max 20×50), `useCompare`, `usePresets`,
+  (`advanced-calc-projects-v2`, max 20×50), `useCompare`,
   `useQuickHistory` (`ferroscale-quick-history` — the session tape and
   recency suggestions, capped at 50).
+- **The library is one store.** Parts, assemblies and what used to be
+  "assembly templates" are all `SavedEntry`: `parts.length > 1` (or an
+  explicit `isAssembly`) makes it an assembly, and `category`,
+  `laborHours` and `additionalCosts` are what a project inherits when one
+  is inserted. Nothing ships in it — the app has no built-in entries, so
+  `saved` is the whole list and every count is the user's own work.
+  `storage-migrations.ts` clears rows left by the release that did ship
+  five.
 - **Adding a field to a synced entity takes two edits**: the type in its hook,
   *and* `normalizeProject`/`normalizeSavedEntry` in `src/lib/sync/collections.ts`.
   Those normalizers are whitelists — a field they do not name is dropped on
@@ -149,7 +157,12 @@ never has its own copy of a list, so a column means the same thing on both.
   only navigation.
 - **Parts** (the old Saved) — `parts/parts-view.tsx`. Parts vs Assemblies is
   derived, not stored: an entry with `parts.length > 1` is an assembly.
-  History reads `useQuickHistory`.
+  History reads `useQuickHistory`. `sheets/saved-edit-sheet.tsx` is the one
+  editor for an entry, including an assembly's trade, hours and hardware.
+  `projects/insert-assembly-modal.tsx` picks and scales one, in either of
+  two voices (`mode="insert"` into the open project, `mode="create"` to
+  start a project from it); both entry points hide themselves while the
+  library holds no assembly to offer.
 
 ### API routes
 
