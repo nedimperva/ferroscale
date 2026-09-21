@@ -615,8 +615,6 @@
       "descriptionLabel": "Description (Optional)",
       "descriptionPlaceholder": "e.g. Dimensions, purpose, hardware specifications...",
       "includedItems": "Included Components",
-      "standardTemplates": "Standard EN",
-      "builtinBanner": "Built-in standards ship with the app. Duplicate this one to get a copy you can rename, re-cost and restructure.",
       "laborHoursLabel": "Labour hours",
       "extraCostsLabel": "Hardware & extra costs",
       "addCostLine": "Add a cost line",
@@ -824,21 +822,18 @@
       "filters": {
         "all": "All",
         "parts": "Parts",
-        "assemblies": "Assemblies",
-        "standards": "Standards"
+        "assemblies": "Assemblies"
       },
       "section": {
         "all": "Everything",
         "parts": "Parts",
-        "assemblies": "Assemblies",
-        "standards": "Standards"
+        "assemblies": "Assemblies"
       },
       "project": "Project",
       "addToProjectAria": "Add {name} to a project",
       "emptyFilterTitle": "Nothing of that kind yet",
       "emptyFilterBody": "Widen the filter to see everything you have saved.",
-      "showAll": "Show everything",
-      "restoreStandards": "Restore {count} removed"
+      "showAll": "Show everything"
     },
     "cutting": {
       "title": "Cut plan",

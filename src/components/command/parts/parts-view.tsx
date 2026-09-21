@@ -39,7 +39,7 @@ import { DeskViewHeader } from "../desktop/desk-rail";
  * multi-part entries were all already there and mostly unsurfaced.
  */
 
-export type PartsFilter = "all" | "parts" | "assemblies" | "standards";
+export type PartsFilter = "all" | "parts" | "assemblies";
 
 export interface PartsActions {
   onPick: (entry: SavedEntry) => void;
@@ -58,9 +58,6 @@ export interface PartsActions {
   /** Put this part (or the whole assembly) into a project. */
   onAddToProject: (entry: SavedEntry) => void;
   onNew?: () => void;
-  /** Standards the user has removed — offered back rather than gone for good. */
-  removedBuiltinCount?: number;
-  onRestoreBuiltins?: () => void;
 }
 
 
@@ -398,21 +395,13 @@ export function PartsView({
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
 
-  // The standards that ship with the app are library entries like any other,
-  // but they are not the user's work: mixing them into "all" would mean a
-  // library that is never empty, no empty state to teach the Save button
-  // with, and counts that overstate what you have actually kept. They get a
-  // chip of their own instead.
-  const own = useMemo(() => saved.filter((entry) => !entry.isBuiltin), [saved]);
-  const standards = useMemo(() => saved.filter((entry) => entry.isBuiltin), [saved]);
-  const parts = useMemo(() => own.filter((entry) => !isAssembly(entry)), [own]);
-  const assemblies = useMemo(() => own.filter(isAssembly), [own]);
+  const parts = useMemo(() => saved.filter((entry) => !isAssembly(entry)), [saved]);
+  const assemblies = useMemo(() => saved.filter(isAssembly), [saved]);
   const scope = useMemo(() => {
     if (filter === "parts") return parts;
     if (filter === "assemblies") return assemblies;
-    if (filter === "standards") return standards;
-    return own;
-  }, [filter, own, parts, assemblies, standards]);
+    return saved;
+  }, [filter, saved, parts, assemblies]);
 
   const tags = useMemo(() => collectSavedTags(scope), [scope]);
   const visible = useMemo(() => filterSortSaved(scope, query), [scope, query]);
@@ -465,7 +454,7 @@ export function PartsView({
       <FilterChip
         active={filter === "all"}
         label={t("parts.filters.all")}
-        count={own.length}
+        count={saved.length}
         onClick={() => setFilter("all")}
       />
       <FilterChip
@@ -480,26 +469,6 @@ export function PartsView({
         count={assemblies.length}
         onClick={() => setFilter("assemblies")}
       />
-      {standards.length > 0 && (
-        <FilterChip
-          active={filter === "standards"}
-          label={t("parts.filters.standards")}
-          count={standards.length}
-          onClick={() => setFilter("standards")}
-        />
-      )}
-      {/* A removed standard is hidden, not destroyed. Without this the only
-          way back would be clearing site data. */}
-      {actions.removedBuiltinCount != null && actions.removedBuiltinCount > 0 && (
-        <button
-          type="button"
-          onClick={actions.onRestoreBuiltins}
-          className="fs-track-wide bg-transparent border-0 text-[10px] font-bold uppercase cursor-pointer"
-          style={{ padding: "4px 6px", color: "var(--accent-text)" }}
-        >
-          {t("parts.restoreStandards", { count: actions.removedBuiltinCount })}
-        </button>
-      )}
     </div>
   );
 
@@ -526,7 +495,7 @@ export function PartsView({
             }}
           >
             {t("parts.showAll")}
-            <span className="font-mono text-[11px]">{own.length}</span>
+            <span className="font-mono text-[11px]">{saved.length}</span>
           </button>
         ) : (
           actions.onNew && (

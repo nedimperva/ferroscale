@@ -2,10 +2,49 @@
 import { describe, expect, it } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useProjects } from "@/hooks/useProjects";
-import { getBuiltinLibraryEntries } from "@/lib/saved/builtins";
+import { libraryAssembly } from "@/test/library-fixtures";
 import { calculateMetal, type CalculationInput } from "@ferroscale/metal-core";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { extractProjectCutGroups } from "@/lib/projects/cutting";
+
+/** A tread: a plate, two brackets and a nosing bar, plus what it costs to make. */
+const STAIR_TREAD = libraryAssembly(
+  "asm-stair-tread",
+  "Stair Step Tread (900mm)",
+  [
+    ["plt280x900x4 x1 s235", 1, "Tread step plate"],
+    ["l50x50x5 280mm x2 s235", 2, "Side fixing brackets"],
+    ["flt40x5 900mm x1 s235", 1, "Front nosing bar"],
+  ],
+  {
+    category: "stairs_railings",
+    laborHours: 0.35,
+    additionalCosts: [
+      { id: "cost-tread-bolts", label: "4x M12 Hex Bolts & Washers", amount: 3.2, category: "hardware" },
+    ],
+  },
+);
+
+const RAILING_POST = libraryAssembly(
+  "asm-railing-post",
+  "Railing Post & Base Flange (1m)",
+  [
+    ["shs40x40x3 1m x1 s235", 1, "Main post column"],
+    ["plt120x120x10 x1 s235", 1, "Base anchor flange"],
+    ["plt40x40x3 x1 s235", 1, "Top cap plate"],
+  ],
+  { category: "stairs_railings", laborHours: 0.25 },
+);
+
+const FENCE_PANEL = libraryAssembly(
+  "asm-fence-panel",
+  "Industrial Fence Panel (2.5m)",
+  [
+    ["rhs50x30x2 2.5m x2 s235", 2, "Top & bottom horizontal rails"],
+    ["chs20x2 1.2m x20 s235", 20, "Vertical round tubes"],
+  ],
+  { category: "gates_fences", laborHours: 1.2 },
+);
 
 describe("Project Assembly Templates and Multipliers", () => {
   it("inserts a template with multiplier into a project and scales all constituent cuts, labor, and costs", () => {
@@ -17,8 +56,7 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const stairTreadTemplate = getBuiltinLibraryEntries().find((t) => t.id === "builtin-stair-tread")!;
-    expect(stairTreadTemplate).toBeDefined();
+    const stairTreadTemplate = STAIR_TREAD;
 
     // Insert 15x Stair Step Treads into the project
     act(() => {
@@ -73,7 +111,7 @@ describe("Project Assembly Templates and Multipliers", () => {
       projectId = p.id;
     });
 
-    const postTemplate = getBuiltinLibraryEntries().find((t) => t.id === "builtin-railing-post")!;
+    const postTemplate = RAILING_POST;
 
     // Insert 4x Posts
     act(() => {
@@ -102,7 +140,7 @@ describe("Project Assembly Templates and Multipliers", () => {
   it("creates a new project directly from a fabrication template", () => {
     const { result } = renderHook(() => useProjects());
 
-    const fenceTemplate = getBuiltinLibraryEntries().find((t) => t.id === "builtin-fence-panel")!;
+    const fenceTemplate = FENCE_PANEL;
 
     let newProjId = "";
     act(() => {

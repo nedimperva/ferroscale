@@ -615,8 +615,6 @@
       "descriptionLabel": "Opis (opcionalno)",
       "descriptionPlaceholder": "npr. Dimenzije, namjena, specifikacije okova...",
       "includedItems": "Uključene komponente",
-      "standardTemplates": "Standard EN",
-      "builtinBanner": "Ugrađeni standardi dolaze uz aplikaciju. Dupliciraj ovaj da dobiješ kopiju koju možeš preimenovati, prekalkulisati i preurediti.",
       "laborHoursLabel": "Radni sati",
       "extraCostsLabel": "Okov i dodatni troškovi",
       "addCostLine": "Dodaj stavku troška",
@@ -824,21 +822,18 @@
       "filters": {
         "all": "Sve",
         "parts": "Dijelovi",
-        "assemblies": "Sklopovi",
-        "standards": "Standardi"
+        "assemblies": "Sklopovi"
       },
       "section": {
         "all": "Sve",
         "parts": "Dijelovi",
-        "assemblies": "Sklopovi",
-        "standards": "Standardi"
+        "assemblies": "Sklopovi"
       },
       "project": "Projekat",
       "addToProjectAria": "Dodaj {name} u projekat",
       "emptyFilterTitle": "Još nema ničega te vrste",
       "emptyFilterBody": "Proširi filter da vidiš sve što si sačuvao.",
-      "showAll": "Prikaži sve",
-      "restoreStandards": "Vrati {count} uklonjenih"
+      "showAll": "Prikaži sve"
     },
     "cutting": {
       "title": "Plan rezanja",

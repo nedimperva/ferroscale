@@ -19,6 +19,32 @@ const RENAMES: Array<[oldKey: string, newKey: string]> = [
  */
 const DROPPED: string[] = ["ferroscale-presets-v1"];
 
+/**
+ * The five standards the app used to ship with, merged into the library for
+ * one release and then dropped. A device that ran that release has a
+ * tombstone row for each one the user removed; nothing renders them now, so
+ * they would sit in the library file and in every sync snapshot forever.
+ */
+function dropRetiredBuiltins(): void {
+  const raw = localStorage.getItem(SAVED_KEY);
+  if (raw === null) return;
+  let entries: unknown[];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return;
+    entries = parsed;
+  } catch {
+    return;
+  }
+  const kept = entries.filter((entry) => {
+    const row = entry as { id?: string; isBuiltin?: boolean };
+    return !(row?.isBuiltin || row?.id?.startsWith("builtin-"));
+  });
+  if (kept.length !== entries.length) {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(kept));
+  }
+}
+
 const TEMPLATES_KEY = "ferroscale-assembly-templates-v1";
 const SAVED_KEY = "ferroscale-saved-v2";
 
@@ -52,9 +78,8 @@ interface LegacyTemplate {
  * always the part's name, and its `quantity` was already mirrored into the
  * input — so this folds the old store into the saved one and drops the key.
  *
- * A built-in the user had removed carried no items, so it cannot be rebuilt
- * here; those standards come back, which is a row to delete again rather than
- * data lost.
+ * The standards that used to ship with the app are gone, so a template row
+ * for one is dropped rather than carried across.
  */
 function foldTemplatesIntoLibrary(): void {
   const raw = localStorage.getItem(TEMPLATES_KEY);
@@ -85,6 +110,9 @@ function foldTemplatesIntoLibrary(): void {
     const id = template.id;
     const name = template.name?.trim();
     if (!id || !name || existingIds.has(id)) return [];
+    // The app shipped five standards once. They are not a thing any more, so
+    // neither a copy of one nor the tombstone that hid it has anywhere to go.
+    if (template.isBuiltin || id.startsWith("builtin-")) return [];
     const parts = (Array.isArray(template.items) ? template.items : [])
       .filter((item) => item && item.input && item.result)
       .map((item, index) => ({
@@ -105,7 +133,6 @@ function foldTemplatesIntoLibrary(): void {
         category: template.category,
         laborHours: template.laborHours,
         additionalCosts: template.additionalCosts,
-        isBuiltin: template.isBuiltin || undefined,
         isAssembly: true,
         useCount: 0,
         updatedAt: template.updatedAt ?? createdAt,
@@ -141,6 +168,7 @@ export function migrateLegacyStorageKeys(): void {
       }
     }
     foldTemplatesIntoLibrary();
+    dropRetiredBuiltins();
   } catch {
     // Storage unavailable (private mode quirks) — hydration falls back to defaults.
   }

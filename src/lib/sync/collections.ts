@@ -133,7 +133,6 @@ export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
         ? Math.max(0, candidate.laborHours)
         : undefined,
     additionalCosts: normalizeAdditionalCosts(candidate.additionalCosts),
-    isBuiltin: candidate.isBuiltin === true || undefined,
     parts,
     input: parts[0].input,
     result: parts[0].result,

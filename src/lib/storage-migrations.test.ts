@@ -91,6 +91,45 @@ describe("folding assembly templates into the library", () => {
     expect(localStorage.getItem(TEMPLATES_KEY)).toBeNull();
   });
 
+  it("drops a template row for a standard the app no longer ships", () => {
+    localStorage.setItem(
+      TEMPLATES_KEY,
+      JSON.stringify([
+        legacyTemplate({ id: "builtin-stair-tread", isBuiltin: true }),
+        legacyTemplate({ id: "builtin-fence-panel", isBuiltin: true, deletedAt: "2026-02-03T00:00:00.000Z" }),
+        legacyTemplate(),
+      ]),
+    );
+
+    migrateLegacyStorageKeys();
+
+    const saved = JSON.parse(localStorage.getItem(SAVED_KEY)!);
+    expect(saved.map((e: { id: string }) => e.id)).toEqual(["tpl-1"]);
+  });
+
+  it("clears out standards a previous release merged into the library", () => {
+    localStorage.setItem(
+      SAVED_KEY,
+      JSON.stringify([
+        { id: "builtin-stair-tread", name: "Stair Step Tread", isBuiltin: true, deletedAt: "2026-02-01T00:00:00.000Z" },
+        { id: "builtin-fence-panel", name: "Industrial Fence Panel", isBuiltin: true },
+        { id: "mine", name: "Gate frame" },
+      ]),
+    );
+
+    migrateLegacyStorageKeys();
+
+    const saved = JSON.parse(localStorage.getItem(SAVED_KEY)!);
+    expect(saved.map((e: { id: string }) => e.id)).toEqual(["mine"]);
+  });
+
+  it("leaves the library alone when it holds nothing of the app's own", () => {
+    const rows = JSON.stringify([{ id: "mine", name: "Gate frame" }]);
+    localStorage.setItem(SAVED_KEY, rows);
+    migrateLegacyStorageKeys();
+    expect(localStorage.getItem(SAVED_KEY)).toBe(rows);
+  });
+
   it("clears the dead presets key", () => {
     localStorage.setItem("ferroscale-presets-v1", "[]");
     migrateLegacyStorageKeys();

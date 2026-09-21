@@ -290,11 +290,6 @@ function BrowseAssembliesBody({
                   <h3 className="font-extrabold text-sm sm:text-base text-foreground">
                     {selected.name}
                   </h3>
-                  {selected.isBuiltin && (
-                    <span className="px-2 py-0.5 rounded-none text-[10px] font-bold bg-[var(--accent-surface)] text-[var(--accent-text)] border border-[var(--accent-border)]">
-                      {t("templates.standardTemplates")}
-                    </span>
-                  )}
                 </div>
                 {selected.notes && (
                   <p className="text-xs text-muted leading-relaxed">

@@ -34,10 +34,6 @@ interface CommandLibrarySheetProps {
   /** Which metric leads on saved cards — follows the app-wide result mode. */
   mode: "weight" | "price";
   saved: SavedEntry[];
-  /** The user's own entries — what the tab badge counts. */
-  ownSaved: SavedEntry[];
-  removedBuiltinCount: number;
-  onRestoreBuiltins: () => void;
   compareItems: CompareItem[];
   projects: Project[];
   onClose: () => void;
@@ -84,9 +80,6 @@ export function CommandLibraryWorkspace({
   defaultUnit,
   mode,
   saved,
-  ownSaved,
-  removedBuiltinCount,
-  onRestoreBuiltins,
   compareItems,
   projects,
   onLoadInput,
@@ -141,7 +134,7 @@ export function CommandLibraryWorkspace({
         />
         <LibraryTabPill
           active={tab === "saved"}
-          count={ownSaved.length}
+          count={saved.length}
           onClick={() => setTab("saved")}
           icon={<TabIconSaved />}
           label={t("nav.parts")}
@@ -192,8 +185,6 @@ export function CommandLibraryWorkspace({
             onAddPartsByCommand,
             onRemovePart: onRemovePartSaved,
             onAddToProject: onAddSavedToProject,
-            removedBuiltinCount,
-            onRestoreBuiltins,
           }}
         />
       )}

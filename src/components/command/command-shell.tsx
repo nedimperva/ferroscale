@@ -148,9 +148,6 @@ export function CommandShell() {
   // App-wide libraries (saves, compare, projects).
   const {
     saved: savedEntries,
-    ownSaved,
-    removedBuiltins,
-    restoreAllBuiltins,
     saveCalculation,
     getSavedEntry,
     removeSaved,
@@ -1532,10 +1529,7 @@ export function CommandShell() {
       return (
         <DestinationSheet
           subject={subject}
-          // Only the user's own entries: a standard is not stored until it
-          // is removed, so appending to one would silently do nothing. To
-          // build on a standard you duplicate it first.
-          entries={ownSaved.filter((item) => item.id !== entry?.id)}
+          entries={savedEntries.filter((item) => item.id !== entry?.id)}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
           onAppendTo={appendLineTo}
@@ -1595,9 +1589,6 @@ export function CommandShell() {
           onRemoveTapeEntry={removeHistoryEntry}
           onClearTape={clearHistory}
           saved={savedEntries}
-          ownSaved={ownSaved}
-          removedBuiltinCount={removedBuiltins.length}
-          onRestoreBuiltins={restoreAllBuiltins}
           compareItems={compareItems}
           projects={projects}
           onSave={doSave}
@@ -2533,9 +2524,6 @@ export function CommandShell() {
               defaultUnit={defaultUnit}
               mode={mode}
               saved={savedEntries}
-              ownSaved={ownSaved}
-              removedBuiltinCount={removedBuiltins.length}
-              onRestoreBuiltins={restoreAllBuiltins}
               compareItems={compareItems}
               projects={projects}
               onClose={() => {

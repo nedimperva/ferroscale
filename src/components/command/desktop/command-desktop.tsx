@@ -157,12 +157,10 @@ export function CommandDesktop(props: CommandDesktopProps) {
     onRemovePart: props.onRemovePartSaved,
     onAddToProject: props.onAddSavedToProject,
     onNew: startNewCalc,
-    removedBuiltinCount: props.removedBuiltinCount,
-    onRestoreBuiltins: props.onRestoreBuiltins,
   };
 
   const counts = {
-    saved: props.ownSaved.length,
+    saved: props.saved.length,
     // Archived projects are not in the list the tab opens, so counting them
     // in the badge would promise rows that are not there.
     projects: props.projects.filter((project) => !isArchivedProject(project)).length,

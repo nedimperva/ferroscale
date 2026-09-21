@@ -54,15 +54,8 @@ export function SavedEditSheet({
   const [costs, setCosts] = useState<ProjectAdditionalCost[]>(entry.additionalCosts ?? []);
 
   const isAssembly = isAssemblyEntry(entry);
-  // A standard ships with the app, so it has nothing to edit in place —
-  // the card offers "duplicate" for that.
-  const readOnly = Boolean(entry.isBuiltin);
 
   const submit = () => {
-    if (readOnly) {
-      onClose();
-      return;
-    }
     const hours = Number(laborHours.replace(",", "."));
     onSubmit({
       name,
@@ -86,33 +79,19 @@ export function SavedEditSheet({
   return (
     <SheetShell title={t("saved.editTitle")} onClose={onClose} maxWidth={520}>
       <div className="flex flex-col gap-3">
-        {readOnly && (
-          <p
-            className="rounded-button px-3 py-2 text-[11.5px] leading-snug"
-            style={{
-              background: "var(--accent-surface)",
-              border: "1px solid var(--accent-border)",
-              color: "var(--accent-text)",
-            }}
-          >
-            {t("templates.builtinBanner")}
-          </p>
-        )}
-
         <label className="flex flex-col gap-1.5">
           <span className={labelClass} style={{ letterSpacing: 1 }}>
             {t("saved.fieldName")}
           </span>
           <input
             value={name}
-            autoFocus={!readOnly}
-            disabled={readOnly}
+            autoFocus
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") submit();
             }}
             placeholder={entry.result.profileLabel}
-            className={`${fieldClass} h-11 disabled:opacity-60`}
+            className={`${fieldClass} h-11`}
           />
         </label>
 
@@ -122,11 +101,10 @@ export function SavedEditSheet({
           </span>
           <textarea
             value={notes}
-            disabled={readOnly}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             placeholder={t("saved.notesPlaceholder")}
-            className={`${fieldClass} py-2.5 resize-none disabled:opacity-60`}
+            className={`${fieldClass} py-2.5 resize-none`}
           />
         </label>
 
@@ -136,13 +114,12 @@ export function SavedEditSheet({
           </span>
           <input
             value={tags}
-            disabled={readOnly}
             onChange={(e) => setTags(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") submit();
             }}
             placeholder={t("saved.tagsPlaceholder")}
-            className={`${fieldClass} h-11 font-mono text-[13px] disabled:opacity-60`}
+            className={`${fieldClass} h-11 font-mono text-[13px]`}
           />
           <span className="text-[11px] text-muted-faint">{t("saved.tagsHint", { max: MAX_TAGS })}</span>
         </label>
@@ -165,9 +142,8 @@ export function SavedEditSheet({
                 </span>
                 <select
                   value={category}
-                  disabled={readOnly}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className={`${fieldClass} h-11 disabled:opacity-60`}
+                        onChange={(e) => setCategory(e.target.value)}
+                  className={`${fieldClass} h-11`}
                 >
                   <option value="">{t("projects.generalSection")}</option>
                   {PROJECT_CATEGORIES.map((id) => (
@@ -184,11 +160,10 @@ export function SavedEditSheet({
                 </span>
                 <input
                   value={laborHours}
-                  disabled={readOnly}
-                  inputMode="decimal"
+                        inputMode="decimal"
                   onChange={(e) => setLaborHours(e.target.value)}
                   placeholder="0"
-                  className={`${fieldClass} h-11 font-mono disabled:opacity-60`}
+                  className={`${fieldClass} h-11 font-mono`}
                 />
               </label>
             </div>
@@ -201,19 +176,17 @@ export function SavedEditSheet({
                 <div key={cost.id} className="flex items-center gap-2">
                   <input
                     value={cost.label}
-                    disabled={readOnly}
-                    onChange={(e) =>
+                            onChange={(e) =>
                       setCosts((prev) =>
                         prev.map((row, i) => (i === index ? { ...row, label: e.target.value } : row)),
                       )
                     }
                     placeholder={t("templates.newCostLabel")}
-                    className={`${fieldClass} h-10 flex-1 min-w-0 disabled:opacity-60`}
+                    className={`${fieldClass} h-10 flex-1 min-w-0`}
                   />
                   <input
                     value={String(cost.amount)}
-                    disabled={readOnly}
-                    inputMode="decimal"
+                            inputMode="decimal"
                     onChange={(e) =>
                       setCosts((prev) =>
                         prev.map((row, i) =>
@@ -223,14 +196,13 @@ export function SavedEditSheet({
                         ),
                       )
                     }
-                    className={`${fieldClass} h-10 w-24 font-mono text-right disabled:opacity-60`}
+                    className={`${fieldClass} h-10 w-24 font-mono text-right`}
                   />
                   <button
                     type="button"
-                    disabled={readOnly}
-                    onClick={() => setCosts((prev) => prev.filter((_, i) => i !== index))}
+                            onClick={() => setCosts((prev) => prev.filter((_, i) => i !== index))}
                     aria-label={t("common.remove")}
-                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-button border border-border-faint bg-[var(--surface)] text-muted cursor-pointer disabled:opacity-40"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-button border border-border-faint bg-[var(--surface)] text-muted cursor-pointer"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden="true">
                       <path d="M18 6L6 18M6 6l12 12" />
@@ -240,14 +212,13 @@ export function SavedEditSheet({
               ))}
               <button
                 type="button"
-                disabled={readOnly}
-                onClick={() =>
+                    onClick={() =>
                   setCosts((prev) => [
                     ...prev,
                     { id: crypto.randomUUID(), label: "", amount: 0, category: "hardware" },
                   ])
                 }
-                className="h-10 rounded-button border border-dashed border-border-strong bg-transparent text-[12px] font-semibold text-muted cursor-pointer disabled:opacity-40"
+                className="h-10 rounded-button border border-dashed border-border-strong bg-transparent text-[12px] font-semibold text-muted cursor-pointer"
               >
                 {t("templates.addCostLine")}
               </button>
@@ -261,17 +232,15 @@ export function SavedEditSheet({
             onClick={submit}
             className="flex-1 h-11 rounded-button bg-[var(--action)] text-[var(--action-contrast)] font-bold text-sm"
           >
-            {readOnly ? t("common.close") : t("common.saveChanges")}
+            {t("common.saveChanges")}
           </button>
-          {!readOnly && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 h-11 rounded-button border border-border bg-[var(--surface)] font-semibold text-sm text-foreground"
-            >
-              {t("common.cancel")}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-11 rounded-button border border-border bg-[var(--surface)] font-semibold text-sm text-foreground"
+          >
+            {t("common.cancel")}
+          </button>
         </div>
       </div>
     </SheetShell>
