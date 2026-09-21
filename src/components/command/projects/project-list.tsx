@@ -416,8 +416,6 @@ export function ProjectList({
 
   const newProjectButton = (
     <div className="flex items-center gap-1.5 flex-shrink-0">
-      {/* Only once there is an assembly to start from. */}
-      {(actions.libraryAssemblies?.length ?? 0) > 0 && (
       <button
         type="button"
         onClick={() => setShowTemplateModal(true)}
@@ -434,7 +432,6 @@ export function ProjectList({
         <DeskIcon name="layers" />
         <span>{t("assembly.fromButton")}</span>
       </button>
-      )}
       <button
         type="button"
         onClick={() => setCreating((v) => !v)}

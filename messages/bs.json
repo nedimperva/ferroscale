@@ -589,7 +589,9 @@
       "addPartFailed": "Nije moguće pročitati taj rez — provjeri komandu.",
       "assemblyExtras": "Ide uz ovaj sklop",
       "assemblyExtrasHint": "Prenosi se u svaki projekat u koji ubacite ovaj sklop, skalirano po količini.",
-      "assemblyDefaultName": "{first} +{more}"
+      "assemblyDefaultName": "{first} +{more}",
+      "editAssembly": "Uredi naziv, rad i okov",
+      "editAssemblyTitle": "Uredi sklop"
     },
     "projects": {
       "templateInserted": "Ubačen šablon {name} (×{mult}) u projekat",

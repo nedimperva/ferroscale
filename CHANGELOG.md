@@ -14,6 +14,7 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- An assembly's labour hours and hardware are edited where its name is, and the menu that opens it says so. They used to live in a template manager buried inside a project; for a while after that they were behind an item called "Rename, notes and tags", which named none of them
 - The mobile breakdown carries three controls instead of nine. It was three rows of buttons with "Copy summary" drawn twice, and both "Save" and "+ Project" leading to the same save control — which is now simply there, the same one the calculator has. Copy value, Share link, Compare and New moved into the overflow beside it
 - Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own "+ Assembly" offered a count — the same act, two answers depending on which door you used
 - Both doors now land the same way: one project item per cut, tagged with the assembly's name. From the library it used to arrive as a single rolled-up row whose cuts could not be edited
@@ -44,7 +45,7 @@ three and four levels down came up to where they are named.
 - Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part
 - The end-to-end suite is green again. Fourteen tests — every accessibility scan among them — waited for a result on a screen that stopped seeding one in 3.26, so axe had not actually run on any surface since
 - A multi-cut line saved from the picker was named after whichever cut the caret was on — "hea140 3m + plt200x160x12 x2" came out as "Plate 200×160×12". It is named after the cut that leads it now, plus how many more
-- The two ways into the assembly picker are hidden while the library has no assembly to offer, instead of opening an empty dialog
+- The assembly picker says what fills it when the library is empty, rather than opening blank
 - The session row let its total draw over the button beside it on a phone, instead of giving way
 - Assembly templates were never synced. The store marked itself dirty and uploaded nothing, so a template written on one device never reached another. They ride along with the library now
 - Adding a cut to a saved part records that it is an assembly, so removing a part again does not quietly turn it back into a single part

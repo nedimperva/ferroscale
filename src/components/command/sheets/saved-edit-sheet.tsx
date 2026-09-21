@@ -77,7 +77,11 @@ export function SavedEditSheet({
   const labelClass = "text-[10px] font-bold text-muted uppercase";
 
   return (
-    <SheetShell title={t("saved.editTitle")} onClose={onClose} maxWidth={520}>
+    <SheetShell
+      title={isAssembly ? t("saved.editAssemblyTitle") : t("saved.editTitle")}
+      onClose={onClose}
+      maxWidth={520}
+    >
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1.5">
           <span className={labelClass} style={{ letterSpacing: 1 }}>

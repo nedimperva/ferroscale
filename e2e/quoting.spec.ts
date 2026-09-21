@@ -206,6 +206,43 @@ test.describe("Session", () => {
 });
 
 test.describe("Assemblies", () => {
+  test("the way into the library is offered before the library has anything in it", async ({ page }) => {
+    await page.goto("/en/projects");
+    // Hiding these until an assembly existed meant the feature vanished for
+    // anyone who had not already used it, with nothing left to learn it from.
+    await expect(page.getByRole("button", { name: "From assembly" }).first()).toBeVisible();
+    await page.getByRole("button", { name: "From assembly" }).first().click();
+    await expect(page.getByText("No assemblies yet").first()).toBeVisible();
+    await expect(page.getByText(/Save a line with several cuts/).first()).toBeVisible();
+  });
+
+  test("an assembly's labour and hardware are named where they are edited", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea140 3m + plt200x160x12 x2 ");
+    await page.getByRole("button", { name: "Save somewhere else" }).click();
+    await page.getByText("Save to library as one assembly").click();
+    await page.getByRole("button", { name: "Create", exact: true }).click();
+
+    await page.getByRole("button", { name: /^Parts\s*1$/ }).click();
+    await page.getByRole("button", { name: "HEA 140 +1", exact: true }).click();
+    // "Rename, notes and tags" said nothing about the two fields a project
+    // inherits, so they might as well not have been there.
+    await page.getByRole("menuitem", { name: "Edit name, labour & hardware" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit assembly" })).toBeVisible();
+
+    await page.getByLabel("Labour hours").fill("1.5");
+    await page.getByRole("button", { name: "Add a cost line" }).click();
+    await page.getByPlaceholder("New cost line").fill("8x M16 bolts");
+    await page.locator('input[inputmode="decimal"]').last().fill("9.60");
+    await page.getByRole("button", { name: "Save changes" }).click();
+
+    // They survive the round trip, which is what a project will read.
+    await page.getByRole("button", { name: "HEA 140 +1", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Edit name, labour & hardware" }).click();
+    await expect(page.getByLabel("Labour hours")).toHaveValue("1.5");
+    await expect(page.locator('input[value="8x M16 bolts"]')).toHaveCount(1);
+  });
+
   test("a project can be started from a library assembly, once there is one", async ({ page }) => {
     await page.goto("/en/projects");
     // The app ships with no assemblies, so there is nothing to start from and

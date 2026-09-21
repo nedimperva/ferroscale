@@ -218,7 +218,11 @@ function PartsRow({
           onSelect: () => actions.onTogglePin(entry),
         },
         { id: "compare", label: t("saved.addToCompare"), onSelect: () => actions.onAddCompare(entry) },
-        { id: "edit", label: t("saved.edit"), onSelect: () => actions.onEdit(entry) },
+        {
+          id: "edit",
+          label: isAssembly(entry) ? t("saved.editAssembly") : t("saved.edit"),
+          onSelect: () => actions.onEdit(entry),
+        },
         { id: "duplicate", label: t("saved.duplicate"), onSelect: () => actions.onDuplicate(entry) },
         ...(actions.onAddPart && actions.canAddCurrentLine
           ? [{ id: "addPart", label: t("saved.addPart"), onSelect: () => actions.onAddPart?.(entry) }]

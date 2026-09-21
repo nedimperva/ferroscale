@@ -1648,10 +1648,6 @@ export function ProjectDetail({
               </svg>
               <span>{t("quote.short")}</span>
             </button>
-            {/* Nothing to insert until the library holds an assembly, and a
-                button that opens an empty dialog teaches nothing. It appears
-                the moment you save one. */}
-            {(actions.libraryAssemblies?.length ?? 0) > 0 && (
             <button
               type="button"
               onClick={() => setShowTemplateModal(true)}
@@ -1667,7 +1663,6 @@ export function ProjectDetail({
               <DeskIcon name="layers" />
               <span>{t("assembly.addButton")}</span>
             </button>
-            )}
             <button
               type="button"
               onClick={() => {

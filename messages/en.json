@@ -589,7 +589,9 @@
       "addPartFailed": "Could not read that cut — check the command.",
       "assemblyExtras": "Goes with this assembly",
       "assemblyExtrasHint": "Carried into any project you drop this assembly into, scaled by the quantity.",
-      "assemblyDefaultName": "{first} +{more}"
+      "assemblyDefaultName": "{first} +{more}",
+      "editAssembly": "Edit name, labour & hardware",
+      "editAssemblyTitle": "Edit assembly"
     },
     "projects": {
       "templateInserted": "Inserted {name} (×{mult}) into project",
