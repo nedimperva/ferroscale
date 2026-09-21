@@ -2343,7 +2343,11 @@ export function CommandShell() {
                 >
                   {it.fam && (
                     <span style={{ color: "var(--foreground-secondary)" }}>
-                      <CommandGlyph fam={it.fam} size={17} />
+                      <CommandGlyph
+                        fam={it.fam}
+                        alias={it.kind === "profile" ? it.ins : p.alias?.alias}
+                        size={17}
+                      />
                     </span>
                   )}
                   <span className="flex flex-col items-start leading-tight">
@@ -2414,10 +2418,15 @@ export function CommandShell() {
                 }}
               >
                 <span
-                  className="font-mono text-base font-bold mr-0.5 flex-shrink-0"
+                  className="flex items-center justify-center font-mono text-base font-bold mr-0.5 flex-shrink-0"
                   style={{ color: "var(--accent)" }}
+                  aria-hidden="true"
                 >
-                  ›
+                  {p.alias ? (
+                    <CommandGlyph fam={p.alias.fam} alias={p.alias.alias} size={18} />
+                  ) : (
+                    "›"
+                  )}
                 </span>
                 {chipCount === 0 && !partialToken && (
                   <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">

@@ -1,12 +1,13 @@
 import type { CommandFamily } from "@ferroscale/metal-core";
 
 interface CommandGlyphProps {
-  fam: CommandFamily;
+  fam: CommandFamily | "channel" | "ibeam";
+  alias?: string;
   size?: number;
   className?: string;
 }
 
-export function CommandGlyph({ fam, size = 20, className }: CommandGlyphProps) {
+export function CommandGlyph({ fam, alias, size = 20, className }: CommandGlyphProps) {
   const common = {
     width: size,
     height: size,
@@ -18,6 +19,38 @@ export function CommandGlyph({ fam, size = 20, className }: CommandGlyphProps) {
     strokeLinejoin: "round" as const,
     className,
   };
+
+  const a = alias?.toLowerCase() ?? "";
+  const isU =
+    fam === "channel" ||
+    a.startsWith("up") ||
+    a === "u" ||
+    a.includes("channel") ||
+    a.includes("upn") ||
+    a.includes("upe");
+  const isI =
+    fam === "ibeam" ||
+    a.startsWith("ip") ||
+    a === "i" ||
+    a.includes("ipe") ||
+    a.includes("ipn");
+
+  if (fam === "channel" || (fam === "beam" && isU)) {
+    return (
+      <svg {...common}>
+        <path d="M6 4v13a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V4" />
+      </svg>
+    );
+  }
+
+  if (fam === "ibeam" || (fam === "beam" && isI)) {
+    return (
+      <svg {...common}>
+        <path d="M8 4h8M8 20h8M12 4v16" />
+      </svg>
+    );
+  }
+
   switch (fam) {
     case "beam":
       return (

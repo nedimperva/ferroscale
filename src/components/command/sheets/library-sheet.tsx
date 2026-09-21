@@ -444,7 +444,7 @@ function CompareTabContent({
           return (
             <LibraryRow
               key={item.id}
-              glyph={fam ? <CommandGlyph fam={fam} size={19} /> : null}
+              glyph={fam ? <CommandGlyph fam={fam} alias={item.input.profileId} size={19} /> : null}
               title={
                 item.normalizedProfile?.shortLabel ?? item.result.profileLabel
               }

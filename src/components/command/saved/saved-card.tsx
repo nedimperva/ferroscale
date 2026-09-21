@@ -153,7 +153,11 @@ export function SavedThumb({ model, size = 46 }: { model: SavedCardModel; size?:
       {model.parsed ? (
         <ProfileDrawing p={model.parsed} variant="thumb" className="w-full" />
       ) : model.fam ? (
-        <CommandGlyph fam={model.fam} size={Math.round(size * 0.5)} />
+        <CommandGlyph
+          fam={model.fam}
+          alias={model.parsed?.alias?.alias ?? model.entry.profileId ?? model.entry.parts[0]?.profileId}
+          size={Math.round(size * 0.5)}
+        />
       ) : null}
     </span>
   );

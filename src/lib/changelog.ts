@@ -43,11 +43,13 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before"
     ],
     added: [
+      "Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile",
       "The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life",
       "An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited",
       "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
     ],
     fixed: [
+      "Discovery tiles now enter clean profile aliases without trailing spaces so sizes and dimensions can be typed immediately",
       "The ⋯ on a library row announced itself with the entry's name, which is also what the row's own open button is called — two controls, one name, side by side",
       "A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen",
       "An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them",
@@ -87,11 +89,13 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Standardi koji dolaze uz aplikaciju su u biblioteci, pod vlastitom pločicom, a ne samo unutar dijaloga u projektu. Uklanjanje se može poništiti"
     ],
     added_bs: [
+      "Komandna linija prikazuje narandžastu ikonu profila (uključujući prepoznatljive U, I, H i T oblike) za aktivni profil",
       "Vizuelne pločice profila su na telefonu — ekranu koji uopšte nema tekstualno polje",
       "Sklop nosi djelatnost, sate rada i okov koje projekat nasljeđuje od njega, uredive tamo gdje se i sklop uređuje",
       "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
     ],
     fixed_bs: [
+      "Kartice profila unose čist alias bez razmaka na kraju kako bi se dimenzije mogle odmah unositi",
       "Dugme ⋯ u redu biblioteke predstavljalo se nazivom stavke, istim kojim se predstavlja i dugme za otvaranje tog reda",
       "Meni ⋯ otvoren dok se pomjeranje još smirivalo zatvarao bi se istog trena. Sada prati svoj red i zatvara se tek kada red napusti ekran",
       "Sklop prebačen iz biblioteke u projekat stizao je bez sati rada, troškova okova i djelatnosti koje nosi",

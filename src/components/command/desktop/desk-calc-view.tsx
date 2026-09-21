@@ -7,6 +7,7 @@ import {
   cmdParse,
   cmdClassifyToken,
   cmdPasteIntoLine,
+  findAliasByPrefix,
 } from "@ferroscale/metal-core";
 import {
   fsMoney,
@@ -201,6 +202,8 @@ export function DeskCalcView({
   }
   const focusParse: CommandParseResult =
     line.multi && line.items[picked]?.parse.valid ? line.items[picked].parse : p;
+  const leadAlias =
+    focusParse.alias ?? (partial ? findAliasByPrefix(partial.toLowerCase()) : null);
 
   const focusInputAtEnd = useCallback(() => {
     requestAnimationFrame(() => {
@@ -321,11 +324,15 @@ export function DeskCalcView({
           }}
         >
           <span
-            className="font-mono font-bold text-[19px] mr-0.5"
+            className="flex items-center justify-center font-mono font-bold text-[19px] mr-0.5 shrink-0"
             style={{ color: "var(--accent)" }}
             aria-hidden="true"
           >
-            ›
+            {leadAlias ? (
+              <CommandGlyph fam={leadAlias.fam} alias={leadAlias.alias} size={20} />
+            ) : (
+              "›"
+            )}
           </span>
           {chips.groups.map((group) => (
             <Fragment key={group.item}>
@@ -586,7 +593,11 @@ export function DeskCalcView({
               >
                 {it.fam && (
                   <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
-                    <CommandGlyph fam={it.fam} size={16} />
+                    <CommandGlyph
+                      fam={it.fam}
+                      alias={it.kind === "profile" ? it.ins : focusParse.alias?.alias}
+                      size={16}
+                    />
                   </span>
                 )}
                 <span className="flex flex-col items-start" style={{ lineHeight: 1.15 }}>
@@ -966,7 +977,7 @@ export function DeskCalcView({
                         className="flex-1 min-w-0 flex items-center gap-3 border-0 cursor-pointer text-left bg-transparent p-0"
                       >
                         <span className="flex flex-shrink-0 text-muted">
-                          {rp.alias && <CommandGlyph fam={rp.alias.fam} size={15} />}
+                          {rp.alias && <CommandGlyph fam={rp.alias.fam} alias={rp.alias.alias} size={15} />}
                         </span>
                         <span className="flex-1 min-w-0 font-bold text-[13px] text-foreground truncate">
                           {formatCommandParseName(t, rp)}

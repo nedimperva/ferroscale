@@ -713,7 +713,7 @@ export function ProfileDrawing({
         className={`${appear} ${className ?? ""}`}
         style={{ color: "var(--accent)" }}
       >
-        {p.alias ? <CommandGlyph fam={p.alias.fam} size={thumb ? 30 : 64} /> : null}
+        {p.alias ? <CommandGlyph fam={p.alias.fam} alias={p.alias.alias} size={thumb ? 30 : 64} /> : null}
       </div>
     );
   }

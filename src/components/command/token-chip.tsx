@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { haptic } from "@/lib/haptics";
 import { canStepToken, stepToken } from "./token-step";
-
 const LONG_PRESS_MS = 450;
 
 export function TokenChip({

@@ -141,7 +141,7 @@ export function CommandResultBreakdown({
       <div className="flex items-baseline gap-2 mb-3">
         {focus.alias && (
           <span className="text-accent-text">
-            <CommandGlyph fam={focus.alias.fam} size={22} />
+            <CommandGlyph fam={focus.alias.fam} alias={focus.alias.alias} size={22} />
           </span>
         )}
         <span className="text-lg font-bold text-foreground">{formatCommandParseName(t, focus)}</span>

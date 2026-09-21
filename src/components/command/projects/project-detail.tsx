@@ -1189,7 +1189,7 @@ export function ProjectDetail({
     const fam = familyForInput(row.calc.input);
     const glyph = (
       <span className="flex flex-shrink-0 text-muted" style={{ width: 24 }} aria-hidden="true">
-        {fam && <CommandGlyph fam={fam} size={17} />}
+        {fam && <CommandGlyph fam={fam} alias={row.calc.input.profileId} size={17} />}
       </span>
     );
 

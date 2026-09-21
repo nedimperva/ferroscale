@@ -173,7 +173,7 @@ export function DeskCompareView({
                       className="flex items-center justify-center flex-shrink-0 rounded-none text-foreground"
                       style={{ width: 34, height: 34, background: "var(--surface-inset)" }}
                     >
-                      {c.fam && <CommandGlyph fam={c.fam} size={19} />}
+                      {c.fam && <CommandGlyph fam={c.fam} alias={c.item.input.profileId} size={19} />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div

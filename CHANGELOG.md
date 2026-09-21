@@ -38,11 +38,14 @@ three and four levels down came up to where they are named.
 
 ### Added
 
+- Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile
 - The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life
 - An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited
 - A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word
 
 ### Fixed
+
+- Discovery tiles now enter clean profile aliases without trailing spaces so sizes and dimensions can be typed immediately
 
 - A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen
 - An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them
