@@ -45,6 +45,12 @@ export interface DestinationSubject {
   defaultName: string;
   /** Several `+`-joined cuts — it saves as one assembly, not one part. */
   multi?: boolean;
+  /**
+   * Whether "how many of it" is a question worth asking. A saved entry is a
+   * thing you take copies of — twelve railing bays, five brackets — so the
+   * picker offers a count. A live line already carries its own quantities.
+   */
+  scalable?: boolean;
 }
 
 export function DestinationSheet({
@@ -65,8 +71,8 @@ export function DestinationSheet({
   entries: SavedEntry[];
   projects: Project[];
   onSaveNew: (name: string, asAssembly: boolean) => void;
-  onAppendTo: (entryId: string) => void;
-  onAddToProject: (projectId: string) => void;
+  onAppendTo: (entryId: string, count: number) => void;
+  onAddToProject: (projectId: string, count: number) => void;
   onCreateProject: (name: string) => Project;
   onClose: () => void;
 }) {
@@ -76,6 +82,7 @@ export function DestinationSheet({
   const [creating, setCreating] = useState<CreateKind | null>(null);
   const [name, setName] = useState("");
   const [cursor, setCursor] = useState(0);
+  const [count, setCount] = useState(1);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // A live line can start a library entry. A saved entry already is one, so
@@ -127,15 +134,15 @@ export function DestinationSheet({
     if (!creating) return;
     if (creating === "project") {
       if (!trimmed) return;
-      onAddToProject(onCreateProject(trimmed).id);
+      onAddToProject(onCreateProject(trimmed).id, count);
       return;
     }
     onSaveNew(trimmed || subject.defaultName, Boolean(subject.multi));
   };
 
   const choose = (row: TargetRow) => {
-    if (row.kind === "project") onAddToProject(row.id);
-    else onAppendTo(row.id);
+    if (row.kind === "project") onAddToProject(row.id, count);
+    else onAppendTo(row.id, count);
   };
 
   const onListKeyDown = (event: React.KeyboardEvent) => {
@@ -266,6 +273,62 @@ export function DestinationSheet({
         </button>
       }
     >
+      {subject.scalable && (
+        <div
+          className="flex items-center gap-2 mb-2.5 rounded-button"
+          style={{ padding: "7px 10px", border: "1px solid var(--border-faint)" }}
+        >
+          <span className="fs-track-label text-[10px] font-bold uppercase text-muted whitespace-nowrap">
+            {t("assembly.multiplierLabel")}
+          </span>
+          <div className="ml-auto flex items-center gap-1.5">
+            {[1, 5, 10].map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setCount(value)}
+                aria-pressed={count === value}
+                className="h-8 min-w-[34px] px-2 text-[11.5px] font-bold cursor-pointer"
+                style={{
+                  border: `1px solid ${count === value ? "var(--action)" : "var(--border)"}`,
+                  background: count === value ? "var(--action)" : "transparent",
+                  color: count === value ? "var(--action-contrast)" : "var(--foreground)",
+                }}
+              >
+                ×{value}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setCount((c) => Math.max(1, c - 1))}
+              aria-label={t("common.less")}
+              className="flex h-8 w-8 items-center justify-center text-[15px] font-bold cursor-pointer"
+              style={{ border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)" }}
+            >
+              −
+            </button>
+            <input
+              value={count}
+              inputMode="numeric"
+              aria-label={t("assembly.multiplierLabel")}
+              onChange={(e) =>
+                setCount(Math.max(1, Math.min(1000, Math.floor(Number(e.target.value) || 1))))
+              }
+              className="h-8 w-12 text-center font-mono text-[13px] font-bold bg-[var(--surface-inset)] border border-border-faint text-foreground outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setCount((c) => Math.min(1000, c + 1))}
+              aria-label={t("common.moreOne")}
+              className="flex h-8 w-8 items-center justify-center text-[15px] font-bold cursor-pointer"
+              style={{ border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)" }}
+            >
+              +
+            </button>
+          </div>
+        </div>
+      )}
+
       <input
         value={search}
         // Focus lands here when the sheet opens: the list is driven from this

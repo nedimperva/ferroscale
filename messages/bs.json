@@ -161,7 +161,9 @@
       "more": "Više radnji",
       "add": "Dodaj",
       "addProjectLong": "Dodaj u projekat",
-      "paste": "Zalijepi"
+      "paste": "Zalijepi",
+      "less": "Jedan manje",
+      "moreOne": "Jedan više"
     },
     "toast": {
       "addLength": "Dodajte dužinu za čuvanje",

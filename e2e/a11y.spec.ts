@@ -2,6 +2,14 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
 /**
+ * A share link carrying a live result. These scans all wait for one, and the
+ * app stopped seeding a demo query when clean-slate onboarding landed — so
+ * every one of them has been failing on its first assertion, and axe has not
+ * actually run on any surface since.
+ */
+const DEMO_LINK = "/en?q=hea120+6m+x2";
+
+/**
  * Automated axe scans of the main surfaces. Critical-impact violations fail;
  * serious ones are logged so they can be triaged without blocking.
  */
@@ -24,13 +32,13 @@ async function scan(page: import("@playwright/test").Page, label: string) {
 
 test.describe("axe scans", () => {
   test("wide desktop workspace", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await scan(page, "wide /en");
   });
 
   test("saved library with a card in it", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByLabel("FerroScale Command query").click();
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await page
@@ -43,7 +51,7 @@ test.describe("axe scans", () => {
   });
 
   test("saved edit sheet open", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByLabel("FerroScale Command query").click();
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await page
@@ -61,7 +69,7 @@ test.describe("axe scans", () => {
     test.use({ viewport: { width: 800, height: 900 } });
 
     test("single-column dashboard", async ({ page }) => {
-      await page.goto("/en");
+      await page.goto(DEMO_LINK);
       await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
       await scan(page, "compact /en");
     });
@@ -71,7 +79,7 @@ test.describe("axe scans", () => {
     test.use({ viewport: { width: 390, height: 844 } });
 
     test("keypad shell", async ({ page }) => {
-      await page.goto("/en");
+      await page.goto(DEMO_LINK);
       await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
       await scan(page, "phone /en");
     });

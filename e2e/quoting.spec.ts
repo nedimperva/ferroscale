@@ -2,6 +2,12 @@ import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 /**
+ * A share link carrying a live result — the app stopped seeding a demo query
+ * when clean-slate onboarding landed, so a bare /en has nothing to measure.
+ */
+const DEMO_LINK = "/en?q=hea120+6m+x2";
+
+/**
  * The quoting layer: per-grade rates, margin on top of cost, and turning a
  * session into a project.
  */
@@ -86,7 +92,10 @@ test.describe("Desktop fold", () => {
   test("+ item starts a second item from the desktop action row", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 ");
-    await page.getByRole("button", { name: "Add another item to the line" }).click();
+    // Starting a second item lives in the overflow beside the save control —
+    // the row itself is for the things done to a finished line.
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("button", { name: "+ item" }).click();
     // Not typeQuery: that helper presses ⌘K first, which would clear the line
     // the button just extended.
     await page
@@ -163,7 +172,7 @@ test.describe("Mass tolerance", () => {
 
 test.describe("Margin", () => {
   test("adds a sell price to the breakdown without touching cost", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await expect(page.getByText("Total cost", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Sell price/)).toHaveCount(0);
 

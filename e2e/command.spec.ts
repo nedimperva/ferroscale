@@ -537,7 +537,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   });
 
   test("Tweak opens the number pad; Done puts the bar back", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
     await expect(page.getByRole("button", { name: "ABC" })).toBeVisible();
@@ -546,11 +546,13 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   });
 
   test("New clears the line and brings the letter pad back", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "New", exact: true }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
     await expect(page.getByRole("button", { name: "q", exact: true })).toBeVisible();
-    await expect(page.getByText("WAITING")).toBeVisible();
+    // A cleared bar shows the way back in, not a hero reading "—" over a
+    // WAITING badge: there is nothing to be waiting for yet.
+    await expect(page.locator('[data-testid="profile-discovery"]')).toBeVisible();
   });
 
   test("a size-ready query opens on the number pad", async ({ page }) => {
@@ -562,7 +564,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   });
 
   test("a finished size and the next length stay two tokens", async ({ page }) => {
-    await page.goto("/en");
+    await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "New", exact: true }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
     for (const key of ["h", "e", "a"]) {

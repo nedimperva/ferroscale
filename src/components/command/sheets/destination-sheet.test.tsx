@@ -98,13 +98,13 @@ describe("DestinationSheet", () => {
   it("adds to a project in a single press", async () => {
     const { user, onAddToProject } = setup();
     await user.click(screen.getByText("Gate job"));
-    expect(onAddToProject).toHaveBeenCalledWith("p1");
+    expect(onAddToProject).toHaveBeenCalledWith("p1", 1);
   });
 
   it("appends to a library entry in a single press", async () => {
     const { user, onAppendTo } = setup();
     await user.click(screen.getByText("Railing bay"));
-    expect(onAppendTo).toHaveBeenCalledWith("e1");
+    expect(onAppendTo).toHaveBeenCalledWith("e1", 1);
   });
 
   it("filters projects and library together", async () => {
@@ -120,7 +120,7 @@ describe("DestinationSheet", () => {
     await user.click(search);
     // Starts on the first row; one step down is the second project.
     await user.keyboard("{ArrowDown}{Enter}");
-    expect(onAddToProject).toHaveBeenCalledWith("p1");
+    expect(onAddToProject).toHaveBeenCalledWith("p1", 1);
   });
 
   it("does not run off the end of a list the search has shortened", async () => {
@@ -130,7 +130,7 @@ describe("DestinationSheet", () => {
     await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
     await user.type(search, "ga");
     await user.keyboard("{Enter}");
-    expect(onAddToProject).toHaveBeenCalledWith("p1");
+    expect(onAddToProject).toHaveBeenCalledWith("p1", 1);
     expect(onAppendTo).not.toHaveBeenCalled();
   });
 
@@ -139,7 +139,7 @@ describe("DestinationSheet", () => {
     await user.click(screen.getByText("New project"));
     await user.type(screen.getByLabelText("New project"), "Balcony{Enter}");
     expect(onCreateProject).toHaveBeenCalledWith("Balcony");
-    expect(onAddToProject).toHaveBeenCalledWith("new");
+    expect(onAddToProject).toHaveBeenCalledWith("new", 1);
   });
 
   it("saves to the library under the line's own name without retyping it", async () => {
@@ -154,6 +154,60 @@ describe("DestinationSheet", () => {
     await user.click(screen.getByText("Save to library as one assembly"));
     await user.click(screen.getByRole("button", { name: "Create" }));
     expect(onSaveNew).toHaveBeenCalledWith("HEA 120", true);
+  });
+
+  it("offers no count for a live line, whose quantities are already on it", () => {
+    setup();
+    expect(screen.queryByLabelText("How many")).toBeNull();
+  });
+
+  it("takes several of a saved entry to one destination", async () => {
+    const entrySubject: DestinationSubject = {
+      kind: "entry",
+      label: "Railing bay",
+      meta: "",
+      glyph: "RB",
+      defaultName: "Railing bay",
+      scalable: true,
+    };
+    const { user, onAddToProject } = setup({ subject: entrySubject });
+    await user.click(screen.getByRole("button", { name: "×10" }));
+    await user.click(screen.getByText("Gate job"));
+    // Twelve railing bays is one press on the count and one on the job, not
+    // twelve trips through the picker.
+    expect(onAddToProject).toHaveBeenCalledWith("p1", 10);
+  });
+
+  it("carries the count into a library entry too", async () => {
+    const entrySubject: DestinationSubject = {
+      kind: "entry",
+      label: "Post plate",
+      meta: "",
+      glyph: "PP",
+      defaultName: "Post plate",
+      scalable: true,
+    };
+    const { user, onAppendTo } = setup({ subject: entrySubject });
+    await user.click(screen.getByRole("button", { name: "One more" }));
+    await user.click(screen.getByRole("button", { name: "One more" }));
+    await user.click(screen.getByText("Railing bay"));
+    expect(onAppendTo).toHaveBeenCalledWith("e1", 3);
+  });
+
+  it("will not go below one", async () => {
+    const entrySubject: DestinationSubject = {
+      kind: "entry",
+      label: "Post plate",
+      meta: "",
+      glyph: "PP",
+      defaultName: "Post plate",
+      scalable: true,
+    };
+    const { user, onAddToProject } = setup({ subject: entrySubject });
+    await user.click(screen.getByRole("button", { name: "One fewer" }));
+    await user.click(screen.getByRole("button", { name: "One fewer" }));
+    await user.click(screen.getByText("Gate job"));
+    expect(onAddToProject).toHaveBeenCalledWith("p1", 1);
   });
 
   it("offers no library-create row for an entry that is already in the library", () => {

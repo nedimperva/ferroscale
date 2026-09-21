@@ -14,7 +14,7 @@ import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProject
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
-import { cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
+import { calculateMetal, cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
   cmdSuggest,
   cmdApplyInsert,
@@ -185,7 +185,6 @@ export function CommandShell() {
     duplicateProject,
     addCalculation,
     addCalculations,
-    addAssemblyParts,
     insertAssembly,
     scaleSubAssembly,
     createProjectFromAssembly,
@@ -804,20 +803,6 @@ export function CommandShell() {
     [p, line, currentLineDrafts, saveCalculation, pushHistory, showActionToast, t],
   );
 
-  const appendLineTo = useCallback(
-    (entryId: string) => {
-      const drafts = currentLineDrafts();
-      const target = savedEntries.find((entry) => entry.id === entryId);
-      if (drafts.length === 0 || !target) return;
-      if (!appendPartsToSaved(entryId, drafts)) return;
-      haptic("commit");
-      for (const item of line.items) pushHistory(item.text.trim());
-      setDestination(null);
-      showToast(t("toast.partAdded", { name: target.name }));
-    },
-    [currentLineDrafts, savedEntries, appendPartsToSaved, line, pushHistory, showToast, t],
-  );
-
   const duplicateSavedEntry = useCallback(
     (entry: SavedEntry) => {
       duplicateSaved(entry.id);
@@ -967,19 +952,71 @@ export function CommandShell() {
   );
 
   /**
+   * Fold the picker's subject into a library entry.
+   *
+   * It used to always append whatever was on the command bar, even when the
+   * subject was a saved entry being sent somewhere — so "put this part into
+   * that assembly" quietly appended the line instead of the part.
+   */
+  const appendSubjectTo = useCallback(
+    (entryId: string, source: SavedEntry | null, count = 1) => {
+      const mult = Math.max(1, Math.floor(count) || 1);
+      const target = savedEntries.find((entry) => entry.id === entryId);
+      if (!target) return;
+      const base = source
+        ? repriceSavedEntry(source).map((part) => ({
+            name: part.name ?? part.result.profileLabel,
+            input: part.input,
+            result: part.result,
+          }))
+        : currentLineDrafts();
+      if (base.length === 0) return;
+      const drafts = Array.from({ length: mult }, () => base).flat();
+      if (!appendPartsToSaved(entryId, drafts)) return;
+      haptic("commit");
+      if (!source) for (const item of line.items) pushHistory(item.text.trim());
+      setDestination(null);
+      showToast(t("toast.partAdded", { name: target.name }));
+    },
+    [
+      currentLineDrafts,
+      repriceSavedEntry,
+      savedEntries,
+      appendPartsToSaved,
+      line,
+      pushHistory,
+      showToast,
+      t,
+    ],
+  );
+
+  /**
    * Commit whatever the picker was opened for. A saved entry with one part is
    * an ordinary item; an assembly goes in as a template entry so the project
    * keeps it as one named line with its parts behind it, the way it was saved.
    */
   const handlePickProject = useCallback(
-    (projectId: string, entry: SavedEntry | null) => {
+    (projectId: string, entry: SavedEntry | null, count = 1) => {
+      const mult = Math.max(1, Math.floor(count) || 1);
       let ok = false;
       if (entry) {
         const parts = repriceSavedEntry(entry);
         if (parts.length > 1 || isAssemblyEntry(entry)) {
-          ok = addAssemblyParts(projectId, entry.name, parts, 1);
+          // The same door the project's own "+ Assembly" uses: one item per
+          // cut, tagged with the assembly's name. This used to be a second
+          // shape — a single composite row holding the parts inside it —
+          // which meant the same assembly looked different depending on which
+          // way you came in, could not have its cuts edited, and arrived
+          // without the labour hours and hardware the assembly carries.
+          ok = insertAssembly(projectId, entry, mult, entry.name);
         } else if (parts.length === 1) {
-          ok = addCalculation(projectId, parts[0].input, parts[0].result);
+          // A single part scales by its own quantity: five of a cut that is
+          // already ×2 is ten pieces, which is what "five of these" means.
+          const input = { ...parts[0].input, quantity: (parts[0].input.quantity || 1) * mult };
+          const calc = calculateMetal(input);
+          ok = calc.ok
+            ? addCalculation(projectId, input, calc.result)
+            : addCalculation(projectId, parts[0].input, parts[0].result);
         }
       } else {
         // A `+`-joined line is several cuts, and every one of them belongs in
@@ -1013,7 +1050,7 @@ export function CommandShell() {
       repriceSavedEntry,
       addCalculation,
       addCalculations,
-      addAssemblyParts,
+      insertAssembly,
       projects,
       showToast,
       t,
@@ -1537,6 +1574,7 @@ export function CommandShell() {
             meta: `${entry.parts.length > 1 ? t("saveTo.partsCount", { count: entry.parts.length }) + " · " : ""}${t("saved.usedCount", { count: entry.useCount })}`,
             glyph: entry.normalizedProfile?.iconKey?.slice(0, 3).toUpperCase() ?? "PT",
             defaultName: entry.name,
+            scalable: true,
           }
         : {
             kind: "line",
@@ -1554,8 +1592,8 @@ export function CommandShell() {
           entries={savedEntries.filter((item) => item.id !== entry?.id)}
           projects={projects.filter((project) => !isArchivedProject(project))}
           onSaveNew={saveLineAsNew}
-          onAppendTo={appendLineTo}
-          onAddToProject={(projectId) => handlePickProject(projectId, entry)}
+          onAppendTo={(entryId, count) => appendSubjectTo(entryId, entry, count)}
+          onAddToProject={(projectId, count) => handlePickProject(projectId, entry, count)}
           onCreateProject={createProject}
           onClose={() => setDestination(null)}
         />

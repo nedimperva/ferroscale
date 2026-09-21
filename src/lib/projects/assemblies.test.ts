@@ -160,14 +160,10 @@ describe("Library assemblies inserted into a project", () => {
   });
 
   it("scales a composite calculation with templateParts preserving piece lengths and updating piece counts", () => {
-    const { result } = renderHook(() => useProjects());
-
-    let projectId = "";
-    act(() => {
-      const p = result.current.createProject("Composite Assembly Test");
-      projectId = p.id;
-    });
-
+    // A composite row — one project item holding its parts inside it — is the
+    // shape an older version wrote when an assembly was added from the
+    // library. Nothing creates one now, so this seeds it the way it would be
+    // read off disk: the point is that scaling still handles it.
     const part1Input: CalculationInput = {
       useCustomDensity: false,
       rounding: { weightDecimals: 3, priceDecimals: 2, dimensionDecimals: 2 },
@@ -189,7 +185,6 @@ describe("Library assemblies inserted into a project", () => {
       vatPercent: 0,
     };
     const part1Res = calculateMetal(part1Input);
-    expect(part1Res.ok).toBe(true);
 
     const part2Input: CalculationInput = {
       useCustomDensity: false,
@@ -211,34 +206,52 @@ describe("Library assemblies inserted into a project", () => {
       vatPercent: 0,
     };
     const part2Res = calculateMetal(part2Input);
+    expect(part1Res.ok).toBe(true);
     expect(part2Res.ok).toBe(true);
     if (!part1Res.ok || !part2Res.ok) throw new Error("Calculation failed");
 
-    act(() => {
-      const ok = result.current.addAssemblyParts(
-        projectId,
-        "Custom Truss",
-        [
-          {
-            id: "p1",
-            name: "Angle Chords",
-            input: part1Input,
-            result: part1Res.result!,
-            normalizedProfile: normalizeProfileSnapshot(part1Input),
-          },
-          {
-            id: "p2",
-            name: "Flat Web",
-            input: part2Input,
-            result: part2Res.result!,
-            normalizedProfile: normalizeProfileSnapshot(part2Input),
-          },
-        ],
-        1,
-      );
-      expect(ok).toBe(true);
-    });
+    const now = new Date().toISOString();
+    const projectId = "composite-project";
+    localStorage.setItem(
+      "ferroscale-projects-v2",
+      JSON.stringify([
+        {
+          id: projectId,
+          name: "Composite Assembly Test",
+          createdAt: now,
+          updatedAt: now,
+          calculations: [
+            {
+              id: "composite-1",
+              timestamp: now,
+              input: part1Input,
+              result: part1Res.result,
+              normalizedProfile: normalizeProfileSnapshot(part1Input),
+              templateName: "Custom Truss",
+              quantityMultiplier: 1,
+              templateParts: [
+                {
+                  id: "p1",
+                  name: "Angle Chords",
+                  input: part1Input,
+                  result: part1Res.result,
+                  normalizedProfile: normalizeProfileSnapshot(part1Input),
+                },
+                {
+                  id: "p2",
+                  name: "Flat Web",
+                  input: part2Input,
+                  result: part2Res.result,
+                  normalizedProfile: normalizeProfileSnapshot(part2Input),
+                },
+              ],
+            },
+          ],
+        },
+      ]),
+    );
 
+    const { result } = renderHook(() => useProjects());
     let project = result.current.projects.find((p) => p.id === projectId)!;
     expect(project.calculations.length).toBe(1);
     const trussCalc = project.calculations[0];

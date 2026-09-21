@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
-import { fingerprint, templateFingerprint } from "@/lib/calculator/fingerprint";
+import { fingerprint } from "@/lib/calculator/fingerprint";
 import { calculateMetal } from "@/lib/calculator/engine";
 import {
   isActiveSyncEntity,
@@ -626,7 +626,6 @@ export interface UseProjectsReturn {
     projectId: string,
     entries: Array<{ input: CalculationInput; result: CalculationResult }>,
   ) => void;
-  addAssemblyParts: (projectId: string, templateName: string, parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>, multiplier: number) => boolean;
   /**
    * Drop a library assembly into a project: its cuts become items tagged with
    * the assembly's name, and its labour and hardware are added on top. The
@@ -1016,96 +1015,6 @@ export function useProjects(): UseProjectsReturn {
     [setProjects],
   );
 
-  const addAssemblyParts = useCallback(
-    (
-      projectId: string,
-      tplName: string,
-      parts: Array<{ id: string; name: string; input: CalculationInput; result: CalculationResult; normalizedProfile: NormalizedProfileSnapshot }>,
-      multiplier: number,
-    ): boolean => {
-      if (parts.length === 0) return false;
-
-      // Recalculate each part with adjusted quantity
-      const recalculatedParts: ProjectTemplatePart[] = [];
-      for (const part of parts) {
-        const adjustedInput = {
-          ...part.input,
-          quantity: Math.max(1, Math.floor((part.input.quantity || 1) * multiplier)),
-        };
-        const calc = calculateMetal(adjustedInput);
-        if (!calc.ok) continue;
-        recalculatedParts.push({
-          id: part.id,
-          name: part.name,
-          input: adjustedInput,
-          result: calc.result,
-          normalizedProfile: normalizeProfileSnapshot(adjustedInput),
-        });
-      }
-      if (recalculatedParts.length === 0) return false;
-
-      // Aggregate totals from all parts
-      let totalWeightKg = 0;
-      let totalCost = 0;
-      let totalSurface = 0;
-      for (const p of recalculatedParts) {
-        totalWeightKg += p.result.totalWeightKg;
-        totalCost += p.result.grandTotalAmount;
-        if (p.result.surfaceAreaM2 != null) totalSurface += p.result.surfaceAreaM2;
-      }
-      totalWeightKg = Math.round(totalWeightKg * 100) / 100;
-      totalCost = Math.round(totalCost * 100) / 100;
-      totalSurface = Math.round(totalSurface * 100) / 100;
-
-      // Use first part as representative for the top-level entry
-      const representative = recalculatedParts[0];
-      const syntheticResult: CalculationResult = {
-        ...representative.result,
-        totalWeightKg,
-        grandTotalAmount: totalCost,
-        surfaceAreaM2: totalSurface > 0 ? totalSurface : null,
-        // Keep unit values from first part as approximation
-        unitWeightKg: representative.result.unitWeightKg,
-        subtotalAmount: totalCost,
-        wasteAmount: 0,
-        vatAmount: 0,
-      };
-
-      const fp = templateFingerprint(tplName, totalWeightKg, totalCost);
-
-      const target = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
-      if (!target) return false;
-      if (target.calculations.length >= MAX_CALCS_PER_PROJECT) return false;
-      const duplicate = target.calculations.some((c) =>
-        c.templateName
-          ? templateFingerprint(c.templateName, c.result.totalWeightKg, c.result.grandTotalAmount) === fp
-          : false,
-      );
-      if (duplicate) return false;
-
-      setProjects((prev) =>
-        prev.map((p) => {
-          if (p.id !== projectId || p.deletedAt) return p;
-          const entry: ProjectCalculation = {
-            id: crypto.randomUUID(),
-            timestamp: new Date().toISOString(),
-            input: representative.input,
-            result: syntheticResult,
-            normalizedProfile: representative.normalizedProfile,
-            templateName: tplName,
-            templateParts: recalculatedParts,
-            quantityMultiplier: multiplier,
-          };
-          return withActivity({ ...p, calculations: [...p.calculations, entry] }, "itemAdded", {
-            detail: tplName,
-          });
-        }),
-      );
-      return true;
-    },
-    [setProjects],
-  );
-
   const insertAssembly = useCallback(
     (
       projectId: string,
@@ -1442,7 +1351,6 @@ export function useProjects(): UseProjectsReturn {
     duplicateProject,
     addCalculation,
     addCalculations,
-    addAssemblyParts,
     insertAssembly,
     scaleSubAssembly,
     createProjectFromAssembly,

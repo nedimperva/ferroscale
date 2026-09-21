@@ -14,6 +14,8 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
+- Taking an assembly from the library to a project asks how many. It always added exactly one, while the project's own "+ Assembly" offered a count — the same act, two answers depending on which door you used
+- Both doors now land the same way: one project item per cut, tagged with the assembly's name. From the library it used to arrive as a single rolled-up row whose cuts could not be edited
 - The five standards that shipped with the app are gone. They were a template collection's built-ins, and keeping them meant a library that was never empty, no empty state to teach the Save button with, a "Standards" filter, a restore-all affordance and counts that had to be split in two to stay honest. The library holds what you put in it
 - "Template" is not a word the app uses any more. There is one library, and the thing you take from it into a project is an assembly — the picker, the save dialog and every label say so
 - The assembly picker knows which of its two jobs it is doing: "Insert an assembly" into the project you are in, or "Start from an assembly" when it is making one. In the second the name field names the project, which it used to collect and then ignore
@@ -36,6 +38,9 @@ three and four levels down came up to where they are named.
 
 ### Fixed
 
+- An assembly taken from the library to a project arrived without the labour hours, hardware costs and trade it carries. The project's own picker had always brought them
+- Sending a saved part into a saved assembly appended whatever happened to be on the command bar instead of the part
+- The end-to-end suite is green again. Fourteen tests — every accessibility scan among them — waited for a result on a screen that stopped seeding one in 3.26, so axe had not actually run on any surface since
 - A multi-cut line saved from the picker was named after whichever cut the caret was on — "hea140 3m + plt200x160x12 x2" came out as "Plate 200×160×12". It is named after the cut that leads it now, plus how many more
 - The two ways into the assembly picker are hidden while the library has no assembly to offer, instead of opening an empty dialog
 - The session row let its total draw over the button beside it on a phone, instead of giving way
