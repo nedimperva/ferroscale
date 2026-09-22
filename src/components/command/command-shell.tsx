@@ -1458,8 +1458,13 @@ export function CommandShell() {
   if (activeQuery.trim() === "" && keypadOverride !== null) {
     setKeypadOverride(null);
   }
-  const keypadStage = cmdDetectStage(activeQuery, activeItemParse);
-  const keypadMode = commandKeypadLayout(activeQuery, activeItemParse, keypadOverride);
+  const activeSegment = querySegments[expandedIndex];
+  const itemEndsSpace = activeSegment
+    ? expandedIndex < querySegments.length - 1 || /\s$/.test(activeSegment.text)
+    : true;
+  const activeKeypadQuery = itemEndsSpace ? `${activeQuery} ` : activeQuery;
+  const keypadStage = cmdDetectStage(activeKeypadQuery, activeItemParse);
+  const keypadMode = commandKeypadLayout(activeKeypadQuery, activeItemParse, keypadOverride);
   const keypadShowNumbers =
     keypadMode === "letters" &&
     (keypadOverride === "letters" ||
