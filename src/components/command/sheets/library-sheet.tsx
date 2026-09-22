@@ -309,7 +309,7 @@ function LibraryTabPill({
       // every language.
       title={label}
       aria-label={active ? undefined : `${label}${count > 0 ? ` (${count})` : ""}`}
-      className={`h-9 rounded-lg flex items-center justify-center gap-1.5 text-[10.5px] font-bold uppercase tracking-[0.5px] transition-[flex] ${
+      className={`h-9 rounded-lg flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.5px] transition-[flex] ${
         active
           ? "flex-1 px-3 bg-[var(--surface)] text-foreground border border-[var(--border-strong)]"
           : "flex-shrink-0 px-3 bg-[var(--surface-raised)] text-muted border border-border-faint"
@@ -369,7 +369,7 @@ export function LibraryRow({
           {glyph}
         </div>
         <div className="flex-1 min-w-0">
-          <div className={`${indent ? "text-[13px]" : "text-[14.5px]"} font-bold text-foreground truncate`}>
+          <div className={`${indent ? "text-[13px]" : "text-[15px]"} font-bold text-foreground truncate`}>
             {title}
           </div>
           <div className="font-mono text-[11px] text-muted mt-0.5 truncate">
@@ -459,7 +459,7 @@ function CompareTabContent({
               trailing={
                 delta && (
                   <span
-                    className={`font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded ${
+                    className={`font-mono text-[11px] font-bold px-1.5 py-0.5 rounded ${
                       isMax
                         ? "bg-[var(--accent-surface)] text-[var(--accent-text)]"
                         : "bg-[var(--blue-surface)] text-[var(--blue-text)]"
@@ -621,7 +621,7 @@ function SessionTabContent({
             className="flex-1 min-w-0 text-left bg-transparent border-0 p-0"
           >
             <div className="font-mono text-[13px] font-bold truncate">{row.query}</div>
-            <div className="font-mono text-[11.5px] text-muted mt-0.5">
+            <div className="font-mono text-[12px] text-muted mt-0.5">
               {row.parsed.totalKg != null ? `${fsWeight(row.parsed.totalKg)} ${fsWeightUnit()}` : "—"}
               {row.parsed.totalAmount != null ? ` · ${sym}${fsMoney(row.parsed.totalAmount)}` : ""}
             </div>
@@ -656,7 +656,7 @@ function SessionTabContent({
         <button
           type="button"
           onClick={onClear}
-          className="rounded-button text-[12.5px] font-bold flex-shrink-0"
+          className="rounded-button text-[13px] font-bold flex-shrink-0"
           style={{
             height: 40,
             padding: "0 14px",
@@ -670,7 +670,7 @@ function SessionTabContent({
         <button
           type="button"
           onClick={onSaveAsProject}
-          className="rounded-button text-[12.5px] font-bold flex-1"
+          className="rounded-button text-[13px] font-bold flex-1"
           style={{
             height: 40,
             border: "1px solid var(--accent-border)",

@@ -1,5 +1,7 @@
 import {
   CURRENCY_SYMBOLS,
+  fsKgm,
+  fsLength,
   fsMoney,
   fsWeight,
   fsWeightUnit,
@@ -26,6 +28,9 @@ export type BreakdownRowId =
   | "totalWeight"
   | "massBand"
   | "density"
+  | "sectionArea"
+  | "formula"
+  | "reference"
   | "rate"
   | "perPiecePrice"
   | "subtotal"
@@ -75,11 +80,11 @@ export function buildBreakdownRows(
   const massRateRow: BreakdownRow =
     isSheet && massPerAreaVal != null
       ? { id: "massPerArea", label: t("result.massPerArea"), value: `${massPerAreaVal.toFixed(2)} kg/m²` }
-      : { id: "massPerMetre", label: t("result.massPerMetre"), value: `${p.kgm.toFixed(2)} kg/m` };
+      : { id: "massPerMetre", label: t("result.massPerMetre"), value: `${fsKgm(p.kgm)} kg/m` };
 
   const geometry: BreakdownRow[] = [
     massRateRow,
-    { id: "length", label: t("result.length"), value: `${p.lengthM} m` },
+    { id: "length", label: t("result.length"), value: `${fsLength(p.lengthM ?? 0)} m` },
     { id: "pieces", label: t("result.pieces"), value: `× ${p.realQty}` },
     {
       id: "perPieceWeight",
@@ -92,6 +97,21 @@ export function buildBreakdownRows(
       value: `${fsWeight(r.totalWeightKg)} ${fsWeightUnit()}`,
     },
     { id: "density", label: t("result.density"), value: `${r.densityKgPerM3} kg/m³` },
+    // The engine has always returned the area, the formula and the standard it
+    // read them from; the panel never showed them, so a result that claimed to
+    // be traceable could not actually be traced from the screen.
+    {
+      id: "sectionArea",
+      label: t("result.sectionArea"),
+      value: `${(r.areaMm2 / 100).toLocaleString("en-US", { maximumFractionDigits: 2 })} cm²`,
+    },
+    { id: "formula", label: t("result.formula"), value: r.formulaLabel },
+    {
+      id: "reference",
+      label: t("result.reference"),
+      value: r.referenceLabels.filter((label) => !label.startsWith("Dataset ")).join(" · ")
+        + ` · ${t("result.dataset", { version: r.datasetVersion })}`,
+    },
   ];
 
   // Theoretical mass is what the formula gives; the band is what may arrive.

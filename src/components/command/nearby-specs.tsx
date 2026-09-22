@@ -68,7 +68,7 @@ export function NearbySpecs({
 
   return (
     <div className="flex flex-col gap-1.5" style={{ paddingTop: 10 }}>
-      <h2 className="fs-track-label text-[9.5px] font-bold text-muted uppercase">
+      <h2 className="fs-track-label text-[10px] font-bold text-muted uppercase">
         {t("nearby.title")}
       </h2>
       <ul className="flex flex-col gap-1" aria-label={t("nearby.title")}>

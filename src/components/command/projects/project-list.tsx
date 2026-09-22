@@ -113,7 +113,7 @@ function ClientChip({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="flex items-center gap-1.5 rounded-none font-bold text-[11.5px] cursor-pointer whitespace-nowrap"
+      className="flex items-center gap-1.5 rounded-none font-bold text-[12px] cursor-pointer whitespace-nowrap"
       style={{
         padding: "5px 11px",
         border: `1px solid ${active ? "var(--accent-border)" : "var(--border-faint)"}`,
@@ -280,7 +280,7 @@ function ProjectRow({
         {title}
       </div>
       <div role="cell" style={{ width: 140 }} className="flex flex-col min-w-0">
-        <span className="text-[12.5px] text-foreground truncate">{project.client || "—"}</span>
+        <span className="text-[13px] text-foreground truncate">{project.client || "—"}</span>
         {urgency.status === "overdue" && (
           <span className="text-[10px] font-bold text-red-500">
             🔴 {t("projects.urgency.overdue", { days: Math.abs(urgency.daysDiff) })}
@@ -297,16 +297,16 @@ function ProjectRow({
           </span>
         )}
         {urgency.status === "normal" && (
-          <span className="text-[10.5px] font-mono text-muted">{project.dueDate}</span>
+          <span className="text-[11px] font-mono text-muted">{project.dueDate}</span>
         )}
       </div>
-      <div role="cell" style={{ width: 44 }} className="text-right font-mono text-[12.5px] text-foreground">
+      <div role="cell" style={{ width: 44 }} className="text-right font-mono text-[13px] text-foreground">
         {summary.isEmpty ? "—" : summary.itemCount}
       </div>
-      <div role="cell" style={{ width: 104 }} className="text-right font-mono text-[12.5px] text-foreground">
+      <div role="cell" style={{ width: 104 }} className="text-right font-mono text-[13px] text-foreground">
         {weightText}
       </div>
-      <div role="cell" style={{ width: 116 }} className="text-right font-mono text-[12.5px] font-bold text-foreground">
+      <div role="cell" style={{ width: 116 }} className="text-right font-mono text-[13px] font-bold text-foreground">
         {valueText}
       </div>
       <div role="cell" style={{ width: 30 }} className="flex justify-end">
@@ -628,7 +628,7 @@ export function ProjectList({
         value={sort}
         onChange={(e) => setSort(e.target.value as ProjectSort)}
         aria-label={t("projects.sortLabel")}
-        className="bg-transparent outline-none text-[12.5px] font-semibold text-foreground cursor-pointer"
+        className="bg-transparent outline-none text-[13px] font-semibold text-foreground cursor-pointer"
       >
         {PROJECT_SORTS.map((value) => (
           <option key={value} value={value}>

@@ -46,12 +46,10 @@ export const QA_TOLERANCE_PCT = 0.5;
  *   T 30x30x4 1.12% - T 40x40x5 0.55%
  */
 export const QA_UNVERIFIED_SIZES: string[] = [
-  "beam_ipn_en/ipn120",
-  "beam_ipn_en/ipn320",
-  "beam_hem_en/hem140",
-  "beam_hem_en/hem260",
-  "tee_en/t30x4",
-  "tee_en/t40x5",
+  // 3.28.0: the seven disagreements were settled against EN 10024 / EN 10365 /
+  // EN 10055 tables and the stored areas corrected (IPN 120 → 14.2 cm²,
+  // IPN 320 → 77.7 cm², HEM 140 → 80.56 cm², HEM 260 → 219.6 cm²,
+  // T 30×4 → 2.26 cm², T 40×5 → 3.77 cm²; IPN 80 was already right at 7.58 cm²).
 ];
 
 export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
@@ -91,6 +89,7 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   /* ---- IPN (EN 10024) ---- */
   { id: "ipn80", label: "IPN 80", profileId: "beam_ipn_en", selectedSizeId: "ipn80", expectedKgPerM: 5.95, source: "EN 10024 catalog" },
   { id: "ipn100", label: "IPN 100", profileId: "beam_ipn_en", selectedSizeId: "ipn100", expectedKgPerM: 8.34, source: "EN 10024 catalog" },
+  { id: "ipn120", label: "IPN 120", profileId: "beam_ipn_en", selectedSizeId: "ipn120", expectedKgPerM: 11.1, source: "EN 10024 catalog" },
   { id: "ipn140", label: "IPN 140", profileId: "beam_ipn_en", selectedSizeId: "ipn140", expectedKgPerM: 14.3, source: "EN 10024 catalog" },
   { id: "ipn160", label: "IPN 160", profileId: "beam_ipn_en", selectedSizeId: "ipn160", expectedKgPerM: 17.9, source: "EN 10024 catalog" },
   { id: "ipn180", label: "IPN 180", profileId: "beam_ipn_en", selectedSizeId: "ipn180", expectedKgPerM: 21.9, source: "EN 10024 catalog" },
@@ -100,6 +99,7 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   { id: "ipn260", label: "IPN 260", profileId: "beam_ipn_en", selectedSizeId: "ipn260", expectedKgPerM: 41.9, source: "EN 10024 catalog" },
   { id: "ipn280", label: "IPN 280", profileId: "beam_ipn_en", selectedSizeId: "ipn280", expectedKgPerM: 47.9, source: "EN 10024 catalog" },
   { id: "ipn300", label: "IPN 300", profileId: "beam_ipn_en", selectedSizeId: "ipn300", expectedKgPerM: 54.2, source: "EN 10024 catalog" },
+  { id: "ipn320", label: "IPN 320", profileId: "beam_ipn_en", selectedSizeId: "ipn320", expectedKgPerM: 61, source: "EN 10024 catalog" },
   { id: "ipn340", label: "IPN 340", profileId: "beam_ipn_en", selectedSizeId: "ipn340", expectedKgPerM: 68, source: "EN 10024 catalog" },
   { id: "ipn360", label: "IPN 360", profileId: "beam_ipn_en", selectedSizeId: "ipn360", expectedKgPerM: 76.1, source: "EN 10024 catalog" },
   { id: "ipn380", label: "IPN 380", profileId: "beam_ipn_en", selectedSizeId: "ipn380", expectedKgPerM: 84, source: "EN 10024 catalog" },
@@ -160,11 +160,13 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   /* ---- HEM (EN 10365) ---- */
   { id: "hem100", label: "HEM 100", profileId: "beam_hem_en", selectedSizeId: "hem100", expectedKgPerM: 41.8, source: "EN 10365 catalog" },
   { id: "hem120", label: "HEM 120", profileId: "beam_hem_en", selectedSizeId: "hem120", expectedKgPerM: 52.1, source: "EN 10365 catalog" },
+  { id: "hem140", label: "HEM 140", profileId: "beam_hem_en", selectedSizeId: "hem140", expectedKgPerM: 63.2, source: "EN 10365 catalog" },
   { id: "hem160", label: "HEM 160", profileId: "beam_hem_en", selectedSizeId: "hem160", expectedKgPerM: 76.2, source: "EN 10365 catalog" },
   { id: "hem180", label: "HEM 180", profileId: "beam_hem_en", selectedSizeId: "hem180", expectedKgPerM: 88.9, source: "EN 10365 catalog" },
   { id: "hem200", label: "HEM 200", profileId: "beam_hem_en", selectedSizeId: "hem200", expectedKgPerM: 103, source: "EN 10365 catalog" },
   { id: "hem220", label: "HEM 220", profileId: "beam_hem_en", selectedSizeId: "hem220", expectedKgPerM: 117, source: "EN 10365 catalog" },
   { id: "hem240", label: "HEM 240", profileId: "beam_hem_en", selectedSizeId: "hem240", expectedKgPerM: 157, source: "EN 10365 catalog" },
+  { id: "hem260", label: "HEM 260", profileId: "beam_hem_en", selectedSizeId: "hem260", expectedKgPerM: 172, source: "EN 10365 catalog" },
   { id: "hem280", label: "HEM 280", profileId: "beam_hem_en", selectedSizeId: "hem280", expectedKgPerM: 189, source: "EN 10365 catalog" },
   { id: "hem300", label: "HEM 300", profileId: "beam_hem_en", selectedSizeId: "hem300", expectedKgPerM: 238, source: "EN 10365 catalog" },
 
@@ -203,7 +205,9 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   { id: "upe400", label: "UPE 400", profileId: "channel_upe_en", selectedSizeId: "upe400", expectedKgPerM: 72.2, source: "EN 10279 catalog" },
 
   /* ---- Tee (EN 10055) ---- */
+  { id: "t30x4", label: "T 30×30×4", profileId: "tee_en", selectedSizeId: "t30x4", expectedKgPerM: 1.77, source: "EN 10055 catalog" },
   { id: "t35x4.5", label: "T 35×35×4.5", profileId: "tee_en", selectedSizeId: "t35x4.5", expectedKgPerM: 2.34, source: "EN 10055 catalog" },
+  { id: "t40x5", label: "T 40×40×5", profileId: "tee_en", selectedSizeId: "t40x5", expectedKgPerM: 2.96, source: "EN 10055 catalog" },
   { id: "t45x5.5", label: "T 45×45×5.5", profileId: "tee_en", selectedSizeId: "t45x5.5", expectedKgPerM: 3.66, source: "EN 10055 catalog" },
   { id: "t50x6", label: "T 50×50×6", profileId: "tee_en", selectedSizeId: "t50x6", expectedKgPerM: 4.44, source: "EN 10055 catalog" },
   { id: "t60x7", label: "T 60×60×7", profileId: "tee_en", selectedSizeId: "t60x7", expectedKgPerM: 6.23, source: "EN 10055 catalog" },
@@ -222,8 +226,11 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   { id: "flat_bar", label: "Flat 120×10", profileId: "flat_bar", manualDimensionsMm: { width: 120, thickness: 10 }, expectedKgPerM: 9.42, source: "120·10 × ρ" },
   { id: "angle", label: "Angle 80×80×8", profileId: "angle", manualDimensionsMm: { legA: 80, legB: 80, thickness: 8 }, expectedKgPerM: 9.5456, source: "(80+80−8)·8 × ρ" },
   { id: "pipe", label: "Pipe 88.9×5", profileId: "pipe", manualDimensionsMm: { outerDiameter: 88.9, wallThickness: 5 }, expectedKgPerM: 10.3455, source: "π/4·(88.9²−78.9²) × ρ" },
-  { id: "rect_tube", label: "RHS 120×80×4", profileId: "rectangular_tube", manualDimensionsMm: { width: 120, height: 80, wallThickness: 4 }, expectedKgPerM: 12.0576, source: "120·80−112·72 × ρ" },
-  { id: "shs", label: "SHS 100×5", profileId: "square_hollow", manualDimensionsMm: { side: 100, wallThickness: 5 }, expectedKgPerM: 14.915, source: "100²−90² × ρ" },
+  // Hollow sections: EN 10219-2 catalog masses (cold-formed corner radii).
+  { id: "rect_tube", label: "RHS 120×80×4", profileId: "rectangular_tube", manualDimensionsMm: { width: 120, height: 80, wallThickness: 4 }, expectedKgPerM: 11.7, source: "EN 10219-2 catalog" },
+  { id: "rect_tube_100x50x4", label: "RHS 100×50×4", profileId: "rectangular_tube", manualDimensionsMm: { width: 100, height: 50, wallThickness: 4 }, expectedKgPerM: 8.59, source: "EN 10219-2 catalog" },
+  { id: "shs", label: "SHS 100×5", profileId: "square_hollow", manualDimensionsMm: { side: 100, wallThickness: 5 }, expectedKgPerM: 14.4, source: "EN 10219-2 catalog" },
+  { id: "shs_40x3", label: "SHS 40×3", profileId: "square_hollow", manualDimensionsMm: { side: 40, wallThickness: 3 }, expectedKgPerM: 3.30, source: "EN 10219-2 catalog" },
   { id: "sheet", label: "Sheet 1250×2.5", profileId: "sheet", manualDimensionsMm: { width: 1250, thickness: 2.5 }, expectedKgPerM: 24.5312, source: "1250·2.5 × ρ" },
   { id: "plate", label: "Plate 1500×16", profileId: "plate", manualDimensionsMm: { width: 1500, thickness: 16 }, expectedKgPerM: 188.4, source: "1500·16 × ρ" },
   { id: "chequered", label: "Chequered 1500×5+2", profileId: "chequered_plate", manualDimensionsMm: { width: 1500, thickness: 5, patternHeight: 2 }, expectedKgPerM: 70.65, source: "1500·(5+2·0.5) × ρ" },

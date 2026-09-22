@@ -61,7 +61,7 @@ function GroupRailItem({
     >
       <span className="flex-1 min-w-0 truncate">{label}</span>
       {count != null && (
-        <span className="font-mono text-[10.5px] text-muted">{count}</span>
+        <span className="font-mono text-[11px] text-muted">{count}</span>
       )}
     </button>
   );
@@ -74,9 +74,9 @@ function SettingsRow({ field }: { field: SettingsField }) {
       style={{ padding: "14px 0", borderBottom: "1px solid var(--border-faint)" }}
     >
       <div className="min-w-0" style={{ flex: "1 1 180px" }}>
-        <div className="text-[13.5px] text-foreground">{field.label}</div>
+        <div className="text-[14px] text-foreground">{field.label}</div>
         {field.description && (
-          <div className="text-[12.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+          <div className="text-[13px] text-muted mt-0.5 leading-snug">{field.description}</div>
         )}
       </div>
       <div className="flex-shrink-0 ml-auto">
@@ -90,7 +90,7 @@ function GroupHeading({ label, hint }: { label: string; hint?: string }) {
   return (
     <div className="flex items-baseline gap-2.5 flex-wrap mb-2.5 px-1">
       <span className="fs-title text-[20px] text-foreground">{label}</span>
-      {hint && <span className="text-[12.5px] text-foreground-secondary">{hint}</span>}
+      {hint && <span className="text-[13px] text-foreground-secondary">{hint}</span>}
     </div>
   );
 }
@@ -324,7 +324,7 @@ export function DeskSettingsView({
                   <FieldCard fields={fieldsIn(group)} />
                 )}
                 {group === "pricing" && (
-                  <p className="text-[11.5px] text-muted mt-3 px-1">
+                  <p className="text-[12px] text-muted mt-3 px-1">
                     {t("settings.inlinePriceHint", {
                       example: `@${shared.unitPrice}/${shared.priceUnit}`,
                     })}

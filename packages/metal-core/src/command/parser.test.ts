@@ -976,3 +976,46 @@ describe("availability rides along with the result", () => {
     expect(cmdParse("hea999 6m 316 ", settings).availability).toBeNull();
   });
 });
+
+describe("short bare length advisory (default unit mm)", () => {
+  const mm = mkSettings({ defaultLengthUnit: "mm" });
+
+  it("computes `hea120 6` as 6 mm but says so and offers 6m", () => {
+    const p = cmdParse("hea120 6", mm);
+    expect(p.valid).toBe(true);
+    expect(p.lengthM).toBeCloseTo(0.006, 6);
+    const advisory = p.issues.find((i) => i.code === "shortLength");
+    expect(advisory).toBeDefined();
+    expect(advisory?.token).toBe("6");
+    expect(advisory?.suggestion).toBe("6m");
+  });
+
+  it("stays quiet for explicit units, plausible bare lengths, and panels", () => {
+    expect(cmdParse("hea120 6mm", mm).issues).toEqual([]);
+    expect(cmdParse("hea120 6000", mm).issues).toEqual([]);
+    expect(cmdParse("hea120 250", mm).issues).toEqual([]);
+    expect(cmdParse("plt1500x3000x3", mm).issues).toEqual([]);
+    // With metres as the default there is nothing to warn about.
+    expect(cmdParse("hea120 6", mkSettings()).issues).toEqual([]);
+  });
+});
+
+describe("hollow sections follow EN 10219-2 corner geometry", () => {
+  it("SHS 40×40×3 and RHS 100×50×4 land on the catalog masses", () => {
+    const shs = cmdParse("shs40x40x3 1m", mkSettings());
+    expect(shs.kgm).toBeCloseTo(3.3, 1);
+    const rhs = cmdParse("rhs100x50x4 1m", mkSettings());
+    expect(rhs.kgm).toBeCloseTo(8.59, 1);
+  });
+});
+
+describe("fractional quantity", () => {
+  it("is reported, computes nothing for it, and gets no tee suggestion", () => {
+    const p = cmdParse("hea120 6m x2.5 ", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.realQty).toBe(1);
+    const issue = p.issues.find((i) => i.token === "x2.5");
+    expect(issue?.code).toBe("unknownToken");
+    expect(issue?.suggestion).toBeUndefined();
+  });
+});

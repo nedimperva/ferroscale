@@ -135,7 +135,7 @@ export function ProfileDiscoveryTiles({
                   <CommandGlyph fam={category.fam} size={compact ? 18 : 20} />
                 </span>
                 <span
-                  className="font-mono text-[9px] font-bold text-muted-faint group-hover:text-muted uppercase"
+                  className="font-mono text-[10px] font-bold text-muted-faint group-hover:text-muted uppercase"
                   style={{ letterSpacing: 0.5 }}
                 >
                   {category.defaultQuery.trim()}
@@ -163,7 +163,7 @@ export function ProfileDiscoveryTiles({
                     }}
                     title={label}
                     aria-label={`${opt.alias.toUpperCase()} · ${label}`}
-                    className="inline-flex items-center px-1.5 py-0.5 font-mono text-[10.5px] font-bold bg-[var(--surface-inset)] hover:bg-[var(--action)] text-muted hover:text-[var(--action-contrast)] border border-[var(--border-faint)] hover:border-[var(--action)] transition-colors cursor-pointer rounded-none uppercase"
+                    className="inline-flex items-center justify-center min-w-[44px] min-h-[32px] px-1.5 py-0.5 font-mono text-[11px] font-bold bg-[var(--surface-inset)] hover:bg-[var(--action)] text-foreground-secondary hover:text-[var(--action-contrast)] border border-[var(--border-faint)] hover:border-[var(--action)] transition-colors cursor-pointer rounded-none uppercase"
                   >
                     {opt.alias}
                   </button>

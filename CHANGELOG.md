@@ -5,6 +5,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.28.0] - 2026-09-22
+
+An audit release. The engine was right where it had a table to read from and
+high where it did not; the screen hid the one thing that would have shown the
+difference. Every item below is a finding from the September audit.
+
+### Fixed
+
+- The page no longer reloads itself half a second after the first visit — and mid-session after every deploy. The service worker's first install fired `controllerchange`, and the handler reloaded unconditionally; it was meant only for a user-requested update, and now is
+- The PWA banners (offline, update, ready) stack above the app instead of beside it. As flex-row siblings they squeezed the phone shell to 242 of 390 px for as long as they showed — permanently while offline. The five-second "ready for offline" notice floats over the top edge so nothing shifts under a pressed finger
+- Hollow sections (SHS/RHS) follow EN 10219-2 corner geometry. The sharp-corner box formula overstated the catalog mass by 4–6% while citing EN 10219 as its reference — SHS 40×40×3 read 3.49 kg/m against a catalog 3.30, RHS 100×50×4 read 8.92 against 8.59. The formula label and the FAQ say what is subtracted and why
+- Typing a decimal comma on the desktop bar no longer splits the line: `hea120 6,5m` became `hea120 6, 5m` and an "Assembly · 2 parts" that never computed, because the comma was read as a cut-list boundary at the keystroke before its next digit arrived. Pasted and shared lines had always worked
+- Six standard sizes the QA benchmark had held back as unsettled are corrected against EN tables: IPN 120 (14.2 cm²), IPN 320 (77.7 cm²), HEM 140 (80.56 cm²), HEM 260 (219.6 cm²), T 30×4 (2.26 cm²), T 40×5 (3.77 cm²). All 138 EN sizes are now in the ≤0.5% gate; DATASET_VERSION 2026.09.3
+- A token the parser dropped is named beside the result instead of only tinting its chip amber. `hea120 6m x2.5` priced one piece and said nothing about the `x2.5`; it now says "Didn't understand x2.5" under the figure, and the chip's tooltip carries the same note
+- Section drawings no longer print solved proportions as dimensions. HEA 120 was labelled tf 8.4 / tw 5.6 / R8.8 against a catalog 8 / 5 / 12, and HEM 200 was drawn 200×200 when it is 220×206. HEA heights below 200 and every HEM outline now follow EN 10365; web, flange and fillet still shape the sketch but are unlabelled until the table values ship. Tees keep theirs (EN 10055: tf = tw = t, r₁ = t)
+- A converted length no longer leaks floating point: `hea120 6ft` printed "1.8288000000000002 m". Lengths show at most three decimals, and kg/m rounds the same way the headline does — 14.915 kg/m read 14.92 kg in the hero and 14.91 kg/m under it
+- Mobile discovery tiles: the profile codes measured 4.4:1 contrast on 18 chips (needs 4.5), one code sat at 9 px, and the Angle chip was 23 px wide. Codes are the secondary ink now, at 11 px, on chips at least 44×32
+- The keypad's symbol keys have spoken names — ×, ., ↵ and the two unit keys read as "multiplication sign", "return symbol" and "mm black down-pointing triangle", and the hold-for-more menus were invisible to assistive tech. The suggestion strip is one focusable, labelled stop so a keyboard can scroll it
+
+### Changed
+
+- Money that comes from the seeded €1.20/kg says so in weight mode too. The cell reads "EST. COST @ €1.20/kg (DEFAULT)" in the secondary ink, the equation line carries "(default rate)", and Copy summary appends it to the rate row — the qualifier used to appear in price mode only, so the default surface showed "TOTAL COST € 286.44" unasked
+- The breakdown shows what makes a result traceable: section area, the formula, the standard it was read from and the dataset version — the engine had always returned them — plus a "How is this calculated?" link to the FAQ
+- A bare number under 100 mm on a long product says how it was read and offers the metre form: `hea120 6` still computes 6 mm (millimetres stay the default unit), but the line now reads "\"6\" read as 6 mm · Did you mean 6m?"
+- The workspace's empty state drops the four dashed cells and two disabled buttons that stood in for an answer, as the phone already did; the profile tiles take the room
+- One whole-pixel type scale. Twenty-one arbitrary sizes including 9, 9.5, 10.5, 11.5, 12.5, 13.5 and 14.5 px collapse to 10–17 px; nothing renders under 10 px
+- Letter-pad keys are 40 px tall (were 36); the number pad stays at 44
+- The home page title names what the app is ("Metal Weight & Price Calculator (EN profiles)") instead of just the brand; /qa is in the sitemap; Saved, Projects and Settings — client-only shells — are noindex; the site sends nosniff, referrer, frame and permissions headers
+
+---
+
 ## [3.27.0] - 2026-09-19
 
 A flow release. The app could do the work; deciding where each answer went

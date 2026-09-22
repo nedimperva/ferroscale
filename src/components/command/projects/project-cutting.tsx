@@ -59,7 +59,7 @@ function StatTile({
         background: "var(--surface)",
       }}
     >
-      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase truncate">
+      <div className="fs-track-label text-[10px] font-bold text-muted uppercase truncate">
         {label}
       </div>
       <div
@@ -76,7 +76,7 @@ function StatTile({
       >
         {value}
       </div>
-      {sub && <div className="text-[10.5px] text-muted mt-0.5 truncate">{sub}</div>}
+      {sub && <div className="text-[11px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
@@ -118,7 +118,7 @@ function BarSvgDiagram({
             {(pattern.stockLengthMm / 1000).toFixed(1)} m · {pattern.cuts.length} cuts
           </span>
         </div>
-        <div className="flex items-center gap-3 font-mono text-[11.5px]">
+        <div className="flex items-center gap-3 font-mono text-[12px]">
           <span className="text-muted">
             {t("cutting.used")}: <strong className="text-foreground">{pattern.usedLengthMm} mm</strong>
           </span>
@@ -254,7 +254,7 @@ function BarSvgDiagram({
 
       {/* Cuts Table */}
       <div className="overflow-x-auto pt-1">
-        <table className="w-full text-[11.5px] font-mono border-collapse">
+        <table className="w-full text-[12px] font-mono border-collapse">
           <thead>
             <tr className="text-muted text-[10px] uppercase border-b border-[var(--border-faint)] text-left">
               <th className="pb-1 font-semibold">{t("cutting.cutIndex")}</th>
@@ -330,7 +330,7 @@ function PlateSvgDiagram({
             {pattern.formatLabel} · {pattern.cuts.length} cuts
           </span>
         </div>
-        <div className="flex items-center gap-3 font-mono text-[11.5px]">
+        <div className="flex items-center gap-3 font-mono text-[12px]">
           <span className="text-muted">
             {t("cutting.used")}: <strong className="text-foreground">{pattern.usedAreaM2} m²</strong> / {pattern.totalAreaM2} m²
           </span>
@@ -426,7 +426,7 @@ function PlateSvgDiagram({
 
       {/* 2D Cut Schedule Table */}
       <div className="overflow-x-auto pt-1">
-        <table className="w-full text-[11.5px] font-mono border-collapse">
+        <table className="w-full text-[12px] font-mono border-collapse">
           <thead>
             <tr className="text-muted text-[10px] uppercase border-b border-[var(--border-faint)] text-left">
               <th className="pb-1 font-semibold">{t("cutting.cutIndex")}</th>
@@ -671,7 +671,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
 
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] text-muted">{t("cutting.bladeKerf")}:</span>
+                  <span className="text-[11px] text-muted">{t("cutting.bladeKerf")}:</span>
                   <input
                     type="number"
                     min={0}
@@ -684,7 +684,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
                   <span className="text-[10px] text-muted">mm</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] text-muted">{t("cutting.minOffcut")}:</span>
+                  <span className="text-[11px] text-muted">{t("cutting.minOffcut")}:</span>
                   <input
                     type="number"
                     min={0}
@@ -771,7 +771,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
 
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] text-muted">{t("cutting.laserKerf")}:</span>
+                  <span className="text-[11px] text-muted">{t("cutting.laserKerf")}:</span>
                   <input
                     type="number"
                     min={0}
@@ -784,7 +784,7 @@ export function ProjectCutting({ project, compact }: ProjectCuttingProps) {
                   <span className="text-[10px] text-muted">mm</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] text-muted">{t("cutting.edgeTrim")}:</span>
+                  <span className="text-[11px] text-muted">{t("cutting.edgeTrim")}:</span>
                   <input
                     type="number"
                     min={0}

@@ -195,7 +195,7 @@ export function DestinationSheet({
             </svg>
           </span>
           <span className="flex-1 min-w-0">
-            <span className="block text-[12.5px] font-bold text-foreground truncate">{title}</span>
+            <span className="block text-[13px] font-bold text-foreground truncate">{title}</span>
             <span className="block text-[11px] text-muted truncate">{body}</span>
           </span>
         </button>
@@ -260,7 +260,7 @@ export function DestinationSheet({
           <p className="font-mono text-xs mt-1 truncate" style={{ color: "var(--accent-text)" }}>
             {subject.label}
           </p>
-          <p className="font-mono text-[11.5px] text-muted-faint mt-0.5 truncate">{subject.meta}</p>
+          <p className="font-mono text-[12px] text-muted-faint mt-0.5 truncate">{subject.meta}</p>
         </>
       }
       footer={
@@ -288,7 +288,7 @@ export function DestinationSheet({
                 type="button"
                 onClick={() => setCount(value)}
                 aria-pressed={count === value}
-                className="h-8 min-w-[34px] px-2 text-[11.5px] font-bold cursor-pointer"
+                className="h-8 min-w-[34px] px-2 text-[12px] font-bold cursor-pointer"
                 style={{
                   border: `1px solid ${count === value ? "var(--action)" : "var(--border)"}`,
                   background: count === value ? "var(--action)" : "transparent",
@@ -382,7 +382,7 @@ export function DestinationSheet({
                   style={{ background: isActive ? "var(--accent-surface)" : "transparent" }}
                 >
                   <span className="flex-1 min-w-0">
-                    <span className="block text-[12.5px] font-bold text-foreground truncate">
+                    <span className="block text-[13px] font-bold text-foreground truncate">
                       {row.name}
                     </span>
                     <span className="block font-mono text-[11px] text-muted-faint truncate">

@@ -161,7 +161,7 @@ export function SavedEditSheet({
               <p className="text-[10px] font-bold text-muted uppercase" style={{ letterSpacing: 1 }}>
                 {t("saved.assemblyExtras")}
               </p>
-              <p className="mt-1 text-[11.5px] text-muted-faint leading-snug">
+              <p className="mt-1 text-[12px] text-muted-faint leading-snug">
                 {t("saved.assemblyExtrasHint")}
               </p>
             </div>

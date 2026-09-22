@@ -17,6 +17,52 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.28.0",
+    date: "2026-09-22",
+    fixed: [
+      "The page no longer reloads itself half a second after the first visit — and mid-session after every deploy. The service worker's first install fired `controllerchange`, and the handler reloaded unconditionally; it was meant only for a user-requested update, and now is",
+      "The PWA banners (offline, update, ready) stack above the app instead of beside it. As flex-row siblings they squeezed the phone shell to 242 of 390 px for as long as they showed — permanently while offline. The five-second \"ready for offline\" notice floats over the top edge so nothing shifts under a pressed finger",
+      "Hollow sections (SHS/RHS) follow EN 10219-2 corner geometry. The sharp-corner box formula overstated the catalog mass by 4–6% while citing EN 10219 as its reference — SHS 40×40×3 read 3.49 kg/m against a catalog 3.30, RHS 100×50×4 read 8.92 against 8.59. The formula label and the FAQ say what is subtracted and why",
+      "Typing a decimal comma on the desktop bar no longer splits the line: `hea120 6,5m` became `hea120 6, 5m` and an \"Assembly · 2 parts\" that never computed, because the comma was read as a cut-list boundary at the keystroke before its next digit arrived. Pasted and shared lines had always worked",
+      "Six standard sizes the QA benchmark had held back as unsettled are corrected against EN tables: IPN 120 (14.2 cm²), IPN 320 (77.7 cm²), HEM 140 (80.56 cm²), HEM 260 (219.6 cm²), T 30×4 (2.26 cm²), T 40×5 (3.77 cm²). All 138 EN sizes are now in the ≤0.5% gate; DATASET_VERSION 2026.09.3",
+      "A token the parser dropped is named beside the result instead of only tinting its chip amber. `hea120 6m x2.5` priced one piece and said nothing about the `x2.5`; it now says \"Didn't understand x2.5\" under the figure, and the chip's tooltip carries the same note",
+      "Section drawings no longer print solved proportions as dimensions. HEA 120 was labelled tf 8.4 / tw 5.6 / R8.8 against a catalog 8 / 5 / 12, and HEM 200 was drawn 200×200 when it is 220×206. HEA heights below 200 and every HEM outline now follow EN 10365; web, flange and fillet still shape the sketch but are unlabelled until the table values ship. Tees keep theirs (EN 10055: tf = tw = t, r₁ = t)",
+      "A converted length no longer leaks floating point: `hea120 6ft` printed \"1.8288000000000002 m\". Lengths show at most three decimals, and kg/m rounds the same way the headline does — 14.915 kg/m read 14.92 kg in the hero and 14.91 kg/m under it",
+      "Mobile discovery tiles: the profile codes measured 4.4:1 contrast on 18 chips (needs 4.5), one code sat at 9 px, and the Angle chip was 23 px wide. Codes are the secondary ink now, at 11 px, on chips at least 44×32",
+      "The keypad's symbol keys have spoken names — ×, ., ↵ and the two unit keys read as \"multiplication sign\", \"return symbol\" and \"mm black down-pointing triangle\", and the hold-for-more menus were invisible to assistive tech. The suggestion strip is one focusable, labelled stop so a keyboard can scroll it",
+    ],
+    changed: [
+      "Money that comes from the seeded €1.20/kg says so in weight mode too. The cell reads \"EST. COST @ €1.20/kg (DEFAULT)\" in the secondary ink, the equation line carries \"(default rate)\", and Copy summary appends it to the rate row — the qualifier used to appear in price mode only, so the default surface showed \"TOTAL COST € 286.44\" unasked",
+      "The breakdown shows what makes a result traceable: section area, the formula, the standard it was read from and the dataset version — the engine had always returned them — plus a \"How is this calculated?\" link to the FAQ",
+      "A bare number under 100 mm on a long product says how it was read and offers the metre form: `hea120 6` still computes 6 mm (millimetres stay the default unit), but the line now reads \"\\\"6\\\" read as 6 mm · Did you mean 6m?\"",
+      "The workspace's empty state drops the four dashed cells and two disabled buttons that stood in for an answer, as the phone already did; the profile tiles take the room",
+      "One whole-pixel type scale. Twenty-one arbitrary sizes including 9, 9.5, 10.5, 11.5, 12.5, 13.5 and 14.5 px collapse to 10–17 px; nothing renders under 10 px",
+      "Letter-pad keys are 40 px tall (were 36); the number pad stays at 44",
+      "The home page title names what the app is (\"Metal Weight & Price Calculator (EN profiles)\") instead of just the brand; /qa is in the sitemap; Saved, Projects and Settings — client-only shells — are noindex; the site sends nosniff, referrer, frame and permissions headers",
+    ],
+    fixed_bs: [
+      "Stranica se više ne učitava ponovo pola sekunde nakon prve posjete — ni usred rada nakon svakog deploya. Prva instalacija service workera pokretala je `controllerchange`, a rukovalac je bezuslovno učitavao ponovo; bio je namijenjen samo ažuriranju na zahtjev korisnika, i sada to i jeste",
+      "PWA baneri (offline, ažuriranje, spremno) slažu se iznad aplikacije umjesto pored nje. Kao flex-row susjedi stiskali su telefonsku ljusku na 242 od 390 px dok su bili vidljivi — trajno u offline režimu. Petosekundna obavijest \"spremno za offline\" lebdi preko gornjeg ruba pa se ništa ne pomiče pod pritisnutim prstom",
+      "Šuplji profili (SHS/RHS) prate geometriju uglova po EN 10219-2. Formula s oštrim uglovima precjenjivala je katalošku masu za 4–6% dok je navodila EN 10219 kao referencu — SHS 40×40×3 pokazivao je 3,49 kg/m naspram kataloških 3,30, RHS 100×50×4 8,92 naspram 8,59. Oznaka formule i FAQ kažu šta se oduzima i zašto",
+      "Kucanje decimalnog zareza u desktop traci više ne cijepa liniju: `hea120 6,5m` postajalo je `hea120 6, 5m` i \"Sklop · 2 dijela\" koji se nikad nije izračunao, jer je zarez pročitan kao granica liste rezanja prije nego što je stigla sljedeća cifra. Zalijepljene i podijeljene linije su uvijek radile",
+      "Šest standardnih veličina koje je QA provjera držala kao neriješene ispravljeno je prema EN tablicama: IPN 120 (14,2 cm²), IPN 320 (77,7 cm²), HEM 140 (80,56 cm²), HEM 260 (219,6 cm²), T 30×4 (2,26 cm²), T 40×5 (3,77 cm²). Svih 138 EN veličina sada je unutar ≤0,5%; DATASET_VERSION 2026.09.3",
+      "Token koji parser odbaci imenovan je pored rezultata, a ne samo obojen u žuto. `hea120 6m x2.5` obračunavao je jedan komad bez riječi o `x2.5`; sada ispod brojke stoji \"Nije razumljivo x2.5\", a čip nosi istu napomenu",
+      "Crteži presjeka više ne ispisuju izračunate proporcije kao dimenzije. HEA 120 imao je oznake tf 8,4 / tw 5,6 / R8,8 naspram kataloških 8 / 5 / 12, a HEM 200 bio je nacrtan 200×200 dok je zapravo 220×206. Visine HEA ispod 200 i sve HEM konture sada prate EN 10365; rebro, pojas i zaobljenje i dalje oblikuju skicu, ali bez oznaka dok tablične vrijednosti ne stignu. T profili zadržavaju svoje (EN 10055: tf = tw = t, r₁ = t)",
+      "Pretvorena dužina više ne propušta pokretni zarez: `hea120 6ft` ispisivao je \"1.8288000000000002 m\". Dužine imaju najviše tri decimale, a kg/m zaokružuje jednako kao glavna brojka — 14,915 kg/m čitalo se 14,92 kg gore i 14,91 kg/m ispod",
+      "Mobilne pločice profila: kodovi su imali kontrast 4,4:1 na 18 čipova (potrebno 4,5), jedan kod je bio 9 px, a čip Angle širok 23 px. Kodovi su sada sekundarne boje, 11 px, na čipovima od najmanje 44×32",
+      "Simbolni tasteri tastature imaju izgovorljiva imena — ×, ., ↵ i dva tastera jedinica čitala su se kao \"znak množenja\", \"simbol povratka\" i \"mm crni trokut\", a meniji na držanje bili su nevidljivi pomoćnoj tehnologiji. Traka prijedloga je jedna fokusabilna, označena stanica koju tastatura može pomicati",
+    ],
+    changed_bs: [
+      "Novac koji dolazi iz zadanih 1,20 €/kg kaže to i u režimu mase. Polje glasi \"PROCJENA @ €1.20/kg (ZADANO)\" sekundarnom bojom, linija jednačine nosi \"(zadana cijena)\", a Kopiraj sažetak dodaje to u red cijene — oznaka se prije pojavljivala samo u režimu cijene, pa je zadani ekran pokazivao \"UKUPNA CIJENA € 286,44\" bez pitanja",
+      "Detalji pokazuju ono što rezultat čini provjerljivim: površinu presjeka, formulu, standard iz kojeg je pročitana i verziju skupa podataka — motor ih je uvijek vraćao — plus link \"Kako se ovo računa?\" na FAQ",
+      "Goli broj ispod 100 mm na dugom proizvodu kaže kako je pročitan i nudi metarski oblik: `hea120 6` i dalje računa 6 mm (milimetri ostaju zadana jedinica), ali linija sada glasi \"\\\"6\\\" pročitano kao 6 mm · Mislili ste 6m?\"",
+      "Prazno stanje radnog prostora izbacuje četiri polja s crticama i dva onemogućena dugmeta koja su stajala umjesto odgovora, kao što je telefon već učinio; pločice profila dobijaju prostor",
+      "Jedna skala pisma u cijelim pikselima. Dvadeset i jedna proizvoljna veličina uključujući 9, 9,5, 10,5, 11,5, 12,5, 13,5 i 14,5 px svodi se na 10–17 px; ništa se ne prikazuje ispod 10 px",
+      "Tasteri slova visoki su 40 px (bili 36); numerička tastatura ostaje na 44",
+      "Naslov početne stranice imenuje šta aplikacija jeste (\"Kalkulator mase i cijene metala (EN profili)\") umjesto samo brenda; /qa je u sitemapu; Sačuvano, Projekti i Postavke — samo klijentske ljuske — su noindex; sajt šalje nosniff, referrer, frame i permissions zaglavlja",
+    ],
+  },
+  {
     version: "3.27.0",
     date: "2026-09-19",
     changed: [

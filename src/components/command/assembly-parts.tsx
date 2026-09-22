@@ -59,10 +59,10 @@ export function AssemblyParts({
                 >
                   {row.label}
                 </span>
-                <span className="font-mono text-[11.5px] font-bold whitespace-nowrap" style={{ color: "var(--accent-text)" }}>
+                <span className="font-mono text-[12px] font-bold whitespace-nowrap" style={{ color: "var(--accent-text)" }}>
                   {row.weight}
                 </span>
-                <span className="font-mono text-[11.5px] text-muted whitespace-nowrap">
+                <span className="font-mono text-[12px] text-muted whitespace-nowrap">
                   {row.amount}
                 </span>
               </button>

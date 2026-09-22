@@ -78,7 +78,7 @@ function FilterChip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-none cursor-pointer whitespace-nowrap font-bold text-[12.5px]"
+      className="flex items-center gap-1.5 rounded-none cursor-pointer whitespace-nowrap font-bold text-[13px]"
       style={{
         height: 32,
         padding: "0 13px",
@@ -130,13 +130,13 @@ function PinnedCard({
           {entry.name.trim() || model.specLabel}
         </span>
       </div>
-      <div className="font-mono text-[11.5px] text-muted truncate">
+      <div className="font-mono text-[11px] text-muted truncate">
         {[model.parsed?.gradeLabel ?? entry.result.gradeLabel, model.kgm != null ? `${model.kgm.toFixed(2)} kg/m` : null]
           .filter(Boolean)
           .join(" · ")}
       </div>
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[11.5px] text-muted-faint flex-1 min-w-0 truncate">
+        <span className="font-mono text-[12px] text-muted-faint flex-1 min-w-0 truncate">
           {t("saved.usedCount", { count: entry.useCount })}
         </span>
         <button
@@ -266,7 +266,7 @@ function PartsRow({
           <PinIcon filled />
         </span>
       )}
-      <span className="min-w-0 truncate font-bold text-[13.5px] text-foreground">
+      <span className="min-w-0 truncate font-bold text-[14px] text-foreground">
         {entry.name.trim() || model.specLabel}
       </span>
       {assembly && (
@@ -287,7 +287,7 @@ function PartsRow({
       {model.repriced && (
         <span
           title={t("saved.repricedHint")}
-          className="font-mono text-[10.5px] flex-shrink-0 whitespace-nowrap"
+          className="font-mono text-[11px] flex-shrink-0 whitespace-nowrap"
           style={{ color: "var(--muted-faint)" }}
         >
           {t("saved.repriced", {
@@ -327,11 +327,11 @@ function PartsRow({
         >
           <span className="flex min-w-0 items-center gap-2">
             <SavedThumb model={model} size={24} />
-            <span className="min-w-0 truncate font-bold text-[13.5px] text-foreground">
+            <span className="min-w-0 truncate font-bold text-[14px] text-foreground">
               {entry.name.trim() || model.specLabel}
             </span>
           </span>
-          <span className="font-mono text-[11.5px] text-muted truncate">
+          <span className="font-mono text-[11px] text-muted truncate">
             {specText}
             <span className="font-bold" style={{ color: "var(--accent-text)" }}>
               {" · "}
@@ -370,7 +370,7 @@ function PartsRow({
       </span>
       <span
         role="cell"
-        className="font-mono text-[12.5px] text-right flex-shrink-0"
+        className="font-mono text-[13px] text-right flex-shrink-0"
         style={{ width: 96, color: "var(--foreground)" }}
       >
         {totalText}
@@ -580,7 +580,7 @@ export function PartsView({
 
       {!filtering && pinnedModels.length > 0 && (
         <section>
-          <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-2 px-1">
+          <div className="fs-track-label text-[10px] font-bold text-muted uppercase mb-2 px-1">
             {t("parts.pinnedLabel")}
           </div>
           <div
@@ -610,7 +610,7 @@ export function PartsView({
       )}
 
       <section>
-        <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase mb-2 px-1">
+        <div className="fs-track-label text-[10px] font-bold text-muted uppercase mb-2 px-1">
           {t(`parts.section.${filter}`)}
         </div>
         {models.length === 0 ? (
@@ -622,7 +622,7 @@ export function PartsView({
               <button
                 type="button"
                 onClick={() => setQuery({ search: "", sort: query.sort, tags: [] })}
-                className="rounded-none px-3.5 h-9 text-[12.5px] font-bold cursor-pointer"
+                className="rounded-none px-3.5 h-9 text-[13px] font-bold cursor-pointer"
                 style={{
                   border: "1px solid var(--border-faint)",
                   background: "var(--surface)",

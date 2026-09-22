@@ -15,6 +15,7 @@ export function TokenChip({
   onReplace,
   anchor,
   shadowed,
+  note,
 }: {
   tok: string;
   kindClass: string;
@@ -25,9 +26,11 @@ export function TokenChip({
   anchor?: boolean;
   /** Recognized but inert: its slot was already filled by an earlier token. */
   shadowed?: boolean;
+  /** What the parser said about this token (e.g. "Didn't understand"), if anything. */
+  note?: string | null;
 }) {
   const t = useTranslations("command");
-  const shadowNote = shadowed ? t("token.shadowed") : null;
+  const shadowNote = shadowed ? t("token.shadowed") : (note ?? null);
   const steppable = Boolean(onReplace && canStepToken(tok));
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });

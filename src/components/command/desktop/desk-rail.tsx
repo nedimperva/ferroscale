@@ -56,7 +56,7 @@ function RailButton({
            for. Position keeps it clear of the glyph at every icon size. */
         <span
           aria-hidden="true"
-          className="absolute font-mono text-[9px] leading-none"
+          className="absolute font-mono text-[10px] leading-none"
           style={{ top: 5, right: 4, color: active ? "var(--accent)" : "var(--muted)" }}
         >
           {count > 99 ? "99+" : count}
@@ -205,7 +205,7 @@ export function DeskViewHeader({
           visually. */}
       <h1 className="fs-title text-[17px] text-foreground whitespace-nowrap">{title}</h1>
       {subtitle && (
-        <span className="font-mono text-[10.5px] uppercase text-muted truncate" style={{ letterSpacing: 1.4 }}>
+        <span className="font-mono text-[11px] uppercase text-muted truncate" style={{ letterSpacing: 1.4 }}>
           {subtitle}
         </span>
       )}

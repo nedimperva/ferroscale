@@ -7,6 +7,30 @@ import { test, expect } from "@playwright/test";
  */
 const DEMO_LINK = "/en?q=hea120+6m+x2";
 
+/**
+ * The keypad is server-rendered for an *empty* line (the letter pad), then
+ * swaps to the number pad once `?q=` hydrates — which unmounts every key. A
+ * hold that starts on the first pad's key is lost: its timer fires on a
+ * component that no longer exists. Wait for the pad the query actually wants,
+ * and for React's props on the key, before pressing it; visibility alone is
+ * not readiness.
+ */
+async function waitForHydratedKey(
+  page: import("@playwright/test").Page,
+  ariaPrefix: string,
+  pad: "numpad" | "letters" = "numpad",
+) {
+  await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", pad);
+  // The shell's last start-up write is the share-URL mirror (`&r=…` once the
+  // pricing settings have loaded); until then the bottom row can still be
+  // re-laid out under a pressed finger, which ends the hold.
+  await page.waitForURL(/[?&]r=/);
+  await page.waitForFunction((prefix) => {
+    const el = document.querySelector(`button[aria-label^="${prefix}"]`);
+    return !!el && Object.keys(el).some((k) => k.startsWith("__reactProps"));
+  }, ariaPrefix);
+}
+
 // Desktop Chrome (1280px) renders the wide two-pane command workspace.
 test.describe("Command bar", () => {
   test("loads with the demo query and a live result", async ({ page }) => {
@@ -288,7 +312,7 @@ test.describe("Phone fold (390x844)", () => {
       );
 
       await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
-      const enter = await page.getByRole("button", { name: "↵" }).boundingBox();
+      const enter = await page.getByRole("button", { name: /^Enter/ }).boundingBox();
       expect(enter, `↵ missing at ${height}`).not.toBeNull();
       expect(enter!.y + enter!.height, `↵ clipped at ${height}`).toBeLessThanOrEqual(height);
 
@@ -530,13 +554,17 @@ test.describe("Keypad rate key (phone viewport)", () => {
 
   test("tap inserts the default price token", async ({ page }) => {
     await page.goto("/en?q=hea120");
-    await page.getByRole("button", { name: /€\/kg/ }).click();
+    // The keypad mounts after the query hydrates — wait for it, or the tap
+    // lands on a key React has not wired yet.
+    await waitForHydratedKey(page, "Rate per");
+    await page.getByRole("button", { name: /^Rate per €\/kg/ }).click();
     await expect(page.getByText(/^1\.2\/kg$/).first()).toBeVisible();
   });
 
   test("hold opens the unit picker and inserts the chosen unit", async ({ page }) => {
     await page.goto("/en?q=hea120");
-    const rateKey = page.getByRole("button", { name: /€\/kg/ });
+    await waitForHydratedKey(page, "Rate per");
+    const rateKey = page.getByRole("button", { name: /^Rate per €\/kg/ });
     const box = await rateKey.boundingBox();
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
@@ -556,15 +584,18 @@ test.describe("Keypad length key (phone viewport)", () => {
 
   test("tap inserts mm as the default length unit", async ({ page }) => {
     await page.goto("/en?q=hea120");
+    await waitForHydratedKey(page, "Millimetres");
     await page.getByRole("button", { name: "5", exact: true }).click();
-    await page.getByRole("button", { name: /^mm ▾$/ }).click();
+    await page.getByRole("button", { name: /^Millimetres/ }).click();
     await expect(page.getByText("5mm", { exact: true }).first()).toBeVisible();
   });
 
   test("hold opens the length picker and inserts the chosen unit", async ({ page }) => {
     await page.goto("/en?q=hea120");
+    await waitForHydratedKey(page, "Millimetres");
     await page.getByRole("button", { name: "5", exact: true }).click();
-    const lengthKey = page.getByRole("button", { name: /^mm ▾$/ });
+    await waitForHydratedKey(page, "Millimetres");
+    const lengthKey = page.getByRole("button", { name: /^Millimetres/ });
     const box = await lengthKey.boundingBox();
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
@@ -636,6 +667,9 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
   test("holding a length chip opens a stepper", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // LIVE is in the SSR HTML; a hold needs React's handlers on the chip.
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    await page.waitForURL(/[?&]r=/);
     const chip = page.getByRole("button", { name: "Edit 6m" });
     const box = await chip.boundingBox();
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);

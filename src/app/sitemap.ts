@@ -15,7 +15,8 @@ function lastModified(): Date {
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ferroscale.nedimp.com";
-  const localizedRoutes = ["", "/contact", "/faq"];
+  // /qa is server-rendered and states the engine's own coverage — worth indexing.
+  const localizedRoutes = ["", "/contact", "/faq", "/qa"];
 
   return routing.locales.flatMap((locale) =>
     localizedRoutes.map((route) => ({

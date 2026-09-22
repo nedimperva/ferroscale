@@ -306,6 +306,16 @@ describe("cmdSplitLine — comma and semicolon boundaries", () => {
     expect(cmdSplitLine("hea120 6m @2,5/kg")).toHaveLength(1);
   });
 
+  it("holds a trailing comma after a digit open while it is still being typed", () => {
+    // `6,` on the way to `6,5m` — a boundary here made the bar open a second
+    // item and glue a space in, so the finished `6,5m` never computed.
+    expect(cmdSplitLine("hea120 6,")).toHaveLength(1);
+    expect(cmdSplitLine("chs60,")).toHaveLength(1);
+    // A comma followed by a space is a real cut-list boundary.
+    expect(cmdSplitLine("hea120 6m, ")).toHaveLength(2);
+    expect(cmdSplitLine("hea120 6m,")).toHaveLength(2);
+  });
+
   it("still treats a glued plus as arithmetic", () => {
     expect(cmdSplitLine("hea120 6m x2+3")).toHaveLength(1);
     expect(cmdSplitLine("hea120 6m-50mm")).toHaveLength(1);
