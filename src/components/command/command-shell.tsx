@@ -1617,7 +1617,10 @@ export function CommandShell() {
   if (isWideViewport) {
     return (
       <div
-        className="fixed inset-0 flex overflow-hidden text-foreground"
+        // A column, so the PWA banner (offline / update / ready) stacks above
+        // the workspace. As a row it became a flex sibling and squeezed the
+        // whole app into what was left beside it.
+        className="fixed inset-0 flex flex-col overflow-hidden text-foreground"
         style={{ background: screenBg, transition: "background 220ms ease" }}
       >
         <PwaRegister />
@@ -1686,17 +1689,21 @@ export function CommandShell() {
   // ── Phone (<640): fullscreen shell with the on-screen keypad ──
   return (
     <div
-      className="fixed inset-0 flex overflow-hidden"
+      // A column: the PWA banner stacks above the shell. As a row the banner
+      // sat beside it and the phone shell ran at 242px of a 390px screen for
+      // as long as the banner showed — permanently, when offline.
+      className="fixed inset-0 flex flex-col overflow-hidden"
       style={{ background: screenBg, transition: "background 220ms ease" }}
     >
       <PwaRegister />
-      {/* Fills the fixed parent exactly. It used to be `height: 100dvh`, which
-          on iOS resolves differently from the fixed element's own box — the
-          shorter of the two left a band of screen background below the keypad
-          instead of the keys sitting flush on the bottom edge. */}
+      {/* Fills what the fixed parent has left after the banner. It used to be
+          `height: 100dvh`, which on iOS resolves differently from the fixed
+          element's own box — the shorter of the two left a band of screen
+          background below the keypad instead of the keys sitting flush on the
+          bottom edge. flex-1 in a column is the same exact fill. */}
       <div
-        className="relative flex flex-col overflow-hidden text-foreground"
-        style={{ width: "100%", height: "100%", background: screenBg }}
+        className="relative flex flex-1 min-h-0 flex-col overflow-hidden text-foreground"
+        style={{ width: "100%", background: screenBg }}
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* Safe-top spacer — honours real device safe-area on mobile, narrow gap on desktop */}

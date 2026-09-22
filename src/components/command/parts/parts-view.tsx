@@ -130,7 +130,7 @@ function PinnedCard({
           {entry.name.trim() || model.specLabel}
         </span>
       </div>
-      <div className="font-mono text-[12px] text-muted truncate">
+      <div className="font-mono text-[11px] text-muted truncate">
         {[model.parsed?.gradeLabel ?? entry.result.gradeLabel, model.kgm != null ? `${model.kgm.toFixed(2)} kg/m` : null]
           .filter(Boolean)
           .join(" · ")}
@@ -331,7 +331,7 @@ function PartsRow({
               {entry.name.trim() || model.specLabel}
             </span>
           </span>
-          <span className="font-mono text-[12px] text-muted truncate">
+          <span className="font-mono text-[11px] text-muted truncate">
             {specText}
             <span className="font-bold" style={{ color: "var(--accent-text)" }}>
               {" · "}

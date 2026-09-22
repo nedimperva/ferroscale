@@ -13,6 +13,8 @@ difference. Every item below is a finding from the September audit.
 
 ### Fixed
 
+- The page no longer reloads itself half a second after the first visit — and mid-session after every deploy. The service worker's first install fired `controllerchange`, and the handler reloaded unconditionally; it was meant only for a user-requested update, and now is
+- The PWA banners (offline, update, ready) stack above the app instead of beside it. As flex-row siblings they squeezed the phone shell to 242 of 390 px for as long as they showed — permanently while offline. The five-second "ready for offline" notice floats over the top edge so nothing shifts under a pressed finger
 - Hollow sections (SHS/RHS) follow EN 10219-2 corner geometry. The sharp-corner box formula overstated the catalog mass by 4–6% while citing EN 10219 as its reference — SHS 40×40×3 read 3.49 kg/m against a catalog 3.30, RHS 100×50×4 read 8.92 against 8.59. The formula label and the FAQ say what is subtracted and why
 - Typing a decimal comma on the desktop bar no longer splits the line: `hea120 6,5m` became `hea120 6, 5m` and an "Assembly · 2 parts" that never computed, because the comma was read as a cut-list boundary at the keystroke before its next digit arrived. Pasted and shared lines had always worked
 - Six standard sizes the QA benchmark had held back as unsettled are corrected against EN tables: IPN 120 (14.2 cm²), IPN 320 (77.7 cm²), HEM 140 (80.56 cm²), HEM 260 (219.6 cm²), T 30×4 (2.26 cm²), T 40×5 (3.77 cm²). All 138 EN sizes are now in the ≤0.5% gate; DATASET_VERSION 2026.09.3

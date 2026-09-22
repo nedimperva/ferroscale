@@ -260,7 +260,7 @@ export function SavedCard({
                 {named ? entry.name : model.specLabel}
               </span>
             </span>
-            <span className="block font-mono text-[12px] text-muted mt-0.5 truncate">
+            <span className="block font-mono text-[11px] text-muted mt-0.5 truncate">
               {model.isAssembly
                 ? t("saved.partCount", { count: model.parts.length })
                 : named

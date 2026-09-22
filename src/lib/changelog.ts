@@ -20,6 +20,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.28.0",
     date: "2026-09-22",
     fixed: [
+      "The page no longer reloads itself half a second after the first visit — and mid-session after every deploy. The service worker's first install fired `controllerchange`, and the handler reloaded unconditionally; it was meant only for a user-requested update, and now is",
+      "The PWA banners (offline, update, ready) stack above the app instead of beside it. As flex-row siblings they squeezed the phone shell to 242 of 390 px for as long as they showed — permanently while offline. The five-second \"ready for offline\" notice floats over the top edge so nothing shifts under a pressed finger",
       "Hollow sections (SHS/RHS) follow EN 10219-2 corner geometry. The sharp-corner box formula overstated the catalog mass by 4–6% while citing EN 10219 as its reference — SHS 40×40×3 read 3.49 kg/m against a catalog 3.30, RHS 100×50×4 read 8.92 against 8.59. The formula label and the FAQ say what is subtracted and why",
       "Typing a decimal comma on the desktop bar no longer splits the line: `hea120 6,5m` became `hea120 6, 5m` and an \"Assembly · 2 parts\" that never computed, because the comma was read as a cut-list boundary at the keystroke before its next digit arrived. Pasted and shared lines had always worked",
       "Six standard sizes the QA benchmark had held back as unsettled are corrected against EN tables: IPN 120 (14.2 cm²), IPN 320 (77.7 cm²), HEM 140 (80.56 cm²), HEM 260 (219.6 cm²), T 30×4 (2.26 cm²), T 40×5 (3.77 cm²). All 138 EN sizes are now in the ≤0.5% gate; DATASET_VERSION 2026.09.3",
@@ -39,6 +41,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The home page title names what the app is (\"Metal Weight & Price Calculator (EN profiles)\") instead of just the brand; /qa is in the sitemap; Saved, Projects and Settings — client-only shells — are noindex; the site sends nosniff, referrer, frame and permissions headers",
     ],
     fixed_bs: [
+      "Stranica se više ne učitava ponovo pola sekunde nakon prve posjete — ni usred rada nakon svakog deploya. Prva instalacija service workera pokretala je `controllerchange`, a rukovalac je bezuslovno učitavao ponovo; bio je namijenjen samo ažuriranju na zahtjev korisnika, i sada to i jeste",
+      "PWA baneri (offline, ažuriranje, spremno) slažu se iznad aplikacije umjesto pored nje. Kao flex-row susjedi stiskali su telefonsku ljusku na 242 od 390 px dok su bili vidljivi — trajno u offline režimu. Petosekundna obavijest \"spremno za offline\" lebdi preko gornjeg ruba pa se ništa ne pomiče pod pritisnutim prstom",
       "Šuplji profili (SHS/RHS) prate geometriju uglova po EN 10219-2. Formula s oštrim uglovima precjenjivala je katalošku masu za 4–6% dok je navodila EN 10219 kao referencu — SHS 40×40×3 pokazivao je 3,49 kg/m naspram kataloških 3,30, RHS 100×50×4 8,92 naspram 8,59. Oznaka formule i FAQ kažu šta se oduzima i zašto",
       "Kucanje decimalnog zareza u desktop traci više ne cijepa liniju: `hea120 6,5m` postajalo je `hea120 6, 5m` i \"Sklop · 2 dijela\" koji se nikad nije izračunao, jer je zarez pročitan kao granica liste rezanja prije nego što je stigla sljedeća cifra. Zalijepljene i podijeljene linije su uvijek radile",
       "Šest standardnih veličina koje je QA provjera držala kao neriješene ispravljeno je prema EN tablicama: IPN 120 (14,2 cm²), IPN 320 (77,7 cm²), HEM 140 (80,56 cm²), HEM 260 (219,6 cm²), T 30×4 (2,26 cm²), T 40×5 (3,77 cm²). Svih 138 EN veličina sada je unutar ≤0,5%; DATASET_VERSION 2026.09.3",
