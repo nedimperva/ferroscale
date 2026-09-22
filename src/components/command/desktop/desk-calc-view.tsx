@@ -7,6 +7,7 @@ import {
   cmdParse,
   cmdClassifyToken,
   cmdPasteIntoLine,
+  cmdSplitLine,
   findAliasByPrefix,
 } from "@ferroscale/metal-core";
 import {

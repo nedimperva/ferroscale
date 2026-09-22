@@ -307,6 +307,7 @@ export function CommandKeypad({
   onNew,
   onTweak,
   onShare,
+  onAddItem,
   onLetters,
   onNumbers,
   onDone,
