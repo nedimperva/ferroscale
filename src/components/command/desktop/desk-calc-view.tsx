@@ -404,15 +404,50 @@ export function DeskCalcView({
               setQuery(replaceLinePartial(query, expandedIndex, e.target.value));
             }}
             onKeyDown={(e) => {
-              // Alt + 1..9: switch to tab N
-              if (e.altKey && !e.ctrlKey && !e.metaKey && e.key >= "1" && e.key <= "9") {
-                const targetTab = parseInt(e.key, 10) - 1;
-                if (targetTab < chips.groups.length) {
-                  e.preventDefault();
-                  setExpandedItem(targetTab);
-                  setPicked(targetTab);
-                  focusInputAtEnd();
-                  return;
+              // Alt + [ or Alt + ArrowLeft: previous tab
+              if (
+                e.altKey &&
+                !e.ctrlKey &&
+                !e.metaKey &&
+                !e.shiftKey &&
+                (e.key === "[" || e.code === "BracketLeft" || e.key === "ArrowLeft") &&
+                chips.groups.length > 1
+              ) {
+                e.preventDefault();
+                const prev = (expandedIndex - 1 + chips.groups.length) % chips.groups.length;
+                setExpandedItem(prev);
+                setPicked(prev);
+                focusInputAtEnd();
+                return;
+              }
+              // Alt + ] or Alt + ArrowRight: next tab
+              if (
+                e.altKey &&
+                !e.ctrlKey &&
+                !e.metaKey &&
+                !e.shiftKey &&
+                (e.key === "]" || e.code === "BracketRight" || e.key === "ArrowRight") &&
+                chips.groups.length > 1
+              ) {
+                e.preventDefault();
+                const next = (expandedIndex + 1) % chips.groups.length;
+                setExpandedItem(next);
+                setPicked(next);
+                focusInputAtEnd();
+                return;
+              }
+              // Alt + Shift + 1..9: jump to tab N directly
+              if (e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                const digitMatch = e.code.match(/^Digit([1-9])$/);
+                if (digitMatch) {
+                  const targetTab = parseInt(digitMatch[1], 10) - 1;
+                  if (targetTab < chips.groups.length) {
+                    e.preventDefault();
+                    setExpandedItem(targetTab);
+                    setPicked(targetTab);
+                    focusInputAtEnd();
+                    return;
+                  }
                 }
               }
               // Alt + + or Alt + =: add new line item

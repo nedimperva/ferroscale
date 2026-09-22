@@ -17,6 +17,7 @@ const SHORTCUTS: { keys: string; key: string }[] = [
   { keys: "↵", key: "enter" },
   { keys: "Tab", key: "tab" },
   { keys: "⌥1–9", key: "digits" },
+  { keys: "⌥[ ⌥]", key: "tabs" },
   { keys: "↑ ↓", key: "history" },
   { keys: "⌘S", key: "save" },
   { keys: "⌘⏎", key: "compare" },

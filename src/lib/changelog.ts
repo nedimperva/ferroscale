@@ -44,7 +44,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before"
     ],
     added: [
-      "Segmented item rail tabs support WAI-ARIA tablist navigation, arrow key traversal, auto-scrolling into view, item duplication, and keyboard shortcuts (Alt+1..9, Alt++, Alt+W, Backspace to pop empty tab)",
+      "Segmented item rail tabs support WAI-ARIA tablist navigation, arrow key traversal, auto-scrolling into view, item duplication, and keyboard shortcuts (Alt+[/], Alt+Shift+1..9, Alt++, Alt+W, Backspace to pop empty tab)",
       "Mobile keypad in actions mode includes a 1-tap '+ Item' button for frictionless assembly creation",
       "Multi-item lines feature segmented item rail tabs directly above the command line to switch items, monitor item weights, delete items, and append new items with 1 click",
       "Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile",
@@ -95,7 +95,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Standardi koji dolaze uz aplikaciju su u biblioteci, pod vlastitom pločicom, a ne samo unutar dijaloga u projektu. Uklanjanje se može poništiti"
     ],
     added_bs: [
-      "Segmentirane kartice stavki podržavaju WAI-ARIA navigaciju listom tabova, navigaciju strelicama, automatsko skrolovanje u fokus, dupliciranje stavke i prečice na tastaturi (Alt+1..9, Alt++, Alt+W, Backspace za brisanje prazne stavke)",
+      "Segmentirane kartice stavki podržavaju WAI-ARIA navigaciju listom tabova, navigaciju strelicama, automatsko skrolovanje u fokus, dupliciranje stavke i prečice na tastaturi (Alt+[/], Alt+Shift+1..9, Alt++, Alt+W, Backspace za brisanje prazne stavke)",
       "Mobilna tastatura u režimu radnji uključuje dugme '+ Stavka' sa jednim dodirom za jednostavno kreiranje sklopova",
       "Linije sa više stavki imaju segmentisane kartice iznad komandne linije za prebacivanje stavki, praćenje težina, brisanje i dodavanje novih jednim klikom",
       "Komandna linija prikazuje narandžastu ikonu profila (uključujući prepoznatljive U, I, H i T oblike) za aktivni profil",

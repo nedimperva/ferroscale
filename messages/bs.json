@@ -120,6 +120,7 @@
         "enter": "Preuzmi prijedlog ili zabilježi gotovu liniju",
         "tab": "Prihvati dopunu u liniji",
         "digits": "Ubaci 1.–9. čip",
+        "tabs": "Prebaci na prethodni / sljedeći tab (ili ⌥⇧1–9)",
         "history": "Krećite se kroz ranije linije",
         "save": "Sačuvaj (ponovni pritisak uklanja)",
         "compare": "Dodaj za poređenje",
