@@ -435,25 +435,28 @@ function buildMetrics({
     case "tee_en":
       push("height", geometry.heightMm, "mm");
       push("width", geometry.widthMm, "mm");
-      push("webThickness", geometry.webThicknessMm, "mm");
-      push("flangeThickness", geometry.flangeThicknessMm, "mm");
-      push("rootRadius", geometry.rootRadiusMm, "mm");
-      push(
-        "clearHeight",
-        geometry.heightMm != null && geometry.flangeThicknessMm != null
-          ? geometry.heightMm - (profileId === "tee_en" ? geometry.flangeThicknessMm : geometry.flangeThicknessMm * 2)
-          : null,
-        "mm",
-      );
-      push(
-        "flangeProjection",
-        geometry.widthMm != null && geometry.webThicknessMm != null
-          ? profileId === "channel_upn_en" || profileId === "channel_upe_en"
-            ? geometry.widthMm - geometry.webThicknessMm
-            : (geometry.widthMm - geometry.webThicknessMm) / 2
-          : null,
-        "mm",
-      );
+      // Solved-from-area thicknesses drive the sketch only; they are not data.
+      if (!geometry.thicknessEstimated) {
+        push("webThickness", geometry.webThicknessMm, "mm");
+        push("flangeThickness", geometry.flangeThicknessMm, "mm");
+        push("rootRadius", geometry.rootRadiusMm, "mm");
+        push(
+          "clearHeight",
+          geometry.heightMm != null && geometry.flangeThicknessMm != null
+            ? geometry.heightMm - (profileId === "tee_en" ? geometry.flangeThicknessMm : geometry.flangeThicknessMm * 2)
+            : null,
+          "mm",
+        );
+        push(
+          "flangeProjection",
+          geometry.widthMm != null && geometry.webThicknessMm != null
+            ? profileId === "channel_upn_en" || profileId === "channel_upe_en"
+              ? geometry.widthMm - geometry.webThicknessMm
+              : (geometry.widthMm - geometry.webThicknessMm) / 2
+            : null,
+          "mm",
+        );
+      }
       break;
   }
 

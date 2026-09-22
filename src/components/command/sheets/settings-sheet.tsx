@@ -78,7 +78,7 @@ export function CommandDocsSection({ className = "mt-4" }: { className?: string 
               </p>
               <ul className="mt-2.5 space-y-1.5">
                 {Object.values(section.tips).map((tip) => (
-                  <li key={tip} className="flex gap-2 text-[11.5px] leading-relaxed text-muted">
+                  <li key={tip} className="flex gap-2 text-[12px] leading-relaxed text-muted">
                     <span className="mt-[7px] h-1 w-1 rounded-none bg-[var(--accent)] flex-shrink-0" />
                     <span>{tip}</span>
                   </li>
@@ -166,7 +166,7 @@ function SheetFieldRow({
         <div className="min-w-0">
           <div className="text-[14px] font-bold text-foreground">{field.label}</div>
           {field.description && (
-            <div className="text-[11.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+            <div className="text-[12px] text-muted mt-0.5 leading-snug">{field.description}</div>
           )}
         </div>
         <div className="flex-shrink-0">
@@ -215,7 +215,7 @@ function SheetFieldRow({
         <div className="min-w-0">
           <div className="text-[14px] font-bold text-foreground">{field.label}</div>
           {field.description && (
-            <div className="text-[11.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+            <div className="text-[12px] text-muted mt-0.5 leading-snug">{field.description}</div>
           )}
         </div>
         <span className="flex items-center gap-1.5 flex-shrink-0">

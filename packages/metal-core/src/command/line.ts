@@ -87,7 +87,14 @@ function isArithmeticPlus(raw: string, index: number): boolean {
  * price token has always accepted it.
  */
 function isDecimalComma(raw: string, index: number): boolean {
-  return /\d/.test(raw[index - 1] ?? "") && /\d/.test(raw[index + 1] ?? "");
+  if (!/\d/.test(raw[index - 1] ?? "")) return false;
+  // A comma at the very end of the line, right after a digit, is a decimal
+  // separator still being typed (`6,` on the way to `6,5m`). Treating it as a
+  // boundary at that keystroke made the desktop bar open a second item and
+  // bake a space in after it, so `hea120 6,5m` became `hea120 6, 5m` and never
+  // computed. A cut list's comma always has something after it.
+  if (index === raw.length - 1) return true;
+  return /\d/.test(raw[index + 1] ?? "");
 }
 
 function isItemBoundary(raw: string, index: number): boolean {

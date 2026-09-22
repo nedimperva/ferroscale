@@ -43,7 +43,7 @@ function Row({ left, right }: { left: React.ReactNode; right: React.ReactNode })
       style={{ padding: "6px 0", borderBottom: "1px solid var(--border-faint)" }}
     >
       <span className="flex-shrink-0">{left}</span>
-      <span className="text-[12.5px] text-muted text-right">{right}</span>
+      <span className="text-[13px] text-muted text-right">{right}</span>
     </div>
   );
 }
@@ -51,7 +51,7 @@ function Row({ left, right }: { left: React.ReactNode; right: React.ReactNode })
 function Token({ children }: { children: React.ReactNode }) {
   return (
     <code
-      className="font-mono text-[12.5px] font-bold rounded"
+      className="font-mono text-[13px] font-bold rounded"
       style={{
         padding: "2px 7px",
         background: "var(--surface-inset)",
@@ -99,10 +99,10 @@ export function CommandHelpSheet({
           background: "var(--accent-surface)",
         }}
       >
-        <div className="font-mono text-[13.5px] font-bold" style={{ color: "var(--accent-text)" }}>
+        <div className="font-mono text-[14px] font-bold" style={{ color: "var(--accent-text)" }}>
           hea120 6m x2 s355 @2.50/kg
         </div>
-        <div className="text-[11.5px] text-muted mt-0.5">{t("help.exampleHint")}</div>
+        <div className="text-[12px] text-muted mt-0.5">{t("help.exampleHint")}</div>
       </button>
 
       <SectionTitle>{t("help.grammar")}</SectionTitle>
@@ -113,7 +113,7 @@ export function CommandHelpSheet({
           right={t(`help.token.${row.key}`)}
         />
       ))}
-      <div className="text-[11.5px] text-muted mt-2" style={{ lineHeight: 1.5 }}>
+      <div className="text-[12px] text-muted mt-2" style={{ lineHeight: 1.5 }}>
         {t("help.orderNote")}
       </div>
 
@@ -123,7 +123,7 @@ export function CommandHelpSheet({
           key={row.key}
           left={
             <kbd
-              className="font-mono text-[11.5px] font-bold rounded"
+              className="font-mono text-[12px] font-bold rounded"
               style={{
                 padding: "2px 7px",
                 border: "1px solid var(--border-faint)",
@@ -158,7 +158,7 @@ export function CommandHelpSheet({
         {grades.map((grade) => (
           <Token key={grade.id}>{grade.aliases[0]}</Token>
         ))}
-        <span className="text-[11.5px] text-muted self-center">{t("help.moreGrades")}</span>
+        <span className="text-[12px] text-muted self-center">{t("help.moreGrades")}</span>
       </div>
 
       <div className="mt-5 pt-3 border-t border-[var(--border-faint)]">

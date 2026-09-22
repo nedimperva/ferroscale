@@ -13,6 +13,21 @@ const nextConfig: NextConfig = {
   // top of them and swallows the click. The badge is a development-only
   // affordance and affects nothing in a production build.
   devIndicators: false,
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          // The app has no reason to be framed; the Drive-sync OAuth callback
+          // in particular should never render inside someone else's page.
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);

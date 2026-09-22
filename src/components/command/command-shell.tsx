@@ -25,7 +25,7 @@ import {
   cmdSplitLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsKgm, fsLength, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   currentProjectStore,
   defaultUnitStore,
@@ -45,6 +45,7 @@ import {
   formatAvailability,
   formatCommandHint,
   formatCommandIssue,
+  issueForToken,
   formatCommandParseName,
   formatCommandSuggestionLabel,
   buildCommandSummary,
@@ -66,7 +67,7 @@ import {
 } from "./line-edit";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
-import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
+import { AvailabilityBadge, CommandToast, InlineIssue, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { SaveControl } from "./save-control";
@@ -553,11 +554,11 @@ export function CommandShell() {
   // Desktop's single Copy action: a clean, paste-ready text summary of the
   // live result (replaces the old copy-query / copy-value pair).
   const copySummary = useCallback(() => {
-    const summary = buildCommandSummary(t, p, line);
+    const summary = buildCommandSummary(t, p, line, { rateIsUserSupplied });
     if (!summary) return;
     navigator.clipboard?.writeText(summary).catch(() => {});
     showToast(t("toast.copiedSummary"));
-  }, [t, p, line, showToast]);
+  }, [t, p, line, showToast, rateIsUserSupplied]);
 
   const shareLink = useCallback(() => {
     if (!p.valid) return;
@@ -565,7 +566,7 @@ export function CommandShell() {
     if (isPhoneViewport) {
       const card = buildShareCardModel(t, p, line, query);
       void shareCalculation({
-        summary: buildCommandSummary(t, p, line),
+        summary: buildCommandSummary(t, p, line, { rateIsUserSupplied }),
         url,
         title: card.title,
         card,
@@ -576,7 +577,7 @@ export function CommandShell() {
     }
     navigator.clipboard?.writeText(url).catch(() => {});
     showToast(t("toast.linkCopied"));
-  }, [p, line, query, shared, isPhoneViewport, showToast, t]);
+  }, [p, line, query, shared, isPhoneViewport, showToast, t, rateIsUserSupplied]);
 
   // The bookmark state of the line currently in the bar — drives the Save
   // button's filled/outlined look, so "is this one saved?" is answerable
@@ -1923,7 +1924,7 @@ export function CommandShell() {
                         type="button"
                         onClick={() => setModeOverride(m)}
                         aria-pressed={active}
-                        className="fs-track-label rounded-none text-[10.5px] font-bold"
+                        className="fs-track-label rounded-none text-[11px] font-bold"
                         style={{
                           // 5px of vertical padding puts the control at 25px, over
                           // the 24px floor in WCAG 2.5.8. It measured 23px.
@@ -2018,18 +2019,33 @@ export function CommandShell() {
                   <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
                       <span className="text-foreground-secondary">
-                        {p.kgm.toFixed(2)}
+                        {fsKgm(p.kgm)}
                       </span>{" "}
                       kg/m ×{" "}
-                      <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
+                      <span className="text-foreground-secondary">{fsLength(p.lengthM ?? 0)}</span>{" "}
                       m × <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                       {/* The assumption travels with the figure — see the
                           workspace hero for why. */}
-                      {mode === "price" && !rateIsUserSupplied
+                      {!rateIsUserSupplied
                         ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
                         : ""}
                     </span>
+                    {p.issues.length > 0 && (
+                      <InlineIssue
+                        text={formatCommandIssue(t, p.issues[0])}
+                        suggestionLabel={
+                          p.issues[0].suggestion
+                            ? t("issues.didYouMean", { suggestion: p.issues[0].suggestion })
+                            : null
+                        }
+                        onApply={() =>
+                          setQuery(
+                            applyIssueSuggestion(query, p.issues[0].token, p.issues[0].suggestion!),
+                          )
+                        }
+                      />
+                    )}
                     {p.availability && (
                       <AvailabilityBadge>
                         {formatAvailability(t, p.availability, p.gradeLabel).badge}
@@ -2284,6 +2300,12 @@ export function CommandShell() {
               // need room below them or their own borders get shaved off.
               className="flex gap-1.5 px-[18px] pb-1"
               style={{ overflowX: "auto", overflowY: "hidden" }}
+              // The chips themselves stay out of the Tab order (typing flow),
+              // so the strip is the one focusable stop: a keyboard can scroll
+              // it, and a screen reader hears what it is.
+              role="group"
+              aria-label={t("aria.suggestionStrip")}
+              tabIndex={0}
             >
               {(isPhoneViewport
                 ? sug.items.filter((it) => it.kind !== "save")
@@ -2454,6 +2476,10 @@ export function CommandShell() {
                           tok={tok}
                           kindClass={KIND_BG[cmdClassifyToken(tok)]}
                           shadowed={line.items[group.item]?.parse.shadowedTokenIndexes.includes(i)}
+                          note={(() => {
+                            const issue = issueForToken(line.items[group.item]?.parse.issues ?? [], tok);
+                            return issue ? formatCommandIssue(t, issue) : null;
+                          })()}
                           onEdit={() => editTokenAt(group.item, i)}
                           onRemove={() => removeTokenAt(group.item, i)}
                           onReplace={(next) => replaceTokenAt(group.item, i, next)}
@@ -2701,12 +2727,12 @@ function MetricStrip({
         cursor: p.valid ? "pointer" : "default",
       }}
     >
-      <span className="font-mono text-[12.5px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
+      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
         {perPiece}
         <span className="text-muted">{t("preview.perPieceSuffix")}</span>
       </span>
       <span className="w-px h-3.5 bg-border-faint" />
-      <span className="font-mono text-[12.5px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
+      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
         {second}
       </span>
       <span className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint whitespace-nowrap">

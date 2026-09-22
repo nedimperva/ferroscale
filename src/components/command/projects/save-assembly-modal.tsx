@@ -41,7 +41,7 @@ export function SaveAssemblyToLibraryModal({
         </span>
       }
       subtitle={
-        <p className="text-[11.5px] text-muted mt-1">
+        <p className="text-[12px] text-muted mt-1">
           {t("assembly.saveSubtitle", { count: items.length })}
         </p>
       }
@@ -121,7 +121,7 @@ export function SaveAssemblyToLibraryModal({
             {items.map((it) => (
               <span
                 key={it.id}
-                className="px-2 py-0.5 rounded-md text-[10.5px] font-mono bg-[var(--surface)] text-foreground border border-[var(--border-faint)]"
+                className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-[var(--surface)] text-foreground border border-[var(--border-faint)]"
               >
                 {it.input.quantity}× {it.result.profileLabel}
               </span>

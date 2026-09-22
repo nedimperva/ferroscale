@@ -792,7 +792,7 @@ export function FaqView() {
             <span className="col-start-1 font-mono text-xs text-foreground tabular-nums md:col-start-2">
               {t(`dataSheet.rows.${id}.formula`)}
             </span>
-            <span className="col-start-1 font-mono text-[11.5px] text-muted tabular-nums md:col-start-3">
+            <span className="col-start-1 font-mono text-[12px] text-muted tabular-nums md:col-start-3">
               {t(`dataSheet.rows.${id}.example`)}
             </span>
             <span
@@ -822,7 +822,7 @@ export function FaqView() {
         >
           <span className="flex flex-wrap items-center gap-2.5">
             <span aria-hidden="true" className="inline-block w-2.5 h-2.5 bg-[var(--foreground)] flex-shrink-0" />
-            <span className="text-[13.5px] font-medium text-foreground">
+            <span className="text-[14px] font-medium text-foreground">
               {t("verifierStrip.title")}
             </span>
             <span className="text-[13px] text-foreground-secondary">

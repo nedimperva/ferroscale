@@ -10,6 +10,7 @@ import { buildBreakdownRows } from "../breakdown-rows";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { SheetShell } from "./sheet-shell";
+import { Link } from "@/i18n/navigation";
 import { SaveControl } from "../save-control";
 import { RowMenu } from "../row-menu";
 import { haptic } from "@/lib/haptics";
@@ -20,11 +21,14 @@ function SheetRow({
   value,
   mono,
   strong,
+  small,
 }: {
   label: string;
   value: string;
   mono?: boolean;
   strong?: boolean;
+  /** Provenance rows (area, formula, standard): quieter, allowed to wrap. */
+  small?: boolean;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-2.5 border-b border-border-faint last:border-b-0">
@@ -32,9 +36,9 @@ function SheetRow({
         {label}
       </span>
       <span
-        className={`text-sm text-foreground tabular-nums ${
+        className={`text-right break-words min-w-0 tabular-nums ${
           mono ? "font-mono" : ""
-        } ${strong ? "font-bold" : "font-semibold"}`}
+        } ${strong ? "font-bold text-sm text-foreground" : small ? "font-medium text-xs text-foreground-secondary" : "font-semibold text-sm text-foreground"}`}
       >
         {value}
       </span>
@@ -114,7 +118,13 @@ export function CommandResultBreakdown({
   const geometryRows = (
     <>
       {(rows?.geometry ?? []).map((row) => (
-        <SheetRow key={row.id} label={row.label} value={row.value} mono />
+        <SheetRow
+          key={row.id}
+          label={row.label}
+          value={row.value}
+          mono
+          small={row.id === "sectionArea" || row.id === "formula" || row.id === "reference"}
+        />
       ))}
     </>
   );
@@ -154,7 +164,7 @@ export function CommandResultBreakdown({
           takes when they are about to act on the number. */}
       {focus.availability && (
         <p
-          className="text-[11.5px] leading-[1.45] mt-0 mb-3 px-3 py-2 rounded-lg"
+          className="text-[12px] leading-[1.45] mt-0 mb-3 px-3 py-2 rounded-lg"
           style={{
             background: "var(--amber-surface)",
             color: "var(--amber-text)",
@@ -191,6 +201,14 @@ export function CommandResultBreakdown({
           {pricingRows}
         </div>
       ))}
+      {rows && (
+        <Link
+          href="/faq"
+          className="inline-block mt-2 px-1 font-mono text-[12px] text-muted underline-offset-2 hover:underline"
+        >
+          {t("result.howCalculated")}
+        </Link>
+      )}
       {focus.calc && (
         <NearbySpecs
           input={focus.calc.input}

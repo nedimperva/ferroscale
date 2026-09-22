@@ -74,10 +74,10 @@ describe("manual profile area/perimeter definitions", () => {
       "A = pi * (88.900^2 - 78.900^2) / 4",
     );
     expect(byId("square_hollow").area({ side: 100, wallThickness: 5 }).expression).toBe(
-      "A = 100.000² − (100.000−2×5.000)²",
+      "A = 100.000² − (100.000−2×5.000)² − (4−π)×(10.000² − 5.000²)",
     );
     expect(byId("rectangular_tube").area({ width: 120, height: 80, wallThickness: 4 }).expression).toBe(
-      "A = 120.000×80.000 − (120.000−2×4.000)×(80.000−2×4.000)",
+      "A = 120.000×80.000 − (120.000−2×4.000)×(80.000−2×4.000) − (4−π)×(8.000² − 4.000²)",
     );
     expect(byId("angle").area({ legA: 80, legB: 80, thickness: 8 }).expression).toBe(
       "A = (80.000 + 80.000 − 8.000) × 8.000",

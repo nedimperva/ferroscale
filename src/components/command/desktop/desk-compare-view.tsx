@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsKgm, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CompareItem } from "@/hooks/useCompare";
@@ -177,11 +177,11 @@ export function DeskCompareView({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div
-                        className="fs-track-tight font-extrabold text-[14.5px] text-foreground truncate"
+                        className="fs-track-tight font-extrabold text-[15px] text-foreground truncate"
                       >
                         {c.name}
                       </div>
-                      <div className="font-mono text-[10.5px] text-muted mt-px">
+                      <div className="font-mono text-[11px] text-muted mt-px">
                         {formatLengthM(c.lengthM)} m × {c.r.quantity}
                       </div>
                     </div>
@@ -199,7 +199,7 @@ export function DeskCompareView({
                   <div className="mt-2">
                     {i === 0 ? (
                       <span
-                        className="text-[9px] font-extrabold rounded-none"
+                        className="text-[10px] font-extrabold rounded-none"
                         style={{
                           letterSpacing: 1,
                           padding: "3px 8px",
@@ -221,7 +221,7 @@ export function DeskCompareView({
 
               {/* total weight */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">{t("result.totalWeight")}</span>
+                <span className="text-[12px] font-semibold text-muted">{t("result.totalWeight")}</span>
               </div>
               {cols.map((c, i) => {
                 const pct = base.r.totalWeightKg > 0
@@ -266,7 +266,7 @@ export function DeskCompareView({
 
               {/* total cost */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">{t("result.totalCost")}</span>
+                <span className="text-[12px] font-semibold text-muted">{t("result.totalCost")}</span>
               </div>
               {cols.map((c, i) => {
                 const pct = base.r.grandTotalAmount > 0
@@ -291,7 +291,7 @@ export function DeskCompareView({
 
               {/* weight / piece */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">{t("compare.weightPerPiece")}</span>
+                <span className="text-[12px] font-semibold text-muted">{t("compare.weightPerPiece")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -303,19 +303,19 @@ export function DeskCompareView({
 
               {/* mass per metre */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">{t("result.massPerMetre")}</span>
+                <span className="text-[12px] font-semibold text-muted">{t("result.massPerMetre")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
                   <span className="font-mono text-xs font-semibold text-foreground">
-                    {c.kgm != null ? `${c.kgm.toFixed(2)} kg/m` : "—"}
+                    {c.kgm != null ? `${fsKgm(c.kgm)} kg/m` : "—"}
                   </span>
                 </div>
               ))}
 
               {/* cost per metre */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">{t("compare.costPerMetre")}</span>
+                <span className="text-[12px] font-semibold text-muted">{t("compare.costPerMetre")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -329,7 +329,7 @@ export function DeskCompareView({
               {hasSurface && (
                 <>
                   <div style={labelCell}>
-                    <span className="text-[11.5px] font-semibold text-muted">{t("compare.surfaceArea")}</span>
+                    <span className="text-[12px] font-semibold text-muted">{t("compare.surfaceArea")}</span>
                   </div>
                   {cols.map((c, i) => (
                     <div key={c.item.id} style={valueCell(i)}>
@@ -343,7 +343,7 @@ export function DeskCompareView({
 
               {/* grade */}
               <div style={labelCell}>
-                <span className="text-[11.5px] font-semibold text-muted">{t("result.grade")}</span>
+                <span className="text-[12px] font-semibold text-muted">{t("result.grade")}</span>
               </div>
               {cols.map((c, i) => (
                 <div key={c.item.id} style={valueCell(i)}>
@@ -360,7 +360,7 @@ export function DeskCompareView({
                   <button
                     type="button"
                     onClick={() => onPick(c.item.input)}
-                    className="w-full rounded-none cursor-pointer font-bold text-[11.5px] text-foreground-secondary"
+                    className="w-full rounded-none cursor-pointer font-bold text-[12px] text-foreground-secondary"
                     style={{
                       padding: "8px 0",
                       border: "1px solid var(--border-faint)",

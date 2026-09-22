@@ -1,6 +1,7 @@
 import {
   CURRENCY_SYMBOLS,
   findAliasByProfileId,
+  fsKgm,
   fsMoney,
   fsWeight,
   fsWeightUnit,
@@ -70,6 +71,20 @@ export function applyIssueSuggestion(
   return /\s$/.test(next) ? next : next + " ";
 }
 
+/**
+ * The parser's issue for one chip, if it raised one. Tokens are matched the
+ * way the parser saw them — lower-cased, decimal comma normalised — so the
+ * chip for `x2.5` can carry "Didn't understand" in its tooltip even while the
+ * rest of the line computes.
+ */
+export function issueForToken(
+  issues: readonly CommandParseIssue[],
+  tok: string,
+): CommandParseIssue | undefined {
+  const key = tok.toLowerCase().replace(/(\d),(\d)/g, "$1.$2");
+  return issues.find((issue) => issue.token.toLowerCase() === key);
+}
+
 export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): string {
   switch (issue.code) {
     case "unknownToken":
@@ -89,6 +104,12 @@ export function formatCommandIssue(t: CommandT, issue: CommandParseIssue): strin
       return localizedEngineMessage(t, issue) ?? t("issues.invalidSetting");
     case "invalidGeometry":
       return localizedEngineMessage(t, issue) ?? issue.message;
+    case "shortLength":
+      return t("issues.shortLength", {
+        token: issue.token,
+        value: String(issue.params?.value ?? issue.token),
+        unit: String(issue.params?.unit ?? ""),
+      });
   }
 }
 
@@ -191,6 +212,10 @@ export function buildCommandSummary(
   t: CommandT,
   p: CommandParseResult,
   line?: CommandLine,
+  options: {
+    /** False while the money comes from the seeded rate — the copied text says so. */
+    rateIsUserSupplied?: boolean;
+  } = {},
 ): string | null {
   // A line of several items copies as all of them. Pasting one item of a
   // two-item quote into an email is a quiet way to send the wrong number.
@@ -204,7 +229,7 @@ export function buildCommandSummary(
   const header = grade ? `${name} · ${grade}` : name;
   const targetNote = commandTargetNote(p);
   const meta = [
-    `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${p.kgm.toFixed(2)} kg/m`,
+    `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${fsKgm(p.kgm)} kg/m`,
     // A target line is the whole point of the calculation — a summary that
     // dropped it would read as if the quantity had been chosen by hand.
     targetNote ? formatTargetNote(targetNote, t) : null,
@@ -220,7 +245,8 @@ export function buildCommandSummary(
     rows.push([t("result.totalCost"), `${sym} ${fsMoney(p.totalAmount)}`]);
     rows.push([
       t("result.rate"),
-      `${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`,
+      `${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}` +
+        (options.rateIsUserSupplied === false ? ` (${t("result.defaultRate")})` : ""),
     ]);
   }
 

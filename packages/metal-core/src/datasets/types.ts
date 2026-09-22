@@ -142,6 +142,13 @@ export interface ProfileSpecGeometry {
   legBMm?: number;
   patternHeightMm?: number;
   rootRadiusMm?: number;
+  /**
+   * True when web/flange thickness and root radius were solved from the area
+   * with a fixed ratio rather than read from the EN table. Renderers keep the
+   * shape but must not print those three as dimensions — HEA 120 was drawn
+   * with "tf 8.4, tw 5.6, R8.8" against a catalog 8 / 5 / 12.
+   */
+  thicknessEstimated?: boolean;
   waveHeightMm?: number;
   wavePitchMm?: number;
   meshPitchMm?: number;

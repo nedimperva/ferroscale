@@ -1,7 +1,7 @@
 {
   "meta": {
     "layout": {
-      "title": "FerroScale",
+      "title": "FerroScale — Metal Weight & Price Calculator (EN profiles)",
       "description": "Metal weight and price calculator for EN standard and custom profiles. Accurate estimates with traceable formulas.",
       "applicationName": "FerroScale",
       "openGraphDescription": "Calculate weight and price for EN profile types with traceable formulas and references.",
@@ -204,6 +204,7 @@
       "liveResult": "Result: {value}",
       "addToSession": "Add this line to the session",
       "openBreakdown": "Open result breakdown",
+      "suggestionStrip": "Suggestions — scroll sideways for more",
       "openSession": "Open the session tape"
     },
     "nav": {
@@ -237,7 +238,12 @@
       "letters": "ABC",
       "numbers": "123",
       "tweak": "Tweak",
-      "tweakAria": "Edit length, quantity or rate"
+      "tweakAria": "Edit length, quantity or rate",
+      "times": "Times — quantity",
+      "decimalPoint": "Decimal point",
+      "enter": "Enter — log this calculation",
+      "lengthUnitKey": "Millimetres — hold for other length units",
+      "priceUnitKey": "Rate per {unit} — hold for other price units"
     },
     "token": {
       "edit": "Edit {token}",
@@ -300,7 +306,8 @@
       "didYouMean": "Did you mean {suggestion}?",
       "invalidLength": "Length out of range: \"{token}\"",
       "invalidSetting": "A setting is out of range — check Settings",
-      "invalidQtyRange": "Quantity must be a whole number, 1 to {max}"
+      "invalidQtyRange": "Quantity must be a whole number, 1 to {max}",
+      "shortLength": "\"{token}\" read as {value} {unit}"
     },
     "sheets": {
       "resultBreakdown": "Result breakdown",
@@ -316,6 +323,11 @@
       "perPiece": "Per piece",
       "totalWeight": "Total weight",
       "density": "Density",
+      "sectionArea": "Section area",
+      "formula": "Formula",
+      "reference": "Reference",
+      "dataset": "dataset {version}",
+      "howCalculated": "How is this calculated? →",
       "rate": "Rate",
       "perPiecePrice": "Per piece price",
       "subtotal": "Subtotal",
@@ -504,6 +516,7 @@
       "breakdown": "BREAKDOWN",
       "breakdownEmpty": "the full breakdown appears as you type",
       "totalCostLabel": "TOTAL COST",
+      "estimatedCostLabel": "EST. COST @ {rate} (DEFAULT)",
       "saveSessionAsProject": "SAVE AS PROJECT",
       "perPieceLabel": "PER PIECE",
       "breakdownItem": "Breakdown · item {index} of {count}",
@@ -1023,7 +1036,7 @@
     }
   },
   "qa": {
-    "title": "Formula QA",
+    "title": "Formula QA — FerroScale",
     "subtitle": "Live engine output checked against independent references — published EN catalog masses and hand-computed formulas (S235JR, per metre).",
     "back": "Back to calculator",
     "summaryPass": "All {count} checks pass",
@@ -1173,7 +1186,7 @@
         "summary": "Perimeter times wall thickness times 0.00785 kg/m, adjusted for corner radiuses.",
         "formula": "kg/m ≈ (Height + Width - 2 × Thickness) × 2 × Thickness × 0.00785",
         "explanation": "For hollow box sections, the perimeter centerline length is 2 × (H + W - 2t). Multiplying by thickness gives metal area. Cold-formed sections (EN 10219) have outer corner radii ≈ 2t; hot-finished (EN 10210) have radii ≈ 1.5t.",
-        "example": "Tube 100×50×4 mm: (100 + 50 - 8) × 8 × 0.00785 ≈ 8.92 kg/m. Exact EN geometry with corner radiuses yields 8.77 kg/m. Over 6 m = 52.62 kg.",
+        "example": "Tube 100×50×4 mm: the sharp-corner box gives (100 + 50 - 8) × 8 × 0.00785 ≈ 8.92 kg/m. Cold-formed EN 10219 corners (Ro = 2t, Ri = t) take off (4 − π)(8² − 4²) = 41 mm², so FerroScale reports 8.59 kg/m — the catalog figure. Hot-finished EN 10210 (Ro = 1.5t) would be 8.78 kg/m. Over 6 m = 51.55 kg.",
         "tip": "Cold-formed rectangular tubes (EN 10219) are slightly lighter than hot-finished ones (EN 10210) because cold forming creates larger outside corner radiuses.",
         "command": "tub100x50x4 6m"
       },

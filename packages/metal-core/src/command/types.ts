@@ -137,7 +137,14 @@ export type CommandParseIssueCode =
   /** The length is out of range — not a problem with the profile or its size. */
   | "invalidLength"
   /** Waste, VAT, density or a rate is out of range; the line itself is fine. */
-  | "invalidSetting";
+  | "invalidSetting"
+  /**
+   * A bare number read in the default unit came to less than 100 mm on a
+   * long product — `hea120 6` is 6 mm of beam, and almost certainly meant
+   * 6 m. The line still computes; this names the reading and offers the
+   * metre form. Advisory: the token is real, the default unit is the user's.
+   */
+  | "shortLength";
 
 /**
  * Structured feedback for input the parser could not act on. `message` is a

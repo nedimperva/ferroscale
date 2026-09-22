@@ -260,7 +260,7 @@ export function SavedCard({
                 {named ? entry.name : model.specLabel}
               </span>
             </span>
-            <span className="block font-mono text-[11.5px] text-muted mt-0.5 truncate">
+            <span className="block font-mono text-[12px] text-muted mt-0.5 truncate">
               {model.isAssembly
                 ? t("saved.partCount", { count: model.parts.length })
                 : named
@@ -289,10 +289,10 @@ export function SavedCard({
           </div>
         </div>
         <div className="min-w-0 ml-auto text-right">
-          <div className="font-mono text-[12.5px] font-bold text-foreground-secondary whitespace-nowrap">
+          <div className="font-mono text-[13px] font-bold text-foreground-secondary whitespace-nowrap">
             {isWeight ? priceText : weightText}
           </div>
-          <div className="font-mono text-[10.5px] text-muted whitespace-nowrap mt-0.5">
+          <div className="font-mono text-[11px] text-muted whitespace-nowrap mt-0.5">
             {model.kgm != null ? `${model.kgm.toFixed(2)} kg/m` : null}
             {model.kgm != null && model.perPieceKg != null ? " · " : null}
             {model.perPieceKg != null
@@ -310,7 +310,7 @@ export function SavedCard({
       >
         {/* Only the provenance text wraps — the actions stay on one line. */}
         <span className="flex flex-1 min-w-0 items-center gap-1.5 flex-wrap">
-          <span className="font-mono text-[10.5px] text-muted-faint truncate">
+          <span className="font-mono text-[11px] text-muted-faint truncate">
             {`@ ${sym}${model.rate}/${model.rateUnit}`}
             {" · "}
             {savedOn}
@@ -413,7 +413,7 @@ export function SavedCard({
           )}
           {model.isAssembly && (
             <div className="mb-3">
-              <div className="text-[9.5px] font-bold text-muted uppercase mb-1" style={{ letterSpacing: 1 }}>
+              <div className="text-[10px] font-bold text-muted uppercase mb-1" style={{ letterSpacing: 1 }}>
                 {t("saved.parts")}
               </div>
               {model.parts.map((part) => (
@@ -422,16 +422,16 @@ export function SavedCard({
                   className="flex items-baseline gap-2"
                   style={{ padding: "5px 0", borderTop: "1px solid var(--border-faint)" }}
                 >
-                  <span className="font-bold text-[12.5px] text-foreground truncate">
+                  <span className="font-bold text-[13px] text-foreground truncate">
                     {part.specLabel}
                   </span>
                   <span className="font-mono text-[11px] text-muted truncate">
                     {part.detailLine}
                   </span>
-                  <span className="ml-auto font-mono text-[11.5px] font-semibold text-foreground-secondary whitespace-nowrap">
+                  <span className="ml-auto font-mono text-[12px] font-semibold text-foreground-secondary whitespace-nowrap">
                     {fsWeight(part.totalKg)} {fsWeightUnit()}
                   </span>
-                  <span className="font-mono text-[11.5px] text-muted whitespace-nowrap" style={{ width: 76, textAlign: "right" }}>
+                  <span className="font-mono text-[12px] text-muted whitespace-nowrap" style={{ width: 76, textAlign: "right" }}>
                     {part.totalAmount != null ? `${sym} ${fsMoney(part.totalAmount)}` : "—"}
                   </span>
                   {actions.onRemovePart && model.parts.length > 1 && (
@@ -455,7 +455,7 @@ export function SavedCard({
               {[...breakdown.geometry, ...breakdown.pricing].map((row) => (
                 <div key={row.id} className="flex items-baseline justify-between gap-2" style={{ padding: "3px 0" }}>
                   <span className="text-[11px] text-muted truncate">{row.label}</span>
-                  <span className="font-mono text-[11.5px] font-semibold text-foreground whitespace-nowrap">
+                  <span className="font-mono text-[12px] font-semibold text-foreground whitespace-nowrap">
                     {row.value}
                   </span>
                 </div>
@@ -496,7 +496,7 @@ export function SavedCard({
                   type="button"
                   onClick={submitAddCommand}
                   disabled={!addCommand.trim()}
-                  className="h-9 px-3 rounded-chip text-[11.5px] font-bold text-foreground flex items-center gap-1.5 flex-shrink-0 cursor-pointer disabled:opacity-40"
+                  className="h-9 px-3 rounded-chip text-[12px] font-bold text-foreground flex items-center gap-1.5 flex-shrink-0 cursor-pointer disabled:opacity-40"
                   style={{ background: "var(--surface)", border: "1px solid var(--border-faint)" }}
                 >
                   <DeskIcon name="plus" />
@@ -563,13 +563,13 @@ export function SavedTableRow({
           {model.detailLine}
         </span>
         <span
-          className="font-mono text-[12.5px] font-bold text-right flex-shrink-0"
+          className="font-mono text-[13px] font-bold text-right flex-shrink-0"
           style={{ minWidth: 92, color: "var(--foreground)" }}
         >
           {model.totalKg != null ? `${fsWeight(model.totalKg)} ${fsWeightUnit()}` : "—"}
         </span>
         <span
-          className="font-mono text-[12.5px] font-semibold text-right flex-shrink-0"
+          className="font-mono text-[13px] font-semibold text-right flex-shrink-0"
           style={{ minWidth: 92, color: "var(--blue-text)" }}
         >
           {model.totalAmount != null ? `${sym} ${fsMoney(model.totalAmount)}` : "—"}

@@ -72,8 +72,14 @@ interface KeyProps {
   ariaLabel?: string;
 }
 
+/**
+ * 44px for the number pad (the row people actually hit with a thumb), 40px for
+ * the letter rows. The letter pad measured 36px, under every platform's
+ * touch-target guidance; the phone layout is flex spacers above the keypad,
+ * so the extra 16px come out of the empty band, not out of the hero.
+ */
 function keyHeight(tall?: boolean): string {
-  return tall ? "h-11" : "h-9";
+  return tall ? "h-11" : "h-10";
 }
 
 function Key({
@@ -183,6 +189,7 @@ function HoldPickerKey({
   flex = 1,
   variant = "default",
   tall,
+  ariaLabel,
 }: {
   label: string;
   onTap: () => void;
@@ -194,6 +201,8 @@ function HoldPickerKey({
   flex?: number;
   variant?: "default" | "dim";
   tall?: boolean;
+  /** Spoken name: "mm ▾" reads as "mm black down-pointing triangle" otherwise. */
+  ariaLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -263,6 +272,10 @@ function HoldPickerKey({
         onPointerLeave={clearTimer}
         onPointerCancel={clearTimer}
         onContextMenu={(e) => e.preventDefault()}
+        aria-label={ariaLabel}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        title={menuLabel}
         className={`w-full ${KEY_BASE} ${keyHeight(tall)} ${variantClass(variant)} font-mono text-[15px]`}
       >
         {label}
@@ -380,7 +393,7 @@ export function CommandKeypad({
             <Key tall mono label="4" onPress={() => onKey("4")} />
             <Key tall mono label="5" onPress={() => onKey("5")} />
             <Key tall mono label="6" onPress={() => onKey("6")} />
-            <Key tall mono big label="×" onPress={() => onKey("x")} />
+            <Key tall mono big label="×" ariaLabel={t("keypad.times")} onPress={() => onKey("x")} />
           </div>
           <div className="flex gap-1">
             <Key tall mono label="7" onPress={() => onKey("7")} />
@@ -396,10 +409,11 @@ export function CommandKeypad({
               onPress={() => onKey(" ")}
               flex={2.2}
             />
-            <Key tall mono big label="." onPress={() => onKey(".")} flex={0.8} />
+            <Key tall mono big label="." ariaLabel={t("keypad.decimalPoint")} onPress={() => onKey(".")} flex={0.8} />
             <HoldPickerKey
               tall
               label="mm ▾"
+              ariaLabel={t("keypad.lengthUnitKey")}
               onTap={() => insertUnit("mm")}
               choices={LENGTH_UNIT_CHOICES}
               onPick={insertUnit}
@@ -410,6 +424,7 @@ export function CommandKeypad({
             <HoldPickerKey
               tall
               label={`${priceUnitLabel} ▾`}
+              ariaLabel={t("keypad.priceUnitKey", { unit: priceUnitLabel })}
               onTap={onPriceUnit}
               choices={PRICE_UNIT_CHOICES}
               onPick={onPriceUnitPick}
@@ -418,7 +433,7 @@ export function CommandKeypad({
               align="right"
               variant="dim"
             />
-            <Key tall variant="accent" label="↵" onPress={onEnter} />
+            <Key tall variant="accent" label="↵" ariaLabel={t("keypad.enter")} onPress={onEnter} />
           </div>
         </div>
         {!valid && <span className="sr-only">{t("keypad.addLength")}</span>}
@@ -446,7 +461,7 @@ export function CommandKeypad({
         </div>
         <div className="flex gap-1">
           {/* Shows × but types x — the canonical quantity token. */}
-          <Key label="×" mono big onPress={() => onKey("x")} flex={1.3} />
+          <Key label="×" mono big ariaLabel={t("keypad.times")} onPress={() => onKey("x")} flex={1.3} />
           {ROW_BOT.map((k) => (
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
@@ -466,7 +481,7 @@ export function CommandKeypad({
               flex={1.15}
             />
           )}
-          <Key label="." mono big onPress={() => onKey(".")} flex={0.8} />
+          <Key label="." mono big ariaLabel={t("keypad.decimalPoint")} onPress={() => onKey(".")} flex={0.8} />
           <Key label={t("keypad.space")} variant="dim" onPress={() => onKey(" ")} flex={2.9} />
           <HoldPickerKey
             label="mm ▾"
@@ -489,7 +504,7 @@ export function CommandKeypad({
             variant="dim"
             flex={1.55}
           />
-          <Key label="↵" variant="accent" onPress={onEnter} flex={1.4} />
+          <Key label="↵" variant="accent" ariaLabel={t("keypad.enter")} onPress={onEnter} flex={1.4} />
         </div>
       </div>
       {!valid && <span className="sr-only">{t("keypad.addLength")}</span>}
