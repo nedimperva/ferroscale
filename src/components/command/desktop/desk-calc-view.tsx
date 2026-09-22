@@ -49,13 +49,13 @@ import { SegmentedRail } from "../segmented-rail";
 import { SaveControl } from "../save-control";
 import { DEMO_QUERY } from "../command-constants";
 import {
+  duplicateLineItem,
   editLineToken,
-  lineChipPrefix,
   lineChips,
-  lineExpandedIndex,
   pullLastChip,
   removeLineItem,
   removeLineToken,
+  replaceLinePartial,
 } from "../line-edit";
 import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
 import { useExpandedItem } from "../use-expanded-item";
@@ -188,14 +188,17 @@ export function DeskCalcView({
 
   // Chips are grouped per `+`-joined item; the trailing piece (no whitespace
   // after it) is still being typed and lives in the real input.
-  const chips = useMemo(() => lineChips(query), [query]);
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
+  const segments = useMemo(() => cmdSplitLine(query), [query]);
+  const expandedIndex =
+    expandedItem != null && expandedItem >= 0 && expandedItem < segments.length
+      ? expandedItem
+      : Math.max(0, segments.length - 1);
+  const chips = useMemo(() => lineChips(query, expandedIndex), [query, expandedIndex]);
   const partial = chips.partial;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
-  const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
-  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
-  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
 
   // Which `+` item the glance row and the breakdown describe. Picked from
   // the assembly list in the right rail, not repeated under the hero.
@@ -252,7 +255,7 @@ export function DeskCalcView({
     keepExpanded(item, removeLineToken(query, item, idx));
   };
   const editTokenAt = (item: number, idx: number) => {
-    keepExpanded(item, editLineToken(query, item, idx));
+    keepExpanded(item, editLineToken(query, item, idx, item));
   };
 
   // Hero metric counts up when the query settles (see useCountUp). Weight
@@ -326,6 +329,13 @@ export function DeskCalcView({
                 }
                 focusInputAtEnd();
               }}
+              onDuplicateItem={(idx) => {
+                const next = duplicateLineItem(query, idx);
+                setQuery(next);
+                setExpandedItem(chips.groups.length);
+                setPicked(chips.groups.length);
+                focusInputAtEnd();
+              }}
               onAddItem={() => {
                 const next = cmdAppendLineItem(query);
                 setQuery(next);
@@ -390,9 +400,62 @@ export function DeskCalcView({
             value={partial}
             onChange={(e) => {
               historyIdxRef.current = -1;
-              setQuery(chipPrefix + e.target.value);
+              setQuery(replaceLinePartial(query, expandedIndex, e.target.value));
             }}
             onKeyDown={(e) => {
+              // Alt + 1..9: switch to tab N
+              if (e.altKey && !e.ctrlKey && !e.metaKey && e.key >= "1" && e.key <= "9") {
+                const targetTab = parseInt(e.key, 10) - 1;
+                if (targetTab < chips.groups.length) {
+                  e.preventDefault();
+                  setExpandedItem(targetTab);
+                  setPicked(targetTab);
+                  focusInputAtEnd();
+                  return;
+                }
+              }
+              // Alt + + or Alt + =: add new line item
+              if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "+" || e.key === "=")) {
+                e.preventDefault();
+                const next = cmdAppendLineItem(query);
+                setQuery(next);
+                setExpandedItem(chips.groups.length);
+                setPicked(chips.groups.length);
+                focusInputAtEnd();
+                return;
+              }
+              // Alt + W: close active tab (when > 1 item)
+              if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "w" || e.key === "W")) {
+                if (chips.groups.length > 1) {
+                  e.preventDefault();
+                  const next = removeLineItem(query, expandedIndex);
+                  setQuery(next);
+                  if (expandedIndex > 0) {
+                    setExpandedItem(expandedIndex - 1);
+                    setPicked(expandedIndex - 1);
+                  }
+                  focusInputAtEnd();
+                  return;
+                }
+              }
+              // Backspace on empty tab: remove this item and return to previous
+              if (
+                e.key === "Backspace" &&
+                !partial &&
+                (chips.groups[expandedIndex]?.tokens.length ?? 0) === 0 &&
+                chips.groups.length > 1
+              ) {
+                e.preventDefault();
+                const next = removeLineItem(query, expandedIndex);
+                setQuery(next);
+                if (expandedIndex > 0) {
+                  setExpandedItem(expandedIndex - 1);
+                  setPicked(expandedIndex - 1);
+                }
+                focusInputAtEnd();
+                return;
+              }
+
               const action = resolveCommandKey({
                 key: e.key,
                 code: e.code,
@@ -468,7 +531,7 @@ export function DeskCalcView({
                   firstSuggestionRef.current?.focus();
                   return;
                 case "editLastChip":
-                  setQuery(pullLastChip(query));
+                  setQuery(pullLastChip(query, expandedIndex));
                   focusInputAtEnd();
                   return;
               }

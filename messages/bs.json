@@ -226,7 +226,9 @@
       "acceptGhost": "Dovrši: {text}",
       "expandItem": "Stavka {index}, {name} — prikaži tokene",
       "addItem": "Dodaj stavku",
-      "removeItem": "Ukloni stavku {index}"
+      "removeItem": "Ukloni stavku {index}",
+      "duplicateItem": "Dupliciraj stavku {index}",
+      "invalidItem": "Stavka {index} ima greške"
     },
     "keypad": {
       "space": "razmak",
@@ -238,6 +240,7 @@
       "backspaceHold": "Zadržite da obrišete cijeli token",
       "letters": "ABC",
       "numbers": "123",
+      "addItem": "+ Stavka",
       "tweak": "Mijenjaj",
       "tweakAria": "Uredi dužinu, količinu ili cijenu"
     },

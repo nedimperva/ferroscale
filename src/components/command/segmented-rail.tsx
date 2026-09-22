@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import type { CommandLine } from "@ferroscale/metal-core";
 import { fsWeight } from "@ferroscale/metal-core";
@@ -12,6 +13,7 @@ export interface SegmentedRailProps {
   expandedIndex: number;
   onSelectTab: (index: number) => void;
   onRemoveItem: (index: number) => void;
+  onDuplicateItem?: (index: number) => void;
   onAddItem: () => void;
   compact?: boolean;
 }
@@ -22,16 +24,55 @@ export function SegmentedRail({
   expandedIndex,
   onSelectTab,
   onRemoveItem,
+  onDuplicateItem,
   onAddItem,
   compact = false,
 }: SegmentedRailProps) {
   const t = useTranslations("command");
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    const el = tabRefs.current[expandedIndex];
+    if (el && typeof el.scrollIntoView === "function") {
+      el.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+    }
+  }, [expandedIndex]);
 
   if (groups.length <= 1) return null;
 
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      const next = (index + 1) % groups.length;
+      onSelectTab(next);
+      tabRefs.current[next]?.focus();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      const prev = (index - 1 + groups.length) % groups.length;
+      onSelectTab(prev);
+      tabRefs.current[prev]?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      onSelectTab(0);
+      tabRefs.current[0]?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      const last = groups.length - 1;
+      onSelectTab(last);
+      tabRefs.current[last]?.focus();
+    } else if (e.key === "Delete" || (e.altKey && e.key === "Backspace")) {
+      e.preventDefault();
+      onRemoveItem(index);
+    }
+  };
+
   return (
     <div
-      role="group"
+      role="tablist"
       aria-label={t("line.items")}
       className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1"
       style={{
@@ -44,6 +85,7 @@ export function SegmentedRail({
         const active = index === expandedIndex;
         const parse = item?.parse;
         const alias = parse?.alias;
+        const isValid = parse?.valid ?? true;
 
         // Label: parse name if valid, else first token, else fallback
         const label =
@@ -67,8 +109,14 @@ export function SegmentedRail({
             }}
           >
             <button
+              ref={(el) => {
+                tabRefs.current[index] = el;
+              }}
               type="button"
-              aria-pressed={active}
+              role="tab"
+              aria-selected={active}
+              tabIndex={active ? 0 : -1}
+              onKeyDown={(e) => handleKeyDown(e, index)}
               aria-label={t("query.expandItem", { index: index + 1, name: label })}
               onClick={() => onSelectTab(index)}
               className="inline-flex items-center gap-1.5 cursor-pointer select-none text-left bg-transparent border-0 py-0"
@@ -84,6 +132,14 @@ export function SegmentedRail({
               >
                 {index + 1}
               </span>
+
+              {!isValid && (
+                <span
+                  className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0"
+                  title={t("query.invalidItem", { index: index + 1 })}
+                  aria-hidden="true"
+                />
+              )}
 
               {alias && (
                 <span className="flex items-center text-foreground-secondary shrink-0" aria-hidden="true">
@@ -109,6 +165,24 @@ export function SegmentedRail({
                 </span>
               )}
             </button>
+
+            {onDuplicateItem && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDuplicateItem(index);
+                }}
+                aria-label={t("query.duplicateItem", { index: index + 1 })}
+                title={t("query.duplicateItem", { index: index + 1 })}
+                className="inline-flex items-center justify-center w-5 text-muted-faint hover:text-foreground hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer border-0 border-l border-transparent hover:border-[var(--border-faint)] rounded-none"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="9" y="9" width="13" height="13" />
+                  <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1" />
+                </svg>
+              </button>
+            )}
 
             <button
               type="button"

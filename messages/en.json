@@ -226,7 +226,9 @@
       "acceptGhost": "Complete: {text}",
       "expandItem": "Item {index}, {name} — show its tokens",
       "addItem": "Add item",
-      "removeItem": "Remove item {index}"
+      "removeItem": "Remove item {index}",
+      "duplicateItem": "Duplicate item {index}",
+      "invalidItem": "Item {index} has issues"
     },
     "keypad": {
       "space": "space",
@@ -238,6 +240,7 @@
       "backspaceHold": "Hold to delete the whole token",
       "letters": "ABC",
       "numbers": "123",
+      "addItem": "+ Item",
       "tweak": "Tweak",
       "tweakAria": "Edit length, quantity or rate"
     },

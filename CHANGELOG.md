@@ -39,6 +39,8 @@ three and four levels down came up to where they are named.
 
 ### Added
 
+- Segmented item rail tabs support WAI-ARIA tablist navigation, arrow key traversal, auto-scrolling into view, item duplication, and keyboard shortcuts (Alt+1..9, Alt++, Alt+W, Backspace to pop empty tab)
+- Mobile keypad in actions mode includes a 1-tap '+ Item' button for frictionless assembly creation
 - Multi-item lines feature segmented item rail tabs directly above the command line to switch items, monitor item weights, delete items, and append new items with 1 click
 - Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile
 - The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life
@@ -47,6 +49,7 @@ three and four levels down came up to where they are named.
 
 ### Fixed
 
+- Editing, suggestion chips, and caret input in multi-item lines are now properly scoped to whichever tab is selected rather than locked to the final item
 - Discovery tiles now enter clean profile aliases without trailing spaces so sizes and dimensions can be typed immediately
 
 - A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen

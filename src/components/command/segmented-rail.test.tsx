@@ -31,6 +31,7 @@ function renderRail(
   handlers: {
     onSelectTab?: (i: number) => void;
     onRemoveItem?: (i: number) => void;
+    onDuplicateItem?: (i: number) => void;
     onAddItem?: () => void;
   } = {},
 ) {
@@ -44,6 +45,7 @@ function renderRail(
         expandedIndex={expandedIndex}
         onSelectTab={handlers.onSelectTab ?? vi.fn()}
         onRemoveItem={handlers.onRemoveItem ?? vi.fn()}
+        onDuplicateItem={handlers.onDuplicateItem}
         onAddItem={handlers.onAddItem ?? vi.fn()}
       />
     </NextIntlClientProvider>,
@@ -56,21 +58,34 @@ describe("SegmentedRail", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("renders tabs for multi-item lines", () => {
-    renderRail("hea120 6m x2 + upn140 4m x4");
-    expect(screen.getByRole("group")).toBeDefined();
-    const tabs = screen.getAllByRole("button", { name: /Item \d/ });
+  it("renders tabs with tablist and tab roles for multi-item lines", () => {
+    renderRail("hea120 6m x2 + upn140 4m x4", 0);
+    expect(screen.getByRole("tablist")).toBeDefined();
+    const tabs = screen.getAllByRole("tab");
     expect(tabs).toHaveLength(2);
     expect(tabs[0].textContent).toContain("HEA 120");
+    expect(tabs[0].getAttribute("aria-selected")).toBe("true");
     expect(tabs[1].textContent).toContain("UPN 140");
+    expect(tabs[1].getAttribute("aria-selected")).toBe("false");
   });
 
   it("calls onSelectTab when a tab is clicked", () => {
     const onSelectTab = vi.fn();
     renderRail("hea120 6m x2 + upn140 4m x4", 0, { onSelectTab });
-    const tabs = screen.getAllByRole("button", { name: /Item \d/ });
+    const tabs = screen.getAllByRole("tab");
     fireEvent.click(tabs[1]);
     expect(onSelectTab).toHaveBeenCalledWith(1);
+  });
+
+  it("navigates tabs with ArrowRight and ArrowLeft", () => {
+    const onSelectTab = vi.fn();
+    renderRail("hea120 6m x2 + upn140 4m x4", 0, { onSelectTab });
+    const tabs = screen.getAllByRole("tab");
+    fireEvent.keyDown(tabs[0], { key: "ArrowRight" });
+    expect(onSelectTab).toHaveBeenCalledWith(1);
+
+    fireEvent.keyDown(tabs[1], { key: "ArrowLeft" });
+    expect(onSelectTab).toHaveBeenCalledWith(0);
   });
 
   it("calls onRemoveItem when close button on a tab is clicked", () => {
@@ -79,6 +94,15 @@ describe("SegmentedRail", () => {
     const removeButtons = screen.getAllByLabelText(/Remove item/);
     fireEvent.click(removeButtons[0]);
     expect(onRemoveItem).toHaveBeenCalledWith(0);
+  });
+
+  it("calls onDuplicateItem when duplicate button on a tab is clicked", () => {
+    const onDuplicateItem = vi.fn();
+    renderRail("hea120 6m x2 + upn140 4m x4", 0, { onDuplicateItem });
+    const dupButtons = screen.getAllByLabelText(/Duplicate item/);
+    expect(dupButtons).toHaveLength(2);
+    fireEvent.click(dupButtons[0]);
+    expect(onDuplicateItem).toHaveBeenCalledWith(0);
   });
 
   it("calls onAddItem when Add button is clicked", () => {

@@ -57,9 +57,9 @@ import { massBand } from "./mass-band";
 import {
   activeItemText,
   applyToActiveItem,
+  duplicateLineItem,
   editLineToken,
   lineChips,
-  lineExpandedIndex,
   removeLineItem,
   removeLineToken,
   replaceLineToken,
@@ -400,8 +400,16 @@ export function CommandShell() {
    */
   const mode =
     modeOverride ?? (weightAsMain || !rateIsUserSupplied ? "weight" : "price");
+  /** Active item state for segmented rail and scoped editing */
+  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
+  const querySegments = useMemo(() => cmdSplitLine(query), [query]);
+  const expandedIndex =
+    expandedItem != null && expandedItem >= 0 && expandedItem < querySegments.length
+      ? expandedItem
+      : Math.max(0, querySegments.length - 1);
+  const activeItemParse = line.items[expandedIndex]?.parse ?? p;
   /** The item under the caret, as the suggestion engine should see it. */
-  const activeQuery = useMemo(() => activeItemText(query), [query]);
+  const activeQuery = useMemo(() => activeItemText(query, expandedIndex), [query, expandedIndex]);
 
   // Usage learning: after the user stops typing on a live result (~2.5 s),
   // record the query's tokens (per profile family) so suggestions rank real
@@ -459,8 +467,8 @@ export function CommandShell() {
     [savedEntries],
   );
   const sug = useMemo(
-    () => cmdSuggest(activeQuery, parserSettings, sizePresetsForProfile, usageSource, p),
-    [activeQuery, parserSettings, sizePresetsForProfile, usageSource, p],
+    () => cmdSuggest(activeQuery, parserSettings, sizePresetsForProfile, usageSource, activeItemParse),
+    [activeQuery, parserSettings, sizePresetsForProfile, usageSource, activeItemParse],
   );
 
   // Auto-close result sheet if query becomes invalid (derive, don't setState)
@@ -1297,50 +1305,72 @@ export function CommandShell() {
       }
       if (item.kind === "item") {
         setQuery((q) => cmdAppendLineItem(q));
+        setExpandedItem(querySegments.length);
         return;
       }
       setKeypadOverride(null);
-      setQuery((q) => applyToActiveItem(q, (text) => cmdApplyInsert(text, item)));
+      setQuery((q) => applyToActiveItem(q, (text) => cmdApplyInsert(text, item), expandedIndex));
     },
-    [doSave],
+    [doSave, expandedIndex, querySegments.length, setExpandedItem],
   );
 
   const onKey = useCallback((ch: string) => {
     setQuery((q) =>
-      applyToActiveItem(q, (text) =>
-        commandKeypadInsert(text, ch, cmdParse(text, parserSettings)),
+      applyToActiveItem(
+        q,
+        (text) => commandKeypadInsert(text, ch, cmdParse(text, parserSettings)),
+        expandedIndex,
       ),
     );
-  }, [parserSettings]);
+  }, [parserSettings, expandedIndex]);
   const insertPriceToken = useCallback(
     (unit: string) => {
-      setQuery((q) => {
-        const token = /\s$/.test(q) || q.length === 0
-          ? `${formatPriceTokenValue(shared.unitPrice)}/${unit}`
-          : `/${unit}`;
-        return `${q}${token} `;
-      });
+      setQuery((q) =>
+        applyToActiveItem(
+          q,
+          (text) => {
+            const token = /\s$/.test(text) || text.length === 0
+              ? `${formatPriceTokenValue(shared.unitPrice)}/${unit}`
+              : `/${unit}`;
+            return `${text}${token} `;
+          },
+          expandedIndex,
+        ),
+      );
     },
-    [shared.unitPrice],
+    [shared.unitPrice, expandedIndex],
   );
   // Tap = default unit; long-press picker passes an explicit one.
   const onPriceUnit = useCallback(() => {
     insertPriceToken(shared.priceUnit === "piece" ? "pc" : shared.priceUnit);
   }, [insertPriceToken, shared.priceUnit]);
   const onBack = useCallback(() => {
-    setQuery((q) => q.slice(0, -1));
-  }, []);
+    const activeText = activeItemText(query, expandedIndex).trim();
+    if (!activeText && querySegments.length > 1) {
+      const next = removeLineItem(query, expandedIndex);
+      setQuery(next);
+      if (expandedIndex > 0) {
+        setExpandedItem(expandedIndex - 1);
+      }
+      return;
+    }
+    setQuery((q) => applyToActiveItem(q, (text) => text.slice(0, -1), expandedIndex));
+  }, [query, expandedIndex, querySegments.length, setExpandedItem]);
   /** Hold-backspace: drop the last whole token (`40x40x3` in one gesture). */
   const onBackToken = useCallback(() => {
     setQuery((q) =>
-      applyToActiveItem(q, (text) => {
-        const tokens = cmdTokenize(text);
-        if (tokens.length === 0) return "";
-        const rest = tokens.slice(0, -1);
-        return rest.length ? `${rest.join(" ")} ` : "";
-      }),
+      applyToActiveItem(
+        q,
+        (text) => {
+          const tokens = cmdTokenize(text);
+          if (tokens.length === 0) return "";
+          const rest = tokens.slice(0, -1);
+          return rest.length ? `${rest.join(" ")} ` : "";
+        },
+        expandedIndex,
+      ),
     );
-  }, []);
+  }, [expandedIndex]);
 
   const cycleTheme = useCallback(() => {
     setTheme(dark ? "light" : "dark");
@@ -1422,14 +1452,14 @@ export function CommandShell() {
   // Chips are grouped by item, so a `+`-joined line renders as the two (or
   // more) calculations it is. While the query doesn't end in whitespace the
   // last piece is still being typed — rendered as plain text at the cursor.
-  const chips = useMemo(() => lineChips(query), [query]);
+  const chips = useMemo(() => lineChips(query, expandedIndex), [query, expandedIndex]);
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   if (activeQuery.trim() === "" && keypadOverride !== null) {
     setKeypadOverride(null);
   }
-  const keypadStage = cmdDetectStage(activeQuery, p);
-  const keypadMode = commandKeypadLayout(activeQuery, p, keypadOverride);
+  const keypadStage = cmdDetectStage(activeQuery, activeItemParse);
+  const keypadMode = commandKeypadLayout(activeQuery, activeItemParse, keypadOverride);
   const keypadShowNumbers =
     keypadMode === "letters" &&
     (keypadOverride === "letters" ||
@@ -1439,19 +1469,6 @@ export function CommandShell() {
   const acceptGhost = () => {
     if (ghost && sug.items[0]) onSuggest(sug.items[0]);
   };
-  /**
-   * Which item shows its tokens on the phone. A `+`-joined line of four items
-   * is far more chips than a phone's query line can hold, and the old capped
-   * scroll window showed them sliced across half-rows. Only the item you are
-   * working on is spelled out; the rest are one chip each, and the hero above
-   * already lists every item with its weight and price.
-   *
-   * `null` means the item the caret is in — the last one — which is what any
-   * keystroke goes into. Tapping another item's chip parks the expansion there
-   * until the query changes for a reason other than editing that item.
-   */
-  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
-  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
 
   /** An edit inside the open item is not a reason to close it. */
   const keepExpanded = (item: number, next: string) => {
@@ -1467,7 +1484,7 @@ export function CommandShell() {
   // Pull a token back to the end of its own item as the editable partial (the
   // parser is order-tolerant within an item, so the reordering is free).
   const editTokenAt = (item: number, idx: number) => {
-    keepExpanded(item, editLineToken(query, item, idx));
+    keepExpanded(item, editLineToken(query, item, idx, item));
   };
   // The caret lives at the end of the line, so the row has to follow it
   // sideways as tokens are added — otherwise typing walks off the visible area.
@@ -2406,6 +2423,11 @@ export function CommandShell() {
                         setExpandedItem(expandedIndex - 1);
                       }
                     }}
+                    onDuplicateItem={(idx) => {
+                      const next = duplicateLineItem(query, idx);
+                      setQuery(next);
+                      setExpandedItem(chips.groups.length);
+                    }}
                     onAddItem={() => {
                       const next = cmdAppendLineItem(query);
                       setQuery(next);
@@ -2509,8 +2531,14 @@ export function CommandShell() {
             onEnter={onEnter}
             onNew={newCalc}
             onTweak={() => {
-              setQuery((q) => tweakActiveItem(q));
+              setQuery((q) => tweakActiveItem(q, expandedIndex));
               setKeypadOverride("numpad");
+            }}
+            onAddItem={() => {
+              const next = cmdAppendLineItem(query);
+              setQuery(next);
+              setExpandedItem(chips.groups.length);
+              setKeypadOverride("letters");
             }}
             onShare={shareLink}
             onLetters={() => setKeypadOverride("letters")}

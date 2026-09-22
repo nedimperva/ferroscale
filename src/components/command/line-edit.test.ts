@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   activeItemText,
   applyToActiveItem,
+  duplicateLineItem,
   editLineToken,
   lineChipPrefix,
   lineChips,
@@ -10,6 +11,7 @@ import {
   removeLineItem,
   removeLineToken,
   replaceItemTokenKind,
+  replaceLinePartial,
   replaceLineToken,
   tweakActiveItem,
 } from "./line-edit";
@@ -195,6 +197,40 @@ describe("removeLineItem", () => {
   it("returns original query if index is out of bounds", () => {
     expect(removeLineItem("hea120 6m + upn140 4m", 5)).toBe("hea120 6m + upn140 4m");
     expect(removeLineItem("hea120 6m + upn140 4m", -1)).toBe("hea120 6m + upn140 4m");
+  });
+});
+
+describe("scoped line editing across tabs", () => {
+  it("lineChips extracts partial from active item 0 while item 1 is committed", () => {
+    const { groups, partial } = lineChips("hea120 6m+ upn140 4m", 0);
+    expect(groups[0].tokens).toEqual(["hea120"]);
+    expect(partial).toBe("6m");
+    expect(groups[1].tokens).toEqual(["upn140", "4m"]);
+  });
+
+  it("replaceLinePartial updates the active item 0 partial while preserving item 1", () => {
+    const next = replaceLinePartial("hea120 6m+ upn140 4m", 0, "8m");
+    expect(next).toBe("hea120 8m + upn140 4m");
+  });
+
+  it("applyToActiveItem targets item 0 cleanly", () => {
+    const next = applyToActiveItem(
+      "hea120 6m + upn140 4m",
+      (text) => `${text.trim()} x2`,
+      0,
+    );
+    expect(next).toBe("hea120 6m x2 + upn140 4m");
+  });
+
+  it("activeItemText returns text for the specified tab", () => {
+    expect(activeItemText("hea120 6m + upn140 4m", 0)).toBe("hea120 6m");
+    expect(activeItemText("hea120 6m + upn140 4m", 1)).toBe("upn140 4m");
+  });
+
+  it("duplicateLineItem clones the selected item to the end of the query", () => {
+    expect(duplicateLineItem("hea120 6m x2 + upn140 4m", 0)).toBe(
+      "hea120 6m x2 + upn140 4m + hea120 6m x2",
+    );
   });
 });
 
