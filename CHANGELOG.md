@@ -39,6 +39,7 @@ three and four levels down came up to where they are named.
 
 ### Added
 
+- Command reference modal features category filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and instant search across all shortcuts, tokens, and profile codes
 - Segmented item rail tabs support WAI-ARIA tablist navigation, arrow key traversal, auto-scrolling into view, item duplication, and keyboard shortcuts (Alt+[/], Alt+Shift+1..9, Alt++, Alt+W, Backspace to pop empty tab)
 - Mobile keypad in actions mode includes a 1-tap '+ Item' button for frictionless assembly creation
 - Multi-item lines feature segmented item rail tabs directly above the command line to switch items, monitor item weights, delete items, and append new items with 1 click
