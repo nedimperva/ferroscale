@@ -2615,6 +2615,7 @@ export function CommandShell() {
             <CommandResultSheet
               p={p}
               line={line}
+              metric={mode}
               query={query}
               setQuery={setQuery}
               onClose={() => setSheet(null)}

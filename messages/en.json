@@ -1039,6 +1039,24 @@
       "projectName": "Project name",
       "projectNameHint": "The cuts are grouped under this name inside the project too.",
       "costAmount": "Amount"
+    },
+    "ledger": {
+      "view": "Breakdown view",
+      "weight": "Weight",
+      "cost": "Cost",
+      "scope": "Breakdown scope",
+      "wholeAssembly": "Whole assembly",
+      "partScope": "Part {index} · {name}",
+      "backToAssembly": "Assembly",
+      "previousPart": "Previous part: {name}",
+      "nextPart": "Next part: {name}",
+      "openPart": "Part {index}: {name}",
+      "share": "{percent}% of the weight",
+      "partsPieces": "{parts} parts · {pieces} pieces",
+      "assemblyCost": "Assembly parts, cost",
+      "howCalculated": "How it’s calculated",
+      "howCalculatedLead": "Mass per metre is the section area times the density. Every figure comes from the standard below.",
+      "readMethod": "Read the method in the FAQ →"
     }
   },
   "contact": {
