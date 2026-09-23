@@ -1018,6 +1018,24 @@
       "projectName": "Naziv projekta",
       "projectNameHint": "Rezovi se i unutar projekta grupišu pod ovim nazivom.",
       "costAmount": "Iznos"
+    },
+    "ledger": {
+      "view": "Prikaz obračuna",
+      "weight": "Težina",
+      "cost": "Cijena",
+      "scope": "Opseg obračuna",
+      "wholeAssembly": "Cijeli sklop",
+      "partScope": "Dio {index} · {name}",
+      "backToAssembly": "Sklop",
+      "previousPart": "Prethodni dio: {name}",
+      "nextPart": "Sljedeći dio: {name}",
+      "openPart": "Dio {index}: {name}",
+      "share": "{percent}% težine",
+      "partsPieces": "Dijelova: {parts} · komada: {pieces}",
+      "assemblyCost": "Dijelovi sklopa, cijena",
+      "howCalculated": "Kako je izračunato",
+      "howCalculatedLead": "Masa po metru je površina presjeka puta gustoća. Svaka vrijednost dolazi iz standarda ispod.",
+      "readMethod": "Pročitaj metodu u FAQ →"
     }
   },
   "contact": {

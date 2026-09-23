@@ -16,15 +16,11 @@ import {
   fsWeight,
   fsWeightUnit,
   getMaterialGradeById,
-  SHEET_LIKE_FAMILIES,
-  toMillimeters,
 } from "@ferroscale/metal-core";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
-import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
-import { Link } from "@/i18n/navigation";
+import { BreakdownLedger } from "../breakdown-ledger";
 import { CommandGlyph } from "../command-glyph";
-import { ProfileDrawing } from "../profile-drawing";
 import { KIND_BG } from "../command-constants";
 import {
   applyIssueSuggestion,
@@ -45,8 +41,6 @@ import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { DeskViewHeader } from "./desk-rail";
 import { AvailabilityBadge, PricingBadge, TargetBadge, InlineIssue } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
-import { AssemblyParts } from "../assembly-parts";
-import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
 import { SaveControl } from "../save-control";
@@ -59,7 +53,7 @@ import {
   pullLastChip,
   removeLineToken,
 } from "../line-edit";
-import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
+import { massTolerancePercentStore } from "@/lib/settings-stores";
 import { useExpandedItem } from "../use-expanded-item";
 
 type DeskCalcViewProps = CommandDesktopProps & {
@@ -67,97 +61,6 @@ type DeskCalcViewProps = CommandDesktopProps & {
   gotoCompare: () => void;
 };
 
-/**
- * The fold's four-cell glance row. Values are pulled from the shared breakdown
- * builder rather than recomputed, so the grid and the breakdown panel below it
- * can never disagree about the same number.
- */
-function FoldCells({
-  p,
-  sym,
-  rateIsUserSupplied,
-}: {
-  p: CommandParseResult;
-  sym: string;
-  /** False while the money comes from the seeded rate nobody typed. */
-  rateIsUserSupplied: boolean;
-}) {
-  const t = useTranslations("command");
-  const isSheet = Boolean(p.alias && SHEET_LIKE_FAMILIES.has(p.alias.fam));
-  const widthEntry = p.calc?.input.manualDimensions?.width;
-  const widthM = widthEntry ? toMillimeters(widthEntry.value, widthEntry.unit) / 1000 : 0;
-  const areaM2 = widthM > 0 && p.lengthM ? widthM * p.lengthM : 0;
-  const massPerAreaVal = areaM2 > 0 && p.calc ? p.calc.result.unitWeightKg / areaM2 : null;
-
-  const massLabel = isSheet && massPerAreaVal != null ? t("result.massPerArea") : t("result.massPerMetre");
-  const massValue =
-    p.valid && isSheet && massPerAreaVal != null
-      ? `${massPerAreaVal.toFixed(2)} kg/m²`
-      : p.valid && p.kgm != null
-      ? `${fsKgm(p.kgm)} kg/m`
-      : "—";
-
-  const cells: { label: string; value: string; muted?: boolean }[] = [
-    {
-      label: massLabel,
-      value: massValue,
-    },
-    {
-      label: t("desktop.perPieceLabel"),
-      value:
-        p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—",
-    },
-    {
-      label: t("result.totalWeight"),
-      value: p.valid && p.totalKg != null ? `${fsWeight(p.totalKg)} ${fsWeightUnit()}` : "—",
-    },
-    {
-      // The weight is measured; the price is an assumption. Until the user
-      // sets a rate the cell says so — the qualifier used to live only in
-      // price mode, so weight mode showed "TOTAL COST € 286.44" unasked.
-      label: rateIsUserSupplied
-        ? t("desktop.totalCostLabel")
-        : t("desktop.estimatedCostLabel", {
-            rate: `${sym}${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit}`,
-          }),
-      value: p.valid && p.totalAmount != null ? `${sym} ${fsMoney(p.totalAmount)}` : "—",
-      muted: !rateIsUserSupplied,
-    },
-  ];
-
-  return (
-    /* Four boxes became one band: a rule above, a rule below, hairlines
-       between. Same four numbers, three fewer edges each. */
-    <div
-      className="flex w-full"
-      style={{
-        borderTop: "1px solid var(--border-faint)",
-        borderBottom: "1px solid var(--border-faint)",
-      }}
-    >
-      {cells.map((cell, i) => (
-        <div
-          key={cell.label}
-          className="flex-1 min-w-0"
-          style={{
-            padding: i === 0 ? "11px 16px 11px 0" : "11px 16px",
-            borderLeft: i === 0 ? undefined : "1px solid var(--border-faint)",
-          }}
-        >
-          <div className="font-mono text-[10px] uppercase text-muted" style={{ letterSpacing: 1.6 }}>
-            {cell.label}
-          </div>
-          <div
-            className="font-mono text-[16px] mt-1 truncate"
-            style={cell.muted ? { color: "var(--foreground-secondary)" } : undefined}
-          >
-            {cell.value}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 
 export function DeskCalcView({
@@ -870,10 +773,13 @@ export function DeskCalcView({
                 workspace now does the same and lets the tiles have the room. */}
             {query.trim() !== "" && (
             <>
-            <div style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}>
-              <FoldCells p={focusParse} sym={sym} rateIsUserSupplied={rateIsUserSupplied} />
-            </div>
-            <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
+            {/* No row of figures here any more: the breakdown in the rail is
+                where they are read, and on a `+` line those four cells
+                described one part under a headline that sums them all. */}
+            <div
+              className="flex items-end gap-6 flex-wrap"
+              style={{ paddingTop: 16, borderTop: "1px solid var(--border-faint)" }}
+            >
               <div className="ml-auto flex items-center gap-2">
                 {/* Copy the answer — the other thing done with a result. */}
                 <button
@@ -1117,6 +1023,7 @@ export function DeskCalcView({
           <DeskBreakdown
             p={focusParse}
             line={line}
+            metric={mode}
             picked={picked}
             onPick={setPicked}
             query={query}
@@ -1128,74 +1035,15 @@ export function DeskCalcView({
   );
 }
 
-/* ───────────────────────── breakdown card ───────────────────────── */
+/* ───────────────────────── breakdown rail ───────────────────────── */
 
-function Line({
-  id,
-  label,
-  value,
-  strong,
-  accent,
-  wrap,
-  small,
-}: {
-  /** Stable hook for tests and debugging — the row's meaning, not its position. */
-  id?: string;
-  label: string;
-  value: string;
-  strong?: boolean;
-  accent?: string;
-  /** Long provenance text (a formula, a standard) wraps instead of clipping. */
-  wrap?: boolean;
-  small?: boolean;
-}) {
-  return (
-    <div
-      data-row={id}
-      className="flex items-baseline justify-between gap-3"
-      style={{ padding: small ? "6px 0" : "9px 0" }}
-    >
-      <span
-        className="whitespace-nowrap"
-        style={{
-          fontSize: 13,
-          fontWeight: strong ? 700 : 500,
-          color: strong ? "var(--foreground)" : "var(--muted)",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        className={`font-mono ${wrap ? "text-right break-words min-w-0" : "whitespace-nowrap"}`}
-        style={{
-          fontSize: strong ? 16 : small ? 12 : 14,
-          fontWeight: strong ? 700 : small ? 500 : 600,
-          color: accent ?? (small ? "var(--foreground-secondary)" : "var(--foreground)"),
-        }}
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-/** Desktop styling per shared row id; rows not listed render as plain lines. */
-const DESK_ROW_STYLE: Partial<
-  Record<BreakdownRowId, { strong?: boolean; accent?: string; wrap?: boolean; small?: boolean }>
-> = {
-  totalWeight: { strong: true, accent: "var(--accent)" },
-  totalCost: { strong: true, accent: "var(--blue-strong)" },
-  sectionArea: { small: true },
-  formula: { wrap: true, small: true },
-  reference: { wrap: true, small: true },
-  secSource: { wrap: true, small: true },
-};
-
+/** The rail: the phone's weight and cost ledgers, with the part drawn above. */
 function DeskBreakdown({
   p,
   line,
   picked,
   onPick,
+  metric,
   query,
   setQuery,
 }: {
@@ -1203,130 +1051,36 @@ function DeskBreakdown({
   line: CommandLine;
   picked: number;
   onPick: (index: number) => void;
+  metric: "weight" | "price";
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const t = useTranslations("command");
-  const focus = p;
-  const r = focus.calc?.result;
-  const marginPercent = useSyncExternalStore(
-    marginPercentStore.subscribe,
-    marginPercentStore.getSnapshot,
-    marginPercentStore.getServerSnapshot,
-  );
-  const massTolerancePercent = useSyncExternalStore(
-    massTolerancePercentStore.subscribe,
-    massTolerancePercentStore.getSnapshot,
-    massTolerancePercentStore.getServerSnapshot,
-  );
-  const rows = focus.valid ? buildBreakdownRows(focus, t, { marginPercent, massTolerancePercent }) : null;
-  // The expanded right column keeps a tighter subset: kg/m is already in the
-  // glance row, density lives in the header, and per-piece price / subtotal
-  // stay sheet-only.
-  const geometry =
-    rows?.geometry.filter(
-      (row) => row.id !== "density" && row.id !== "massPerMetre" && row.id !== "massPerArea",
-    ) ?? [];
-  const pricing =
-    rows?.pricing.filter((row) => row.id !== "perPiecePrice" && row.id !== "subtotal") ?? [];
-
+  if (!p.valid && !line.multi) {
+    return (
+      <div
+        className="flex flex-1 flex-col items-center justify-center gap-2 text-center"
+        style={{ padding: "18px 0 14px" }}
+      >
+        <span className="text-muted-faint">
+          <CommandGlyph fam="beam" size={26} />
+        </span>
+        <span className="font-mono text-[12px] text-muted-faint" style={{ lineHeight: 1.5 }}>
+          {t("desktop.breakdownEmpty")}
+        </span>
+      </div>
+    );
+  }
   return (
-    <>
-      {line.multi ? (
-        <AssemblyParts line={line} selected={picked} onSelect={onPick} />
-      ) : (
-        <h2 className="fs-track-label text-[10px] font-bold text-muted mb-3 flex-shrink-0">
-          {t("desktop.breakdown")}
-        </h2>
-      )}
-      {rows && r ? (
-        <>
-          <div
-            className="rounded-none flex items-center justify-center mb-4 flex-shrink-0"
-            style={{ background: "var(--surface-inset)", padding: "16px 10px" }}
-          >
-            <ProfileDrawing p={focus} className="w-full flex flex-col items-center" />
-          </div>
-          <div
-            className="min-w-0 flex-shrink-0"
-            style={{ paddingBottom: 12, borderBottom: "1px solid var(--border-faint)" }}
-          >
-            <div className="fs-track-tight font-extrabold text-[17px] text-foreground">
-              {formatCommandParseName(t, focus)}
-            </div>
-            <div className="font-mono text-[11px] text-muted mt-0.5">
-              {focus.gradeLabel ?? r.gradeLabel} · {r.densityKgPerM3} kg/m³
-            </div>
-            {/* The badge on the hero says "to order"; this is where there is
-                room to say what that means and why the rate will not carry
-                over from the steel price book. */}
-            {focus.availability && (
-              <p
-                className="text-[11px] leading-[1.45] mt-2 mb-0 px-2 py-1.5 rounded"
-                style={{
-                  background: "var(--amber-surface)",
-                  color: "var(--amber-text)",
-                  border: "1px solid var(--amber-border)",
-                }}
-              >
-                {formatAvailability(t, focus.availability, focus.gradeLabel).detail}{" "}
-                {t("availability.checkRate")}
-              </p>
-            )}
-          </div>
-          <div style={{ paddingTop: 6 }}>
-            {geometry.map((row) => (
-              <div key={row.id}>
-                <Line id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
-                {row.id === "pieces" && (
-                  <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
-                )}
-              </div>
-            ))}
-            <div style={{ height: 1, background: "var(--border-faint)", margin: "2px 0" }} />
-            {pricing.map((row) => (
-              <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
-            ))}
-            {rows.section.length > 0 && (
-              <>
-                <h3 className="fs-track-label text-[10px] font-bold uppercase text-muted mt-3 mb-1">
-                  {t("result.sectionProps")}
-                </h3>
-                {rows.section.map((row) => (
-                  <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
-                ))}
-              </>
-            )}
-            <Link
-              href="/faq"
-              className="inline-block mt-2 font-mono text-[12px] text-muted hover:text-foreground underline-offset-2 hover:underline"
-            >
-              {t("result.howCalculated")}
-            </Link>
-          </div>
-          {focus.calc && (
-            <NearbySpecs
-              input={focus.calc.input}
-              onPick={(row) => {
-                if (!focus.calc) return;
-                setQuery(applyNearbySpec(query, picked, row, focus.calc.input));
-              }}
-            />
-          )}
-        </>
-      ) : (
-        <div
-          className="flex flex-1 flex-col items-center justify-center gap-2 text-center"
-          style={{ padding: "18px 0 14px" }}
-        >
-          <span className="text-muted-faint">
-            <CommandGlyph fam="beam" size={26} />
-          </span>
-          <span className="font-mono text-[12px] text-muted-faint" style={{ lineHeight: 1.5 }}>
-            {t("desktop.breakdownEmpty")}
-          </span>
-        </div>
-      )}
-    </>
+    <BreakdownLedger
+      p={p}
+      line={line}
+      picked={picked}
+      onPick={onPick}
+      metric={metric}
+      variant="rail"
+      query={query}
+      setQuery={setQuery}
+    />
   );
 }

@@ -81,10 +81,10 @@ test.describe("Price book", () => {
 });
 
 test.describe("Desktop fold", () => {
-  test("the glance row shows four cells that agree with the breakdown", async ({ page }) => {
+  test("the rail's ledger agrees with the headline", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 ");
-    // kg/m appears in the glance row and again in the breakdown — same number.
+    // kg/m in the equation line and in the weight ledger — the same number.
     await expect(page.getByText("19.89 kg/m").first()).toBeVisible();
     await expect(page.getByText("238.7 kg").first()).toBeVisible();
   });
@@ -177,12 +177,15 @@ test.describe("Mass tolerance", () => {
 test.describe("Margin", () => {
   test("adds a sell price to the breakdown without touching cost", async ({ page }) => {
     await page.goto(DEMO_LINK);
+    // No rate typed, so the ledger opens on weight; cost is its other tab.
+    await page.getByRole("tab", { name: /^Cost/ }).click();
     await expect(page.getByText("Total cost", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Sell price/)).toHaveCount(0);
 
     await openSettings(page);
     await page.getByLabel("Margin", { exact: true }).fill("20");
     await gotoCalculator(page);
+    await page.getByRole("tab", { name: /^Cost/ }).click();
 
     await expect(page.getByText("Sell price (+20%)")).toBeVisible();
     // Demo query costs € 286.44 → € 343.73 at 20%.

@@ -685,7 +685,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
 test.describe("Assembly breakdown (phone viewport)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("lists every part and switches the drawing to the one you tap", async ({ page }) => {
+  test("lists every part and opens the one you tap", async ({ page }) => {
     await page.goto(`/en?q=${encodeURIComponent("hea120 6m x2 + ipe200 4m x3")}`);
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: /Breakdown/i }).first().click();
@@ -694,10 +694,12 @@ test.describe("Assembly breakdown (phone viewport)", () => {
     await expect(dialog.getByRole("list", { name: "Assembly parts" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /HEA 120/ })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /IPE 200/ })).toBeVisible();
-    await dialog.getByRole("button", { name: /IPE 200/ }).click();
-    await expect(dialog.getByRole("button", { name: /IPE 200/ })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    // A part opens into its own ledger, with a way back to the whole.
+    await dialog.getByRole("button", { name: /Part 2: IPE 200/ }).click();
+    await expect(dialog.getByRole("button", { name: "Assembly", exact: true })).toBeVisible();
+    await expect(dialog.getByRole("list", { name: "Assembly parts" })).toHaveCount(0);
+    await expect(dialog.getByRole("tab", { name: /^Weight/ })).toBeVisible();
+    await dialog.getByRole("button", { name: "Assembly", exact: true }).click();
+    await expect(dialog.getByRole("list", { name: "Assembly parts" })).toBeVisible();
   });
 });
