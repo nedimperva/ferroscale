@@ -11,7 +11,7 @@ Section properties, cited — and a breakdown you can read.
 
 ### Added
 
-- Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, folded under "Section properties" in the breakdown on the phone and the workspace. Every figure is transcribed from a named table — the ArcelorMittal *Sections and Merchant Bars* 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them. Tests hold every row to the section's own geometry and to the size table's area
+- Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, folded under "Section properties" in the breakdown on the phone and the workspace — off by default, turned on in Settings › Calculation. Every figure is transcribed from a named table — the ArcelorMittal *Sections and Merchant Bars* 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them. Tests hold every row to the section's own geometry and to the size table's area
 
 ### Changed
 

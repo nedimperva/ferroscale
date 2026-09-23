@@ -151,6 +151,8 @@ export interface SettingsModelArgs {
   onUpdateShared: (patch: Partial<SharedCalcSettings>) => void;
   weightAsMain: boolean;
   onSetWeightAsMain: (value: boolean) => void;
+  showSectionProperties: boolean;
+  onSetShowSectionProperties: (value: boolean) => void;
   defaultUnit: LengthUnit;
   onSetDefaultUnit: (unit: LengthUnit) => void;
   locale: AppLocale;
@@ -175,6 +177,8 @@ export function buildSettingsFields({
   onUpdateShared,
   weightAsMain,
   onSetWeightAsMain,
+  showSectionProperties,
+  onSetShowSectionProperties,
   defaultUnit,
   onSetDefaultUnit,
   locale,
@@ -313,6 +317,20 @@ export function buildSettingsFields({
         { value: "price", label: t("settings.price") },
       ],
       onSelect: (v) => onSetWeightAsMain(v === "weight"),
+    },
+    {
+      kind: "choice",
+      id: "sectionProperties",
+      group: "calculation",
+      label: t("settings.sectionProperties"),
+      description: t("settings.sectionPropertiesHint"),
+      searchTerms: "Iy Wel Wpl moment inertia modulus",
+      value: showSectionProperties ? "on" : "off",
+      options: [
+        { value: "on", label: t("common.on") },
+        { value: "off", label: t("common.off") },
+      ],
+      onSelect: (v) => onSetShowSectionProperties(v === "on"),
     },
     {
       kind: "choice",

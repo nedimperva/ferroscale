@@ -23,6 +23,16 @@ import { markSettingsDirty } from "@/lib/sync/settings-dirty";
 const synced = { onChange: markSettingsDirty };
 
 export const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false, synced);
+/**
+ * Show a standard section's catalogue properties (Iy, Wel, Wpl…) in the
+ * breakdown. Off by default: most jobs are weight and price, and the fold is
+ * for whoever is checking a section, not for everyone.
+ */
+export const showSectionPropertiesStore = createBoolStore(
+  "ferroscale-show-section-properties",
+  false,
+  synced,
+);
 /** Keypad/action vibration on phones that support it. */
 export const hapticsStore = createBoolStore("ferroscale-haptics", true);
 /**

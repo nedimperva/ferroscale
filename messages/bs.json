@@ -428,6 +428,8 @@
       "themeHint": "Auto prati postavku sistema",
       "auto": "Auto",
       "hapticsHint": "Odziv na dodir tastature",
+      "sectionProperties": "Statičke karakteristike",
+      "sectionPropertiesHint": "Iy, Wel, Wpl i poluprečnici inercije za standardne profile, u obračunu",
       "version": "Verzija {version}"
     },
     "docs": {

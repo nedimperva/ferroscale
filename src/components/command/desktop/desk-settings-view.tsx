@@ -13,6 +13,7 @@ import { PriceBookSection } from "../price-book-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import {
   hapticsStore,
+  showSectionPropertiesStore,
   marginPercentStore,
   massTolerancePercentStore,
   defaultPaintPriceStore,
@@ -159,6 +160,11 @@ export function DeskSettingsView({
     hapticsStore.getSnapshot,
     hapticsStore.getServerSnapshot,
   );
+  const showSectionProperties = useSyncExternalStore(
+    showSectionPropertiesStore.subscribe,
+    showSectionPropertiesStore.getSnapshot,
+    showSectionPropertiesStore.getServerSnapshot,
+  );
 
   const fields = buildSettingsFields({
     t,
@@ -166,6 +172,8 @@ export function DeskSettingsView({
     onUpdateShared,
     weightAsMain,
     onSetWeightAsMain,
+    showSectionProperties,
+    onSetShowSectionProperties: showSectionPropertiesStore.set,
     defaultUnit,
     onSetDefaultUnit,
     locale,

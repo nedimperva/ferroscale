@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.30.0",
     date: "2026-09-23",
     added: [
-      "Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, folded under \"Section properties\" in the breakdown on the phone and the workspace. Every figure is transcribed from a named table — the ArcelorMittal Sections and Merchant Bars 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them",
+      "Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, folded under \"Section properties\" in the breakdown on the phone and the workspace — off by default, turned on in Settings › Calculation. Every figure is transcribed from a named table — the ArcelorMittal Sections and Merchant Bars 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them",
     ],
     changed: [
       "The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows",
@@ -33,7 +33,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Removed nine tees that are not EN 10055 sections (T 45, T 70×7, T 80×8, T 90, T 100×10, T 110, T 120×12, T 130, T 140×14). The five standard tees, T 30 to T 60, remain. A saved part that used one of the nine keeps its stored weight but no longer loads into the command line",
     ],
     added_bs: [
-      "Statičke karakteristike za svaki standardni profil (129): Iy, Wel,y, Wpl,y i iy za jaču osu, isto za slabiju, sklopljeno pod \"Statičke karakteristike\" u obračunu na telefonu i u radnom prostoru. Svaka vrijednost je prepisana iz imenovane tabele — ArcelorMittal Sections and Merchant Bars 2024-1 za IPE, IPN, HEA, HEB, HEM, UPN i UPE, tabela DIN EN 10055 za T profile — a razrada navodi izvor i stranicu. Poluprečnici inercije se računaju kao √(I/A) umjesto da se prepisuju, jer ih katalog skraćuje",
+      "Statičke karakteristike za svaki standardni profil (129): Iy, Wel,y, Wpl,y i iy za jaču osu, isto za slabiju, sklopljeno pod \"Statičke karakteristike\" u obračunu na telefonu i u radnom prostoru — isključeno po zadanom, uključuje se u Postavkama › Obračun. Svaka vrijednost je prepisana iz imenovane tabele — ArcelorMittal Sections and Merchant Bars 2024-1 za IPE, IPN, HEA, HEB, HEM, UPN i UPE, tabela DIN EN 10055 za T profile — a razrada navodi izvor i stranicu. Poluprečnici inercije se računaju kao √(I/A) umjesto da se prepisuju, jer ih katalog skraćuje",
     ],
     changed_bs: [
       "Obračun su dvije knjige, Težina i Cijena, svaka završava podvučenim zbirom — isto na telefonu i u desnoj koloni na desktopu. Otvara se na vrijednosti koju pokazuje glavni broj",

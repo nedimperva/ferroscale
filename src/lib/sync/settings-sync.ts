@@ -12,6 +12,7 @@ import {
   marginPercentStore,
   massTolerancePercentStore,
   sharedCalcSettingsStore,
+  showSectionPropertiesStore,
   weightAsMainStore,
   type SharedCalcSettings,
 } from "@/lib/settings-stores";
@@ -27,6 +28,7 @@ import type { SyncSettingsPayload } from "./types";
 export interface SyncedSettings {
   shared: SharedCalcSettings;
   weightAsMain: boolean;
+  showSectionProperties: boolean;
   marginPercent: number;
   massTolerancePercent: number;
   defaultUnit: LengthUnit;
@@ -40,6 +42,7 @@ export function loadSyncedSettings(): SyncedSettings {
   return {
     shared: sharedCalcSettingsStore.getSnapshot(),
     weightAsMain: weightAsMainStore.getSnapshot(),
+    showSectionProperties: showSectionPropertiesStore.getSnapshot(),
     marginPercent: marginPercentStore.getSnapshot(),
     massTolerancePercent: massTolerancePercentStore.getSnapshot(),
     defaultUnit: defaultUnitStore.getSnapshot(),
@@ -52,6 +55,7 @@ function defaultSyncedSettings(): SyncedSettings {
   return {
     shared: DEFAULT_SHARED_SETTINGS,
     weightAsMain: weightAsMainStore.getServerSnapshot(),
+    showSectionProperties: showSectionPropertiesStore.getServerSnapshot(),
     marginPercent: marginPercentStore.getServerSnapshot(),
     massTolerancePercent: massTolerancePercentStore.getServerSnapshot(),
     defaultUnit: defaultUnitStore.getServerSnapshot(),
@@ -110,6 +114,9 @@ export function applySyncedSettings(payload: SyncSettingsPayload): boolean {
     const shared = pickShared(values.shared);
     if (shared) sharedCalcSettingsStore.update(shared);
     if (typeof values.weightAsMain === "boolean") weightAsMainStore.set(values.weightAsMain);
+    if (typeof values.showSectionProperties === "boolean") {
+      showSectionPropertiesStore.set(values.showSectionProperties);
+    }
     const margin = num(values.marginPercent);
     if (margin !== undefined) marginPercentStore.set(margin);
     const tolerance = num(values.massTolerancePercent);

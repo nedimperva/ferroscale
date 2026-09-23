@@ -428,6 +428,8 @@
       "themeHint": "Auto follows the system setting",
       "auto": "Auto",
       "hapticsHint": "Feedback on keypad taps",
+      "sectionProperties": "Section properties",
+      "sectionPropertiesHint": "Iy, Wel, Wpl and radii of gyration for standard sections, in the breakdown",
       "version": "Version {version}"
     },
     "docs": {

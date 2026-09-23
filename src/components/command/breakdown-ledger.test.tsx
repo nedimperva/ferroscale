@@ -6,6 +6,7 @@ import messages from "../../../messages/en.json";
 import { cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { BreakdownLedger } from "./breakdown-ledger";
+import { showSectionPropertiesStore } from "@/lib/settings-stores";
 
 vi.mock("@/i18n/navigation", () => ({
   Link: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -17,6 +18,7 @@ vi.mock("@/i18n/navigation", () => ({
 
 afterEach(() => {
   cleanup();
+  showSectionPropertiesStore.set(false);
 });
 
 const settings: CommandParserSettings = {
@@ -107,7 +109,13 @@ describe("BreakdownLedger", () => {
     expect(screen.getByText(/of the weight/)).toBeDefined();
   });
 
-  it("folds a standard section's catalogue properties, with the source", () => {
+  it("leaves section properties out unless the setting is on", () => {
+    const { container } = renderLedger("ipe200 6m s235", { variant: "rail" });
+    expect(container.querySelector("[data-section-properties]")).toBeNull();
+  });
+
+  it("folds a standard section's catalogue properties, with the source, when asked", () => {
+    showSectionPropertiesStore.set(true);
     const { container } = renderLedger("ipe200 6m s235", { variant: "rail" });
     const fold = container.querySelector("[data-section-properties]")!;
     expect(fold).not.toBeNull();
@@ -119,6 +127,7 @@ describe("BreakdownLedger", () => {
   });
 
   it("has no section-properties fold for a manual section", () => {
+    showSectionPropertiesStore.set(true);
     const { container } = renderLedger("shs40x40x3 6m", { variant: "rail" });
     expect(container.querySelector("[data-section-properties]")).toBeNull();
   });

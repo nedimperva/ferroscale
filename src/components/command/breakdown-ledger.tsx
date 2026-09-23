@@ -10,7 +10,11 @@ import { buildBreakdownRows, type BreakdownRow, type BreakdownRowId } from "./br
 import { applyNearbySpec, NearbySpecs } from "./nearby-specs";
 import { Link } from "@/i18n/navigation";
 import { haptic } from "@/lib/haptics";
-import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-stores";
+import {
+  marginPercentStore,
+  massTolerancePercentStore,
+  showSectionPropertiesStore,
+} from "@/lib/settings-stores";
 
 /**
  * The result breakdown, as two ledgers: Weight and Cost, each a short list of
@@ -22,7 +26,8 @@ import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-st
  * same one a single calculation gets. Where the numbers come from (area,
  * density, formula, the standard) is one tap further, under "How it's
  * calculated", for whoever wants to check. A standard section's catalogue
- * properties (Iy, Wel, Wpl…) fold the same way, under "Section properties".
+ * properties (Iy, Wel, Wpl…) fold the same way, under "Section properties" —
+ * only when that setting is on; it is off by default.
  */
 
 type Tab = "weight" | "cost";
@@ -345,6 +350,11 @@ function PartLedger({
 }) {
   const t = useTranslations("command");
   const uid = useId();
+  const showSection = useSyncExternalStore(
+    showSectionPropertiesStore.subscribe,
+    showSectionPropertiesStore.getSnapshot,
+    showSectionPropertiesStore.getServerSnapshot,
+  );
   const rows = p.valid ? buildBreakdownRows(p, t, { marginPercent, massTolerancePercent }) : null;
   if (!rows || !p.calc) return null;
 
@@ -435,7 +445,7 @@ function PartLedger({
         )}
       </div>
 
-      {rows.section.length > 0 && <SectionProperties rows={rows.section} />}
+      {showSection && rows.section.length > 0 && <SectionProperties rows={rows.section} />}
 
       <NearbySpecs input={p.calc.input} onPick={onNearby} />
 

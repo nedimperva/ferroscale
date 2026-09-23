@@ -159,7 +159,8 @@ row (ArcelorMittal *Sections and Merchant Bars* 2024-1 with its PDF page;
 a DIN EN 10055 table for tees). `buildBreakdownRows` turns them into the
 `section` row group, which `BreakdownLedger` (`breakdown-ledger.tsx`, the one
 breakdown for the phone sheet and the desk rail) folds under "Section
-properties".
+properties" — only while `showSectionPropertiesStore` (Settings ›
+Calculation, synced, **off by default**) is on.
 
 - **Never compute or estimate a row.** A size without a citable row goes in
   `SECTION_PROPERTIES_UNSOURCED` with the reason; the coverage test requires
