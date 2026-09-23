@@ -367,39 +367,27 @@ function PartLedger({
 
   return (
     <>
-      {variant === "rail" ? (
-        <>
-          <div
-            className="flex items-center justify-center"
-            style={{ background: "var(--surface-inset)", padding: "14px 10px" }}
-          >
-            <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
-          </div>
-          <div className="-mt-1 flex flex-col gap-0.5">
-            <span className="fs-track-tight text-[18px] font-extrabold text-foreground">
-              {formatCommandParseName(t, p)}
-            </span>
-            <span className="font-mono text-[13px] text-foreground-secondary">
-              {share != null ? `${spec} · ${t("ledger.share", { percent: share })}` : spec}
-            </span>
-          </div>
-        </>
-      ) : (
-        <div className="flex items-center gap-3.5">
-          <div
-            className="flex h-[66px] w-[84px] shrink-0 items-center justify-center overflow-hidden"
-            style={{ background: "var(--surface-inset)" }}
-          >
-            <ProfileDrawing p={p} variant="thumb" className="h-full w-full flex items-center justify-center" />
-          </div>
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-[20px] font-extrabold text-foreground">{formatCommandParseName(t, p)}</span>
-            <span className="font-mono text-[13px] text-foreground-secondary">
-              {share != null ? `${spec} · ${t("ledger.share", { percent: share })}` : spec}
-            </span>
-          </div>
-        </div>
-      )}
+      {/* The full drawing, dimensions and all, on both surfaces — the
+          thumbnail dropped the callouts, and those are the exact sizes a
+          reader checks the section against. */}
+      <div
+        className="flex items-center justify-center"
+        style={{ background: "var(--surface-inset)", padding: "14px 10px" }}
+      >
+        <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+      </div>
+      <div className="-mt-1 flex flex-col gap-0.5">
+        <span
+          className={`fs-track-tight font-extrabold text-foreground ${
+            variant === "rail" ? "text-[18px]" : "text-[20px]"
+          }`}
+        >
+          {formatCommandParseName(t, p)}
+        </span>
+        <span className="font-mono text-[13px] text-foreground-secondary">
+          {share != null ? `${spec} · ${t("ledger.share", { percent: share })}` : spec}
+        </span>
+      </div>
 
       {p.availability && (
         <p
