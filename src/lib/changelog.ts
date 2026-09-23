@@ -30,6 +30,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The sync card says where things stand in words — \"Synced 4 minutes ago\", \"Offline — changes will sync when you're back online\" — instead of the last pull's timestamp",
     ],
     fixed: [
+      "The sync passphrase is no longer stored in plain text. It used to sit in localStorage, readable by any script on the page and by anyone with the browser profile; it is now kept only as a non-extractable key in IndexedDB that the browser can use but never reveal. Existing devices convert on their next sync, with nothing to re-enter, and disconnecting forgets the key",
       "An expired or revoked Google sign-in asks you to sign in again instead of showing a raw token error on every attempt. Google's `invalid_grant` did not match the old check, so the app stayed \"connected\" and failed forever",
       "Network blips and Google outages retry on their own with backoff (30 s up to 15 min) instead of parking sync in an error state",
       "A Drive change cursor that expired no longer breaks every pull; the server lists the folder again and carries on",
@@ -46,6 +47,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Kartica sinhronizacije kaže stanje riječima — \"Sinhronizovano prije 4 minute\", \"Van mreže — promjene će se sinhronizovati kad se vratite na mrežu\" — umjesto vremena zadnjeg preuzimanja",
     ],
     fixed_bs: [
+      "Lozinka za sinhronizaciju se više ne čuva kao običan tekst. Ranije je stajala u localStorage, čitljiva svakoj skripti na stranici i svakome s pristupom profilu preglednika; sada se čuva samo kao neizvoziv ključ u IndexedDB koji preglednik može koristiti, ali ga nikad ne otkriva. Postojeći uređaji se prebacuju pri sljedećoj sinhronizaciji bez ponovnog unosa, a prekid veze briše ključ",
       "Istekla ili opozvana Google prijava traži ponovnu prijavu umjesto sirove greške tokena pri svakom pokušaju. Googleov `invalid_grant` nije odgovarao staroj provjeri, pa je aplikacija ostajala \"povezana\" i zauvijek padala",
       "Prekidi mreže i ispadi Googlea se sami ponovo pokušavaju s odgodom (30 s do 15 min) umjesto da sinhronizaciju ostave u grešci",
       "Istekli Drive kursor promjena više ne ruši svako preuzimanje; server ponovo izlista folder i nastavlja",

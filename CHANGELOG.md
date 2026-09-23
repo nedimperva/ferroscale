@@ -23,6 +23,7 @@ Sync you don't have to think about.
 
 ### Fixed
 
+- The sync passphrase is no longer stored in plain text. It used to sit in localStorage, readable by any script on the page and by anyone with the browser profile; it is now kept only as a non-extractable key in IndexedDB that the browser can use but never reveal. Existing devices convert on their next sync, with nothing to re-enter, and disconnecting forgets the key
 - An expired or revoked Google sign-in asks you to sign in again instead of showing a raw token error on every attempt. Google's `invalid_grant` did not match the old check, so the app stayed "connected" and failed forever
 - Network blips and Google outages retry on their own with backoff (30 s up to 15 min) instead of parking sync in an error state
 - A Drive change cursor that expired no longer breaks every pull; the server lists the folder again and carries on

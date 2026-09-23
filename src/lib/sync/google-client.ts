@@ -10,15 +10,13 @@ import {
 } from "./records";
 import { decryptAESGCM, encryptAESGCM, sha256Text } from "./crypto";
 import { registerSyncDirtyHandler } from "./registry";
+import { clearSyncKey, hasSyncKey, loadSyncKey, saveSyncKey } from "./key-store";
 import {
   clearSyncSession,
   getSyncMetadata,
-  hasSyncPassphrase,
-  loadSyncPassphrase,
   loadSyncSession,
   resetSyncMetadata,
   saveSyncMetadata,
-  saveSyncPassphrase,
   saveSyncSession,
   subscribeSyncState,
 } from "./metadata";
@@ -261,7 +259,7 @@ async function waitForAuthCompletion(authRequestId: string) {
   });
 }
 
-async function decryptPulledRecords(records: SyncPullResponse["records"], passphrase: string) {
+async function decryptPulledRecords(records: SyncPullResponse["records"], passphrase: CryptoKey) {
   // Everything is decrypted before anything is applied, so a wrong passphrase
   // stops the pull cold instead of leaving half of Drive merged in.
   return Promise.all(records.map(async (record): Promise<AppliedSyncRecord> => {
@@ -291,7 +289,7 @@ function attentionFor(metadata: SyncMetadata): SyncAttention | null {
   if (!metadata.syncEnabled || !metadata.connectedEmail) return null;
   if (metadata.authState === "reauth_required") return "reconnect";
   if (metadata.authState !== "connected") return null;
-  if (metadata.syncErrorKind === "passphrase" || !hasSyncPassphrase()) return "passphrase";
+  if (metadata.syncErrorKind === "passphrase" || !hasSyncKey()) return "passphrase";
   return null;
 }
 
@@ -313,7 +311,7 @@ function toStatus(): SyncStatus {
     pendingChanges: metadata.pendingUploadCount > 0 || metadata.pendingDownloadCount > 0,
     pendingUploadCount: metadata.pendingUploadCount,
     pendingDownloadCount: metadata.pendingDownloadCount,
-    passphraseConfigured: hasSyncPassphrase(),
+    passphraseConfigured: hasSyncKey(),
     currentAction,
   };
 }
@@ -396,7 +394,7 @@ async function runSyncOnce(opts?: { resetRemote?: boolean }): Promise<SyncOutcom
     return { status: next.syncStatus };
   }
 
-  const passphrase = loadSyncPassphrase();
+  const passphrase = await loadSyncKey();
   if (!passphrase) {
     const next = saveSyncMetadata({
       syncStatus: "error",
@@ -623,16 +621,8 @@ async function resumePendingAuth(): Promise<SyncOutcome | null> {
   }
 }
 
-async function connect(passphrase: string) {
-  const trimmed = passphrase.trim();
-  if (!trimmed) {
-    throw new Error("Enter a sync passphrase before connecting Google Drive.");
-  }
-
-  setCurrentAction("connect");
-  const authWindow = prepareAuthWindow();
-  saveSyncPassphrase(trimmed);
-
+/** Open Google sign-in in a window prepared inside the click, and finish the connection. */
+async function startGoogleSignIn(authWindow: PreparedAuthWindow): Promise<SyncOutcome> {
   try {
     const start = await apiJson<SyncAuthStartResponse>("/api/sync/google/auth/start", {
       method: "POST",
@@ -647,7 +637,7 @@ async function connect(passphrase: string) {
     });
     navigateAuthWindow(authWindow, start.authUrl);
     if (authWindow.mode === "redirect") {
-      return { status: "pending" as const };
+      return { status: "pending" };
     }
 
     const session = await waitForAuthCompletion(start.authRequestId);
@@ -666,17 +656,40 @@ async function connect(passphrase: string) {
       syncError: message,
     });
     throw error;
+  }
+}
+
+async function connect(passphrase: string) {
+  const trimmed = passphrase.trim();
+  if (!trimmed) {
+    throw new Error("Enter a sync passphrase before connecting Google Drive.");
+  }
+
+  setCurrentAction("connect");
+  // The popup must open synchronously inside the click, before any await.
+  const authWindow = prepareAuthWindow();
+  try {
+    await saveSyncKey(trimmed);
+    return await startGoogleSignIn(authWindow);
+  } catch (error) {
+    if (authWindow.mode === "popup" && !authWindow.popup.closed) {
+      authWindow.popup.close();
+    }
+    throw error;
   } finally {
     setCurrentAction(undefined);
   }
 }
 
+/** Sign in to Google again, keeping the stored key. */
 async function reconnect() {
-  const passphrase = loadSyncPassphrase();
-  if (!passphrase) {
-    throw new Error("Enter the sync passphrase first.");
+  setCurrentAction("connect");
+  const authWindow = prepareAuthWindow();
+  try {
+    return await startGoogleSignIn(authWindow);
+  } finally {
+    setCurrentAction(undefined);
   }
-  return connect(passphrase);
 }
 
 async function disconnect() {
@@ -692,6 +705,7 @@ async function disconnect() {
 
   clearSyncSession();
   clearAllIndexedRecords();
+  await clearSyncKey();
   resetSyncMetadata();
   setCurrentAction(undefined);
 }
@@ -715,7 +729,7 @@ async function setPassphrase(passphrase: string) {
   if (!trimmed) {
     throw new Error("Enter the sync passphrase.");
   }
-  saveSyncPassphrase(trimmed);
+  await saveSyncKey(trimmed);
   saveSyncMetadata({ syncStatus: "pending", syncError: null, syncErrorKind: null });
   return syncNow();
 }
@@ -729,7 +743,7 @@ async function changePassphrase(passphrase: string) {
 
   setCurrentAction("change-passphrase");
   try {
-    saveSyncPassphrase(trimmed);
+    await saveSyncKey(trimmed);
     clearAllIndexedRecords();
     saveSyncMetadata({
       syncStatus: "pending",
