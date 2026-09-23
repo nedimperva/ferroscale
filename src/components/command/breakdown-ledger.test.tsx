@@ -106,4 +106,20 @@ describe("BreakdownLedger", () => {
     expect(screen.queryByRole("list", { name: "Assembly parts" })).toBeNull();
     expect(screen.getByText(/of the weight/)).toBeDefined();
   });
+
+  it("folds a standard section's catalogue properties, with the source", () => {
+    const { container } = renderLedger("ipe200 6m s235", { variant: "rail" });
+    const fold = container.querySelector("[data-section-properties]")!;
+    expect(fold).not.toBeNull();
+    expect(within(fold as HTMLElement).getByText("Section properties")).toBeDefined();
+    // Iy and iy are different quantities: both labels survive, case intact.
+    expect(fold.querySelector('[data-row="secIy"]')!.textContent).toContain("1,943 cm⁴");
+    expect(fold.querySelector('[data-row="secIyRadius"]')!.textContent).toContain("iy");
+    expect(fold.querySelector('[data-row="secSource"]')!.textContent).toContain("ArcelorMittal 2024-1");
+  });
+
+  it("has no section-properties fold for a manual section", () => {
+    const { container } = renderLedger("shs40x40x3 6m", { variant: "rail" });
+    expect(container.querySelector("[data-section-properties]")).toBeNull();
+  });
 });

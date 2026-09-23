@@ -21,7 +21,8 @@ import { marginPercentStore, massTolerancePercentStore } from "@/lib/settings-st
  * costs and its share of the whole. A part opens into its own ledger — the
  * same one a single calculation gets. Where the numbers come from (area,
  * density, formula, the standard) is one tap further, under "How it's
- * calculated", for whoever wants to check.
+ * calculated", for whoever wants to check. A standard section's catalogue
+ * properties (Iy, Wel, Wpl…) fold the same way, under "Section properties".
  */
 
 type Tab = "weight" | "cost";
@@ -434,10 +435,53 @@ function PartLedger({
         )}
       </div>
 
+      {rows.section.length > 0 && <SectionProperties rows={rows.section} />}
+
       <NearbySpecs input={p.calc.input} onPick={onNearby} />
 
       <HowCalculated rows={pick(rows.geometry, SOURCE_ROWS)} />
     </>
+  );
+}
+
+/**
+ * The catalogue's section properties, folded like the source below it. The
+ * labels are symbols — Iy and iy are different quantities — so they keep
+ * their case and sit in mono, and the cited table closes the list.
+ */
+function SectionProperties({ rows }: { rows: BreakdownRow[] }) {
+  const t = useTranslations("command");
+  const figures = rows.filter((row) => row.id !== "secSource");
+  const source = rows.find((row) => row.id === "secSource");
+  return (
+    <details className="group" data-section-properties="">
+      <summary
+        className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-[13px] text-muted underline underline-offset-[3px] [&::-webkit-details-marker]:hidden"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M5 4h14M5 20h14M12 4v16" />
+        </svg>
+        {t("result.sectionProps")}
+      </summary>
+      <div className="mt-1 flex flex-col">
+        {figures.map((row) => (
+          <div
+            key={row.id}
+            data-row={row.id}
+            className="flex items-baseline justify-between gap-3 py-2"
+            style={{ borderBottom: "1px solid var(--border-faint)" }}
+          >
+            <span className="font-mono text-[13px] text-muted">{row.label}</span>
+            <span className="font-mono text-[14px] tabular-nums text-foreground">{row.value}</span>
+          </div>
+        ))}
+        {source && (
+          <p data-row="secSource" className="m-0 mt-2 font-mono text-[12px] leading-[1.5] text-foreground-secondary">
+            {source.label}: {source.value}
+          </p>
+        )}
+      </div>
+    </details>
   );
 }
 

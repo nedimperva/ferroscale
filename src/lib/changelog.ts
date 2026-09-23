@@ -20,18 +20,26 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.30.0",
     date: "2026-09-23",
     added: [
-      "Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, under the result breakdown on the phone and the workspace. Every figure is transcribed from a named table — the ArcelorMittal Sections and Merchant Bars 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them",
+      "Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, folded under \"Section properties\" in the breakdown on the phone and the workspace. Every figure is transcribed from a named table — the ArcelorMittal Sections and Merchant Bars 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them",
     ],
     changed: [
+      "The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows",
+      "On a multi-item line the breakdown lists the parts: what each weighs or costs, its share of the weight, and a ruled total for the whole. A part opens into its own ledger; on the desk a Whole assembly / Part switch does the same",
+      "Where the numbers come from — section area, density, formula, the standard and dataset — is folded under \"How it's calculated\" instead of sitting among the results",
+      "The desk no longer repeats kg/m, per piece, total weight and total cost in a row under the headline. On a multi-item line that row described one part under a number that summed them all",
       "The cross-section drawing in the breakdown dimensions every standard section again — web tw, flange tf and root radius R on IPE, IPN, HEA, HEB, HEM, UPN and UPE — now that they come from the catalogue instead of estimated proportions. HEM sections are drawn at their true depth (an HE 100 M is 120 mm deep)",
     ],
     fixed: [
       "Removed nine tees that are not EN 10055 sections (T 45, T 70×7, T 80×8, T 90, T 100×10, T 110, T 120×12, T 130, T 140×14). The five standard tees, T 30 to T 60, remain. A saved part that used one of the nine keeps its stored weight but no longer loads into the command line",
     ],
     added_bs: [
-      "Statičke karakteristike za svaki standardni profil (129): Iy, Wel,y, Wpl,y i iy za jaču osu, isto za slabiju, ispod razrade rezultata na telefonu i u radnom prostoru. Svaka vrijednost je prepisana iz imenovane tabele — ArcelorMittal Sections and Merchant Bars 2024-1 za IPE, IPN, HEA, HEB, HEM, UPN i UPE, tabela DIN EN 10055 za T profile — a razrada navodi izvor i stranicu. Poluprečnici inercije se računaju kao √(I/A) umjesto da se prepisuju, jer ih katalog skraćuje",
+      "Statičke karakteristike za svaki standardni profil (129): Iy, Wel,y, Wpl,y i iy za jaču osu, isto za slabiju, sklopljeno pod \"Statičke karakteristike\" u obračunu na telefonu i u radnom prostoru. Svaka vrijednost je prepisana iz imenovane tabele — ArcelorMittal Sections and Merchant Bars 2024-1 za IPE, IPN, HEA, HEB, HEM, UPN i UPE, tabela DIN EN 10055 za T profile — a razrada navodi izvor i stranicu. Poluprečnici inercije se računaju kao √(I/A) umjesto da se prepisuju, jer ih katalog skraćuje",
     ],
     changed_bs: [
+      "Obračun su dvije knjige, Težina i Cijena, svaka završava podvučenim zbirom — isto na telefonu i u desnoj koloni na desktopu. Otvara se na vrijednosti koju pokazuje glavni broj",
+      "Na liniji s više stavki obračun navodi dijelove: koliko svaki teži ili košta, njegov udio u težini i podvučen zbir za cjelinu. Dio se otvara u vlastitu knjigu; na desktopu isto radi prekidač Cijeli sklop / Dio",
+      "Odakle brojevi dolaze — površina presjeka, gustoća, formula, standard i skup podataka — sklopljeno je pod \"Kako je izračunato\" umjesto da stoji među rezultatima",
+      "Desktop više ne ponavlja kg/m, po komadu, ukupnu težinu i ukupnu cijenu u redu ispod glavnog broja. Na liniji s više stavki taj red je opisivao jedan dio ispod broja koji ih sabira sve",
       "Crtež presjeka u razradi ponovo kotira svaki standardni profil — debljinu rebra tw, pojasa tf i radijus R na IPE, IPN, HEA, HEB, HEM, UPN i UPE — jer sada dolaze iz kataloga umjesto procijenjenih proporcija. HEM profili se crtaju u stvarnoj visini (HE 100 M je visok 120 mm)",
     ],
     fixed_bs: [
