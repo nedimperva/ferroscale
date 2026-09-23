@@ -4,6 +4,7 @@ import type {
   StandardProfileSpecRecord,
 } from "./types";
 import { BEAM_PROFILES, CHANNEL_ANGLE_PROFILES, TEE_PROFILES } from "./profiles";
+import { SECTION_PROPERTIES } from "./section-properties";
 
 function roundMm(value: number): number {
   return Number(value.toFixed(2));
@@ -63,6 +64,28 @@ function buildSectionRecord({
   thicknessRatio: number;
   rootRadiusFactor?: number;
 }): StandardProfileSpecRecord {
+  // A size with a catalogue row is drawn from the catalogue: real depth (an
+  // HE 100 M is 120 mm deep, not 100), web, flange and root radius — which the
+  // drawing then labels. Only sizes without one fall back to solved proportions.
+  const catalogue = SECTION_PROPERTIES[sizeId];
+  if (catalogue) {
+    return {
+      sizeId,
+      label,
+      drawingKind,
+      geometry: {
+        heightMm: catalogue.hMm,
+        widthMm: catalogue.bMm,
+        webThicknessMm: catalogue.twMm,
+        flangeThicknessMm: catalogue.tfMm,
+        rootRadiusMm: catalogue.rMm,
+      },
+      areaMm2,
+      perimeterMm,
+      referenceLabel,
+    };
+  }
+
   const { webThicknessMm, flangeThicknessMm } = solveSectionThicknesses({
     areaMm2,
     heightMm,

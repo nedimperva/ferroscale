@@ -52,7 +52,7 @@ fallback, full Apple splash set).
 | No CI at all | ✅ shipped in 3.2.0 — GitHub Actions: lint, i18n parity, both vitest suites, production build; non-blocking Playwright job |
 | Duplicated constants (`KIND_BG`, `CURRENCIES`, `UNIT_OPTIONS`, `BASIS_UNIT`) across command components | ✅ shipped in 3.2.0 — single `command-constants.ts` |
 | Stale e2e spec asserting a removed UI | ✅ shipped in 3.2.0 — replaced with a command-bar spec (demo result, typing, share-link hydration, parse issues) |
-| Stale docs (AGENTS.md described non-existent hooks; READMEs described an absent `raycast-extension/` workspace) | ✅ shipped in 3.2.0 — rewritten |
+| Stale docs (AGENTS.md described non-existent hooks; READMEs described an absent workspace) | ✅ shipped in 3.2.0 — rewritten |
 
 ## 3. Recommended follow-ups
 

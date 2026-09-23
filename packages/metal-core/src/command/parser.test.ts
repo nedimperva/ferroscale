@@ -872,9 +872,9 @@ describe("tee sizes accept the catalog spelling", () => {
     defaultLengthUnit: "m",
   };
 
-  it("reads T 100x100x10 the same as t100x10", () => {
-    const square = cmdParse("t100x100x10 6m ", settings);
-    const short = cmdParse("t100x10 6m ", settings);
+  it("reads T 60x60x7 the same as t60x7", () => {
+    const square = cmdParse("t60x60x7 6m ", settings);
+    const short = cmdParse("t60x7 6m ", settings);
     expect(square.totalKg).toBeCloseTo(short.totalKg!, 6);
     expect(square.realQty).toBe(1);
     expect(square.lengthM).toBe(6);
@@ -882,8 +882,8 @@ describe("tee sizes accept the catalog spelling", () => {
   });
 
   it("reads the spaced catalog form too", () => {
-    expect(cmdParse("t 100x100x10 6m ", settings).totalKg).toBeCloseTo(
-      cmdParse("t100x10 6m ", settings).totalKg!,
+    expect(cmdParse("t 60x60x7 6m ", settings).totalKg).toBeCloseTo(
+      cmdParse("t60x7 6m ", settings).totalKg!,
       6,
     );
   });

@@ -246,12 +246,8 @@ test.describe("Assemblies", () => {
   });
 
   test("a project can be started from a library assembly, once there is one", async ({ page }) => {
-    await page.goto("/en/projects");
-    // The app ships with no assemblies, so there is nothing to start from and
-    // the button that would open an empty picker is not drawn.
-    await expect(page.getByRole("button", { name: "From assembly" })).toHaveCount(0);
-
-    // Save a two-cut line into the library as one assembly.
+    // Save a two-cut line into the library as one assembly. (The button is
+    // there before this too — the test above covers its empty state.)
     await page.goto("/en");
     await typeQuery(page, "hea140 3m + plt200x160x12 x2 ");
     await page.getByRole("button", { name: "Save somewhere else" }).click();

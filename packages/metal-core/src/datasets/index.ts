@@ -4,3 +4,4 @@ export * from "./materials";
 export * from "./profiles";
 export * from "./specs";
 export * from "./availability";
+export * from "./section-properties";

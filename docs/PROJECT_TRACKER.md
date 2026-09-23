@@ -18,7 +18,7 @@ Public EU-focused web app that provides fast, accurate metal profile weight and 
 | Quality gate | Completed | CI: lint (green gate) + i18n check + tests + build; 200+ case engine benchmark |
 | PWA/offline baseline | Completed | Manifest + service worker + offline fallback + versioned caches |
 | Command workspace (v3) | Completed | Command bar as the whole app: parser, suggestions, three viewport layouts |
-| Shared core package | Completed | `@ferroscale/metal-core`: engine, datasets, command parser (Raycast/CLI-ready) |
+| Shared core package | Completed | `@ferroscale/metal-core`: engine, datasets, command parser |
 | Cloud sync | Completed | Encrypted Google Drive appdata sync (schema-versioned) |
 | Share links | Completed | `?q=` URLs restore the calculation (3.2.0) |
 

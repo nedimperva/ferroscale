@@ -22,6 +22,7 @@ function SheetRow({
   mono,
   strong,
   small,
+  symbol,
 }: {
   label: string;
   value: string;
@@ -29,10 +30,12 @@ function SheetRow({
   strong?: boolean;
   /** Provenance rows (area, formula, standard): quieter, allowed to wrap. */
   small?: boolean;
+  /** The label is a symbol (Iy, iy, Wel,y) whose case carries meaning — never uppercase it. */
+  symbol?: boolean;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-2.5 border-b border-border-faint last:border-b-0">
-      <span className="text-xs uppercase tracking-wide text-muted whitespace-nowrap">
+      <span className={`text-xs ${symbol ? "font-mono" : "uppercase tracking-wide"} text-muted whitespace-nowrap`}>
         {label}
       </span>
       <span
@@ -201,6 +204,23 @@ export function CommandResultBreakdown({
           {pricingRows}
         </div>
       ))}
+      {rows && rows.section.length > 0 && (
+        <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4 mt-3">
+          <div className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase pt-3 pb-1">
+            {t("result.sectionProps")}
+          </div>
+          {rows.section.map((row) => (
+            <SheetRow
+              key={row.id}
+              label={row.label}
+              value={row.value}
+              mono
+              small={row.id === "secSource"}
+              symbol={row.id !== "secSource"}
+            />
+          ))}
+        </div>
+      )}
       {rows && (
         <Link
           href="/faq"

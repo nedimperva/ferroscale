@@ -5,6 +5,9 @@ import {
   fsMoney,
   fsWeight,
   fsWeightUnit,
+  getProfileById,
+  getSectionProperties,
+  SECTION_PROPERTY_SOURCES,
   SHEET_LIKE_FAMILIES,
   toMillimeters,
 } from "@ferroscale/metal-core";
@@ -37,7 +40,16 @@ export type BreakdownRowId =
   | "waste"
   | "vat"
   | "totalCost"
-  | "sellPrice";
+  | "sellPrice"
+  | "secIy"
+  | "secWelY"
+  | "secWplY"
+  | "secIyRadius"
+  | "secIz"
+  | "secWelZ"
+  | "secWplZ"
+  | "secIzRadius"
+  | "secSource";
 
 export interface BreakdownRow {
   id: BreakdownRowId;
@@ -48,6 +60,11 @@ export interface BreakdownRow {
 export interface BreakdownRows {
   geometry: BreakdownRow[];
   pricing: BreakdownRow[];
+  /**
+   * Published section properties for a standard size, empty for everything
+   * else — a manual section's figures would be computed, not cited.
+   */
+  section: BreakdownRow[];
 }
 
 export interface BreakdownOptions {
@@ -160,5 +177,33 @@ export function buildBreakdownRows(
       : []),
   ];
 
-  return { geometry, pricing };
+  return { geometry, pricing, section: sectionRows(p, t) };
+}
+
+/** Catalogue figures carry four significant digits; show what was printed. */
+function catalogue(value: number, unit: string) {
+  return `${value.toLocaleString("en-US", { maximumFractionDigits: 3 })} ${unit}`;
+}
+
+function sectionRows(p: CommandParseResult, t: CommandT): BreakdownRow[] {
+  const input = p.calc?.input;
+  if (!input || getProfileById(input.profileId)?.mode !== "standard") return [];
+  const s = getSectionProperties(input.selectedSizeId);
+  if (!s) return [];
+  const source = SECTION_PROPERTY_SOURCES[s.source].shortLabel;
+  return [
+    { id: "secIy", label: t("result.secIy"), value: catalogue(s.iyCm4, "cm⁴") },
+    { id: "secWelY", label: t("result.secWelY"), value: catalogue(s.welYCm3, "cm³") },
+    { id: "secWplY", label: t("result.secWplY"), value: catalogue(s.wplYCm3, "cm³") },
+    { id: "secIyRadius", label: t("result.secIyRadius"), value: `${s.iyRadiusCm.toFixed(2)} cm` },
+    { id: "secIz", label: t("result.secIz"), value: catalogue(s.izCm4, "cm⁴") },
+    { id: "secWelZ", label: t("result.secWelZ"), value: catalogue(s.welZCm3, "cm³") },
+    { id: "secWplZ", label: t("result.secWplZ"), value: catalogue(s.wplZCm3, "cm³") },
+    { id: "secIzRadius", label: t("result.secIzRadius"), value: `${s.izRadiusCm.toFixed(2)} cm` },
+    {
+      id: "secSource",
+      label: t("result.secSource"),
+      value: s.pdfPage ? t("result.secSourcePage", { source, page: s.pdfPage }) : source,
+    },
+  ];
 }

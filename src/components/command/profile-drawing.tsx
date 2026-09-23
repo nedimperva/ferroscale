@@ -174,12 +174,22 @@ function DimV({
   y2,
   value,
   side = "left",
+  below,
+  labelAt,
 }: {
   x: number;
   y1: number;
   y2: number;
   value: string;
   side?: "left" | "right";
+  /**
+   * A feature too thin to hold its own label (a 5 mm flange is ~6 px here):
+   * the label drops below it on a short leader, into open space, instead of
+   * sitting across the flange's edge lines.
+   */
+  below?: boolean;
+  /** With `below`: where the label goes, when not beside the leader. */
+  labelAt?: { x: number; anchor: "start" | "end" };
 }) {
   const id = useContext(ArrowId);
   if (!useContext(DimensionsShown)) return null;
@@ -189,6 +199,23 @@ function DimV({
   const tall = bot - top >= 16;
   const labelX = side === "left" ? x - 4 : x + 4;
   const anchor = side === "left" ? "end" : "start";
+  if (below) {
+    const drop = bot + 14;
+    return (
+      <g stroke={DIM} strokeWidth={1}>
+        <line x1={x - 2.5} y1={top} x2={x + 2.5} y2={top} />
+        <line x1={x - 2.5} y1={bot} x2={x + 2.5} y2={bot} />
+        <line x1={x} y1={top} x2={x} y2={drop - 4} />
+        <Label
+          x={labelAt?.x ?? x}
+          y={drop + 4}
+          anchor={labelAt?.anchor ?? (side === "left" ? "end" : "start")}
+        >
+          {value}
+        </Label>
+      </g>
+    );
+  }
   return (
     <g stroke={DIM} strokeWidth={1}>
       <line x1={x - 2.5} y1={top} x2={x + 2.5} y2={top} />
@@ -597,6 +624,28 @@ function renderDims(sec: Section, f: FittedBox): React.ReactNode {
       const webRight = sec.kind === "channel" ? sec.tw : rr;
       const filletX = sec.kind === "channel" ? X(sec.tw) : X(rr);
       const tfPx = Math.max(1, Y(sec.tf) - f.y0);
+      // Below ~14 px the label cannot sit inside the flange without crossing
+      // its edges. I-sections and tees have open space under the flange left
+      // of the web; a channel's R callout sits by its web, so its tf goes to
+      // the free flange tip.
+      const thinFlange = tfPx < 14;
+      const tfText = `tf ${fmt(sec.tf)}`;
+      const tfWidth = tfText.length * FONT * 0.62;
+      // Where a thin flange's label fits: in the open bay beside the web when
+      // the bay is wide enough, otherwise outside the outline — left of the
+      // flange tip on an I or T (clear of the h dimension), right of the tip
+      // on a channel (the drawing's right margin).
+      const bayPx = sec.kind === "channel" ? 0 : X(webLeft) - f.x0;
+      const tfInside = bayPx >= tfWidth + 20;
+      const leftRoom = f.x0 - (M.l - 24) - 8;
+      const tfPlacement: { x: number; labelAt?: { x: number; anchor: "start" | "end" } } =
+        !thinFlange || tfInside
+          ? { x: f.x0 + Math.min(14, f.w * 0.12) }
+          : sec.kind === "channel"
+            ? { x: f.x1 - 5, labelAt: { x: f.x1 + 5, anchor: "start" } }
+            : leftRoom >= tfWidth
+              ? { x: f.x0 + 5, labelAt: { x: f.x0 - 4, anchor: "end" } }
+              : { x: f.x0 + Math.min(14, f.w * 0.12) };
       return (
         <>
           <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
@@ -607,11 +656,13 @@ function renderDims(sec: Section, f: FittedBox): React.ReactNode {
           {!sec.estimated && (
             <>
               <DimV
-                x={f.x0 + Math.min(14, f.w * 0.12)}
+                x={tfPlacement.x}
                 y1={f.y0}
                 y2={f.y0 + tfPx}
-                value={`tf ${fmt(sec.tf)}`}
+                value={tfText}
                 side="right"
+                below={thinFlange}
+                labelAt={tfPlacement.labelAt}
               />
               <DimH
                 y={Y(sec.h * 0.48)}

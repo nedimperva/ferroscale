@@ -1188,6 +1188,7 @@ const DESK_ROW_STYLE: Partial<
   sectionArea: { small: true },
   formula: { wrap: true, small: true },
   reference: { wrap: true, small: true },
+  secSource: { wrap: true, small: true },
 };
 
 function DeskBreakdown({
@@ -1286,6 +1287,16 @@ function DeskBreakdown({
             {pricing.map((row) => (
               <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
             ))}
+            {rows.section.length > 0 && (
+              <>
+                <h3 className="fs-track-label text-[10px] font-bold uppercase text-muted mt-3 mb-1">
+                  {t("result.sectionProps")}
+                </h3>
+                {rows.section.map((row) => (
+                  <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
+                ))}
+              </>
+            )}
             <Link
               href="/faq"
               className="inline-block mt-2 font-mono text-[12px] text-muted hover:text-foreground underline-offset-2 hover:underline"

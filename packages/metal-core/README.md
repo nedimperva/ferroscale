@@ -1,8 +1,8 @@
 # @ferroscale/metal-core
 
-Shared calculation package used by the Ferroscale web app and by the
-Raycast extension (maintained in its own repository): the command parser
-below is UI-independent and is the grammar both surfaces share.
+Shared calculation package used by the Ferroscale web app. It is
+UI-independent: engine, datasets and command parser carry no web imports
+or i18n.
 
 ## What It Contains
 

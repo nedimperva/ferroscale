@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import { getAppTabFromPathname } from "@/lib/app-shell";
@@ -8,15 +8,14 @@ import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
 import { libraryAssemblies } from "./projects/insert-assembly-modal";
-import type { SavedEntry, SavedPart, SavedPartDraft } from "@/hooks/useSaved";
+import type { SavedEntry, SavedPartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProjects";
+import { isArchivedProject, useProjects } from "@/hooks/useProjects";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
-import { AlertDot } from "./desktop/desk-rail";
-import { calculateMetal, cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
+import { calculateMetal, cmdParse, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
   cmdSuggest,
   cmdApplyInsert,
@@ -27,7 +26,7 @@ import {
   cmdSplitLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
-import { CURRENCY_SYMBOLS, fsKgm, fsLength, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   currentProjectStore,
   defaultUnitStore,
@@ -40,39 +39,16 @@ import type {
   CommandParserSettings,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
-import { CommandGlyph } from "./command-glyph";
-import {
-  applyIssueSuggestion,
-  computeGhost,
-  formatAvailability,
-  formatCommandHint,
-  formatCommandIssue,
-  issueForToken,
-  formatCommandParseName,
-  formatCommandSuggestionLabel,
-  buildCommandSummary,
-} from "./command-copy";
+import { formatCommandParseName, buildCommandSummary } from "./command-copy";
 import { buildShareCardModel } from "./line-summary";
 import { CommandHelpSheet } from "./sheets/help-sheet";
-import { KIND_BG } from "./command-constants";
 import { commandTargetNote } from "./target-note";
 import { massBand } from "./mass-band";
-import {
-  activeItemText,
-  applyToActiveItem,
-  editLineToken,
-  lineChips,
-  lineExpandedIndex,
-  removeLineToken,
-  replaceLineToken,
-  tweakActiveItem,
-} from "./line-edit";
-import { TokenChip } from "./token-chip";
-import { useExpandedItem } from "./use-expanded-item";
-import { AvailabilityBadge, CommandToast, InlineIssue, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
-import type { CommandToastState } from "./command-atoms";
+import { activeItemText, applyToActiveItem, tweakActiveItem } from "./line-edit";
+import { CommandToast, ResultAnnouncer } from "./command-atoms";
+import { useCommandToast } from "./use-command-toast";
+import { useShellViewport } from "./use-shell-viewport";
 import { CommandKeypad } from "./command-keypad";
-import { SaveControl } from "./save-control";
 import { ProfileDiscoveryTiles } from "./profile-discovery-tiles";
 import {
   commandKeypadInsert,
@@ -80,9 +56,13 @@ import {
   type CommandKeypadOverride,
 } from "./keypad-layout";
 import { CommandDesktop } from "./desktop/command-desktop";
-import { DeskIcon } from "./desktop/desk-atoms";
+import { PhoneTopBar } from "./phone/phone-top-bar";
+import { PhoneHero } from "./phone/phone-hero";
+import { SessionRibbon } from "./phone/session-ribbon";
+import { PhoneSuggestionStrip } from "./phone/suggestion-strip";
+import { PhoneQueryLine } from "./phone/query-line";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
-import type { ProjectActions } from "./projects/project-actions";
+import { useProjectActions } from "./projects/use-project-actions";
 import { CommandResultSheet } from "./sheets/result-sheet";
 import { CommandSettingsSheet } from "./sheets/settings-sheet";
 import { SavedEditSheet } from "./sheets/saved-edit-sheet";
@@ -102,10 +82,6 @@ import type { CalculationInput, CalculationResult } from "@/lib/calculator/types
 
 import { DEMO_QUERY } from "./command-constants";
 
-// The phone's headline figure. Mono at a regular weight, like the workspace's
-// — same rule everywhere: numbers are mono, and at this size they carry
-// without extra weight.
-const HERO_FONT_WEIGHT = 400;
 /**
  * The rate getDefaultInput() seeds. Matching it means nobody has said what
  * steel costs yet, so every currency figure on screen is a placeholder.
@@ -171,31 +147,14 @@ export function CommandShell() {
     clearAll: clearCompare,
     isDuplicate: isInCompare,
   } = useCompare();
+  const projectsApi = useProjects();
   const {
     projects,
     createProject,
-    renameProject,
-    updateProjectMeta,
-    updateProjectLabor,
-    updateProjectAdditionalCosts,
-    updateItemAssembly,
-    batchArchiveProjects,
-    batchDeleteProjects,
-    updateProjectDescription,
-    logQuotePrinted,
-    deleteProject,
-    restoreProject,
-    duplicateProject,
     addCalculation,
     addCalculations,
     insertAssembly,
-    scaleSubAssembly,
-    createProjectFromAssembly,
-    removeCalculation,
-    updateCalculationQuantity,
-    updateCalculationNote,
-    updateProjectPaintCoats,
-  } = useProjects();
+  } = projectsApi;
   const priceBook = usePriceBook();
 
   const currentProjectId = useSyncExternalStore(
@@ -231,7 +190,7 @@ export function CommandShell() {
   const [libraryTab, setLibraryTab] = useState<
     "session" | "saved" | "compare" | "projects" | null
   >(null);
-  const [toast, setToast] = useState<CommandToastState | null>(null);
+  const { toast, showToast, showActionToast } = useCommandToast();
   // Sync runs by itself; this is only set when it needs the user.
   const syncAttention = useSyncAttention();
   // Query history — persisted (and Drive-synced) via the quickHistory
@@ -251,15 +210,10 @@ export function CommandShell() {
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
-  const [isPhoneViewport, setIsPhoneViewport] = useState(false);
+  const { isPhoneViewport, isWideViewport, isCompactDesktop } = useShellViewport();
   /** Letters / number pad chosen by hand. Cleared when the active item empties. */
   const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
-  const [isWideViewport, setIsWideViewport] = useState(false);
-  /** Workspace, but narrow: one column, breakdown folded away. */
-  const [isCompactDesktop, setIsCompactDesktop] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  /** The phone's chip box — kept scrolled to the caret as the line grows. */
-  const queryLineRef = useRef<HTMLDivElement | null>(null);
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
 
   const parserSettings: CommandParserSettings = useMemo(
@@ -300,26 +254,6 @@ export function CommandShell() {
   // own fade for another few hundred ms. Retire it the moment we exist.
   useEffect(() => {
     document.documentElement.classList.add("app-ready");
-  }, []);
-
-  // Two shells, not three:
-  //  · phone (<640) → fullscreen with the on-screen keypad and sheets
-  //  · everything else (≥640) → the workspace, single-column below 1024
-  //
-  // 640–1023 used to get a 560px card floating on a background — no session
-  // tape, no library, no breakdown — which is exactly an iPad in portrait and
-  // a half-width laptop window. It now gets the real thing, laid out for the
-  // width it has.
-  useEffect(() => {
-    const fit = () => {
-      const w = window.innerWidth;
-      setIsPhoneViewport(w < 640);
-      setIsWideViewport(w >= 640);
-      setIsCompactDesktop(w < 1024);
-    };
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
   }, []);
 
   // Deep links on a phone. The workspace reads the route into its own tab, but
@@ -372,6 +306,12 @@ export function CommandShell() {
     setSheet(null);
     if (isPhoneViewport) resetRouteToCalculator();
   }, [isPhoneViewport, resetRouteToCalculator]);
+
+  /** Open the library sheet on one of its tabs. */
+  const openLibrary = useCallback((tab: "session" | "saved" | "projects") => {
+    setLibraryTab(tab);
+    setSheet("library");
+  }, []);
 
   // A line can hold several `+`-joined items. `p` is the one being typed —
   // every existing behaviour (chips, suggestions, save, compare) acts on it,
@@ -473,24 +413,6 @@ export function CommandShell() {
   const priceKeyUnit = shared.priceUnit === "piece" ? "pc" : shared.priceUnit;
   const priceUnitLabel = `${sym}/${priceKeyUnit}`;
   const isW = mode === "weight";
-
-  const showToast = useCallback((msg: string) => {
-    setToast({ text: msg });
-    window.setTimeout(() => setToast(null), 1700);
-  }, []);
-
-  /** Toast with an action button (Undo, Name it) — stays up longer. */
-  const showActionToast = useCallback(
-    (msg: string, action: { label: string; onAction: () => void }) => {
-      const entry = { text: msg, ...action };
-      setToast(entry);
-      window.setTimeout(() => {
-        // Only clear if this toast is still the visible one.
-        setToast((current) => (current === entry ? null : current));
-      }, 5000);
-    },
-    [],
-  );
 
   // Hydrate persisted state on mount. setState-in-effect is intentional here:
   // initial SSR/first-paint values must match defaults to avoid hydration
@@ -1079,157 +1001,17 @@ export function CommandShell() {
     addCompareEntry(p.calc.input, p.calc.result);
   }, [p.calc, addCompareEntry]);
 
-  /**
-   * The Projects surface's whole vocabulary, assembled once. Deleting shows an
-   * undo toast rather than a confirm dialog: the tombstone is reversible and a
-   * modal for a project you can put back is a tax on the common case.
-   */
-  const projectActions: ProjectActions = useMemo(
-    () => ({
-      onCreate: (name: string) => {
-        if (projects.length >= MAX_PROJECTS) {
-          showToast(t("projects.full"));
-          return;
-        }
-        return createProject(name);
-      },
-      onRename: renameProject,
-      onUpdateMeta: (id, patch) => {
-        updateProjectMeta(id, patch);
-        if (patch.status === "archived") showToast(t("projects.archivedToast"));
-        else if (patch.status === "draft") showToast(t("projects.unarchivedToast"));
-      },
-      onUpdateNotes: updateProjectDescription,
-      onDuplicate: (id) => {
-        const copy = duplicateProject(id);
-        showToast(copy ? t("toast.duplicated") : t("projects.full"));
-      },
-      onDelete: (id) => {
-        deleteProject(id);
-        showActionToast(t("projects.deleted"), {
-          label: t("common.undo"),
-          onAction: () => {
-            restoreProject(id);
-            showToast(t("toast.restored"));
-          },
-        });
-      },
-      onRemoveItem: removeCalculation,
-      onSetItemQuantity: updateCalculationQuantity,
-      onSetItemNote: updateCalculationNote,
-      onSetPaintCoats: updateProjectPaintCoats,
-      onUpdateLabor: updateProjectLabor,
-      onUpdateAdditionalCosts: updateProjectAdditionalCosts,
-      onSetItemAssembly: updateItemAssembly,
-      onBatchArchive: (ids) => {
-        batchArchiveProjects(ids);
-        showToast(t("projects.archivedToast"));
-      },
-      onBatchDelete: (ids) => {
-        batchDeleteProjects(ids);
-        showToast(t("projects.deleted"));
-      },
-      onOpenItem: loadInput,
-      onAddItem: (projectId: string) => {
-        if (!p.calc) {
-          showToast(t("toast.addLength"));
-          return false;
-        }
-        const ok = addCalculation(projectId, p.calc.input, p.calc.result);
-        const name = projects.find((project) => project.id === projectId)?.name;
-        showToast(
-          ok
-            ? t("toast.addedToProject", { project: name ?? t("common.project") })
-            : t("projects.itemsFull"),
-        );
-        return ok;
-      },
-      onQuickAddItem: (projectId: string, queryStr: string, assembly?: string) => {
-        const parsed = cmdParse(queryStr, parserSettings);
-        if (!parsed.calc) {
-          showToast(t("toast.addLength"));
-          return false;
-        }
-        const ok = addCalculation(projectId, parsed.calc.input, parsed.calc.result, assembly);
-        const name = projects.find((project) => project.id === projectId)?.name;
-        showToast(
-          ok
-            ? t("toast.addedToProject", { project: name ?? t("common.project") })
-            : t("projects.itemsFull"),
-        );
-        return ok;
-      },
-      libraryAssemblies: assembliesInLibrary,
-      onInsertAssembly: (projectId, entry, multiplier, customAssemblyName) => {
-        const ok = insertAssembly(projectId, entry, multiplier, customAssemblyName);
-        if (ok) {
-          showToast(t("projects.templateInserted", { name: entry.name, mult: multiplier }));
-        }
-        return ok;
-      },
-      onSaveAssemblyToLibrary: (name, parts: SavedPart[], description, category) => {
-        if (parts.length === 0) return;
-        const entry = saveCalculation(
-          parts[0].input,
-          parts[0].result,
-          name,
-          description,
-          undefined,
-          parts.map((part) => ({ name: part.name, input: part.input, result: part.result })),
-          true,
-        );
-        if (category) updateSaved(entry.id, { category });
-        haptic("commit");
-        showToast(t("assembly.saved"));
-      },
-      onScaleSubAssembly: (projectId, assemblyName, multiplier) => {
-        const ok = scaleSubAssembly(projectId, assemblyName, multiplier);
-        if (ok) {
-          showToast(t("projects.assemblyScaledToast", { name: assemblyName || "General", mult: multiplier }));
-        }
-        return ok;
-      },
-      onCreateFromAssembly: (name, entry, multiplier) => {
-        const project = createProjectFromAssembly(name, entry, multiplier);
-        showToast(t("projects.templateProjectCreated", { name: project.name }));
-        return project;
-      },
-      onPrintQuote: (project) => logQuotePrinted(project.id),
-    }),
-    [
-      projects,
-      createProject,
-      renameProject,
-      updateProjectMeta,
-      updateProjectDescription,
-      updateProjectLabor,
-      updateProjectAdditionalCosts,
-      updateItemAssembly,
-      batchArchiveProjects,
-      batchDeleteProjects,
-      duplicateProject,
-      deleteProject,
-      restoreProject,
-      removeCalculation,
-      updateCalculationQuantity,
-      updateCalculationNote,
-      updateProjectPaintCoats,
-      loadInput,
-      addCalculation,
-      assembliesInLibrary,
-      saveCalculation,
-      updateSaved,
-      insertAssembly,
-      scaleSubAssembly,
-      createProjectFromAssembly,
-      logQuotePrinted,
-      p.calc,
-      parserSettings,
-      showToast,
-      showActionToast,
-      t,
-    ],
-  );
+  const projectActions = useProjectActions({
+    projectsApi,
+    saveCalculation,
+    updateSaved,
+    libraryAssemblies: assembliesInLibrary,
+    onOpenItem: loadInput,
+    currentCalc: p.calc,
+    parserSettings,
+    showToast,
+    showActionToast,
+  });
 
   /** The picker, for everywhere the primary action does not go. */
   const openDestinations = useCallback(() => {
@@ -1420,14 +1202,6 @@ export function CommandShell() {
         })
       : "";
 
-  // Tokens come from the same tokenizer the parser uses, so glued input
-  // ("hea1006m") displays as the pieces it is parsed as.
-  // Chips are grouped by item, so a `+`-joined line renders as the two (or
-  // more) calculations it is. While the query doesn't end in whitespace the
-  // last piece is still being typed — rendered as plain text at the cursor.
-  const chips = useMemo(() => lineChips(query), [query]);
-  const partialToken = chips.partial || null;
-  const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   if (activeQuery.trim() === "" && keypadOverride !== null) {
     setKeypadOverride(null);
   }
@@ -1437,63 +1211,6 @@ export function CommandShell() {
     keypadMode === "letters" &&
     (keypadOverride === "letters" ||
       (keypadStage.stage !== "empty" && keypadStage.stage !== "profile"));
-  // Faint completion drawn after the caret (profile letters / recent prefix).
-  const ghost = computeGhost(partialToken ?? "", sug);
-  const acceptGhost = () => {
-    if (ghost && sug.items[0]) onSuggest(sug.items[0]);
-  };
-  /**
-   * Which item shows its tokens on the phone. A `+`-joined line of four items
-   * is far more chips than a phone's query line can hold, and the old capped
-   * scroll window showed them sliced across half-rows. Only the item you are
-   * working on is spelled out; the rest are one chip each, and the hero above
-   * already lists every item with its weight and price.
-   *
-   * `null` means the item the caret is in — the last one — which is what any
-   * keystroke goes into. Tapping another item's chip parks the expansion there
-   * until the query changes for a reason other than editing that item.
-   */
-  const { expandedItem, setExpandedItem, lockExpanded } = useExpandedItem(query);
-  const expandedIndex = lineExpandedIndex(chips.groups, expandedItem);
-
-  /** An edit inside the open item is not a reason to close it. */
-  const keepExpanded = (item: number, next: string) => {
-    lockExpanded(item, next);
-    setQuery(next);
-  };
-  const removeTokenAt = (item: number, idx: number) => {
-    keepExpanded(item, removeLineToken(query, item, idx));
-  };
-  const replaceTokenAt = (item: number, idx: number, next: string) => {
-    keepExpanded(item, replaceLineToken(query, item, idx, next));
-  };
-  // Pull a token back to the end of its own item as the editable partial (the
-  // parser is order-tolerant within an item, so the reordering is free).
-  const editTokenAt = (item: number, idx: number) => {
-    keepExpanded(item, editLineToken(query, item, idx));
-  };
-  // The caret lives at the end of the line, so the row has to follow it
-  // sideways as tokens are added — otherwise typing walks off the visible area.
-  useEffect(() => {
-    const el = queryLineRef.current;
-    if (!el) return;
-    // Opening an earlier item scrolls to that item; otherwise the caret is the
-    // last thing in the row, so the end of the scroll *is* the caret and the
-    // line follows what is being typed.
-    const opened = el.querySelector<HTMLElement>("[data-expanded-start]");
-    if (opened) {
-      el.scrollLeft += opened.getBoundingClientRect().left - el.getBoundingClientRect().left - 12;
-    } else {
-      el.scrollLeft = el.scrollWidth;
-    }
-  }, [query, expandedIndex]);
-
-  /** One chip standing in for a whole item, labelled as the hero numbers it. */
-  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
-    line.items[group.item]?.parse.name ||
-    group.tokens[0] ||
-    partialToken ||
-    String(group.item + 1);
   // A CSS variable, not a theme-derived literal: the class that selects it is
   // set before first paint by the inline script in the root layout, so the
   // server and the client emit the same style string. Reading `dark` here made
@@ -1717,86 +1434,12 @@ export function CommandShell() {
           />
 
           {/* TOP BAR */}
-          <div className="flex items-center justify-between px-[18px] pt-1 pb-2">
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-6 h-6 rounded-none flex items-center justify-center"
-                style={{ background: "var(--accent)" }}
-              >
-                <span
-                  className="w-2.5 h-2.5"
-                  style={{
-                    background: "var(--accent-contrast)",
-                  }}
-                />
-              </div>
-              {/* The phone shell's only title, and so the page's h1. The
-                  workspace gets one from DeskViewHeader; this surface had
-                  none, which left the whole app without a heading outline. */}
-              <h1 className="text-[17px] font-extrabold tracking-tight">
-                FerroScale
-              </h1>
-            </div>
-            <div className="flex gap-1.5">
-              <IconBtn onClick={cycleTheme} ariaLabel={t("aria.toggleTheme")}>
-                {/* Both glyphs ship and CSS picks one. Choosing in JS from the
-                    resolved theme meant the server drew the moon and a
-                    dark-mode client drew the sun, which failed hydration and
-                    made React discard and rebuild the whole shell. The `.dark`
-                    class is on <html> before first paint, so the right glyph is
-                    the first one drawn. */}
-                <svg aria-hidden="true" className="hidden dark:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                  <circle cx="12" cy="12" r="4.5" />
-                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
-                </svg>
-                <svg aria-hidden="true" className="block dark:hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z" />
-                </svg>
-              </IconBtn>
-              {/* The workspace rail's destinations, named the same way. One
-                  bookmark glyph used to stand for Parts, Projects, Compare and
-                  the session tape at once, so the two surfaces disagreed about
-                  what the app even contains. */}
-              <IconBtn
-                onClick={() => {
-                  setLibraryTab("saved");
-                  setSheet("library");
-                }}
-                ariaLabel={t("nav.parts")}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                </svg>
-              </IconBtn>
-              <IconBtn
-                onClick={() => {
-                  setLibraryTab("projects");
-                  setSheet("library");
-                }}
-                ariaLabel={t("nav.projects")}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
-                </svg>
-              </IconBtn>
-              <IconBtn
-                onClick={() => setSheet("settings")}
-                ariaLabel={t("nav.settings")}
-                alert={
-                  syncAttention === "reconnect"
-                    ? t("sync.attentionReconnect")
-                    : syncAttention === "passphrase"
-                      ? t("sync.attentionPassphrase")
-                      : null
-                }
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-                </svg>
-              </IconBtn>
-            </div>
-          </div>
+          <PhoneTopBar
+            onToggleTheme={cycleTheme}
+            onOpenLibrary={openLibrary}
+            onOpenSettings={() => setSheet("settings")}
+            syncAttention={syncAttention}
+          />
 
           {/*
             A pristine bar has no answer to show, so the whole top of this
@@ -1834,77 +1477,14 @@ export function CommandShell() {
                 actions the workspace pane does: open it, or turn it into a
                 project. Nothing typed is lost by not deciding where it goes,
                 which is the point of the tape. */}
-            <div
-              data-session-ribbon=""
-              className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
-              // A fixed height, because everything on this screen is laid out by
-              // flex spacers: a row that grows when the tape fills pushes the
-              // answer up the screen as you work. Its tallest control is the
-              // 28px "+", so 44 holds it with room either side.
-              style={{
-                height: 44,
-                padding: "0 8px 0 11px",
-                border: "1px dashed var(--border-strong)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setLibraryTab("session");
-                  setSheet("library");
-                }}
-                aria-label={t("aria.openSession")}
-                // overflow-hidden, because the figure and the label inside are
-                // both nowrap: without it a long total simply drew over the
-                // button to its right instead of giving way.
-                className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden bg-transparent border-0 p-0 text-left cursor-pointer"
-              >
-                <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
-                  {t("desktop.session")}
-                </h2>
-                {/* The total in whichever unit the hero is showing, then how many
-                    lines it came from. Showing weight and money side by side made
-                    the row two lines tall as soon as the session had anything in
-                    it, and truncating a number mid-digit is worse than omitting
-                    it — the full breakdown is one tap away. */}
-                <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
-                  {sessionSummary.count === 0
-                    ? "—"
-                    : isW
-                      ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
-                      : `${sym}${fsMoney(sessionSummary.amount)}`}
-                </span>
-                {/* No line count here. It only ever had a value when the
-                    "→ project" button was showing too, and the two together do
-                    not fit a 390px row — it came out as "2 c…". The count is
-                    on the session tab, one tap away. */}
-              </button>
-              {sessionSummary.count > 0 && (
-                <button
-                  type="button"
-                  onClick={saveSessionAsProject}
-                  className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
-                  style={{ padding: "6px 7px", color: "var(--accent-text)" }}
-                >
-                  {t("desktop.saveSessionAsProjectShort")}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={logToSession}
-                aria-label={t("aria.addToSession")}
-                className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
-                style={{
-                  width: 28,
-                  height: 28,
-                  border: "1px solid var(--accent-border)",
-                  background: "var(--accent-surface)",
-                  color: "var(--accent-text)",
-                }}
-              >
-                +
-              </button>
-            </div>
+            <SessionRibbon
+              summary={sessionSummary}
+              isWeight={isW}
+              sym={sym}
+              onOpen={() => openLibrary("session")}
+              onSaveAsProject={saveSessionAsProject}
+              onAdd={logToSession}
+            />
 
             {/* The visual way in, on the surface that has no text field at all.
                 It shipped to the workspace only, which left the phone — the
@@ -1926,349 +1506,39 @@ export function CommandShell() {
                   upper third rather than dead centre. */}
               <div className="flex-[1] min-h-0" />
             {/* HERO */}
-            <div className="px-[18px] pt-1.5 flex-shrink-0">
-              {/* The mode switch rides in the hero's label row rather than taking
-                  a full-width row of its own — the fold's single biggest saving. */}
-              <div className="flex items-center justify-between mb-0.5">
-                {/* Names the metric rather than the mode — the highlighted pill
-                    already says which mode is on. */}
-                <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
-                  {isW ? t("preview.totalWeight") : t("preview.totalCost")}
-                </span>
-                <div className="flex gap-1">
-                  {(["weight", "price"] as const).map((m) => {
-                    const active = mode === m;
-                    const isWeight = m === "weight";
-                    return (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => setModeOverride(m)}
-                        aria-pressed={active}
-                        className="fs-track-label rounded-none text-[11px] font-bold"
-                        style={{
-                          // 5px of vertical padding puts the control at 25px, over
-                          // the 24px floor in WCAG 2.5.8. It measured 23px.
-                          padding: "5px 12px",
-                          border: active
-                            ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
-                            : "1px solid var(--border-faint)",
-                          background: active
-                            ? isWeight
-                              ? "var(--accent-surface)"
-                              : "var(--blue-surface)"
-                            : "transparent",
-                          color: active
-                            ? isWeight
-                              ? "var(--accent-text)"
-                              : "var(--blue-text)"
-                            : "var(--muted)",
-                        }}
-                      >
-                        {/* Same words as the desktop toggle — the concept is
-                            one, so the label is one (KG/€ read as units). */}
-                        {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                disabled={!p.valid}
-                onClick={() => p.valid && setSheet("result")}
-                aria-haspopup="dialog"
-                aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-                className="block w-full text-left p-0 m-0 bg-transparent border-0"
-                style={{ cursor: p.valid ? "pointer" : "default" }}
-              >
-                <div className="flex items-baseline gap-2">
-                  {!isW && p.totalAmount != null && (
-                    <span
-                      className="font-mono text-[30px] leading-none"
-                      style={{
-                        color: "var(--muted)",
-                        fontWeight: HERO_FONT_WEIGHT,
-                      }}
-                    >
-                      {sym}
-                    </span>
-                  )}
-                  <span
-                    className="font-mono leading-[0.88] tracking-[-2.8px] fs-display-num"
-                    style={{
-                      fontSize: 56,
-                      fontWeight: HERO_FONT_WEIGHT,
-                      color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
-                    }}
-                  >
-                    {heroVal}
-                  </span>
-                  {isW && p.totalKg != null && (
-                    <span
-                      className="font-mono text-[20px]"
-                      // The hero unit is 20-22px at a normal weight, which WCAG
-                      // does not count as large text, so it needs the 4.5:1 token
-                      // rather than the 4.33:1 signal colour.
-                      style={{ color: "var(--accent-text)" }}
-                    >
-                      {fsWeightUnit()}
-                    </span>
-                  )}
-                  {band && (
-                    <span
-                      className="fs-track-wide font-mono text-[11px] text-muted self-end pb-2 ml-1"
-                      >
-                      {band.percentLabel}
-                    </span>
-                  )}
-                  {p.valid && (
-                    <span className="ml-auto self-center text-muted-faint">
-                      <Chev />
-                    </span>
-                  )}
-                </div>
-              </button>
-
-              <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
-                {line.multi ? (
-                  <span className="font-mono text-[12px] text-muted">
-                    {t("result.assembly", { count: line.items.length })}
-                  </span>
-                ) : p.valid && p.kgm != null ? (
-                  <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
-                    <span>
-                      <span className="text-foreground-secondary">
-                        {fsKgm(p.kgm)}
-                      </span>{" "}
-                      kg/m ×{" "}
-                      <span className="text-foreground-secondary">{fsLength(p.lengthM ?? 0)}</span>{" "}
-                      m × <span className="text-foreground-secondary">{p.realQty}</span>
-                      {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
-                      {/* The assumption travels with the figure — see the
-                          workspace hero for why. */}
-                      {!rateIsUserSupplied
-                        ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
-                        : ""}
-                    </span>
-                    {p.issues.length > 0 && (
-                      <InlineIssue
-                        text={formatCommandIssue(t, p.issues[0])}
-                        suggestionLabel={
-                          p.issues[0].suggestion
-                            ? t("issues.didYouMean", { suggestion: p.issues[0].suggestion })
-                            : null
-                        }
-                        onApply={() =>
-                          setQuery(
-                            applyIssueSuggestion(query, p.issues[0].token, p.issues[0].suggestion!),
-                          )
-                        }
-                      />
-                    )}
-                    {p.availability && (
-                      <AvailabilityBadge>
-                        {formatAvailability(t, p.availability, p.gradeLabel).badge}
-                      </AvailabilityBadge>
-                    )}
-                    {targetNote && (
-                      <TargetBadge>
-                        {t(
-                          `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
-                          { target: targetNote.target },
-                        )}
-                        {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
-                      </TargetBadge>
-                    )}
-                    {!isW && p.pricing.wastePercent > 0 && (
-                      <PricingBadge>{t("pricingBadge.waste", { percent: p.pricing.wastePercent })}</PricingBadge>
-                    )}
-                    {!isW && p.pricing.includeVat && (
-                      <PricingBadge>{t("pricingBadge.vat", { percent: p.pricing.vatPercent })}</PricingBadge>
-                    )}
-                  </span>
-                ) : p.issues.length > 0 ? (
-                  <span
-                    className="fs-drop font-mono text-[12px] flex items-center gap-2 flex-wrap"
-                    style={{ color: "var(--amber-text)" }}
-                    role="status"
-                  >
-                    <span>{formatCommandIssue(t, p.issues[0])}</span>
-                    {p.issues[0].suggestion && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setQuery(
-                            applyIssueSuggestion(
-                              query,
-                              p.issues[0].token,
-                              p.issues[0].suggestion!,
-                            ),
-                          );
-                          // no-op on phone: the keypad owns the caret
-                        }}
-                        className="rounded-none font-bold"
-                        style={{
-                          padding: "2px 9px",
-                          background: "var(--accent-surface)",
-                          color: "var(--accent-text)",
-                          border: "1px solid var(--accent-border)",
-                        }}
-                      >
-                        {t("issues.didYouMean", { suggestion: p.issues[0].suggestion })}
-                      </button>
-                    )}
-                  </span>
-                ) : (
-                  <span className="font-mono text-[12px] text-muted-faint">
-                    {p.alias
-                      ? p.hasSize
-                        ? t("hint.addLength")
-                        : t("hint.addSize")
-                      : t("hint.startProfile")}
-                  </span>
-                )}
-                <span className="ml-auto flex items-center gap-1.5">
-                  <span
-                    className="w-1.5 h-1.5"
-                    style={{
-                      background: p.valid ? "var(--accent)" : "var(--muted-faint)",
-                    }}
-                  />
-                  <span
-                    className="font-mono text-[10px] uppercase"
-                    style={{
-                      letterSpacing: 1.6,
-                      color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
-                    }}
-                  >
-                    {p.valid ? t("status.live") : t("status.waiting")}
-                  </span>
-                </span>
-              </div>
-
-              <MetricStrip
-                p={p}
-                isWeight={isW}
-                sym={sym}
-                onOpen={() => p.valid && setSheet("result")}
-              />
-
-              {/* The save control takes the row; the other three are icons.
-                  All four used to share the width equally, which left the one
-                  control that has something to say — "Add to Gate job", or even
-                  just "Save" — with about 60px to say it in, and it came out as
-                  a bookmark and the letter S. Compare and Share have glyphs that
-                  carry them; the primary action is the one that needs words. */}
-              <div className="flex gap-1.5 mt-2">
-                <div className="flex-1 min-w-0">
-                  <SaveControl
-                    compact
-                    projectName={currentProject?.name ?? null}
-                    saved={!!currentSavedEntry}
-                    disabled={!p.calc}
-                    onPrimary={primarySave}
-                    onOpenPicker={openDestinations}
-                  />
-                </div>
-                <PhoneIconBtn onClick={doCompare} label={t("nav.compare")}>
-                  <DeskIcon name="compare" size={16} />
-                </PhoneIconBtn>
-                <PhoneIconBtn onClick={shareLink} label={t("common.share")}>
-                  <DeskIcon name="link" size={16} stroke="currentColor" />
-                </PhoneIconBtn>
-                {/* The fold doesn't draw this, but without it the phone can only
-                    view a multi-item line, never start one. */}
-                <PhoneIconBtn
-                  onClick={() => {
-                    haptic("tap");
-                    setQuery((q) => cmdAppendLineItem(q));
-                  }}
-                  disabled={!p.valid}
-                  label={t("suggest.addItem")}
-                  dashed
-                >
-                  <span className="text-[17px] font-bold leading-none">+</span>
-                </PhoneIconBtn>
-              </div>
-            </div>
+            <PhoneHero
+              p={p}
+              line={line}
+              query={query}
+              setQuery={setQuery}
+              mode={mode}
+              onSetMode={setModeOverride}
+              sym={sym}
+              heroVal={heroVal}
+              band={band}
+              rateIsUserSupplied={rateIsUserSupplied}
+              targetNote={targetNote}
+              onOpenResult={() => setSheet("result")}
+              projectName={currentProject?.name ?? null}
+              saved={!!currentSavedEntry}
+              onPrimarySave={primarySave}
+              onOpenDestinations={openDestinations}
+              onCompare={doCompare}
+              onShare={shareLink}
+            />
 
             {/* SESSION RIBBON — the tape, at phone size. It carries the same two
                 actions the workspace pane does: open it, or turn it into a
                 project. Nothing typed is lost by not deciding where it goes,
                 which is the point of the tape. */}
-            <div
-              data-session-ribbon=""
-              className="flex items-center gap-2 mx-[18px] mt-2 rounded-none flex-shrink-0"
-              // A fixed height, because everything on this screen is laid out by
-              // flex spacers: a row that grows when the tape fills pushes the
-              // answer up the screen as you work. Its tallest control is the
-              // 28px "+", so 44 holds it with room either side.
-              style={{
-                height: 44,
-                padding: "0 8px 0 11px",
-                border: "1px dashed var(--border-strong)",
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setLibraryTab("session");
-                  setSheet("library");
-                }}
-                aria-label={t("aria.openSession")}
-                // overflow-hidden, because the figure and the label inside are
-                // both nowrap: without it a long total simply drew over the
-                // button to its right instead of giving way.
-                className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden bg-transparent border-0 p-0 text-left cursor-pointer"
-              >
-                <h2 className="fs-track-wide text-[10px] font-bold uppercase text-muted whitespace-nowrap flex-shrink-0">
-                  {t("desktop.session")}
-                </h2>
-                {/* The total in whichever unit the hero is showing, then how many
-                    lines it came from. Showing weight and money side by side made
-                    the row two lines tall as soon as the session had anything in
-                    it, and truncating a number mid-digit is worse than omitting
-                    it — the full breakdown is one tap away. */}
-                <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
-                  {sessionSummary.count === 0
-                    ? "—"
-                    : isW
-                      ? `${fsWeight(sessionSummary.kg)} ${fsWeightUnit()}`
-                      : `${sym}${fsMoney(sessionSummary.amount)}`}
-                </span>
-                {/* No line count here. It only ever had a value when the
-                    "→ project" button was showing too, and the two together do
-                    not fit a 390px row — it came out as "2 c…". The count is
-                    on the session tab, one tap away. */}
-              </button>
-              {sessionSummary.count > 0 && (
-                <button
-                  type="button"
-                  onClick={saveSessionAsProject}
-                  className="fs-track-wide flex-shrink-0 whitespace-nowrap text-[10px] font-bold uppercase"
-                  style={{ padding: "6px 7px", color: "var(--accent-text)" }}
-                >
-                  {t("desktop.saveSessionAsProjectShort")}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={logToSession}
-                aria-label={t("aria.addToSession")}
-                className="flex items-center justify-center rounded-none text-[16px] font-bold leading-none flex-shrink-0"
-                style={{
-                  width: 28,
-                  height: 28,
-                  border: "1px solid var(--accent-border)",
-                  background: "var(--accent-surface)",
-                  color: "var(--accent-text)",
-                }}
-              >
-                +
-              </button>
-            </div>
+            <SessionRibbon
+              summary={sessionSummary}
+              isWeight={isW}
+              sym={sym}
+              onOpen={() => openLibrary("session")}
+              onSaveAsProject={saveSessionAsProject}
+              onAdd={logToSession}
+            />
 
             {/* The visual way in, on the surface that has no text field at all.
                 It shipped to the workspace only, which left the phone — the
@@ -2283,277 +1553,31 @@ export function CommandShell() {
           {/* The gap under the strip has to clear the query line's 3px focus
               ring, not just its border box — at pb-1.5 the chips sat on the
               glow and the two read as one collided control. */}
-          <div className="pb-2.5">
-            <div className="flex items-center gap-2 px-[18px] pb-1.5">
-              <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
-                {formatCommandHint(t, sug.hint)}
-              </h2>
-              <span className="ml-auto flex items-center -mr-3">
-                <button
-                  type="button"
-                  onClick={pasteFromClipboard}
-                  aria-label={t("common.paste")}
-                  // Padding + negative margin grows the tap target without
-                  // shifting the layout.
-                  className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
-                >
-                  {t("common.paste")}
-                </button>
-                {query !== "" && (
-                  <button
-                    type="button"
-                    onClick={newCalc}
-                    className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
-                  >
-                    {t("common.clear")}
-                  </button>
-                )}
-              </span>
-            </div>
-            <div className="relative">
-            <div
-              // One row that scrolls sideways, per the fold. Wrapping to two
-              // rows made the strip's height depend on how many chips the stage
-              // happened to produce, and the second row was clipped by the
-              // query line — the layout has no vertical give to lend it.
-              data-suggestion-strip=""
-              // `overflowY: hidden` clips at the padding edge, so the chips
-              // need room below them or their own borders get shaved off.
-              className="flex gap-1.5 px-[18px] pb-1"
-              style={{ overflowX: "auto", overflowY: "hidden" }}
-              // The chips themselves stay out of the Tab order (typing flow),
-              // so the strip is the one focusable stop: a keyboard can scroll
-              // it, and a screen reader hears what it is.
-              role="group"
-              aria-label={t("aria.suggestionStrip")}
-              tabIndex={0}
-            >
-              {(isPhoneViewport
-                ? sug.items.filter((it) => it.kind !== "save")
-                : sug.items
-              ).map((it, i) => (
-                <button
-                  key={i}
-                  ref={i === 0 ? firstSuggestionRef : undefined}
-                  type="button"
-                  // Chips stay out of the Tab order — keep typing flow unbroken.
-                  // ArrowDown / ArrowRight from input opens this list explicitly.
-                  tabIndex={-1}
-                  onClick={() => {
-                    onSuggest(it);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                      e.preventDefault();
-                      const dir = e.key === "ArrowRight" ? 1 : -1;
-                      const buttons = Array.from(
-                        e.currentTarget.parentElement?.querySelectorAll(
-                          "button",
-                        ) ?? [],
-                      ) as HTMLButtonElement[];
-                      const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
-                      const next = buttons[idx + dir];
-                      if (next) {
-                        next.focus();
-                      } else if (dir === -1) {
-                        focusInput();
-                      }
-                      return;
-                    }
-                    if (e.key === "ArrowUp" || e.key === "Escape") {
-                      e.preventDefault();
-                      focusInput();
-                    }
-                  }}
-                  className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-none font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
-                  style={{
-                    // 44px touch targets — the strip is the phone's main
-                    // input accelerator, tapped with thumbs on the jobsite.
-                    padding: it.sub ? "9px 13px" : "12px 14px",
-                    border:
-                      it.kind === "save"
-                        ? "none"
-                        : "1px solid var(--border-faint)",
-                    background:
-                      it.kind === "save"
-                        ? "var(--action)"
-                        : "var(--surface)",
-                    color:
-                      it.kind === "save"
-                        ? "var(--action-contrast)"
-                        : "var(--foreground)",
-                  }}
-                >
-                  {it.fam && (
-                    <span style={{ color: "var(--foreground-secondary)" }}>
-                      <CommandGlyph
-                        fam={it.fam}
-                        alias={it.kind === "profile" ? it.ins : p.alias?.alias}
-                        size={17}
-                      />
-                    </span>
-                  )}
-                  <span className="flex flex-col items-start leading-tight">
-                    <span
-                      className={`text-sm font-bold ${
-                        it.kind === "size" || it.kind === "length" || it.kind === "qty"
-                          ? "font-mono"
-                          : ""
-                      }`}
-                    >
-                      {formatCommandSuggestionLabel(t, it)}
-                    </span>
-                    {it.sub && (
-                      <span className="text-[10px] text-muted font-semibold">
-                        {it.sub}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
-            {/* Bottom fade hints that more chips are below the fold */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-4"
-              style={{
-                background: `linear-gradient(to bottom, transparent, ${screenBg})`,
-              }}
-            />
-            {/* The strip scrolls sideways, so the fade that says "there is
-                more" belongs on the right edge. Without it the last chip was
-                simply cut mid-word and the row read as clipped, not
-                scrollable. */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 w-8"
-              style={{
-                background: `linear-gradient(to right, transparent, ${screenBg})`,
-              }}
-            />
-            </div>
-          </div>
+          <PhoneSuggestionStrip
+            sug={sug}
+            activeAlias={p.alias?.alias}
+            hideSave={isPhoneViewport}
+            showClear={query !== ""}
+            firstSuggestionRef={firstSuggestionRef}
+            onSuggest={onSuggest}
+            onPaste={pasteFromClipboard}
+            onClear={newCalc}
+            onExit={focusInput}
+          />
 
           {/* QUERY AREA */}
           {/* QUERY LINE — chips plus the caret; the keypad below types into it */}
-            <div className="px-[14px] pb-2">
-              <div
-                ref={queryLineRef}
-                data-query-line=""
-                onClick={() => {
-                  if (keypadMode === "actions") setKeypadOverride("numpad");
-                }}
-                // One row that scrolls sideways to the caret, never wrapping.
-                // Wrapping meant the line's height depended on the token count:
-                // capped, it sliced chips across half-rows; uncapped, a long
-                // line grew to four rows and pushed the keypad's bottom row off
-                // the screen. A fixed height keeps the input and its keys where
-                // they were, whatever the line holds.
-                className="flex items-center gap-1.5 flex-nowrap rounded-none px-3 py-2.5"
-                style={{
-                  height: 50,
-                  overflowX: "auto",
-                  overflowY: "hidden",
-                  // Ink edge, no glow — the same command line as the
-                  // workspace, drawn as a rule rather than lit.
-                  border: "1px solid var(--foreground)",
-                  background: "var(--surface)",
-                }}
-              >
-                <span
-                  className="flex items-center justify-center font-mono text-base font-bold mr-0.5 flex-shrink-0"
-                  style={{ color: "var(--accent)" }}
-                  aria-hidden="true"
-                >
-                  {p.alias ? (
-                    <CommandGlyph fam={p.alias.fam} alias={p.alias.alias} size={18} />
-                  ) : (
-                    "›"
-                  )}
-                </span>
-                {chipCount === 0 && !partialToken && (
-                  <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">
-                    {t("query.placeholder")}
-                  </span>
-                )}
-                {chips.groups.map((group) => (
-                  <Fragment key={group.item}>
-                    {group.item > 0 && (
-                      <span
-                        className="font-mono text-sm font-bold px-0.5"
-                        style={{ color: "var(--muted-faint)" }}
-                        aria-hidden="true"
-                      >
-                        +
-                      </span>
-                    )}
-                    {group.item === expandedIndex ? (
-                      group.tokens.map((tok, i) => (
-                        <TokenChip
-                          key={`${tok}-${i}`}
-                          // Only an item opened by hand needs seeking to; the
-                          // last item is where the caret already is.
-                          anchor={i === 0 && group.item !== chips.groups.length - 1}
-                          tok={tok}
-                          kindClass={KIND_BG[cmdClassifyToken(tok)]}
-                          shadowed={line.items[group.item]?.parse.shadowedTokenIndexes.includes(i)}
-                          note={(() => {
-                            const issue = issueForToken(line.items[group.item]?.parse.issues ?? [], tok);
-                            return issue ? formatCommandIssue(t, issue) : null;
-                          })()}
-                          onEdit={() => editTokenAt(group.item, i)}
-                          onRemove={() => removeTokenAt(group.item, i)}
-                          onReplace={(next) => replaceTokenAt(group.item, i, next)}
-                        />
-                      ))
-                    ) : group.tokens.length === 0 ? null : (
-                      <button
-                        type="button"
-                        onClick={() => setExpandedItem(group.item)}
-                        aria-label={t("query.expandItem", {
-                          index: group.item + 1,
-                          name: collapsedItemLabel(group),
-                        })}
-                        className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-sm font-semibold whitespace-nowrap"
-                        style={{
-                          padding: "5px 10px",
-                          border: "1px solid var(--border-faint)",
-                          background: "var(--surface-inset)",
-                          color: "var(--foreground-secondary)",
-                        }}
-                      >
-                        <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
-                        {collapsedItemLabel(group)}
-                        <span className="text-[10px] text-muted-faint">▸</span>
-                      </button>
-                    )}
-                  </Fragment>
-                ))}
-                {partialToken && (
-                  <span className="font-mono text-sm font-semibold text-foreground flex-shrink-0">
-                    {partialToken}
-                  </span>
-                )}
-                {ghost && (
-                  <button
-                    type="button"
-                    onClick={acceptGhost}
-                    aria-label={t("query.acceptGhost", { text: ghost.trim() })}
-                    className="font-mono text-sm font-semibold whitespace-pre flex-shrink-0"
-                    style={{ color: "var(--muted-faint)" }}
-                  >
-                    {ghost}
-                  </button>
-                )}
-                <span
-                  className="w-0.5 h-5 rounded-sm flex-shrink-0"
-                  style={{
-                    background: "var(--accent)",
-                    animation: "fsBlink 1s steps(1) infinite",
-                  }}
-                />
-              </div>
-            </div>
+            <PhoneQueryLine
+              query={query}
+              setQuery={setQuery}
+              p={p}
+              line={line}
+              sug={sug}
+              onSuggest={onSuggest}
+              onTap={() => {
+                if (keypadMode === "actions") setKeypadOverride("numpad");
+              }}
+            />
         </div>
 
           {/* On-screen keypad */}
@@ -2673,142 +1697,6 @@ export function CommandShell() {
           <ResultAnnouncer text={liveResultText} />
       </div>
     </div>
-  );
-}
-
-function IconBtn({
-  children,
-  onClick,
-  ariaLabel,
-  alert,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  ariaLabel: string;
-  /** Something behind this button needs the user — read aloud and dotted. */
-  alert?: string | null;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={alert ? `${ariaLabel}, ${alert}` : ariaLabel}
-      title={alert ?? undefined}
-      className="relative w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
-    >
-      {children}
-      {alert && <AlertDot />}
-    </button>
-  );
-}
-
-function Chev() {
-  return (
-    <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 1l4.5 5L1 11" />
-    </svg>
-  );
-}
-
-
-/**
- * The fold's one-line answer to "show me more": per-piece and the other
- * headline metric side by side, with the whole strip acting as the way into
- * the full breakdown. It replaces a 109px two-stat card with a 34px row —
- * the single biggest saving on the phone after the mode pills.
- */
-function MetricStrip({
-  p,
-  isWeight,
-  sym,
-  onOpen,
-}: {
-  p: CommandParseResult;
-  isWeight: boolean;
-  sym: string;
-  onOpen: () => void;
-}) {
-  const t = useTranslations("command");
-  const dim = { color: "var(--muted-faint)" };
-  const perPiece =
-    p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—";
-  const second =
-    p.valid && p.totalKg != null && p.totalAmount != null
-      ? isWeight
-        ? `${sym} ${fsMoney(p.totalAmount)}`
-        : `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
-      : "—";
-
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      disabled={!p.valid}
-      aria-haspopup="dialog"
-      aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-      className="flex items-center gap-3 w-full mt-2.5 rounded-button text-left border border-border-faint"
-      style={{
-        padding: "7px 11px",
-        background: "var(--surface-raised)",
-        cursor: p.valid ? "pointer" : "default",
-      }}
-    >
-      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
-        {perPiece}
-        <span className="text-muted">{t("preview.perPieceSuffix")}</span>
-      </span>
-      <span className="w-px h-3.5 bg-border-faint" />
-      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
-        {second}
-      </span>
-      <span className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint whitespace-nowrap">
-        {t("preview.breakdown")} ›
-      </span>
-    </button>
-  );
-}
-
-/** One of the three equal actions under the hero (Save / Compare / Share). */
-/**
- * A 44px square on the phone's action row. Everything beside the save control
- * is one of these: the row has about 350px and the one control with words on
- * it needs most of them.
- */
-function PhoneIconBtn({
-  onClick,
-  label,
-  disabled,
-  dashed,
-  children,
-}: {
-  onClick: () => void;
-  label: string;
-  disabled?: boolean;
-  /** The "another item" button, which is an invitation rather than an action. */
-  dashed?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-      className="flex flex-shrink-0 items-center justify-center rounded-button cursor-pointer disabled:cursor-default"
-      style={{
-        width: 44,
-        height: 44,
-        border: dashed
-          ? "1px dashed var(--border-strong)"
-          : "1px solid var(--border-faint)",
-        background: dashed ? "transparent" : "var(--surface)",
-        color: dashed ? "var(--muted)" : "var(--foreground-secondary)",
-        opacity: disabled ? 0.4 : 1,
-      }}
-    >
-      {children}
-    </button>
   );
 }
 

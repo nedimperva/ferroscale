@@ -49,18 +49,21 @@ The query mirrors to `?q=`, so every result is a shareable link.
 
 ## Accuracy
 
-- Dataset version `2026.09.1`
+- Dataset version `2026.09.4`
   (`packages/metal-core/src/datasets/version.ts`).
 - The live engine is validated against references that are independent of
   the datasets: **published EN catalog masses** for standard sizes,
   hand-computed cross-section formulas for manual ones. **≤0.5% tolerance**,
-  **131 of 138 EN sizes covered**.
-- Seven sizes are held back — their stored area and their catalog mass
-  disagree and the conflict is unsettled. They are named in
-  `QA_UNVERIFIED_SIZES`, and a test fails if a new size ships without a
-  reference.
+  every one of the 129 EN sizes has a row, and a test fails if a new size
+  ships without one.
 - The same benchmark runs as a vitest gate in CI and as an interactive
   table in the app at `/qa`, which states its own coverage.
+- **Section properties** (Iy, Wel, Wpl, Iz, radii of gyration) and real
+  dimensions (h, b, tw, tf, r) for all 129 standard sizes, transcribed from
+  the ArcelorMittal *Sections and Merchant Bars* 2024-1 catalogue and a
+  DIN EN 10055 table, each row cited to its source page
+  (`packages/metal-core/src/datasets/section-properties.ts`). Tests hold
+  every row to its section geometry and to the size table's area.
 
 ## Quickstart
 

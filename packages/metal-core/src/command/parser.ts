@@ -292,7 +292,7 @@ function buildCalculationInput(
     const profile = getProfileById(alias.profileId);
     if (!profile || profile.mode !== "standard") return null;
     // HEA/IPE etc. use single-dim keys ("120"); tees use multi-dim ("30x4"),
-    // and accept the catalog's own equal-leg spelling ("100x100x10").
+    // and accept the catalog's own equal-leg spelling ("60x60x7").
     const key =
       dims.length === 0 ? "" : canonicalSizeText(alias.fam, dims.map(fmt).join("x"));
     if (!key) return null;
@@ -536,10 +536,10 @@ function peelPieces(rest: string): string[] | null {
  * ambiguity (flat "40x412m": 40x4+12m vs 40x41+2m) keeps the word whole.
  */
 /**
- * EN 10055 tees are equal-leg, so the catalog spells them `T 100x100x10` while
- * the size table keys them `t100x10`. The app was therefore rejecting its own
- * display label: `t100x100x10` matched the size `t100x10` as a prefix and the
- * leftovers peeled into a length of 0 and a quantity of 10.
+ * EN 10055 tees are equal-leg, so the catalog spells them `T 60x60x7` while
+ * the size table keys them `t60x7`. The app was therefore rejecting its own
+ * display label: `t60x60x7` matched the size `t60x7` as a prefix and the
+ * leftovers peeled into a length of 0 and a quantity of 7.
  *
  * Collapsing the repeated leg is unambiguous for this family - every size in
  * the table has its two legs equal.
