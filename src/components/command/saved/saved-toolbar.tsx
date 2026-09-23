@@ -83,7 +83,7 @@ export function SavedToolbar({
             onChange={(e) => onChange({ search: e.target.value })}
             placeholder={t("saved.searchPlaceholder")}
             aria-label={t("saved.searchPlaceholder")}
-            className="flex-1 min-w-0 bg-transparent outline-none text-[12.5px] text-foreground placeholder:text-muted-faint"
+            className="flex-1 min-w-0 bg-transparent outline-none text-[13px] text-foreground placeholder:text-muted-faint"
           />
         </label>
 
@@ -95,7 +95,7 @@ export function SavedToolbar({
             value={state.sort}
             onChange={(e) => onChange({ sort: e.target.value as SavedSort })}
             aria-label={t("saved.sortLabel")}
-            className="bg-transparent outline-none text-[12.5px] font-semibold text-foreground cursor-pointer"
+            className="bg-transparent outline-none text-[13px] font-semibold text-foreground cursor-pointer"
           >
             {SAVED_SORTS.map((sort) => (
               <option key={sort} value={sort}>

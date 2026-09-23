@@ -69,7 +69,7 @@ function Row({ left, right }: { left: React.ReactNode; right: React.ReactNode })
       style={{ padding: "6px 0", borderBottom: "1px solid var(--border-faint)" }}
     >
       <span className="flex-shrink-0">{left}</span>
-      <span className="text-[12.5px] text-muted text-right">{right}</span>
+      <span className="text-[13px] text-muted text-right">{right}</span>
     </div>
   );
 }
@@ -77,7 +77,7 @@ function Row({ left, right }: { left: React.ReactNode; right: React.ReactNode })
 function Token({ children }: { children: React.ReactNode }) {
   return (
     <code
-      className="font-mono text-[12.5px] font-bold rounded"
+      className="font-mono text-[13px] font-bold rounded"
       style={{
         padding: "2px 7px",
         background: "var(--surface-inset)",
@@ -92,7 +92,7 @@ function Token({ children }: { children: React.ReactNode }) {
 function ShortcutKbd({ keys }: { keys: string }) {
   return (
     <kbd
-      className="font-mono text-[11.5px] font-bold rounded"
+      className="font-mono text-[12px] font-bold rounded"
       style={{
         padding: "2px 7px",
         border: "1px solid var(--border-faint)",
@@ -412,7 +412,7 @@ export function CommandHelpSheet({
                   right={t(`help.token.${row.key}`)}
                 />
               ))}
-              <div className="text-[11.5px] text-muted mt-2" style={{ lineHeight: 1.5 }}>
+              <div className="text-[12px] text-muted mt-2" style={{ lineHeight: 1.5 }}>
                 {t("help.orderNote")}
               </div>
             </section>
@@ -441,7 +441,7 @@ export function CommandHelpSheet({
                 {grades.map((grade) => (
                   <Token key={grade.id}>{grade.aliases[0]}</Token>
                 ))}
-                <span className="text-[11.5px] text-muted self-center">
+                <span className="text-[12px] text-muted self-center">
                   {t("help.moreGrades")}
                 </span>
               </div>

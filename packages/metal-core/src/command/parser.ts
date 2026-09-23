@@ -769,6 +769,10 @@ function nearestFrom(
 /** For an unrecognized whole token: a near grade code, or a near alias with
  *  any trailing size kept ("hae120" → "hea120", "s2355" → "s235"). */
 function suggestForUnknownToken(tok: string): string | undefined {
+  // Quantity-shaped but not a whole number (`x2.5`): the one-letter alias
+  // table is an edit away from `x`, so this used to offer "t2.5" — a tee.
+  // There is no sensible guess for half a piece; say nothing.
+  if (/^[x×*]\d/.test(tok)) return undefined;
   const grade = nearestFrom(tok, GRADE_ALIASES_ALL, 1);
   if (grade) return grade;
   const m = tok.match(/^([a-z]+)(.*)$/);
@@ -1130,6 +1134,26 @@ export function cmdParse(
       calc = { input, result: response.result };
       kgm = response.result.unitWeightKg / lengthM;
       density = response.result.densityKgPerM3;
+      // `hea120 6` with mm as the default unit is 6 mm of HEA 120 — a real
+      // reading of real input, but on a long product under 100 mm is almost
+      // always a metre figure typed without its unit. Say how it was read and
+      // offer the metre form; the default unit itself is not touched.
+      if (
+        !lengthExplicit &&
+        !target &&
+        lengthRaw != null &&
+        lengthM * 1000 < 100 &&
+        !SHEET_LIKE_FAMILIES.has(alias.fam) &&
+        BARE_NUMBER_RE.test(String(lengthRaw))
+      ) {
+        issues.push({
+          code: "shortLength",
+          token: String(lengthRaw),
+          message: `"${lengthRaw}" was read as ${lengthRaw} ${lengthUnit}.`,
+          params: { value: lengthRaw, unit: lengthUnit },
+          suggestion: `${lengthRaw}m`,
+        });
+      }
       if (target) {
         // What the rounded solution actually comes to — stated, not hidden,
         // because whole bars almost always overshoot the target.

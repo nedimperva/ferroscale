@@ -282,13 +282,13 @@ function BrowseAssembliesBody({
                     {tpl.parts.map((part) => (
                       <span
                         key={part.id}
-                        className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]"
+                        className="px-2 py-0.5 rounded text-[11px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]"
                       >
                         {part.input.quantity}× {part.result.profileLabel}
                       </span>
                     ))}
                     {tpl.laborHours !== undefined && tpl.laborHours > 0 && (
-                      <span className="px-2 py-0.5 rounded text-[10.5px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]">
+                      <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-[var(--surface-inset)] text-muted-faint border border-[var(--border-faint)]">
                         ⏱️ {tpl.laborHours}h
                       </span>
                     )}
@@ -386,14 +386,14 @@ function BrowseAssembliesBody({
                   placeholder={selected.name}
                   className="w-full h-9 px-3 rounded-xl text-xs bg-[var(--surface)] border border-[var(--border-faint)] text-foreground outline-none font-semibold"
                 />
-                <p className="text-[10.5px] text-muted-faint">
+                <p className="text-[11px] text-muted-faint">
                   {creating ? t("assembly.projectNameHint") : t("assembly.targetNameHint")}
                 </p>
               </div>
 
               {/* Scaled Preview Bill of Materials */}
               <div className="space-y-2">
-                <div className="text-[10.5px] font-bold text-muted uppercase tracking-wider">
+                <div className="text-[11px] font-bold text-muted uppercase tracking-wider">
                   {t("assembly.scaledBreakdown", { mult: preview.mult })}
                 </div>
                 <div className="rounded-xl border border-[var(--border-faint)] bg-[var(--surface)] overflow-hidden">
@@ -411,12 +411,12 @@ function BrowseAssembliesBody({
                               {scaledQty}× {part.result.profileLabel}
                             </span>
                             {part.name && (
-                              <span className="block text-[10.5px] text-muted truncate">
+                              <span className="block text-[11px] text-muted truncate">
                                 {part.name}
                               </span>
                             )}
                           </div>
-                          <span className="font-mono text-muted flex-shrink-0 text-[11.5px]">
+                          <span className="font-mono text-muted flex-shrink-0 text-[12px]">
                             {fsWeight(itemWeight)} {fsWeightUnit()}
                           </span>
                         </div>
@@ -430,7 +430,7 @@ function BrowseAssembliesBody({
                         <span className="text-foreground truncate pr-2">
                           🔩 {cost.label} {preview.mult > 1 ? `(×${preview.mult})` : ""}
                         </span>
-                        <span className="font-mono font-semibold text-foreground flex-shrink-0 text-[11.5px]">
+                        <span className="font-mono font-semibold text-foreground flex-shrink-0 text-[12px]">
                           € {fsMoney(cost.amount * preview.mult)}
                         </span>
                       </div>
@@ -440,7 +440,7 @@ function BrowseAssembliesBody({
                         <span className="text-foreground">
                           ⏱️ {t("projects.laborHours")}
                         </span>
-                        <span className="font-mono font-semibold text-foreground text-[11.5px]">
+                        <span className="font-mono font-semibold text-foreground text-[12px]">
                           {preview.totalLaborHours.toFixed(2)} hrs
                         </span>
                       </div>

@@ -3,7 +3,12 @@
  * while keeping preferences in localStorage.
  */
 
-export function createBoolStore(key: string, defaultValue: boolean) {
+/** `onChange` runs after every `set` — how synced settings tell sync they moved. */
+interface StoreOptions {
+  onChange?: () => void;
+}
+
+export function createBoolStore(key: string, defaultValue: boolean, options?: StoreOptions) {
   let _listeners: Array<() => void> = [];
   function subscribe(cb: () => void) {
     _listeners = [..._listeners, cb];
@@ -23,11 +28,12 @@ export function createBoolStore(key: string, defaultValue: boolean) {
   function set(value: boolean) {
     try { localStorage.setItem(key, String(value)); } catch { /* noop */ }
     for (const l of _listeners) l();
+    options?.onChange?.();
   }
   return { subscribe, getSnapshot, getServerSnapshot, toggle, set };
 }
 
-export function createStringStore<T extends string>(key: string, defaultValue: T) {
+export function createStringStore<T extends string>(key: string, defaultValue: T, options?: StoreOptions) {
   let _listeners: Array<() => void> = [];
   function subscribe(cb: () => void) {
     _listeners = [..._listeners, cb];
@@ -44,11 +50,17 @@ export function createStringStore<T extends string>(key: string, defaultValue: T
   function set(value: T) {
     try { localStorage.setItem(key, value); } catch { /* noop */ }
     for (const l of _listeners) l();
+    options?.onChange?.();
   }
   return { subscribe, getSnapshot, getServerSnapshot, set };
 }
 
-export function createNumberStore(key: string, defaultValue: number, clamp?: (v: number) => number) {
+export function createNumberStore(
+  key: string,
+  defaultValue: number,
+  clamp?: (v: number) => number,
+  options?: StoreOptions,
+) {
   let _listeners: Array<() => void> = [];
   function subscribe(cb: () => void) {
     _listeners = [..._listeners, cb];
@@ -68,6 +80,7 @@ export function createNumberStore(key: string, defaultValue: number, clamp?: (v:
     const next = clamp ? clamp(value) : value;
     try { localStorage.setItem(key, String(next)); } catch { /* noop */ }
     for (const l of _listeners) l();
+    options?.onChange?.();
   }
   return { subscribe, getSnapshot, getServerSnapshot, set };
 }

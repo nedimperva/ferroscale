@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { SyncPushRequest, SyncPushResponse } from "@/lib/sync/sync-shared";
-import { clearRemoteSyncFiles, pushRecordsToDrive, refreshGoogleAccessToken } from "@/lib/sync/google-server";
-import { unsealSyncSession } from "@/lib/sync/sync-session";
+import {
+  clearRemoteSyncFiles,
+  openSyncSession,
+  pushRecordsToDrive,
+  refreshGoogleAccessToken,
+  syncErrorResponse,
+} from "@/lib/sync/google-server";
 
 export const runtime = "nodejs";
 
@@ -12,7 +17,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Missing sessionToken" }, { status: 400 });
     }
 
-    const session = unsealSyncSession(body.sessionToken);
+    const session = openSyncSession(body.sessionToken);
     const { accessToken, sessionToken } = await refreshGoogleAccessToken(session);
 
     if (body.resetRemote) {
@@ -28,9 +33,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(payload);
   } catch (error) {
-    return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to push sync records" },
-      { status: 500 },
-    );
+    const { status, body } = syncErrorResponse(error, "Failed to push sync records");
+    return NextResponse.json(body, { status });
   }
 }

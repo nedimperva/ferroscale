@@ -37,7 +37,7 @@ export function ScaleAssemblyModal({
         </span>
       }
       subtitle={
-        <p className="text-[11.5px] text-muted mt-1 truncate">
+        <p className="text-[12px] text-muted mt-1 truncate">
           {assemblyName || t("projects.generalSection")} ({itemCount} {t("projects.columns.items")})
         </p>
       }

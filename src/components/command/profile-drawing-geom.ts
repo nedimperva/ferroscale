@@ -9,7 +9,16 @@ import { getStandardProfileSpecRecord, toMillimeters } from "@ferroscale/metal-c
 export type Pt = { x: number; y: number };
 
 export type Section =
-  | { kind: "ibeam" | "channel" | "tee"; h: number; b: number; tw: number; tf: number; r: number }
+  | {
+      kind: "ibeam" | "channel" | "tee";
+      h: number;
+      b: number;
+      tw: number;
+      tf: number;
+      r: number;
+      /** tw/tf/r are proportions for the sketch, not catalog figures — draw, don't label. */
+      estimated?: boolean;
+    }
   | { kind: "box"; b: number; h: number; t: number }
   | { kind: "pipe"; d: number; t: number }
   | { kind: "round"; d: number }
@@ -75,6 +84,7 @@ export function resolveSection(p: CommandParseResult): Section | null {
         tw: g.webThicknessMm ?? 0,
         tf: g.flangeThicknessMm ?? 0,
         r: g.rootRadiusMm ?? 0,
+        estimated: g.thicknessEstimated === true,
       };
     }
   }

@@ -55,7 +55,7 @@ export function SaveControl({
         title={label}
         aria-pressed={filing ? undefined : saved}
         className={`inline-flex items-center gap-[7px] min-w-0 font-bold whitespace-nowrap cursor-pointer disabled:cursor-default ${
-          compact ? "flex-1 justify-center text-[12.5px] px-3" : "text-[12.5px] px-4"
+          compact ? "flex-1 justify-center text-[13px] px-3" : "text-[13px] px-4"
         }`}
         style={{
           border: "none",

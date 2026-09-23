@@ -52,7 +52,7 @@ export function PriceBookSection({
         >
           {t("priceBook.title")}
         </span>
-        <span className="font-mono text-[10.5px] text-muted-faint">
+        <span className="font-mono text-[11px] text-muted-faint">
           {t("priceBook.subtitle", { unit: `${sym}/${unit}` })}
         </span>
       </div>

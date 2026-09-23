@@ -4,7 +4,6 @@ import { loadFromStorage, persistToStorage } from "@/lib/storage";
 import {
   GOOGLE_SYNC_PROVIDER_ID,
   SYNC_METADATA_KEY,
-  SYNC_PASSPHRASE_KEY,
   SYNC_RECORD_INDEX_KEY,
   SYNC_SESSION_KEY,
 } from "./keys";
@@ -24,10 +23,13 @@ const DEFAULT_METADATA: Omit<SyncMetadata, "deviceId"> = {
   connectedEmail: null,
   syncStatus: "idle",
   syncError: null,
+  syncErrorKind: null,
+  retryCount: 0,
   pendingUploadCount: 0,
   pendingDownloadCount: 0,
   lastSuccessfulPullAt: null,
   lastSuccessfulPushAt: null,
+  lastSyncedAt: null,
   lastDriveChangeToken: null,
 };
 
@@ -57,10 +59,13 @@ function normalizeMetadata(raw: Partial<SyncMetadata> | null | undefined): SyncM
     connectedEmail: raw?.connectedEmail ?? null,
     syncStatus: raw?.syncStatus ?? "idle",
     syncError: raw?.syncError ?? null,
+    syncErrorKind: raw?.syncErrorKind ?? null,
+    retryCount: raw?.retryCount ?? 0,
     pendingUploadCount: raw?.pendingUploadCount ?? 0,
     pendingDownloadCount: raw?.pendingDownloadCount ?? 0,
     lastSuccessfulPullAt: raw?.lastSuccessfulPullAt ?? null,
     lastSuccessfulPushAt: raw?.lastSuccessfulPushAt ?? null,
+    lastSyncedAt: raw?.lastSyncedAt ?? null,
     lastDriveChangeToken: raw?.lastDriveChangeToken ?? null,
   };
 }
@@ -110,25 +115,6 @@ export function subscribeSyncState(listener: Listener) {
   return () => {
     listeners = listeners.filter((entry) => entry !== listener);
   };
-}
-
-export function loadSyncPassphrase() {
-  if (typeof window === "undefined") return "";
-  return loadFromStorage<string>(SYNC_PASSPHRASE_KEY, "");
-}
-
-export function saveSyncPassphrase(passphrase: string) {
-  persistToStorage(SYNC_PASSPHRASE_KEY, passphrase);
-  emitChange();
-}
-
-export function clearSyncPassphrase() {
-  persistToStorage(SYNC_PASSPHRASE_KEY, "");
-  emitChange();
-}
-
-export function hasSyncPassphrase() {
-  return loadSyncPassphrase().trim().length > 0;
 }
 
 export function loadSyncSession() {

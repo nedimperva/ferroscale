@@ -5,6 +5,61 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.29.0] - 2026-09-23
+
+Sync you don't have to think about.
+
+### Added
+
+- Sync runs by itself. It used to run only while Settings was open, so a part saved and closed stayed on that device until Settings was opened again; the engine now lives for the whole app — it syncs about a second after each change, when the app opens, when the tab comes back, when the network returns, and every three minutes while the tab is visible
+- Shop defaults sync across devices: default rate and unit, currency, waste, VAT, default grade, margin, mass tolerance, length-unit fallback, headline number and paint defaults. Newer wins. A fresh device adopts what Drive holds; one you had already tuned keeps its own. Theme and haptics stay per device
+- A small red mark on the Settings button when sync needs you — to sign in to Google again, or to enter the passphrase on this device. Settings then opens on the sync card. Syncing, offline and retrying stay silent
+
+### Changed
+
+- The price book merges grade by grade across devices instead of the newer book replacing the other whole: change steel on the phone and stainless on the laptop and both rates survive. A rate you remove stays removed rather than coming back from a device that still had it
+- The passphrase is typed into the sync card, twice on first connect, with a show toggle — not into a browser prompt. On a second device a wrong passphrase is caught before anything is merged, with a field to enter the right one; Drive is never overwritten from that screen
+- The sync card says where things stand in words — "Synced 4 minutes ago", "Offline — changes will sync when you're back online" — instead of the last pull's timestamp
+
+### Fixed
+
+- The sync passphrase is no longer stored in plain text. It used to sit in localStorage, readable by any script on the page and by anyone with the browser profile; it is now kept only as a non-extractable key in IndexedDB that the browser can use but never reveal. Existing devices convert on their next sync, with nothing to re-enter, and disconnecting forgets the key
+- An expired or revoked Google sign-in asks you to sign in again instead of showing a raw token error on every attempt. Google's `invalid_grant` did not match the old check, so the app stayed "connected" and failed forever
+- Network blips and Google outages retry on their own with backoff (30 s up to 15 min) instead of parking sync in an error state
+- A Drive change cursor that expired no longer breaks every pull; the server lists the folder again and carries on
+- Two open tabs no longer sync at the same moment and create duplicate Drive files for a new part, and an edit made while a sync was in flight is no longer left for the next one
+
+## [3.28.0] - 2026-09-22
+
+An audit release. The engine was right where it had a table to read from and
+high where it did not; the screen hid the one thing that would have shown the
+difference. Every item below is a finding from the September audit.
+
+### Fixed
+
+- The page no longer reloads itself half a second after the first visit — and mid-session after every deploy. The service worker's first install fired `controllerchange`, and the handler reloaded unconditionally; it was meant only for a user-requested update, and now is
+- The PWA banners (offline, update, ready) stack above the app instead of beside it. As flex-row siblings they squeezed the phone shell to 242 of 390 px for as long as they showed — permanently while offline. The five-second "ready for offline" notice floats over the top edge so nothing shifts under a pressed finger
+- Hollow sections (SHS/RHS) follow EN 10219-2 corner geometry. The sharp-corner box formula overstated the catalog mass by 4–6% while citing EN 10219 as its reference — SHS 40×40×3 read 3.49 kg/m against a catalog 3.30, RHS 100×50×4 read 8.92 against 8.59. The formula label and the FAQ say what is subtracted and why
+- Typing a decimal comma on the desktop bar no longer splits the line: `hea120 6,5m` became `hea120 6, 5m` and an "Assembly · 2 parts" that never computed, because the comma was read as a cut-list boundary at the keystroke before its next digit arrived. Pasted and shared lines had always worked
+- Six standard sizes the QA benchmark had held back as unsettled are corrected against EN tables: IPN 120 (14.2 cm²), IPN 320 (77.7 cm²), HEM 140 (80.56 cm²), HEM 260 (219.6 cm²), T 30×4 (2.26 cm²), T 40×5 (3.77 cm²). All 138 EN sizes are now in the ≤0.5% gate; DATASET_VERSION 2026.09.3
+- A token the parser dropped is named beside the result instead of only tinting its chip amber. `hea120 6m x2.5` priced one piece and said nothing about the `x2.5`; it now says "Didn't understand x2.5" under the figure, and the chip's tooltip carries the same note
+- Section drawings no longer print solved proportions as dimensions. HEA 120 was labelled tf 8.4 / tw 5.6 / R8.8 against a catalog 8 / 5 / 12, and HEM 200 was drawn 200×200 when it is 220×206. HEA heights below 200 and every HEM outline now follow EN 10365; web, flange and fillet still shape the sketch but are unlabelled until the table values ship. Tees keep theirs (EN 10055: tf = tw = t, r₁ = t)
+- A converted length no longer leaks floating point: `hea120 6ft` printed "1.8288000000000002 m". Lengths show at most three decimals, and kg/m rounds the same way the headline does — 14.915 kg/m read 14.92 kg in the hero and 14.91 kg/m under it
+- Mobile discovery tiles: the profile codes measured 4.4:1 contrast on 18 chips (needs 4.5), one code sat at 9 px, and the Angle chip was 23 px wide. Codes are the secondary ink now, at 11 px, on chips at least 44×32
+- The keypad's symbol keys have spoken names — ×, ., ↵ and the two unit keys read as "multiplication sign", "return symbol" and "mm black down-pointing triangle", and the hold-for-more menus were invisible to assistive tech. The suggestion strip is one focusable, labelled stop so a keyboard can scroll it
+
+### Changed
+
+- Money that comes from the seeded €1.20/kg says so in weight mode too. The cell reads "EST. COST @ €1.20/kg (DEFAULT)" in the secondary ink, the equation line carries "(default rate)", and Copy summary appends it to the rate row — the qualifier used to appear in price mode only, so the default surface showed "TOTAL COST € 286.44" unasked
+- The breakdown shows what makes a result traceable: section area, the formula, the standard it was read from and the dataset version — the engine had always returned them — plus a "How is this calculated?" link to the FAQ
+- A bare number under 100 mm on a long product says how it was read and offers the metre form: `hea120 6` still computes 6 mm (millimetres stay the default unit), but the line now reads "\"6\" read as 6 mm · Did you mean 6m?"
+- The workspace's empty state drops the four dashed cells and two disabled buttons that stood in for an answer, as the phone already did; the profile tiles take the room
+- One whole-pixel type scale. Twenty-one arbitrary sizes including 9, 9.5, 10.5, 11.5, 12.5, 13.5 and 14.5 px collapse to 10–17 px; nothing renders under 10 px
+- Letter-pad keys are 40 px tall (were 36); the number pad stays at 44
+- The home page title names what the app is ("Metal Weight & Price Calculator (EN profiles)") instead of just the brand; /qa is in the sitemap; Saved, Projects and Settings — client-only shells — are noindex; the site sends nosniff, referrer, frame and permissions headers
+
+---
+
 ## [3.27.0] - 2026-09-19
 
 A flow release. The app could do the work; deciding where each answer went

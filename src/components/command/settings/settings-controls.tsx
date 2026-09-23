@@ -87,7 +87,7 @@ export function SettingsChips({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(option.value)}
-            className={`cursor-pointer text-[12.5px] ${option.mono ? "font-mono" : ""}`}
+            className={`cursor-pointer text-[13px] ${option.mono ? "font-mono" : ""}`}
             style={{
               padding: "6px 13px",
               border: `1px solid ${active ? "var(--action)" : "var(--border)"}`,
@@ -131,7 +131,7 @@ export function SettingsGroupedChoice({ field }: { field: SettingsChoiceField })
         aria-label={field.label}
         value={activeGroup}
         onChange={(e) => setGroup(e.target.value)}
-        className="h-9 rounded-button border border-border-faint bg-[var(--surface-raised)] px-2.5 text-[12.5px] font-bold text-foreground cursor-pointer"
+        className="h-9 rounded-button border border-border-faint bg-[var(--surface-raised)] px-2.5 text-[13px] font-bold text-foreground cursor-pointer"
       >
         {groups.map((name) => (
           <option key={name} value={name}>
@@ -221,7 +221,7 @@ export function SettingsNumberBox({
           className="border-0 bg-transparent outline-none font-mono font-bold text-foreground text-right"
           style={{ width: compact ? 58 : 72, fontSize: compact ? 15 : 16.5 }}
         />
-        {!attached && <span className="text-[12.5px] text-muted font-semibold">{suffix}</span>}
+        {!attached && <span className="text-[13px] text-muted font-semibold">{suffix}</span>}
       </div>
       {attached && (
         <SettingsSeg

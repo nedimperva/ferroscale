@@ -30,6 +30,13 @@ interface PwaRegisterProps {
 export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
   const t = useTranslations("pwa");
   const registrationRef = useRef<ServiceWorkerRegistration | null>(null);
+  /**
+   * Set only when the user presses Update. `controllerchange` also fires on
+   * the very first install (sw.js claims its clients), and on every deploy
+   * (it skips waiting) — so the unconditional reload below ran on every first
+   * visit about half a second after paint, and mid-session after each release.
+   */
+  const reloadRequestedRef = useRef(false);
   const [banner, setBanner] = useState<BannerState>(null);
 
   const isOffline = useSyncExternalStore(
@@ -76,13 +83,14 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
         console.error("Service worker registration failed:", error);
       });
 
-    // After SKIP_WAITING the controller changes — reload so the new SW takes over.
+    // After a user-requested SKIP_WAITING the controller changes — reload so
+    // the new SW takes over. A first install or a silent update just gets the
+    // banner; the page the user is looking at is left alone.
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!refreshing) {
-        refreshing = true;
-        window.location.reload();
-      }
+      if (!reloadRequestedRef.current || refreshing) return;
+      refreshing = true;
+      window.location.reload();
     });
   }, []);
 
@@ -104,6 +112,7 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
   function handleUpdate() {
     const reg = registrationRef.current;
     if (reg?.waiting) {
+      reloadRequestedRef.current = true;
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
     }
   }
@@ -143,8 +152,12 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
   }
 
   if (activeBanner === "ready") {
+    // A five-second notice, so it floats over the top edge instead of taking
+    // a row in the layout: pushing the hero down and then snapping it back up
+    // when the notice left was the one thing this had to not do. (Offline and
+    // update stay in the flow — they last, and one of them needs a button.)
     return (
-      <div role="status" className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[var(--green-border)] bg-[var(--green-surface)] px-4 py-2 text-sm text-[var(--green-text)]">
+      <div role="status" className="fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-3 border-b border-[var(--green-border)] bg-[var(--green-surface)] px-4 py-2 text-sm text-[var(--green-text)]">
         <span>{t("readyForOffline")}</span>
         <button
           onClick={() => setBanner(null)}

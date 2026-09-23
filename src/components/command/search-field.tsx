@@ -50,7 +50,7 @@ export function SearchField({
         placeholder={placeholder}
         aria-label={ariaLabel}
         autoFocus={autoFocus}
-        className="flex-1 min-w-0 bg-transparent outline-none text-[12.5px] text-foreground placeholder:text-muted-faint"
+        className="flex-1 min-w-0 bg-transparent outline-none text-[13px] text-foreground placeholder:text-muted-faint"
       />
     </label>
   );

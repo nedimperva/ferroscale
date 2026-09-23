@@ -16,10 +16,14 @@ describe("resolveProfileSpecs", () => {
     expect(specs).not.toBeNull();
     expect(specs?.drawingKind).toBe("ibeam");
     expect(specs?.selectedFamilyRowId).toBe("hea200");
-    expect(specs?.geometry?.heightMm).toBeGreaterThan(150);
-    expect(specs?.metrics.map((metric) => metric.key)).toEqual(
-      expect.arrayContaining(["height", "width", "webThickness", "flangeThickness", "areaMm2"]),
-    );
+    expect(specs?.geometry?.heightMm).toBe(190);
+    const keys = specs?.metrics.map((metric) => metric.key) ?? [];
+    expect(keys).toEqual(expect.arrayContaining(["height", "width", "areaMm2"]));
+    // Web/flange/fillet are solved proportions for the sketch, not EN data —
+    // they must not be published as dimensions.
+    expect(keys).not.toContain("webThickness");
+    expect(keys).not.toContain("flangeThickness");
+    expect(keys).not.toContain("rootRadius");
     expect(specs?.familyRows[0]).toMatchObject({
       label: "HEA 200",
       matchKind: "current",
@@ -203,5 +207,29 @@ describe("resolveProfileSpecs", () => {
     expect(specs?.metrics.map((metric) => metric.key)).toEqual(
       expect.arrayContaining(["width", "thickness", "waveHeight", "wavePitch"]),
     );
+  });
+});
+
+describe("standard section outlines follow EN 10365", () => {
+  const BASE = { ...getDefaultInput(), manualDimensions: {} };
+  it("HEA heights below 200 are the catalog values, not nominal − 10", () => {
+    const hea120 = resolveProfileSpecs({
+      ...BASE,
+      profileId: "beam_hea_en" as const,
+      selectedSizeId: "hea120",
+    });
+    expect(hea120?.geometry?.heightMm).toBe(114);
+    expect(hea120?.geometry?.widthMm).toBe(120);
+    expect(hea120?.geometry?.thicknessEstimated).toBe(true);
+  });
+
+  it("HEM sections are taller and wider than their nominal size", () => {
+    const hem200 = resolveProfileSpecs({
+      ...BASE,
+      profileId: "beam_hem_en" as const,
+      selectedSizeId: "hem200",
+    });
+    expect(hem200?.geometry?.heightMm).toBe(220);
+    expect(hem200?.geometry?.widthMm).toBe(206);
   });
 });

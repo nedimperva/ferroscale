@@ -11,6 +11,8 @@ import {
   findAliasByPrefix,
 } from "@ferroscale/metal-core";
 import {
+  fsKgm,
+  fsLength,
   fsMoney,
   fsWeight,
   fsWeightUnit,
@@ -21,6 +23,7 @@ import {
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { buildBreakdownRows, type BreakdownRowId } from "../breakdown-rows";
+import { Link } from "@/i18n/navigation";
 import { CommandGlyph } from "../command-glyph";
 import { ProfileDrawing } from "../profile-drawing";
 import { KIND_BG } from "../command-constants";
@@ -30,6 +33,7 @@ import {
   formatAvailability,
   formatCommandHint,
   formatCommandIssue,
+  issueForToken,
   formatCommandParseName,
   formatCommandSuggestionLabel,
 } from "../command-copy";
@@ -40,7 +44,7 @@ import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { DeskViewHeader } from "./desk-rail";
-import { AvailabilityBadge, PricingBadge, TargetBadge } from "../command-atoms";
+import { AvailabilityBadge, PricingBadge, TargetBadge, InlineIssue } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { AssemblyParts } from "../assembly-parts";
 import { applyNearbySpec, NearbySpecs } from "../nearby-specs";
@@ -71,7 +75,16 @@ type DeskCalcViewProps = CommandDesktopProps & {
  * builder rather than recomputed, so the grid and the breakdown panel below it
  * can never disagree about the same number.
  */
-function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
+function FoldCells({
+  p,
+  sym,
+  rateIsUserSupplied,
+}: {
+  p: CommandParseResult;
+  sym: string;
+  /** False while the money comes from the seeded rate nobody typed. */
+  rateIsUserSupplied: boolean;
+}) {
   const t = useTranslations("command");
   const isSheet = Boolean(p.alias && SHEET_LIKE_FAMILIES.has(p.alias.fam));
   const widthEntry = p.calc?.input.manualDimensions?.width;
@@ -84,10 +97,10 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
     p.valid && isSheet && massPerAreaVal != null
       ? `${massPerAreaVal.toFixed(2)} kg/m²`
       : p.valid && p.kgm != null
-      ? `${p.kgm.toFixed(2)} kg/m`
+      ? `${fsKgm(p.kgm)} kg/m`
       : "—";
 
-  const cells: { label: string; value: string }[] = [
+  const cells: { label: string; value: string; muted?: boolean }[] = [
     {
       label: massLabel,
       value: massValue,
@@ -102,8 +115,16 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
       value: p.valid && p.totalKg != null ? `${fsWeight(p.totalKg)} ${fsWeightUnit()}` : "—",
     },
     {
-      label: t("desktop.totalCostLabel"),
+      // The weight is measured; the price is an assumption. Until the user
+      // sets a rate the cell says so — the qualifier used to live only in
+      // price mode, so weight mode showed "TOTAL COST € 286.44" unasked.
+      label: rateIsUserSupplied
+        ? t("desktop.totalCostLabel")
+        : t("desktop.estimatedCostLabel", {
+            rate: `${sym}${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit}`,
+          }),
       value: p.valid && p.totalAmount != null ? `${sym} ${fsMoney(p.totalAmount)}` : "—",
+      muted: !rateIsUserSupplied,
     },
   ];
 
@@ -129,7 +150,12 @@ function FoldCells({ p, sym }: { p: CommandParseResult; sym: string }) {
           <div className="font-mono text-[10px] uppercase text-muted" style={{ letterSpacing: 1.6 }}>
             {cell.label}
           </div>
-          <div className="font-mono text-[16px] mt-1 truncate">{cell.value}</div>
+          <div
+            className="font-mono text-[16px] mt-1 truncate"
+            style={cell.muted ? { color: "var(--foreground-secondary)" } : undefined}
+          >
+            {cell.value}
+          </div>
         </div>
       ))}
     </div>
@@ -302,7 +328,7 @@ export function DeskCalcView({
       <DeskViewHeader
         title={t("nav.calculator")}
         actions={
-          <span className="font-mono text-[10.5px] text-muted whitespace-nowrap">
+          <span className="font-mono text-[11px] text-muted whitespace-nowrap">
             {settingsSummary}
           </span>
         }
@@ -378,6 +404,10 @@ export function DeskCalcView({
               tok={tok}
               kindClass={KIND_BG[cmdClassifyToken(tok)]}
               shadowed={line.items[expandedIndex]?.parse.shadowedTokenIndexes.includes(i)}
+              note={(() => {
+                const issue = issueForToken(line.items[expandedIndex]?.parse.issues ?? [], tok);
+                return issue ? formatCommandIssue(t, issue) : null;
+              })()}
               onEdit={() => editTokenAt(expandedIndex, i)}
               onRemove={() => removeTokenAt(expandedIndex, i)}
             />
@@ -635,7 +665,7 @@ export function DeskCalcView({
               <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
                 {group.group && (
                   <span
-                    className="text-[9.5px] font-bold text-muted-faint uppercase"
+                    className="text-[10px] font-bold text-muted-faint uppercase"
                     style={{ letterSpacing: 1 }}
                   >
                     {t(`suggest.group.${group.group}`)}
@@ -709,7 +739,7 @@ export function DeskCalcView({
                     learnable by looking rather than by being told. */}
                 {i < 9 && it.kind !== "save" && (
                   <span
-                    className="font-mono text-[9.5px] font-bold"
+                    className="font-mono text-[10px] font-bold"
                     style={{ color: "var(--muted-faint)" }}
                     aria-hidden="true"
                   >
@@ -825,18 +855,37 @@ export function DeskCalcView({
                 ) : p.valid && p.kgm != null ? (
                   <span className="font-mono text-[14px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
-                      <span className="text-foreground-secondary">{p.kgm.toFixed(2)}</span> kg/m ×{" "}
-                      <span className="text-foreground-secondary">{p.lengthM}</span> m ×{" "}
+                      <span className="text-foreground-secondary">{fsKgm(p.kgm)}</span> kg/m ×{" "}
+                      <span className="text-foreground-secondary">{fsLength(p.lengthM ?? 0)}</span> m ×{" "}
                       <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                       {/* When the money on screen comes from the seeded rate,
                           say so next to it. The weight is measured; the price
                           is an assumption, and it should travel with the
                           figure rather than hide in the breakdown panel. */}
-                      {!isW && !rateIsUserSupplied
+                      {!rateIsUserSupplied
                         ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
                         : ""}
                     </span>
+                    {/* A token the parser dropped is named beside the figure, not
+                        hidden behind the amber chip — `x2.5` used to price one
+                        piece in silence. */}
+                    {p.issues.length > 0 && (
+                      <InlineIssue
+                        text={formatCommandIssue(t, p.issues[0])}
+                        suggestionLabel={
+                          p.issues[0].suggestion
+                            ? t("issues.didYouMean", { suggestion: p.issues[0].suggestion })
+                            : null
+                        }
+                        onApply={() => {
+                          setQuery(
+                            applyIssueSuggestion(query, p.issues[0].token, p.issues[0].suggestion!),
+                          );
+                          focusInputAtEnd();
+                        }}
+                      />
+                    )}
                     {p.availability && (
                       <AvailabilityBadge>
                         {formatAvailability(t, p.availability, p.gradeLabel).badge}
@@ -904,9 +953,16 @@ export function DeskCalcView({
 
             {/* stats, then actions — stacked, as the fold has them. Sharing a
                 flex row with the action cluster crushed the grid to 21px per
-                cell and clipped every value mid-number. */}
+                cell and clipped every value mid-number.
+
+                On a pristine bar there is nothing to put in them: four cells
+                of dashes and two disabled buttons were placeholders standing
+                in for an answer. The phone dropped them (see the shell); the
+                workspace now does the same and lets the tiles have the room. */}
+            {query.trim() !== "" && (
+            <>
             <div style={{ paddingTop: 18, borderTop: "1px solid var(--border-faint)" }}>
-              <FoldCells p={focusParse} sym={sym} />
+              <FoldCells p={focusParse} sym={sym} rateIsUserSupplied={rateIsUserSupplied} />
             </div>
             <div className="flex items-end gap-6 flex-wrap" style={{ paddingTop: 16 }}>
               <div className="ml-auto flex items-center gap-2">
@@ -917,7 +973,7 @@ export function DeskCalcView({
                   disabled={!p.valid}
                   title={t("common.copySummary")}
                   aria-label={t("common.copySummary")}
-                  className="inline-flex items-center gap-[7px] text-[12.5px] font-medium whitespace-nowrap"
+                  className="inline-flex items-center gap-[7px] text-[13px] font-medium whitespace-nowrap"
                   style={{
                     padding: "8px 16px",
                     border: "1px solid var(--border)",
@@ -1007,6 +1063,8 @@ export function DeskCalcView({
                 </div>
               </div>
             </div>
+            </>
+            )}
           </div>
 
           {/* SESSION TAPE — fills remaining height. An ink rule heads it: the
@@ -1044,7 +1102,7 @@ export function DeskCalcView({
             </div>
             {tapeRows.length === 0 ? (
               <div
-                className="flex-1 min-h-0 flex items-center font-mono text-[11.5px] text-muted-faint"
+                className="flex-1 min-h-0 flex items-center font-mono text-[12px] text-muted-faint"
                 style={{ padding: "6px 2px" }}
               >
                 {t("desktop.emptyTape")}
@@ -1074,16 +1132,16 @@ export function DeskCalcView({
                           {formatCommandParseName(t, rp)}
                         </span>
                         <span className="font-mono text-[11px] text-muted flex-shrink-0">
-                          {rp.lengthM} m × {rp.realQty}
+                          {fsLength(rp.lengthM ?? 0)} m × {rp.realQty}
                         </span>
                         <span
-                          className="font-mono text-[12.5px] font-bold text-foreground text-right flex-shrink-0 whitespace-nowrap"
+                          className="font-mono text-[13px] font-bold text-foreground text-right flex-shrink-0 whitespace-nowrap"
                           style={{ minWidth: 82 }}
                         >
                           {fsWeight(rp.totalKg!)} {fsWeightUnit()}
                         </span>
                         <span
-                          className="font-mono text-[12.5px] font-semibold text-muted text-right flex-shrink-0 whitespace-nowrap"
+                          className="font-mono text-[13px] font-semibold text-muted text-right flex-shrink-0 whitespace-nowrap"
                           style={{ minWidth: 92 }}
                         >
                           {sym} {fsMoney(rp.totalAmount!)}
@@ -1110,19 +1168,19 @@ export function DeskCalcView({
                 >
                   <span className="font-mono text-xs font-bold text-muted">Σ</span>
                   <span
-                    className="flex-1 text-[10.5px] font-bold text-muted"
+                    className="flex-1 text-[11px] font-bold text-muted"
                     style={{ letterSpacing: 0.8 }}
                   >
                     {t("desktop.runningTotal", { count: validTape.length })}
                   </span>
                   <span
-                    className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
+                    className="font-mono text-[14px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
                     style={{ minWidth: 82, color: "var(--accent)" }}
                   >
                     {fsWeight(sumKg)} {fsWeightUnit()}
                   </span>
                   <span
-                    className="font-mono text-[13.5px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
+                    className="font-mono text-[14px] font-extrabold text-right whitespace-nowrap flex-shrink-0"
                     style={{ minWidth: 92, color: "var(--blue-strong)" }}
                   >
                     {sym} {fsMoney(sumAmount)}
@@ -1172,6 +1230,8 @@ function Line({
   value,
   strong,
   accent,
+  wrap,
+  small,
 }: {
   /** Stable hook for tests and debugging — the row's meaning, not its position. */
   id?: string;
@@ -1179,12 +1239,15 @@ function Line({
   value: string;
   strong?: boolean;
   accent?: string;
+  /** Long provenance text (a formula, a standard) wraps instead of clipping. */
+  wrap?: boolean;
+  small?: boolean;
 }) {
   return (
     <div
       data-row={id}
       className="flex items-baseline justify-between gap-3"
-      style={{ padding: "9px 0" }}
+      style={{ padding: small ? "6px 0" : "9px 0" }}
     >
       <span
         className="whitespace-nowrap"
@@ -1197,11 +1260,11 @@ function Line({
         {label}
       </span>
       <span
-        className="whitespace-nowrap font-mono"
+        className={`font-mono ${wrap ? "text-right break-words min-w-0" : "whitespace-nowrap"}`}
         style={{
-          fontSize: strong ? 16 : 14,
-          fontWeight: strong ? 700 : 600,
-          color: accent ?? "var(--foreground)",
+          fontSize: strong ? 16 : small ? 12 : 14,
+          fontWeight: strong ? 700 : small ? 500 : 600,
+          color: accent ?? (small ? "var(--foreground-secondary)" : "var(--foreground)"),
         }}
       >
         {value}
@@ -1211,9 +1274,14 @@ function Line({
 }
 
 /** Desktop styling per shared row id; rows not listed render as plain lines. */
-const DESK_ROW_STYLE: Partial<Record<BreakdownRowId, { strong?: boolean; accent?: string }>> = {
+const DESK_ROW_STYLE: Partial<
+  Record<BreakdownRowId, { strong?: boolean; accent?: string; wrap?: boolean; small?: boolean }>
+> = {
   totalWeight: { strong: true, accent: "var(--accent)" },
   totalCost: { strong: true, accent: "var(--blue-strong)" },
+  sectionArea: { small: true },
+  formula: { wrap: true, small: true },
+  reference: { wrap: true, small: true },
 };
 
 function DeskBreakdown({
@@ -1312,6 +1380,12 @@ function DeskBreakdown({
             {pricing.map((row) => (
               <Line key={row.id} id={row.id} label={row.label} value={row.value} {...DESK_ROW_STYLE[row.id]} />
             ))}
+            <Link
+              href="/faq"
+              className="inline-block mt-2 font-mono text-[12px] text-muted hover:text-foreground underline-offset-2 hover:underline"
+            >
+              {t("result.howCalculated")}
+            </Link>
           </div>
           {focus.calc && (
             <NearbySpecs
@@ -1331,7 +1405,7 @@ function DeskBreakdown({
           <span className="text-muted-faint">
             <CommandGlyph fam="beam" size={26} />
           </span>
-          <span className="font-mono text-[11.5px] text-muted-faint" style={{ lineHeight: 1.5 }}>
+          <span className="font-mono text-[12px] text-muted-faint" style={{ lineHeight: 1.5 }}>
             {t("desktop.breakdownEmpty")}
           </span>
         </div>

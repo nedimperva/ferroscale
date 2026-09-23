@@ -37,7 +37,7 @@ function StatTile({
         background: "var(--surface)",
       }}
     >
-      <div className="fs-track-label text-[9.5px] font-bold text-muted uppercase truncate">
+      <div className="fs-track-label text-[10px] font-bold text-muted uppercase truncate">
         {label}
       </div>
       <div
@@ -54,7 +54,7 @@ function StatTile({
       >
         {value}
       </div>
-      {sub && <div className="text-[10.5px] text-muted mt-0.5 truncate">{sub}</div>}
+      {sub && <div className="text-[11px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
@@ -194,7 +194,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
                   <span className="truncate">{item.label}</span>
                 </span>
                 <span
-                  className="px-2 py-0.5 rounded-none text-[10.5px] font-bold flex-shrink-0"
+                  className="px-2 py-0.5 rounded-none text-[11px] font-bold flex-shrink-0"
                   style={{
                     background:
                       item.yieldPercent >= 80
@@ -213,21 +213,21 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
               <div className="flex items-center justify-between text-xs bg-[var(--surface-inset)] p-2 rounded-lg border border-[var(--border-faint)]">
                 <span className="text-muted text-[11px]">{t("cutting.stockToOrder")}:</span>
                 <span className="font-bold text-[var(--accent-text)]">
-                  {item.rawStockUnits} <span className="text-muted font-normal text-[10.5px]">({item.stockDescription})</span>
+                  {item.rawStockUnits} <span className="text-muted font-normal text-[11px]">({item.stockDescription})</span>
                 </span>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-center text-[11px] pt-0.5">
                 <div className="bg-[var(--surface)] p-1.5 rounded-lg border border-[var(--border-faint)]">
-                  <div className="text-muted-faint text-[9.5px] uppercase">{t("cutting.rawWeight")}</div>
+                  <div className="text-muted-faint text-[10px] uppercase">{t("cutting.rawWeight")}</div>
                   <div className="font-bold text-foreground mt-0.5">{item.rawWeightKg.toLocaleString()} kg</div>
                 </div>
                 <div className="bg-[var(--surface)] p-1.5 rounded-lg border border-[var(--border-faint)]">
-                  <div className="text-muted-faint text-[9.5px] uppercase">{t("cutting.netWeight")}</div>
+                  <div className="text-muted-faint text-[10px] uppercase">{t("cutting.netWeight")}</div>
                   <div className="font-semibold text-foreground mt-0.5">{item.netWeightKg.toLocaleString()} kg</div>
                 </div>
                 <div className="bg-[var(--surface)] p-1.5 rounded-lg border border-[var(--border-faint)]">
-                  <div className="text-muted-faint text-[9.5px] uppercase">{t("cutting.scrap")}</div>
+                  <div className="text-muted-faint text-[10px] uppercase">{t("cutting.scrap")}</div>
                   <div className="text-muted mt-0.5">{item.scrapWeightKg.toLocaleString()} kg</div>
                 </div>
               </div>
@@ -253,7 +253,7 @@ export function ProjectProcurement({ project }: ProjectProcurementProps) {
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-[12px] font-mono border-collapse">
             <thead>
-              <tr className="text-muted text-[10.5px] uppercase border-b border-[var(--border-faint)] text-left">
+              <tr className="text-muted text-[11px] uppercase border-b border-[var(--border-faint)] text-left">
                 <th className="pb-2 font-semibold">{t("cutting.sectionMaterial")}</th>
                 <th className="pb-2 font-semibold">{t("cutting.stockToOrder")}</th>
                 <th className="pb-2 font-semibold text-right">{t("cutting.rawWeight")}</th>

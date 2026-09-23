@@ -133,7 +133,7 @@ export function BackupSection() {
               <div className="font-bold text-xs text-foreground">
                 {t("backup.confirmTitle")}
               </div>
-              <div className="text-[11.5px] font-mono text-muted">
+              <div className="text-[12px] font-mono text-muted">
                 {t("backup.summaryInfo", {
                   saved: pendingBackup.data.saved.length,
                   projects: pendingBackup.data.projects.length,

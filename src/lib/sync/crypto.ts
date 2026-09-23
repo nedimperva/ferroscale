@@ -5,8 +5,17 @@ function toBufferSource(value: Uint8Array) {
   return value as unknown as BufferSource;
 }
 
-async function deriveKey(secret: string, salt: Uint8Array, usage: KeyUsage[]): Promise<CryptoKey> {
-  const keyMaterial = await crypto.subtle.importKey("raw", textEncoder.encode(secret), "PBKDF2", false, ["deriveKey"]);
+/**
+ * `secret` is the passphrase or, as sync stores it, the passphrase already
+ * imported as non-extractable PBKDF2 key material (see key-store.ts). Both
+ * derive the same AES key, so either can read the other's ciphertext.
+ */
+export type SyncSecret = string | CryptoKey;
+
+async function deriveKey(secret: SyncSecret, salt: Uint8Array, usage: KeyUsage[]): Promise<CryptoKey> {
+  const keyMaterial = typeof secret === "string"
+    ? await crypto.subtle.importKey("raw", textEncoder.encode(secret), "PBKDF2", false, ["deriveKey"])
+    : secret;
   return crypto.subtle.deriveKey(
     { name: "PBKDF2", salt: toBufferSource(salt), iterations: 100_000, hash: "SHA-256" },
     keyMaterial,
@@ -16,7 +25,7 @@ async function deriveKey(secret: string, salt: Uint8Array, usage: KeyUsage[]): P
   );
 }
 
-export async function encryptAESGCM(plaintext: string, secret: string): Promise<string> {
+export async function encryptAESGCM(plaintext: string, secret: SyncSecret): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(secret, salt, ["encrypt"]);
@@ -28,7 +37,7 @@ export async function encryptAESGCM(plaintext: string, secret: string): Promise<
   return btoa(String.fromCharCode(...packed));
 }
 
-export async function decryptAESGCM(encoded: string, secret: string): Promise<string> {
+export async function decryptAESGCM(encoded: string, secret: SyncSecret): Promise<string> {
   const packed = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
   const salt = packed.slice(0, 16);
   const iv = packed.slice(16, 28);

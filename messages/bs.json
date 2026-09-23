@@ -1,7 +1,7 @@
 {
   "meta": {
     "layout": {
-      "title": "FerroScale",
+      "title": "FerroScale — Kalkulator mase i cijene metala (EN profili)",
       "description": "Kalkulator mase i cijene metala za EN standardne i prilagođene profile. Precizne procjene s provjerljivim formulama.",
       "applicationName": "FerroScale",
       "openGraphDescription": "Izračunajte masu i cijenu za EN profile uz provjerljive formule i reference.",
@@ -221,6 +221,7 @@
       "liveResult": "Rezultat: {value}",
       "addToSession": "Dodaj ovu liniju u sesiju",
       "openBreakdown": "Otvori detalje rezultata",
+      "suggestionStrip": "Prijedlozi — pomakni bočno za više",
       "openSession": "Otvori traku sesije"
     },
     "nav": {
@@ -259,7 +260,12 @@
       "numbers": "123",
       "addItem": "+ Stavka",
       "tweak": "Mijenjaj",
-      "tweakAria": "Uredi dužinu, količinu ili cijenu"
+      "tweakAria": "Uredi dužinu, količinu ili cijenu",
+      "times": "Puta — količina",
+      "decimalPoint": "Decimalna tačka",
+      "enter": "Enter — zabilježi ovaj proračun",
+      "lengthUnitKey": "Milimetri — drži za druge jedinice dužine",
+      "priceUnitKey": "Cijena po {unit} — drži za druge jedinice cijene"
     },
     "token": {
       "edit": "Uredi {token}",
@@ -322,7 +328,8 @@
       "didYouMean": "Jeste li mislili {suggestion}?",
       "invalidLength": "Dužina izvan opsega: \"{token}\"",
       "invalidSetting": "Postavka je izvan opsega — provjerite Postavke",
-      "invalidQtyRange": "Količina mora biti cijeli broj, 1 do {max}"
+      "invalidQtyRange": "Količina mora biti cijeli broj, 1 do {max}",
+      "shortLength": "\"{token}\" pročitano kao {value} {unit}"
     },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
@@ -338,6 +345,11 @@
       "perPiece": "Po komadu",
       "totalWeight": "Ukupna masa",
       "density": "Gustoća",
+      "sectionArea": "Površina presjeka",
+      "formula": "Formula",
+      "reference": "Referenca",
+      "dataset": "skup podataka {version}",
+      "howCalculated": "Kako se ovo računa? →",
       "rate": "Cijena",
       "perPiecePrice": "Cijena po komadu",
       "subtotal": "Međuzbir",
@@ -476,14 +488,13 @@
           "body": "FerroScale radi offline nakon instalacije i može sinhronizovati sačuvane podatke preko Google Drive-a.",
           "tips": {
             "passphrase": "Koristite istu lozinku za sinhronizaciju na svakom uređaju; ona šifruje podatke prije slanja.",
-            "included": "Sačuvane stavke, poređenja, projekti i preseti ulaze u sinhronizaciju.",
+            "included": "Dijelovi, projekti, poređenje, cjenovnik, postavke radionice (cijena, kvalitet, PDV, jedinice, marža) i navike kucanja ulaze u sinhronizaciju. Tema i vibracija ostaju po uređaju.",
             "offline": "Aplikacija zadržava keširane podatke kalkulatora kada veza nestane."
           }
         }
       }
     },
     "sync": {
-      "passphrasePrompt": "Unesite lozinku za sinhronizaciju. Koristite istu lozinku na svakom uređaju — njom se podaci šifruju prije spremanja na Google Drive.",
       "couldNotConnect": "Povezivanje nije uspjelo.",
       "syncFailed": "Sinhronizacija nije uspjela.",
       "disconnectConfirm": "Prekinuti Google Drive sinhronizaciju na ovom uređaju?",
@@ -494,9 +505,31 @@
       "syncing": "Sinhronizujem...",
       "syncNow": "Sinhronizuj sada",
       "disconnect": "Prekini vezu",
-      "description": "Sinhronizujte dijelove, projekte, poređenje, cjenovnik i navike kucanja na Google Drive — end-to-end šifrovano vašom lozinkom.",
+      "description": "Neka vaši dijelovi, projekti, cjenovnik i postavke radionice budu isti na svakom uređaju. Čuva se na vašem Google Driveu, end-to-end šifrovano lozinkom koju znate samo vi.",
       "connecting": "Povezujem...",
-      "connectGoogleDrive": "Poveži Google Drive"
+      "connectGoogleDrive": "Poveži Google Drive",
+      "passphraseLabel": "Lozinka za sinhronizaciju",
+      "passphraseConfirmLabel": "Ponovite lozinku",
+      "passphraseHint": "Koristite istu lozinku na svakom uređaju. Ona nikad ne napušta ovaj uređaj — ako je izgubite, podaci na Driveu se ne mogu pročitati.",
+      "passphraseMismatch": "Lozinke se ne podudaraju.",
+      "showPassphrase": "Prikaži",
+      "hidePassphrase": "Sakrij",
+      "statusSynced": "Sinhronizovano {when}",
+      "statusSyncing": "Sinhronizujem…",
+      "statusOffline": "Van mreže — promjene će se sinhronizovati kad se vratite na mrežu",
+      "statusRetrying": "Drive nije dostupan — uskoro pokušavam ponovo",
+      "statusWaiting": "Čeka na sinhronizaciju",
+      "autoNote": "Promjene se sinhronizuju same, a rad s drugih uređaja se pojavi kad otvorite aplikaciju.",
+      "reconnectTitle": "Google Drive traži da se ponovo prijavite",
+      "reconnectBody": "Vaši podaci su sigurni na ovom uređaju. Prijavite se ponovo i sinhronizacija nastavlja gdje je stala.",
+      "reconnect": "Prijavi se ponovo",
+      "passphraseTitle": "Unesite lozinku za sinhronizaciju",
+      "passphraseWrongBody": "Ova lozinka ne otvara podatke na Driveu. Unesite onu koju ste koristili na drugim uređajima.",
+      "passphraseMissingBody": "Ovaj uređaj još nema lozinku. Unesite onu koju ste koristili na drugim uređajima.",
+      "savePassphrase": "Otključaj",
+      "attentionReconnect": "Sinhronizacija traži ponovnu prijavu",
+      "attentionPassphrase": "Sinhronizacija traži lozinku",
+      "justNow": "upravo"
     },
     "library": {
       "emptySaved": "Sačuvani izračuni će se prikazati ovdje. Dodirnite Sačuvaj na rezultatu.",
@@ -526,6 +559,7 @@
       "breakdown": "DETALJI",
       "breakdownEmpty": "detalji rezultata se prikazuju dok kucate",
       "totalCostLabel": "UKUPNA CIJENA",
+      "estimatedCostLabel": "PROCJENA @ {rate} (ZADANO)",
       "saveSessionAsProject": "SAČUVAJ KAO PROJEKAT",
       "perPieceLabel": "PO KOMADU",
       "breakdownItem": "Pregled · stavka {index} od {count}",
@@ -1045,7 +1079,7 @@
     }
   },
   "qa": {
-    "title": "Provjera formula",
+    "title": "Provjera formula — FerroScale",
     "subtitle": "Izlaz živog kalkulatora provjeren prema nezavisnim referencama — objavljene EN kataloške mase i ručno izračunate formule (S235JR, po metru).",
     "back": "Nazad na kalkulator",
     "summaryPass": "Svih {count} provjera prolazi",
@@ -1195,7 +1229,7 @@
         "summary": "Obim pomnožen sa debljinom zida i 0,00785 kg/m, uz korekciju za zaobljenja uglova.",
         "formula": "kg/m ≈ (Visina + Širina - 2 × Debljina) × 2 × Debljina × 0,00785",
         "explanation": "Za šuplje kutijaste profile, srednja linija obima je 2 × (H + W - 2t). Množenjem sa debljinom dobija se površina metala. Hladno oblikovani profili (EN 10219) imaju vanjske radijuse ugla ≈ 2t, dok toplo oblikovani (EN 10210) imaju radijuse ≈ 1,5t.",
-        "example": "Cijev 100×50×4 mm: (100 + 50 - 8) × 8 × 0,00785 ≈ 8,92 kg/m. Tačna EN geometrija s radijusima daje 8,77 kg/m. Za 6 m = 52,62 kg.",
+        "example": "Cijev 100×50×4 mm: kutija s oštrim uglovima daje (100 + 50 - 8) × 8 × 0,00785 ≈ 8,92 kg/m. Hladno oblikovani EN 10219 uglovi (Ro = 2t, Ri = t) oduzimaju (4 − π)(8² − 4²) = 41 mm², pa FerroScale prikazuje 8,59 kg/m — kataloški podatak. Toplo dorađeni EN 10210 (Ro = 1,5t) dao bi 8,78 kg/m. Za 6 m = 51,55 kg.",
         "tip": "Hladno oblikovane kutijaste cijevi (EN 10219) su neznatno lakše od toplo valjanih (EN 10210) jer hladno savijanje pravi veće radijuse na uglovima.",
         "command": "tub100x50x4 6m"
       },

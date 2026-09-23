@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 /** Small blue WASTE/VAT badge shown next to the equation line. */
 export function PricingBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--blue-surface)] text-[var(--blue-text)] whitespace-nowrap">
+    <span className="font-sans text-[10px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--blue-surface)] text-[var(--blue-text)] whitespace-nowrap">
       {children}
     </span>
   );
@@ -25,7 +25,7 @@ export function PricingBadge({ children }: { children: React.ReactNode }) {
  */
 export function AvailabilityBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--amber-surface)] text-[var(--amber-text)] whitespace-nowrap">
+    <span className="font-sans text-[10px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--amber-surface)] text-[var(--amber-text)] whitespace-nowrap">
       {children}
     </span>
   );
@@ -33,7 +33,7 @@ export function AvailabilityBadge({ children }: { children: React.ReactNode }) {
 
 export function TargetBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-sans text-[9.5px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--purple-surface)] text-[var(--purple-text)] whitespace-nowrap">
+    <span className="font-sans text-[10px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--purple-surface)] text-[var(--purple-text)] whitespace-nowrap">
       {children}
     </span>
   );
@@ -114,6 +114,44 @@ export function CommandToast({
  * debounce resets on every keystroke so only stable results are announced;
  * identical text produces no DOM change and therefore no re-announcement.
  */
+/**
+ * A parser issue shown *next to* a result that still computes. The hero used
+ * to show either the description or the first issue, so `hea120 6m x2.5`
+ * priced one piece and said nothing about the `x2.5` it had dropped — the
+ * only cue was an amber chip. Now the dropped token is named beside the
+ * figure, with the same did-you-mean button the waiting state has.
+ */
+export function InlineIssue({
+  text,
+  suggestionLabel,
+  onApply,
+}: {
+  text: string;
+  suggestionLabel?: string | null;
+  onApply?: () => void;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 flex-wrap" role="status" style={{ color: "var(--amber-text)" }}>
+      <span>{text}</span>
+      {suggestionLabel && onApply ? (
+        <button
+          type="button"
+          onClick={onApply}
+          className="rounded-none font-bold cursor-pointer"
+          style={{
+            padding: "1px 7px",
+            background: "var(--accent-surface)",
+            color: "var(--accent-text)",
+            border: "1px solid var(--accent-border)",
+          }}
+        >
+          {suggestionLabel}
+        </button>
+      ) : null}
+    </span>
+  );
+}
+
 export function ResultAnnouncer({ text }: { text: string }) {
   const [announced, setAnnounced] = useState("");
   useEffect(() => {

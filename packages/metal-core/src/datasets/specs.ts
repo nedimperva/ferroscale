@@ -80,6 +80,7 @@ function buildSectionRecord({
       webThicknessMm,
       flangeThicknessMm,
       rootRadiusMm: roundMm(Math.max(3, Math.min(flangeThicknessMm * rootRadiusFactor, widthMm / 6))),
+      thicknessEstimated: true,
     },
     areaMm2,
     perimeterMm,
@@ -193,14 +194,66 @@ const UPE_WIDTHS: Record<number, number> = {
   400: 115,
 };
 
-const HEA_HEIGHT_OFFSETS = new Set([100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300]);
+/**
+ * EN 10365 section heights for the HEA series. Below 200 the nominal size is
+ * not "height − 10": HEA 120 is 114 mm tall, not 110.
+ */
+const HEA_HEIGHTS: Record<number, number> = {
+  100: 96,
+  120: 114,
+  140: 133,
+  160: 152,
+  180: 171,
+  200: 190,
+  220: 210,
+  240: 230,
+  260: 250,
+  280: 270,
+  300: 290,
+  320: 310,
+  340: 330,
+  360: 350,
+  400: 390,
+  450: 440,
+  500: 490,
+  550: 540,
+  600: 590,
+  650: 640,
+  700: 690,
+  800: 790,
+  900: 890,
+  1000: 990,
+};
+
+/** EN 10365 HEM sections are taller and wider than their nominal size. */
+const HEM_DIMS: Record<number, { h: number; b: number }> = {
+  100: { h: 120, b: 106 },
+  120: { h: 140, b: 126 },
+  140: { h: 160, b: 146 },
+  160: { h: 180, b: 166 },
+  180: { h: 200, b: 186 },
+  200: { h: 220, b: 206 },
+  220: { h: 240, b: 226 },
+  240: { h: 270, b: 248 },
+  260: { h: 290, b: 268 },
+  280: { h: 310, b: 288 },
+  300: { h: 340, b: 310 },
+  320: { h: 359, b: 309 },
+  340: { h: 377, b: 309 },
+  360: { h: 395, b: 308 },
+  400: { h: 432, b: 307 },
+  450: { h: 478, b: 307 },
+  500: { h: 524, b: 306 },
+  550: { h: 572, b: 306 },
+  600: { h: 620, b: 305 },
+};
 
 function heSeriesWidth(size: number): number {
   return size <= 300 ? size : 300;
 }
 
 function heaSeriesHeight(size: number): number {
-  return HEA_HEIGHT_OFFSETS.has(size) ? size - 10 : size - 10;
+  return HEA_HEIGHTS[size] ?? size - 10;
 }
 
 function hebSeriesHeight(size: number): number {
@@ -208,7 +261,11 @@ function hebSeriesHeight(size: number): number {
 }
 
 function hemSeriesHeight(size: number): number {
-  return size;
+  return HEM_DIMS[size]?.h ?? size;
+}
+
+function hemSeriesWidth(size: number): number {
+  return HEM_DIMS[size]?.b ?? heSeriesWidth(size);
 }
 
 function widthFromLookup(value: number, lookup: Record<number, number>, fallbackRatio: number): number {
@@ -230,7 +287,8 @@ function buildTeeSpecs(profile: StandardProfileDefinition): Record<string, Stand
             widthMm,
             webThicknessMm: thicknessMm,
             flangeThicknessMm: thicknessMm,
-            rootRadiusMm: roundMm(Math.max(2, thicknessMm * 0.8)),
+            // EN 10055: r1 = t (flange/web = t, so nothing here is estimated).
+            rootRadiusMm: roundMm(thicknessMm),
           },
           areaMm2: size.areaMm2,
           perimeterMm: size.perimeterMm,
@@ -318,7 +376,7 @@ export const STANDARD_PROFILE_SPECS: Partial<Record<ProfileId, Record<string, St
       const nominal = parseLeadingNumber(label);
       return {
         heightMm: hemSeriesHeight(nominal),
-        widthMm: heSeriesWidth(nominal),
+        widthMm: hemSeriesWidth(nominal),
       };
     },
     "ibeam",

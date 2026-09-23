@@ -14,6 +14,8 @@ import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProject
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
+import { useSyncAttention } from "@/hooks/useSyncAttention";
+import { AlertDot } from "./desktop/desk-rail";
 import { calculateMetal, cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
   cmdSuggest,
@@ -25,7 +27,7 @@ import {
   cmdSplitLine,
 } from "@ferroscale/metal-core";
 import { COMMAND_ALIAS_RE } from "@ferroscale/metal-core";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsKgm, fsLength, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   currentProjectStore,
   defaultUnitStore,
@@ -45,6 +47,7 @@ import {
   formatAvailability,
   formatCommandHint,
   formatCommandIssue,
+  issueForToken,
   formatCommandParseName,
   formatCommandSuggestionLabel,
   buildCommandSummary,
@@ -68,7 +71,7 @@ import {
 import { SegmentedRail } from "./segmented-rail";
 import { TokenChip } from "./token-chip";
 import { useExpandedItem } from "./use-expanded-item";
-import { AvailabilityBadge, CommandToast, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
+import { AvailabilityBadge, CommandToast, InlineIssue, PricingBadge, ResultAnnouncer, TargetBadge } from "./command-atoms";
 import type { CommandToastState } from "./command-atoms";
 import { CommandKeypad } from "./command-keypad";
 import { SaveControl } from "./save-control";
@@ -231,6 +234,8 @@ export function CommandShell() {
     "session" | "saved" | "compare" | "projects" | null
   >(null);
   const [toast, setToast] = useState<CommandToastState | null>(null);
+  // Sync runs by itself; this is only set when it needs the user.
+  const syncAttention = useSyncAttention();
   // Query history — persisted (and Drive-synced) via the quickHistory
   // collection. Backs the desktop session tape and recency suggestions.
   const {
@@ -563,11 +568,11 @@ export function CommandShell() {
   // Desktop's single Copy action: a clean, paste-ready text summary of the
   // live result (replaces the old copy-query / copy-value pair).
   const copySummary = useCallback(() => {
-    const summary = buildCommandSummary(t, p, line);
+    const summary = buildCommandSummary(t, p, line, { rateIsUserSupplied });
     if (!summary) return;
     navigator.clipboard?.writeText(summary).catch(() => {});
     showToast(t("toast.copiedSummary"));
-  }, [t, p, line, showToast]);
+  }, [t, p, line, showToast, rateIsUserSupplied]);
 
   const shareLink = useCallback(() => {
     if (!p.valid) return;
@@ -575,7 +580,7 @@ export function CommandShell() {
     if (isPhoneViewport) {
       const card = buildShareCardModel(t, p, line, query);
       void shareCalculation({
-        summary: buildCommandSummary(t, p, line),
+        summary: buildCommandSummary(t, p, line, { rateIsUserSupplied }),
         url,
         title: card.title,
         card,
@@ -586,7 +591,7 @@ export function CommandShell() {
     }
     navigator.clipboard?.writeText(url).catch(() => {});
     showToast(t("toast.linkCopied"));
-  }, [p, line, query, shared, isPhoneViewport, showToast, t]);
+  }, [p, line, query, shared, isPhoneViewport, showToast, t, rateIsUserSupplied]);
 
   // The bookmark state of the line currently in the bar — drives the Save
   // button's filled/outlined look, so "is this one saved?" is answerable
@@ -1634,7 +1639,10 @@ export function CommandShell() {
   if (isWideViewport) {
     return (
       <div
-        className="fixed inset-0 flex overflow-hidden text-foreground"
+        // A column, so the PWA banner (offline / update / ready) stacks above
+        // the workspace. As a row it became a flex sibling and squeezed the
+        // whole app into what was left beside it.
+        className="fixed inset-0 flex flex-col overflow-hidden text-foreground"
         style={{ background: screenBg, transition: "background 220ms ease" }}
       >
         <PwaRegister />
@@ -1703,17 +1711,21 @@ export function CommandShell() {
   // ── Phone (<640): fullscreen shell with the on-screen keypad ──
   return (
     <div
-      className="fixed inset-0 flex overflow-hidden"
+      // A column: the PWA banner stacks above the shell. As a row the banner
+      // sat beside it and the phone shell ran at 242px of a 390px screen for
+      // as long as the banner showed — permanently, when offline.
+      className="fixed inset-0 flex flex-col overflow-hidden"
       style={{ background: screenBg, transition: "background 220ms ease" }}
     >
       <PwaRegister />
-      {/* Fills the fixed parent exactly. It used to be `height: 100dvh`, which
-          on iOS resolves differently from the fixed element's own box — the
-          shorter of the two left a band of screen background below the keypad
-          instead of the keys sitting flush on the bottom edge. */}
+      {/* Fills what the fixed parent has left after the banner. It used to be
+          `height: 100dvh`, which on iOS resolves differently from the fixed
+          element's own box — the shorter of the two left a band of screen
+          background below the keypad instead of the keys sitting flush on the
+          bottom edge. flex-1 in a column is the same exact fill. */}
       <div
-        className="relative flex flex-col overflow-hidden text-foreground"
-        style={{ width: "100%", height: "100%", background: screenBg }}
+        className="relative flex flex-1 min-h-0 flex-col overflow-hidden text-foreground"
+        style={{ width: "100%", background: screenBg }}
       >
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* Safe-top spacer — honours real device safe-area on mobile, narrow gap on desktop */}
@@ -1785,7 +1797,17 @@ export function CommandShell() {
                   <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
                 </svg>
               </IconBtn>
-              <IconBtn onClick={() => setSheet("settings")} ariaLabel={t("nav.settings")}>
+              <IconBtn
+                onClick={() => setSheet("settings")}
+                ariaLabel={t("nav.settings")}
+                alert={
+                  syncAttention === "reconnect"
+                    ? t("sync.attentionReconnect")
+                    : syncAttention === "passphrase"
+                      ? t("sync.attentionPassphrase")
+                      : null
+                }
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -1941,7 +1963,7 @@ export function CommandShell() {
                         type="button"
                         onClick={() => setModeOverride(m)}
                         aria-pressed={active}
-                        className="fs-track-label rounded-none text-[10.5px] font-bold"
+                        className="fs-track-label rounded-none text-[11px] font-bold"
                         style={{
                           // 5px of vertical padding puts the control at 25px, over
                           // the 24px floor in WCAG 2.5.8. It measured 23px.
@@ -2036,18 +2058,33 @@ export function CommandShell() {
                   <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
                       <span className="text-foreground-secondary">
-                        {p.kgm.toFixed(2)}
+                        {fsKgm(p.kgm)}
                       </span>{" "}
                       kg/m ×{" "}
-                      <span className="text-foreground-secondary">{p.lengthM}</span>{" "}
+                      <span className="text-foreground-secondary">{fsLength(p.lengthM ?? 0)}</span>{" "}
                       m × <span className="text-foreground-secondary">{p.realQty}</span>
                       {p.gradeLabel ? ` · ${p.gradeLabel}` : ""}
                       {/* The assumption travels with the figure — see the
                           workspace hero for why. */}
-                      {mode === "price" && !rateIsUserSupplied
+                      {!rateIsUserSupplied
                         ? ` · @ ${fsMoney(p.pricing.unitPrice)}/${p.pricing.priceUnit} ${t("result.defaultRate")}`
                         : ""}
                     </span>
+                    {p.issues.length > 0 && (
+                      <InlineIssue
+                        text={formatCommandIssue(t, p.issues[0])}
+                        suggestionLabel={
+                          p.issues[0].suggestion
+                            ? t("issues.didYouMean", { suggestion: p.issues[0].suggestion })
+                            : null
+                        }
+                        onApply={() =>
+                          setQuery(
+                            applyIssueSuggestion(query, p.issues[0].token, p.issues[0].suggestion!),
+                          )
+                        }
+                      />
+                    )}
                     {p.availability && (
                       <AvailabilityBadge>
                         {formatAvailability(t, p.availability, p.gradeLabel).badge}
@@ -2302,6 +2339,12 @@ export function CommandShell() {
               // need room below them or their own borders get shaved off.
               className="flex gap-1.5 px-[18px] pb-1"
               style={{ overflowX: "auto", overflowY: "hidden" }}
+              // The chips themselves stay out of the Tab order (typing flow),
+              // so the strip is the one focusable stop: a keyboard can scroll
+              // it, and a screen reader hears what it is.
+              role="group"
+              aria-label={t("aria.suggestionStrip")}
+              tabIndex={0}
             >
               {(isPhoneViewport
                 ? sug.items.filter((it) => it.kind !== "save")
@@ -2493,6 +2536,10 @@ export function CommandShell() {
                     tok={tok}
                     kindClass={KIND_BG[cmdClassifyToken(tok)]}
                     shadowed={line.items[expandedIndex]?.parse.shadowedTokenIndexes.includes(i)}
+                    note={(() => {
+                      const issue = issueForToken(line.items[expandedIndex]?.parse.issues ?? [], tok);
+                      return issue ? formatCommandIssue(t, issue) : null;
+                    })()}
                     onEdit={() => editTokenAt(expandedIndex, i)}
                     onRemove={() => removeTokenAt(expandedIndex, i)}
                     onReplace={(next) => replaceTokenAt(expandedIndex, i, next)}
@@ -2655,19 +2702,24 @@ function IconBtn({
   children,
   onClick,
   ariaLabel,
+  alert,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   ariaLabel: string;
+  /** Something behind this button needs the user — read aloud and dotted. */
+  alert?: string | null;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={ariaLabel}
-      className="w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
+      aria-label={alert ? `${ariaLabel}, ${alert}` : ariaLabel}
+      title={alert ?? undefined}
+      className="relative w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
     >
       {children}
+      {alert && <AlertDot />}
     </button>
   );
 }
@@ -2723,12 +2775,12 @@ function MetricStrip({
         cursor: p.valid ? "pointer" : "default",
       }}
     >
-      <span className="font-mono text-[12.5px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
+      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
         {perPiece}
         <span className="text-muted">{t("preview.perPieceSuffix")}</span>
       </span>
       <span className="w-px h-3.5 bg-border-faint" />
-      <span className="font-mono text-[12.5px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
+      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
         {second}
       </span>
       <span className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint whitespace-nowrap">

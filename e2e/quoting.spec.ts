@@ -112,6 +112,10 @@ test.describe("Session rail", () => {
         "ferroscale-quick-history",
         JSON.stringify(["hea120 6m x4", "hea120 6m x2"]),
       );
+      // A returning visitor gets their last line back. This test used to get
+      // that for free because the service worker's first install reloaded the
+      // page, which made every first visit look like a second one.
+      localStorage.setItem("ferroscale-onboarded", "1");
     });
     await page.goto("/en");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
@@ -291,8 +295,8 @@ test.describe("Assemblies", () => {
     // The parts list is open: each part can be taken back out of the assembly.
     await expect(page.getByRole("button", { name: /from this assembly$/ })).toHaveCount(2);
     await expect(page.getByText("SHS 40×40×3").first()).toBeVisible();
-    // 238.7 kg + 139.42 kg = 378.12 kg
-    await expect(page.getByText("378.12 kg").first()).toBeVisible();
+    // 238.7 kg + 132.14 kg (SHS 40×40×3 at 3.30 kg/m, EN 10219-2 corners) = 370.84 kg
+    await expect(page.getByText("370.84 kg").first()).toBeVisible();
   });
 
   test("Use restores every part, not just the first", async ({ page }) => {
@@ -382,8 +386,8 @@ test.describe("Printable quote", () => {
     await expect(quote).toContainText("Quote");
     await expect(quote).toContainText("HEA 120");
     await expect(quote).toContainText("SHS 40x40x3");
-    // 286.44 + 167.30 = 453.74 cost → 521.80 with 15% margin.
-    await expect(quote).toContainText("€ 521.80");
+    // 286.44 + 158.56 = 445.00 cost → 511.76 with 15% margin.
+    await expect(quote).toContainText("€ 511.76");
 
     // Under print media the app is hidden and only the quote remains.
     await page.emulateMedia({ media: "print" });

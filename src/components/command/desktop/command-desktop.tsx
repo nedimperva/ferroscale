@@ -171,7 +171,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
     /* Rail beside the workspace, not a bar above it: navigation costs 56px of
        width, which the calculator has, instead of a band of height, which is
        what the answer needs. */
-    <div className="flex flex-1 min-w-0 overflow-hidden">
+    <div className="flex flex-1 min-w-0 min-h-0 overflow-hidden">
       <DeskRail
         view={view}
         setView={setView}

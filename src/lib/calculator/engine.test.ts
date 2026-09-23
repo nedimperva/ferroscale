@@ -151,6 +151,16 @@ function relativeError(actual: number, expected: number): number {
   return Math.abs(actual - expected) / Math.abs(expected);
 }
 
+/**
+ * Independent re-statement of the EN 10219-2 corner rule (kept separate from
+ * the dataset's helper on purpose): outer/inner radius 2t/1t up to 6 mm,
+ * 2.5t/1.5t up to 10 mm, 3t/2t above. Lost metal = (4 − π)(Ro² − Ri²).
+ */
+function oracleHollowCorners(t: number): number {
+  const [ro, ri] = t <= 6 ? [2 * t, t] : t <= 10 ? [2.5 * t, 1.5 * t] : [3 * t, 2 * t];
+  return (4 - Math.PI) * (ro * ro - ri * ri);
+}
+
 function computeAreaMm2(testCase: ProfileCase): number {
   switch (testCase.profileId) {
     case "round_bar": {
@@ -190,7 +200,11 @@ function computeAreaMm2(testCase: ProfileCase): number {
         testCase.manualDimensions.wallThickness!.value,
         testCase.manualDimensions.wallThickness!.unit,
       );
-      return width * height - (width - 2 * wallThickness) * (height - 2 * wallThickness);
+      return (
+        width * height -
+        (width - 2 * wallThickness) * (height - 2 * wallThickness) -
+        oracleHollowCorners(wallThickness)
+      );
     }
     case "square_hollow": {
       const side = toMillimeters(testCase.manualDimensions.side!.value, testCase.manualDimensions.side!.unit);
@@ -198,7 +212,7 @@ function computeAreaMm2(testCase: ProfileCase): number {
         testCase.manualDimensions.wallThickness!.value,
         testCase.manualDimensions.wallThickness!.unit,
       );
-      return side * side - (side - 2 * wallThickness) * (side - 2 * wallThickness);
+      return side * side - (side - 2 * wallThickness) * (side - 2 * wallThickness) - oracleHollowCorners(wallThickness);
     }
     case "chequered_plate": {
       const w = toMillimeters(testCase.manualDimensions.width!.value, testCase.manualDimensions.width!.unit);

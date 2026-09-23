@@ -8,7 +8,10 @@ export const BOOTSTRAP_RECORD_KEY = "bootstrap:root";
 
 export const SYNC_METADATA_KEY = "ferroscale-sync-metadata-v2";
 export const SYNC_SESSION_KEY = "ferroscale-sync-session-v2";
+/** Legacy: where the passphrase sat in plain text. Read once to migrate, then removed. */
 export const SYNC_PASSPHRASE_KEY = "ferroscale-sync-passphrase-v1";
+/** "1" when a sync key is stored in IndexedDB (see key-store.ts). Holds no secret. */
+export const SYNC_KEY_CONFIGURED_KEY = "ferroscale-sync-key-configured-v1";
 export const SYNC_RECORD_INDEX_KEY = "ferroscale-sync-record-index-v2";
 export const SYNC_AUTH_RESULT_STORAGE_KEY = "ferroscale-sync-auth-result";
 
@@ -17,6 +20,12 @@ export const SYNC_COLLECTION_UPDATED_AT_KEYS = {
   quickHistory: "ferroscale-sync-quick-history-updated-at-v1",
   priceBook: "ferroscale-sync-price-book-updated-at-v1",
 } as const;
+
+/** gradeId → when that rate was removed; lets a removal sync instead of reappearing. */
+export const SYNC_PRICE_BOOK_REMOVED_KEY = "ferroscale-price-book-removed-v1";
+
+/** When the synced settings last changed on this device (or arrived from Drive). */
+export const SYNC_SETTINGS_UPDATED_AT_KEY = "ferroscale-sync-settings-updated-at-v1";
 
 export const SYNC_STORAGE_KEYS = {
   saved: "ferroscale-saved-v2",

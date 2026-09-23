@@ -30,6 +30,7 @@ import { BackupSection } from "../backup-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
+import { useSyncAttention } from "@/hooks/useSyncAttention";
 
 export function useCommandLocaleSwitch() {
   const locale = useLocale() as AppLocale;
@@ -78,7 +79,7 @@ export function CommandDocsSection({ className = "mt-4" }: { className?: string 
               </p>
               <ul className="mt-2.5 space-y-1.5">
                 {Object.values(section.tips).map((tip) => (
-                  <li key={tip} className="flex gap-2 text-[11.5px] leading-relaxed text-muted">
+                  <li key={tip} className="flex gap-2 text-[12px] leading-relaxed text-muted">
                     <span className="mt-[7px] h-1 w-1 rounded-none bg-[var(--accent)] flex-shrink-0" />
                     <span>{tip}</span>
                   </li>
@@ -166,7 +167,7 @@ function SheetFieldRow({
         <div className="min-w-0">
           <div className="text-[14px] font-bold text-foreground">{field.label}</div>
           {field.description && (
-            <div className="text-[11.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+            <div className="text-[12px] text-muted mt-0.5 leading-snug">{field.description}</div>
           )}
         </div>
         <div className="flex-shrink-0">
@@ -215,7 +216,7 @@ function SheetFieldRow({
         <div className="min-w-0">
           <div className="text-[14px] font-bold text-foreground">{field.label}</div>
           {field.description && (
-            <div className="text-[11.5px] text-muted mt-0.5 leading-snug">{field.description}</div>
+            <div className="text-[12px] text-muted mt-0.5 leading-snug">{field.description}</div>
           )}
         </div>
         <span className="flex items-center gap-1.5 flex-shrink-0">
@@ -276,7 +277,11 @@ export function CommandSettingsSheet({
   const [openField, setOpenField] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [search, setSearch] = useState("");
-  const [showExtras, setShowExtras] = useState(false);
+  // Sync lives in the collapsed extras; when it needs the user (the dot on
+  // the settings button), start with it open.
+  const syncAttention = useSyncAttention();
+  const [extrasToggled, setShowExtras] = useState<boolean | null>(null);
+  const showExtras = extrasToggled ?? syncAttention != null;
 
   const marginPercent = useSyncExternalStore(
     marginPercentStore.subscribe,
@@ -411,7 +416,7 @@ export function CommandSettingsSheet({
           <SheetCard>
             <button
               type="button"
-              onClick={() => setShowExtras((on) => !on)}
+              onClick={() => setShowExtras(!showExtras)}
               aria-expanded={showExtras}
               className="flex items-center justify-between gap-3 w-full px-4 py-3 text-left cursor-pointer"
             >

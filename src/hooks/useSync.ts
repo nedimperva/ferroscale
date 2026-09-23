@@ -33,6 +33,7 @@ export function useSync() {
     reconnectProvider: sync.reconnect,
     disconnectProvider: sync.disconnect,
     changePassphrase: sync.changePassphrase,
+    setPassphrase: sync.setPassphrase,
     resetRemoteCopy: sync.resetRemoteCopy,
     syncNow: sync.syncNow,
     exportSnapshot,

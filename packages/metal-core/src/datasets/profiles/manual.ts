@@ -39,6 +39,25 @@ function wallIssue(message: string, messageKey: string, messageValues: Record<st
   };
 }
 
+/**
+ * EN 10219-2 (cold-formed hollow sections) corner radii by wall thickness:
+ * outer Ro and inner Ri. The sharp-corner box formula overstated the catalog
+ * mass by 4-6% on the common sizes (SHS 40×40×3: 3.49 vs 3.30 kg/m) while
+ * citing EN 10219 as its reference. Hot-finished EN 10210 uses Ro = 1.5t,
+ * Ri = 1.0t and lands ~2% heavier than these figures.
+ */
+export function hollowCornerRadiiMm(t: number): { outer: number; inner: number } {
+  if (t <= 6) return { outer: 2 * t, inner: t };
+  if (t <= 10) return { outer: 2.5 * t, inner: 1.5 * t };
+  return { outer: 3 * t, inner: 2 * t };
+}
+
+/** Metal lost to the four rounded corners: (4 − π)(Ro² − Ri²). */
+function hollowCornerAllowanceMm2(t: number): number {
+  const { outer, inner } = hollowCornerRadiiMm(t);
+  return (4 - Math.PI) * (outer * outer - inner * inner);
+}
+
 export const MANUAL_PROFILES: ManualProfileDefinition[] = [
   /* ---- Bars ---- */
   {
@@ -204,8 +223,8 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     label: "Rectangular Tube",
     category: "tubes",
     mode: "manual",
-    formulaLabel: "A = B×H − (B−2t)×(H−2t)",
-    referenceLabel: "EN 10219 / EN 10210",
+    formulaLabel: "A = 2t(B+H) − 4t² − (4−π)(Ro²−Ri²)",
+    referenceLabel: "EN 10219-2 (cold-formed, Ro = 2t / Ri = t for t ≤ 6)",
     dimensions: [
       { key: "width", label: "Width (B)", minMm: 20, maxMm: 500, defaultMm: 120 },
       { key: "height", label: "Height (H)", minMm: 20, maxMm: 500, defaultMm: 80 },
@@ -215,9 +234,12 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
       const width = dim(dims, "width");
       const height = dim(dims, "height");
       const wallThickness = dim(dims, "wallThickness");
+      const box = width * height - (width - wallThickness * 2) * (height - wallThickness * 2);
+      const corners = hollowCornerAllowanceMm2(wallThickness);
+      const { outer, inner } = hollowCornerRadiiMm(wallThickness);
       return {
-        areaMm2: width * height - (width - wallThickness * 2) * (height - wallThickness * 2),
-        expression: `A = ${f(width)}×${f(height)} − (${f(width)}−2×${f(wallThickness)})×(${f(height)}−2×${f(wallThickness)})`,
+        areaMm2: box - corners,
+        expression: `A = ${f(width)}×${f(height)} − (${f(width)}−2×${f(wallThickness)})×(${f(height)}−2×${f(wallThickness)}) − (4−π)×(${f(outer)}² − ${f(inner)}²)`,
       };
     },
     perimeter(dims) {
@@ -246,8 +268,8 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     label: "Square Hollow Section",
     category: "tubes",
     mode: "manual",
-    formulaLabel: "A = a² − (a−2t)²",
-    referenceLabel: "EN 10219 / EN 10210",
+    formulaLabel: "A = a² − (a−2t)² − (4−π)(Ro²−Ri²)",
+    referenceLabel: "EN 10219-2 (cold-formed, Ro = 2t / Ri = t for t ≤ 6)",
     dimensions: [
       { key: "side", label: "Side (a)", minMm: 20, maxMm: 500, defaultMm: 80 },
       { key: "wallThickness", label: "Wall Thickness", minMm: 1.5, maxMm: 40, defaultMm: 4 },
@@ -255,9 +277,11 @@ export const MANUAL_PROFILES: ManualProfileDefinition[] = [
     area(dims) {
       const side = dim(dims, "side");
       const wallThickness = dim(dims, "wallThickness");
+      const box = side * side - (side - wallThickness * 2) * (side - wallThickness * 2);
+      const { outer, inner } = hollowCornerRadiiMm(wallThickness);
       return {
-        areaMm2: side * side - (side - wallThickness * 2) * (side - wallThickness * 2),
-        expression: `A = ${f(side)}² − (${f(side)}−2×${f(wallThickness)})²`,
+        areaMm2: box - hollowCornerAllowanceMm2(wallThickness),
+        expression: `A = ${f(side)}² − (${f(side)}−2×${f(wallThickness)})² − (4−π)×(${f(outer)}² − ${f(inner)}²)`,
       };
     },
     perimeter(dims) {

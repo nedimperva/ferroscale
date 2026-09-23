@@ -601,22 +601,29 @@ function renderDims(sec: Section, f: FittedBox): React.ReactNode {
         <>
           <DimTop x1={f.x0} x2={f.x1} shapeY={f.y0} value={fmt(sec.b)} />
           <DimLeft y1={f.y0} y2={f.y1} shapeX={f.x0} value={fmt(sec.h)} />
-          <DimV
-            x={f.x0 + Math.min(14, f.w * 0.12)}
-            y1={f.y0}
-            y2={f.y0 + tfPx}
-            value={`tf ${fmt(sec.tf)}`}
-            side="right"
-          />
-          <DimH
-            y={Y(sec.h * 0.48)}
-            x1={X(webLeft)}
-            x2={X(webRight)}
-            value={`tw ${fmt(sec.tw)}`}
-          />
-          {sec.r > 0 ? (
-            <Tick x={filletX + 2} y={Y(sec.tf) + 7} value={`R${fmt(sec.r)}`} dx={9} dy={11} />
-          ) : null}
+          {/* Web, flange and fillet are only dimensioned when they come from
+              the table. Solved proportions still shape the sketch, but a
+              number next to a fillet reads as a catalog figure. */}
+          {!sec.estimated && (
+            <>
+              <DimV
+                x={f.x0 + Math.min(14, f.w * 0.12)}
+                y1={f.y0}
+                y2={f.y0 + tfPx}
+                value={`tf ${fmt(sec.tf)}`}
+                side="right"
+              />
+              <DimH
+                y={Y(sec.h * 0.48)}
+                x1={X(webLeft)}
+                x2={X(webRight)}
+                value={`tw ${fmt(sec.tw)}`}
+              />
+              {sec.r > 0 ? (
+                <Tick x={filletX + 2} y={Y(sec.tf) + 7} value={`R${fmt(sec.r)}`} dx={9} dy={11} />
+              ) : null}
+            </>
+          )}
         </>
       );
     }
