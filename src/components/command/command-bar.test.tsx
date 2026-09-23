@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { cleanup, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { currentQuery, renderCommandShell } from "@/test/render-command";
 
 /**
@@ -248,17 +248,50 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
     await waitFor(() => {
       expect(h.getAllByRole("listitem").length).toBeGreaterThanOrEqual(2);
     });
-    // Finished items collapse to one chip; the item being typed stays open.
-    expect(h.getByRole("button", { name: /Item 1, HEA 120/ })).toBeDefined();
+    // Only the item being typed is spelled out; every item has a segment.
+    expect(h.getByRole("button", { name: /^Item 1, HEA 120/ })).toBeDefined();
     expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
     expect(h.getByRole("button", { name: "Edit 4m" })).toBeDefined();
     // Opening the first item shows its own tokens — it didn't swallow the second.
-    await h.user.click(h.getByRole("button", { name: /Item 1, HEA 120/ }));
+    await h.user.click(h.getByRole("button", { name: /^Item 1, HEA 120/ }));
     await waitFor(() => {
       expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
     });
     expect(h.getByRole("button", { name: "Edit 6m" })).toBeDefined();
-    expect(h.getByRole("button", { name: /Item 2, IPE 200/ })).toBeDefined();
+    expect(h.getByRole("button", { name: /^Item 2, IPE 200/ })).toBeDefined();
+  });
+
+  it("switches tabs with Alt+[ and Alt+], while Alt+N picks suggestions", async () => {
+    const h = await renderCommandShell({ query: "hea120 6m + ipe200 4m " });
+    await h.user.click(h.input());
+
+    // Initially on item 1 (IPE 200)
+    expect(h.getByRole("button", { name: /^Item 1, HEA 120/ })).toBeDefined();
+    expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
+
+    // Alt + [ switches to previous tab (Item 0, HEA 120)
+    fireEvent.keyDown(h.input(), { key: "[", code: "BracketLeft", altKey: true });
+    await waitFor(() => {
+      expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
+    });
+
+    // Alt + ] switches to next tab (Item 1, IPE 200)
+    fireEvent.keyDown(h.input(), { key: "]", code: "BracketRight", altKey: true });
+    await waitFor(() => {
+      expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
+    });
+
+    // Alt + ArrowLeft also switches to previous tab
+    fireEvent.keyDown(h.input(), { key: "ArrowLeft", code: "ArrowLeft", altKey: true });
+    await waitFor(() => {
+      expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
+    });
+
+    // Alt + Shift + 2 switches to tab 2 directly
+    fireEvent.keyDown(h.input(), { key: "2", code: "Digit2", altKey: true, shiftKey: true });
+    await waitFor(() => {
+      expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
+    });
   });
 
   it("saves a multi-item line as one assembly, not two entries", async () => {

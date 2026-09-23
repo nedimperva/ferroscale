@@ -2,13 +2,17 @@ import { describe, it, expect } from "vitest";
 import {
   activeItemText,
   applyToActiveItem,
+  duplicateLineItem,
   editLineToken,
   lineChipPrefix,
   lineChips,
   lineExpandedIndex,
+  moveLineItem,
   pullLastChip,
+  removeLineItem,
   removeLineToken,
   replaceItemTokenKind,
+  replaceLinePartial,
   replaceLineToken,
   tweakActiveItem,
 } from "./line-edit";
@@ -51,9 +55,9 @@ describe("lineExpandedIndex", () => {
     expect(lineExpandedIndex(groups, 0)).toBe(0);
   });
 
-  it("falls back to the last item that still has chips", () => {
+  it("defaults to the active item at the caret", () => {
     const { groups } = lineChips("hea120 6m + ipe200 4m + ");
-    expect(lineExpandedIndex(groups, null)).toBe(1);
+    expect(lineExpandedIndex(groups, null)).toBe(2);
   });
 });
 
@@ -171,3 +175,77 @@ describe("tweakActiveItem", () => {
   });
 });
 
+describe("removeLineItem", () => {
+  it("removes a middle item from a 3-item query", () => {
+    const q = "hea120 6m x2 + upn140 4m x4 + plt1000x2000x5";
+    expect(removeLineItem(q, 1)).toBe("hea120 6m x2 + plt1000x2000x5");
+  });
+
+  it("removes the first item from a multi-item query", () => {
+    const q = "hea120 6m x2 + upn140 4m x4 + plt1000x2000x5";
+    expect(removeLineItem(q, 0)).toBe("upn140 4m x4 + plt1000x2000x5");
+  });
+
+  it("removes the last item from a multi-item query", () => {
+    const q = "hea120 6m x2 + upn140 4m x4 + plt1000x2000x5";
+    expect(removeLineItem(q, 2)).toBe("hea120 6m x2 + upn140 4m x4");
+  });
+
+  it("clears the query when removing the only item", () => {
+    expect(removeLineItem("hea120 6m", 0)).toBe("");
+  });
+
+  it("returns original query if index is out of bounds", () => {
+    expect(removeLineItem("hea120 6m + upn140 4m", 5)).toBe("hea120 6m + upn140 4m");
+    expect(removeLineItem("hea120 6m + upn140 4m", -1)).toBe("hea120 6m + upn140 4m");
+  });
+});
+
+describe("scoped line editing across tabs", () => {
+  it("lineChips extracts partial from active item 0 while item 1 is committed", () => {
+    const { groups, partial } = lineChips("hea120 6m+ upn140 4m", 0);
+    expect(groups[0].tokens).toEqual(["hea120"]);
+    expect(partial).toBe("6m");
+    expect(groups[1].tokens).toEqual(["upn140", "4m"]);
+  });
+
+  it("replaceLinePartial updates the active item 0 partial while preserving item 1", () => {
+    const next = replaceLinePartial("hea120 6m+ upn140 4m", 0, "8m");
+    expect(next).toBe("hea120 8m + upn140 4m");
+  });
+
+  it("applyToActiveItem targets item 0 cleanly", () => {
+    const next = applyToActiveItem(
+      "hea120 6m + upn140 4m",
+      (text) => `${text.trim()} x2`,
+      0,
+    );
+    expect(next).toBe("hea120 6m x2 + upn140 4m");
+  });
+
+  it("activeItemText returns text for the specified tab", () => {
+    expect(activeItemText("hea120 6m + upn140 4m", 0)).toBe("hea120 6m");
+    expect(activeItemText("hea120 6m + upn140 4m", 1)).toBe("upn140 4m");
+  });
+
+  it("duplicateLineItem clones the selected item to the end of the query", () => {
+    expect(duplicateLineItem("hea120 6m x2 + upn140 4m", 0)).toBe(
+      "hea120 6m x2 + upn140 4m + hea120 6m x2",
+    );
+  });
+});
+
+describe("moveLineItem", () => {
+  it("moves an item earlier and later, keeping every item intact", () => {
+    const q = "hea120 6m x2 + ipe200 4m + shs80x4 3m";
+    expect(moveLineItem(q, 1, 0)).toBe("ipe200 4m + hea120 6m x2 + shs80x4 3m");
+    expect(moveLineItem(q, 0, 2)).toBe("ipe200 4m + shs80x4 3m + hea120 6m x2");
+  });
+
+  it("leaves the line alone for a no-op or out-of-range move", () => {
+    const q = "hea120 6m + ipe200 4m";
+    expect(moveLineItem(q, 1, 1)).toBe(q);
+    expect(moveLineItem(q, -1, 0)).toBe(q);
+    expect(moveLineItem(q, 0, 2)).toBe(q);
+  });
+});

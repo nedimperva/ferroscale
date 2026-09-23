@@ -17,6 +17,44 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.30.0",
+    date: "2026-09-23",
+    added: [
+      "A line with several items gets a way to move between them. On the phone it is a stepper above the command line: ‹ and › named for the item they go to, the item being edited with its weight, a dot per item — and tapping it lists every item, with Duplicate, Earlier, Later and Remove for the one you are on",
+      "On the desk the items are one strip above the command line, each segment as wide as its share of the weight, with Add, Duplicate and Remove for the selected item. Alt+[ and Alt+] step through the items, Alt+Shift+1–9 jumps to one, Alt++ adds one and Alt+W removes the selected one",
+      "The command reference has filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and a search across every shortcut, token and profile code",
+      "The keypad's actions mode has a + Item key",
+    ],
+    changed: [
+      "The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows",
+      "On a multi-item line the breakdown lists the parts: what each weighs or costs, its share of the weight, and a ruled total for the whole. A part opens into its own ledger; on the desk a Whole assembly / Part switch does the same",
+      "Where the numbers come from — section area, density, formula, the standard and dataset — is folded under \"How it's calculated\" instead of sitting among the results",
+      "The desk no longer repeats kg/m, per piece, total weight and total cost in a row under the headline. On a multi-item line that row described one part under a number that summed them all",
+      "The command line shows only the tokens of the item being edited, not every item's chips joined by + signs",
+    ],
+    fixed: [
+      "Editing, suggestion chips and typing on a multi-item line act on the selected item, not always on the last one",
+      "Removing an item is a deliberate step — the stepper's list on the phone, the Remove button beside the strip on the desk — where it used to be a 24px × on every item, next to a 20px duplicate",
+    ],
+    added_bs: [
+      "Linija s više stavki dobija način da se kreće između njih. Na telefonu je to korak iznad komandne linije: ‹ i › nazvani po stavci na koju vode, stavka koja se uređuje s njenom težinom, tačka po stavci — a dodir otvara listu svih stavki s Dupliciraj, Ranije, Kasnije i Ukloni za trenutnu",
+      "Na desktopu su stavke jedna traka iznad komandne linije, svaki dio širok koliko je njen udio u težini, s Dodaj, Dupliciraj i Ukloni za odabranu stavku. Alt+[ i Alt+] prolaze kroz stavke, Alt+Shift+1–9 skače na jednu, Alt++ dodaje, a Alt+W uklanja odabranu",
+      "Pregled komandi ima kartice za filtriranje (Kartice i stavke, Komandna linija, Radni prostor, Gramatika, Profili) i pretragu kroz sve prečice, tokene i kodove profila",
+      "Režim radnji na tastaturi ima tipku + Stavka",
+    ],
+    changed_bs: [
+      "Obračun su dvije knjige, Težina i Cijena, svaka završava podvučenim zbirom — isto na telefonu i u desnoj koloni na desktopu. Otvara se na vrijednosti koju pokazuje glavni broj",
+      "Na liniji s više stavki obračun navodi dijelove: koliko svaki teži ili košta, njegov udio u težini i podvučen zbir za cjelinu. Dio se otvara u vlastitu knjigu; na desktopu isto radi prekidač Cijeli sklop / Dio",
+      "Odakle brojevi dolaze — površina presjeka, gustoća, formula, standard i skup podataka — sklopljeno je pod \"Kako je izračunato\" umjesto da stoji među rezultatima",
+      "Desktop više ne ponavlja kg/m, po komadu, ukupnu težinu i ukupnu cijenu u redu ispod glavnog broja. Na liniji s više stavki taj red je opisivao jedan dio ispod broja koji ih sabira sve",
+      "Komandna linija prikazuje samo tokene stavke koja se uređuje, a ne čipove svih stavki spojene znakovima +",
+    ],
+    fixed_bs: [
+      "Uređivanje, čipovi prijedloga i kucanje na liniji s više stavki djeluju na odabranu stavku, a ne uvijek na posljednju",
+      "Uklanjanje stavke je namjeran korak — lista koraka na telefonu, dugme Ukloni pored trake na desktopu — gdje je ranije bio × od 24px na svakoj stavci, pored dupliranja od 20px",
+    ],
+  },
+  {
     version: "3.29.0",
     date: "2026-09-23",
     added: [

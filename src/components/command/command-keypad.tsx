@@ -19,6 +19,7 @@ interface CommandKeypadProps {
   onNew: () => void;
   onTweak: () => void;
   onShare: () => void;
+  onAddItem?: () => void;
   onLetters: () => void;
   onNumbers: () => void;
   onDone: () => void;
@@ -319,6 +320,7 @@ export function CommandKeypad({
   onNew,
   onTweak,
   onShare,
+  onAddItem,
   onLetters,
   onNumbers,
   onDone,
@@ -333,6 +335,9 @@ export function CommandKeypad({
     return (
       <KeypadChrome mode={mode}>
         <div className="flex gap-1.5">
+          {onAddItem && (
+            <Key tall label={t("keypad.addItem")} variant="dim" onPress={onAddItem} />
+          )}
           <Key tall label={t("common.new")} variant="dim" onPress={onNew} />
           <Key
             tall

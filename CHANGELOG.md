@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.30.0] - 2026-09-23
+
+One item at a time, and a breakdown you can read.
+
+### Added
+
+- A line with several items gets a way to move between them. On the phone it is a stepper above the command line: ‹ and › named for the item they go to, the item being edited with its weight, a dot per item — and tapping it lists every item, with Duplicate, Earlier, Later and Remove for the one you are on
+- On the desk the items are one strip above the command line, each segment as wide as its share of the weight, with Add, Duplicate and Remove for the selected item. Alt+[ and Alt+] step through the items, Alt+Shift+1–9 jumps to one, Alt++ adds one and Alt+W removes the selected one
+- The command reference has filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and a search across every shortcut, token and profile code
+- The keypad's actions mode has a + Item key
+
+### Changed
+
+- The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows
+- On a multi-item line the breakdown lists the parts: what each weighs or costs, its share of the weight, and a ruled total for the whole. A part opens into its own ledger; on the desk a Whole assembly / Part switch does the same
+- Where the numbers come from — section area, density, formula, the standard and dataset — is folded under "How it's calculated" instead of sitting among the results
+- The desk no longer repeats kg/m, per piece, total weight and total cost in a row under the headline. On a multi-item line that row described one part under a number that summed them all
+- The command line shows only the tokens of the item being edited, not every item's chips joined by + signs
+
+### Fixed
+
+- Editing, suggestion chips and typing on a multi-item line act on the selected item, not always on the last one
+- Removing an item is a deliberate step — the stepper's list on the phone, the Remove button beside the strip on the desk — where it used to be a 24px × on every item, next to a 20px duplicate
+
 ## [3.29.0] - 2026-09-23
 
 Sync you don't have to think about.
