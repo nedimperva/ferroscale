@@ -11,7 +11,7 @@ import type {
   SyncPulledRecord,
 } from "./sync-shared";
 import type { SyncSessionPayload } from "./types";
-import { sealSyncSession } from "./sync-session";
+import { sealSyncSession, unsealSyncSession } from "./sync-session";
 
 const DRIVE_SPACE_QUERY = "'appDataFolder' in parents and trashed=false";
 
@@ -27,6 +27,47 @@ type DriveFile = {
   name: string;
   modifiedTime?: string;
 };
+
+/**
+ * Google refused the stored refresh token (revoked, expired — Testing-mode
+ * OAuth apps expire them weekly — or the session no longer unseals). Only a
+ * fresh sign-in fixes it, so routes answer 401 with `code: "reauth"` and the
+ * client asks the user instead of retrying.
+ */
+export class SyncReauthRequiredError extends Error {
+  constructor(message = "Google Drive access expired. Reconnect to keep syncing.") {
+    super(message);
+    this.name = "SyncReauthRequiredError";
+  }
+}
+
+/** The saved Drive changes cursor is no longer valid; a full listing is needed. */
+export class SyncStaleChangeTokenError extends Error {
+  constructor() {
+    super("Drive change token expired");
+    this.name = "SyncStaleChangeTokenError";
+  }
+}
+
+/** A session sealed under a rotated secret cannot be opened — same fix as a revoked token. */
+export function openSyncSession(token: string): SyncSessionPayload {
+  try {
+    return unsealSyncSession(token);
+  } catch {
+    throw new SyncReauthRequiredError();
+  }
+}
+
+/** Shared error → response mapping for the sync routes. */
+export function syncErrorResponse(error: unknown, fallbackMessage: string) {
+  if (error instanceof SyncReauthRequiredError) {
+    return { status: 401, body: { message: error.message, code: "reauth" } };
+  }
+  return {
+    status: 500,
+    body: { message: error instanceof Error ? error.message : fallbackMessage },
+  };
+}
 
 function requireEnv(name: string, fallback?: string) {
   const value = process.env[name] ?? fallback;
@@ -100,7 +141,13 @@ async function tokenRequest(params: URLSearchParams) {
   });
 
   if (!response.ok) {
-    throw new Error(await response.text() || "Google token exchange failed");
+    const text = await response.text();
+    if (response.status === 400 || response.status === 401) {
+      if (/invalid_grant|unauthorized_client|invalid_client/i.test(text)) {
+        throw new SyncReauthRequiredError();
+      }
+    }
+    throw new Error(text || "Google token exchange failed");
   }
 
   return response.json() as Promise<GoogleTokenResponse>;
@@ -290,7 +337,15 @@ export async function pullChangedRecords(accessToken: string, pageToken: string)
     url.searchParams.set("includeRemoved", "true");
     url.searchParams.set("fields", "nextPageToken,newStartPageToken,changes(fileId,removed,file(id,name,modifiedTime,trashed))");
 
-    const response = await driveFetch(accessToken, url.toString());
+    let response: Response;
+    try {
+      response = await driveFetch(accessToken, url.toString());
+    } catch (error) {
+      // Drive answers an unknown or expired pageToken with 400/404.
+      const message = error instanceof Error ? error.message : "";
+      if (/pageToken|Invalid Value|notFound|404/i.test(message)) throw new SyncStaleChangeTokenError();
+      throw error;
+    }
     const payload = await response.json() as {
       nextPageToken?: string;
       newStartPageToken?: string;

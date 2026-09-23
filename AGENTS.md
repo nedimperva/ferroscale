@@ -108,6 +108,12 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   every load, so it will appear to work until the page reloads.
 - Sync layer: `src/lib/sync/` — schema-versioned snapshots
   (`SYNC_SCHEMA_VERSION`), AES-GCM encryption, dirty-tracking registry.
+  The engine is `useSyncEngine()` in `google-client.ts`, mounted once for
+  the whole app by `<SyncEngine/>` in `RouteAwareAppShell`; every other
+  caller uses `useGoogleDriveSync()`, which is only status + actions. Shop
+  defaults sync as one `settings:root` record (`settings-sync.ts`): a store
+  in `settings-stores.ts` joins it by passing `synced` and adding its field
+  to `SyncedSettings`.
   Adding a synced collection touches `keys.ts`, `collections.ts`,
   `records.ts`, and the snapshot types.
 

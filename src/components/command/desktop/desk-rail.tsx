@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useSyncAttention } from "@/hooks/useSyncAttention";
 import { DeskIcon } from "./desk-atoms";
 import type { DeskView } from "./desktop-props";
 
@@ -21,6 +22,7 @@ function RailButton({
   label,
   icon,
   count,
+  alert,
 }: {
   active: boolean;
   onClick: () => void;
@@ -28,18 +30,22 @@ function RailButton({
   icon: React.ReactNode;
   /** Badge for how many rows the view holds. Hidden at zero. */
   count?: number;
+  /** Something behind this button needs the user — read aloud and dotted. */
+  alert?: string | null;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      title={label}
+      title={alert ? `${label} — ${alert}` : label}
       // The count travels in the accessible name, not just the badge: the
       // badge is aria-hidden (it is a bare numeral, meaningless read aloud
       // beside the label), so without this a screen reader would lose a
       // number sighted users can see. The labelled tabs this rail replaced
       // read out the same way.
-      aria-label={count != null && count > 0 ? `${label} ${count}` : label}
+      aria-label={
+        alert ? `${label}, ${alert}` : count != null && count > 0 ? `${label} ${count}` : label
+      }
       aria-current={active ? "page" : undefined}
       className="relative flex items-center justify-center cursor-pointer"
       style={{
@@ -62,7 +68,19 @@ function RailButton({
           {count > 99 ? "99+" : count}
         </span>
       )}
+      {alert && <AlertDot />}
     </button>
+  );
+}
+
+/** The one mark sync makes outside Settings: it needs the user. */
+export function AlertDot() {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute"
+      style={{ top: 6, right: 6, width: 6, height: 6, background: "var(--red-interactive)" }}
+    />
   );
 }
 
@@ -80,6 +98,7 @@ export function DeskRail({
   onToggleTheme: () => void;
 }) {
   const t = useTranslations("command");
+  const syncAttention = useSyncAttention();
   return (
     <nav
       aria-label={t("nav.workspace")}
@@ -162,6 +181,13 @@ export function DeskRail({
           onClick={() => setView("settings")}
           label={t("nav.settings")}
           icon={<DeskIcon name="settings" size={17} />}
+          alert={
+            syncAttention === "reconnect"
+              ? t("sync.attentionReconnect")
+              : syncAttention === "passphrase"
+                ? t("sync.attentionPassphrase")
+                : null
+          }
         />
       </div>
     </nav>

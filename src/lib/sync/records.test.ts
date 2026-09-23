@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPendingSyncRecords, applyRemoteSyncRecords } from "./records";
 import { clearAllIndexedRecords } from "./records";
-import { persistSavedEntries, persistCompareItems } from "./collections";
+import { loadPriceBook, persistCompareItems, persistPriceBook, persistSavedEntries } from "./collections";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import { saveSyncRecordIndex } from "./metadata";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS } from "./keys";
 import { buildUsageSource, USAGE_STORAGE_KEY } from "@/lib/usage-stats";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 function createSavedEntry(overrides?: Partial<SavedEntry>): SavedEntry {
   return {
@@ -239,5 +240,69 @@ describe("usage records", () => {
     // Merging our own echo would count the same use twice.
     expect(buildUsageSource().topSizes("shs")).toEqual(["40x40x3"]);
     expect(localStorage.getItem("ferroscale-usage-peers-v1")).toBeNull();
+  });
+
+  it("carries the shop defaults as one settings record, both ways", async () => {
+    marginPercentStore.set(18);
+    const pending = await getPendingSyncRecords("device-a");
+    const settings = pending.find((record) => record.recordKey === "settings:root");
+    expect(settings?.kind).toBe("settings");
+    expect(JSON.parse(settings!.payload).values.marginPercent).toBe(18);
+
+    applyRemoteSyncRecords(
+      [
+        {
+          recordKey: "settings:root",
+          kind: "settings",
+          driveFileId: "drive-settings",
+          removed: false,
+          payload: JSON.stringify({
+            updatedAt: "2999-01-01T00:00:00.000Z",
+            values: { marginPercent: 25 },
+          }),
+          contentHash: "hash-settings",
+          modifiedTime: "2999-01-01T00:00:00.000Z",
+        },
+      ],
+      "device-a",
+    );
+    expect(marginPercentStore.getSnapshot()).toBe(25);
+  });
+
+  it("merges a pulled price book grade by grade and syncs removals", async () => {
+    persistPriceBook([{ gradeId: "s235", unitPrice: 1.3 }, { gradeId: "s355", unitPrice: 1.5 }]);
+    persistPriceBook([{ gradeId: "s235", unitPrice: 1.3 }]); // s355 removed here
+
+    applyRemoteSyncRecords(
+      [
+        {
+          recordKey: "priceBook:root",
+          kind: "priceBook",
+          driveFileId: "drive-price-book",
+          removed: false,
+          payload: JSON.stringify({
+            updatedAt: "2000-01-01T00:00:00.000Z",
+            items: [
+              { gradeId: "s235", unitPrice: 1.1, updatedAt: "2000-01-01T00:00:00.000Z" },
+              { gradeId: "s355", unitPrice: 1.5, updatedAt: "2000-01-01T00:00:00.000Z" },
+              { gradeId: "1.4301", unitPrice: 4.9, updatedAt: "2000-01-01T00:00:00.000Z" },
+            ],
+          }),
+          contentHash: "hash-price-book",
+          modifiedTime: "2000-01-01T00:00:00.000Z",
+        },
+      ],
+      "device-a",
+    );
+
+    // Our newer s235 stays, our removal of s355 holds, their stainless arrives.
+    expect(loadPriceBook().map(({ gradeId, unitPrice }) => [gradeId, unitPrice])).toEqual([
+      ["s235", 1.3],
+      ["1.4301", 4.9],
+    ]);
+
+    const pending = await getPendingSyncRecords("device-a");
+    const book = JSON.parse(pending.find((record) => record.recordKey === "priceBook:root")!.payload);
+    expect(Object.keys(book.removed)).toEqual(["s355"]);
   });
 });

@@ -466,14 +466,13 @@
           "body": "FerroScale works offline after install and can sync saved data through Google Drive.",
           "tips": {
             "passphrase": "Use the same sync passphrase on each device; it encrypts data before upload.",
-            "included": "Saved entries, compare items, projects, and presets are included in sync.",
+            "included": "Parts, projects, compare, price book, shop defaults (rate, grade, VAT, units, margin) and typing habits are included in sync. Theme and haptics stay per device.",
             "offline": "The app keeps cached calculator data available when the network drops."
           }
         }
       }
     },
     "sync": {
-      "passphrasePrompt": "Enter a sync passphrase. Use the same passphrase on every device — it is used to end-to-end encrypt your data before it is stored on Google Drive.",
       "couldNotConnect": "Could not connect.",
       "syncFailed": "Sync failed.",
       "disconnectConfirm": "Disconnect Google Drive sync on this device?",
@@ -484,9 +483,31 @@
       "syncing": "Syncing...",
       "syncNow": "Sync now",
       "disconnect": "Disconnect",
-      "description": "Sync your parts, projects, compare, price book and typing habits to Google Drive — end-to-end encrypted with your own passphrase.",
+      "description": "Keep your parts, projects, price book and shop defaults the same on every device. Stored in your own Google Drive, end-to-end encrypted with a passphrase only you know.",
       "connecting": "Connecting...",
-      "connectGoogleDrive": "Connect Google Drive"
+      "connectGoogleDrive": "Connect Google Drive",
+      "passphraseLabel": "Sync passphrase",
+      "passphraseConfirmLabel": "Repeat passphrase",
+      "passphraseHint": "Use the same passphrase on every device. It never leaves this device — if you lose it, Drive data can't be read.",
+      "passphraseMismatch": "The two passphrases don't match.",
+      "showPassphrase": "Show",
+      "hidePassphrase": "Hide",
+      "statusSynced": "Synced {when}",
+      "statusSyncing": "Syncing…",
+      "statusOffline": "Offline — changes will sync when you're back online",
+      "statusRetrying": "Couldn't reach Drive — trying again shortly",
+      "statusWaiting": "Waiting to sync",
+      "autoNote": "Changes sync on their own, and other devices' work shows up when you open the app.",
+      "reconnectTitle": "Google Drive needs you to sign in again",
+      "reconnectBody": "Your data is safe on this device. Sign in again and syncing picks up where it left off.",
+      "reconnect": "Sign in again",
+      "passphraseTitle": "Enter your sync passphrase",
+      "passphraseWrongBody": "This passphrase doesn't open the data on Drive. Enter the one you used on your other devices.",
+      "passphraseMissingBody": "This device doesn't have the passphrase yet. Enter the one you used on your other devices.",
+      "savePassphrase": "Unlock",
+      "attentionReconnect": "Sync needs you to sign in again",
+      "attentionPassphrase": "Sync needs your passphrase",
+      "justNow": "just now"
     },
     "library": {
       "emptySaved": "Saved calculations show here. Tap Save on a result.",

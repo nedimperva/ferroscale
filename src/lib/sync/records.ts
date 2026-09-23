@@ -10,11 +10,13 @@ import {
   getQuickHistoryUpdatedAt,
   loadCompareItems,
   loadPriceBook,
+  loadPriceBookRemovals,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
   normalizeCompareItems,
   normalizePriceBook,
+  normalizePriceBookRemovals,
   normalizeProjects,
   normalizeSavedEntries,
   persistCompareItems,
@@ -29,6 +31,8 @@ import {
   mergeRemoteUsageStats,
 } from "@/lib/usage-stats";
 import { BOOTSTRAP_RECORD_KEY, SYNC_SCHEMA_VERSION } from "./keys";
+import { applySyncedSettings, buildSettingsPayload } from "./settings-sync";
+import { canonicalPriceBook, mergePriceBooks, samePriceBook } from "./price-book-merge";
 import { loadSyncRecordIndex, saveSyncRecordIndex } from "./metadata";
 import type {
   AppliedSyncRecord,
@@ -37,8 +41,10 @@ import type {
   SyncListPayload,
   SyncLocalRecord,
   SyncListCollectionKey,
+  SyncPriceBookPayload,
   SyncRecordIndex,
   SyncRecordKind,
+  SyncSettingsPayload,
   SyncUsagePayload,
 } from "./types";
 
@@ -118,6 +124,39 @@ function buildUsageRecord(deviceId: string): Omit<SyncLocalRecord, "contentHash"
   };
 }
 
+/**
+ * The price book with per-grade stamps and tombstones. `items` keeps the old
+ * list shape so a device still on the whole-list release can read it; the
+ * canonical order keeps the hash stable across devices that merged the same
+ * book in a different order.
+ */
+function buildPriceBookRecord(): Omit<SyncLocalRecord, "contentHash"> {
+  const book = canonicalPriceBook({ items: loadPriceBook(), removed: loadPriceBookRemovals() });
+  const payload: SyncPriceBookPayload = {
+    updatedAt: singletonUpdatedAt("priceBook"),
+    items: book.items,
+    removed: book.removed,
+  };
+  return {
+    recordKey: "priceBook:root",
+    kind: "priceBook",
+    entityId: "root",
+    updatedAt: payload.updatedAt,
+    payload: JSON.stringify(payload),
+  };
+}
+
+function buildSettingsRecord(): Omit<SyncLocalRecord, "contentHash"> {
+  const payload = buildSettingsPayload();
+  return {
+    recordKey: "settings:root",
+    kind: "settings",
+    entityId: "root",
+    updatedAt: payload.updatedAt,
+    payload: JSON.stringify(payload),
+  };
+}
+
 async function finalizeRecords(
   drafts: Array<Omit<SyncLocalRecord, "contentHash">>,
   index: SyncRecordIndex,
@@ -147,9 +186,10 @@ export async function buildLocalSyncRecords(deviceId: string) {
     ...loadSavedEntries().map((item) => buildEntityRecord("saved", item.id, item)),
     ...loadProjects().map((item) => buildEntityRecord("project", item.id, item)),
     buildListRecord("compare", loadCompareItems()),
-    buildListRecord("priceBook", loadPriceBook()),
+    buildPriceBookRecord(),
     buildListRecord("quickHistory", loadQuickHistory()),
     buildUsageRecord(deviceId),
+    buildSettingsRecord(),
   ];
 
   return finalizeRecords(drafts, index);
@@ -227,6 +267,9 @@ function resolveRecordUpdatedAt(kind: SyncRecordKind, payload: string) {
   if (kind === "usage") {
     return (JSON.parse(payload) as SyncUsagePayload).updatedAt;
   }
+  if (kind === "settings") {
+    return (JSON.parse(payload) as SyncSettingsPayload).updatedAt;
+  }
   return (JSON.parse(payload) as SyncEntityRecord).updatedAt;
 }
 
@@ -235,7 +278,7 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
   let projects = loadProjects();
   let compare = loadCompareItems();
   let quickHistory = loadQuickHistory();
-  let priceBook = loadPriceBook();
+  let priceBook = { items: loadPriceBook(), removed: loadPriceBookRemovals() };
   let compareUpdatedAt = getCompareUpdatedAt();
   let quickHistoryUpdatedAt = getQuickHistoryUpdatedAt();
   let priceBookUpdatedAt = getPriceBookUpdatedAt();
@@ -287,9 +330,22 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
         break;
       }
       case "priceBook": {
-        const payload = JSON.parse(record.payload) as SyncListPayload<unknown>;
+        // Grade by grade, not whole-book: two devices editing different
+        // rates both keep their edit.
+        const payload = JSON.parse(record.payload) as SyncPriceBookPayload;
+        const remote = {
+          items: normalizePriceBook(Array.isArray(payload.items) ? payload.items : []),
+          removed: normalizePriceBookRemovals(payload.removed),
+        };
+        const merged = mergePriceBooks(priceBook, remote);
+        if (!samePriceBook(merged, priceBook)) {
+          priceBook = merged;
+          priceBookChanged = true;
+        }
+        // The stamp is part of the hashed payload: adopt a newer one even when
+        // the rates already match, or two devices would each see the other's
+        // copy as different and re-push it on every sync.
         if (payload.updatedAt > priceBookUpdatedAt) {
-          priceBook = normalizePriceBook(payload.items);
           priceBookUpdatedAt = payload.updatedAt;
           priceBookChanged = true;
         }
@@ -304,6 +360,9 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
         }
         break;
       }
+      case "settings":
+        applySyncedSettings(JSON.parse(record.payload) as SyncSettingsPayload);
+        break;
     }
   }
 
@@ -311,5 +370,11 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
   if (projectsChanged) persistProjects(projects, { markDirty: false });
   if (compareChanged) persistCompareItems(compare, { markDirty: false, updatedAt: compareUpdatedAt });
   if (quickHistoryChanged) persistQuickHistory(quickHistory, { markDirty: false, updatedAt: quickHistoryUpdatedAt });
-  if (priceBookChanged) persistPriceBook(priceBook, { markDirty: false, updatedAt: priceBookUpdatedAt });
+  if (priceBookChanged) {
+    persistPriceBook(priceBook.items, {
+      markDirty: false,
+      updatedAt: priceBookUpdatedAt,
+      removed: priceBook.removed,
+    });
+  }
 }

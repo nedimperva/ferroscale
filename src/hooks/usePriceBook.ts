@@ -23,6 +23,8 @@ import { loadPriceBook, persistPriceBook } from "@/lib/sync/collections";
 export interface PriceBookEntry {
   gradeId: string;
   unitPrice: number;
+  /** When this rate last changed — sync merges the book grade by grade on it. */
+  updatedAt?: string;
 }
 
 const EMPTY: PriceBookEntry[] = [];
@@ -47,8 +49,9 @@ function subscribe(onChange: () => void): () => void {
 }
 
 function write(next: PriceBookEntry[]): void {
-  cache = next;
   persistPriceBook(next);
+  // Re-read so the cache carries the per-grade stamps persist just added.
+  cache = loadPriceBook();
   for (const listener of listeners) listener();
 }
 
@@ -79,7 +82,7 @@ export function usePriceBook(): UsePriceBookReturn {
       return;
     }
     const next = [...current];
-    next[index] = { gradeId, unitPrice };
+    next[index] = { ...current[index], unitPrice };
     write(next);
   }, []);
 

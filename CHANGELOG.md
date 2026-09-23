@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.29.0] - 2026-09-23
+
+Sync you don't have to think about.
+
+### Added
+
+- Sync runs by itself. It used to run only while Settings was open, so a part saved and closed stayed on that device until Settings was opened again; the engine now lives for the whole app — it syncs about a second after each change, when the app opens, when the tab comes back, when the network returns, and every three minutes while the tab is visible
+- Shop defaults sync across devices: default rate and unit, currency, waste, VAT, default grade, margin, mass tolerance, length-unit fallback, headline number and paint defaults. Newer wins. A fresh device adopts what Drive holds; one you had already tuned keeps its own. Theme and haptics stay per device
+- A small red mark on the Settings button when sync needs you — to sign in to Google again, or to enter the passphrase on this device. Settings then opens on the sync card. Syncing, offline and retrying stay silent
+
+### Changed
+
+- The price book merges grade by grade across devices instead of the newer book replacing the other whole: change steel on the phone and stainless on the laptop and both rates survive. A rate you remove stays removed rather than coming back from a device that still had it
+- The passphrase is typed into the sync card, twice on first connect, with a show toggle — not into a browser prompt. On a second device a wrong passphrase is caught before anything is merged, with a field to enter the right one; Drive is never overwritten from that screen
+- The sync card says where things stand in words — "Synced 4 minutes ago", "Offline — changes will sync when you're back online" — instead of the last pull's timestamp
+
+### Fixed
+
+- The sync passphrase is no longer stored in plain text. It used to sit in localStorage, readable by any script on the page and by anyone with the browser profile; it is now kept only as a non-extractable key in IndexedDB that the browser can use but never reveal. Existing devices convert on their next sync, with nothing to re-enter, and disconnecting forgets the key
+- An expired or revoked Google sign-in asks you to sign in again instead of showing a raw token error on every attempt. Google's `invalid_grant` did not match the old check, so the app stayed "connected" and failed forever
+- Network blips and Google outages retry on their own with backoff (30 s up to 15 min) instead of parking sync in an error state
+- A Drive change cursor that expired no longer breaks every pull; the server lists the folder again and carries on
+- Two open tabs no longer sync at the same moment and create duplicate Drive files for a new part, and an edit made while a sync was in flight is no longer left for the next one
+
 ## [3.28.0] - 2026-09-22
 
 An audit release. The engine was right where it had a table to read from and

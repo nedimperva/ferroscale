@@ -466,14 +466,13 @@
           "body": "FerroScale radi offline nakon instalacije i može sinhronizovati sačuvane podatke preko Google Drive-a.",
           "tips": {
             "passphrase": "Koristite istu lozinku za sinhronizaciju na svakom uređaju; ona šifruje podatke prije slanja.",
-            "included": "Sačuvane stavke, poređenja, projekti i preseti ulaze u sinhronizaciju.",
+            "included": "Dijelovi, projekti, poređenje, cjenovnik, postavke radionice (cijena, kvalitet, PDV, jedinice, marža) i navike kucanja ulaze u sinhronizaciju. Tema i vibracija ostaju po uređaju.",
             "offline": "Aplikacija zadržava keširane podatke kalkulatora kada veza nestane."
           }
         }
       }
     },
     "sync": {
-      "passphrasePrompt": "Unesite lozinku za sinhronizaciju. Koristite istu lozinku na svakom uređaju — njom se podaci šifruju prije spremanja na Google Drive.",
       "couldNotConnect": "Povezivanje nije uspjelo.",
       "syncFailed": "Sinhronizacija nije uspjela.",
       "disconnectConfirm": "Prekinuti Google Drive sinhronizaciju na ovom uređaju?",
@@ -484,9 +483,31 @@
       "syncing": "Sinhronizujem...",
       "syncNow": "Sinhronizuj sada",
       "disconnect": "Prekini vezu",
-      "description": "Sinhronizujte dijelove, projekte, poređenje, cjenovnik i navike kucanja na Google Drive — end-to-end šifrovano vašom lozinkom.",
+      "description": "Neka vaši dijelovi, projekti, cjenovnik i postavke radionice budu isti na svakom uređaju. Čuva se na vašem Google Driveu, end-to-end šifrovano lozinkom koju znate samo vi.",
       "connecting": "Povezujem...",
-      "connectGoogleDrive": "Poveži Google Drive"
+      "connectGoogleDrive": "Poveži Google Drive",
+      "passphraseLabel": "Lozinka za sinhronizaciju",
+      "passphraseConfirmLabel": "Ponovite lozinku",
+      "passphraseHint": "Koristite istu lozinku na svakom uređaju. Ona nikad ne napušta ovaj uređaj — ako je izgubite, podaci na Driveu se ne mogu pročitati.",
+      "passphraseMismatch": "Lozinke se ne podudaraju.",
+      "showPassphrase": "Prikaži",
+      "hidePassphrase": "Sakrij",
+      "statusSynced": "Sinhronizovano {when}",
+      "statusSyncing": "Sinhronizujem…",
+      "statusOffline": "Van mreže — promjene će se sinhronizovati kad se vratite na mrežu",
+      "statusRetrying": "Drive nije dostupan — uskoro pokušavam ponovo",
+      "statusWaiting": "Čeka na sinhronizaciju",
+      "autoNote": "Promjene se sinhronizuju same, a rad s drugih uređaja se pojavi kad otvorite aplikaciju.",
+      "reconnectTitle": "Google Drive traži da se ponovo prijavite",
+      "reconnectBody": "Vaši podaci su sigurni na ovom uređaju. Prijavite se ponovo i sinhronizacija nastavlja gdje je stala.",
+      "reconnect": "Prijavi se ponovo",
+      "passphraseTitle": "Unesite lozinku za sinhronizaciju",
+      "passphraseWrongBody": "Ova lozinka ne otvara podatke na Driveu. Unesite onu koju ste koristili na drugim uređajima.",
+      "passphraseMissingBody": "Ovaj uređaj još nema lozinku. Unesite onu koju ste koristili na drugim uređajima.",
+      "savePassphrase": "Otključaj",
+      "attentionReconnect": "Sinhronizacija traži ponovnu prijavu",
+      "attentionPassphrase": "Sinhronizacija traži lozinku",
+      "justNow": "upravo"
     },
     "library": {
       "emptySaved": "Sačuvani izračuni će se prikazati ovdje. Dodirnite Sačuvaj na rezultatu.",
