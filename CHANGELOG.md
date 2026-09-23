@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.30.0] - 2026-09-23
+
+One item at a time, and a breakdown you can read.
+
+### Added
+
+- A line with several items gets a way to move between them. On the phone it is a stepper above the command line: ‹ and › named for the item they go to, the item being edited with its weight, a dot per item — and tapping it lists every item, with Duplicate, Earlier, Later and Remove for the one you are on
+- On the desk the items are one strip above the command line, each segment as wide as its share of the weight, with Add, Duplicate and Remove for the selected item. Alt+[ and Alt+] step through the items, Alt+Shift+1–9 jumps to one, Alt++ adds one and Alt+W removes the selected one
+- The command reference has filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and a search across every shortcut, token and profile code
+- The keypad's actions mode has a + Item key
+
+### Changed
+
+- The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows
+- On a multi-item line the breakdown lists the parts: what each weighs or costs, its share of the weight, and a ruled total for the whole. A part opens into its own ledger; on the desk a Whole assembly / Part switch does the same
+- Where the numbers come from — section area, density, formula, the standard and dataset — is folded under "How it's calculated" instead of sitting among the results
+- The desk no longer repeats kg/m, per piece, total weight and total cost in a row under the headline. On a multi-item line that row described one part under a number that summed them all
+- The command line shows only the tokens of the item being edited, not every item's chips joined by + signs
+
+### Fixed
+
+- Editing, suggestion chips and typing on a multi-item line act on the selected item, not always on the last one
+- Removing an item is a deliberate step — the stepper's list on the phone, the Remove button beside the strip on the desk — where it used to be a 24px × on every item, next to a 20px duplicate
+
 ## [3.29.0] - 2026-09-23
 
 Sync you don't have to think about.
@@ -69,7 +93,6 @@ three and four levels down came up to where they are named.
 
 ### Changed
 
-- The command bar typing line displays only the tokens for the active item, eliminating inline plus signs and collapsed grey pills from the typing box
 - Clean-slate discovery cards provide instant 1-tap access to all 20 profile options grouped by product family (Beams & Structural, Plates & Sheets including chequered plate CHQ, Tubes & Pipes, and Bars & Sections), with single-row monospace codes
 - Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was "Rename, notes and tags", then briefly "Edit name, labour & hardware" — both of them a list of fields where a verb belonged
 - The entry editor fits a phone. The category select was showing "Main Structure / G", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned
@@ -94,10 +117,6 @@ three and four levels down came up to where they are named.
 
 ### Added
 
-- Command reference modal features category filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and instant search across all shortcuts, tokens, and profile codes
-- Segmented item rail tabs support WAI-ARIA tablist navigation, arrow key traversal, auto-scrolling into view, item duplication, and keyboard shortcuts (Alt+[/], Alt+Shift+1..9, Alt++, Alt+W, Backspace to pop empty tab)
-- Mobile keypad in actions mode includes a 1-tap '+ Item' button for frictionless assembly creation
-- Multi-item lines feature segmented item rail tabs directly above the command line to switch items, monitor item weights, delete items, and append new items with 1 click
 - Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile
 - The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life
 - An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited
@@ -105,7 +124,6 @@ three and four levels down came up to where they are named.
 
 ### Fixed
 
-- Editing, suggestion chips, and caret input in multi-item lines are now properly scoped to whichever tab is selected rather than locked to the final item
 - Discovery tiles now enter clean profile aliases without trailing spaces so sizes and dimensions can be typed immediately
 
 - A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen

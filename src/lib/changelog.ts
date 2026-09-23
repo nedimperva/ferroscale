@@ -17,6 +17,44 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.30.0",
+    date: "2026-09-23",
+    added: [
+      "A line with several items gets a way to move between them. On the phone it is a stepper above the command line: ‹ and › named for the item they go to, the item being edited with its weight, a dot per item — and tapping it lists every item, with Duplicate, Earlier, Later and Remove for the one you are on",
+      "On the desk the items are one strip above the command line, each segment as wide as its share of the weight, with Add, Duplicate and Remove for the selected item. Alt+[ and Alt+] step through the items, Alt+Shift+1–9 jumps to one, Alt++ adds one and Alt+W removes the selected one",
+      "The command reference has filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and a search across every shortcut, token and profile code",
+      "The keypad's actions mode has a + Item key",
+    ],
+    changed: [
+      "The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows",
+      "On a multi-item line the breakdown lists the parts: what each weighs or costs, its share of the weight, and a ruled total for the whole. A part opens into its own ledger; on the desk a Whole assembly / Part switch does the same",
+      "Where the numbers come from — section area, density, formula, the standard and dataset — is folded under \"How it's calculated\" instead of sitting among the results",
+      "The desk no longer repeats kg/m, per piece, total weight and total cost in a row under the headline. On a multi-item line that row described one part under a number that summed them all",
+      "The command line shows only the tokens of the item being edited, not every item's chips joined by + signs",
+    ],
+    fixed: [
+      "Editing, suggestion chips and typing on a multi-item line act on the selected item, not always on the last one",
+      "Removing an item is a deliberate step — the stepper's list on the phone, the Remove button beside the strip on the desk — where it used to be a 24px × on every item, next to a 20px duplicate",
+    ],
+    added_bs: [
+      "Linija s više stavki dobija način da se kreće između njih. Na telefonu je to korak iznad komandne linije: ‹ i › nazvani po stavci na koju vode, stavka koja se uređuje s njenom težinom, tačka po stavci — a dodir otvara listu svih stavki s Dupliciraj, Ranije, Kasnije i Ukloni za trenutnu",
+      "Na desktopu su stavke jedna traka iznad komandne linije, svaki dio širok koliko je njen udio u težini, s Dodaj, Dupliciraj i Ukloni za odabranu stavku. Alt+[ i Alt+] prolaze kroz stavke, Alt+Shift+1–9 skače na jednu, Alt++ dodaje, a Alt+W uklanja odabranu",
+      "Pregled komandi ima kartice za filtriranje (Kartice i stavke, Komandna linija, Radni prostor, Gramatika, Profili) i pretragu kroz sve prečice, tokene i kodove profila",
+      "Režim radnji na tastaturi ima tipku + Stavka",
+    ],
+    changed_bs: [
+      "Obračun su dvije knjige, Težina i Cijena, svaka završava podvučenim zbirom — isto na telefonu i u desnoj koloni na desktopu. Otvara se na vrijednosti koju pokazuje glavni broj",
+      "Na liniji s više stavki obračun navodi dijelove: koliko svaki teži ili košta, njegov udio u težini i podvučen zbir za cjelinu. Dio se otvara u vlastitu knjigu; na desktopu isto radi prekidač Cijeli sklop / Dio",
+      "Odakle brojevi dolaze — površina presjeka, gustoća, formula, standard i skup podataka — sklopljeno je pod \"Kako je izračunato\" umjesto da stoji među rezultatima",
+      "Desktop više ne ponavlja kg/m, po komadu, ukupnu težinu i ukupnu cijenu u redu ispod glavnog broja. Na liniji s više stavki taj red je opisivao jedan dio ispod broja koji ih sabira sve",
+      "Komandna linija prikazuje samo tokene stavke koja se uređuje, a ne čipove svih stavki spojene znakovima +",
+    ],
+    fixed_bs: [
+      "Uređivanje, čipovi prijedloga i kucanje na liniji s više stavki djeluju na odabranu stavku, a ne uvijek na posljednju",
+      "Uklanjanje stavke je namjeran korak — lista koraka na telefonu, dugme Ukloni pored trake na desktopu — gdje je ranije bio × od 24px na svakoj stavci, pored dupliranja od 20px",
+    ],
+  },
+  {
     version: "3.29.0",
     date: "2026-09-23",
     added: [
@@ -104,7 +142,6 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.27.0",
     date: "2026-09-19",
     changed: [
-      "The command bar typing line displays only the tokens for the active item, eliminating inline plus signs and collapsed grey pills from the typing box",
       "Clean-slate discovery cards provide instant 1-tap access to all 20 profile options grouped by product family (Beams & Structural, Plates & Sheets including chequered plate CHQ, Tubes & Pipes, and Bars & Sections), with single-row monospace codes",
       "Editing a library entry is a button on its row, not an item in a menu, and it is called Edit. It was \"Rename, notes and tags\", then briefly \"Edit name, labour & hardware\" — both of them a list of fields where a verb belonged",
       "The entry editor fits a phone. The category select was showing \"Main Structure / G\", a hardware line gave its name about 90px and its price about the same, notes took a quarter of the screen before the fields a project reads came into view, and Save was below the fold. Category and labour get a row each, a cost line puts its name on one line and its price on the next, and Save and Cancel are pinned",
@@ -128,17 +165,12 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The standards that ship with the app are in the library, under a chip of their own, rather than only inside a dialog inside a project. Removing one can be undone, which nothing offered before"
     ],
     added: [
-      "Command reference modal features category filter tabs (Tabs & Items, Command line, Workspace, Grammar, Profiles) and instant search across all shortcuts, tokens, and profile codes",
-      "Segmented item rail tabs support WAI-ARIA tablist navigation, arrow key traversal, auto-scrolling into view, item duplication, and keyboard shortcuts (Alt+[/], Alt+Shift+1..9, Alt++, Alt+W, Backspace to pop empty tab)",
-      "Mobile keypad in actions mode includes a 1-tap '+ Item' button for frictionless assembly creation",
-      "Multi-item lines feature segmented item rail tabs directly above the command line to switch items, monitor item weights, delete items, and append new items with 1 click",
       "Command bar prompt displays an orange profile shape glyph (including distinct U channel, I-beam, H-beam, and T shapes) matching the active profile",
       "The visual profile tiles are on the phone — the surface with no text field at all, and the one most likely to be held by someone who has never typed `hea120` in their life",
       "An assembly carries the trade, the labour hours and the hardware a project inherits from it, editable where the assembly itself is edited",
       "A `+`-joined line files every cut into a project. It used to file only the one being typed, so two thirds of a three-item line went missing without a word"
     ],
     fixed: [
-      "Editing, suggestion chips, and caret input in multi-item lines are now properly scoped to whichever tab is selected rather than locked to the final item",
       "Discovery tiles now enter clean profile aliases without trailing spaces so sizes and dimensions can be typed immediately",
       "The ⋯ on a library row announced itself with the entry's name, which is also what the row's own open button is called — two controls, one name, side by side",
       "A ⋯ menu opened while a scroll was still settling closed again the instant it appeared — which on a phone is what tapping one near the bottom of a sheet does. It follows its row now, and only closes when that row leaves the screen",
@@ -156,7 +188,6 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The end-to-end suite has been red since 3.26: nine tests waited for a result on a screen that stopped seeding one"
     ],
     changed_bs: [
-      "Komandna linija prikazuje samo tokene aktivne stavke, uklanjajući inline znakove plus i skupljene pilule iz prostora za kucanje",
       "Početne kartice profila pružaju brzi pristup za svih 20 profila grupisano po porodicama (nosači, limovi i ploče uključujući rebrasti lim CHQ, cijevi i šipke), sa kompaktnim jednorednim kodovima",
       "Uređivanje stavke biblioteke je dugme u njenom redu, ne stavka u meniju, i zove se Uredi",
       "Uređivač stavke sada stane na telefon: kategorija i sati rada dobijaju svaki svoj red, stavka troška ima naziv u jednom redu a cijenu u sljedećem, a Sačuvaj i Otkaži su prikvačeni",
@@ -180,17 +211,12 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Standardi koji dolaze uz aplikaciju su u biblioteci, pod vlastitom pločicom, a ne samo unutar dijaloga u projektu. Uklanjanje se može poništiti"
     ],
     added_bs: [
-      "Pregled komandi i prečica sadrži kartice za filtriranje po kategorijama (Kartice i stavke, Komandna linija, Radni prostor, Gramatika, Profili) i trenutnu pretragu kroz sve prečice, tokene i profile",
-      "Segmentirane kartice stavki podržavaju WAI-ARIA navigaciju listom tabova, navigaciju strelicama, automatsko skrolovanje u fokus, dupliciranje stavke i prečice na tastaturi (Alt+[/], Alt+Shift+1..9, Alt++, Alt+W, Backspace za brisanje prazne stavke)",
-      "Mobilna tastatura u režimu radnji uključuje dugme '+ Stavka' sa jednim dodirom za jednostavno kreiranje sklopova",
-      "Linije sa više stavki imaju segmentisane kartice iznad komandne linije za prebacivanje stavki, praćenje težina, brisanje i dodavanje novih jednim klikom",
       "Komandna linija prikazuje narandžastu ikonu profila (uključujući prepoznatljive U, I, H i T oblike) za aktivni profil",
       "Vizuelne pločice profila su na telefonu — ekranu koji uopšte nema tekstualno polje",
       "Sklop nosi djelatnost, sate rada i okov koje projekat nasljeđuje od njega, uredive tamo gdje se i sklop uređuje",
       "Linija spojena sa `+` šalje svaki rez u projekat. Prije je slala samo onaj koji se kuca"
     ],
     fixed_bs: [
-      "Uređivanje, čipovi prijedloga i unos teksta u linijama sa više stavki sada su ispravno usmjereni na odabranu karticu umjesto da budu vezani za posljednju stavku",
       "Kartice profila unose čist alias bez razmaka na kraju kako bi se dimenzije mogle odmah unositi",
       "Dugme ⋯ u redu biblioteke predstavljalo se nazivom stavke, istim kojim se predstavlja i dugme za otvaranje tog reda",
       "Meni ⋯ otvoren dok se pomjeranje još smirivalo zatvarao bi se istog trena. Sada prati svoj red i zatvara se tek kada red napusti ekran",
