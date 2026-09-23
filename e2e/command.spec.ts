@@ -79,8 +79,8 @@ test.describe("Command bar", () => {
   test("a + joins two items, sums them, and lists both", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2+%2B+ipe200+4m+x3");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
-    // Finished items collapse to one chip; the last item stays spelled out.
-    await expect(page.getByRole("tab", { name: /Item 1, HEA 120/ })).toBeVisible();
+    // Only the last item is spelled out; the first is a segment in the rail.
+    await expect(page.getByRole("button", { name: /^Item 1, HEA 120/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Edit ipe200" })).toBeVisible();
 
     // The item list replaces the single-item equation line...
@@ -104,7 +104,7 @@ test.describe("Command bar", () => {
     await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(2);
     // First item is a grey chip when the last item is open; after some edits
     // it is already spelled out. Either way its quantity must still be there.
-    const collapsed = page.getByRole("tab", { name: /Item 1, HEA 120/ });
+    const collapsed = page.getByRole("button", { name: /^Item 1, HEA 120/ });
     const x2 = page.getByRole("button", { name: "Edit x2" });
     await expect(collapsed.or(x2)).toBeVisible();
     if (await collapsed.isVisible()) await collapsed.click();
@@ -144,7 +144,7 @@ test.describe("Command bar", () => {
 
     // Three items: the one that was typed, plus the two pasted.
     await expect(page.getByRole("list", { name: "Assembly parts" }).getByRole("listitem")).toHaveCount(3);
-    await expect(page.getByRole("tab", { name: /Item 1, HEA 120/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Item 1, HEA 120/ })).toBeVisible();
   });
 
   test("the breakdown says which item it describes on a multi-item line", async ({ page }) => {
@@ -253,13 +253,16 @@ test.describe("Phone fold (390x844)", () => {
     // out; the rest are one chip each, and the row never grows.
     const queryLine = page.locator("[data-query-line]");
     expect((await queryLine.boundingBox())!.height).toBeLessThanOrEqual(52);
-    await expect(page.getByRole("tab", { name: /^Item [123], / })).toHaveCount(3);
+    await expect(page.getByRole("button", { name: /^Item 4 of 4/ })).toBeVisible();
     await expect(queryLine.getByRole("button", { name: "Edit rhs80x40x3" })).toBeVisible();
 
-    // Tapping a collapsed item opens it and folds the others away.
-    await page.getByRole("tab", { name: /^Item 1, / }).click();
+    // The stepper's sheet lists every item; picking one opens it.
+    await page.getByRole("button", { name: /^Item 4 of 4/ }).click();
+    const sheet = page.getByRole("dialog", { name: "Line items" });
+    await expect(sheet.getByRole("button", { name: /^Item [1234], / })).toHaveCount(4);
+    await sheet.getByRole("button", { name: /^Item 1, / }).click();
     await expect(queryLine.getByRole("button", { name: "Edit heb120" })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /^Item 4, / })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Item 1 of 4/ })).toBeVisible();
     expect((await queryLine.boundingBox())!.height).toBeLessThanOrEqual(52);
   });
 

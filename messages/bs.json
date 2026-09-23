@@ -246,7 +246,17 @@
       "addItem": "Dodaj stavku",
       "removeItem": "Ukloni stavku {index}",
       "duplicateItem": "Dupliciraj stavku {index}",
-      "invalidItem": "Stavka {index} ima greške"
+      "invalidItem": "Stavka {index} ima greške",
+      "stepperLabel": "Stavka {index} od {count}: {name} — sve stavke",
+      "previousItem": "Prethodna stavka: {name}",
+      "nextItem": "Sljedeća stavka: {name}",
+      "newItem": "Nova stavka",
+      "moveEarlier": "Ranije",
+      "moveLater": "Kasnije",
+      "duplicate": "Dupliciraj",
+      "remove": "Ukloni",
+      "itemsCount": "Stavki: {count}",
+      "weightShare": "Širina prati udio svake stavke u težini"
     },
     "keypad": {
       "space": "razmak",

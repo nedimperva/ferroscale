@@ -61,6 +61,7 @@ import {
   activeItemText,
   applyToActiveItem,
   duplicateLineItem,
+  moveLineItem,
   editLineToken,
   lineChips,
   removeLineItem,
@@ -2476,12 +2477,16 @@ export function CommandShell() {
                       setQuery(next);
                       setExpandedItem(chips.groups.length);
                     }}
+                    onMoveItem={(from, to) => {
+                      setQuery(moveLineItem(query, from, to));
+                      setExpandedItem(to);
+                    }}
                     onAddItem={() => {
                       const next = cmdAppendLineItem(query);
                       setQuery(next);
                       setExpandedItem(chips.groups.length);
                     }}
-                    compact
+                    variant="stepper"
                   />
                 </div>
               )}

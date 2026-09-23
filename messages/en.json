@@ -246,7 +246,17 @@
       "addItem": "Add item",
       "removeItem": "Remove item {index}",
       "duplicateItem": "Duplicate item {index}",
-      "invalidItem": "Item {index} has issues"
+      "invalidItem": "Item {index} has issues",
+      "stepperLabel": "Item {index} of {count}: {name} — all items",
+      "previousItem": "Previous item: {name}",
+      "nextItem": "Next item: {name}",
+      "newItem": "New item",
+      "moveEarlier": "Earlier",
+      "moveLater": "Later",
+      "duplicate": "Duplicate",
+      "remove": "Remove",
+      "itemsCount": "{count} items",
+      "weightShare": "Width follows each item’s share of the weight"
     },
     "keypad": {
       "space": "space",

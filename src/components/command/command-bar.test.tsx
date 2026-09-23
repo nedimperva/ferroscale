@@ -248,17 +248,17 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
     await waitFor(() => {
       expect(h.getAllByRole("listitem").length).toBeGreaterThanOrEqual(2);
     });
-    // Finished items collapse to one chip; the item being typed stays open.
-    expect(h.getByRole("tab", { name: /Item 1, HEA 120/ })).toBeDefined();
+    // Only the item being typed is spelled out; every item has a segment.
+    expect(h.getByRole("button", { name: /^Item 1, HEA 120/ })).toBeDefined();
     expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
     expect(h.getByRole("button", { name: "Edit 4m" })).toBeDefined();
     // Opening the first item shows its own tokens — it didn't swallow the second.
-    await h.user.click(h.getByRole("tab", { name: /Item 1, HEA 120/ }));
+    await h.user.click(h.getByRole("button", { name: /^Item 1, HEA 120/ }));
     await waitFor(() => {
       expect(h.getByRole("button", { name: "Edit hea120" })).toBeDefined();
     });
     expect(h.getByRole("button", { name: "Edit 6m" })).toBeDefined();
-    expect(h.getByRole("tab", { name: /Item 2, IPE 200/ })).toBeDefined();
+    expect(h.getByRole("button", { name: /^Item 2, IPE 200/ })).toBeDefined();
   });
 
   it("switches tabs with Alt+[ and Alt+], while Alt+N picks suggestions", async () => {
@@ -266,7 +266,7 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
     await h.user.click(h.input());
 
     // Initially on item 1 (IPE 200)
-    expect(h.getByRole("tab", { name: /Item 1, HEA 120/ })).toBeDefined();
+    expect(h.getByRole("button", { name: /^Item 1, HEA 120/ })).toBeDefined();
     expect(h.getByRole("button", { name: "Edit ipe200" })).toBeDefined();
 
     // Alt + [ switches to previous tab (Item 0, HEA 120)

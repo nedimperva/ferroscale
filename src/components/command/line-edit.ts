@@ -115,6 +115,20 @@ export function duplicateLineItem(query: string, itemIndex: number): string {
   return `${query.trim()} + ${targetText}`;
 }
 
+/**
+ * Move an item segment to another position on the line — the stepper sheet's
+ * "Earlier" and "Later". Out-of-range or no-op moves return the line as it was.
+ */
+export function moveLineItem(query: string, from: number, to: number): string {
+  const segments = cmdSplitLine(query);
+  const n = segments.length;
+  if (from === to || from < 0 || from >= n || to < 0 || to >= n) return query;
+  const texts = segments.map((s) => s.text.trim());
+  const [moved] = texts.splice(from, 1);
+  texts.splice(to, 0, moved);
+  return texts.join(" + ");
+}
+
 /** Swap one token in place — used by the chip stepper so a nudge does not
  *  pull the token to the caret the way tap-to-edit does. */
 export function replaceLineToken(

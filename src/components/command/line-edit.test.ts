@@ -7,6 +7,7 @@ import {
   lineChipPrefix,
   lineChips,
   lineExpandedIndex,
+  moveLineItem,
   pullLastChip,
   removeLineItem,
   removeLineToken,
@@ -234,3 +235,17 @@ describe("scoped line editing across tabs", () => {
   });
 });
 
+describe("moveLineItem", () => {
+  it("moves an item earlier and later, keeping every item intact", () => {
+    const q = "hea120 6m x2 + ipe200 4m + shs80x4 3m";
+    expect(moveLineItem(q, 1, 0)).toBe("ipe200 4m + hea120 6m x2 + shs80x4 3m");
+    expect(moveLineItem(q, 0, 2)).toBe("ipe200 4m + shs80x4 3m + hea120 6m x2");
+  });
+
+  it("leaves the line alone for a no-op or out-of-range move", () => {
+    const q = "hea120 6m + ipe200 4m";
+    expect(moveLineItem(q, 1, 1)).toBe(q);
+    expect(moveLineItem(q, -1, 0)).toBe(q);
+    expect(moveLineItem(q, 0, 2)).toBe(q);
+  });
+});

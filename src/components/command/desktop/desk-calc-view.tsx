@@ -55,6 +55,7 @@ import { SaveControl } from "../save-control";
 import { DEMO_QUERY } from "../command-constants";
 import {
   duplicateLineItem,
+  moveLineItem,
   editLineToken,
   lineChips,
   pullLastChip,
@@ -363,6 +364,12 @@ export function DeskCalcView({
                 setPicked(chips.groups.length);
                 focusInputAtEnd();
               }}
+              onMoveItem={(from, to) => {
+                setQuery(moveLineItem(query, from, to));
+                setExpandedItem(to);
+                setPicked(to);
+                focusInputAtEnd();
+              }}
               onAddItem={() => {
                 const next = cmdAppendLineItem(query);
                 setQuery(next);
@@ -370,7 +377,7 @@ export function DeskCalcView({
                 setPicked(chips.groups.length);
                 focusInputAtEnd();
               }}
-              compact={compact}
+              variant="segments"
             />
           </div>
         )}
