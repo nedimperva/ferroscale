@@ -18,6 +18,9 @@ export const SYNC_COLLECTION_UPDATED_AT_KEYS = {
   priceBook: "ferroscale-sync-price-book-updated-at-v1",
 } as const;
 
+/** gradeId → when that rate was removed; lets a removal sync instead of reappearing. */
+export const SYNC_PRICE_BOOK_REMOVED_KEY = "ferroscale-price-book-removed-v1";
+
 /** When the synced settings last changed on this device (or arrived from Drive). */
 export const SYNC_SETTINGS_UPDATED_AT_KEY = "ferroscale-sync-settings-updated-at-v1";
 

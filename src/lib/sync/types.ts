@@ -46,6 +46,14 @@ export interface SyncUsagePayload {
   stats: unknown;
 }
 
+/**
+ * The price book record. `items` is the old list shape (older clients read
+ * only that); each item's `updatedAt` and `removed` drive the per-grade merge.
+ */
+export interface SyncPriceBookPayload extends SyncListPayload<PriceBookEntry> {
+  removed?: Record<string, string>;
+}
+
 /** The synced settings record. `values` is settings-sync.ts's own shape. */
 export interface SyncSettingsPayload {
   updatedAt: string;

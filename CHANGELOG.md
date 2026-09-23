@@ -17,6 +17,7 @@ Sync you don't have to think about.
 
 ### Changed
 
+- The price book merges grade by grade across devices instead of the newer book replacing the other whole: change steel on the phone and stainless on the laptop and both rates survive. A rate you remove stays removed rather than coming back from a device that still had it
 - The passphrase is typed into the sync card, twice on first connect, with a show toggle — not into a browser prompt. On a second device a wrong passphrase is caught before anything is merged, with a field to enter the right one; Drive is never overwritten from that screen
 - The sync card says where things stand in words — "Synced 4 minutes ago", "Offline — changes will sync when you're back online" — instead of the last pull's timestamp
 

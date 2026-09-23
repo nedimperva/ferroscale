@@ -25,6 +25,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A small red mark on the Settings button when sync needs you — to sign in to Google again, or to enter the passphrase on this device. Settings then opens on the sync card. Syncing, offline and retrying stay silent",
     ],
     changed: [
+      "The price book merges grade by grade across devices instead of the newer book replacing the other whole: change steel on the phone and stainless on the laptop and both rates survive. A rate you remove stays removed rather than coming back from a device that still had it",
       "The passphrase is typed into the sync card, twice on first connect, with a show toggle — not into a browser prompt. On a second device a wrong passphrase is caught before anything is merged, with a field to enter the right one; Drive is never overwritten from that screen",
       "The sync card says where things stand in words — \"Synced 4 minutes ago\", \"Offline — changes will sync when you're back online\" — instead of the last pull's timestamp",
     ],
@@ -40,6 +41,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Mala crvena oznaka na dugmetu Postavke kad sinhronizacija treba vas — ponovna prijava na Google ili unos lozinke na ovom uređaju. Postavke se tada otvaraju na kartici sinhronizacije. Sinhronizacija u toku, van mreže i ponovni pokušaji ostaju tihi",
     ],
     changed_bs: [
+      "Cjenovnik se između uređaja spaja po kvalitetu umjesto da noviji cjenovnik zamijeni drugi u cijelosti: promijenite čelik na telefonu i inoks na laptopu i obje cijene ostaju. Uklonjena cijena ostaje uklonjena umjesto da se vrati s uređaja koji ju je još imao",
       "Lozinka se unosi u karticu sinhronizacije, dvaput pri prvom povezivanju, uz prikaz lozinke — ne u prozor preglednika. Na drugom uređaju pogrešna lozinka se otkrije prije ikakvog spajanja, uz polje za ispravnu; Drive se s tog ekrana nikad ne prepisuje",
       "Kartica sinhronizacije kaže stanje riječima — \"Sinhronizovano prije 4 minute\", \"Van mreže — promjene će se sinhronizovati kad se vratite na mrežu\" — umjesto vremena zadnjeg preuzimanja",
     ],

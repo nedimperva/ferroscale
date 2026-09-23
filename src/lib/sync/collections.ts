@@ -1,7 +1,7 @@
 "use client";
 
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
-import { loadArrayFromStorage, persistToStorage } from "@/lib/storage";
+import { loadArrayFromStorage, loadFromStorage, persistToStorage } from "@/lib/storage";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import type { CompareItem } from "@/hooks/useCompare";
 import {
@@ -16,13 +16,19 @@ import {
 import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
-import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_STORAGE_KEYS } from "./keys";
+import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_PRICE_BOOK_REMOVED_KEY, SYNC_STORAGE_KEYS } from "./keys";
+import { stampPriceBookEdit, type PriceBookRemovals } from "./price-book-merge";
 import { notifySyncedCollectionDirty } from "./registry";
 import type { SyncEntityCollectionKey, SyncListCollectionKey, SyncEntityRecord } from "./types";
 
 interface PersistOptions {
   markDirty?: boolean;
   updatedAt?: string;
+}
+
+interface PriceBookPersistOptions extends PersistOptions {
+  /** Tombstones to store as-is — only for writes that are not a user edit. */
+  removed?: PriceBookRemovals;
 }
 
 function nowIso(): string {
@@ -294,9 +300,24 @@ export function normalizePriceBook(raw: unknown[]): PriceBookEntry[] {
     if (!gradeId || seen.has(gradeId)) continue;
     if (!Number.isFinite(unitPrice) || unitPrice < 0) continue;
     seen.add(gradeId);
-    out.push({ gradeId, unitPrice });
+    const updatedAt = typeof candidate.updatedAt === "string" && candidate.updatedAt ? candidate.updatedAt : undefined;
+    out.push(updatedAt ? { gradeId, unitPrice, updatedAt } : { gradeId, unitPrice });
   }
   return out;
+}
+
+export function normalizePriceBookRemovals(raw: unknown): PriceBookRemovals {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: PriceBookRemovals = {};
+  for (const [gradeId, at] of Object.entries(raw as Record<string, unknown>)) {
+    if (gradeId.trim() && typeof at === "string" && at) out[gradeId.trim()] = at;
+  }
+  return out;
+}
+
+/** Grades removed from the price book, and when — so the removal syncs too. */
+export function loadPriceBookRemovals(): PriceBookRemovals {
+  return normalizePriceBookRemovals(loadFromStorage<unknown>(SYNC_PRICE_BOOK_REMOVED_KEY, {}));
 }
 
 export function loadPriceBook(): PriceBookEntry[] {
@@ -307,9 +328,17 @@ export function getPriceBookUpdatedAt(): string {
   return readListUpdatedAt("priceBook");
 }
 
-export function persistPriceBook(items: PriceBookEntry[], options?: PersistOptions): void {
+export function persistPriceBook(items: PriceBookEntry[], options?: PriceBookPersistOptions): void {
   const updatedAt = options?.updatedAt ?? nowIso();
-  persistToStorage(SYNC_STORAGE_KEYS.priceBook, items);
+  const markDirty = options?.markDirty ?? true;
+  // A user edit is stamped per grade here, so every writer (the hook, backup
+  // restore) gets per-grade sync without knowing about it. Writes from Drive
+  // already carry their stamps and tombstones.
+  const next = markDirty
+    ? stampPriceBookEdit({ items: loadPriceBook(), removed: loadPriceBookRemovals() }, items, nowIso())
+    : { items, removed: options?.removed ?? loadPriceBookRemovals() };
+  persistToStorage(SYNC_STORAGE_KEYS.priceBook, next.items);
+  persistToStorage(SYNC_PRICE_BOOK_REMOVED_KEY, next.removed);
   writeListUpdatedAt("priceBook", updatedAt);
   // A remote pull writes here without going through the hook — tell the UI
   // store its cache is stale.
