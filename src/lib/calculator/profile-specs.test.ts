@@ -19,11 +19,11 @@ describe("resolveProfileSpecs", () => {
     expect(specs?.geometry?.heightMm).toBe(190);
     const keys = specs?.metrics.map((metric) => metric.key) ?? [];
     expect(keys).toEqual(expect.arrayContaining(["height", "width", "areaMm2"]));
-    // Web/flange/fillet are solved proportions for the sketch, not EN data —
-    // they must not be published as dimensions.
-    expect(keys).not.toContain("webThickness");
-    expect(keys).not.toContain("flangeThickness");
-    expect(keys).not.toContain("rootRadius");
+    // Web, flange and fillet come from the ArcelorMittal catalogue row, so
+    // they are published: HE 200 A is tw 6.5, tf 10, r 18.
+    expect(keys).toEqual(expect.arrayContaining(["webThickness", "flangeThickness", "rootRadius"]));
+    expect(specs?.geometry).toMatchObject({ webThicknessMm: 6.5, flangeThicknessMm: 10, rootRadiusMm: 18 });
+    expect(specs?.geometry?.thicknessEstimated).toBeUndefined();
     expect(specs?.familyRows[0]).toMatchObject({
       label: "HEA 200",
       matchKind: "current",
@@ -220,7 +220,9 @@ describe("standard section outlines follow EN 10365", () => {
     });
     expect(hea120?.geometry?.heightMm).toBe(114);
     expect(hea120?.geometry?.widthMm).toBe(120);
-    expect(hea120?.geometry?.thicknessEstimated).toBe(true);
+    // Catalogue row, not solved proportions: HE 120 A is tw 5, tf 8, r 12.
+    expect(hea120?.geometry).toMatchObject({ webThicknessMm: 5, flangeThicknessMm: 8, rootRadiusMm: 12 });
+    expect(hea120?.geometry?.thicknessEstimated).toBeUndefined();
   });
 
   it("HEM sections are taller and wider than their nominal size", () => {

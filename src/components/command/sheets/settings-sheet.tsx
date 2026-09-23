@@ -7,6 +7,7 @@ import type { AppLocale } from "@/i18n/routing";
 import { useTheme } from "@/hooks/useTheme";
 import {
   hapticsStore,
+  showSectionPropertiesStore,
   marginPercentStore,
   massTolerancePercentStore,
   defaultPaintPriceStore,
@@ -308,6 +309,11 @@ export function CommandSettingsSheet({
     hapticsStore.getSnapshot,
     hapticsStore.getServerSnapshot,
   );
+  const showSectionProperties = useSyncExternalStore(
+    showSectionPropertiesStore.subscribe,
+    showSectionPropertiesStore.getSnapshot,
+    showSectionPropertiesStore.getServerSnapshot,
+  );
 
   const fields = buildSettingsFields({
     t,
@@ -315,6 +321,8 @@ export function CommandSettingsSheet({
     onUpdateShared,
     weightAsMain,
     onSetWeightAsMain,
+    showSectionProperties,
+    onSetShowSectionProperties: showSectionPropertiesStore.set,
     defaultUnit,
     onSetDefaultUnit,
     locale,

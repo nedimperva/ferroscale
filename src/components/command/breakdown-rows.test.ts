@@ -41,4 +41,23 @@ describe("buildBreakdownRows", () => {
     expect(massRow?.value).toBe("78.50 kg/m²");
     expect(rows!.geometry.find((r) => r.id === "massPerMetre")).toBeUndefined();
   });
+
+  it("cites the catalogue's section properties for a standard size", () => {
+    const rows = buildBreakdownRows(cmdParse("ipe200 6m s235", settings), fakeT)!;
+    const value = (id: string) => rows.section.find((r) => r.id === id)?.value;
+    // ArcelorMittal 2024-1: IPE 200 Iy 1943 cm⁴, Wpl,y 220.6 cm³, Iz 142.3 cm⁴.
+    expect(value("secIy")).toBe("1,943 cm⁴");
+    expect(value("secWplY")).toBe("220.6 cm³");
+    expect(value("secIz")).toBe("142.3 cm⁴");
+    // The radius is derived: sqrt(1943 / 28.5).
+    expect(value("secIyRadius")).toBe("8.26 cm");
+    expect(value("secSource")).toBe("result.secSourcePage");
+  });
+
+  it("shows no section properties for a manual section", () => {
+    // A hollow section's figures would be computed, not cited.
+    expect(buildBreakdownRows(cmdParse("shs40x40x3 6m", settings), fakeT)!.section).toEqual([]);
+    // A standard tee has them.
+    expect(buildBreakdownRows(cmdParse("t60x7 6m", settings), fakeT)!.section.length).toBeGreaterThan(0);
+  });
 });

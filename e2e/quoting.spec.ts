@@ -81,10 +81,10 @@ test.describe("Price book", () => {
 });
 
 test.describe("Desktop fold", () => {
-  test("the glance row shows four cells that agree with the breakdown", async ({ page }) => {
+  test("the rail's ledger agrees with the headline", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m x2 ");
-    // kg/m appears in the glance row and again in the breakdown — same number.
+    // kg/m in the equation line and in the weight ledger — the same number.
     await expect(page.getByText("19.89 kg/m").first()).toBeVisible();
     await expect(page.getByText("238.7 kg").first()).toBeVisible();
   });
@@ -177,12 +177,15 @@ test.describe("Mass tolerance", () => {
 test.describe("Margin", () => {
   test("adds a sell price to the breakdown without touching cost", async ({ page }) => {
     await page.goto(DEMO_LINK);
+    // No rate typed, so the ledger opens on weight; cost is its other tab.
+    await page.getByRole("tab", { name: /^Cost/ }).click();
     await expect(page.getByText("Total cost", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Sell price/)).toHaveCount(0);
 
     await openSettings(page);
     await page.getByLabel("Margin", { exact: true }).fill("20");
     await gotoCalculator(page);
+    await page.getByRole("tab", { name: /^Cost/ }).click();
 
     await expect(page.getByText("Sell price (+20%)")).toBeVisible();
     // Demo query costs € 286.44 → € 343.73 at 20%.
@@ -246,12 +249,8 @@ test.describe("Assemblies", () => {
   });
 
   test("a project can be started from a library assembly, once there is one", async ({ page }) => {
-    await page.goto("/en/projects");
-    // The app ships with no assemblies, so there is nothing to start from and
-    // the button that would open an empty picker is not drawn.
-    await expect(page.getByRole("button", { name: "From assembly" })).toHaveCount(0);
-
-    // Save a two-cut line into the library as one assembly.
+    // Save a two-cut line into the library as one assembly. (The button is
+    // there before this too — the test above covers its empty state.)
     await page.goto("/en");
     await typeQuery(page, "hea140 3m + plt200x160x12 x2 ");
     await page.getByRole("button", { name: "Save somewhere else" }).click();

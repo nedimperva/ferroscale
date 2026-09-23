@@ -5,6 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.30.0] - 2026-09-23
+
+Section properties, cited — and a breakdown you can read.
+
+### Added
+
+- Section properties for every standard size (129): Iy, Wel,y, Wpl,y and iy on the strong axis, the same on the weak axis, folded under "Section properties" in the breakdown on the phone and the workspace — off by default, turned on in Settings › Calculation. Every figure is transcribed from a named table — the ArcelorMittal *Sections and Merchant Bars* 2024-1 catalogue for IPE, IPN, HEA, HEB, HEM, UPN and UPE, a DIN EN 10055 table for tees — and the breakdown names the source and page. Radii of gyration are derived as √(I/A) rather than copied, because the catalogue truncates them. Tests hold every row to the section's own geometry and to the size table's area
+
+### Changed
+
+- The breakdown is two ledgers, Weight and Cost, each ending in a ruled total — the same on the phone and in the desk's rail. It opens on whichever figure the headline shows
+- On a multi-item line the breakdown lists the parts: what each weighs or costs, its share of the weight, and a ruled total for the whole. A part opens into its own ledger; on the desk a Whole assembly / Part switch does the same
+- Where the numbers come from — section area, density, formula, the standard and dataset — is folded under "How it's calculated" instead of sitting among the results
+- The desk no longer repeats kg/m, per piece, total weight and total cost in a row under the headline. On a multi-item line that row described one part under a number that summed them all
+- The cross-section drawing in the breakdown dimensions every standard section again — web tw, flange tf and root radius R on IPE, IPN, HEA, HEB, HEM, UPN and UPE — now that they come from the catalogue instead of estimated proportions. HEM sections are drawn at their true depth (an HE 100 M is 120 mm deep)
+
+### Removed
+
+- Nine tees that are not EN 10055 sections: T 45×45×5.5, T 70×70×7, T 80×80×8, T 90×90×9, T 100×100×10, T 110×110×11, T 120×120×12, T 130×130×13, T 140×140×14. The five standard tees, T 30 to T 60, remain. A saved part or history line that used one of the nine keeps its stored weight, but no longer loads into the command line
+
+### Internal
+
+- An e2e test asserted the Projects "From assembly" button was hidden with an empty library — the opposite of the test beside it and of the app. It only passed when it ran before hydration; the assertion is gone
+
+- The phone shell's layout moved out of `command-shell.tsx` into `command/phone/`, and the viewport, toast and project-actions logic into hooks; the shell went from 2,816 lines to about 1,700
+- Removed references to the deprecated Raycast extension
+
 ## [3.29.0] - 2026-09-23
 
 Sync you don't have to think about.
@@ -822,7 +849,7 @@ The palette is a keyboard feature and the phone keypad has no `>` key, so on pho
 - Text contrast now meets WCAG AA everywhere: secondary text, placeholders, hints, and status labels are darker in light mode (and slightly lighter in dark mode), and the accent orange and confirmation green were tuned so buttons and highlighted values stay readable — the automated axe scans report zero serious color-contrast violations
 - Settings look and behave the same everywhere — both the mobile settings sheet and the desktop settings view are driven by one shared field model (`settings-model.ts`); the theme row on mobile is now a Light/Dark choice like the other rows
 - The result breakdown shows consistent labels on mobile and desktop (per piece, rate) — both surfaces now render from one shared row builder (`breakdown-rows.ts`)
-- Internal: the desktop saved cards reuse the shared subtitle helper; the Raycast extension is documented as living in its own repository (out of scope here) with `@ferroscale/metal-core`'s command module as the shared grammar
+- Internal: the desktop saved cards reuse the shared subtitle helper
 
 ---
 
@@ -855,7 +882,7 @@ The palette is a keyboard feature and the phone keypad has no `>` key, so on pho
 ### Changed
 
 - The session tape is now persistent — logged calculations survive reloads and are included in Google Drive sync (up to 50 entries)
-- The command query parser (grammar, suggestions, formatting) moved into `@ferroscale/metal-core` as the package's single parser, ready for reuse by non-web surfaces such as a Raycast extension or CLI
+- The command query parser (grammar, suggestions, formatting) moved into `@ferroscale/metal-core` as the package's single parser
 - Internal: removed unused dependencies (framer-motion, vaul) and dead hooks/components; deduplicated command UI constants; refreshed AGENTS.md, READMEs, and docs; replaced the stale e2e suite with a command-bar spec
 
 ### Removed
@@ -1204,7 +1231,6 @@ The palette is a keyboard feature and the phone keypad has no `>` key, so on pho
 - Length support in plate/sheet presets
 - Overflow popover for plate/sheet preset list
 - RHS (rectangular hollow section) quick-calc example
-- **Raycast extension** â€” standalone quick metal weight calculator powered by `@ferroscale/metal-core` shared package
 
 ### Changed
 - Plates and sheets: improved preset UX with popover when list overflows

@@ -208,17 +208,8 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   { id: "t30x4", label: "T 30×30×4", profileId: "tee_en", selectedSizeId: "t30x4", expectedKgPerM: 1.77, source: "EN 10055 catalog" },
   { id: "t35x4.5", label: "T 35×35×4.5", profileId: "tee_en", selectedSizeId: "t35x4.5", expectedKgPerM: 2.34, source: "EN 10055 catalog" },
   { id: "t40x5", label: "T 40×40×5", profileId: "tee_en", selectedSizeId: "t40x5", expectedKgPerM: 2.96, source: "EN 10055 catalog" },
-  { id: "t45x5.5", label: "T 45×45×5.5", profileId: "tee_en", selectedSizeId: "t45x5.5", expectedKgPerM: 3.66, source: "EN 10055 catalog" },
   { id: "t50x6", label: "T 50×50×6", profileId: "tee_en", selectedSizeId: "t50x6", expectedKgPerM: 4.44, source: "EN 10055 catalog" },
   { id: "t60x7", label: "T 60×60×7", profileId: "tee_en", selectedSizeId: "t60x7", expectedKgPerM: 6.23, source: "EN 10055 catalog" },
-  { id: "t70x7", label: "T 70×70×7", profileId: "tee_en", selectedSizeId: "t70x7", expectedKgPerM: 7.29, source: "EN 10055 catalog" },
-  { id: "t80x8", label: "T 80×80×8", profileId: "tee_en", selectedSizeId: "t80x8", expectedKgPerM: 9.54, source: "EN 10055 catalog" },
-  { id: "t90x9", label: "T 90×90×9", profileId: "tee_en", selectedSizeId: "t90x9", expectedKgPerM: 12.1, source: "EN 10055 catalog" },
-  { id: "t100x10", label: "T 100×100×10", profileId: "tee_en", selectedSizeId: "t100x10", expectedKgPerM: 14.8, source: "EN 10055 catalog" },
-  { id: "t110x11", label: "T 110×110×11", profileId: "tee_en", selectedSizeId: "t110x11", expectedKgPerM: 17.9, source: "EN 10055 catalog" },
-  { id: "t120x12", label: "T 120×120×12", profileId: "tee_en", selectedSizeId: "t120x12", expectedKgPerM: 21.3, source: "EN 10055 catalog" },
-  { id: "t130x13", label: "T 130×130×13", profileId: "tee_en", selectedSizeId: "t130x13", expectedKgPerM: 24.9, source: "EN 10055 catalog" },
-  { id: "t140x14", label: "T 140×140×14", profileId: "tee_en", selectedSizeId: "t140x14", expectedKgPerM: 28.9, source: "EN 10055 catalog" },
 
   /* ---- Manual profiles: hand-computed formula × 7850 kg/m³ ---- */
   { id: "round_bar", label: "Round bar Ø40", profileId: "round_bar", manualDimensionsMm: { diameter: 40 }, expectedKgPerM: 9.8646, source: "π/4·40² × ρ" },

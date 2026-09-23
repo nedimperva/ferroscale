@@ -21,6 +21,7 @@ npm run test:core  # metal-core vitest suite (command parser, suggestions)
 npm run test:all   # Both suites
 npm run i18n:check # en/bs message parity — fails CI when locales drift
 npx playwright test  # e2e (set PLAYWRIGHT_CHROMIUM_EXECUTABLE to reuse a system Chromium)
+BASE_URL=http://127.0.0.1:3100 npx playwright test  # e2e against a server you started (e.g. `npx next start -p 3100` after a build)
 ```
 
 Run a single test file: `npx vitest run src/lib/calculator/engine.test.ts`
@@ -32,12 +33,18 @@ Run a single test file: `npx vitest run src/lib/calculator/engine.test.ts`
 Every app route (`/`, `/saved`, `/projects`, `/settings`) renders `null`
 and exists only for metadata/URLs; `RouteAwareAppShell`
 (`src/components/route-aware-app-shell.tsx`) mounts the client-side
-`CommandShell` for all of them.
+`CommandShell` for all of them. `/qa`, `/faq` and `/contact` are ordinary
+pages that render their own content.
 
 1. **State** — `CommandShell` (`src/components/command/command-shell.tsx`)
-   holds the query string; everything derives from it. Three viewports:
-   phone <640 (on-screen keypad), medium 640–1023 (centered card), wide
-   ≥1024 (`CommandDesktop` two-pane workspace).
+   holds the query string and every action on it; everything derives from
+   it. Two shells (`use-shell-viewport.ts`): phone <640 renders the
+   components in `command/phone/` (top bar, hero, session ribbon, suggestion
+   strip, query line) above `CommandKeypad`; ≥640 renders `CommandDesktop`
+   from `command/desktop/`, single-column below 1024. The shell passes both
+   the same values — a layout component never parses or calls a store.
+   Toasts come from `use-command-toast.ts`; the Projects action bag from
+   `projects/use-project-actions.ts`.
 2. **Parsing** — `cmdParse()` from `@ferroscale/metal-core` (source:
    `packages/metal-core/src/command/parser.ts`). Order-tolerant tokens:
    profile+size, length (or bare number using the default unit), `xN`
@@ -80,9 +87,8 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   `profile-specs.ts`, `standard-sizes.ts`, `csv.ts`, `fingerprint.ts`,
   `input-storage.ts`, `settings-stores.ts`, `sync/`.
 - `packages/metal-core/` — shared package (engine, validation, units,
-  datasets, command parser/suggestions). UI-independent; intended to be
-  reusable by non-web surfaces (Raycast/CLI) — keep it free of web
-  imports and i18n.
+  datasets, command parser/suggestions). UI-independent — keep it free of
+  web imports and i18n.
 
 ### State & persistence
 
@@ -145,6 +151,32 @@ output — for standard profiles that reference is the only independent check
 the engine benchmark has, and reading the area back off the dataset is
 exactly the bug that let five wrong channel areas ship.
 
+### Section properties
+
+`packages/metal-core/src/datasets/section-properties.ts` holds Iy, Wel, Wpl
+and Iz per standard size id, **transcribed** from the source named on each
+row (ArcelorMittal *Sections and Merchant Bars* 2024-1 with its PDF page;
+a DIN EN 10055 table for tees). `buildBreakdownRows` turns them into the
+`section` row group, which `BreakdownLedger` (`breakdown-ledger.tsx`, the one
+breakdown for the phone sheet and the desk rail) folds under "Section
+properties" — only while `showSectionPropertiesStore` (Settings ›
+Calculation, synced, **off by default**) is on.
+
+- **Never compute or estimate a row.** A size without a citable row goes in
+  `SECTION_PROPERTIES_UNSOURCED` with the reason; the coverage test requires
+  one or the other for every standard size.
+- Radii of gyration are derived (`sqrt(I/A)`), not stored.
+- The tests check each row against the section's own geometry (parallel-flange
+  I-sections: A, Iy, Iz, Wpl within 0.12%) and against the size table's
+  `areaMm2`. If a new row fails them, re-read the source; don't widen the
+  tolerance.
+- Standard spec records (`specs.ts`) take h, b, tw, tf and r from this table,
+  so the breakdown drawing labels real catalogue dimensions. Sizes without a
+  row fall back to solved proportions flagged `thicknessEstimated`, which the
+  drawing sketches but does not label.
+- Tees are the five EN 10055 sizes T 30–T 60. Nine non-standard tees were
+  removed in 3.30.0 — don't re-add a size without a published table behind it.
+
 ### The three list surfaces
 
 Settings, Projects and Parts are each one component rendered twice: full on
@@ -167,8 +199,8 @@ never has its own copy of a list, so a column means the same thing on both.
   editor for an entry, including an assembly's trade, hours and hardware.
   `projects/insert-assembly-modal.tsx` picks and scales one, in either of
   two voices (`mode="insert"` into the open project, `mode="create"` to
-  start a project from it); both entry points hide themselves while the
-  library holds no assembly to offer.
+  start a project from it). Both entry points stay visible while the library
+  holds no assembly; the picker then explains how to make one.
 
 ### API routes
 
@@ -186,7 +218,10 @@ never has its own copy of a list, so a column means the same thing on both.
 
 Vitest with `@/` and `@ferroscale/metal-core` aliases (see both
 `vitest.config.ts` files). The benchmark suite in `engine.test.ts` runs
-200+ cases and enforces ≤0.5% deviation. e2e lives in `e2e/command.spec.ts`.
+200+ cases and enforces ≤0.5% deviation. e2e lives in `e2e/`:
+`command.spec.ts`, `quoting.spec.ts`, `saved.spec.ts`, `a11y.spec.ts`; the
+phone-viewport tests (390×844) are the only coverage the `phone/` layout gets
+— vitest's jsdom renders at 1024px, i.e. the workspace.
 
 ## i18n
 

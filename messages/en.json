@@ -338,6 +338,17 @@
       "pcs": "pcs",
       "geometry": "Geometry",
       "pricing": "Pricing",
+      "sectionProps": "Section properties",
+      "secIy": "Iy · strong axis",
+      "secWelY": "Wel,y",
+      "secWplY": "Wpl,y",
+      "secIyRadius": "iy",
+      "secIz": "Iz · weak axis",
+      "secWelZ": "Wel,z",
+      "secWplZ": "Wpl,z",
+      "secIzRadius": "iz",
+      "secSource": "Source",
+      "secSourcePage": "{source}, PDF p. {page}",
       "unitPrice": "Unit price",
       "grade": "Grade",
       "massBand": "Mass band {percent}",
@@ -417,6 +428,8 @@
       "themeHint": "Auto follows the system setting",
       "auto": "Auto",
       "hapticsHint": "Feedback on keypad taps",
+      "sectionProperties": "Section properties",
+      "sectionPropertiesHint": "Iy, Wel, Wpl and radii of gyration for standard sections, in the breakdown",
       "version": "Version {version}"
     },
     "docs": {
@@ -1007,6 +1020,24 @@
       "projectName": "Project name",
       "projectNameHint": "The cuts are grouped under this name inside the project too.",
       "costAmount": "Amount"
+    },
+    "ledger": {
+      "view": "Breakdown view",
+      "weight": "Weight",
+      "cost": "Cost",
+      "scope": "Breakdown scope",
+      "wholeAssembly": "Whole assembly",
+      "partScope": "Part {index} · {name}",
+      "backToAssembly": "Assembly",
+      "previousPart": "Previous part: {name}",
+      "nextPart": "Next part: {name}",
+      "openPart": "Part {index}: {name}",
+      "share": "{percent}% of the weight",
+      "partsPieces": "{parts} parts · {pieces} pieces",
+      "assemblyCost": "Assembly parts, cost",
+      "howCalculated": "How it’s calculated",
+      "howCalculatedLead": "Mass per metre is the section area times the density. Every figure comes from the standard below.",
+      "readMethod": "Read the method in the FAQ →"
     }
   },
   "contact": {
@@ -1217,7 +1248,7 @@
         "formula": "Mass = Published EN standard kg/m × Length (m)",
         "explanation": "European structural beams (EN 10025, EN 10034, EN 10365, DIN 1025) are hot-rolled with structural transition fillets (r1) where flanges meet the web, as well as flange slope tapers on IPN and UPN sections. Approximating beams as 3 rectangles understates actual weight and structural capacity.",
         "example": "An HEA 120 beam has catalog mass 19.9 kg/m. A 6-metre beam weighs 119.40 kg. Naive three-rectangle math yields only 18.2 kg/m — an 8.5% error!",
-        "tip": "FerroScale cross-checks 131 standard EN profile sizes against published European catalog masses in its QA benchmark suite.",
+        "tip": "FerroScale cross-checks all 129 standard EN profile sizes against published European catalog masses in its QA benchmark suite.",
         "command": "hea120 6m"
       },
       "angleIron": {

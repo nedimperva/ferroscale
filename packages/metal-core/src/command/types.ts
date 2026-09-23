@@ -148,7 +148,7 @@ export type CommandParseIssueCode =
 
 /**
  * Structured feedback for input the parser could not act on. `message` is a
- * plain-English fallback for non-web consumers (CLI/Raycast); the web app
+ * plain-English fallback for non-web consumers (tests, scripts); the web app
  * maps `code` + `params` to localized strings instead.
  */
 export interface CommandParseIssue {
