@@ -24,10 +24,13 @@ const DEFAULT_METADATA: Omit<SyncMetadata, "deviceId"> = {
   connectedEmail: null,
   syncStatus: "idle",
   syncError: null,
+  syncErrorKind: null,
+  retryCount: 0,
   pendingUploadCount: 0,
   pendingDownloadCount: 0,
   lastSuccessfulPullAt: null,
   lastSuccessfulPushAt: null,
+  lastSyncedAt: null,
   lastDriveChangeToken: null,
 };
 
@@ -57,10 +60,13 @@ function normalizeMetadata(raw: Partial<SyncMetadata> | null | undefined): SyncM
     connectedEmail: raw?.connectedEmail ?? null,
     syncStatus: raw?.syncStatus ?? "idle",
     syncError: raw?.syncError ?? null,
+    syncErrorKind: raw?.syncErrorKind ?? null,
+    retryCount: raw?.retryCount ?? 0,
     pendingUploadCount: raw?.pendingUploadCount ?? 0,
     pendingDownloadCount: raw?.pendingDownloadCount ?? 0,
     lastSuccessfulPullAt: raw?.lastSuccessfulPullAt ?? null,
     lastSuccessfulPushAt: raw?.lastSuccessfulPushAt ?? null,
+    lastSyncedAt: raw?.lastSyncedAt ?? null,
     lastDriveChangeToken: raw?.lastDriveChangeToken ?? null,
   };
 }

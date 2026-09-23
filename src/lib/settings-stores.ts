@@ -13,8 +13,16 @@ import {
 } from "@/lib/calculator/input-storage";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { CommandPricing } from "@ferroscale/metal-core";
+import { markSettingsDirty } from "@/lib/sync/settings-dirty";
 
-export const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false);
+/**
+ * Stores passing `synced` travel to every device through Drive sync (see
+ * lib/sync/settings-sync.ts). Haptics, theme and the current project stay per
+ * device — they describe the device or the moment, not the shop.
+ */
+const synced = { onChange: markSettingsDirty };
+
+export const weightAsMainStore = createBoolStore("ferroscale-weight-as-main", false, synced);
 /** Keypad/action vibration on phones that support it. */
 export const hapticsStore = createBoolStore("ferroscale-haptics", true);
 /**
@@ -25,6 +33,7 @@ export const marginPercentStore = createNumberStore(
   "ferroscale-margin-percent",
   0,
   (value) => Math.min(500, Math.max(0, value)),
+  synced,
 );
 /**
  * Mass tolerance, as ±%. Rolled steel is sold by theoretical mass but delivered
@@ -41,8 +50,9 @@ export const massTolerancePercentStore = createNumberStore(
   "ferroscale-mass-tolerance-percent",
   0,
   (value) => Math.min(20, Math.max(0, value)),
+  synced,
 );
-export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm");
+export const defaultUnitStore = createStringStore<LengthUnit>("ferroscale-default-unit", "mm", synced);
 
 /**
  * The project the user is working out of, remembered across sessions.
@@ -58,11 +68,13 @@ export const defaultPaintPriceStore = createNumberStore(
   "ferroscale-paint-price",
   8,
   (value) => Math.min(10_000, Math.max(0, value)),
+  synced,
 );
 export const defaultPaintCoverageStore = createNumberStore(
   "ferroscale-paint-coverage",
   8,
   (value) => Math.min(200, Math.max(0.1, value)),
+  synced,
 );
 
 export type { CommandPricing };
@@ -140,6 +152,7 @@ export function updateSharedCalcSettings(patch: Partial<SharedCalcSettings>): vo
   });
   _cachedRaw = undefined; // force re-read on next snapshot
   notify();
+  markSettingsDirty();
 }
 
 export const sharedCalcSettingsStore = {

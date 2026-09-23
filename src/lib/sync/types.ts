@@ -16,10 +16,13 @@ export type SyncListCollectionKey = "compare" | "quickHistory" | "priceBook";
  * reader sums them.
  */
 export type SyncMergeCollectionKey = "usage";
+/** The shop defaults (rate, grade, VAT, units, margin…) — one record, newer wins. */
+export type SyncSettingsCollectionKey = "settings";
 export type SyncedCollectionKey =
   | SyncEntityCollectionKey
   | SyncListCollectionKey
-  | SyncMergeCollectionKey;
+  | SyncMergeCollectionKey
+  | SyncSettingsCollectionKey;
 
 export interface SyncEntityRecord {
   id: string;
@@ -41,6 +44,12 @@ export interface SyncUsagePayload {
   deviceId: string;
   updatedAt: string;
   stats: unknown;
+}
+
+/** The synced settings record. `values` is settings-sync.ts's own shape. */
+export interface SyncSettingsPayload {
+  updatedAt: string;
+  values: unknown;
 }
 
 export interface SyncSnapshotV1 {
@@ -65,10 +74,16 @@ export interface SyncMetadata {
   connectedEmail?: string | null;
   syncStatus: SyncRunStatus;
   syncError?: string | null;
+  /** What kind of failure `syncError` is — drives whether the user is asked to act. */
+  syncErrorKind?: SyncErrorKind | null;
+  /** Consecutive transient failures, for retry backoff. */
+  retryCount?: number;
   pendingUploadCount: number;
   pendingDownloadCount: number;
   lastSuccessfulPullAt?: string | null;
   lastSuccessfulPushAt?: string | null;
+  /** When a full pull + push round last finished cleanly. */
+  lastSyncedAt?: string | null;
   lastDriveChangeToken?: string | null;
 }
 
@@ -80,7 +95,14 @@ export interface SyncStatus {
   connectedEmail?: string | null;
   lastPullAt?: string | null;
   lastPushAt?: string | null;
+  lastSyncedAt?: string | null;
   lastError?: string | null;
+  /**
+   * Set only when sync cannot fix itself and needs the user: sign in to Drive
+   * again, or re-enter the passphrase. Everything else (offline, a flaky
+   * request) retries quietly and leaves this null.
+   */
+  attention: SyncAttention | null;
   syncing: boolean;
   syncStatus: SyncRunStatus;
   pendingChanges: boolean;
@@ -94,6 +116,11 @@ export type SyncAuthState = "disconnected" | "awaiting_browser" | "connected" | 
 
 export type SyncRunStatus = "idle" | "pending" | "syncing" | "synced" | "error";
 
+/** reauth / passphrase need the user; transient retries on its own; other is a bug. */
+export type SyncErrorKind = "reauth" | "passphrase" | "transient" | "other";
+
+export type SyncAttention = "reconnect" | "passphrase";
+
 export type SyncRecordKind =
   | "bootstrap"
   | "saved"
@@ -101,7 +128,8 @@ export type SyncRecordKind =
   | "compare"
   | "quickHistory"
   | "priceBook"
-  | "usage";
+  | "usage"
+  | "settings";
 
 export interface SyncSessionDescriptor {
   provider: "google";

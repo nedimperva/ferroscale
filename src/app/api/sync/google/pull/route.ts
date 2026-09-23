@@ -1,7 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { SyncPullRequest, SyncPullResponse } from "@/lib/sync/sync-shared";
-import { pullChangedRecords, pullInitialRecords, refreshGoogleAccessToken } from "@/lib/sync/google-server";
-import { unsealSyncSession } from "@/lib/sync/sync-session";
+import {
+  SyncStaleChangeTokenError,
+  openSyncSession,
+  pullChangedRecords,
+  pullInitialRecords,
+  refreshGoogleAccessToken,
+  syncErrorResponse,
+} from "@/lib/sync/google-server";
 
 export const runtime = "nodejs";
 
@@ -12,12 +18,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Missing sessionToken" }, { status: 400 });
     }
 
-    const session = unsealSyncSession(body.sessionToken);
+    const session = openSyncSession(body.sessionToken);
     const { accessToken, sessionToken } = await refreshGoogleAccessToken(session);
 
-    const result = body.pageToken
-      ? await pullChangedRecords(accessToken, body.pageToken)
-      : await pullInitialRecords(accessToken);
+    let result;
+    try {
+      result = body.pageToken
+        ? await pullChangedRecords(accessToken, body.pageToken)
+        : await pullInitialRecords(accessToken);
+    } catch (error) {
+      // A cursor Drive no longer knows: list everything again. Merging is
+      // idempotent, so re-reading records the client already has is harmless.
+      if (!(error instanceof SyncStaleChangeTokenError)) throw error;
+      result = await pullInitialRecords(accessToken);
+    }
 
     const payload: SyncPullResponse = {
       ok: true,
@@ -28,9 +42,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(payload);
   } catch (error) {
-    return NextResponse.json(
-      { message: error instanceof Error ? error.message : "Failed to pull sync records" },
-      { status: 500 },
-    );
+    const { status, body } = syncErrorResponse(error, "Failed to pull sync records");
+    return NextResponse.json(body, { status });
   }
 }

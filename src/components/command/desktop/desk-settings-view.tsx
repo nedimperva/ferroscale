@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useSyncExternalStore } from "react";
+import { useSyncAttention } from "@/hooks/useSyncAttention";
 import { useTranslations } from "next-intl";
 import { APP_VERSION } from "@/lib/changelog";
 import { useTheme } from "@/hooks/useTheme";
@@ -126,7 +127,11 @@ export function DeskSettingsView({
   const { locale, setLocale } = useCommandLocaleSwitch();
   const { theme, setTheme } = useTheme();
   const priceBook = usePriceBook();
-  const [group, setGroup] = useState<SettingsGroupId>("pricing");
+  // Until the user picks a group, a sync that needs them opens on the sync
+  // pane — that is what the dot on the rail's Settings button promised.
+  const syncAttention = useSyncAttention();
+  const [pickedGroup, setGroup] = useState<SettingsGroupId | null>(null);
+  const group: SettingsGroupId = pickedGroup ?? (syncAttention ? "sync" : "pricing");
   const [search, setSearch] = useState("");
 
   const marginPercent = useSyncExternalStore(

@@ -7,6 +7,7 @@ import type { CompareItem } from "@/hooks/useCompare";
 import { saveSyncRecordIndex } from "./metadata";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS } from "./keys";
 import { buildUsageSource, USAGE_STORAGE_KEY } from "@/lib/usage-stats";
+import { marginPercentStore } from "@/lib/settings-stores";
 
 function createSavedEntry(overrides?: Partial<SavedEntry>): SavedEntry {
   return {
@@ -239,5 +240,32 @@ describe("usage records", () => {
     // Merging our own echo would count the same use twice.
     expect(buildUsageSource().topSizes("shs")).toEqual(["40x40x3"]);
     expect(localStorage.getItem("ferroscale-usage-peers-v1")).toBeNull();
+  });
+
+  it("carries the shop defaults as one settings record, both ways", async () => {
+    marginPercentStore.set(18);
+    const pending = await getPendingSyncRecords("device-a");
+    const settings = pending.find((record) => record.recordKey === "settings:root");
+    expect(settings?.kind).toBe("settings");
+    expect(JSON.parse(settings!.payload).values.marginPercent).toBe(18);
+
+    applyRemoteSyncRecords(
+      [
+        {
+          recordKey: "settings:root",
+          kind: "settings",
+          driveFileId: "drive-settings",
+          removed: false,
+          payload: JSON.stringify({
+            updatedAt: "2999-01-01T00:00:00.000Z",
+            values: { marginPercent: 25 },
+          }),
+          contentHash: "hash-settings",
+          modifiedTime: "2999-01-01T00:00:00.000Z",
+        },
+      ],
+      "device-a",
+    );
+    expect(marginPercentStore.getSnapshot()).toBe(25);
   });
 });

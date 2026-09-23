@@ -14,6 +14,8 @@ import { isArchivedProject, MAX_PROJECTS, useProjects } from "@/hooks/useProject
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
+import { useSyncAttention } from "@/hooks/useSyncAttention";
+import { AlertDot } from "./desktop/desk-rail";
 import { calculateMetal, cmdParse, cmdClassifyToken, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
   cmdSuggest,
@@ -230,6 +232,8 @@ export function CommandShell() {
     "session" | "saved" | "compare" | "projects" | null
   >(null);
   const [toast, setToast] = useState<CommandToastState | null>(null);
+  // Sync runs by itself; this is only set when it needs the user.
+  const syncAttention = useSyncAttention();
   // Query history — persisted (and Drive-synced) via the quickHistory
   // collection. Backs the desktop session tape and recency suggestions.
   const {
@@ -1775,7 +1779,17 @@ export function CommandShell() {
                   <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
                 </svg>
               </IconBtn>
-              <IconBtn onClick={() => setSheet("settings")} ariaLabel={t("nav.settings")}>
+              <IconBtn
+                onClick={() => setSheet("settings")}
+                ariaLabel={t("nav.settings")}
+                alert={
+                  syncAttention === "reconnect"
+                    ? t("sync.attentionReconnect")
+                    : syncAttention === "passphrase"
+                      ? t("sync.attentionPassphrase")
+                      : null
+                }
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
@@ -2666,19 +2680,24 @@ function IconBtn({
   children,
   onClick,
   ariaLabel,
+  alert,
 }: {
   children: React.ReactNode;
   onClick: () => void;
   ariaLabel: string;
+  /** Something behind this button needs the user — read aloud and dotted. */
+  alert?: string | null;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={ariaLabel}
-      className="w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
+      aria-label={alert ? `${ariaLabel}, ${alert}` : ariaLabel}
+      title={alert ?? undefined}
+      className="relative w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
     >
       {children}
+      {alert && <AlertDot />}
     </button>
   );
 }

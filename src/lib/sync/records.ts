@@ -29,6 +29,7 @@ import {
   mergeRemoteUsageStats,
 } from "@/lib/usage-stats";
 import { BOOTSTRAP_RECORD_KEY, SYNC_SCHEMA_VERSION } from "./keys";
+import { applySyncedSettings, buildSettingsPayload } from "./settings-sync";
 import { loadSyncRecordIndex, saveSyncRecordIndex } from "./metadata";
 import type {
   AppliedSyncRecord,
@@ -39,6 +40,7 @@ import type {
   SyncListCollectionKey,
   SyncRecordIndex,
   SyncRecordKind,
+  SyncSettingsPayload,
   SyncUsagePayload,
 } from "./types";
 
@@ -118,6 +120,17 @@ function buildUsageRecord(deviceId: string): Omit<SyncLocalRecord, "contentHash"
   };
 }
 
+function buildSettingsRecord(): Omit<SyncLocalRecord, "contentHash"> {
+  const payload = buildSettingsPayload();
+  return {
+    recordKey: "settings:root",
+    kind: "settings",
+    entityId: "root",
+    updatedAt: payload.updatedAt,
+    payload: JSON.stringify(payload),
+  };
+}
+
 async function finalizeRecords(
   drafts: Array<Omit<SyncLocalRecord, "contentHash">>,
   index: SyncRecordIndex,
@@ -150,6 +163,7 @@ export async function buildLocalSyncRecords(deviceId: string) {
     buildListRecord("priceBook", loadPriceBook()),
     buildListRecord("quickHistory", loadQuickHistory()),
     buildUsageRecord(deviceId),
+    buildSettingsRecord(),
   ];
 
   return finalizeRecords(drafts, index);
@@ -226,6 +240,9 @@ function resolveRecordUpdatedAt(kind: SyncRecordKind, payload: string) {
   }
   if (kind === "usage") {
     return (JSON.parse(payload) as SyncUsagePayload).updatedAt;
+  }
+  if (kind === "settings") {
+    return (JSON.parse(payload) as SyncSettingsPayload).updatedAt;
   }
   return (JSON.parse(payload) as SyncEntityRecord).updatedAt;
 }
@@ -304,6 +321,9 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
         }
         break;
       }
+      case "settings":
+        applySyncedSettings(JSON.parse(record.payload) as SyncSettingsPayload);
+        break;
     }
   }
 

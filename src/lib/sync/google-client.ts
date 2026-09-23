@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   applyRemoteSyncRecords,
   clearAllIndexedRecords,
@@ -22,14 +22,69 @@ import {
   saveSyncSession,
   subscribeSyncState,
 } from "./metadata";
-import { GOOGLE_SYNC_PROVIDER_ID, SYNC_AUTH_RESULT_STORAGE_KEY } from "./keys";
+import { GOOGLE_SYNC_PROVIDER_ID, SYNC_AUTH_RESULT_STORAGE_KEY, SYNC_METADATA_KEY } from "./keys";
 import type { SyncAuthPollResponse, SyncAuthStartResponse, SyncPullResponse, SyncPushResponse } from "./sync-shared";
-import type { AppliedSyncRecord, SyncStatus } from "./types";
+import type { AppliedSyncRecord, SyncAttention, SyncErrorKind, SyncMetadata, SyncStatus } from "./types";
+
+/**
+ * Google Drive sync, client side.
+ *
+ * The engine (timers, listeners, the dirty handler) is module state driven by
+ * one `useSyncEngine()` mounted for the whole app, so sync runs whether or not
+ * Settings is open. `useGoogleDriveSync()` is only a view onto it plus the
+ * user actions, and can be mounted anywhere, any number of times.
+ */
 
 type SyncOutcome = {
   status: SyncStatus["syncStatus"];
   message?: string;
 };
+
+type SyncSession = NonNullable<SyncAuthPollResponse & { status: "complete" }>["session"];
+
+/** Local edits settle for this long before a push. */
+const DIRTY_DEBOUNCE_MS = 1500;
+/** A visible tab checks Drive for other devices' changes this often. */
+const BACKGROUND_PULL_MS = 3 * 60_000;
+/** Transient failures retry at 30s, 1m, 2m… capped here. */
+const MAX_RETRY_DELAY_MS = 15 * 60_000;
+
+/** A request that failed, with the HTTP status (0 = never reached the server). */
+class SyncRequestError extends Error {
+  constructor(message: string, readonly status: number, readonly code?: string) {
+    super(message);
+    this.name = "SyncRequestError";
+  }
+}
+
+/** Drive holds data this passphrase cannot open. */
+class SyncPassphraseError extends Error {
+  constructor() {
+    super("The sync passphrase does not match the one used on your other devices.");
+    this.name = "SyncPassphraseError";
+  }
+}
+
+export function classifySyncError(error: unknown): SyncErrorKind {
+  if (error instanceof SyncPassphraseError) return "passphrase";
+  if (error instanceof SyncRequestError) {
+    if (error.code === "reauth" || error.status === 401) return "reauth";
+    if (error.status === 0 || error.status === 429 || error.status >= 500) {
+      // The server wraps Google's refusal of a revoked token as a plain 500
+      // on older deployments — still an auth problem, not a flaky network.
+      return /invalid_grant|unauthorized|reauth/i.test(error.message) ? "reauth" : "transient";
+    }
+    return "other";
+  }
+  const message = error instanceof Error ? error.message : "";
+  if (/invalid_grant|refresh token|unauthorized|reauth/i.test(message)) return "reauth";
+  if (/failed to fetch|network|load failed|timed out/i.test(message)) return "transient";
+  return "other";
+}
+
+export function retryDelayMs(retryCount: number): number {
+  return Math.min(MAX_RETRY_DELAY_MS, 30_000 * 2 ** Math.max(0, retryCount - 1));
+}
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -76,18 +131,28 @@ function navigateAuthWindow(target: PreparedAuthWindow, authUrl: string) {
 }
 
 async function apiJson<T>(input: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    cache: "no-store",
-  });
+  let response: Response;
+  try {
+    response = await fetch(input, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...(init?.headers ?? {}),
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new SyncRequestError(error instanceof Error ? error.message : "Network request failed", 0);
+  }
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error((payload as { message?: string } | null)?.message || `Sync request failed (${response.status})`);
+    const body = payload as { message?: string; code?: string } | null;
+    throw new SyncRequestError(
+      body?.message || `Sync request failed (${response.status})`,
+      response.status,
+      body?.code,
+    );
   }
 
   return payload as T;
@@ -197,18 +262,40 @@ async function waitForAuthCompletion(authRequestId: string) {
 }
 
 async function decryptPulledRecords(records: SyncPullResponse["records"], passphrase: string) {
-  return Promise.all(records.map(async (record): Promise<AppliedSyncRecord> => ({
-    recordKey: record.recordKey,
-    kind: record.kind,
-    driveFileId: record.driveFileId,
-    removed: record.removed,
-    payload: record.encryptedPayload ? await decryptAESGCM(record.encryptedPayload, passphrase) : null,
-    contentHash: record.encryptedPayload ? await sha256Text(await decryptAESGCM(record.encryptedPayload, passphrase)) : null,
-    modifiedTime: record.modifiedTime,
-  })));
+  // Everything is decrypted before anything is applied, so a wrong passphrase
+  // stops the pull cold instead of leaving half of Drive merged in.
+  return Promise.all(records.map(async (record): Promise<AppliedSyncRecord> => {
+    let payload: string | null = null;
+    if (record.encryptedPayload) {
+      try {
+        payload = await decryptAESGCM(record.encryptedPayload, passphrase);
+      } catch {
+        throw new SyncPassphraseError();
+      }
+    }
+    return {
+      recordKey: record.recordKey,
+      kind: record.kind,
+      driveFileId: record.driveFileId,
+      removed: record.removed,
+      payload,
+      contentHash: payload ? await sha256Text(payload) : null,
+      modifiedTime: record.modifiedTime,
+    };
+  }));
 }
 
-function toStatus(currentAction?: string): SyncStatus {
+function attentionFor(metadata: SyncMetadata): SyncAttention | null {
+  // Only a device that has been connected can lose the connection; a first
+  // sign-in the user abandoned is not something to nag about.
+  if (!metadata.syncEnabled || !metadata.connectedEmail) return null;
+  if (metadata.authState === "reauth_required") return "reconnect";
+  if (metadata.authState !== "connected") return null;
+  if (metadata.syncErrorKind === "passphrase" || !hasSyncPassphrase()) return "passphrase";
+  return null;
+}
+
+function toStatus(): SyncStatus {
   const metadata = getSyncMetadata();
   return {
     hydrated: true,
@@ -218,7 +305,9 @@ function toStatus(currentAction?: string): SyncStatus {
     connectedEmail: metadata.connectedEmail,
     lastPullAt: metadata.lastSuccessfulPullAt,
     lastPushAt: metadata.lastSuccessfulPushAt,
+    lastSyncedAt: metadata.lastSyncedAt ?? metadata.lastSuccessfulPullAt,
     lastError: metadata.syncError,
+    attention: attentionFor(metadata),
     syncing: metadata.syncStatus === "syncing",
     syncStatus: metadata.syncStatus,
     pendingChanges: metadata.pendingUploadCount > 0 || metadata.pendingDownloadCount > 0,
@@ -229,402 +318,517 @@ function toStatus(currentAction?: string): SyncStatus {
   };
 }
 
-export function useGoogleDriveSync() {
-  const [status, setStatus] = useState<SyncStatus>(() => toStatus());
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentActionRef = useRef<string | undefined>(undefined);
-  const runLock = useRef<Promise<SyncOutcome> | null>(null);
-  const pendingAuthCheckRef = useRef<Promise<SyncOutcome | null> | null>(null);
+/** What renders before localStorage can be read — keeps SSR and hydration equal. */
+const UNHYDRATED_STATUS: SyncStatus = {
+  hydrated: false,
+  connected: false,
+  providerId: GOOGLE_SYNC_PROVIDER_ID,
+  authState: "disconnected",
+  attention: null,
+  syncing: false,
+  syncStatus: "idle",
+  pendingChanges: false,
+  pendingUploadCount: 0,
+  pendingDownloadCount: 0,
+  passphraseConfigured: false,
+};
 
-  const refreshStatus = useCallback(() => {
-    setStatus(toStatus(currentActionRef.current));
-  }, []);
+/* ---------------------------------------------------------------- engine state */
 
-  const syncNow = useCallback(async (opts?: { resetRemote?: boolean }) => {
-    if (runLock.current) return runLock.current;
+let currentAction: string | undefined;
+const actionListeners = new Set<() => void>();
+let runLock: Promise<SyncOutcome> | null = null;
+let pendingAuthCheck: Promise<SyncOutcome | null> | null = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+/** A local edit landed while a run was in flight — its snapshot missed it. */
+let dirtyDuringRun = false;
+let lastAutoRunAt = 0;
 
-    runLock.current = (async () => {
-      const current = getSyncMetadata();
-      if (!current.syncEnabled || current.authState !== "connected") {
-        refreshStatus();
-        return { status: current.syncStatus };
-      }
+function setCurrentAction(action: string | undefined) {
+  currentAction = action;
+  for (const listener of actionListeners) listener();
+}
 
-      const passphrase = loadSyncPassphrase();
-      if (!passphrase) {
-        const next = saveSyncMetadata({
-          syncStatus: "error",
-          syncError: "Enter the sync passphrase on this device.",
-        });
-        setStatus(toStatus(currentActionRef.current));
-        return { status: next.syncStatus, message: next.syncError ?? undefined };
-      }
+function clearTimers() {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  if (retryTimer) clearTimeout(retryTimer);
+  debounceTimer = null;
+  retryTimer = null;
+}
 
-      const session = loadSyncSession();
-      if (!session) {
-        const next = saveSyncMetadata({
-          authState: "reauth_required",
-          syncStatus: "error",
-          syncError: "Reconnect Google Drive to continue syncing.",
-        });
-        setStatus(toStatus(currentActionRef.current));
-        return { status: next.syncStatus, message: next.syncError ?? undefined };
-      }
+function scheduleSync(delayMs = DIRTY_DEBOUNCE_MS) {
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    debounceTimer = null;
+    void syncNow();
+  }, delayMs);
+}
 
-      saveSyncMetadata({
-        syncStatus: "syncing",
-        syncError: null,
-        pendingDownloadCount: 0,
-      });
-      refreshStatus();
+function scheduleRetry(delayMs: number) {
+  if (retryTimer) clearTimeout(retryTimer);
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
+    void syncNow({ auto: true });
+  }, delayMs);
+}
 
-      try {
-        const pull = await apiJson<SyncPullResponse>("/api/sync/google/pull", {
-          method: "POST",
-          body: JSON.stringify({
-            sessionToken: session.sessionToken,
-            pageToken: current.lastDriveChangeToken,
-          }),
-        });
+/**
+ * Two tabs syncing at once would both create Drive files for the same new
+ * record. Web Locks serialises them across tabs; the second run then finds
+ * nothing left to push.
+ */
+async function withCrossTabLock<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+  if (!locks) return fn();
+  return locks.request("ferroscale-sync", fn) as Promise<T>;
+}
 
-        if (pull.sessionToken && pull.sessionToken !== session.sessionToken) {
-          saveSyncSession({
-            ...session,
-            sessionToken: pull.sessionToken,
-          });
-        }
+async function runSyncOnce(opts?: { resetRemote?: boolean }): Promise<SyncOutcome> {
+  const current = getSyncMetadata();
+  if (!current.syncEnabled || current.authState !== "connected") {
+    return { status: current.syncStatus };
+  }
 
-        if (pull.records.length > 0) {
-          saveSyncMetadata({
-            pendingDownloadCount: pull.records.length,
-            syncStatus: "syncing",
-            syncError: null,
-          });
-          const decrypted = await decryptPulledRecords(pull.records, passphrase);
-          applyRemoteSyncRecords(decrypted, current.deviceId);
-          savePulledRecordsToIndex(decrypted);
-        }
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    // Not an error: the `online` event picks this up again.
+    const next = saveSyncMetadata({ syncStatus: "pending", syncErrorKind: "transient", syncError: null });
+    return { status: next.syncStatus };
+  }
 
-        saveSyncMetadata({
-          lastDriveChangeToken: pull.nextPageToken ?? current.lastDriveChangeToken,
-          lastSuccessfulPullAt: new Date().toISOString(),
-          pendingDownloadCount: 0,
-          syncStatus: "pending",
-          syncError: null,
-        });
-
-        const latest = getSyncMetadata();
-        const pending = await getPendingSyncRecords(latest.deviceId);
-        saveSyncMetadata({
-          pendingUploadCount: pending.length,
-        });
-
-        if (pending.length > 0 || opts?.resetRemote) {
-          const activeSession = loadSyncSession();
-          if (!activeSession) throw new Error("Google Drive session missing");
-
-          const push = await apiJson<SyncPushResponse>("/api/sync/google/push", {
-            method: "POST",
-            body: JSON.stringify({
-              sessionToken: activeSession.sessionToken,
-              resetRemote: !!opts?.resetRemote,
-              records: await Promise.all(pending.map(async (record) => ({
-                recordKey: record.recordKey,
-                kind: record.kind,
-                entityId: record.entityId,
-                updatedAt: record.updatedAt,
-                contentHash: record.contentHash,
-                encryptedPayload: await encryptAESGCM(record.payload, passphrase),
-                existingFileId: opts?.resetRemote ? null : record.existingFileId,
-              }))),
-            }),
-          });
-
-          if (push.sessionToken && push.sessionToken !== activeSession.sessionToken) {
-            saveSyncSession({
-              ...activeSession,
-              sessionToken: push.sessionToken,
-            });
-          }
-
-          markSyncPushResults(pending, push.records);
-          saveSyncMetadata({
-            lastSuccessfulPushAt: new Date().toISOString(),
-            pendingUploadCount: 0,
-            syncStatus: "synced",
-            syncError: null,
-          });
-        } else {
-          saveSyncMetadata({
-            syncStatus: "synced",
-            syncError: null,
-          });
-        }
-
-        refreshStatus();
-        return { status: getSyncMetadata().syncStatus };
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Google Drive sync failed";
-        saveSyncMetadata({
-          authState: /401|refresh token|authorization|reauth/i.test(message) ? "reauth_required" : getSyncMetadata().authState,
-          syncStatus: "error",
-          syncError: message,
-        });
-        refreshStatus();
-        return { status: "error", message };
-      } finally {
-        runLock.current = null;
-      }
-    })();
-
-    return runLock.current;
-  }, [refreshStatus]);
-
-  const finalizeConnectedSession = useCallback(async (session: NonNullable<SyncAuthPollResponse & { status: "complete" }>["session"]) => {
-    saveSyncSession(session);
-    saveSyncMetadata({
-      syncEnabled: true,
-      authState: "connected",
-      pendingAuthRequestId: null,
-      connectedEmail: session.accountEmail,
-      syncStatus: "pending",
-      syncError: null,
+  const passphrase = loadSyncPassphrase();
+  if (!passphrase) {
+    const next = saveSyncMetadata({
+      syncStatus: "error",
+      syncErrorKind: "passphrase",
+      syncError: "Enter the sync passphrase on this device.",
     });
-    refreshStatus();
-    return syncNow();
-  }, [refreshStatus, syncNow]);
+    return { status: next.syncStatus, message: next.syncError ?? undefined };
+  }
 
-  const resumePendingAuth = useCallback(async () => {
-    if (pendingAuthCheckRef.current) {
-      return pendingAuthCheckRef.current;
+  const session = loadSyncSession();
+  if (!session) {
+    const next = saveSyncMetadata({
+      authState: "reauth_required",
+      syncStatus: "error",
+      syncErrorKind: "reauth",
+      syncError: "Reconnect Google Drive to continue syncing.",
+    });
+    return { status: next.syncStatus, message: next.syncError ?? undefined };
+  }
+
+  saveSyncMetadata({
+    syncStatus: "syncing",
+    pendingDownloadCount: 0,
+  });
+
+  try {
+    const pull = await apiJson<SyncPullResponse>("/api/sync/google/pull", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionToken: session.sessionToken,
+        pageToken: current.lastDriveChangeToken,
+      }),
+    });
+
+    if (pull.sessionToken && pull.sessionToken !== session.sessionToken) {
+      saveSyncSession({
+        ...session,
+        sessionToken: pull.sessionToken,
+      });
     }
 
-    pendingAuthCheckRef.current = (async () => {
-      const stored = readStoredAuthResult();
-      if (stored?.status === "complete") {
-        return finalizeConnectedSession(stored.session);
-      }
-      if (stored?.status === "error") {
-        saveSyncMetadata({
-          authState: "reauth_required",
-          pendingAuthRequestId: null,
-          syncStatus: "error",
-          syncError: stored.message,
-        });
-        refreshStatus();
-        return { status: "error", message: stored.message };
-      }
-
-      const current = getSyncMetadata();
-      if (current.authState !== "awaiting_browser" || !current.pendingAuthRequestId) {
-        return null;
-      }
-
-      try {
-        const session = await waitForAuthCompletion(current.pendingAuthRequestId);
-        return finalizeConnectedSession(session);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Google Drive sign-in could not be completed";
-        saveSyncMetadata({
-          authState: /timed out/i.test(message) ? current.authState : "reauth_required",
-          pendingAuthRequestId: /timed out/i.test(message) ? current.pendingAuthRequestId : null,
-          syncStatus: "error",
-          syncError: message,
-        });
-        refreshStatus();
-        return { status: "error", message };
-      }
-    })();
-
-    try {
-      return await pendingAuthCheckRef.current;
-    } finally {
-      pendingAuthCheckRef.current = null;
-    }
-  }, [finalizeConnectedSession, refreshStatus]);
-
-  const scheduleSync = useCallback((delayMs = 1500) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      void syncNow();
-    }, delayMs);
-    refreshStatus();
-  }, [refreshStatus, syncNow]);
-
-  const connect = useCallback(async (passphrase: string) => {
-    const trimmed = passphrase.trim();
-    if (!trimmed) {
-      throw new Error("Enter a sync passphrase before connecting Google Drive.");
+    // A reset overwrites Drive with this device's copy, so what is there now
+    // (possibly under an old passphrase) is not read, only replaced.
+    if (pull.records.length > 0 && !opts?.resetRemote) {
+      saveSyncMetadata({ pendingDownloadCount: pull.records.length });
+      const decrypted = await decryptPulledRecords(pull.records, passphrase);
+      applyRemoteSyncRecords(decrypted, current.deviceId);
+      savePulledRecordsToIndex(decrypted);
     }
 
-    currentActionRef.current = "connect";
-    refreshStatus();
-    const authWindow = prepareAuthWindow();
-    saveSyncPassphrase(trimmed);
+    saveSyncMetadata({
+      lastDriveChangeToken: pull.nextPageToken ?? current.lastDriveChangeToken,
+      lastSuccessfulPullAt: new Date().toISOString(),
+      pendingDownloadCount: 0,
+    });
 
-    try {
-      const start = await apiJson<SyncAuthStartResponse>("/api/sync/google/auth/start", {
+    const pending = await getPendingSyncRecords(getSyncMetadata().deviceId);
+    saveSyncMetadata({ pendingUploadCount: pending.length });
+
+    if (pending.length > 0 || opts?.resetRemote) {
+      const activeSession = loadSyncSession();
+      if (!activeSession) throw new SyncRequestError("Google Drive session missing", 401, "reauth");
+
+      const push = await apiJson<SyncPushResponse>("/api/sync/google/push", {
         method: "POST",
+        body: JSON.stringify({
+          sessionToken: activeSession.sessionToken,
+          resetRemote: !!opts?.resetRemote,
+          records: await Promise.all(pending.map(async (record) => ({
+            recordKey: record.recordKey,
+            kind: record.kind,
+            entityId: record.entityId,
+            updatedAt: record.updatedAt,
+            contentHash: record.contentHash,
+            encryptedPayload: await encryptAESGCM(record.payload, passphrase),
+            existingFileId: opts?.resetRemote ? null : record.existingFileId,
+          }))),
+        }),
       });
+
+      if (push.sessionToken && push.sessionToken !== activeSession.sessionToken) {
+        saveSyncSession({
+          ...activeSession,
+          sessionToken: push.sessionToken,
+        });
+      }
+
+      markSyncPushResults(pending, push.records);
       saveSyncMetadata({
-        syncEnabled: true,
-        authState: "awaiting_browser",
-        pendingAuthRequestId: start.authRequestId,
-        syncStatus: "pending",
-        syncError: null,
+        lastSuccessfulPushAt: new Date().toISOString(),
+        pendingUploadCount: 0,
       });
-      refreshStatus();
-      navigateAuthWindow(authWindow, start.authUrl);
-      if (authWindow.mode === "redirect") {
-        return { status: "pending" as const };
-      }
+    }
 
-      const session = await waitForAuthCompletion(start.authRequestId);
-      return finalizeConnectedSession(session);
-    } catch (error) {
-      if (authWindow.mode === "popup" && !authWindow.popup.closed) {
-        authWindow.popup.close();
-      }
+    saveSyncMetadata({
+      syncStatus: "synced",
+      syncError: null,
+      syncErrorKind: null,
+      retryCount: 0,
+      lastSyncedAt: new Date().toISOString(),
+    });
+    return { status: "synced" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Google Drive sync failed";
+    const kind = classifySyncError(error);
 
-      const message = error instanceof Error ? error.message : "Failed to connect Google Drive";
+    if (kind === "transient") {
+      // Offline, a timeout, Google having a moment: nothing the user can do,
+      // so say nothing and try again later.
+      const retryCount = (getSyncMetadata().retryCount ?? 0) + 1;
+      saveSyncMetadata({
+        syncStatus: "pending",
+        syncError: message,
+        syncErrorKind: "transient",
+        retryCount,
+      });
+      scheduleRetry(retryDelayMs(retryCount));
+      return { status: "pending", message };
+    }
+
+    saveSyncMetadata({
+      authState: kind === "reauth" ? "reauth_required" : getSyncMetadata().authState,
+      syncStatus: "error",
+      syncError: message,
+      syncErrorKind: kind,
+      retryCount: 0,
+    });
+    return { status: "error", message };
+  }
+}
+
+/**
+ * Run one pull + push round. `auto` marks runs the app started on its own
+ * (focus, timer, startup); those stand down while the passphrase is known
+ * wrong, since only the user can fix that.
+ */
+export function syncNow(opts?: { resetRemote?: boolean; auto?: boolean }): Promise<SyncOutcome> {
+  if (runLock) {
+    if (opts?.resetRemote) return runLock.then(() => syncNow(opts));
+    return runLock;
+  }
+
+  if (opts?.auto) {
+    const metadata = getSyncMetadata();
+    if (metadata.syncErrorKind === "passphrase") {
+      return Promise.resolve({ status: metadata.syncStatus });
+    }
+    lastAutoRunAt = Date.now();
+  }
+
+  clearTimers();
+  runLock = withCrossTabLock(() => runSyncOnce(opts)).finally(() => {
+    runLock = null;
+    if (dirtyDuringRun) {
+      dirtyDuringRun = false;
+      scheduleSync(250);
+    }
+  });
+  return runLock;
+}
+
+/* ---------------------------------------------------------------- actions */
+
+function finalizeConnectedSession(session: SyncSession) {
+  saveSyncSession(session);
+  saveSyncMetadata({
+    syncEnabled: true,
+    authState: "connected",
+    pendingAuthRequestId: null,
+    connectedEmail: session.accountEmail,
+    syncStatus: "pending",
+    syncError: null,
+    syncErrorKind: null,
+    retryCount: 0,
+  });
+  return syncNow();
+}
+
+async function resumePendingAuth(): Promise<SyncOutcome | null> {
+  if (pendingAuthCheck) return pendingAuthCheck;
+
+  pendingAuthCheck = (async (): Promise<SyncOutcome | null> => {
+    const stored = readStoredAuthResult();
+    if (stored?.status === "complete") {
+      return finalizeConnectedSession(stored.session);
+    }
+    if (stored?.status === "error") {
       saveSyncMetadata({
         authState: "reauth_required",
         pendingAuthRequestId: null,
         syncStatus: "error",
+        syncErrorKind: "reauth",
+        syncError: stored.message,
+      });
+      return { status: "error", message: stored.message };
+    }
+
+    const current = getSyncMetadata();
+    if (current.authState !== "awaiting_browser" || !current.pendingAuthRequestId) {
+      return null;
+    }
+
+    try {
+      const session = await waitForAuthCompletion(current.pendingAuthRequestId);
+      return finalizeConnectedSession(session);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Google Drive sign-in could not be completed";
+      const timedOut = /timed out/i.test(message);
+      saveSyncMetadata({
+        authState: timedOut ? current.authState : "reauth_required",
+        pendingAuthRequestId: timedOut ? current.pendingAuthRequestId : null,
+        syncStatus: "error",
+        syncErrorKind: timedOut ? "transient" : "reauth",
         syncError: message,
       });
-      refreshStatus();
-      throw error;
-    } finally {
-      currentActionRef.current = undefined;
-      refreshStatus();
+      return { status: "error", message };
     }
-  }, [finalizeConnectedSession, refreshStatus]);
+  })();
 
-  const reconnect = useCallback(async () => {
-    const passphrase = loadSyncPassphrase();
-    if (!passphrase) {
-      throw new Error("Enter the sync passphrase first.");
-    }
-    return connect(passphrase);
-  }, [connect]);
+  try {
+    return await pendingAuthCheck;
+  } finally {
+    pendingAuthCheck = null;
+  }
+}
 
-  const disconnect = useCallback(async () => {
-    currentActionRef.current = "disconnect";
-    refreshStatus();
-    const session = loadSyncSession();
-    if (session) {
-      await apiJson<{ ok: true }>("/api/sync/google/disconnect", {
-        method: "POST",
-        body: JSON.stringify({ sessionToken: session.sessionToken }),
-      }).catch(() => {});
-    }
+async function connect(passphrase: string) {
+  const trimmed = passphrase.trim();
+  if (!trimmed) {
+    throw new Error("Enter a sync passphrase before connecting Google Drive.");
+  }
 
-    clearSyncSession();
-    clearAllIndexedRecords();
-    resetSyncMetadata();
-    currentActionRef.current = undefined;
-    refreshStatus();
-  }, [refreshStatus]);
+  setCurrentAction("connect");
+  const authWindow = prepareAuthWindow();
+  saveSyncPassphrase(trimmed);
 
-  const resetRemoteCopy = useCallback(async () => {
-    currentActionRef.current = "reset-remote";
-    refreshStatus();
-    const outcome = await syncNow({ resetRemote: true });
-    currentActionRef.current = undefined;
-    refreshStatus();
-    return outcome;
-  }, [refreshStatus, syncNow]);
-
-  const changePassphrase = useCallback(async (passphrase: string) => {
-    const trimmed = passphrase.trim();
-    if (!trimmed) {
-      throw new Error("Enter the new sync passphrase.");
+  try {
+    const start = await apiJson<SyncAuthStartResponse>("/api/sync/google/auth/start", {
+      method: "POST",
+    });
+    saveSyncMetadata({
+      syncEnabled: true,
+      authState: "awaiting_browser",
+      pendingAuthRequestId: start.authRequestId,
+      syncStatus: "pending",
+      syncError: null,
+      syncErrorKind: null,
+    });
+    navigateAuthWindow(authWindow, start.authUrl);
+    if (authWindow.mode === "redirect") {
+      return { status: "pending" as const };
     }
 
-    currentActionRef.current = "change-passphrase";
+    const session = await waitForAuthCompletion(start.authRequestId);
+    return await finalizeConnectedSession(session);
+  } catch (error) {
+    if (authWindow.mode === "popup" && !authWindow.popup.closed) {
+      authWindow.popup.close();
+    }
+
+    const message = error instanceof Error ? error.message : "Failed to connect Google Drive";
+    saveSyncMetadata({
+      authState: "reauth_required",
+      pendingAuthRequestId: null,
+      syncStatus: "error",
+      syncErrorKind: "reauth",
+      syncError: message,
+    });
+    throw error;
+  } finally {
+    setCurrentAction(undefined);
+  }
+}
+
+async function reconnect() {
+  const passphrase = loadSyncPassphrase();
+  if (!passphrase) {
+    throw new Error("Enter the sync passphrase first.");
+  }
+  return connect(passphrase);
+}
+
+async function disconnect() {
+  setCurrentAction("disconnect");
+  clearTimers();
+  const session = loadSyncSession();
+  if (session) {
+    await apiJson<{ ok: true }>("/api/sync/google/disconnect", {
+      method: "POST",
+      body: JSON.stringify({ sessionToken: session.sessionToken }),
+    }).catch(() => {});
+  }
+
+  clearSyncSession();
+  clearAllIndexedRecords();
+  resetSyncMetadata();
+  setCurrentAction(undefined);
+}
+
+async function resetRemoteCopy() {
+  setCurrentAction("reset-remote");
+  try {
+    return await syncNow({ resetRemote: true });
+  } finally {
+    setCurrentAction(undefined);
+  }
+}
+
+/**
+ * This device's passphrase was missing or wrong: store the one the user typed
+ * and pull again. Unlike `changePassphrase`, Drive is left as it is — if this
+ * one is wrong too, the pull says so and nothing is overwritten.
+ */
+async function setPassphrase(passphrase: string) {
+  const trimmed = passphrase.trim();
+  if (!trimmed) {
+    throw new Error("Enter the sync passphrase.");
+  }
+  saveSyncPassphrase(trimmed);
+  saveSyncMetadata({ syncStatus: "pending", syncError: null, syncErrorKind: null });
+  return syncNow();
+}
+
+/** Re-encrypt everything on Drive under a new passphrase, from this device's copy. */
+async function changePassphrase(passphrase: string) {
+  const trimmed = passphrase.trim();
+  if (!trimmed) {
+    throw new Error("Enter the new sync passphrase.");
+  }
+
+  setCurrentAction("change-passphrase");
+  try {
     saveSyncPassphrase(trimmed);
     clearAllIndexedRecords();
     saveSyncMetadata({
       syncStatus: "pending",
       syncError: null,
+      syncErrorKind: null,
     });
-    refreshStatus();
 
     if (getSyncMetadata().authState !== "connected") {
-      currentActionRef.current = undefined;
-      refreshStatus();
       return { status: getSyncMetadata().syncStatus };
     }
+    return await syncNow({ resetRemote: true });
+  } finally {
+    setCurrentAction(undefined);
+  }
+}
 
-    const outcome = await syncNow({ resetRemote: true });
-    currentActionRef.current = undefined;
-    refreshStatus();
-    return outcome;
-  }, [refreshStatus, syncNow]);
+/* ---------------------------------------------------------------- hooks */
 
+/**
+ * Drives sync for the whole app. Mount exactly once, high in the tree — it
+ * owns the dirty handler, which is a single slot.
+ */
+export function useSyncEngine() {
   useEffect(() => {
-    refreshStatus();
-    const unsubscribe = subscribeSyncState(() => {
-      refreshStatus();
-      const current = getSyncMetadata();
-      if (current.authState === "awaiting_browser" && current.pendingAuthRequestId) {
-        void resumePendingAuth();
-      } else if (
-        current.syncEnabled
-        && current.authState === "connected"
-        && current.syncStatus === "pending"
-        && (current.pendingUploadCount > 0 || current.pendingDownloadCount > 0)
-      ) {
-        scheduleSync(250);
-      }
-    });
+    const wake = () => {
+      // focus and visibilitychange usually arrive together.
+      if (Date.now() - lastAutoRunAt < 5_000) return;
+      void resumePendingAuth().then((outcome) => {
+        if (!outcome) void syncNow({ auto: true });
+      });
+    };
 
     registerSyncDirtyHandler(() => {
       const current = getSyncMetadata();
       if (current.syncEnabled && current.authState === "connected") {
-        scheduleSync();
+        if (runLock) dirtyDuringRun = true;
+        else scheduleSync();
       } else {
         saveSyncMetadata({ pendingUploadCount: Math.max(current.pendingUploadCount, 1), syncStatus: "pending" });
-        refreshStatus();
+      }
+    });
+
+    const unsubscribe = subscribeSyncState(() => {
+      const current = getSyncMetadata();
+      if (current.authState === "awaiting_browser" && current.pendingAuthRequestId) {
+        void resumePendingAuth();
       }
     });
 
     const handleOnline = () => {
-      void resumePendingAuth().then((outcome) => {
-        if (!outcome) void syncNow();
-      });
+      lastAutoRunAt = 0;
+      wake();
     };
-
-    const handleFocus = () => {
-      void resumePendingAuth().then((outcome) => {
-        if (!outcome) void syncNow();
-      });
-    };
-
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        void resumePendingAuth().then((outcome) => {
-          if (!outcome) void syncNow();
-        });
-      }
+      if (document.visibilityState === "visible") wake();
     };
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") wake();
+    }, BACKGROUND_PULL_MS);
 
     window.addEventListener("online", handleOnline);
-    window.addEventListener("focus", handleFocus);
+    window.addEventListener("focus", wake);
     document.addEventListener("visibilitychange", handleVisibility);
 
-    void resumePendingAuth();
+    // Opening the app is the moment another device's work should show up.
+    wake();
 
     return () => {
       unsubscribe();
       registerSyncDirtyHandler(null);
+      clearInterval(interval);
+      clearTimers();
       window.removeEventListener("online", handleOnline);
-      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("focus", wake);
       document.removeEventListener("visibilitychange", handleVisibility);
-      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [refreshStatus, resumePendingAuth, scheduleSync, syncNow]);
+  }, []);
+}
+
+/** Sync status plus the user's actions. Safe to mount anywhere. */
+export function useGoogleDriveSync() {
+  const [status, setStatus] = useState<SyncStatus>(UNHYDRATED_STATUS);
+
+  useEffect(() => {
+    const refresh = () => setStatus(toStatus());
+    refresh();
+    const unsubscribe = subscribeSyncState(refresh);
+    actionListeners.add(refresh);
+    // Another tab's run writes the same metadata key.
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === SYNC_METADATA_KEY) refresh();
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      unsubscribe();
+      actionListeners.delete(refresh);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   return useMemo(() => ({
     status,
@@ -633,6 +837,7 @@ export function useGoogleDriveSync() {
     disconnect,
     resetRemoteCopy,
     changePassphrase,
-    syncNow,
-  }), [changePassphrase, connect, disconnect, reconnect, resetRemoteCopy, status, syncNow]);
+    setPassphrase,
+    syncNow: () => syncNow(),
+  }), [status]);
 }

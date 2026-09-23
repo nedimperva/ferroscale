@@ -17,6 +17,40 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.29.0",
+    date: "2026-09-23",
+    added: [
+      "Sync runs by itself. It used to run only while Settings was open, so a part saved and closed stayed on that device until Settings was opened again; the engine now lives for the whole app — it syncs about a second after each change, when the app opens, when the tab comes back, when the network returns, and every three minutes while the tab is visible",
+      "Shop defaults sync across devices: default rate and unit, currency, waste, VAT, default grade, margin, mass tolerance, length-unit fallback, headline number and paint defaults. Newer wins. A fresh device adopts what Drive holds; one you had already tuned keeps its own. Theme and haptics stay per device",
+      "A small red mark on the Settings button when sync needs you — to sign in to Google again, or to enter the passphrase on this device. Settings then opens on the sync card. Syncing, offline and retrying stay silent",
+    ],
+    changed: [
+      "The passphrase is typed into the sync card, twice on first connect, with a show toggle — not into a browser prompt. On a second device a wrong passphrase is caught before anything is merged, with a field to enter the right one; Drive is never overwritten from that screen",
+      "The sync card says where things stand in words — \"Synced 4 minutes ago\", \"Offline — changes will sync when you're back online\" — instead of the last pull's timestamp",
+    ],
+    fixed: [
+      "An expired or revoked Google sign-in asks you to sign in again instead of showing a raw token error on every attempt. Google's `invalid_grant` did not match the old check, so the app stayed \"connected\" and failed forever",
+      "Network blips and Google outages retry on their own with backoff (30 s up to 15 min) instead of parking sync in an error state",
+      "A Drive change cursor that expired no longer breaks every pull; the server lists the folder again and carries on",
+      "Two open tabs no longer sync at the same moment and create duplicate Drive files for a new part, and an edit made while a sync was in flight is no longer left for the next one",
+    ],
+    added_bs: [
+      "Sinhronizacija radi sama. Ranije je radila samo dok su Postavke bile otvorene, pa je sačuvan dio ostajao na tom uređaju dok se Postavke ponovo ne otvore; sada radi za cijelu aplikaciju — oko sekundu nakon svake promjene, pri otvaranju aplikacije, povratku na karticu, povratku mreže i svake tri minute dok je kartica vidljiva",
+      "Postavke radionice se sinhronizuju između uređaja: zadana cijena i jedinica, valuta, otpad, PDV, zadani kvalitet, marža, tolerancija mase, zadana jedinica dužine, glavna brojka i zadane vrijednosti boje. Novije pobjeđuje. Novi uređaj preuzima ono što je na Driveu; onaj koji ste već podesili zadržava svoje. Tema i vibracija ostaju po uređaju",
+      "Mala crvena oznaka na dugmetu Postavke kad sinhronizacija treba vas — ponovna prijava na Google ili unos lozinke na ovom uređaju. Postavke se tada otvaraju na kartici sinhronizacije. Sinhronizacija u toku, van mreže i ponovni pokušaji ostaju tihi",
+    ],
+    changed_bs: [
+      "Lozinka se unosi u karticu sinhronizacije, dvaput pri prvom povezivanju, uz prikaz lozinke — ne u prozor preglednika. Na drugom uređaju pogrešna lozinka se otkrije prije ikakvog spajanja, uz polje za ispravnu; Drive se s tog ekrana nikad ne prepisuje",
+      "Kartica sinhronizacije kaže stanje riječima — \"Sinhronizovano prije 4 minute\", \"Van mreže — promjene će se sinhronizovati kad se vratite na mrežu\" — umjesto vremena zadnjeg preuzimanja",
+    ],
+    fixed_bs: [
+      "Istekla ili opozvana Google prijava traži ponovnu prijavu umjesto sirove greške tokena pri svakom pokušaju. Googleov `invalid_grant` nije odgovarao staroj provjeri, pa je aplikacija ostajala \"povezana\" i zauvijek padala",
+      "Prekidi mreže i ispadi Googlea se sami ponovo pokušavaju s odgodom (30 s do 15 min) umjesto da sinhronizaciju ostave u grešci",
+      "Istekli Drive kursor promjena više ne ruši svako preuzimanje; server ponovo izlista folder i nastavlja",
+      "Dvije otvorene kartice se više ne sinhronizuju istovremeno i ne prave duple Drive datoteke za novi dio, a izmjena napravljena tokom sinhronizacije više ne čeka sljedeću",
+    ],
+  },
+  {
     version: "3.28.0",
     date: "2026-09-22",
     fixed: [
