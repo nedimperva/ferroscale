@@ -22,6 +22,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changed: [
       "The desk's breakdown rail is wider, and weight and cost are both open at once — no tabs. Every figure that scales with quantity shows one piece beside all of them (length, weight, material, waste, VAT, total and sell price); mass per metre and the rate span both. A single piece keeps one column",
       "A multi-item line on the desk lists each part's weight and cost side by side, with its share of the weight, one ruled total for both, and the cost built up from material, waste and VAT. With a part open, arrows beside the Whole assembly / Part switch step to the previous or next part",
+      "On the desk the suggestions sit at the head of the answer column, so the breakdown starts right under the command line",
     ],
     fixed: [
       "An unfinished part in an assembly's breakdown reads \"Unfinished item\" instead of a raw translation key",
@@ -29,6 +30,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changed_bs: [
       "Kolona obračuna na desktopu je šira, a težina i cijena su otvorene istovremeno — bez kartica. Svaka vrijednost koja zavisi od količine prikazana je za jedan komad pored svih (dužina, težina, materijal, otpad, PDV, ukupno i prodajna cijena); masa po metru i cijena po jedinici idu preko obje kolone. Jedan komad zadržava jednu kolonu",
       "Linija s više stavki na desktopu navodi težinu i cijenu svakog dijela jednu pored druge, s udjelom u težini, jednim podvučenim zbirom za obje i strukturom cijene: materijal, otpad i PDV. Kad je dio otvoren, strelice pored prekidača Cijeli sklop / Dio prelaze na prethodni ili sljedeći dio",
+      "Na desktopu su prijedlozi na vrhu kolone s rezultatom, pa obračun počinje odmah ispod komandne linije",
     ],
     fixed_bs: [
       "Nedovršen dio u obračunu sklopa prikazuje \"Nedovršena stavka\" umjesto sirovog ključa prijevoda",
