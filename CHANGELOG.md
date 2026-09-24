@@ -5,6 +5,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.31.0] - 2026-09-24
+
+The breakdown as a ledger sheet.
+
+### Changed
+
+- The breakdown is a ledger sheet. On the desk it takes most of the page and starts right under the command line — the suggestions move to the head of the answer column. The drawing, section properties and nearby sizes sit on the left; weight and cost share one table on the right, the group the headline shows first
+- Every figure that scales with quantity shows one piece beside all of them (length, weight, subtotal, waste, VAT, total, mass band, sell price), and a basis column says what it was multiplied from: area × density for mass per metre, kg/m × length for the weight, weight × rate for the subtotal. A single piece keeps one column
+- A multi-item line opens on a bill of material: length, pieces, kg/m, kg per piece, weight, share of the weight and cost for every part, one ruled total for both, the weight split by part and the cost built up from material, waste and VAT. A strip of tabs above it — Assembly, then each part — opens any part directly, and arrows step between parts
+- The phone's breakdown is the same sheet in one column: no Weight/Cost tabs, the basis under each label, and the bill of material with weight over cost for each part
+
+### Fixed
+
+- An unfinished part in an assembly's breakdown reads "Unfinished item" instead of a raw translation key
+
 ## [3.30.0] - 2026-09-23
 
 Section properties, cited — and a breakdown you can read.
