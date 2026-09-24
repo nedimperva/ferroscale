@@ -12,7 +12,7 @@ cutting schedule, and quote. No account, no tracking, works offline.
 
 **Live demo: https://ferroscale.nedimp.com/en**
 
-![FerroScale calculator on desktop](docs/screenshots/calculator-desktop.png)
+![FerroScale on the desk: a HEB 200 line and its breakdown as a ledger sheet](docs/screenshots/calculator-desktop.webp)
 
 ## The command bar
 
@@ -35,17 +35,53 @@ The query mirrors to `?q=`, so every result is a shareable link.
 - **Calculator** — 20 profile types (manual + EN-standard sizes), steel /
   stainless / aluminum grades, per-grade price book, margin, waste, VAT,
   mass tolerance bands, dimensioned cross-section drawings.
+- **The breakdown is a ledger sheet** — weight and cost in one table, every
+  figure for one piece beside all of them, and a basis column saying what it
+  was multiplied from (area × density, kg/m × length, weight × rate). On the
+  desk it takes most of the page, right under the command bar; on a phone it
+  is the same sheet in one column.
+- **Bill of material** — a line of several parts (`a + b + c`) opens as a
+  table of length, pieces, kg/m, kg per piece, weight, share and cost, with
+  one ruled total, the weight split by part and the cost built up. A strip of
+  tabs opens any part on its own.
+- **Section properties** — Iy, Wel, Wpl and the weak axis for every standard
+  size, cited to the catalogue page (Settings › Calculation; off by default).
 - **Projects** — quotes with sub-assemblies, labor and hardware costing,
   per-project margin, 1D bar + 2D plate cutting optimizers with visual cut
   maps, supplier BOM/RFQ export, printable quotes, CSV export.
-- **Library** — saved parts and assemblies, templates (incl. standard EN
-  fabrication assemblies), compare, session tape, offline JSON backup.
+- **Library** — one library of parts and assemblies, and nothing built in:
+  it holds what you save. An assembly carries its trade, labour hours and
+  hardware into every project it is inserted into, scaled first (×10 stair
+  treads). Plus compare, the session tape, and offline JSON backup.
 - **Sync & privacy** — local-first; optional Google Drive sync of an
-  AES-GCM-encrypted snapshot. No account, no analytics.
+  AES-GCM-encrypted snapshot, including shop defaults and a price book that
+  merges grade by grade. No account, no analytics.
 - **Platform** — PWA with offline support, light/dark themes, English +
   Bosnian (`en`/`bs`), phone keypad and desktop workspace layouts.
 
-![FerroScale calculator on a phone](docs/screenshots/calculator-mobile.png)
+## Screens
+
+Real captures of the app with a seeded shop — every number on them is
+FerroScale's own output.
+
+| | |
+| --- | --- |
+| ![A three-part gate frame as a bill of material](docs/screenshots/bill-of-material.webp) | ![An IPE 200 with its section properties opened, cited to the catalogue page](docs/screenshots/section-properties.webp) |
+| **Bill of material** — one line, three parts, one total | **Section properties** — transcribed, with the source page |
+| ![A project quote: material, labour, hardware and paint](docs/screenshots/project-quote.webp) | ![The cutting optimizer nesting balusters into stock bars](docs/screenshots/cut-plan.webp) |
+| **A project quote** — material, labour, hardware, paint | **Cut plan** — yield, kerf, offcuts and scrap |
+| ![Inserting a stair-tread assembly from the library at ×10](docs/screenshots/insert-assembly.webp) | ![The parts library: pinned parts, tags, ranked by use](docs/screenshots/parts-library.webp) |
+| **An assembly, scaled before insert** | **The library** — parts and assemblies, ranked by use |
+
+On a phone there is no text field — chips for the line and a keypad with the
+unit and the rate as keys — and the breakdown pulls up as the same ledger in
+one column.
+
+<p align="center">
+  <img src="docs/screenshots/mobile-keypad.webp" alt="The phone keypad with the unit and rate as keys" width="260">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-breakdown.webp" alt="The breakdown on a phone: the same ledger in one column" width="260">
+</p>
 
 ## Accuracy
 
