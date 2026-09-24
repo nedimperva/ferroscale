@@ -65,6 +65,17 @@ export interface BreakdownRows {
    * else — a manual section's figures would be computed, not cited.
    */
   section: BreakdownRow[];
+  /**
+   * The rows that scale with quantity, as one piece beside all of them — the
+   * ledger's two figure columns. A row missing here (mass per metre, the
+   * rate) is the same for one piece as for all, and spans both.
+   */
+  twin: Partial<Record<BreakdownRowId, { each: string; total: string }>>;
+  /**
+   * Where a figure comes from, in a line: what was multiplied to get it.
+   * Only the rows whose label does not already say so.
+   */
+  basis: Partial<Record<BreakdownRowId, string>>;
 }
 
 export interface BreakdownOptions {
@@ -177,7 +188,37 @@ export function buildBreakdownRows(
       : []),
   ];
 
-  return { geometry, pricing, section: sectionRows(p, t) };
+  const qty = Math.max(r.quantity, 1);
+  const kg = (v: number) => `${fsWeight(v)} ${fsWeightUnit()}`;
+  const money = (v: number) => `${sym} ${fsMoney(v)}`;
+  const twin: BreakdownRows["twin"] = {
+    length: { each: `${fsLength(p.lengthM ?? 0)} m`, total: `${fsLength((p.lengthM ?? 0) * qty)} m` },
+    totalWeight: { each: kg(r.unitWeightKg), total: kg(r.totalWeightKg) },
+    subtotal: { each: money(r.unitPriceAmount), total: money(r.subtotalAmount) },
+    waste: { each: money(r.wasteAmount / qty), total: money(r.wasteAmount) },
+    vat: { each: money(r.vatAmount / qty), total: money(r.vatAmount) },
+    totalCost: { each: money(r.grandTotalAmount / qty), total: money(r.grandTotalAmount) },
+  };
+  const bandEach = massBand(r.unitWeightKg, options.massTolerancePercent ?? 0);
+  if (band && bandEach) twin.massBand = { each: bandEach.rangeLabel, total: band.rangeLabel };
+  if (options.marginPercent && options.marginPercent > 0) {
+    twin.sellPrice = {
+      each: money(sellPrice(r.grandTotalAmount, options.marginPercent) / qty),
+      total: money(sellPrice(r.grandTotalAmount, options.marginPercent)),
+    };
+  }
+
+  const rate = `${sym} ${fsMoney(p.calc.input.unitPrice)}/${r.priceUnit}`;
+  const basis: BreakdownRows["basis"] = {
+    totalWeight: `${fsKgm(p.kgm)} kg/m × ${fsLength(p.lengthM ?? 0)} m`,
+    subtotal: t(`ledger.basisSubtotal.${r.priceBasis}`, { rate }),
+  };
+  if (massRateRow.id === "massPerMetre") {
+    const area = (r.areaMm2 / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    basis.massPerMetre = `${area} cm² × ${r.densityKgPerM3.toLocaleString("en-US")} kg/m³`;
+  }
+
+  return { geometry, pricing, section: sectionRows(p, t), twin, basis };
 }
 
 /** Catalogue figures carry four significant digits; show what was printed. */

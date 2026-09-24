@@ -222,6 +222,140 @@ export function DeskCalcView({
   const sumKg = validTape.reduce((s, x) => s + (x.rp.totalKg ?? 0), 0);
   const sumAmount = validTape.reduce((s, x) => s + (x.rp.totalAmount ?? 0), 0);
 
+  // Suggestions, or the profile tiles on an empty line. On the wide desk they
+  // head the answer column, so the breakdown sheet can start right under the
+  // command line; stacked, they stay with the line they refine.
+  const strip = (
+    <div className={compact ? "" : "flex-shrink-0"}>
+      {query.trim() === "" ? (
+        <div className={compact ? "mt-4" : undefined}>
+          <ProfileDiscoveryTiles
+            onSelectProfile={(prefix) => {
+              setQuery(prefix);
+              focusInputAtEnd();
+            }}
+            onTryDemo={() => {
+              setQuery(DEMO_QUERY);
+              focusInputAtEnd();
+            }}
+            compact={compact}
+          />
+        </div>
+      ) : (
+        /* SUGGESTIONS */
+        <div className={compact ? "mt-3" : undefined}>
+          <div className="flex items-center gap-3 flex-wrap mb-2">
+          <h2
+            className="fs-track-label text-[10px] font-bold text-muted uppercase"
+          >
+            {formatCommandHint(t, sug.hint)}
+          </h2>
+          <span className="ml-auto">
+            <CommandKeyHints
+              valid={p.valid}
+              hasGhost={!!ghost}
+              suggestionCount={sug.items.length}
+              historyLength={sessionTape.length}
+              onOpenHelp={onOpenHelp}
+            />
+          </span>
+        </div>
+        <div data-suggestion-strip="" className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
+          {groupedSuggestions(sug.items).map((group) => (
+            <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
+              {group.group && (
+                <span
+                  className="text-[10px] font-bold text-muted-faint uppercase"
+                  style={{ letterSpacing: 1 }}
+                >
+                  {t(`suggest.group.${group.group}`)}
+                </span>
+              )}
+              {group.items.map(({ item: it, index: i }) => (
+            <button
+              key={i}
+              ref={i === 0 ? firstSuggestionRef : undefined}
+              type="button"
+              // Chips stay out of the Tab order — keep typing flow unbroken.
+              // ArrowDown from the input opens this list explicitly.
+              tabIndex={-1}
+              onClick={() => {
+                onSuggest(it);
+                focusInputAtEnd();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  const dir = e.key === "ArrowRight" ? 1 : -1;
+                  const buttons = Array.from(
+                    e.currentTarget.parentElement?.querySelectorAll("button") ?? [],
+                  ) as HTMLButtonElement[];
+                  const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
+                  const next = buttons[idx + dir];
+                  if (next) {
+                    next.focus();
+                  } else if (dir === -1) {
+                    focusInputAtEnd();
+                  }
+                  return;
+                }
+                if (e.key === "ArrowUp" || e.key === "Escape") {
+                  e.preventDefault();
+                  focusInputAtEnd();
+                }
+              }}
+              className="fs-pop flex items-center gap-[7px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+              style={{
+                padding: it.sub ? "7px 13px" : "8px 14px",
+                border: it.kind === "save" ? "none" : "1px solid var(--border)",
+                background: it.kind === "save" ? "var(--action)" : "var(--surface)",
+                color: it.kind === "save" ? "var(--action-contrast)" : "var(--foreground)",
+              }}
+            >
+              {it.fam && (
+                <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
+                  <CommandGlyph
+                    fam={it.fam}
+                    alias={it.kind === "profile" ? it.ins : focusParse.alias?.alias}
+                    size={16}
+                  />
+                </span>
+              )}
+              <span className="flex flex-col items-start" style={{ lineHeight: 1.15 }}>
+                <span
+                  className={`font-bold text-[13px] ${
+                    it.kind === "size" || it.kind === "length" || it.kind === "qty"
+                      ? "font-mono"
+                      : ""
+                  }`}
+                >
+                  {formatCommandSuggestionLabel(t, it)}
+                </span>
+                {it.sub && (
+                  <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
+                )}
+              </span>
+              {/* The ⌥-digit that picks this chip, so the shortcut is
+                  learnable by looking rather than by being told. */}
+              {i < 9 && it.kind !== "save" && (
+                <span
+                  className="font-mono text-[10px] font-bold"
+                  style={{ color: "var(--muted-faint)" }}
+                  aria-hidden="true"
+                >
+                  {i + 1}
+                </span>
+              )}
+            </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
       {/* No standfirst here: the design puts the query in this slot, but the
@@ -238,7 +372,13 @@ export function DeskCalcView({
       />
 
       {/* ───────── command line — full width ───────── */}
-      <div className="flex-shrink-0" style={{ padding: compact ? "14px 16px 0" : "18px 20px 0" }}>
+      <div
+        className="flex-shrink-0"
+        style={{
+          padding: compact ? "14px 16px 0" : "18px 20px 16px",
+          borderBottom: compact ? undefined : "1px solid var(--border-faint)",
+        }}
+      >
         {/* An ink edge, not an accent glow. The bar is the one thing on the
             screen you always type into, so it is drawn like a rule rather
             than lit like a notification — which leaves the accent free to
@@ -439,132 +579,7 @@ export function DeskCalcView({
           )}
         </label>
 
-        {query.trim() === "" ? (
-          <div className="mt-4">
-            <ProfileDiscoveryTiles
-              onSelectProfile={(prefix) => {
-                setQuery(prefix);
-                focusInputAtEnd();
-              }}
-              onTryDemo={() => {
-                setQuery(DEMO_QUERY);
-                focusInputAtEnd();
-              }}
-              compact={compact}
-            />
-          </div>
-        ) : (
-          /* SUGGESTIONS */
-          <div className="mt-3">
-            <div className="flex items-center gap-3 flex-wrap mb-2">
-            <h2
-              className="fs-track-label text-[10px] font-bold text-muted uppercase"
-            >
-              {formatCommandHint(t, sug.hint)}
-            </h2>
-            <span className="ml-auto">
-              <CommandKeyHints
-                valid={p.valid}
-                hasGhost={!!ghost}
-                suggestionCount={sug.items.length}
-                historyLength={sessionTape.length}
-                onOpenHelp={onOpenHelp}
-              />
-            </span>
-          </div>
-          <div data-suggestion-strip="" className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
-            {groupedSuggestions(sug.items).map((group) => (
-              <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
-                {group.group && (
-                  <span
-                    className="text-[10px] font-bold text-muted-faint uppercase"
-                    style={{ letterSpacing: 1 }}
-                  >
-                    {t(`suggest.group.${group.group}`)}
-                  </span>
-                )}
-                {group.items.map(({ item: it, index: i }) => (
-              <button
-                key={i}
-                ref={i === 0 ? firstSuggestionRef : undefined}
-                type="button"
-                // Chips stay out of the Tab order — keep typing flow unbroken.
-                // ArrowDown from the input opens this list explicitly.
-                tabIndex={-1}
-                onClick={() => {
-                  onSuggest(it);
-                  focusInputAtEnd();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                    e.preventDefault();
-                    const dir = e.key === "ArrowRight" ? 1 : -1;
-                    const buttons = Array.from(
-                      e.currentTarget.parentElement?.querySelectorAll("button") ?? [],
-                    ) as HTMLButtonElement[];
-                    const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
-                    const next = buttons[idx + dir];
-                    if (next) {
-                      next.focus();
-                    } else if (dir === -1) {
-                      focusInputAtEnd();
-                    }
-                    return;
-                  }
-                  if (e.key === "ArrowUp" || e.key === "Escape") {
-                    e.preventDefault();
-                    focusInputAtEnd();
-                  }
-                }}
-                className="fs-pop flex items-center gap-[7px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
-                style={{
-                  padding: it.sub ? "7px 13px" : "8px 14px",
-                  border: it.kind === "save" ? "none" : "1px solid var(--border)",
-                  background: it.kind === "save" ? "var(--action)" : "var(--surface)",
-                  color: it.kind === "save" ? "var(--action-contrast)" : "var(--foreground)",
-                }}
-              >
-                {it.fam && (
-                  <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
-                    <CommandGlyph
-                      fam={it.fam}
-                      alias={it.kind === "profile" ? it.ins : focusParse.alias?.alias}
-                      size={16}
-                    />
-                  </span>
-                )}
-                <span className="flex flex-col items-start" style={{ lineHeight: 1.15 }}>
-                  <span
-                    className={`font-bold text-[13px] ${
-                      it.kind === "size" || it.kind === "length" || it.kind === "qty"
-                        ? "font-mono"
-                        : ""
-                    }`}
-                  >
-                    {formatCommandSuggestionLabel(t, it)}
-                  </span>
-                  {it.sub && (
-                    <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
-                  )}
-                </span>
-                {/* The ⌥-digit that picks this chip, so the shortcut is
-                    learnable by looking rather than by being told. */}
-                {i < 9 && it.kind !== "save" && (
-                  <span
-                    className="font-mono text-[10px] font-bold"
-                    style={{ color: "var(--muted-faint)" }}
-                    aria-hidden="true"
-                  >
-                    {i + 1}
-                  </span>
-                )}
-              </button>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-        )}
+        {compact && strip}
       </div>
 
       {/* ───────── dashboard grid ─────────
@@ -580,6 +595,7 @@ export function DeskCalcView({
           className="flex flex-col gap-4 min-w-0"
           style={{ flex: 1.55, padding: compact ? undefined : "20px 24px 0" }}
         >
+          {!compact && strip}
           {/* RESULT — no panel. The answer is the page here, so it sits on
               the paper directly and lets the rules below it do the grouping. */}
           <div className="flex-shrink-0 flex flex-col">
@@ -639,7 +655,9 @@ export function DeskCalcView({
                 <span
                   className="font-mono fs-display-num"
                   style={{
-                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(56px, 6.2vw, 92px)",
+                    // The sheet beside it takes most of the width; the figure
+                    // scales to what is left.
+                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(46px, 4.4vw, 76px)",
                     lineHeight: 0.86,
                     letterSpacing: -4,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
@@ -1008,13 +1026,15 @@ export function DeskCalcView({
           </div>
         </div>
 
-        {/* RIGHT column — expanded breakdown */}
+        {/* RIGHT column — the breakdown as a ledger sheet. It takes most of
+            the page: the drawing, the ledger with its basis column, and on a
+            multi-item line the bill of material all want the width. */}
         <div
           className={`flex flex-col ${compact ? "flex-shrink-0 mt-4" : "min-h-0 overflow-y-auto"}`}
           style={{
-            flex: compact ? "0 0 auto" : "0 0 352px",
-            width: compact ? "100%" : 352,
-            padding: "20px 22px",
+            flex: compact ? "0 0 auto" : `0 0 ${SHEET_WIDTH}`,
+            width: compact ? "100%" : SHEET_WIDTH,
+            padding: compact ? "20px 22px" : "20px 28px",
             background: "var(--surface)",
             borderLeft: compact ? undefined : "1px solid var(--border-faint)",
             borderTop: compact ? "1px solid var(--border-faint)" : undefined,
@@ -1036,6 +1056,8 @@ export function DeskCalcView({
 }
 
 /* ───────────────────────── breakdown rail ───────────────────────── */
+
+const SHEET_WIDTH = "clamp(560px, 62vw, 940px)";
 
 /** The rail: the phone's weight and cost ledgers, with the part drawn above. */
 function DeskBreakdown({
