@@ -14,6 +14,7 @@ A wider breakdown on the desk: one piece beside all of them.
 - The desk's breakdown rail is wider, and weight and cost are both open at once — no tabs. Every figure that scales with quantity shows one piece beside all of them (length, weight, material, waste, VAT, total and sell price); mass per metre and the rate span both. A single piece keeps one column
 - A multi-item line on the desk lists each part's weight and cost side by side, with its share of the weight, one ruled total for both, and the cost built up from material, waste and VAT. With a part open, arrows beside the Whole assembly / Part switch step to the previous or next part
 - On the desk the suggestions sit at the head of the answer column, so the breakdown starts right under the command line
+- The phone's breakdown keeps its Weight and Cost tabs, but each now shows one piece beside all of them, the same two columns as the desk. An assembly's share bar is labelled, each part shows its weight per piece, and the Cost tab ends with the cost build-up
 
 ### Fixed
 

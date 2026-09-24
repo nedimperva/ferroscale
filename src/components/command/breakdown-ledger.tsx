@@ -35,8 +35,10 @@ import {
 
 type Tab = "weight" | "cost";
 
-const WEIGHT_ROWS: BreakdownRowId[] = ["massPerMetre", "massPerArea", "length", "perPieceWeight", "pieces"];
-const COST_ROWS: BreakdownRowId[] = ["rate", "perPiecePrice", "subtotal", "waste", "vat"];
+// The rows above each ruled total. Per piece and piece count are gone: the
+// ledger's two columns say both.
+const WEIGHT_ROWS: BreakdownRowId[] = ["massPerMetre", "massPerArea", "length"];
+const COST_ROWS: BreakdownRowId[] = ["rate", "subtotal", "waste", "vat"];
 const SOURCE_ROWS: BreakdownRowId[] = ["density", "sectionArea", "formula", "reference"];
 
 function pick(rows: BreakdownRow[], ids: BreakdownRowId[]): BreakdownRow[] {
@@ -325,19 +327,6 @@ function Tabs({
   );
 }
 
-function Row({ row }: { row: BreakdownRow }) {
-  return (
-    <div
-      data-row={row.id}
-      className="flex items-baseline justify-between gap-3 py-2.5"
-      style={{ borderBottom: "1px solid var(--border-faint)" }}
-    >
-      <span className="text-[14px] text-foreground-secondary">{row.label}</span>
-      <span className="font-mono text-[15px] tabular-nums text-foreground">{row.value}</span>
-    </div>
-  );
-}
-
 function Total({
   id,
   label,
@@ -376,10 +365,11 @@ function Total({
 const RULE_FAINT = { borderBottom: "1px solid var(--border-faint)" };
 
 /**
- * One ledger on the wide rail: every figure that scales with quantity shown
- * for one piece beside all of them, so neither is a tap away. Figures that
- * don't scale (mass per metre, the rate) span both columns. A single piece
- * collapses to one column — the two would say the same thing.
+ * One ledger: every figure that scales with quantity shown for one piece
+ * beside all of them, so neither is a tap away. Figures that don't scale
+ * (mass per metre, the rate) span both columns. A single piece collapses to
+ * one column — the two would say the same thing. On the sheet it sits in a
+ * tab, which already names it, so the heading keeps only the column captions.
  */
 function TwinLedger({
   title,
@@ -389,8 +379,10 @@ function TwinLedger({
   total,
   accent,
   after,
+  inTab,
 }: {
   title: string;
+  inTab?: boolean;
   qty: number;
   rows: BreakdownRow[];
   twin: BreakdownRows["twin"];
@@ -403,13 +395,15 @@ function TwinLedger({
   const each = t("ledger.onePiece");
   const all = t("ledger.allPieces", { count: qty });
   const line = "col-span-full grid grid-cols-subgrid items-baseline";
+  // A phone is ~360px of ledger: the total steps down so two columns fit.
+  const bigTotal = inTab ? "text-[20px] font-bold" : "text-[22px] font-bold";
 
   const cells = (row: BreakdownRow, big: boolean) => {
     const pair = twin[row.id];
     if (single || !pair) {
       return (
         <span
-          className={`${single ? "" : "col-span-2"} text-right font-mono tabular-nums ${big ? "text-[22px] font-bold" : "text-[15px]"}`}
+          className={`${single ? "" : "col-span-2"} text-right font-mono tabular-nums ${big ? bigTotal : "text-[15px]"}`}
           style={{ color: big && accent ? "var(--accent)" : "var(--foreground)" }}
         >
           {pair?.total ?? row.value}
@@ -423,7 +417,7 @@ function TwinLedger({
           <span>{pair.each}</span>
         </span>
         <span
-          className={`text-right font-mono tabular-nums ${big ? "text-[22px] font-bold" : "text-[15px]"}`}
+          className={`text-right font-mono tabular-nums ${big ? bigTotal : "text-[15px]"}`}
           style={{ color: big && accent ? "var(--accent)" : "var(--foreground)" }}
         >
           <span className="sr-only">{all}: </span>
@@ -439,19 +433,24 @@ function TwinLedger({
       className="grid gap-x-4"
       style={{ gridTemplateColumns: single ? "minmax(0,1fr) auto" : "minmax(0,1fr) auto auto" }}
     >
-      <div className={`${line} pb-1.5`} style={{ borderBottom: "1px solid var(--foreground)" }}>
-        <span className="fs-title text-[18px] text-foreground">{title}</span>
-        {!single && (
-          <>
-            <span aria-hidden="true" className="self-end text-right font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
-              {each}
-            </span>
-            <span aria-hidden="true" className="self-end text-right font-mono text-[10px] uppercase tracking-[0.14em] text-foreground">
-              {all}
-            </span>
-          </>
-        )}
-      </div>
+      {!(inTab && single) && (
+        <div
+          className={`${line} pb-1.5`}
+          style={{ borderBottom: inTab ? "1px solid var(--border)" : "1px solid var(--foreground)" }}
+        >
+          {inTab ? <span /> : <span className="fs-title text-[18px] text-foreground">{title}</span>}
+          {!single && (
+            <>
+              <span aria-hidden="true" className="self-end text-right font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+                {each}
+              </span>
+              <span aria-hidden="true" className="self-end text-right font-mono text-[10px] uppercase tracking-[0.14em] text-foreground">
+                {all}
+              </span>
+            </>
+          )}
+        </div>
+      )}
       {rows.map((row) => (
         <div key={row.id} data-row={row.id} className={`${line} py-2.5`} style={RULE_FAINT}>
           <span className="text-[14px] text-foreground-secondary">{row.label}</span>
@@ -574,7 +573,7 @@ function PartLedger({
         <TwinLedger
           title={t("ledger.weight")}
           qty={qty}
-          rows={pick(rows.geometry, ["massPerMetre", "massPerArea", "length"])}
+          rows={pick(rows.geometry, WEIGHT_ROWS)}
           twin={rows.twin}
           total={totalWeight}
           accent
@@ -583,7 +582,7 @@ function PartLedger({
         <TwinLedger
           title={t("ledger.cost")}
           qty={qty}
-          rows={pick(rows.pricing, ["rate", "subtotal", "waste", "vat"])}
+          rows={pick(rows.pricing, COST_ROWS)}
           twin={rows.twin}
           total={totalCost}
           after={sell}
@@ -640,27 +639,28 @@ function PartLedger({
       />
 
       <div role="tabpanel" id={ids.weightPanel} aria-labelledby={ids.weightTab} hidden={tab !== "weight"}>
-        {pick(rows.geometry, WEIGHT_ROWS).map((row) => (
-          <Row key={row.id} row={row} />
-        ))}
-        {totalWeight && <Total id="totalWeight" label={totalWeight.label} value={totalWeight.value} accent />}
-        {massBand && (
-          <div className="pt-2">
-            <Row row={massBand} />
-          </div>
-        )}
+        <TwinLedger
+          inTab
+          title={t("ledger.weight")}
+          qty={p.calc.result.quantity}
+          rows={pick(rows.geometry, WEIGHT_ROWS)}
+          twin={rows.twin}
+          total={totalWeight}
+          accent
+          after={massBand}
+        />
       </div>
 
       <div role="tabpanel" id={ids.costPanel} aria-labelledby={ids.costTab} hidden={tab !== "cost"}>
-        {pick(rows.pricing, COST_ROWS).map((row) => (
-          <Row key={row.id} row={row} />
-        ))}
-        {totalCost && <Total id="totalCost" label={totalCost.label} value={totalCost.value} />}
-        {sell && (
-          <div className="pt-2">
-            <Row row={sell} />
-          </div>
-        )}
+        <TwinLedger
+          inTab
+          title={t("ledger.cost")}
+          qty={p.calc.result.quantity}
+          rows={pick(rows.pricing, COST_ROWS)}
+          twin={rows.twin}
+          total={totalCost}
+          after={sell}
+        />
       </div>
 
       {showSection && rows.section.length > 0 && <SectionProperties rows={rows.section} />}
@@ -755,6 +755,103 @@ function HowCalculated({ rows }: { rows: BreakdownRow[] }) {
 
 const SHARE_SHADES = ["var(--accent)", "color-mix(in oklab, var(--accent) 70%, var(--surface))", "color-mix(in oklab, var(--accent) 45%, var(--surface))", "color-mix(in oklab, var(--accent) 28%, var(--surface))"];
 
+/** Each part's share of the weight as one bar, the picked part outlined. */
+function ShareBar({ line, picked, labels }: { line: CommandLine; picked: number; labels?: boolean }) {
+  if (!line.totalKg) return null;
+  const total = line.totalKg;
+  return (
+    <div aria-hidden="true" className="flex flex-col gap-1.5">
+      <div className={`flex gap-0.5 ${labels ? "h-3" : "h-2"}`}>
+        {line.items.map((item, index) => (
+          <span
+            key={index}
+            style={{
+              flex: `${Math.max((item.parse.totalKg ?? 0) / total, 0.01).toFixed(3)} 1 0%`,
+              background: SHARE_SHADES[Math.min(index, SHARE_SHADES.length - 1)],
+              outline: index === picked ? "2px solid var(--foreground)" : undefined,
+              outlineOffset: 1,
+            }}
+          />
+        ))}
+      </div>
+      {labels && (
+        <div className="flex gap-0.5 font-mono text-[11px] text-foreground-secondary">
+          {line.items.map((item, index) => {
+            const share = Math.round(((item.parse.totalKg ?? 0) / total) * 100);
+            return (
+              <span
+                key={index}
+                className="min-w-0 overflow-hidden whitespace-nowrap"
+                style={{ flex: `${Math.max(share, 12)} 1 0%` }}
+              >
+                {index + 1} · {share}%
+              </span>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The assembly's cost built up from material, waste and VAT (and the sell
+ * price, with a margin set), summed from what each part's own calculation
+ * already carries. A subtotal alone would only repeat the total, so without
+ * waste, VAT or margin there is nothing to show.
+ */
+function CostBuildUp({ line }: { line: CommandLine }) {
+  const t = useTranslations("command");
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const first = line.items.find((item) => item.parse.valid)?.parse;
+  if (!line.valid || !first) return null;
+  const sym = CURRENCY_SYMBOLS[first.pricing.currency] ?? "€";
+  const money = (v: number) => `${sym} ${fsMoney(v)}`;
+  const results = line.items.flatMap((item) => (item.parse.calc ? [item.parse.calc.result] : []));
+  const sum = (key: "subtotalAmount" | "wasteAmount" | "vatAmount") =>
+    results.reduce((n, r) => n + r[key], 0);
+  const rows: { id: string; label: string; value: string; muted?: boolean }[] = [
+    { id: "subtotal", label: t("result.subtotal"), value: money(sum("subtotalAmount")) },
+    ...(first.pricing.wastePercent > 0
+      ? [{ id: "waste", label: t("result.waste", { percent: first.pricing.wastePercent }), value: money(sum("wasteAmount")) }]
+      : []),
+    ...(first.pricing.includeVat
+      ? [{ id: "vat", label: t("result.vat", { percent: first.pricing.vatPercent }), value: money(sum("vatAmount")) }]
+      : []),
+    ...(marginPercent > 0 && line.totalAmount != null
+      ? [{
+          id: "sellPrice",
+          label: t("result.sellPrice", { percent: marginPercent }),
+          value: money(sellPrice(line.totalAmount, marginPercent)),
+          muted: true,
+        }]
+      : []),
+  ];
+  if (rows.length < 2) return null;
+  return (
+    <section aria-label={t("ledger.costBuildUp")} className="flex flex-col">
+      <div className="pb-1.5" style={{ borderBottom: "1px solid var(--foreground)" }}>
+        <span className="fs-title text-[18px] text-foreground">{t("ledger.costBuildUp")}</span>
+      </div>
+      {rows.map((row) => (
+        <div
+          key={row.id}
+          data-row={row.id}
+          className="flex items-baseline justify-between gap-3 py-2.5"
+          style={RULE_FAINT}
+        >
+          <span className={`text-[14px] ${row.muted ? "text-muted" : "text-foreground-secondary"}`}>{row.label}</span>
+          <span className="font-mono text-[15px] tabular-nums text-foreground">{row.value}</span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function AssemblyLedger({
   line,
   picked,
@@ -795,6 +892,9 @@ function AssemblyLedger({
         const share = line.totalKg && kg != null ? Math.round((kg / line.totalKg) * 100) : null;
         const name = formatCommandParseName(t, parse) ?? parse.name ?? t("query.newItem");
         const spec = partSpec(parse);
+        const perPiece = parse.calc
+          ? ` · ${t("ledger.perPieceShort", { weight: weightLabel(parse.calc.result.unitWeightKg) })}`
+          : "";
         return (
           <li key={index}>
             <button
@@ -825,7 +925,10 @@ function AssemblyLedger({
                 </span>
                 <span className="truncate font-mono text-[12px] text-foreground-secondary">
                   {spec}
-                  {!compact && share != null ? ` · ${share}%` : ""}
+                  {/* Weight has the labelled share bar above it, so its rows
+                      carry the piece weight instead; cost keeps the share. */}
+                  {!compact && field === "weight" && perPiece}
+                  {!compact && field === "cost" && share != null ? ` · ${share}%` : ""}
                 </span>
               </span>
               <span className={`font-mono tabular-nums text-foreground ${compact ? "text-[14px]" : "text-[15px]"} font-semibold`}>
@@ -851,27 +954,18 @@ function AssemblyLedger({
         ids={ids}
       />
       <div role="tabpanel" id={ids.weightPanel} aria-labelledby={ids.weightTab} hidden={tab !== "weight"}>
-        {line.totalKg ? (
-          <div aria-hidden="true" className="mb-2 flex h-2 gap-0.5">
-            {line.items.map((item, index) => (
-              <span
-                key={index}
-                style={{
-                  flex: `${Math.max((item.parse.totalKg ?? 0) / line.totalKg!, 0.01).toFixed(3)} 1 0%`,
-                  background: SHARE_SHADES[Math.min(index, SHARE_SHADES.length - 1)],
-                  outline: index === picked ? "2px solid var(--foreground)" : undefined,
-                  outlineOffset: 1,
-                }}
-              />
-            ))}
-          </div>
-        ) : null}
+        <div className="mb-2.5">
+          <ShareBar line={line} picked={picked} labels />
+        </div>
         {list("weight")}
         <Total id="totalWeight" label={t("result.totalWeight")} value={weightLabel(line.totalKg)} accent sub={sub} />
       </div>
       <div role="tabpanel" id={ids.costPanel} aria-labelledby={ids.costTab} hidden={tab !== "cost"}>
         {list("cost")}
         <Total id="totalCost" label={t("result.totalCost")} value={money(line.totalAmount)} sub={sub} />
+        <div className="mt-5">
+          <CostBuildUp line={line} />
+        </div>
       </div>
     </>
   );
@@ -892,11 +986,6 @@ function RailAssemblyLedger({
   onOpen: (index: number) => void;
 }) {
   const t = useTranslations("command");
-  const marginPercent = useSyncExternalStore(
-    marginPercentStore.subscribe,
-    marginPercentStore.getSnapshot,
-    marginPercentStore.getServerSnapshot,
-  );
   const first = line.items.find((item) => item.parse.valid)?.parse ?? line.items[0]?.parse;
   const sym = CURRENCY_SYMBOLS[first?.pricing.currency ?? "EUR"] ?? "€";
   const money = (v: number | null | undefined) => (v != null ? `${sym} ${fsMoney(v)}` : "—");
@@ -907,30 +996,6 @@ function RailAssemblyLedger({
   const row = "col-span-full grid grid-cols-subgrid items-center";
   const head = "font-mono text-[10px] uppercase tracking-[0.14em] text-muted";
 
-  // The build-up sums what each part's own calculation already carries.
-  const results = line.items.flatMap((item) => (item.parse.calc ? [item.parse.calc.result] : []));
-  const sum = (key: "subtotalAmount" | "wasteAmount" | "vatAmount") =>
-    results.reduce((n, r) => n + r[key], 0);
-  const buildUp: { id: string; label: string; value: string; muted?: boolean }[] =
-    line.valid && first
-      ? [
-          { id: "subtotal", label: t("result.subtotal"), value: money(sum("subtotalAmount")) },
-          ...(first.pricing.wastePercent > 0
-            ? [{ id: "waste", label: t("result.waste", { percent: first.pricing.wastePercent }), value: money(sum("wasteAmount")) }]
-            : []),
-          ...(first.pricing.includeVat
-            ? [{ id: "vat", label: t("result.vat", { percent: first.pricing.vatPercent }), value: money(sum("vatAmount")) }]
-            : []),
-          ...(marginPercent > 0 && line.totalAmount != null
-            ? [{
-                id: "sellPrice",
-                label: t("result.sellPrice", { percent: marginPercent }),
-                value: money(sellPrice(line.totalAmount, marginPercent)),
-                muted: true,
-              }]
-            : []),
-        ]
-      : [];
 
   return (
     <>
@@ -939,37 +1004,7 @@ function RailAssemblyLedger({
         <span className="font-mono text-[13px] text-foreground-secondary">{sub}</span>
       </div>
 
-      {line.totalKg ? (
-        <div aria-hidden="true" className="flex flex-col gap-1.5">
-          <div className="flex h-3 gap-0.5">
-            {line.items.map((item, index) => (
-              <span
-                key={index}
-                style={{
-                  flex: `${Math.max((item.parse.totalKg ?? 0) / line.totalKg!, 0.01).toFixed(3)} 1 0%`,
-                  background: SHARE_SHADES[Math.min(index, SHARE_SHADES.length - 1)],
-                  outline: index === picked ? "2px solid var(--foreground)" : undefined,
-                  outlineOffset: 1,
-                }}
-              />
-            ))}
-          </div>
-          <div className="flex gap-0.5 font-mono text-[11px] text-foreground-secondary">
-            {line.items.map((item, index) => {
-              const share = Math.round(((item.parse.totalKg ?? 0) / line.totalKg!) * 100);
-              return (
-                <span
-                  key={index}
-                  className="min-w-0 overflow-hidden whitespace-nowrap"
-                  style={{ flex: `${Math.max(share, 12)} 1 0%` }}
-                >
-                  {index + 1} · {share}%
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
+      <ShareBar line={line} picked={picked} labels />
 
       <div className="grid gap-x-3.5" style={{ gridTemplateColumns: cols }}>
         <div aria-hidden="true" className={`${row} px-1 pb-1.5`} style={{ borderBottom: "1px solid var(--foreground)" }}>
@@ -1072,25 +1107,7 @@ function RailAssemblyLedger({
         </div>
       </div>
 
-      {/* A subtotal alone would only repeat the total above it. */}
-      {buildUp.length > 1 && (
-        <section aria-label={t("ledger.costBuildUp")} className="flex flex-col">
-          <div className="pb-1.5" style={{ borderBottom: "1px solid var(--foreground)" }}>
-            <span className="fs-title text-[18px] text-foreground">{t("ledger.costBuildUp")}</span>
-          </div>
-          {buildUp.map((item) => (
-            <div
-              key={item.id}
-              data-row={item.id}
-              className="flex items-baseline justify-between gap-3 py-2.5"
-              style={RULE_FAINT}
-            >
-              <span className={`text-[14px] ${item.muted ? "text-muted" : "text-foreground-secondary"}`}>{item.label}</span>
-              <span className="font-mono text-[15px] tabular-nums text-foreground">{item.value}</span>
-            </div>
-          ))}
-        </section>
-      )}
+      <CostBuildUp line={line} />
     </>
   );
 }

@@ -70,6 +70,16 @@ describe("BreakdownLedger", () => {
     expect(screen.getByRole("tabpanel").textContent).toContain("Total cost");
   });
 
+  it("shows one piece beside all of them inside the sheet's tabs", () => {
+    const { container } = renderLedger("hea120 6m x2", { variant: "sheet" });
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).getByText("1 piece")).toBeDefined();
+    expect(within(panel).getByText("× 2 pieces")).toBeDefined();
+    // The per-piece and piece-count rows are gone: the two columns say both.
+    expect(container.querySelector('[data-row="perPieceWeight"]')).toBeNull();
+    expect(container.querySelector('[data-row="pieces"]')).toBeNull();
+  });
+
   it("opens on cost when the hero shows the price", () => {
     renderLedger("hea120 6m x2", { metric: "price" });
     expect(screen.getByRole("tab", { name: /^Cost/ }).getAttribute("aria-selected")).toBe("true");
