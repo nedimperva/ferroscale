@@ -1,12 +1,19 @@
 "use client";
 
-import { useId, useState, useSyncExternalStore } from "react";
+import { Fragment, useSyncExternalStore, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsKgm, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { ProfileDrawing } from "./profile-drawing";
+import { CommandGlyph } from "./command-glyph";
 import { formatAvailability, formatCommandParseName } from "./command-copy";
-import { buildBreakdownRows, type BreakdownRow, type BreakdownRowId } from "./breakdown-rows";
+import {
+  buildBreakdownRows,
+  sellPrice,
+  type BreakdownRow,
+  type BreakdownRowId,
+  type BreakdownRows,
+} from "./breakdown-rows";
 import { applyNearbySpec, NearbySpecs } from "./nearby-specs";
 import { Link } from "@/i18n/navigation";
 import { haptic } from "@/lib/haptics";
@@ -17,24 +24,42 @@ import {
 } from "@/lib/settings-stores";
 
 /**
- * The result breakdown, as two ledgers: Weight and Cost, each a short list of
- * figures ending in a ruled total. The phone sheet and the desk rail render
- * this same component; `variant` only changes the chrome around it.
+ * The result breakdown as a ledger sheet. One table carries both weight and
+ * cost: each figure with the basis it was multiplied from, for one piece and
+ * for all of them, the group the headline shows first. On a `+`-joined line
+ * a strip of tabs picks the whole assembly — a bill of material — or one
+ * part, which opens into the same sheet a single calculation gets.
  *
- * On a `+`-joined line the ledger's rows are the parts: what each weighs or
- * costs and its share of the whole. A part opens into its own ledger — the
- * same one a single calculation gets. Where the numbers come from (area,
- * density, formula, the standard) is one tap further, under "How it's
- * calculated", for whoever wants to check. A standard section's catalogue
+ * The phone sheet and the desk panel render this same component; the layout
+ * follows the width it is given (container queries), not the device, so the
+ * desk's drawing column and basis column fold away on a phone.
+ *
+ * Where the numbers come from (area, density, formula, the standard) is one
+ * tap further, under "How it's calculated". A standard section's catalogue
  * properties (Iy, Wel, Wpl…) fold the same way, under "Section properties" —
  * only when that setting is on; it is off by default.
  */
 
-type Tab = "weight" | "cost";
+type Group = "weight" | "cost";
 
-const WEIGHT_ROWS: BreakdownRowId[] = ["massPerMetre", "massPerArea", "length", "perPieceWeight", "pieces"];
-const COST_ROWS: BreakdownRowId[] = ["rate", "perPiecePrice", "subtotal", "waste", "vat"];
+// The rows above each ruled total. Per piece and piece count have no rows of
+// their own: the ledger's two figure columns say both.
+const WEIGHT_ROWS: BreakdownRowId[] = ["massPerMetre", "massPerArea", "length"];
+const COST_ROWS: BreakdownRowId[] = ["rate", "subtotal", "waste", "vat"];
 const SOURCE_ROWS: BreakdownRowId[] = ["density", "sectionArea", "formula", "reference"];
+
+const SHARE_SHADES = [
+  "var(--accent)",
+  "color-mix(in oklab, var(--accent) 70%, var(--surface))",
+  "color-mix(in oklab, var(--accent) 45%, var(--surface))",
+  "color-mix(in oklab, var(--accent) 28%, var(--surface))",
+];
+const shade = (index: number) => SHARE_SHADES[Math.min(index, SHARE_SHADES.length - 1)];
+
+const CAPTION = "font-mono text-[10px] uppercase tracking-[0.14em] text-muted";
+const RULE_FAINT = { borderBottom: "1px solid var(--border-faint)" };
+const RULE_INK = { borderBottom: "1px solid var(--foreground)" };
+const TOTAL_RULES = { borderTop: "1.5px solid var(--foreground)", borderBottom: "3px double var(--foreground)" };
 
 function pick(rows: BreakdownRow[], ids: BreakdownRowId[]): BreakdownRow[] {
   return ids.flatMap((id) => rows.filter((row) => row.id === id));
@@ -63,29 +88,15 @@ export function BreakdownLedger({
   line?: CommandLine;
   picked: number;
   onPick: (index: number) => void;
-  /** The hero's metric: the ledger opens on the same figure. */
+  /** The hero's metric: its group heads the ledger. */
   metric: "weight" | "price";
   variant: "sheet" | "rail";
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
 }) {
-  const t = useTranslations("command");
-  const [tabOverride, setTabOverride] = useState<Tab | null>(null);
-  const tab: Tab = tabOverride ?? (metric === "price" ? "cost" : "weight");
   const multi = Boolean(line?.multi);
   const [scope, setScope] = useState<"assembly" | "part">("assembly");
   const showAssembly = multi && scope === "assembly";
-
-  const marginPercent = useSyncExternalStore(
-    marginPercentStore.subscribe,
-    marginPercentStore.getSnapshot,
-    marginPercentStore.getServerSnapshot,
-  );
-  const massTolerancePercent = useSyncExternalStore(
-    massTolerancePercentStore.subscribe,
-    massTolerancePercentStore.getSnapshot,
-    massTolerancePercentStore.getServerSnapshot,
-  );
 
   const openPart = (index: number) => {
     onPick(index);
@@ -93,32 +104,27 @@ export function BreakdownLedger({
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      {multi && line && variant === "rail" && (
-        <ScopeSwitch
+    <div className="@container flex flex-col gap-5">
+      {multi && line && (
+        <PartStrip
+          line={line}
+          picked={picked}
           scope={scope}
-          partLabel={t("ledger.partScope", {
-            index: picked + 1,
-            name: formatCommandParseName(t, line.items[picked]?.parse ?? p) ?? "",
-          })}
-          onScope={setScope}
+          onAssembly={() => setScope("assembly")}
+          onPart={openPart}
         />
-      )}
-      {multi && line && variant === "sheet" && scope === "part" && (
-        <PartNav line={line} picked={picked} onPick={onPick} onBack={() => setScope("assembly")} />
       )}
 
       {showAssembly && line ? (
-        <AssemblyLedger line={line} picked={picked} tab={tab} onTab={setTabOverride} onOpen={openPart} />
+        <BillOfMaterial line={line} picked={picked} onOpen={openPart} />
       ) : (
-        <PartLedger
+        <PartSheet
           p={p}
           line={line}
+          picked={picked}
+          onPick={onPick}
+          metric={metric}
           variant={variant}
-          tab={tab}
-          onTab={setTabOverride}
-          marginPercent={marginPercent}
-          massTolerancePercent={massTolerancePercent}
           onNearby={(row) => {
             if (!p.calc) return;
             haptic("commit");
@@ -132,27 +138,32 @@ export function BreakdownLedger({
 
 /* ───────────────────────── chrome ───────────────────────── */
 
-function ScopeSwitch({
+/** Whole assembly, then each part: the sheet's tabs. Scrolls when it overflows. */
+function PartStrip({
+  line,
+  picked,
   scope,
-  partLabel,
-  onScope,
+  onAssembly,
+  onPart,
 }: {
+  line: CommandLine;
+  picked: number;
   scope: "assembly" | "part";
-  partLabel: string;
-  onScope: (scope: "assembly" | "part") => void;
+  onAssembly: () => void;
+  onPart: (index: number) => void;
 }) {
   const t = useTranslations("command");
-  const button = (value: "assembly" | "part", label: string, first: boolean) => (
+  const tab = (key: string, label: string, on: boolean, onClick: () => void) => (
     <button
+      key={key}
       type="button"
-      aria-pressed={scope === value}
-      onClick={() => onScope(value)}
-      className="h-10 min-w-0 cursor-pointer truncate px-2 text-[13px] text-foreground transition-colors"
+      aria-pressed={on}
+      onClick={onClick}
+      className="h-11 flex-shrink-0 cursor-pointer whitespace-nowrap px-3.5 text-[13px] transition-colors"
       style={{
-        borderLeft: first ? undefined : "1px solid var(--border-faint)",
-        background: scope === value ? "var(--surface-inset)" : "transparent",
-        fontWeight: scope === value ? 700 : 500,
-        boxShadow: scope === value ? "inset 0 -2px 0 var(--accent)" : undefined,
+        color: on ? "var(--foreground)" : "var(--foreground-secondary)",
+        fontWeight: on ? 700 : 500,
+        boxShadow: on ? "inset 0 -2px 0 var(--accent)" : undefined,
       }}
     >
       {label}
@@ -162,11 +173,21 @@ function ScopeSwitch({
     <div
       role="group"
       aria-label={t("ledger.scope")}
-      className="grid grid-cols-2 border"
-      style={{ borderColor: "var(--border-faint)" }}
+      className="-mt-1 flex overflow-x-auto [scrollbar-width:none]"
+      style={RULE_FAINT}
     >
-      {button("assembly", t("ledger.wholeAssembly"), true)}
-      {button("part", partLabel, false)}
+      {tab("assembly", t("ledger.backToAssembly"), scope === "assembly", onAssembly)}
+      {line.items.map((item, index) =>
+        tab(
+          String(index),
+          t("ledger.partTab", {
+            index: index + 1,
+            name: formatCommandParseName(t, item.parse) ?? item.parse.name ?? t("query.newItem"),
+          }),
+          scope === "part" && index === picked,
+          () => onPart(index),
+        ),
+      )}
     </div>
   );
 }
@@ -177,179 +198,49 @@ const Chevron = ({ dir }: { dir: "left" | "right" }) => (
   </svg>
 );
 
-function PartNav({
-  line,
-  picked,
-  onPick,
-  onBack,
-}: {
-  line: CommandLine;
-  picked: number;
-  onPick: (index: number) => void;
-  onBack: () => void;
-}) {
-  const t = useTranslations("command");
-  const count = line.items.length;
-  const name = (i: number) => formatCommandParseName(t, line.items[i].parse) ?? line.items[i].parse.name ?? "";
-  const nav =
-    "inline-flex h-11 w-11 items-center justify-center text-foreground disabled:opacity-30 disabled:pointer-events-none cursor-pointer";
+/** The sheet's heading: a serif title, the spec under it, anything on the right. */
+function SheetHeader({ title, sub, children }: { title: string; sub: string; children?: React.ReactNode }) {
   return (
-    <div className="-mx-2 -mt-1 flex items-center justify-between">
-      <button
-        type="button"
-        onClick={onBack}
-        className="inline-flex h-11 cursor-pointer items-center gap-1.5 px-2 text-[14px] font-semibold text-foreground"
-      >
-        <Chevron dir="left" />
-        {t("ledger.backToAssembly")}
-      </button>
-      <span className="flex items-center">
-        <button
-          type="button"
-          className={nav}
-          disabled={picked === 0}
-          onClick={() => onPick(picked - 1)}
-          aria-label={picked > 0 ? t("ledger.previousPart", { name: name(picked - 1) }) : undefined}
-        >
-          <Chevron dir="left" />
-        </button>
-        <span className="font-mono text-[13px] text-muted">
-          {picked + 1} / {count}
-        </span>
-        <button
-          type="button"
-          className={nav}
-          disabled={picked >= count - 1}
-          onClick={() => onPick(picked + 1)}
-          aria-label={picked < count - 1 ? t("ledger.nextPart", { name: name(picked + 1) }) : undefined}
-        >
-          <Chevron dir="right" />
-        </button>
-      </span>
-    </div>
-  );
-}
-
-function Tabs({
-  tab,
-  onTab,
-  weight,
-  cost,
-  ids,
-}: {
-  tab: Tab;
-  onTab: (tab: Tab) => void;
-  weight: string;
-  cost: string;
-  ids: { weightTab: string; costTab: string; weightPanel: string; costPanel: string };
-}) {
-  const t = useTranslations("command");
-  const button = (value: Tab, label: string, figure: string, first: boolean) => (
-    <button
-      type="button"
-      role="tab"
-      id={value === "weight" ? ids.weightTab : ids.costTab}
-      aria-selected={tab === value}
-      aria-controls={value === "weight" ? ids.weightPanel : ids.costPanel}
-      tabIndex={tab === value ? 0 : -1}
-      onClick={() => onTab(value)}
-      onKeyDown={(e) => {
-        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-          e.preventDefault();
-          const next = value === "weight" ? "cost" : "weight";
-          onTab(next);
-          document.getElementById(next === "weight" ? ids.weightTab : ids.costTab)?.focus();
-        }
-      }}
-      className="flex h-11 min-w-0 cursor-pointer items-center justify-center gap-2 px-2 text-[14px] transition-colors"
-      style={{
-        borderLeft: first ? undefined : "1px solid var(--border)",
-        background: tab === value ? "var(--foreground)" : "var(--surface)",
-        color: tab === value ? "var(--background)" : "var(--foreground)",
-        fontWeight: tab === value ? 700 : 600,
-      }}
-    >
-      {label}
-      <span className="truncate font-mono text-[13px] font-medium opacity-75">{figure}</span>
-    </button>
-  );
-  return (
-    <div role="tablist" aria-label={t("ledger.view")} className="grid grid-cols-2 border" style={{ borderColor: "var(--border)" }}>
-      {button("weight", t("ledger.weight"), weight, true)}
-      {button("cost", t("ledger.cost"), cost, false)}
-    </div>
-  );
-}
-
-function Row({ row }: { row: BreakdownRow }) {
-  return (
-    <div
-      data-row={row.id}
-      className="flex items-baseline justify-between gap-3 py-2.5"
-      style={{ borderBottom: "1px solid var(--border-faint)" }}
-    >
-      <span className="text-[14px] text-foreground-secondary">{row.label}</span>
-      <span className="font-mono text-[15px] tabular-nums text-foreground">{row.value}</span>
-    </div>
-  );
-}
-
-function Total({
-  id,
-  label,
-  value,
-  accent,
-  sub,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  accent?: boolean;
-  sub?: string;
-}) {
-  return (
-    <div
-      data-row={id}
-      className="mt-1.5 flex items-baseline justify-between gap-3 pb-2.5 pt-3"
-      style={{ borderTop: "1.5px solid var(--foreground)", borderBottom: "3px double var(--foreground)" }}
-    >
-      <span className="flex flex-col gap-0.5">
-        <span className="text-[15px] font-bold text-foreground">{label}</span>
-        {sub && <span className="font-mono text-[12px] text-foreground-secondary">{sub}</span>}
-      </span>
-      <span
-        className="font-mono text-[22px] font-bold tabular-nums"
-        style={{ color: accent ? "var(--accent)" : "var(--foreground)" }}
-      >
-        {value}
-      </span>
+    <div className="flex items-end justify-between gap-4 pb-3" style={RULE_INK}>
+      <div className="flex min-w-0 flex-col gap-1">
+        <h3 className="fs-title m-0 break-words text-[26px] leading-[1.05] text-foreground">{title}</h3>
+        <span className="font-mono text-[13px] leading-[1.5] text-foreground-secondary">{sub}</span>
+      </div>
+      {children}
     </div>
   );
 }
 
 /* ───────────────────────── one calculation ───────────────────────── */
 
-function PartLedger({
+function PartSheet({
   p,
   line,
+  picked,
+  onPick,
+  metric,
   variant,
-  tab,
-  onTab,
-  marginPercent,
-  massTolerancePercent,
   onNearby,
 }: {
   p: CommandParseResult;
   line?: CommandLine;
+  picked: number;
+  onPick: (index: number) => void;
+  metric: "weight" | "price";
   variant: "sheet" | "rail";
-  tab: Tab;
-  onTab: (tab: Tab) => void;
-  marginPercent: number;
-  massTolerancePercent: number;
   onNearby: Parameters<typeof NearbySpecs>[0]["onPick"];
 }) {
   const t = useTranslations("command");
-  const uid = useId();
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const massTolerancePercent = useSyncExternalStore(
+    massTolerancePercentStore.subscribe,
+    massTolerancePercentStore.getSnapshot,
+    massTolerancePercentStore.getServerSnapshot,
+  );
   const showSection = useSyncExternalStore(
     showSectionPropertiesStore.subscribe,
     showSectionPropertiesStore.getSnapshot,
@@ -360,45 +251,66 @@ function PartLedger({
 
   const all = [...rows.geometry, ...rows.pricing];
   const find = (id: BreakdownRowId) => all.find((row) => row.id === id);
-  const totalWeight = find("totalWeight");
-  const totalCost = find("totalCost");
-  const massBand = find("massBand");
-  const sell = find("sellPrice");
   const share =
     line?.multi && line.totalKg && p.totalKg != null
       ? Math.round((p.totalKg / line.totalKg) * 100)
       : null;
-  const ids = {
-    weightTab: `${uid}-wt`,
-    costTab: `${uid}-ct`,
-    weightPanel: `${uid}-wp`,
-    costPanel: `${uid}-cp`,
-  };
-  const spec = [p.gradeLabel ?? p.calc.result.gradeLabel, partSpec(p)].filter(Boolean).join(" · ");
+  const spec = [p.gradeLabel ?? p.calc.result.gradeLabel, partSpec(p), share != null ? t("ledger.share", { percent: share }) : ""]
+    .filter(Boolean)
+    .join(" · ");
+  const count = line?.multi ? line.items.length : 0;
+  const partName = (i: number) =>
+    line ? (formatCommandParseName(t, line.items[i].parse) ?? line.items[i].parse.name ?? "") : "";
 
+  const weight: LedgerGroup = {
+    id: "weight",
+    title: t("ledger.weight"),
+    rows: pick(rows.geometry, WEIGHT_ROWS),
+    total: find("totalWeight"),
+    accent: true,
+    after: find("massBand"),
+  };
+  const cost: LedgerGroup = {
+    id: "cost",
+    title: t("ledger.cost"),
+    rows: pick(rows.pricing, COST_ROWS),
+    total: find("totalCost"),
+    after: find("sellPrice"),
+  };
+  const step =
+    "inline-flex h-9 w-9 cursor-pointer items-center justify-center border text-foreground disabled:pointer-events-none disabled:opacity-30";
+
+  // Wide: the drawing and what describes the section on the left, the ledger
+  // on the right. Narrow (a phone, a tight desk): one column, ledger second.
+  const WIDE = "@[44rem]:grid-cols-[16.5rem_minmax(0,1fr)] @[44rem]:grid-rows-[auto_1fr_auto]";
   return (
     <>
-      {/* The full drawing, dimensions and all, on both surfaces — the
-          thumbnail dropped the callouts, and those are the exact sizes a
-          reader checks the section against. */}
-      <div
-        className="flex items-center justify-center"
-        style={{ background: "var(--surface-inset)", padding: "14px 10px" }}
-      >
-        <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
-      </div>
-      <div className="-mt-1 flex flex-col gap-0.5">
-        <span
-          className={`fs-track-tight font-extrabold text-foreground ${
-            variant === "rail" ? "text-[18px]" : "text-[20px]"
-          }`}
-        >
-          {formatCommandParseName(t, p)}
-        </span>
-        <span className="font-mono text-[13px] text-foreground-secondary">
-          {share != null ? `${spec} · ${t("ledger.share", { percent: share })}` : spec}
-        </span>
-      </div>
+      <SheetHeader title={formatCommandParseName(t, p) ?? ""} sub={spec}>
+        {count > 1 && (
+          <span className="flex flex-shrink-0 gap-1.5">
+            <button
+              type="button"
+              className={step}
+              style={{ borderColor: "var(--border)" }}
+              disabled={picked === 0}
+              onClick={() => onPick(picked - 1)}
+              aria-label={picked > 0 ? t("ledger.previousPart", { name: partName(picked - 1) }) : undefined}
+            >
+              <Chevron dir="left" />
+            </button>
+            <button
+              type="button"
+              className={step}
+              style={{ borderColor: "var(--border)" }}
+              disabled={picked >= count - 1}
+              onClick={() => onPick(picked + 1)}
+              aria-label={picked < count - 1 ? t("ledger.nextPart", { name: partName(picked + 1) }) : undefined}
+            >
+              <Chevron dir="right" />
+            </button>
+          </span>
+        )}
+      </SheetHeader>
 
       {p.availability && (
         <p
@@ -413,44 +325,158 @@ function PartLedger({
         </p>
       )}
 
-      <Tabs
-        tab={tab}
-        onTab={onTab}
-        weight={totalWeight?.value ?? "—"}
-        cost={totalCost?.value ?? "—"}
-        ids={ids}
-      />
+      <div className={`grid items-start gap-x-7 gap-y-5 ${WIDE}`}>
+        {/* The full drawing, dimensions and all — those are the exact sizes a
+            reader checks the section against. */}
+        <div
+          className="flex items-center justify-center @[44rem]:col-start-1 @[44rem]:row-start-1"
+          style={{ background: "var(--surface-inset)", padding: variant === "rail" ? "12px 8px" : "14px 10px" }}
+        >
+          <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+        </div>
 
-      <div role="tabpanel" id={ids.weightPanel} aria-labelledby={ids.weightTab} hidden={tab !== "weight"}>
-        {pick(rows.geometry, WEIGHT_ROWS).map((row) => (
-          <Row key={row.id} row={row} />
-        ))}
-        {totalWeight && <Total id="totalWeight" label={totalWeight.label} value={totalWeight.value} accent />}
-        {massBand && (
-          <div className="pt-2">
-            <Row row={massBand} />
-          </div>
-        )}
+        <div className="min-w-0 @[44rem]:col-start-2 @[44rem]:row-span-2 @[44rem]:row-start-1">
+          <LedgerTable
+            groups={metric === "price" ? [cost, weight] : [weight, cost]}
+            qty={p.calc.result.quantity}
+            twin={rows.twin}
+            basis={rows.basis}
+          />
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-4 @[44rem]:col-start-1 @[44rem]:row-start-2">
+          {showSection && rows.section.length > 0 && <SectionProperties rows={rows.section} />}
+          <NearbySpecs input={p.calc.input} onPick={onNearby} />
+        </div>
+
+        <div className="min-w-0 @[44rem]:col-start-2 @[44rem]:row-start-3">
+          <HowCalculated rows={pick(rows.geometry, SOURCE_ROWS)} />
+        </div>
       </div>
-
-      <div role="tabpanel" id={ids.costPanel} aria-labelledby={ids.costTab} hidden={tab !== "cost"}>
-        {pick(rows.pricing, COST_ROWS).map((row) => (
-          <Row key={row.id} row={row} />
-        ))}
-        {totalCost && <Total id="totalCost" label={totalCost.label} value={totalCost.value} />}
-        {sell && (
-          <div className="pt-2">
-            <Row row={sell} />
-          </div>
-        )}
-      </div>
-
-      {showSection && rows.section.length > 0 && <SectionProperties rows={rows.section} />}
-
-      <NearbySpecs input={p.calc.input} onPick={onNearby} />
-
-      <HowCalculated rows={pick(rows.geometry, SOURCE_ROWS)} />
     </>
+  );
+}
+
+interface LedgerGroup {
+  id: Group;
+  title: string;
+  rows: BreakdownRow[];
+  total?: BreakdownRow;
+  accent?: boolean;
+  after?: BreakdownRow;
+}
+
+/*
+ * The ledger's cells. Narrow, a row is label | 1 piece | all, with the basis
+ * on a second line under the label; from 34rem the basis gets its own column.
+ * Class strings stay literal so Tailwind sees them.
+ */
+const ROW = "col-span-full grid grid-cols-subgrid items-baseline";
+const C_LABEL = "col-start-1 row-start-1 min-w-0";
+const C_BASIS =
+  "col-start-1 row-start-2 min-w-0 pt-0.5 font-mono text-[11.5px] text-muted @[34rem]:col-start-2 @[34rem]:row-start-1 @[34rem]:pt-0";
+const C_EACH = "col-start-2 row-start-1 text-right @[34rem]:col-start-3";
+const C_ALL = "col-start-3 row-start-1 text-right @[34rem]:col-start-4";
+const C_SPAN = "col-start-2 col-span-2 row-start-1 text-right @[34rem]:col-start-3";
+const C_ONLY = "col-start-2 row-start-1 text-right @[34rem]:col-start-3";
+const COLS_TWIN =
+  "grid-cols-[minmax(0,1fr)_auto_auto] @[34rem]:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto_auto]";
+const COLS_SINGLE = "grid-cols-[minmax(0,1fr)_auto] @[34rem]:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)_auto]";
+
+/**
+ * Weight and cost as one table: every figure that scales with quantity shown
+ * for one piece beside all of them. Figures that don't scale (mass per metre,
+ * the rate) span both columns; a single piece collapses to one column.
+ */
+function LedgerTable({
+  groups,
+  qty,
+  twin,
+  basis,
+}: {
+  groups: LedgerGroup[];
+  qty: number;
+  twin: BreakdownRows["twin"];
+  basis: BreakdownRows["basis"];
+}) {
+  const t = useTranslations("command");
+  const single = qty <= 1;
+  const each = t("ledger.onePiece");
+  const all = t("ledger.allPieces", { count: qty });
+
+  const figures = (row: BreakdownRow, big: boolean, accent?: boolean) => {
+    const pair = twin[row.id];
+    const size = big ? "text-[20px] font-bold @[34rem]:text-[22px]" : "text-[15px]";
+    const color = { color: big && accent ? "var(--accent)" : "var(--foreground)" };
+    if (single || !pair) {
+      return (
+        <span className={`${single ? C_ONLY : C_SPAN} whitespace-nowrap font-mono tabular-nums ${size}`} style={color}>
+          {pair?.total ?? row.value}
+        </span>
+      );
+    }
+    return (
+      <>
+        <span
+          className={`${C_EACH} whitespace-nowrap font-mono tabular-nums ${
+            big ? "text-[15px] text-foreground-secondary @[34rem]:text-[16px]" : "text-[15px] text-foreground"
+          }`}
+        >
+          <span className="sr-only">{each}: </span>
+          <span>{pair.each}</span>
+        </span>
+        <span className={`${C_ALL} whitespace-nowrap font-mono tabular-nums ${size}`} style={color}>
+          <span className="sr-only">{all}: </span>
+          <span>{pair.total}</span>
+        </span>
+      </>
+    );
+  };
+
+  const line = (row: BreakdownRow, tone: "plain" | "muted") => (
+    <div key={row.id} data-row={row.id} className={`${ROW} py-2.5`} style={RULE_FAINT}>
+      <span className={`${C_LABEL} text-[14px] ${tone === "muted" ? "text-muted" : "text-foreground-secondary"}`}>
+        {row.label}
+      </span>
+      {basis[row.id] && <span className={C_BASIS}>{basis[row.id]}</span>}
+      {figures(row, false)}
+    </div>
+  );
+
+  return (
+    <div className="@container">
+      <div className={`grid gap-x-4 ${single ? COLS_SINGLE : COLS_TWIN}`}>
+        {groups.map((group, index) => (
+          <section key={group.id} aria-label={group.title} className={`${ROW} items-stretch`}>
+            <div className={`${ROW} pb-1.5 ${index === 0 ? "" : "pt-6"}`} style={RULE_INK}>
+              <span className={`${C_LABEL} ${CAPTION} font-semibold text-foreground`}>{group.title}</span>
+              <span aria-hidden="true" className={`${C_BASIS} ${CAPTION} hidden @[34rem]:block`}>
+                {t("ledger.basis")}
+              </span>
+              {!single && (
+                <>
+                  <span aria-hidden="true" className={`${C_EACH} ${CAPTION}`}>
+                    {each}
+                  </span>
+                  <span aria-hidden="true" className={`${C_ALL} ${CAPTION} text-foreground`}>
+                    {all}
+                  </span>
+                </>
+              )}
+            </div>
+            {group.rows.map((row) => line(row, "plain"))}
+            {group.total && (
+              <div data-row={group.total.id} className={`${ROW} mt-1.5 pb-2.5 pt-3`} style={TOTAL_RULES}>
+                <span className={`${C_LABEL} text-[15px] font-bold text-foreground`}>{group.total.label}</span>
+                {basis[group.total.id] && <span className={C_BASIS}>{basis[group.total.id]}</span>}
+                {figures(group.total, true, group.accent)}
+              </div>
+            )}
+            {group.after && line(group.after, "muted")}
+          </section>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -535,126 +561,276 @@ function HowCalculated({ rows }: { rows: BreakdownRow[] }) {
 
 /* ───────────────────────── the assembly ───────────────────────── */
 
-const SHARE_SHADES = ["var(--accent)", "color-mix(in oklab, var(--accent) 70%, var(--surface))", "color-mix(in oklab, var(--accent) 45%, var(--surface))", "color-mix(in oklab, var(--accent) 28%, var(--surface))"];
+/*
+ * The bill of material's cells. Wide (from 40rem) it is the full table —
+ * glyph, length, pieces, kg/m, kg per piece, weight, share, cost. Narrow, a
+ * row is the part with its spec under it and weight over cost on the right.
+ * Cells for the other layout are display:none, so they take no grid track;
+ * DOM order is the column order of both.
+ */
+const BOM_COLS =
+  "grid-cols-[1.25rem_minmax(0,1fr)_auto_1rem] @[40rem]:grid-cols-[1.25rem_1.5rem_minmax(0,1fr)_auto_auto_auto_auto_auto_3.75rem_auto]";
+const BOM_ROW = "col-span-full grid grid-cols-subgrid items-center gap-x-3 @[40rem]:gap-x-5";
+const WIDE_ONLY = "hidden @[40rem]:block";
+const NARROW_ONLY = "@[40rem]:hidden";
 
-function AssemblyLedger({
+/**
+ * The whole assembly: every part with what it weighs and costs, one ruled
+ * total for both, then the weight split by part and the cost built up.
+ */
+function BillOfMaterial({
   line,
   picked,
-  tab,
-  onTab,
   onOpen,
 }: {
   line: CommandLine;
   picked: number;
-  tab: Tab;
-  onTab: (tab: Tab) => void;
   onOpen: (index: number) => void;
 }) {
   const t = useTranslations("command");
-  const uid = useId();
-  const sym = CURRENCY_SYMBOLS[line.items[0]?.parse.pricing.currency ?? "EUR"] ?? "€";
+  const first = line.items.find((item) => item.parse.valid)?.parse ?? line.items[0]?.parse;
+  const sym = CURRENCY_SYMBOLS[first?.pricing.currency ?? "EUR"] ?? "€";
   const money = (v: number | null | undefined) => (v != null ? `${sym} ${fsMoney(v)}` : "—");
   const pieces = line.items.reduce((n, item) => n + (item.parse.valid ? item.parse.realQty : 0), 0);
   const count = line.items.length;
-  const compact = count > 4;
   const sub = t("ledger.partsPieces", { parts: count, pieces });
-  const ids = {
-    weightTab: `${uid}-wt`,
-    costTab: `${uid}-ct`,
-    weightPanel: `${uid}-wp`,
-    costPanel: `${uid}-cp`,
-  };
-
-  const list = (field: Tab) => (
-    <ol
-      className="m-0 flex list-none flex-col p-0"
-      aria-label={field === "weight" ? t("result.assemblyParts") : t("ledger.assemblyCost")}
-    >
-      {line.items.map((item, index) => {
-        const parse = item.parse;
-        const active = index === picked;
-        const kg = parse.totalKg;
-        const share = line.totalKg && kg != null ? Math.round((kg / line.totalKg) * 100) : null;
-        const name = formatCommandParseName(t, parse) ?? parse.name ?? t("query.newItem");
-        const spec = partSpec(parse);
-        return (
-          <li key={index}>
-            <button
-              type="button"
-              aria-pressed={active}
-              aria-label={t("ledger.openPart", { index: index + 1, name })}
-              onClick={() => onOpen(index)}
-              className={`grid w-full cursor-pointer grid-cols-[22px_minmax(0,1fr)_auto_16px] items-center gap-2.5 px-1.5 text-left ${
-                compact ? "min-h-11" : "min-h-[54px]"
-              }`}
-              style={{
-                borderBottom: "1px solid var(--border-faint)",
-                background: active ? "var(--accent-surface)" : "transparent",
-              }}
-            >
-              <span
-                className="font-mono text-[12px] font-bold"
-                style={{ color: active ? "var(--accent)" : "var(--muted-faint)" }}
-              >
-                {index + 1}
-              </span>
-              <span className={`flex min-w-0 ${compact ? "items-baseline gap-2" : "flex-col gap-0.5"}`}>
-                <span
-                  className={`truncate font-bold ${compact ? "text-[14px]" : "text-[15px]"}`}
-                  style={{ color: parse.valid ? "var(--foreground)" : "var(--muted)" }}
-                >
-                  {name}
-                </span>
-                <span className="truncate font-mono text-[12px] text-foreground-secondary">
-                  {spec}
-                  {!compact && share != null ? ` · ${share}%` : ""}
-                </span>
-              </span>
-              <span className={`font-mono tabular-nums text-foreground ${compact ? "text-[14px]" : "text-[15px]"} font-semibold`}>
-                {field === "weight" ? weightLabel(kg) : money(parse.totalAmount)}
-              </span>
-              <span className="text-muted" aria-hidden="true">
-                <Chevron dir="right" />
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ol>
-  );
+  const num = "whitespace-nowrap text-right font-mono text-[14px] tabular-nums";
 
   return (
     <>
-      <Tabs
-        tab={tab}
-        onTab={onTab}
-        weight={weightLabel(line.totalKg)}
-        cost={money(line.totalAmount)}
-        ids={ids}
-      />
-      <div role="tabpanel" id={ids.weightPanel} aria-labelledby={ids.weightTab} hidden={tab !== "weight"}>
-        {line.totalKg ? (
-          <div aria-hidden="true" className="mb-2 flex h-2 gap-0.5">
-            {line.items.map((item, index) => (
-              <span
-                key={index}
-                style={{
-                  flex: `${Math.max((item.parse.totalKg ?? 0) / line.totalKg!, 0.01).toFixed(3)} 1 0%`,
-                  background: SHARE_SHADES[Math.min(index, SHARE_SHADES.length - 1)],
-                  outline: index === picked ? "2px solid var(--foreground)" : undefined,
-                  outlineOffset: 1,
-                }}
-              />
-            ))}
+      <SheetHeader title={t("ledger.billOfMaterial")} sub={sub} />
+
+      <div className="@container">
+        <div className={`grid ${BOM_COLS}`}>
+          <div aria-hidden="true" className={`${BOM_ROW} px-1.5 pb-1.5`} style={RULE_INK}>
+            <span className={CAPTION}>#</span>
+            <span className={`${CAPTION} ${WIDE_ONLY}`} />
+            <span className={CAPTION}>{t("ledger.part")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.length")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.pieces")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.kgm")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.kgPiece")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.weight")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY}`}>{t("ledger.shareColumn")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.cost")}</span>
+            <span className={`${CAPTION} ${NARROW_ONLY} text-right`}>
+              {t("ledger.weight")} / {t("ledger.cost")}
+            </span>
+            <span className={NARROW_ONLY} />
           </div>
-        ) : null}
-        {list("weight")}
-        <Total id="totalWeight" label={t("result.totalWeight")} value={weightLabel(line.totalKg)} accent sub={sub} />
-      </div>
-      <div role="tabpanel" id={ids.costPanel} aria-labelledby={ids.costTab} hidden={tab !== "cost"}>
-        {list("cost")}
-        <Total id="totalCost" label={t("result.totalCost")} value={money(line.totalAmount)} sub={sub} />
+
+          <ol className={`${BOM_ROW} m-0 list-none p-0`} aria-label={t("result.assemblyParts")}>
+            {line.items.map((item, index) => {
+              const parse = item.parse;
+              const active = index === picked;
+              const kg = parse.totalKg;
+              const share = line.totalKg && kg != null ? Math.round((kg / line.totalKg) * 100) : null;
+              const name = formatCommandParseName(t, parse) ?? parse.name ?? t("query.newItem");
+              const unitKg = parse.calc?.result.unitWeightKg;
+              const narrowSpec = [
+                partSpec(parse),
+                unitKg != null ? t("ledger.perPieceShort", { weight: weightLabel(unitKg) }) : "",
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+                <li key={index} className={BOM_ROW}>
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    aria-label={t("ledger.openPart", { index: index + 1, name })}
+                    onClick={() => onOpen(index)}
+                    className={`${BOM_ROW} min-h-[56px] w-full cursor-pointer px-1.5 text-left`}
+                    style={{ ...RULE_FAINT, background: active ? "var(--accent-surface)" : "transparent" }}
+                  >
+                    <span
+                      className="font-mono text-[12px] font-bold"
+                      style={{ color: active ? "var(--accent)" : "var(--muted-faint)" }}
+                    >
+                      {index + 1}
+                    </span>
+                    <span className={`${WIDE_ONLY} text-foreground`} aria-hidden="true">
+                      {parse.alias ? <CommandGlyph fam={parse.alias.fam} alias={parse.alias.alias} size={20} /> : null}
+                    </span>
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span
+                        className="truncate text-[15px] font-bold"
+                        style={{ color: parse.valid ? "var(--foreground)" : "var(--muted)" }}
+                      >
+                        {name}
+                      </span>
+                      <span className={`${NARROW_ONLY} truncate font-mono text-[12px] text-foreground-secondary`}>
+                        {narrowSpec}
+                      </span>
+                    </span>
+                    <span className={`${WIDE_ONLY} ${num}`}>
+                      {parse.lengthRaw != null ? `${parse.lengthRaw} ${parse.lengthUnit}` : "—"}
+                    </span>
+                    <span className={`${WIDE_ONLY} ${num}`}>× {parse.realQty}</span>
+                    <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
+                      {parse.kgm != null ? fsKgm(parse.kgm) : "—"}
+                    </span>
+                    <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
+                      {unitKg != null ? fsWeight(unitKg) : "—"}
+                    </span>
+                    <span className={`${WIDE_ONLY} ${num} text-[15px] font-semibold text-foreground`}>{weightLabel(kg)}</span>
+                    <span className={`${WIDE_ONLY}`}>
+                      {share != null && (
+                        <span className="flex items-center gap-1.5">
+                          <span aria-hidden="true" className="flex h-1.5 w-8" style={{ background: "var(--surface-inset)" }}>
+                            <span style={{ width: `${share}%`, background: shade(index) }} />
+                          </span>
+                          <span className="font-mono text-[12px] text-foreground-secondary">{share}%</span>
+                        </span>
+                      )}
+                    </span>
+                    <span className={`${WIDE_ONLY} ${num} text-[15px] text-foreground`}>{money(parse.totalAmount)}</span>
+                    <span className={`${NARROW_ONLY} flex flex-col items-end gap-0.5`}>
+                      <span className={`${num} text-[15px] font-semibold text-foreground`}>{weightLabel(kg)}</span>
+                      <span className={`${num} text-[13px] text-foreground-secondary`}>{money(parse.totalAmount)}</span>
+                    </span>
+                    <span className={`${NARROW_ONLY} text-muted`} aria-hidden="true">
+                      <Chevron dir="right" />
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className={`${BOM_ROW} mt-1.5 items-baseline px-1.5 pb-2.5 pt-3`} style={TOTAL_RULES}>
+            <span />
+            <span className={WIDE_ONLY} />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-[15px] font-bold text-foreground">{t("ledger.total")}</span>
+              <span className="font-mono text-[12px] text-foreground-secondary">{sub}</span>
+            </span>
+            <span className={WIDE_ONLY} />
+            <span className={`${WIDE_ONLY} ${num}`}>{pieces}</span>
+            <span className={WIDE_ONLY} />
+            <span className={WIDE_ONLY} />
+            <span
+              data-row="totalWeight"
+              className={`${WIDE_ONLY} ${num} text-[22px] font-bold`}
+              style={{ color: "var(--accent)" }}
+            >
+              {weightLabel(line.totalKg)}
+            </span>
+            <span className={WIDE_ONLY} />
+            <span data-row="totalCost" className={`${WIDE_ONLY} ${num} text-[20px] font-bold text-foreground`}>
+              {money(line.totalAmount)}
+            </span>
+            <span className={`${NARROW_ONLY} flex flex-col items-end gap-0.5`}>
+              <span className={`${num} text-[20px] font-bold`} style={{ color: "var(--accent)" }}>
+                {weightLabel(line.totalKg)}
+              </span>
+              <span className={`${num} text-[15px] font-bold text-foreground`}>{money(line.totalAmount)}</span>
+            </span>
+            <span className={NARROW_ONLY} />
+          </div>
+        </div>
+
+        <div className="mt-7 grid gap-x-10 gap-y-7 @[40rem]:grid-cols-2">
+          <WeightByPart line={line} picked={picked} />
+          <CostBuildUp line={line} />
+        </div>
       </div>
     </>
+  );
+}
+
+/** Each part's share of the weight, one bar a part. */
+function WeightByPart({ line, picked }: { line: CommandLine; picked: number }) {
+  const t = useTranslations("command");
+  if (!line.totalKg) return null;
+  const total = line.totalKg;
+  return (
+    <section aria-label={t("ledger.weightByPart")} className="flex flex-col">
+      <div className="pb-1.5" style={RULE_INK}>
+        <span className={`${CAPTION} font-semibold text-foreground`}>{t("ledger.weightByPart")}</span>
+      </div>
+      {line.items.map((item, index) => {
+        const kg = item.parse.totalKg ?? 0;
+        const share = Math.round((kg / total) * 100);
+        return (
+          <div
+            key={index}
+            className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_auto] items-center gap-3 py-2"
+            style={RULE_FAINT}
+          >
+            <span
+              className="truncate text-[13px]"
+              style={{ color: index === picked ? "var(--foreground)" : "var(--foreground-secondary)" }}
+            >
+              {index + 1} · {formatCommandParseName(t, item.parse) ?? item.parse.name ?? t("query.newItem")}
+            </span>
+            <span aria-hidden="true" className="flex h-2.5" style={{ background: "var(--surface-inset)" }}>
+              <span style={{ width: `${share}%`, background: shade(index) }} />
+            </span>
+            <span className="whitespace-nowrap font-mono text-[13px] tabular-nums text-foreground">
+              {share}%
+            </span>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+/**
+ * The assembly's cost built up from material, waste and VAT (and the sell
+ * price, with a margin set), summed from what each part's own calculation
+ * already carries. A subtotal alone would only repeat the total, so without
+ * waste, VAT or margin there is nothing to show.
+ */
+function CostBuildUp({ line }: { line: CommandLine }) {
+  const t = useTranslations("command");
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
+  const first = line.items.find((item) => item.parse.valid)?.parse;
+  if (!line.valid || !first) return null;
+  const sym = CURRENCY_SYMBOLS[first.pricing.currency] ?? "€";
+  const money = (v: number) => `${sym} ${fsMoney(v)}`;
+  const results = line.items.flatMap((item) => (item.parse.calc ? [item.parse.calc.result] : []));
+  const sum = (key: "subtotalAmount" | "wasteAmount" | "vatAmount") =>
+    results.reduce((n, r) => n + r[key], 0);
+  const rows: { id: string; label: string; value: string; muted?: boolean }[] = [
+    { id: "subtotal", label: t("result.subtotal"), value: money(sum("subtotalAmount")) },
+    ...(first.pricing.wastePercent > 0
+      ? [{ id: "waste", label: t("result.waste", { percent: first.pricing.wastePercent }), value: money(sum("wasteAmount")) }]
+      : []),
+    ...(first.pricing.includeVat
+      ? [{ id: "vat", label: t("result.vat", { percent: first.pricing.vatPercent }), value: money(sum("vatAmount")) }]
+      : []),
+    ...(marginPercent > 0 && line.totalAmount != null
+      ? [{
+          id: "sellPrice",
+          label: t("result.sellPrice", { percent: marginPercent }),
+          value: money(sellPrice(line.totalAmount, marginPercent)),
+          muted: true,
+        }]
+      : []),
+  ];
+  if (rows.length < 2) return null;
+  return (
+    <section aria-label={t("ledger.costBuildUp")} className="flex flex-col">
+      <div className="pb-1.5" style={RULE_INK}>
+        <span className={`${CAPTION} font-semibold text-foreground`}>{t("ledger.costBuildUp")}</span>
+      </div>
+      {rows.map((row) => (
+        <div
+          key={row.id}
+          data-row={row.id}
+          className="flex items-baseline justify-between gap-3 py-2"
+          style={RULE_FAINT}
+        >
+          <span className={`text-[13px] ${row.muted ? "text-muted" : "text-foreground-secondary"}`}>{row.label}</span>
+          <span className="font-mono text-[14px] tabular-nums text-foreground">{row.value}</span>
+        </div>
+      ))}
+    </section>
   );
 }

@@ -225,7 +225,8 @@
       "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
       "aria": "FerroScale komandni upit",
       "acceptGhost": "Dovrši: {text}",
-      "expandItem": "Stavka {index}, {name} — prikaži tokene"
+      "expandItem": "Stavka {index}, {name} — prikaži tokene",
+      "newItem": "Nedovršena stavka"
     },
     "keypad": {
       "space": "razmak",
@@ -1037,7 +1038,27 @@
       "assemblyCost": "Dijelovi sklopa, cijena",
       "howCalculated": "Kako je izračunato",
       "howCalculatedLead": "Masa po metru je površina presjeka puta gustoća. Svaka vrijednost dolazi iz standarda ispod.",
-      "readMethod": "Pročitaj metodu u FAQ →"
+      "readMethod": "Pročitaj metodu u FAQ →",
+      "onePiece": "1 komad",
+      "allPieces": "× {count} kom.",
+      "part": "Dio",
+      "total": "Ukupno",
+      "costBuildUp": "Struktura cijene",
+      "weightByPart": "Masa po dijelu",
+      "billOfMaterial": "Specifikacija materijala",
+      "basis": "Osnova",
+      "length": "Dužina",
+      "pieces": "Kom.",
+      "kgm": "kg/m",
+      "kgPiece": "kg/kom",
+      "shareColumn": "Udio",
+      "partTab": "{index} · {name}",
+      "perPieceShort": "{weight}/kom",
+      "basisSubtotal": {
+        "weight": "masa × {rate}",
+        "length": "dužina × {rate}",
+        "piece": "komadi × {rate}"
+      }
     }
   },
   "contact": {

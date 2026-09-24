@@ -177,15 +177,13 @@ test.describe("Mass tolerance", () => {
 test.describe("Margin", () => {
   test("adds a sell price to the breakdown without touching cost", async ({ page }) => {
     await page.goto(DEMO_LINK);
-    // No rate typed, so the ledger opens on weight; cost is its other tab.
-    await page.getByRole("tab", { name: /^Cost/ }).click();
+    // The ledger sheet carries weight and cost in one table — no tab to pick.
     await expect(page.getByText("Total cost", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Sell price/)).toHaveCount(0);
 
     await openSettings(page);
     await page.getByLabel("Margin", { exact: true }).fill("20");
     await gotoCalculator(page);
-    await page.getByRole("tab", { name: /^Cost/ }).click();
 
     await expect(page.getByText("Sell price (+20%)")).toBeVisible();
     // Demo query costs € 286.44 → € 343.73 at 20%.

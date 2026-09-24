@@ -691,14 +691,18 @@ test.describe("Assembly breakdown (phone viewport)", () => {
     await page.getByRole("button", { name: /Breakdown/i }).first().click();
     const dialog = page.getByRole("dialog", { name: /Assembly/ });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("list", { name: "Assembly parts" })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /HEA 120/ })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /IPE 200/ })).toBeVisible();
+    const parts = dialog.getByRole("list", { name: "Assembly parts" });
+    await expect(parts).toBeVisible();
+    await expect(parts.getByRole("button", { name: /HEA 120/ })).toBeVisible();
+    await expect(parts.getByRole("button", { name: /IPE 200/ })).toBeVisible();
+    // The strip above names every part too, so any one is a tap away.
+    const strip = dialog.getByRole("group", { name: "Breakdown scope" });
+    await expect(strip.getByRole("button", { name: /IPE 200/ })).toBeVisible();
     // A part opens into its own ledger, with a way back to the whole.
-    await dialog.getByRole("button", { name: /Part 2: IPE 200/ }).click();
+    await parts.getByRole("button", { name: /Part 2: IPE 200/ }).click();
     await expect(dialog.getByRole("button", { name: "Assembly", exact: true })).toBeVisible();
     await expect(dialog.getByRole("list", { name: "Assembly parts" })).toHaveCount(0);
-    await expect(dialog.getByRole("tab", { name: /^Weight/ })).toBeVisible();
+    await expect(dialog.getByRole("region", { name: "Weight" })).toBeVisible();
     await dialog.getByRole("button", { name: "Assembly", exact: true }).click();
     await expect(dialog.getByRole("list", { name: "Assembly parts" })).toBeVisible();
   });

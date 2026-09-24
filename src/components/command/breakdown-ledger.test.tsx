@@ -59,20 +59,39 @@ function renderLedger(
 }
 
 describe("BreakdownLedger", () => {
-  it("opens on the hero's metric, and the other ledger is a tab away", () => {
+  it("puts the headline's group first", () => {
     renderLedger("hea120 6m x2", { metric: "weight" });
-    const weight = screen.getByRole("tab", { name: /^Weight/ });
-    const cost = screen.getByRole("tab", { name: /^Cost/ });
-    expect(weight.getAttribute("aria-selected")).toBe("true");
-    expect(screen.getByRole("tabpanel").textContent).toContain("Total weight");
-    fireEvent.click(cost);
-    expect(cost.getAttribute("aria-selected")).toBe("true");
-    expect(screen.getByRole("tabpanel").textContent).toContain("Total cost");
+    expect(screen.getAllByRole("region").map((r) => r.getAttribute("aria-label"))).toEqual(["Weight", "Cost"]);
+    cleanup();
+    renderLedger("hea120 6m x2", { metric: "price" });
+    expect(screen.getAllByRole("region").map((r) => r.getAttribute("aria-label"))).toEqual(["Cost", "Weight"]);
   });
 
-  it("opens on cost when the hero shows the price", () => {
-    renderLedger("hea120 6m x2", { metric: "price" });
-    expect(screen.getByRole("tab", { name: /^Cost/ }).getAttribute("aria-selected")).toBe("true");
+  it("shows one piece beside all of them, with no tabs", () => {
+    const { container } = renderLedger("hea120 6m x2");
+    expect(screen.queryByRole("tab")).toBeNull();
+    const weight = screen.getByRole("region", { name: "Weight" });
+    expect(within(weight).getByText("1 piece")).toBeDefined();
+    expect(within(weight).getByText("× 2 pieces")).toBeDefined();
+    const [each, all] = Array.from(container.querySelectorAll('[data-row="totalWeight"] > span > span:last-child'))
+      .map((el) => Number(el.textContent!.replace(/[^0-9.]/g, "")));
+    expect(all).toBeCloseTo(each * 2, 1);
+    // Per piece and the piece count are the columns now, not rows.
+    expect(container.querySelector('[data-row="perPieceWeight"]')).toBeNull();
+    expect(container.querySelector('[data-row="pieces"]')).toBeNull();
+  });
+
+  it("drops the per-piece column for a single piece", () => {
+    renderLedger("hea120 6m");
+    expect(screen.queryByText("1 piece")).toBeNull();
+    expect(screen.getByRole("region", { name: "Weight" }).textContent).toContain("Total weight");
+  });
+
+  it("says what each figure was multiplied from", () => {
+    const { container } = renderLedger("hea120 6m x2");
+    expect(container.querySelector('[data-row="massPerMetre"]')!.textContent).toMatch(/cm² × 7,850 kg\/m³/);
+    expect(container.querySelector('[data-row="totalWeight"]')!.textContent).toMatch(/kg\/m × 6 m/);
+    expect(container.querySelector('[data-row="subtotal"]')!.textContent).toContain("weight × € 1.20/kg");
   });
 
   it("keeps the source folded away until asked for", () => {
@@ -82,31 +101,31 @@ describe("BreakdownLedger", () => {
     expect(within(details).getByText("Formula")).toBeDefined();
   });
 
-  it("lists an assembly's parts with a ruled total, and a part opens its own ledger", () => {
+  it("opens an assembly on its bill of material, and a part opens its own sheet", () => {
     const onPick = vi.fn();
     renderLedger("hea120 6m x2 + ipe200 4m", { onPick });
     const parts = screen.getByRole("list", { name: "Assembly parts" });
     expect(within(parts).getAllByRole("listitem")).toHaveLength(2);
     expect(screen.getAllByText("2 parts · 3 pieces").length).toBeGreaterThan(0);
+    // No waste, VAT or margin: a build-up would only repeat the total.
+    expect(screen.queryByRole("region", { name: "Cost build-up" })).toBeNull();
 
     fireEvent.click(within(parts).getByRole("button", { name: /Part 1: HEA 120/ }));
     expect(onPick).toHaveBeenCalledWith(0);
-    // The part view has a way back; the list is gone.
-    expect(screen.getByRole("button", { name: "Assembly" })).toBeDefined();
     expect(screen.queryByRole("list", { name: "Assembly parts" })).toBeNull();
+    expect(screen.getByText(/of the weight/)).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: "Assembly" }));
     expect(screen.getByRole("list", { name: "Assembly parts" })).toBeDefined();
   });
 
-  it("gives the desk rail a scope switch instead of a back button", () => {
-    renderLedger("hea120 6m x2 + ipe200 4m", { variant: "rail", picked: 1 });
-    const scope = screen.getByRole("group", { name: "Breakdown scope" });
-    const [whole, part] = within(scope).getAllByRole("button");
-    expect(whole.getAttribute("aria-pressed")).toBe("true");
-    expect(part.textContent).toContain("Part 2 · IPE 200");
-    fireEvent.click(part);
-    expect(screen.queryByRole("list", { name: "Assembly parts" })).toBeNull();
-    expect(screen.getByText(/of the weight/)).toBeDefined();
+  it("tabs straight to a part from the strip, and steps between parts", () => {
+    const onPick = vi.fn();
+    renderLedger("hea120 6m x2 + ipe200 4m", { onPick, picked: 0 });
+    const strip = screen.getByRole("group", { name: "Breakdown scope" });
+    fireEvent.click(within(strip).getByRole("button", { name: "2 · IPE 200" }));
+    expect(onPick).toHaveBeenLastCalledWith(1);
+    fireEvent.click(screen.getByRole("button", { name: "Next part: IPE 200" }));
+    expect(onPick).toHaveBeenLastCalledWith(1);
   });
 
   it("leaves section properties out unless the setting is on", () => {
