@@ -225,7 +225,8 @@
       "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
       "aria": "FerroScale Command query",
       "acceptGhost": "Complete: {text}",
-      "expandItem": "Item {index}, {name} — show its tokens"
+      "expandItem": "Item {index}, {name} — show its tokens",
+      "newItem": "Unfinished item"
     },
     "keypad": {
       "space": "space",
@@ -1037,7 +1038,15 @@
       "assemblyCost": "Assembly parts, cost",
       "howCalculated": "How it’s calculated",
       "howCalculatedLead": "Mass per metre is the section area times the density. Every figure comes from the standard below.",
-      "readMethod": "Read the method in the FAQ →"
+      "readMethod": "Read the method in the FAQ →",
+      "onePiece": "1 piece",
+      "allPieces": "× {count} pieces",
+      "part": "Part",
+      "assembly": "Assembly",
+      "total": "Total",
+      "costBuildUp": "Cost build-up",
+      "sharePercent": "{percent}%",
+      "perPieceShort": "{weight}/pc"
     }
   },
   "contact": {

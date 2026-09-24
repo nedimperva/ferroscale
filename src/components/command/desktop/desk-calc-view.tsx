@@ -1008,13 +1008,15 @@ export function DeskCalcView({
           </div>
         </div>
 
-        {/* RIGHT column — expanded breakdown */}
+        {/* RIGHT column — expanded breakdown. Wide enough for the ledger's
+            per-piece and total columns side by side; it gives ground on a
+            narrow desk before the answer column does. */}
         <div
           className={`flex flex-col ${compact ? "flex-shrink-0 mt-4" : "min-h-0 overflow-y-auto"}`}
           style={{
-            flex: compact ? "0 0 auto" : "0 0 352px",
-            width: compact ? "100%" : 352,
-            padding: "20px 22px",
+            flex: compact ? "0 0 auto" : `0 0 ${RAIL_WIDTH}`,
+            width: compact ? "100%" : RAIL_WIDTH,
+            padding: "20px 26px",
             background: "var(--surface)",
             borderLeft: compact ? undefined : "1px solid var(--border-faint)",
             borderTop: compact ? "1px solid var(--border-faint)" : undefined,
@@ -1036,6 +1038,8 @@ export function DeskCalcView({
 }
 
 /* ───────────────────────── breakdown rail ───────────────────────── */
+
+const RAIL_WIDTH = "clamp(440px, 38vw, 560px)";
 
 /** The rail: the phone's weight and cost ledgers, with the part drawn above. */
 function DeskBreakdown({

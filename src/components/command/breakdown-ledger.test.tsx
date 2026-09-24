@@ -109,6 +109,48 @@ describe("BreakdownLedger", () => {
     expect(screen.getByText(/of the weight/)).toBeDefined();
   });
 
+  it("lays both ledgers open on the desk rail, one piece beside all of them", () => {
+    const { container } = renderLedger("hea120 6m x2", { variant: "rail" });
+    expect(screen.queryByRole("tab")).toBeNull();
+    const weight = screen.getByRole("region", { name: "Weight" });
+    const cost = screen.getByRole("region", { name: "Cost" });
+    expect(within(weight).getByText("1 piece")).toBeDefined();
+    expect(within(weight).getByText("× 2 pieces")).toBeDefined();
+    // Each total row carries the piece and the whole; the whole is twice the piece.
+    const [each, all] = Array.from(container.querySelectorAll('[data-row="totalWeight"] > span > span:last-child'))
+      .map((el) => Number(el.textContent!.replace(/[^0-9.]/g, "")));
+    expect(all).toBeCloseTo(each * 2, 1);
+    expect(within(cost).getByText("Total cost")).toBeDefined();
+    // Mass per metre is the same for one piece as for all: one figure, no pair.
+    expect(container.querySelectorAll('[data-row="massPerMetre"] > span')).toHaveLength(2);
+  });
+
+  it("drops the per-piece column for a single piece", () => {
+    renderLedger("hea120 6m", { variant: "rail" });
+    expect(screen.queryByText("1 piece")).toBeNull();
+    expect(screen.getByRole("region", { name: "Weight" }).textContent).toContain("Total weight");
+  });
+
+  it("gives an assembly on the rail weight and cost for every part, and one total for both", () => {
+    const { container } = renderLedger("hea120 6m x2 + ipe200 4m", { variant: "rail" });
+    const parts = screen.getByRole("list", { name: "Assembly parts" });
+    const first = within(parts).getByRole("button", { name: /Part 1: HEA 120/ });
+    expect(first.textContent).toMatch(/kg/);
+    expect(first.textContent).toMatch(/€/);
+    expect(container.querySelector('[data-row="totalWeight"]')!.textContent).toMatch(/kg$/);
+    expect(container.querySelector('[data-row="totalCost"]')!.textContent).toMatch(/^€/);
+    // No waste, VAT or margin: a build-up would only repeat the total.
+    expect(screen.queryByRole("region", { name: "Cost build-up" })).toBeNull();
+  });
+
+  it("steps through parts from the rail's scope switch", () => {
+    const onPick = vi.fn();
+    renderLedger("hea120 6m x2 + ipe200 4m", { variant: "rail", picked: 0, onPick });
+    fireEvent.click(screen.getByRole("button", { name: /Part 1: HEA 120/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Next part: IPE 200" }));
+    expect(onPick).toHaveBeenLastCalledWith(1);
+  });
+
   it("leaves section properties out unless the setting is on", () => {
     const { container } = renderLedger("ipe200 6m s235", { variant: "rail" });
     expect(container.querySelector("[data-section-properties]")).toBeNull();
