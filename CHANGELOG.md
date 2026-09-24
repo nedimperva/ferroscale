@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.31.0] - 2026-09-24
+
+A wider breakdown on the desk: one piece beside all of them.
+
+### Changed
+
+- The desk's breakdown rail is wider, and weight and cost are both open at once — no tabs. Every figure that scales with quantity shows one piece beside all of them (length, weight, material, waste, VAT, total and sell price); mass per metre and the rate span both. A single piece keeps one column
+- A multi-item line on the desk lists each part's weight and cost side by side, with its share of the weight, one ruled total for both, and the cost built up from material, waste and VAT. With a part open, arrows beside the Whole assembly / Part switch step to the previous or next part
+
+### Fixed
+
+- An unfinished part in an assembly's breakdown reads "Unfinished item" instead of a raw translation key
+
 ## [3.30.0] - 2026-09-23
 
 Section properties, cited — and a breakdown you can read.
