@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.32.0",
     date: "2026-09-25",
     changed: [
-      "The bill of material groups parts the way the stock is bought: one profile and size with its cut lengths listed under it (L 45×45×5 — 4500 mm, 740 mm × 2), with the group's pieces, metres, weight and cost summed; sheet goods by thickness — Plate 10 mm, Sheet 5 mm — with each piece's width × length. Different grades stay apart. Weight by part follows the groups",
+      "The bill of material groups parts the way the stock is bought: one profile and size with its cut lengths listed under it (L 45×45×5 — 4500 mm, 740 mm × 2), with the group's pieces, metres, weight and cost summed; sheet goods by thickness — Plate 10 mm, Sheet 5 mm — with each piece's width × length. Different grades stay apart. Weight by part and the part tabs follow the groups: every L 45×45×5 sits under one tab, with a row under it to pick the cut",
       "On the desk the answer column and the breakdown now share the width and shrink together, instead of the breakdown keeping a fixed width and squeezing the left side. The part sheet keeps its drawing beside the ledger on narrower windows, and the drawing is smaller in the phone sheet so the figures start higher",
     ],
     fixed: [
@@ -29,7 +29,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "A click on the empty space of the desk command line no longer edits its first chip",
     ],
     changed_bs: [
-      "Specifikacija materijala grupiše dijelove onako kako se materijal nabavlja: isti profil i dimenzija s dužinama rezanja ispod (L 45×45×5 — 4500 mm, 740 mm × 2), sa zbirom komada, metara, težine i cijene grupe; limovi i ploče po debljini — Ploča 10 mm, Lim 5 mm — sa širinom × dužinom svakog komada. Različiti kvaliteti ostaju odvojeni. Masa po dijelu prati grupe",
+      "Specifikacija materijala grupiše dijelove onako kako se materijal nabavlja: isti profil i dimenzija s dužinama rezanja ispod (L 45×45×5 — 4500 mm, 740 mm × 2), sa zbirom komada, metara, težine i cijene grupe; limovi i ploče po debljini — Ploča 10 mm, Lim 5 mm — sa širinom × dužinom svakog komada. Različiti kvaliteti ostaju odvojeni. Masa po dijelu i kartice dijelova prate grupe: svaki L 45×45×5 je pod jednom karticom, s redom ispod za izbor dužine",
       "Na desktopu kolona s rezultatom i obračun dijele širinu i smanjuju se zajedno, umjesto da obračun zadrži fiksnu širinu i stisne lijevu stranu. List dijela zadržava crtež pored tabele i na užim prozorima, a crtež je manji na telefonu pa brojevi počinju više",
     ],
     fixed_bs: [

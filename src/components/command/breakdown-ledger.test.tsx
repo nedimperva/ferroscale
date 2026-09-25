@@ -132,6 +132,22 @@ describe("BreakdownLedger", () => {
     expect(onPick).toHaveBeenCalledWith(3);
   });
 
+  it("tabs by stock group, with a row picking the cut inside a group", () => {
+    const onPick = vi.fn();
+    renderLedger("l45x45x5 4500mm + hea120 6m + l45x45x5 740mm x2", { onPick, picked: 0 });
+    const strip = screen.getByRole("group", { name: "Breakdown scope" });
+    expect(within(strip).getAllByRole("button").map((b) => b.textContent)).toEqual([
+      "Assembly",
+      "1, 3 · Angle 45×45×5",
+      "2 · HEA 120",
+    ]);
+    fireEvent.click(within(strip).getByRole("button", { name: "1, 3 · Angle 45×45×5" }));
+    expect(onPick).toHaveBeenLastCalledWith(0);
+    const cuts = screen.getByRole("group", { name: "Angle 45×45×5, 2 parts" });
+    fireEvent.click(within(cuts).getByRole("button", { name: /Part 3: Angle 45×45×5 740 mm/ }));
+    expect(onPick).toHaveBeenLastCalledWith(2);
+  });
+
   it("tabs straight to a part from the strip, and steps between parts", () => {
     const onPick = vi.fn();
     renderLedger("hea120 6m x2 + ipe200 4m", { onPick, picked: 0 });

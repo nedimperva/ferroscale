@@ -98,6 +98,7 @@ export function BreakdownLedger({
   const multi = Boolean(line?.multi);
   const [scope, setScope] = useState<"assembly" | "part">("assembly");
   const showAssembly = multi && scope === "assembly";
+  const groups = multi && line ? groupBillOfMaterial(line) : [];
 
   const openPart = (index: number) => {
     onPick(index);
@@ -108,7 +109,7 @@ export function BreakdownLedger({
     <div className="@container flex flex-col gap-5">
       {multi && line && (
         <PartStrip
-          line={line}
+          groups={groups}
           picked={picked}
           scope={scope}
           onAssembly={() => setScope("assembly")}
@@ -117,7 +118,7 @@ export function BreakdownLedger({
       )}
 
       {showAssembly && line ? (
-        <BillOfMaterial line={line} picked={picked} onOpen={openPart} />
+        <BillOfMaterial line={line} groups={groups} picked={picked} onOpen={openPart} />
       ) : (
         <PartSheet
           p={p}
@@ -139,21 +140,26 @@ export function BreakdownLedger({
 
 /* ───────────────────────── chrome ───────────────────────── */
 
-/** Whole assembly, then each part: the sheet's tabs. Scrolls when it overflows. */
+/**
+ * Whole assembly, then one tab per stock group — the same groups as the bill
+ * of material, so every L 45×45×5 on the line sits under one tab. A group of
+ * several cuts gets a second row picking the cut. Scrolls when it overflows.
+ */
 function PartStrip({
-  line,
+  groups,
   picked,
   scope,
   onAssembly,
   onPart,
 }: {
-  line: CommandLine;
+  groups: BomGroup[];
   picked: number;
   scope: "assembly" | "part";
   onAssembly: () => void;
   onPart: (index: number) => void;
 }) {
   const t = useTranslations("command");
+  const active = scope === "part" ? groups.find((g) => g.members.some((m) => m.index === picked)) : undefined;
   const tab = (key: string, label: string, on: boolean, onClick: () => void) => (
     <button
       key={key}
@@ -171,23 +177,59 @@ function PartStrip({
     </button>
   );
   return (
-    <div
-      role="group"
-      aria-label={t("ledger.scope")}
-      className="-mt-1 flex overflow-x-auto [scrollbar-width:none]"
-      style={RULE_FAINT}
-    >
-      {tab("assembly", t("ledger.backToAssembly"), scope === "assembly", onAssembly)}
-      {line.items.map((item, index) =>
-        tab(
-          String(index),
-          t("ledger.partTab", {
-            index: index + 1,
-            name: formatCommandParseName(t, item.parse) ?? item.parse.name ?? t("query.newItem"),
-          }),
-          scope === "part" && index === picked,
-          () => onPart(index),
-        ),
+    <div className="-mt-1 flex flex-col">
+      <div
+        role="group"
+        aria-label={t("ledger.scope")}
+        className="flex overflow-x-auto [scrollbar-width:none]"
+        style={RULE_FAINT}
+      >
+        {tab("assembly", t("ledger.backToAssembly"), scope === "assembly", onAssembly)}
+        {groups.map((group) =>
+          tab(
+            group.key,
+            t("ledger.partTab", {
+              index: group.members.map((m) => m.index + 1).join(", "),
+              name: groupLabel(t, group),
+            }),
+            group === active,
+            // Re-tapping the open group keeps the cut you were on.
+            () => onPart(group === active ? picked : group.members[0].index),
+          ),
+        )}
+      </div>
+      {active && active.members.length > 1 && (
+        <div
+          role="group"
+          aria-label={t("ledger.group", { name: groupLabel(t, active), count: active.members.length })}
+          className="flex gap-1.5 overflow-x-auto pt-2.5 [scrollbar-width:none]"
+        >
+          {active.members.map((member) => {
+            const on = member.index === picked;
+            return (
+              <button
+                key={member.index}
+                type="button"
+                aria-pressed={on}
+                aria-label={t("ledger.openPart", {
+                  index: member.index + 1,
+                  name: `${groupLabel(t, active)} ${member.cut}`,
+                })}
+                onClick={() => onPart(member.index)}
+                className="inline-flex min-h-9 flex-shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap px-3 font-mono text-[13px]"
+                style={{
+                  border: `1px solid ${on ? "var(--foreground)" : "var(--border)"}`,
+                  background: on ? "var(--surface-inset)" : "transparent",
+                  color: on ? "var(--foreground)" : "var(--foreground-secondary)",
+                  fontWeight: on ? 700 : 500,
+                }}
+              >
+                <span className="text-[11px] text-muted-faint">{member.index + 1}</span>
+                {member.cut} × {member.parse.realQty}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -603,10 +645,12 @@ function groupLabel(t: LedgerT, group: BomGroup): string {
  */
 function BillOfMaterial({
   line,
+  groups,
   picked,
   onOpen,
 }: {
   line: CommandLine;
+  groups: BomGroup[];
   picked: number;
   onOpen: (index: number) => void;
 }) {
@@ -618,7 +662,6 @@ function BillOfMaterial({
   const count = line.items.length;
   const sub = t("ledger.partsPieces", { parts: count, pieces });
   const num = "whitespace-nowrap text-right font-mono text-[14px] tabular-nums";
-  const groups = groupBillOfMaterial(line);
   const hasSheet = groups.some((group) => group.kind === "sheet");
   const grades = new Set(groups.map((group) => group.gradeLabel).filter(Boolean));
   const mixedGrades = grades.size > 1;
@@ -673,11 +716,11 @@ function BillOfMaterial({
             {!nested && parse.alias ? <CommandGlyph fam={parse.alias.fam} alias={parse.alias.alias} size={20} /> : null}
           </span>
           <span
-            className={`flex min-w-0 flex-col gap-0.5 ${nested ? "self-stretch justify-center" : ""}`}
+            className={`flex min-w-0 flex-col gap-0.5 ${nested ? "self-stretch justify-center @[40rem]:col-span-2" : ""}`}
             style={nested ? { borderLeft: "1px solid var(--border)", paddingLeft: 10, marginLeft: 6 } : undefined}
           >
             <span
-              className={`break-words ${nested ? `${NARROW_ONLY} font-mono text-[14px] font-semibold` : "text-[15px] font-bold"}`}
+              className={`break-words ${nested ? "font-mono text-[14px] font-semibold" : "text-[15px] font-bold"}`}
               style={{ color: parse.valid ? "var(--foreground)" : "var(--muted)" }}
             >
               {name}
@@ -691,7 +734,8 @@ function BillOfMaterial({
               {narrowSpec}
             </span>
           </span>
-          <span className={`${WIDE_ONLY} ${num} ${nested ? "font-semibold text-foreground" : ""}`}>{cut || "—"}</span>
+          {/* A nested row's cut already fills the part and length columns. */}
+          {!nested && <span className={`${WIDE_ONLY} ${num}`}>{cut || "—"}</span>}
           <span className={`${WIDE_ONLY} ${num}`}>× {parse.realQty}</span>
           <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
             {nested ? "" : parse.kgm != null && group.kind !== "sheet" ? fsKgm(parse.kgm) : "—"}

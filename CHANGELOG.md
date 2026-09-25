@@ -11,7 +11,7 @@ A bill of material grouped like stock, a breakdown that gives way, and a + line 
 
 ### Changed
 
-- The bill of material groups parts the way the stock is bought: one profile and size with its cut lengths listed under it (L 45×45×5 — 4500 mm, 740 mm × 2), with the group's pieces, metres, weight and cost summed; sheet goods by thickness — Plate 10 mm, Sheet 5 mm — with each piece's width × length. Different grades stay apart. Weight by part follows the groups
+- The bill of material groups parts the way the stock is bought: one profile and size with its cut lengths listed under it (L 45×45×5 — 4500 mm, 740 mm × 2), with the group's pieces, metres, weight and cost summed; sheet goods by thickness — Plate 10 mm, Sheet 5 mm — with each piece's width × length. Different grades stay apart. Weight by part and the part tabs follow the groups: every L 45×45×5 sits under one tab, with a row under it to pick the cut
 - On the desk the answer column and the breakdown now share the width and shrink together, instead of the breakdown keeping a fixed width and squeezing the left side. The part sheet keeps its drawing beside the ledger on narrower windows, and the drawing is smaller in the phone sheet so the figures start higher
 
 ### Fixed
