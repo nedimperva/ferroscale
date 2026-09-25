@@ -3,7 +3,13 @@ import type {
   StandardProfileDefinition,
   StandardProfileSpecRecord,
 } from "./types";
-import { BEAM_PROFILES, CHANNEL_ANGLE_PROFILES, TEE_PROFILES } from "./profiles";
+import {
+  ANGLE_CATALOG,
+  BEAM_PROFILES,
+  CHANNEL_ANGLE_PROFILES,
+  TEE_PROFILES,
+  anglePerimeterMm,
+} from "./profiles";
 import { SECTION_PROPERTIES } from "./section-properties";
 
 function roundMm(value: number): number {
@@ -322,6 +328,30 @@ function buildTeeSpecs(profile: StandardProfileDefinition): Record<string, Stand
   );
 }
 
+/** Angles carry their own legs, thickness and radii — nothing to solve. */
+function buildAngleSpecs(): Record<string, StandardProfileSpecRecord> {
+  return Object.fromEntries(
+    ANGLE_CATALOG.map((row) => [
+      row.id,
+      {
+        sizeId: row.id,
+        label: `L ${row.hMm}×${row.bMm}×${row.tMm}`,
+        drawingKind: "angle",
+        geometry: {
+          legAMm: row.hMm,
+          legBMm: row.bMm,
+          thicknessMm: row.tMm,
+          rootRadiusMm: row.r1Mm,
+          toeRadiusMm: row.r2Mm,
+        },
+        areaMm2: Math.round(row.areaCm2 * 100 * 10) / 10,
+        perimeterMm: Math.round(anglePerimeterMm(row)),
+        referenceLabel: "EN 10056-1",
+      },
+    ]),
+  );
+}
+
 function findProfile(profileId: ProfileId): StandardProfileDefinition {
   const profiles = [...BEAM_PROFILES, ...CHANNEL_ANGLE_PROFILES, ...TEE_PROFILES];
   const profile = profiles.find((item) => item.id === profileId);
@@ -433,6 +463,7 @@ export const STANDARD_PROFILE_SPECS: Partial<Record<ProfileId, Record<string, St
     0.8,
   ),
   tee_en: buildTeeSpecs(TEE_PROFILE),
+  angle_en: buildAngleSpecs(),
 };
 
 export function getStandardProfileSpecRecord(

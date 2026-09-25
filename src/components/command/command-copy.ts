@@ -5,6 +5,7 @@ import {
   fsMoney,
   fsWeight,
   fsWeightUnit,
+  STOCK_SOURCES,
 } from "@ferroscale/metal-core";
 import { commandTargetNote, formatTargetNote } from "./target-note";
 import type {
@@ -16,6 +17,7 @@ import type {
   CommandSuggestion,
   CommandSuggestionItem,
   MaterialAvailability,
+  StockSourceId,
 } from "@ferroscale/metal-core";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
@@ -332,4 +334,11 @@ export function formatAvailability(
       ? t("availability.notInSeriesDetail")
       : t("availability.notInSeriesDetailAlloy", { grade: gradeLabel ?? "" }),
   };
+}
+
+/** "EN 10219-2 · EN 10210-2", with the merchant's list named in the reader's language. */
+export function formatStockSources(t: CommandT, sources: readonly StockSourceId[]): string {
+  return sources
+    .map((id) => (id === "eisen-stoll-2025" ? t("stock.merchantList") : STOCK_SOURCES[id].shortLabel))
+    .join(" · ");
 }

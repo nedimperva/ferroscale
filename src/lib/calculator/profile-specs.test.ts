@@ -102,9 +102,10 @@ describe("resolveProfileSpecs", () => {
       profileId: "angle" as const,
       selectedSizeId: undefined,
       manualDimensions: {
+        // EN 10056-1 rolls 80×60×7; the 80×60×8 this used to use is not in the table.
         legA: { value: 80, unit: "mm" as const },
         legB: { value: 60, unit: "mm" as const },
-        thickness: { value: 8, unit: "mm" as const },
+        thickness: { value: 7, unit: "mm" as const },
       },
     };
 

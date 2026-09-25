@@ -31,6 +31,21 @@ export function AvailabilityBadge({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * "Non-standard": the quietest of the badges — a hairline and muted ink, no
+ * fill. The size is fine to weigh; it may just be hard to buy.
+ */
+export function StockBadge({ children, title }: { children: React.ReactNode; title?: string }) {
+  return (
+    <span
+      title={title}
+      className="font-sans text-[10px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded border border-[var(--border)] text-muted whitespace-nowrap"
+    >
+      {children}
+    </span>
+  );
+}
+
 export function TargetBadge({ children }: { children: React.ReactNode }) {
   return (
     <span className="font-sans text-[10px] font-bold tracking-wide uppercase px-1.5 py-0.5 rounded bg-[var(--purple-surface)] text-[var(--purple-text)] whitespace-nowrap">

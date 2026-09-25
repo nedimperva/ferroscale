@@ -1,3 +1,5 @@
+import { ANGLE_CATALOG } from "./profiles/angles";
+
 /**
  * Published section properties for the standard sizes — the second-moment and
  * modulus figures an engineer otherwise keeps a catalogue tab open for.
@@ -214,10 +216,21 @@ export const SECTION_PROPERTIES: Readonly<Record<string, SectionProperties>> = {
 };
 
 /**
- * Standard sizes with no properties, and why. Empty: every standard size has
- * a cited row. A size added without one must be named here with the reason.
+ * Standard sizes with no properties, and why. A size added without a cited row
+ * must be named here with the reason.
+ *
+ * Angles: the catalogues do print their properties, but an angle's are not an
+ * I-section's — Iy = Iz on equal legs, the useful axes are the principal u-u
+ * and v-v, and no plastic moduli are published — so the row shape above has
+ * no honest place for them yet. They wait on a row type of their own rather
+ * than being forced into this one.
  */
-export const SECTION_PROPERTIES_UNSOURCED: Readonly<Record<string, string>> = {};
+const ANGLE_UNSOURCED_REASON =
+  "EN 10056-1 angle: catalogue properties are principal-axis (Iu, Iv, Iyz) with no Wpl, which this table has no fields for yet";
+
+export const SECTION_PROPERTIES_UNSOURCED: Readonly<Record<string, string>> = Object.fromEntries(
+  ANGLE_CATALOG.map((row) => [row.id, ANGLE_UNSOURCED_REASON]),
+);
 
 export interface ResolvedSectionProperties extends SectionProperties {
   /** Radii of gyration, cm — derived as sqrt(I / A). */

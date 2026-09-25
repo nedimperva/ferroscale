@@ -6,7 +6,7 @@ Guidance for coding agents working in this repository.
 
 EU-focused web app for metal profile weight and price estimation, built
 around a command bar: the user types a query like `hea120 6m x2 s235
-@2.50/kg` and gets a live result. Supports 20 profile types (manual and
+@2.50/kg` and gets a live result. Supports 21 profile types (manual and
 EN-standard sizes), steel/stainless/aluminum grades, and multiple
 pricing modes.
 
@@ -151,6 +151,17 @@ output — for standard profiles that reference is the only independent check
 the engine benchmark has, and reading the area back off the dataset is
 exactly the bug that let five wrong channel areas ship.
 
+### Standard (stock) sizes for manual profiles
+
+`packages/metal-core/src/datasets/stock-sizes.ts` lists the sizes a buyer can
+expect to find for bars, tubes, angles and panel gauges, each list transcribed
+from a named table (EN 10219-2 / 10210-2, EN 10060, the angle catalogue, a
+merchant's stock list). It drives three things and nothing else — never a
+weight: the size-typing chips in `cmdSuggest`, the parser's `stock` note
+(steel only; silent outside the range a list covers) and the web's nearby
+sizes (`src/lib/datasets/standard-sizes.ts` reads it). Add a size only from a
+source you can cite on the list.
+
 ### Section properties
 
 `packages/metal-core/src/datasets/section-properties.ts` holds Iy, Wel, Wpl
@@ -174,6 +185,12 @@ Calculation, synced, **off by default**) is on.
   so the breakdown drawing labels real catalogue dimensions. Sizes without a
   row fall back to solved proportions flagged `thicknessEstimated`, which the
   drawing sketches but does not label.
+- Angles (`angle_en`, `profiles/angles.ts`) have no alias of their own: the
+  parser sends an `l` query to the catalogue when its legs and thickness are a
+  rolled EN 10056-1 size and the grade is steel or stainless, and to the manual
+  `angle` formula otherwise (aluminium, off-catalogue sizes). Their section
+  properties are in `SECTION_PROPERTIES_UNSOURCED` until the table gets an
+  angle row type (Iu, Iv, Iyz; catalogues publish no Wpl).
 - Tees are the five EN 10055 sizes T 30–T 60. Nine non-standard tees were
   removed in 3.30.0 — don't re-add a size without a published table behind it.
 

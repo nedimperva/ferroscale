@@ -26,6 +26,7 @@ import {
   applyIssueSuggestion,
   computeGhost,
   formatAvailability,
+  formatStockSources,
   formatCommandHint,
   formatCommandIssue,
   issueForToken,
@@ -39,7 +40,7 @@ import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
 import { DeskViewHeader } from "./desk-rail";
-import { AvailabilityBadge, PricingBadge, TargetBadge, InlineIssue } from "../command-atoms";
+import { AvailabilityBadge, PricingBadge, StockBadge, TargetBadge, InlineIssue } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
@@ -797,6 +798,11 @@ export function DeskCalcView({
                       <AvailabilityBadge>
                         {formatAvailability(t, p.availability, p.gradeLabel).badge}
                       </AvailabilityBadge>
+                    )}
+                    {p.stock && (
+                      <StockBadge title={t("stock.detail", { sources: formatStockSources(t, p.stock.sources) })}>
+                        {t("stock.badge")}
+                      </StockBadge>
                     )}
                     {targetNote && (
                       <TargetBadge>

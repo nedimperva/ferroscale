@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { cmdAppendLineItem, fsKgm, fsLength, fsMoney, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { haptic } from "@/lib/haptics";
-import { applyIssueSuggestion, formatAvailability, formatCommandIssue } from "../command-copy";
-import { AvailabilityBadge, InlineIssue, PricingBadge, TargetBadge } from "../command-atoms";
+import { applyIssueSuggestion, formatAvailability, formatStockSources, formatCommandIssue } from "../command-copy";
+import { AvailabilityBadge, InlineIssue, PricingBadge, StockBadge, TargetBadge } from "../command-atoms";
 import { SaveControl } from "../save-control";
 import { DeskIcon } from "../desktop/desk-atoms";
 import type { MassBand } from "../mass-band";
@@ -210,6 +210,11 @@ export function PhoneHero({
               <AvailabilityBadge>
                 {formatAvailability(t, p.availability, p.gradeLabel).badge}
               </AvailabilityBadge>
+            )}
+            {p.stock && (
+              <StockBadge title={t("stock.detail", { sources: formatStockSources(t, p.stock.sources) })}>
+                {t("stock.badge")}
+              </StockBadge>
             )}
             {targetNote && (
               <TargetBadge>

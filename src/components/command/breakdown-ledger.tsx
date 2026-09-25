@@ -6,7 +6,7 @@ import { CURRENCY_SYMBOLS, fsKgm, fsLength, fsMoney, fsWeight, fsWeightUnit } fr
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { ProfileDrawing } from "./profile-drawing";
 import { CommandGlyph } from "./command-glyph";
-import { formatAvailability, formatCommandAliasName, formatCommandParseName } from "./command-copy";
+import { formatAvailability, formatStockSources, formatCommandAliasName, formatCommandParseName } from "./command-copy";
 import { groupBillOfMaterial, type BomGroup, type BomMember } from "./bom-groups";
 import {
   buildBreakdownRows,
@@ -16,6 +16,7 @@ import {
   type BreakdownRows,
 } from "./breakdown-rows";
 import { applyNearbySpec, NearbySpecs } from "./nearby-specs";
+import { replaceItemTokenKind } from "./line-edit";
 import { Link } from "@/i18n/navigation";
 import { haptic } from "@/lib/haptics";
 import {
@@ -131,6 +132,10 @@ export function BreakdownLedger({
             if (!p.calc) return;
             haptic("commit");
             setQuery(applyNearbySpec(query, picked, row, p.calc.input));
+          }}
+          onStandardSize={(ins) => {
+            haptic("commit");
+            setQuery(replaceItemTokenKind(query, picked, "profile", ins));
           }}
         />
       )}
@@ -264,6 +269,7 @@ function PartSheet({
   metric,
   variant,
   onNearby,
+  onStandardSize,
 }: {
   p: CommandParseResult;
   line?: CommandLine;
@@ -272,6 +278,7 @@ function PartSheet({
   metric: "weight" | "price";
   variant: "sheet" | "rail";
   onNearby: Parameters<typeof NearbySpecs>[0]["onPick"];
+  onStandardSize: (ins: string) => void;
 }) {
   const t = useTranslations("command");
   const marginPercent = useSyncExternalStore(
@@ -368,6 +375,28 @@ function PartSheet({
         >
           {formatAvailability(t, p.availability, p.gradeLabel).detail} {t("availability.checkRate")}
         </p>
+      )}
+
+      {p.stock && (
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1.5 text-[12px] leading-[1.45] text-muted">
+          <span>{t("stock.detail", { sources: formatStockSources(t, p.stock.sources) })}</span>
+          {p.stock.nearest.length > 0 && (
+            <span className="inline-flex flex-wrap items-baseline gap-1.5">
+              <span>{t("stock.nearest")}</span>
+              {p.stock.nearest.map((option) => (
+                <button
+                  key={option.ins}
+                  type="button"
+                  className="font-mono tabular-nums rounded border border-[var(--border)] px-1.5 py-px text-[12px] text-foreground cursor-pointer hover:border-[var(--border-strong)]"
+                  aria-label={t("stock.use", { size: option.label })}
+                  onClick={() => onStandardSize(option.ins)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </span>
+          )}
+        </div>
       )}
 
       <div className={`grid items-start gap-x-4 gap-y-4 @[48rem]:gap-x-7 @[48rem]:gap-y-5 ${WIDE}`}>

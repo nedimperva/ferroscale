@@ -979,6 +979,13 @@
       "notInSeriesDetailAlloy": "{grade} is stocked as plate, sheet, bar and tube, not as sections. The mass is right for the shape, but this is not a stock form.",
       "checkRate": "Check the rate — the price book is per grade."
     },
+    "stock": {
+      "badge": "Non-standard",
+      "detail": "Not a standard size in {sources} — likely made to order or cut from larger stock.",
+      "nearest": "Standard:",
+      "use": "Use {size} instead",
+      "merchantList": "a merchant's stock list"
+    },
     "save": {
       "toProject": "Add to {project}",
       "toLibrary": "Save",

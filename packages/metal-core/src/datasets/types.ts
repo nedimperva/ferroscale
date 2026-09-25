@@ -55,7 +55,8 @@ export type ProfileId =
   | "beam_hea_en"
   | "beam_heb_en"
   | "beam_hem_en"
-  | "tee_en";
+  | "tee_en"
+  | "angle_en";
 
 export type DimensionKey =
   | "diameter"
@@ -142,6 +143,8 @@ export interface ProfileSpecGeometry {
   legBMm?: number;
   patternHeightMm?: number;
   rootRadiusMm?: number;
+  /** Angles: the radius on the inside edge of each toe (EN 10056-1 r2). */
+  toeRadiusMm?: number;
   /**
    * True when web/flange thickness and root radius were solved from the area
    * with a fixed ratio rather than read from the EN table. Renderers keep the

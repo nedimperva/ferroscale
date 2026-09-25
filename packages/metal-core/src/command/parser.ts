@@ -9,7 +9,9 @@ import type {
 } from "../calculator/types";
 import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./arith";
 import type { LengthExpression } from "./arith";
-import { getProfileById } from "../datasets/profiles";
+import { findAngleCatalogSize, getProfileById } from "../datasets/profiles";
+import { getMaterialGradeById } from "../datasets/materials";
+import { checkStockSize } from "../datasets/stock-sizes";
 import { materialAvailability } from "../datasets/availability";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
@@ -29,6 +31,7 @@ import type {
   CommandParseIssue,
   CommandParseIssueCode,
   CommandParseResult,
+  CommandStockNote,
   CommandParserSettings,
   CommandPricing,
   CommandTarget,
@@ -207,8 +210,9 @@ export function inputToQuery(
   const lengthMm = toMillimeters(input.length.value, input.length.unit);
 
   let sizeText: string | null;
-  if (alias.profileId && input.selectedSizeId) {
-    // Standard profile — strip the alias prefix off the size id.
+  if ((alias.profileId || input.profileId === "angle_en") && input.selectedSizeId) {
+    // Standard profile — strip the alias prefix off the size id. Catalogue
+    // angles ride the manual `l` alias, so they are named here by profile.
     sizeText = input.selectedSizeId.startsWith(alias.alias)
       ? input.selectedSizeId.slice(alias.alias.length)
       : null;
@@ -259,6 +263,49 @@ export function inputToQuery(
   }
 
   return `${alias.alias}${sizeText}${lengthToken}${qtyToken}${gradeToken}${priceToken}`;
+}
+
+/**
+ * The standard-size note for a hand-typed steel section. Stainless and
+ * aluminium are rolled and extruded to other series, so the steel tables
+ * would only raise false alarms there — they get no note.
+ */
+function stockNoteFor(
+  alias: CommandAlias,
+  input: CalculationInput,
+  gradeId: string,
+): CommandStockNote | null {
+  if (getMaterialGradeById(gradeId)?.familyId !== "steel") return null;
+  const dimsMm: Partial<Record<DimensionKey, number>> = {};
+  for (const key of Object.keys(input.manualDimensions) as DimensionKey[]) {
+    const entry = input.manualDimensions[key];
+    if (entry) dimsMm[key] = toMillimeters(entry.value, entry.unit);
+  }
+  const check = checkStockSize(input.profileId, dimsMm);
+  if (!check || check.standard) return null;
+  const lengthMm = toMillimeters(input.length.value, input.length.unit);
+  const sheetLike = SHEET_LIKE_FAMILIES.has(alias.fam);
+  const nearest = check.nearest.flatMap((dims) => {
+    // A sheet or plate keeps the piece it was cut to; only the gauge changes.
+    const merged = sheetLike ? { ...dimsMm, ...dims } : dims;
+    const size = dimsToSizeText(alias.fam, merged, lengthMm);
+    if (!size) return [];
+    const label = sheetLike
+      ? `${fmt(merged.thickness ?? 0)} mm`
+      : `${alias.fam === "round" ? "Ø" : ""}${size.replace(/x/g, "×")}`;
+    return [{ ins: `${alias.alias}${size}`, label }];
+  });
+  return {
+    sources: check.sources,
+    nearest,
+  };
+}
+
+/** The EN 10056-1 catalogue size for a steel or stainless angle, else null. */
+function rolledAngleSize(a: number, b: number, t: number, gradeId: string) {
+  const family = getMaterialGradeById(gradeId)?.familyId;
+  if (family !== "steel" && family !== "stainless_steel") return null;
+  return findAngleCatalogSize(a, b, t);
 }
 
 /**
@@ -369,6 +416,19 @@ function buildCalculationInput(
       const b = dims.length >= 3 ? dims[1] : dims[0];
       const t = dims.length >= 3 ? dims[2] : dims[1];
       if (!a || !b || !t) return null;
+      // A rolled EN 10056-1 size weighs from its catalogue area, root and toe
+      // radii included — the sharp-cornered formula below reads ~1% light.
+      // Aluminium angles are extruded to EN 755 with their own radii, so they
+      // keep the formula; any size the mills don't roll does too.
+      const catalog = rolledAngleSize(a, b, t, gradeId);
+      if (catalog) {
+        return {
+          ...base,
+          profileId: "angle_en",
+          selectedSizeId: catalog.id,
+          manualDimensions: {},
+        };
+      }
       setDim("legA", a);
       setDim("legB", b);
       setDim("thickness", t);
@@ -1215,6 +1275,10 @@ export function cmdParse(
     availability:
       alias && hasSize && calc
         ? materialAvailability(calc.input.profileId, effectiveGradeId)
+        : null,
+    stock:
+      alias && hasSize && calc
+        ? stockNoteFor(alias, calc.input, effectiveGradeId)
         : null,
     pricing: effectivePricing,
     target,

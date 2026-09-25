@@ -743,6 +743,9 @@ function renderDims(sec: Section, f: FittedBox): React.ReactNode {
             value={`t ${fmt(sec.t)}`}
             side="right"
           />
+          {sec.r1 ? (
+            <Tick x={f.px(sec.t)} y={f.py(sec.a - sec.t)} value={`R${fmt(sec.r1)}`} dx={10} dy={-12} />
+          ) : null}
         </>
       );
   }
