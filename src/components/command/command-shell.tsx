@@ -44,7 +44,7 @@ import { buildShareCardModel } from "./line-summary";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { commandTargetNote } from "./target-note";
 import { massBand } from "./mass-band";
-import { activeItemText, applyToActiveItem, tweakActiveItem } from "./line-edit";
+import { activeItemText, applyToActiveItem, dropEmptyLastItem, tweakActiveItem } from "./line-edit";
 import { CommandToast, ResultAnnouncer } from "./command-atoms";
 import { useCommandToast } from "./use-command-toast";
 import { useShellViewport } from "./use-shell-viewport";
@@ -1113,11 +1113,14 @@ export function CommandShell() {
     insertPriceToken(shared.priceUnit === "piece" ? "pc" : shared.priceUnit);
   }, [insertPriceToken, shared.priceUnit]);
   const onBack = useCallback(() => {
-    setQuery((q) => q.slice(0, -1));
+    // A `+` just typed goes in one tap, its padding spaces with it.
+    setQuery((q) => dropEmptyLastItem(q) ?? q.slice(0, -1));
   }, []);
   /** Hold-backspace: drop the last whole token (`40x40x3` in one gesture). */
   const onBackToken = useCallback(() => {
+    // On a `+` nothing has been typed after, the separator is the "token".
     setQuery((q) =>
+      dropEmptyLastItem(q) ??
       applyToActiveItem(q, (text) => {
         const tokens = cmdTokenize(text);
         if (tokens.length === 0) return "";

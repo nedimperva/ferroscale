@@ -51,8 +51,11 @@ import {
   lineChips,
   lineExpandedIndex,
   pullLastChip,
+  removeLineItem,
   removeLineToken,
+  replaceLineToken,
 } from "../line-edit";
+import { InlineTokenEditor } from "../inline-token-editor";
 import { massTolerancePercentStore } from "@/lib/settings-stores";
 import { useExpandedItem } from "../use-expanded-item";
 
@@ -179,8 +182,28 @@ export function DeskCalcView({
   const removeTokenAt = (item: number, idx: number) => {
     keepExpanded(item, removeLineToken(query, item, idx));
   };
+  // A token of the last item goes back under the caret. An earlier item has
+  // no caret to give it, so its token is edited where it stands.
+  const [editing, setEditing] = useState<{ item: number; idx: number; tok: string } | null>(null);
   const editTokenAt = (item: number, idx: number) => {
+    if (item < chips.groups.length - 1) {
+      setEditing({ item, idx, tok: chips.groups[item].tokens[idx] });
+      return;
+    }
     keepExpanded(item, editLineToken(query, item, idx));
+  };
+  const commitEdit = (item: number, idx: number, next: string) => {
+    setEditing(null);
+    keepExpanded(
+      item,
+      next === "" ? removeLineToken(query, item, idx) : replaceLineToken(query, item, idx, next),
+    );
+  };
+  const removeItem = (item: number) => {
+    setEditing(null);
+    setExpandedItem(null);
+    setQuery(removeLineItem(query, item));
+    focusInputAtEnd();
   };
   const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
     line.items[group.item]?.parse.name ||
@@ -383,7 +406,15 @@ export function DeskCalcView({
             screen you always type into, so it is drawn like a rule rather
             than lit like a notification — which leaves the accent free to
             mean "this is the answer" a few centimetres below. */}
-        <label
+        {/* A div, not a label: a label with no `for` labels its first
+            labelable descendant, which is the first chip — so a click on the
+            bar's empty space used to edit that chip. */}
+        <div
+          onMouseDown={(e) => {
+            if ((e.target as HTMLElement).closest("button, input")) return;
+            e.preventDefault();
+            focusInputAtEnd();
+          }}
           className="flex items-center gap-2 flex-wrap cursor-text"
           style={{
             minHeight: 52,
@@ -405,17 +436,43 @@ export function DeskCalcView({
           </span>
           {chips.groups.map((group) => (
             <Fragment key={group.item}>
-              {group.item > 0 && (
-                <span
-                  className="font-mono text-[17px] font-bold px-0.5"
-                  style={{ color: "var(--muted-faint)" }}
-                  aria-hidden="true"
-                >
-                  +
-                </span>
-              )}
+              {group.item > 0 &&
+                (group.item === chips.groups.length - 1 && group.tokens.length === 0 && !partial ? (
+                  // A `+` nothing has been typed after yet: say how to take it back.
+                  <button
+                    type="button"
+                    onClick={() => removeItem(group.item)}
+                    aria-label={t("query.removeEmptyItem")}
+                    title={t("query.removeEmptyItem")}
+                    className="inline-flex items-center gap-1 font-mono text-[17px] font-bold px-1 cursor-pointer hover:text-foreground"
+                    style={{ color: "var(--muted-faint)" }}
+                  >
+                    +<span className="text-[12px]">×</span>
+                  </button>
+                ) : (
+                  <span
+                    className="font-mono text-[17px] font-bold px-0.5"
+                    style={{ color: "var(--muted-faint)" }}
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
+                ))}
               {group.item === expandedIndex ? (
-                group.tokens.map((tok, i) => (
+                group.tokens.map((tok, i) =>
+                  editing && editing.item === group.item && editing.idx === i && editing.tok === tok ? (
+                    <InlineTokenEditor
+                      key={`edit-${tok}-${i}`}
+                      tok={tok}
+                      kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                      onCommit={(next) => commitEdit(group.item, i, next)}
+                      onCancel={() => {
+                        setEditing(null);
+                        focusInputAtEnd();
+                      }}
+                      className="text-base px-2.5 py-1"
+                    />
+                  ) : (
                   <DeskTokenChip
                     key={`${tok}-${i}`}
                     tok={tok}
@@ -428,27 +485,43 @@ export function DeskCalcView({
                     onEdit={() => editTokenAt(group.item, i)}
                     onRemove={() => removeTokenAt(group.item, i)}
                   />
-                ))
+                  ),
+                )
               ) : group.tokens.length === 0 ? null : (
-                <button
-                  type="button"
-                  onClick={() => setExpandedItem(group.item)}
-                  aria-label={t("query.expandItem", {
-                    index: group.item + 1,
-                    name: collapsedItemLabel(group),
-                  })}
-                  className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-[14px] font-semibold whitespace-nowrap"
+                <span
+                  className="inline-flex items-stretch flex-shrink-0 font-mono text-[14px] font-semibold whitespace-nowrap"
                   style={{
-                    padding: "5px 10px",
                     border: "1px solid var(--border-faint)",
                     background: "var(--surface-inset)",
                     color: "var(--foreground-secondary)",
                   }}
                 >
-                  <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
-                  {collapsedItemLabel(group)}
-                  <span className="text-[10px] text-muted-faint">▸</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedItem(group.item)}
+                    aria-label={t("query.expandItem", {
+                      index: group.item + 1,
+                      name: collapsedItemLabel(group),
+                    })}
+                    className="inline-flex items-center gap-1.5 cursor-pointer"
+                    style={{ padding: "5px 6px 5px 10px" }}
+                  >
+                    <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
+                    {collapsedItemLabel(group)}
+                    <span className="text-[10px] text-muted-faint">▸</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(group.item)}
+                    aria-label={t("query.removeItem", {
+                      index: group.item + 1,
+                      name: collapsedItemLabel(group),
+                    })}
+                    className="flex items-center justify-center w-6 text-[14px] leading-none cursor-pointer hover:bg-[rgba(0,0,0,0.08)] dark:hover:bg-[rgba(255,255,255,0.12)]"
+                  >
+                    ×
+                  </button>
+                </span>
               )}
             </Fragment>
           ))}
@@ -577,7 +650,7 @@ export function DeskCalcView({
               {t("common.clear")}
             </button>
           )}
-        </label>
+        </div>
 
         {compact && strip}
       </div>
@@ -593,7 +666,11 @@ export function DeskCalcView({
         {/* LEFT column — result + session tape */}
         <div
           className="flex flex-col gap-4 min-w-0"
-          style={{ flex: 1.55, padding: compact ? undefined : "20px 24px 0" }}
+          style={{
+            flex: compact ? undefined : ANSWER_FLEX,
+            minWidth: compact ? undefined : ANSWER_MIN,
+            padding: compact ? undefined : "20px clamp(14px, 1.6vw, 24px) 0",
+          }}
         >
           {!compact && strip}
           {/* RESULT — no panel. The answer is the page here, so it sits on
@@ -1026,15 +1103,18 @@ export function DeskCalcView({
           </div>
         </div>
 
-        {/* RIGHT column — the breakdown as a ledger sheet. It takes most of
-            the page: the drawing, the ledger with its basis column, and on a
-            multi-item line the bill of material all want the width. */}
+        {/* RIGHT column — the breakdown as a ledger sheet. It takes the
+            larger share of the page — the drawing, the ledger with its basis
+            column and the bill of material all want the width — but both
+            columns give way together as the window narrows, rather than the
+            answer column alone being squeezed against a fixed-width sheet. */}
         <div
-          className={`flex flex-col ${compact ? "flex-shrink-0 mt-4" : "min-h-0 overflow-y-auto"}`}
+          className={`flex flex-col ${compact ? "flex-shrink-0 mt-4" : "min-h-0 min-w-0 overflow-y-auto"}`}
           style={{
-            flex: compact ? "0 0 auto" : `0 0 ${SHEET_WIDTH}`,
-            width: compact ? "100%" : SHEET_WIDTH,
-            padding: compact ? "20px 22px" : "20px 28px",
+            flex: compact ? "0 0 auto" : SHEET_FLEX,
+            width: compact ? "100%" : undefined,
+            maxWidth: compact ? undefined : SHEET_MAX,
+            padding: compact ? "16px clamp(14px, 3vw, 22px)" : "18px clamp(14px, 1.8vw, 28px)",
             background: "var(--surface)",
             borderLeft: compact ? undefined : "1px solid var(--border-faint)",
             borderTop: compact ? "1px solid var(--border-faint)" : undefined,
@@ -1057,7 +1137,13 @@ export function DeskCalcView({
 
 /* ───────────────────────── breakdown rail ───────────────────────── */
 
-const SHEET_WIDTH = "clamp(560px, 62vw, 940px)";
+// The answer column and the sheet share the width 1 : 1.6 from a zero basis,
+// so both shrink in proportion. The answer column keeps a floor for the hero
+// and the tape; the sheet stops growing where its tables stop needing room.
+const ANSWER_FLEX = "1 1 0";
+const ANSWER_MIN = 300;
+const SHEET_FLEX = "1.6 1 0";
+const SHEET_MAX = 940;
 
 /** The rail: the phone's weight and cost ledgers, with the part drawn above. */
 function DeskBreakdown({

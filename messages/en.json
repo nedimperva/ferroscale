@@ -226,7 +226,9 @@
       "aria": "FerroScale Command query",
       "acceptGhost": "Complete: {text}",
       "expandItem": "Item {index}, {name} — show its tokens",
-      "newItem": "Unfinished item"
+      "newItem": "Unfinished item",
+      "removeItem": "Remove item {index}, {name}",
+      "removeEmptyItem": "Remove the empty item"
     },
     "keypad": {
       "space": "space",
@@ -253,7 +255,8 @@
       "stepUp": "Increase {token}",
       "stepDown": "Decrease {token}",
       "holdToStep": "Hold to nudge the number",
-      "shadowed": "Ignored — the line already has one. Remove it, or start another item with +"
+      "shadowed": "Ignored — the line already has one. Remove it, or start another item with +",
+      "editing": "Editing {token} — Enter to keep, Esc to cancel"
     },
     "preview": {
       "perPiece": "Per piece",
@@ -1058,7 +1061,11 @@
         "weight": "weight × {rate}",
         "length": "length × {rate}",
         "piece": "pieces × {rate}"
-      }
+      },
+      "lengthOrSize": "Length / size",
+      "sheetGroup": "{name} {thickness} mm",
+      "groupPieces": "{count} pcs",
+      "group": "{name}, {count} parts"
     }
   },
   "contact": {
