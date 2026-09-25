@@ -25,6 +25,7 @@ const STANDARD_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileId[
   channel_upn_en: ["channel_upn_en", "channel_upe_en"],
   channel_upe_en: ["channel_upn_en", "channel_upe_en"],
   tee_en: ["tee_en"],
+  angle_en: ["angle_en"],
 };
 const MANUAL_ALTERNATIVE_GROUPS: Partial<Record<ProfileId, readonly ProfileId[]>> = {
   square_hollow: ["square_hollow", "rectangular_tube"],
@@ -424,6 +425,12 @@ function buildMetrics({
       push("legA", geometry.legAMm, "mm");
       push("legB", geometry.legBMm, "mm");
       push("thickness", geometry.thicknessMm, "mm");
+      break;
+    case "angle_en":
+      push("legA", geometry.legAMm, "mm");
+      push("legB", geometry.legBMm, "mm");
+      push("thickness", geometry.thicknessMm, "mm");
+      push("rootRadius", geometry.rootRadiusMm, "mm");
       break;
     case "beam_ipe_en":
     case "beam_ipn_en":

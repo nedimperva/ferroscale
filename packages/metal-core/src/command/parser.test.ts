@@ -223,10 +223,43 @@ describe("cmdParse", () => {
     const p3 = cmdParse("l50x50x5 6m", mkSettings());
     expect(p2.valid).toBe(true);
     expect(p3.valid).toBe(true);
-    expect(p2.calc!.input.manualDimensions.legA).toEqual({ value: 50, unit: "mm" });
-    expect(p2.calc!.input.manualDimensions.legB).toEqual({ value: 50, unit: "mm" });
-    expect(p2.calc!.input.manualDimensions.thickness).toEqual({ value: 5, unit: "mm" });
+    expect(p2.calc!.input.selectedSizeId).toBe("l50x5");
+    expect(p3.calc!.input.selectedSizeId).toBe("l50x5");
     expect(p2.totalKg).toBeCloseTo(p3.totalKg!, 4);
+  });
+
+  it("weighs a rolled angle from the EN 10056-1 catalogue, radii included", () => {
+    const p = cmdParse("l50x5 1m", mkSettings());
+    expect(p.calc!.input.profileId).toBe("angle_en");
+    expect(p.calc!.input.manualDimensions).toEqual({});
+    // Catalogue: A 4.80 cm², G 3.77 kg/m. The sharp-cornered formula gave 3.73.
+    expect(p.totalKg).toBeCloseTo(3.768, 3);
+  });
+
+  it("finds an unequal catalogue angle in either leg order", () => {
+    const a = cmdParse("l60x40x5 1m", mkSettings());
+    const b = cmdParse("l40x60x5 1m", mkSettings());
+    expect(a.calc!.input.selectedSizeId).toBe("l60x40x5");
+    expect(b.calc!.input.selectedSizeId).toBe("l60x40x5");
+  });
+
+  it("keeps the manual formula for an angle the mills don't roll", () => {
+    const p = cmdParse("l47x33x4 6m", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.calc!.input.profileId).toBe("angle");
+    expect(p.calc!.input.manualDimensions.legA).toEqual({ value: 47, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.legB).toEqual({ value: 33, unit: "mm" });
+    expect(p.calc!.input.manualDimensions.thickness).toEqual({ value: 4, unit: "mm" });
+  });
+
+  it("routes stainless angles to the catalogue but keeps aluminium on the formula", () => {
+    const inox = cmdParse("l50x5 6m 304", mkSettings());
+    expect(inox.calc!.input.profileId).toBe("angle_en");
+    // Stainless angles are ordinary stock, not made to order like an HEA.
+    expect(inox.availability).toBeNull();
+    const alu = cmdParse("l50x5 6m 6060", mkSettings());
+    expect(alu.calc!.input.profileId).toBe("angle");
+    expect(alu.availability).toBeNull();
   });
 
   it("ensures all curated tee sizes correspond to valid EN sizes", () => {
@@ -443,6 +476,20 @@ describe("inputToQuery", () => {
     expect(p2.calc!.input.profileId).toBe(p.calc!.input.profileId);
     expect(p2.calc!.input.selectedSizeId).toBe(p.calc!.input.selectedSizeId);
     expect(p2.calc!.result.grandTotalAmount).toBe(p.calc!.result.grandTotalAmount);
+  });
+
+  it("round-trips a catalogue angle back to the l alias", () => {
+    const settings = mkSettings();
+    for (const [query, expected] of [
+      ["l50x50x5 6m", "l50x5 6m"],
+      ["l40x60x5 6m", "l60x40x5 6m"],
+      ["l47x33x4 6m", "l47x33x4 6m"],
+    ]) {
+      const p = cmdParse(query, settings);
+      const reQuery = inputToQuery(p.calc!.input, "m", { defaultGradeId: settings.defaultGradeId });
+      expect(reQuery).toBe(expected);
+      expect(cmdParse(reQuery, settings).calc!.input.selectedSizeId).toBe(p.calc!.input.selectedSizeId);
+    }
   });
 
   it("round-trips a saved price override when it differs from current defaults", () => {

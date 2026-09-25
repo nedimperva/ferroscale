@@ -93,6 +93,10 @@ export function findAliasByProfileId(profileId: string): CommandAlias | null {
   if (profileId === "sheet" || profileId === "plate") {
     return ALIAS_LOOKUP.get("plt") ?? null;
   }
+  // Catalogue angles are what `l` resolves to when the size is rolled.
+  if (profileId === "angle_en") {
+    return ALIAS_LOOKUP.get("l") ?? null;
+  }
   return (
     COMMAND_ALIASES.find(
       (a) => a.profileId === profileId || a.manualProfileId === profileId,

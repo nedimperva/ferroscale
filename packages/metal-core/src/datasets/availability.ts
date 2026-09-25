@@ -58,6 +58,8 @@ const SECTION_LIKE_MANUAL: ReadonlySet<ProfileId> = new Set<ProfileId>([
   "expanded_metal",
 ]);
 
+const STOCKED_IN_STAINLESS: ReadonlySet<ProfileId> = new Set<ProfileId>(["angle_en"]);
+
 export function materialAvailability(
   profileId: ProfileId,
   gradeId: string,
@@ -69,6 +71,9 @@ export function materialAvailability(
   const family: MetalFamilyId = grade.familyId;
 
   if (profile.mode === "standard") {
+    // Angles are the one EN table stainless is rolled to as ordinary stock
+    // (EN 10088-3 bar in EN 10056-1 sizes); the beams and channels are not.
+    if (family === "stainless_steel" && STOCKED_IN_STAINLESS.has(profile.id)) return null;
     if (family === "stainless_steel") {
       return { level: "madeToOrder", code: "madeToOrder", referenceLabel: "EN 10088-3" };
     }

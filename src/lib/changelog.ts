@@ -17,6 +17,22 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.33.0",
+    date: "2026-09-25",
+    added: [
+      "EN 10056-1 angles as catalogue sizes: 173 equal and unequal angles, L 20×20×3 to L 300×300×35. Typing a rolled size — l50x5, l50x50x5, l60x40x5 or l40x60x5 — weighs it from the catalogue area, root and toe radii included, and the drawing shows the real radii. Any other size (l47x33x4) and aluminium angles keep the leg formula",
+    ],
+    fixed: [
+      "Steel angles read about 1% light: the leg formula leaves out the material in the root fillet. L 50×50×5 now weighs 3.77 kg/m, as the catalogue prints, instead of 3.73",
+    ],
+    added_bs: [
+      "EN 10056-1 ugaonici kao kataloške dimenzije: 173 jednakokraka i raznokraka ugaonika, od L 20×20×3 do L 300×300×35. Unos valjane dimenzije — l50x5, l50x50x5, l60x40x5 ili l40x60x5 — računa masu iz kataloške površine, s radijusima korijena i krakova, a crtež prikazuje stvarne radijuse. Svaka druga dimenzija (l47x33x4) i aluminijski ugaonici i dalje se računaju formulom krakova",
+    ],
+    fixed_bs: [
+      "Čelični ugaonici su bili oko 1% lakši: formula krakova izostavlja materijal u zaobljenju korijena. L 50×50×5 sada ima 3,77 kg/m, kao u katalogu, umjesto 3,73",
+    ],
+  },
+  {
     version: "3.32.0",
     date: "2026-09-25",
     changed: [

@@ -25,7 +25,8 @@ export type Section =
   | { kind: "square"; a: number }
   | { kind: "plate"; w: number; t: number }
   | { kind: "sheet"; w: number; t: number; lengthMm: number; ph?: number }
-  | { kind: "angle"; a: number; b: number; t: number }
+  /** r1 root / r2 toe radii come only with a catalogue size; typed angles are sharp. */
+  | { kind: "angle"; a: number; b: number; t: number; r1?: number; r2?: number }
   | { kind: "chequered"; w: number; t: number; ph: number };
 
 export type PolyRing = { pts: Pt[]; radii: number[] };
@@ -85,6 +86,16 @@ export function resolveSection(p: CommandParseResult): Section | null {
         tf: g.flangeThicknessMm ?? 0,
         r: g.rootRadiusMm ?? 0,
         estimated: g.thicknessEstimated === true,
+      };
+    }
+    if (rec && g && rec.drawingKind === "angle") {
+      return {
+        kind: "angle",
+        a: g.legAMm ?? 0,
+        b: g.legBMm ?? 0,
+        t: g.thicknessMm ?? 0,
+        r1: g.rootRadiusMm,
+        r2: g.toeRadiusMm,
       };
     }
   }
@@ -299,7 +310,7 @@ export function sectionModel(sec: Section): SectionModel {
             p(sec.b, sec.a),
             p(0, sec.a),
           ],
-          radii: [0, 0, 0, 0, 0, 0],
+          radii: [0, sec.r2 ?? 0, sec.r1 ?? 0, sec.r2 ?? 0, 0, 0],
         },
         holes: [],
       };

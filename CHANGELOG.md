@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.33.0] - 2026-09-25
+
+Angles weighed from the EN 10056-1 catalogue.
+
+### Added
+
+- EN 10056-1 angles as catalogue sizes: 173 equal and unequal angles, L 20×20×3 to L 300×300×35. Typing a rolled size — l50x5, l50x50x5, l60x40x5 or l40x60x5 — weighs it from the catalogue area, root and toe radii included, and the drawing shows the real radii. Any other size (l47x33x4) and aluminium angles keep the leg formula
+
+### Fixed
+
+- Steel angles read about 1% light: the leg formula leaves out the material in the root fillet. L 50×50×5 now weighs 3.77 kg/m, as the catalogue prints, instead of 3.73
+
 ## [3.32.0] - 2026-09-25
 
 A bill of material grouped like stock, a breakdown that gives way, and a + line you can edit.

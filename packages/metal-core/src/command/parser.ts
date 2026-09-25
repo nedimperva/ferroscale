@@ -9,7 +9,8 @@ import type {
 } from "../calculator/types";
 import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./arith";
 import type { LengthExpression } from "./arith";
-import { getProfileById } from "../datasets/profiles";
+import { findAngleCatalogSize, getProfileById } from "../datasets/profiles";
+import { getMaterialGradeById } from "../datasets/materials";
 import { materialAvailability } from "../datasets/availability";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
@@ -207,8 +208,9 @@ export function inputToQuery(
   const lengthMm = toMillimeters(input.length.value, input.length.unit);
 
   let sizeText: string | null;
-  if (alias.profileId && input.selectedSizeId) {
-    // Standard profile — strip the alias prefix off the size id.
+  if ((alias.profileId || input.profileId === "angle_en") && input.selectedSizeId) {
+    // Standard profile — strip the alias prefix off the size id. Catalogue
+    // angles ride the manual `l` alias, so they are named here by profile.
     sizeText = input.selectedSizeId.startsWith(alias.alias)
       ? input.selectedSizeId.slice(alias.alias.length)
       : null;
@@ -259,6 +261,13 @@ export function inputToQuery(
   }
 
   return `${alias.alias}${sizeText}${lengthToken}${qtyToken}${gradeToken}${priceToken}`;
+}
+
+/** The EN 10056-1 catalogue size for a steel or stainless angle, else null. */
+function rolledAngleSize(a: number, b: number, t: number, gradeId: string) {
+  const family = getMaterialGradeById(gradeId)?.familyId;
+  if (family !== "steel" && family !== "stainless_steel") return null;
+  return findAngleCatalogSize(a, b, t);
 }
 
 /**
@@ -369,6 +378,19 @@ function buildCalculationInput(
       const b = dims.length >= 3 ? dims[1] : dims[0];
       const t = dims.length >= 3 ? dims[2] : dims[1];
       if (!a || !b || !t) return null;
+      // A rolled EN 10056-1 size weighs from its catalogue area, root and toe
+      // radii included — the sharp-cornered formula below reads ~1% light.
+      // Aluminium angles are extruded to EN 755 with their own radii, so they
+      // keep the formula; any size the mills don't roll does too.
+      const catalog = rolledAngleSize(a, b, t, gradeId);
+      if (catalog) {
+        return {
+          ...base,
+          profileId: "angle_en",
+          selectedSizeId: catalog.id,
+          manualDimensions: {},
+        };
+      }
       setDim("legA", a);
       setDim("legB", b);
       setDim("thickness", t);
