@@ -2,11 +2,12 @@
 
 import { Fragment, useSyncExternalStore, useState } from "react";
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, fsKgm, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { CURRENCY_SYMBOLS, fsKgm, fsLength, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { ProfileDrawing } from "./profile-drawing";
 import { CommandGlyph } from "./command-glyph";
-import { formatAvailability, formatCommandParseName } from "./command-copy";
+import { formatAvailability, formatCommandAliasName, formatCommandParseName } from "./command-copy";
+import { groupBillOfMaterial, type BomGroup, type BomMember } from "./bom-groups";
 import {
   buildBreakdownRows,
   sellPrice,
@@ -203,7 +204,7 @@ function SheetHeader({ title, sub, children }: { title: string; sub: string; chi
   return (
     <div className="flex items-end justify-between gap-4 pb-3" style={RULE_INK}>
       <div className="flex min-w-0 flex-col gap-1">
-        <h3 className="fs-title m-0 break-words text-[26px] leading-[1.05] text-foreground">{title}</h3>
+        <h3 className="fs-title m-0 break-words text-[22px] leading-[1.05] text-foreground @[40rem]:text-[26px]">{title}</h3>
         <span className="font-mono text-[13px] leading-[1.5] text-foreground-secondary">{sub}</span>
       </div>
       {children}
@@ -281,8 +282,10 @@ function PartSheet({
     "inline-flex h-9 w-9 cursor-pointer items-center justify-center border text-foreground disabled:pointer-events-none disabled:opacity-30";
 
   // Wide: the drawing and what describes the section on the left, the ledger
-  // on the right. Narrow (a phone, a tight desk): one column, ledger second.
-  const WIDE = "@[44rem]:grid-cols-[16.5rem_minmax(0,1fr)] @[44rem]:grid-rows-[auto_1fr_auto]";
+  // on the right, the drawing column scaling with the sheet. Narrow (a phone):
+  // one column, the drawing kept small so the ledger starts on screen.
+  const WIDE =
+    "@[36rem]:grid-cols-[clamp(10rem,30cqw,16.5rem)_minmax(0,1fr)] @[36rem]:grid-rows-[auto_1fr_auto]";
   return (
     <>
       <SheetHeader title={formatCommandParseName(t, p) ?? ""} sub={spec}>
@@ -325,17 +328,19 @@ function PartSheet({
         </p>
       )}
 
-      <div className={`grid items-start gap-x-7 gap-y-5 ${WIDE}`}>
+      <div className={`grid items-start gap-x-4 gap-y-4 @[48rem]:gap-x-7 @[48rem]:gap-y-5 ${WIDE}`}>
         {/* The full drawing, dimensions and all — those are the exact sizes a
             reader checks the section against. */}
         <div
-          className="flex items-center justify-center @[44rem]:col-start-1 @[44rem]:row-start-1"
+          className="flex items-center justify-center @[36rem]:col-start-1 @[36rem]:row-start-1"
           style={{ background: "var(--surface-inset)", padding: variant === "rail" ? "12px 8px" : "14px 10px" }}
         >
-          <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+          <div className="w-full max-w-[15rem] @[36rem]:max-w-none">
+            <ProfileDrawing p={p} className="w-full flex flex-col items-center" />
+          </div>
         </div>
 
-        <div className="min-w-0 @[44rem]:col-start-2 @[44rem]:row-span-2 @[44rem]:row-start-1">
+        <div className="min-w-0 @[36rem]:col-start-2 @[36rem]:row-span-2 @[36rem]:row-start-1">
           <LedgerTable
             groups={metric === "price" ? [cost, weight] : [weight, cost]}
             qty={p.calc.result.quantity}
@@ -344,12 +349,12 @@ function PartSheet({
           />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4 @[44rem]:col-start-1 @[44rem]:row-start-2">
+        <div className="flex min-w-0 flex-col gap-4 @[36rem]:col-start-1 @[36rem]:row-start-2">
           {showSection && rows.section.length > 0 && <SectionProperties rows={rows.section} />}
           <NearbySpecs input={p.calc.input} onPick={onNearby} />
         </div>
 
-        <div className="min-w-0 @[44rem]:col-start-2 @[44rem]:row-start-3">
+        <div className="min-w-0 @[36rem]:col-start-2 @[36rem]:row-start-3">
           <HowCalculated rows={pick(rows.geometry, SOURCE_ROWS)} />
         </div>
       </div>
@@ -574,9 +579,27 @@ const BOM_ROW = "col-span-full grid grid-cols-subgrid items-center gap-x-3 @[40r
 const WIDE_ONLY = "hidden @[40rem]:block";
 const NARROW_ONLY = "@[40rem]:hidden";
 
+type LedgerT = ReturnType<typeof useTranslations<"command">>;
+
+/** A group's name: the section for bars, the thickness for sheet goods. */
+function groupLabel(t: LedgerT, group: BomGroup): string {
+  const first = group.members[0].parse;
+  if (group.kind === "sheet" && group.alias && group.thicknessMm != null) {
+    return t("ledger.sheetGroup", {
+      name: formatCommandAliasName(t, group.alias),
+      thickness: fsLength(group.thicknessMm),
+    });
+  }
+  return formatCommandParseName(t, first) ?? first.name ?? t("query.newItem");
+}
+
 /**
  * The whole assembly: every part with what it weighs and costs, one ruled
  * total for both, then the weight split by part and the cost built up.
+ *
+ * Parts are grouped the way the stock is bought (see `groupBillOfMaterial`):
+ * one profile and size with its cut lengths under it, sheet goods by
+ * thickness. A group of one reads as a plain row.
  */
 function BillOfMaterial({
   line,
@@ -595,6 +618,155 @@ function BillOfMaterial({
   const count = line.items.length;
   const sub = t("ledger.partsPieces", { parts: count, pieces });
   const num = "whitespace-nowrap text-right font-mono text-[14px] tabular-nums";
+  const groups = groupBillOfMaterial(line);
+  const hasSheet = groups.some((group) => group.kind === "sheet");
+  const grades = new Set(groups.map((group) => group.gradeLabel).filter(Boolean));
+  const mixedGrades = grades.size > 1;
+  const shareOf = (kg: number | null | undefined) =>
+    line.totalKg && kg != null ? Math.round((kg / line.totalKg) * 100) : null;
+
+  const shareCell = (share: number | null, groupIndex: number) => (
+    <span className={`${WIDE_ONLY}`}>
+      {share != null && (
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="flex h-1.5 w-8" style={{ background: "var(--surface-inset)" }}>
+            <span style={{ width: `${share}%`, background: shade(groupIndex) }} />
+          </span>
+          <span className="font-mono text-[12px] text-foreground-secondary">{share}%</span>
+        </span>
+      )}
+    </span>
+  );
+
+  /** One part, clickable into its own sheet. `nested` rows sit under a group header. */
+  const partRow = (member: BomMember, group: BomGroup, groupIndex: number, nested: boolean) => {
+    const { parse, index, cut } = member;
+    const active = index === picked;
+    const kg = parse.totalKg;
+    const unitKg = parse.calc?.result.unitWeightKg;
+    const name = nested ? cut : groupLabel(t, group);
+    const ariaName = nested ? `${groupLabel(t, group)} ${cut}` : name;
+    const narrowSpec = [
+      nested ? `× ${parse.realQty}` : [cut, parse.lengthRaw != null ? `× ${parse.realQty}` : ""].filter(Boolean).join(" "),
+      unitKg != null ? t("ledger.perPieceShort", { weight: weightLabel(unitKg) }) : "",
+      !nested && mixedGrades ? group.gradeLabel : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return (
+      <li key={index} className={BOM_ROW}>
+        <button
+          type="button"
+          aria-pressed={active}
+          aria-label={t("ledger.openPart", { index: index + 1, name: ariaName })}
+          onClick={() => onOpen(index)}
+          className={`${BOM_ROW} ${nested ? "min-h-[44px]" : "min-h-[56px]"} w-full cursor-pointer px-1.5 text-left`}
+          style={{ ...RULE_FAINT, background: active ? "var(--accent-surface)" : "transparent" }}
+        >
+          <span
+            className="font-mono text-[12px] font-bold"
+            style={{ color: active ? "var(--accent)" : "var(--muted-faint)" }}
+          >
+            {index + 1}
+          </span>
+          <span className={`${WIDE_ONLY} text-foreground`} aria-hidden="true">
+            {!nested && parse.alias ? <CommandGlyph fam={parse.alias.fam} alias={parse.alias.alias} size={20} /> : null}
+          </span>
+          <span
+            className={`flex min-w-0 flex-col gap-0.5 ${nested ? "self-stretch justify-center" : ""}`}
+            style={nested ? { borderLeft: "1px solid var(--border)", paddingLeft: 10, marginLeft: 6 } : undefined}
+          >
+            <span
+              className={`break-words ${nested ? `${NARROW_ONLY} font-mono text-[14px] font-semibold` : "text-[15px] font-bold"}`}
+              style={{ color: parse.valid ? "var(--foreground)" : "var(--muted)" }}
+            >
+              {name}
+            </span>
+            {!nested && mixedGrades && group.gradeLabel && (
+              <span className={`${WIDE_ONLY} truncate font-mono text-[12px] text-foreground-secondary`}>
+                {group.gradeLabel}
+              </span>
+            )}
+            <span className={`${NARROW_ONLY} truncate font-mono text-[12px] text-foreground-secondary`}>
+              {narrowSpec}
+            </span>
+          </span>
+          <span className={`${WIDE_ONLY} ${num} ${nested ? "font-semibold text-foreground" : ""}`}>{cut || "—"}</span>
+          <span className={`${WIDE_ONLY} ${num}`}>× {parse.realQty}</span>
+          <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
+            {nested ? "" : parse.kgm != null && group.kind !== "sheet" ? fsKgm(parse.kgm) : "—"}
+          </span>
+          <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
+            {unitKg != null ? fsWeight(unitKg) : "—"}
+          </span>
+          <span className={`${WIDE_ONLY} ${num} text-[15px] ${nested ? "text-foreground-secondary" : "font-semibold text-foreground"}`}>
+            {weightLabel(kg)}
+          </span>
+          {shareCell(shareOf(kg), groupIndex)}
+          <span className={`${WIDE_ONLY} ${num} text-[15px] ${nested ? "text-foreground-secondary" : "text-foreground"}`}>
+            {money(parse.totalAmount)}
+          </span>
+          <span className={`${NARROW_ONLY} flex flex-col items-end gap-0.5`}>
+            <span className={`${num} ${nested ? "text-[14px]" : "text-[15px] font-semibold"} text-foreground`}>
+              {weightLabel(kg)}
+            </span>
+            <span className={`${num} text-[13px] text-foreground-secondary`}>{money(parse.totalAmount)}</span>
+          </span>
+          <span className={`${NARROW_ONLY} text-muted`} aria-hidden="true">
+            <Chevron dir="right" />
+          </span>
+        </button>
+      </li>
+    );
+  };
+
+  /** A group of several parts: its name and sums, the parts under it. */
+  const groupRows = (group: BomGroup, groupIndex: number) => {
+    const label = groupLabel(t, group);
+    const lead = group.members[0].parse;
+    const metres = group.totalLengthM != null ? `${fsLength(group.totalLengthM)} m` : "";
+    const narrowSub = [t("ledger.groupPieces", { count: group.pieces }), metres, mixedGrades ? group.gradeLabel : ""]
+      .filter(Boolean)
+      .join(" · ");
+    return (
+      <li key={group.key} className={BOM_ROW} aria-label={t("ledger.group", { name: label, count: group.members.length })}>
+        <div data-bom-group="" className={`${BOM_ROW} min-h-[48px] px-1.5 pt-2`} style={RULE_FAINT}>
+          <span />
+          <span className={`${WIDE_ONLY} text-foreground`} aria-hidden="true">
+            {lead.alias ? <CommandGlyph fam={lead.alias.fam} alias={lead.alias.alias} size={20} /> : null}
+          </span>
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="break-words text-[15px] font-bold text-foreground">{label}</span>
+            {mixedGrades && group.gradeLabel && (
+              <span className={`${WIDE_ONLY} truncate font-mono text-[12px] text-foreground-secondary`}>
+                {group.gradeLabel}
+              </span>
+            )}
+            <span className={`${NARROW_ONLY} truncate font-mono text-[12px] text-foreground-secondary`}>{narrowSub}</span>
+          </span>
+          <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>{metres}</span>
+          <span className={`${WIDE_ONLY} ${num} font-semibold`}>{group.pieces}</span>
+          <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
+            {group.kind === "section" && lead.kgm != null ? fsKgm(lead.kgm) : ""}
+          </span>
+          <span className={WIDE_ONLY} />
+          <span className={`${WIDE_ONLY} ${num} text-[15px] font-semibold text-foreground`}>
+            {weightLabel(group.totalKg)}
+          </span>
+          {shareCell(shareOf(group.totalKg), groupIndex)}
+          <span className={`${WIDE_ONLY} ${num} text-[15px] text-foreground`}>{money(group.totalAmount)}</span>
+          <span className={`${NARROW_ONLY} flex flex-col items-end gap-0.5`}>
+            <span className={`${num} text-[15px] font-semibold text-foreground`}>{weightLabel(group.totalKg)}</span>
+            <span className={`${num} text-[13px] text-foreground-secondary`}>{money(group.totalAmount)}</span>
+          </span>
+          <span className={NARROW_ONLY} />
+        </div>
+        <ol className={`${BOM_ROW} m-0 list-none p-0`}>
+          {group.members.map((member) => partRow(member, group, groupIndex, true))}
+        </ol>
+      </li>
+    );
+  };
 
   return (
     <>
@@ -606,7 +778,9 @@ function BillOfMaterial({
             <span className={CAPTION}>#</span>
             <span className={`${CAPTION} ${WIDE_ONLY}`} />
             <span className={CAPTION}>{t("ledger.part")}</span>
-            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.length")}</span>
+            <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>
+              {hasSheet ? t("ledger.lengthOrSize") : t("ledger.length")}
+            </span>
             <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.pieces")}</span>
             <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.kgm")}</span>
             <span className={`${CAPTION} ${WIDE_ONLY} text-right`}>{t("ledger.kgPiece")}</span>
@@ -620,82 +794,11 @@ function BillOfMaterial({
           </div>
 
           <ol className={`${BOM_ROW} m-0 list-none p-0`} aria-label={t("result.assemblyParts")}>
-            {line.items.map((item, index) => {
-              const parse = item.parse;
-              const active = index === picked;
-              const kg = parse.totalKg;
-              const share = line.totalKg && kg != null ? Math.round((kg / line.totalKg) * 100) : null;
-              const name = formatCommandParseName(t, parse) ?? parse.name ?? t("query.newItem");
-              const unitKg = parse.calc?.result.unitWeightKg;
-              const narrowSpec = [
-                partSpec(parse),
-                unitKg != null ? t("ledger.perPieceShort", { weight: weightLabel(unitKg) }) : "",
-              ]
-                .filter(Boolean)
-                .join(" · ");
-              return (
-                <li key={index} className={BOM_ROW}>
-                  <button
-                    type="button"
-                    aria-pressed={active}
-                    aria-label={t("ledger.openPart", { index: index + 1, name })}
-                    onClick={() => onOpen(index)}
-                    className={`${BOM_ROW} min-h-[56px] w-full cursor-pointer px-1.5 text-left`}
-                    style={{ ...RULE_FAINT, background: active ? "var(--accent-surface)" : "transparent" }}
-                  >
-                    <span
-                      className="font-mono text-[12px] font-bold"
-                      style={{ color: active ? "var(--accent)" : "var(--muted-faint)" }}
-                    >
-                      {index + 1}
-                    </span>
-                    <span className={`${WIDE_ONLY} text-foreground`} aria-hidden="true">
-                      {parse.alias ? <CommandGlyph fam={parse.alias.fam} alias={parse.alias.alias} size={20} /> : null}
-                    </span>
-                    <span className="flex min-w-0 flex-col gap-0.5">
-                      <span
-                        className="truncate text-[15px] font-bold"
-                        style={{ color: parse.valid ? "var(--foreground)" : "var(--muted)" }}
-                      >
-                        {name}
-                      </span>
-                      <span className={`${NARROW_ONLY} truncate font-mono text-[12px] text-foreground-secondary`}>
-                        {narrowSpec}
-                      </span>
-                    </span>
-                    <span className={`${WIDE_ONLY} ${num}`}>
-                      {parse.lengthRaw != null ? `${parse.lengthRaw} ${parse.lengthUnit}` : "—"}
-                    </span>
-                    <span className={`${WIDE_ONLY} ${num}`}>× {parse.realQty}</span>
-                    <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
-                      {parse.kgm != null ? fsKgm(parse.kgm) : "—"}
-                    </span>
-                    <span className={`${WIDE_ONLY} ${num} text-foreground-secondary`}>
-                      {unitKg != null ? fsWeight(unitKg) : "—"}
-                    </span>
-                    <span className={`${WIDE_ONLY} ${num} text-[15px] font-semibold text-foreground`}>{weightLabel(kg)}</span>
-                    <span className={`${WIDE_ONLY}`}>
-                      {share != null && (
-                        <span className="flex items-center gap-1.5">
-                          <span aria-hidden="true" className="flex h-1.5 w-8" style={{ background: "var(--surface-inset)" }}>
-                            <span style={{ width: `${share}%`, background: shade(index) }} />
-                          </span>
-                          <span className="font-mono text-[12px] text-foreground-secondary">{share}%</span>
-                        </span>
-                      )}
-                    </span>
-                    <span className={`${WIDE_ONLY} ${num} text-[15px] text-foreground`}>{money(parse.totalAmount)}</span>
-                    <span className={`${NARROW_ONLY} flex flex-col items-end gap-0.5`}>
-                      <span className={`${num} text-[15px] font-semibold text-foreground`}>{weightLabel(kg)}</span>
-                      <span className={`${num} text-[13px] text-foreground-secondary`}>{money(parse.totalAmount)}</span>
-                    </span>
-                    <span className={`${NARROW_ONLY} text-muted`} aria-hidden="true">
-                      <Chevron dir="right" />
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
+            {groups.map((group, groupIndex) =>
+              group.members.length > 1
+                ? groupRows(group, groupIndex)
+                : partRow(group.members[0], group, groupIndex, false),
+            )}
           </ol>
 
           <div className={`${BOM_ROW} mt-1.5 items-baseline px-1.5 pb-2.5 pt-3`} style={TOTAL_RULES}>
@@ -731,7 +834,7 @@ function BillOfMaterial({
         </div>
 
         <div className="mt-7 grid gap-x-10 gap-y-7 @[40rem]:grid-cols-2">
-          <WeightByPart line={line} picked={picked} />
+          <WeightByPart line={line} groups={groups} picked={picked} />
           <CostBuildUp line={line} />
         </div>
       </div>
@@ -739,8 +842,8 @@ function BillOfMaterial({
   );
 }
 
-/** Each part's share of the weight, one bar a part. */
-function WeightByPart({ line, picked }: { line: CommandLine; picked: number }) {
+/** Each group's share of the weight, one bar a group. */
+function WeightByPart({ line, groups, picked }: { line: CommandLine; groups: BomGroup[]; picked: number }) {
   const t = useTranslations("command");
   if (!line.totalKg) return null;
   const total = line.totalKg;
@@ -749,20 +852,22 @@ function WeightByPart({ line, picked }: { line: CommandLine; picked: number }) {
       <div className="pb-1.5" style={RULE_INK}>
         <span className={`${CAPTION} font-semibold text-foreground`}>{t("ledger.weightByPart")}</span>
       </div>
-      {line.items.map((item, index) => {
-        const kg = item.parse.totalKg ?? 0;
+      {groups.map((group, index) => {
+        const kg = group.totalKg ?? 0;
         const share = Math.round((kg / total) * 100);
+        const numbers = group.members.map((m) => m.index + 1).join(", ");
+        const holdsPicked = group.members.some((m) => m.index === picked);
         return (
           <div
-            key={index}
-            className="grid grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_auto] items-center gap-3 py-2"
+            key={group.key}
+            className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)_auto] items-center gap-3 py-2"
             style={RULE_FAINT}
           >
             <span
               className="truncate text-[13px]"
-              style={{ color: index === picked ? "var(--foreground)" : "var(--foreground-secondary)" }}
+              style={{ color: holdsPicked ? "var(--foreground)" : "var(--foreground-secondary)" }}
             >
-              {index + 1} · {formatCommandParseName(t, item.parse) ?? item.parse.name ?? t("query.newItem")}
+              {numbers} · {groupLabel(t, group)}
             </span>
             <span aria-hidden="true" className="flex h-2.5" style={{ background: "var(--surface-inset)" }}>
               <span style={{ width: `${share}%`, background: shade(index) }} />

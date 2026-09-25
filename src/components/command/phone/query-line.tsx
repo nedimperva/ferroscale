@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { useTranslations } from "next-intl";
 import { cmdClassifyToken } from "@ferroscale/metal-core";
@@ -17,9 +17,11 @@ import {
   editLineToken,
   lineChips,
   lineExpandedIndex,
+  removeLineItem,
   removeLineToken,
   replaceLineToken,
 } from "../line-edit";
+import { InlineTokenEditor } from "../inline-token-editor";
 import { TokenChip } from "../token-chip";
 import { useExpandedItem } from "../use-expanded-item";
 
@@ -88,9 +90,28 @@ export function PhoneQueryLine({
     keepExpanded(item, replaceLineToken(query, item, idx, next));
   };
   // Pull a token back to the end of its own item as the editable partial (the
-  // parser is order-tolerant within an item, so the reordering is free).
+  // parser is order-tolerant within an item, so the reordering is free). An
+  // earlier item has no caret — the keypad types into the last one — so its
+  // token is edited where it stands instead.
+  const [editing, setEditing] = useState<{ item: number; idx: number; tok: string } | null>(null);
   const editTokenAt = (item: number, idx: number) => {
+    if (item < chips.groups.length - 1) {
+      setEditing({ item, idx, tok: chips.groups[item].tokens[idx] });
+      return;
+    }
     keepExpanded(item, editLineToken(query, item, idx));
+  };
+  const commitEdit = (item: number, idx: number, next: string) => {
+    setEditing(null);
+    keepExpanded(
+      item,
+      next === "" ? removeLineToken(query, item, idx) : replaceLineToken(query, item, idx, next),
+    );
+  };
+  const removeItem = (item: number) => {
+    setEditing(null);
+    setExpandedItem(null);
+    setQuery(removeLineItem(query, item));
   };
   // The caret lives at the end of the line, so the row has to follow it
   // sideways as tokens are added — otherwise typing walks off the visible area.
@@ -156,17 +177,42 @@ export function PhoneQueryLine({
         )}
         {chips.groups.map((group) => (
           <Fragment key={group.item}>
-            {group.item > 0 && (
-              <span
-                className="font-mono text-sm font-bold px-0.5"
-                style={{ color: "var(--muted-faint)" }}
-                aria-hidden="true"
-              >
-                +
-              </span>
-            )}
+            {group.item > 0 &&
+              (group.item === chips.groups.length - 1 && group.tokens.length === 0 && !partialToken ? (
+                // A `+` nothing has been typed after yet: tap to take it back.
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeItem(group.item);
+                  }}
+                  aria-label={t("query.removeEmptyItem")}
+                  className="inline-flex items-center gap-1 flex-shrink-0 font-mono text-sm font-bold px-1.5 py-1"
+                  style={{ color: "var(--muted-faint)", border: "1px dashed var(--border)" }}
+                >
+                  +<span className="text-[11px]">×</span>
+                </button>
+              ) : (
+                <span
+                  className="font-mono text-sm font-bold px-0.5"
+                  style={{ color: "var(--muted-faint)" }}
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              ))}
             {group.item === expandedIndex ? (
-              group.tokens.map((tok, i) => (
+              group.tokens.map((tok, i) =>
+                editing && editing.item === group.item && editing.idx === i && editing.tok === tok ? (
+                  <InlineTokenEditor
+                    key={`edit-${tok}-${i}`}
+                    tok={tok}
+                    kindClass={KIND_BG[cmdClassifyToken(tok)]}
+                    onCommit={(next) => commitEdit(group.item, i, next)}
+                    onCancel={() => setEditing(null)}
+                    className="text-sm px-2 py-1.5 rounded-md"
+                  />
+                ) : (
                 <TokenChip
                   key={`${tok}-${i}`}
                   // Only an item opened by hand needs seeking to; the
@@ -183,27 +229,47 @@ export function PhoneQueryLine({
                   onRemove={() => removeTokenAt(group.item, i)}
                   onReplace={(next) => replaceTokenAt(group.item, i, next)}
                 />
-              ))
+                ),
+              )
             ) : group.tokens.length === 0 ? null : (
-              <button
-                type="button"
-                onClick={() => setExpandedItem(group.item)}
-                aria-label={t("query.expandItem", {
-                  index: group.item + 1,
-                  name: collapsedItemLabel(group),
-                })}
-                className="inline-flex items-center gap-1.5 flex-shrink-0 rounded-lg font-mono text-sm font-semibold whitespace-nowrap"
+              <span
+                className="inline-flex items-stretch flex-shrink-0 rounded-lg font-mono text-sm font-semibold whitespace-nowrap"
                 style={{
-                  padding: "5px 10px",
                   border: "1px solid var(--border-faint)",
                   background: "var(--surface-inset)",
                   color: "var(--foreground-secondary)",
                 }}
               >
-                <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
-                {collapsedItemLabel(group)}
-                <span className="text-[10px] text-muted-faint">▸</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setExpandedItem(group.item)}
+                  aria-label={t("query.expandItem", {
+                    index: group.item + 1,
+                    name: collapsedItemLabel(group),
+                  })}
+                  className="inline-flex items-center gap-1.5"
+                  style={{ padding: "5px 4px 5px 10px" }}
+                >
+                  <span className="text-[11px] text-muted-faint">{group.item + 1}</span>
+                  {collapsedItemLabel(group)}
+                  <span className="text-[10px] text-muted-faint">▸</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeItem(group.item);
+                  }}
+                  aria-label={t("query.removeItem", {
+                    index: group.item + 1,
+                    name: collapsedItemLabel(group),
+                  })}
+                  style={{ borderLeft: "1px solid var(--border-faint)" }}
+                  className="flex items-center justify-center min-w-[32px] px-1.5 text-[14px] leading-none"
+                >
+                  ×
+                </button>
+              </span>
             )}
           </Fragment>
         ))}

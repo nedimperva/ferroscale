@@ -118,6 +118,20 @@ describe("BreakdownLedger", () => {
     expect(screen.getByRole("list", { name: "Assembly parts" })).toBeDefined();
   });
 
+  it("groups one section's cut lengths under it, and sheet goods by thickness", () => {
+    const onPick = vi.fn();
+    renderLedger("l45x45x5 4500mm + plt1500x3000x10 + l45x45x5 740mm x2 + plt200x300x10 x4 + hea120 6m", { onPick });
+    const angle = screen.getByRole("listitem", { name: "Angle 45×45×5, 2 parts" });
+    expect(within(angle).getByRole("button", { name: /Part 1: Angle 45×45×5 4500 mm/ })).toBeDefined();
+    expect(within(angle).getByRole("button", { name: /Part 3: Angle 45×45×5 740 mm/ })).toBeDefined();
+    const plate = screen.getByRole("listitem", { name: "Plate 10 mm, 2 parts" });
+    expect(within(plate).getAllByText("1500 × 3000 mm").length).toBeGreaterThan(0);
+    expect(within(plate).getAllByText("200 × 300 mm").length).toBeGreaterThan(0);
+    // A part in a group still opens its own sheet, by its place on the line.
+    fireEvent.click(within(plate).getByRole("button", { name: /Part 4:/ }));
+    expect(onPick).toHaveBeenCalledWith(3);
+  });
+
   it("tabs straight to a part from the strip, and steps between parts", () => {
     const onPick = vi.fn();
     renderLedger("hea120 6m x2 + ipe200 4m", { onPick, picked: 0 });

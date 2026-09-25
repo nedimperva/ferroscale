@@ -6,7 +6,9 @@ import {
   lineChipPrefix,
   lineChips,
   lineExpandedIndex,
+  dropEmptyLastItem,
   pullLastChip,
+  removeLineItem,
   removeLineToken,
   replaceItemTokenKind,
   replaceLineToken,
@@ -147,8 +149,39 @@ describe("pullLastChip", () => {
     expect(pullLastChip("hea120 6m + ipe200 4m ")).toBe("hea120 6m + ipe200 4m");
   });
 
-  it("won't reach back across the separator when the new item is empty", () => {
-    expect(pullLastChip("hea120 6m + ")).toBe("hea120 6m + ");
+  it("takes back the separator of an empty new item, leaving the one before intact", () => {
+    expect(pullLastChip("hea120 6m + ")).toBe("hea120 6m ");
+    expect(pullLastChip("hea120 6m + ipe200 4m + ")).toBe("hea120 6m + ipe200 4m ");
+  });
+});
+
+describe("dropEmptyLastItem", () => {
+  it("only acts on an empty trailing item", () => {
+    expect(dropEmptyLastItem("hea120 6m + ")).toBe("hea120 6m ");
+    expect(dropEmptyLastItem("hea120 6m + ipe")).toBeNull();
+    expect(dropEmptyLastItem("hea120 6m ")).toBeNull();
+  });
+});
+
+describe("removeLineItem", () => {
+  it("removes a middle item and closes the line up", () => {
+    expect(removeLineItem("hea120 6m + ipe200 4m + l50x5 2m", 1)).toBe("hea120 6m + l50x5 2m");
+  });
+
+  it("removes the first item", () => {
+    expect(removeLineItem("hea120 6m + ipe200 4m ", 0)).toBe("ipe200 4m ");
+  });
+
+  it("keeps the last item's half-typed token", () => {
+    expect(removeLineItem("hea120 6m + ipe200 4", 0)).toBe("ipe200 4");
+  });
+
+  it("removes the last item and leaves the new last one committed", () => {
+    expect(removeLineItem("hea120 6m + ipe200 4m", 1)).toBe("hea120 6m ");
+  });
+
+  it("clears a single-item line", () => {
+    expect(removeLineItem("hea120 6m ", 0)).toBe("");
   });
 });
 

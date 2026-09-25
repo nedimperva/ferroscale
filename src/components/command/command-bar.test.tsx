@@ -261,6 +261,52 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
     expect(h.getByRole("button", { name: /Item 2, IPE 200/ })).toBeDefined();
   });
 
+  it("edits a token of an earlier item in place", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "hea120 6m x2 + ipe200 4m ");
+
+    await h.user.click(h.getByRole("button", { name: /Item 1, HEA 120/ }));
+    await h.user.click(await h.findByRole("button", { name: "Edit 6m" }));
+    const editor = await h.findByRole("textbox", { name: /Editing 6m/ });
+    await h.user.clear(editor);
+    await h.user.type(editor, "7.5m{Enter}");
+    // The item stays open with the new length; the second item is untouched
+    // and still its own item — the edit didn't land in it.
+    await waitFor(() => expect(h.getByRole("button", { name: "Edit 7.5m" })).toBeDefined());
+    expect(h.queryByRole("button", { name: "Edit 6m" })).toBeNull();
+    expect(h.getByRole("button", { name: /Item 2, IPE 200/ })).toBeDefined();
+    expect(currentQuery(h)).toBe("hea120 7.5m x2");
+  });
+
+  it("takes back a + that nothing was typed after", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "hea120 6m + ");
+    await h.user.click(await h.findByRole("button", { name: "Remove the empty item" }));
+    await waitFor(() => expect(h.queryByRole("button", { name: "Remove the empty item" })).toBeNull());
+    expect(currentQuery(h)).toBe("hea120 6m");
+
+    // Backspace on the empty item takes the + back too.
+    await h.user.type(h.input(), "+ ");
+    await h.findByRole("button", { name: "Remove the empty item" });
+    await h.user.keyboard("{Backspace}");
+    await waitFor(() => expect(h.queryByRole("button", { name: "Remove the empty item" })).toBeNull());
+    expect(currentQuery(h)).toBe("hea120 6m");
+  });
+
+  it("removes a whole finished item", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.input());
+    await h.user.keyboard("{Control>}k{/Control}");
+    await h.user.type(h.input(), "hea120 6m + ipe200 4m ");
+    await h.user.click(h.getByRole("button", { name: /Remove item 1, HEA 120/ }));
+    await waitFor(() => expect(h.queryByRole("button", { name: /Item 1, HEA 120/ })).toBeNull());
+    expect(currentQuery(h)).toBe("ipe200 4m");
+  });
+
   it("saves a multi-item line as one assembly, not two entries", async () => {
     const h = await renderCommandShell();
     await h.user.click(h.input());

@@ -1,4 +1,9 @@
-import { cmdClassifyToken, cmdSplitLine, cmdTokenize } from "@ferroscale/metal-core";
+import {
+  COMMAND_ITEM_SEPARATOR,
+  cmdClassifyToken,
+  cmdSplitLine,
+  cmdTokenize,
+} from "@ferroscale/metal-core";
 import type { CommandTokenKind } from "@ferroscale/metal-core";
 
 /**
@@ -173,15 +178,46 @@ export function lineChipPrefix(query: string): string {
 }
 
 /**
+ * Drop one whole item and the separator that joined it. The items either side
+ * close up around the gap; the last item keeps whatever half-typed token it
+ * held, and when the last item itself goes, the new last one ends committed.
+ */
+export function removeLineItem(query: string, item: number): string {
+  const segments = cmdSplitLine(query);
+  if (item < 0 || item >= segments.length) return query;
+  if (segments.length === 1) return "";
+  const removedLast = item === segments.length - 1;
+  const kept = segments.filter((_, i) => i !== item);
+  const texts = kept.map((segment, i) =>
+    i === kept.length - 1 && !removedLast ? segment.text.trimStart() : segment.text.trim(),
+  );
+  const joined = texts.filter((text, i) => text !== "" || i === texts.length - 1).join(` ${COMMAND_ITEM_SEPARATOR} `);
+  if (!removedLast) return joined;
+  return joined.trim() ? `${joined.trimEnd()} ` : "";
+}
+
+/**
+ * A `+` that opened an item nothing has been typed into yet. Returns the line
+ * without it, or `null` when the last item already holds something (or there
+ * is only one item) — then there is no separator to take back.
+ */
+export function dropEmptyLastItem(query: string): string | null {
+  const segments = cmdSplitLine(query);
+  if (segments.length < 2 || segments[segments.length - 1].text.trim() !== "") return null;
+  return removeLineItem(query, segments.length - 1);
+}
+
+/**
  * Backspace on an empty input: pull the active item's last chip back under the
- * caret. On an item with no chips yet there is nothing to pull, and the line is
- * left alone rather than reaching back across the separator.
+ * caret. On an item with no chips yet — a `+` just typed — backspace takes the
+ * separator back instead, so an item added by mistake never means starting
+ * the whole line over.
  */
 export function pullLastChip(query: string): string {
   const segments = cmdSplitLine(query);
   const item = segments.length - 1;
   const tokens = lineChips(query).groups[item].tokens;
-  if (tokens.length === 0) return query;
+  if (tokens.length === 0) return dropEmptyLastItem(query) ?? query;
   return editLineToken(query, item, tokens.length - 1);
 }
 

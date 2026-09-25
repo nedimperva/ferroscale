@@ -226,7 +226,9 @@
       "aria": "FerroScale komandni upit",
       "acceptGhost": "Dovrši: {text}",
       "expandItem": "Stavka {index}, {name} — prikaži tokene",
-      "newItem": "Nedovršena stavka"
+      "newItem": "Nedovršena stavka",
+      "removeItem": "Ukloni stavku {index}, {name}",
+      "removeEmptyItem": "Ukloni praznu stavku"
     },
     "keypad": {
       "space": "razmak",
@@ -253,7 +255,8 @@
       "stepUp": "Povećaj {token}",
       "stepDown": "Smanji {token}",
       "holdToStep": "Zadržite da pomaknete broj",
-      "shadowed": "Zanemareno — linija već ima jedan. Ukloni ovo, ili pokreni novu stavku sa +"
+      "shadowed": "Zanemareno — linija već ima jedan. Ukloni ovo, ili pokreni novu stavku sa +",
+      "editing": "Uređivanje {token} — Enter za potvrdu, Esc za odustajanje"
     },
     "preview": {
       "perPiece": "Po komadu",
@@ -1058,7 +1061,11 @@
         "weight": "masa × {rate}",
         "length": "dužina × {rate}",
         "piece": "komadi × {rate}"
-      }
+      },
+      "lengthOrSize": "Dužina / mjera",
+      "sheetGroup": "{name} {thickness} mm",
+      "groupPieces": "{count} kom.",
+      "group": "{name}, dijelova: {count}"
     }
   },
   "contact": {
