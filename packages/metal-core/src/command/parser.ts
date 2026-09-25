@@ -11,6 +11,7 @@ import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./
 import type { LengthExpression } from "./arith";
 import { findAngleCatalogSize, getProfileById } from "../datasets/profiles";
 import { getMaterialGradeById } from "../datasets/materials";
+import { checkStockSize } from "../datasets/stock-sizes";
 import { materialAvailability } from "../datasets/availability";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
@@ -30,6 +31,7 @@ import type {
   CommandParseIssue,
   CommandParseIssueCode,
   CommandParseResult,
+  CommandStockNote,
   CommandParserSettings,
   CommandPricing,
   CommandTarget,
@@ -261,6 +263,42 @@ export function inputToQuery(
   }
 
   return `${alias.alias}${sizeText}${lengthToken}${qtyToken}${gradeToken}${priceToken}`;
+}
+
+/**
+ * The standard-size note for a hand-typed steel section. Stainless and
+ * aluminium are rolled and extruded to other series, so the steel tables
+ * would only raise false alarms there — they get no note.
+ */
+function stockNoteFor(
+  alias: CommandAlias,
+  input: CalculationInput,
+  gradeId: string,
+): CommandStockNote | null {
+  if (getMaterialGradeById(gradeId)?.familyId !== "steel") return null;
+  const dimsMm: Partial<Record<DimensionKey, number>> = {};
+  for (const key of Object.keys(input.manualDimensions) as DimensionKey[]) {
+    const entry = input.manualDimensions[key];
+    if (entry) dimsMm[key] = toMillimeters(entry.value, entry.unit);
+  }
+  const check = checkStockSize(input.profileId, dimsMm);
+  if (!check || check.standard) return null;
+  const lengthMm = toMillimeters(input.length.value, input.length.unit);
+  const sheetLike = SHEET_LIKE_FAMILIES.has(alias.fam);
+  const nearest = check.nearest.flatMap((dims) => {
+    // A sheet or plate keeps the piece it was cut to; only the gauge changes.
+    const merged = sheetLike ? { ...dimsMm, ...dims } : dims;
+    const size = dimsToSizeText(alias.fam, merged, lengthMm);
+    if (!size) return [];
+    const label = sheetLike
+      ? `${fmt(merged.thickness ?? 0)} mm`
+      : `${alias.fam === "round" ? "Ø" : ""}${size.replace(/x/g, "×")}`;
+    return [{ ins: `${alias.alias}${size}`, label }];
+  });
+  return {
+    sources: check.sources,
+    nearest,
+  };
 }
 
 /** The EN 10056-1 catalogue size for a steel or stainless angle, else null. */
@@ -1237,6 +1275,10 @@ export function cmdParse(
     availability:
       alias && hasSize && calc
         ? materialAvailability(calc.input.profileId, effectiveGradeId)
+        : null,
+    stock:
+      alias && hasSize && calc
+        ? stockNoteFor(alias, calc.input, effectiveGradeId)
         : null,
     pricing: effectivePricing,
     target,

@@ -317,3 +317,34 @@ describe("cmdApplyInsert with refine items", () => {
     expect(apply("x2 hea120 6m ", "qty", "x5")).toBe("x5 hea120 6m ");
   });
 });
+
+describe("standard sizes while the size is typed", () => {
+  const labels = (q: string) => cmdSuggest(q, SETTINGS).items.map((i) => i.label);
+
+  it("completes a hollow section from EN 10219-2 / 10210-2", () => {
+    expect(labels("shs40x")).toEqual([
+      "40×40×2", "40×40×2.5", "40×40×2.6", "40×40×3", "40×40×3.2", "40×40×4", "40×40×5",
+    ]);
+  });
+
+  it("completes a standard profile from its EN table", () => {
+    expect(labels("hea1")).toEqual(["100", "120", "140", "160", "180", "1000"]);
+  });
+
+  it("completes an angle from the catalogue and reads a synonym", () => {
+    expect(labels("l50x")).toEqual(["50×30×5", "50×50×4", "50×50×5", "50×50×6"]);
+    expect(cmdSuggest("tube60", SETTINGS).items[0].ins).toBe("chs60.3x2 ");
+  });
+
+  it("swaps only the token being typed, then moves on", () => {
+    const item = cmdSuggest("ipe200 6m + shs40x", SETTINGS).items[3];
+    expect(cmdApplyInsert("ipe200 6m + shs40x", item)).toBe("ipe200 6m + shs40x40x3 ");
+  });
+
+  it("steps aside once the size is complete or the token is closed", () => {
+    // Only a longer continuation keeps the picker up.
+    expect(labels("shs40x40x3")).toEqual(["40×40×3.2"]);
+    expect(cmdSuggest("shs40x40x5", SETTINGS).hint).not.toContain("standard size");
+    expect(cmdSuggest("shs40x40x3 ", SETTINGS).hint).not.toContain("standard size");
+  });
+});

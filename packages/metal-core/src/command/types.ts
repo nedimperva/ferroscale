@@ -8,6 +8,21 @@ import type {
 } from "../calculator/types";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import type { MaterialAvailability } from "../datasets/availability";
+import type { StockSourceId } from "../datasets/stock-sizes";
+
+/** A standard size offered in place of a non-standard one. */
+export interface CommandStockOption {
+  /** The profile+size token that replaces the typed one (`shs40x40x3`). */
+  ins: string;
+  /** The size alone, as it reads (`40×40×3`, `8 mm` for a sheet's thickness). */
+  label: string;
+}
+
+export interface CommandStockNote {
+  /** The tables whose range covers the size and which do not list it. */
+  sources: StockSourceId[];
+  nearest: CommandStockOption[];
+}
 
 /** The pricing fields of CalculationInput that Command needs for live totals. */
 export interface CommandPricing {
@@ -118,6 +133,12 @@ export interface CommandParseResult {
    * Advisory only — the mass is still right, and the line stays valid.
    */
   availability: MaterialAvailability | null;
+  /**
+   * Non-null when a steel size typed by hand is missing from the standard
+   * size tables that cover its range — likely made to order or cut from
+   * larger stock. Advisory only; the mass is right either way.
+   */
+  stock: CommandStockNote | null;
   /** Non-null when the query asked for a target instead of an input. */
   target: CommandTarget | null;
   /** Non-null when the query contains an inline price token. */

@@ -151,6 +151,17 @@ output — for standard profiles that reference is the only independent check
 the engine benchmark has, and reading the area back off the dataset is
 exactly the bug that let five wrong channel areas ship.
 
+### Standard (stock) sizes for manual profiles
+
+`packages/metal-core/src/datasets/stock-sizes.ts` lists the sizes a buyer can
+expect to find for bars, tubes, angles and panel gauges, each list transcribed
+from a named table (EN 10219-2 / 10210-2, EN 10060, the angle catalogue, a
+merchant's stock list). It drives three things and nothing else — never a
+weight: the size-typing chips in `cmdSuggest`, the parser's `stock` note
+(steel only; silent outside the range a list covers) and the web's nearby
+sizes (`src/lib/datasets/standard-sizes.ts` reads it). Add a size only from a
+source you can cite on the list.
+
 ### Section properties
 
 `packages/metal-core/src/datasets/section-properties.ts` holds Iy, Wel, Wpl

@@ -7,11 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [3.33.0] - 2026-09-25
 
-Angles weighed from the EN 10056-1 catalogue.
+Angles weighed from the EN 10056-1 catalogue, and standard sizes offered and checked as you type.
 
 ### Added
 
 - EN 10056-1 angles as catalogue sizes: 173 equal and unequal angles, L 20×20×3 to L 300×300×35. Typing a rolled size — l50x5, l50x50x5, l60x40x5 or l40x60x5 — weighs it from the catalogue area, root and toe radii included, and the drawing shows the real radii. Any other size (l47x33x4) and aluminium angles keep the leg formula
+- Standard sizes as you type: while the size is still open (shs40x, hea1, l50x, chs48) the chips complete it from the standard table — EN 10219-2 and EN 10210-2 hollow sections, EN 10060 round bar, the EN 10056-1 angles, the EN profile tables, and a merchant's stock list for flat and square bar, sheet and plate — each with its kg/m
+- A steel size typed by hand that is not in those tables gets a quiet Non-standard mark beside the result, and the breakdown says which tables it is missing from and offers the nearest standard sizes in one tap (SHS 45×45×3 → 50×50×3, 40×40×3). A sheet or plate keeps its piece and only changes gauge. Sizes beyond a table's range, and stainless and aluminium, get no mark
+- Nearby sizes under the breakdown now come from the same sourced tables
 
 ### Fixed
 

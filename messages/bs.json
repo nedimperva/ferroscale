@@ -979,6 +979,13 @@
       "notInSeriesDetailAlloy": "{grade} se drži kao lim, ploča, šipka i cijev, ne kao profil. Masa je tačna za oblik, ali ovo nije skladišni oblik.",
       "checkRate": "Provjerite cijenu — cjenovnik je po klasi."
     },
+    "stock": {
+      "badge": "Nestandardno",
+      "detail": "Nije standardna dimenzija prema {sources} — vjerovatno se radi po narudžbi ili reže iz veće dimenzije.",
+      "nearest": "Standardne:",
+      "use": "Koristi {size}",
+      "merchantList": "lager-listi trgovca"
+    },
     "save": {
       "toProject": "Dodaj u {project}",
       "toLibrary": "Sačuvaj",

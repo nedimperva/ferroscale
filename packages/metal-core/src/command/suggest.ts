@@ -1,11 +1,14 @@
 import { toMillimeters } from "../calculator/units";
 import type { LengthUnit } from "../calculator/types";
 import type { ProfileId } from "../datasets/types";
+import { getProfileById } from "../datasets/profiles";
+import { getStockSizes } from "../datasets/stock-sizes";
 import {
   COMMAND_ALIAS_RE,
   COMMAND_ALIASES,
   COMMAND_GRADES,
   COMMAND_SIZES,
+  findAliasByKey,
 } from "./aliases";
 import { cmdClassifyToken, cmdParse, cmdTokenize, dimsToSizeText, SHEET_LIKE_FAMILIES } from "./parser";
 import type {
@@ -118,9 +121,72 @@ function sizeKgmSub(
   return kgm != null ? kgmSub(kgm) : undefined;
 }
 
+const MAX_SIZE_COMPLETIONS = 8;
+const TYPING_SIZE_RE = new RegExp(`^(${COMMAND_ALIAS_RE})(\\d[\\d.,x×]*)$`, "i");
+const sizeTextCache = new Map<string, string[]>();
+
+/**
+ * Every standard size text a family can complete to: the EN table of a
+ * standard profile, the angle catalogue, or the stock list of a manual one.
+ */
+function standardSizeTexts(alias: CommandAlias): string[] {
+  const cached = sizeTextCache.get(alias.alias);
+  if (cached) return cached;
+  let texts: string[] = [];
+  if (alias.profileId) {
+    const profile = getProfileById(alias.profileId);
+    if (profile?.mode === "standard") {
+      texts = profile.sizes.map((size) =>
+        size.id.startsWith(alias.alias) ? size.id.slice(alias.alias.length) : size.id,
+      );
+    }
+  } else if (alias.manualProfileId && !SHEET_LIKE_FAMILIES.has(alias.fam)) {
+    texts = getStockSizes(alias.manualProfileId).flatMap((size) => {
+      const text = dimsToSizeText(alias.fam, size.dims);
+      return text ? [text] : [];
+    });
+  }
+  sizeTextCache.set(alias.alias, texts);
+  return texts;
+}
+
+/**
+ * While the size itself is being typed (`shs40x`, no space yet), the chips
+ * complete it from the standard list — the quiet way to pick a size the
+ * mills actually make. A size that is already complete and has no longer
+ * continuation gets none, and the usual next stage takes over.
+ */
+function sizeCompletions(
+  query: string,
+  settings: CommandParserSettings,
+): CommandSuggestion | null {
+  if (query === "" || /\s$/.test(query)) return null;
+  const last = query.trim().split(/\s+/).pop() ?? "";
+  const match = last.match(TYPING_SIZE_RE);
+  if (!match) return null;
+  const alias = findAliasByKey(match[1].toLowerCase());
+  if (!alias) return null;
+  const typed = match[2].toLowerCase().replace(/×/g, "x").replace(/,/g, ".");
+  const items = standardSizeTexts(alias)
+    .filter((text) => text.startsWith(typed) && text !== typed)
+    .slice(0, MAX_SIZE_COMPLETIONS)
+    .map<CommandSuggestionItem>((text) => ({
+      label: text.replace(/x/g, "×"),
+      sub: sizeKgmSub(alias, text, settings),
+      fam: alias.fam,
+      ins: `${alias.alias}${text} `,
+      kind: "size",
+      replaceLast: true,
+      group: "standard",
+    }));
+  if (items.length === 0) return null;
+  return { hint: `${alias.name} · standard size`, items };
+}
+
 /** Test hook — the cache is keyed by catalog data that never changes at
  *  runtime, but suites that swap datasets need a way to drop it. */
 export function cmdResetSuggestCache(): void {
+  sizeTextCache.clear();
   kgmCache.clear();
 }
 
@@ -288,6 +354,11 @@ export function cmdSuggest(
 ): CommandSuggestion {
   const p = parsed && parsed.raw === query ? parsed : cmdParse(query, settings);
   const { stage, partial } = cmdDetectStage(query, p);
+
+  if (p.alias && stage !== "empty" && stage !== "profile") {
+    const completions = sizeCompletions(query, settings);
+    if (completions) return completions;
+  }
 
   if (stage === "empty" || stage === "profile") {
     // Queries the user actually ran, first — one tap re-runs the calculation.

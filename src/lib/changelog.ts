@@ -21,12 +21,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-09-25",
     added: [
       "EN 10056-1 angles as catalogue sizes: 173 equal and unequal angles, L 20×20×3 to L 300×300×35. Typing a rolled size — l50x5, l50x50x5, l60x40x5 or l40x60x5 — weighs it from the catalogue area, root and toe radii included, and the drawing shows the real radii. Any other size (l47x33x4) and aluminium angles keep the leg formula",
+      "Standard sizes as you type: while the size is still open (shs40x, hea1, l50x, chs48) the chips complete it from the standard table — EN 10219-2 and EN 10210-2 hollow sections, EN 10060 round bar, the EN 10056-1 angles, the EN profile tables, and a merchant's stock list for flat and square bar, sheet and plate — each with its kg/m",
+      "A steel size typed by hand that is not in those tables gets a quiet Non-standard mark beside the result, and the breakdown says which tables it is missing from and offers the nearest standard sizes in one tap (SHS 45×45×3 → 50×50×3, 40×40×3). A sheet or plate keeps its piece and only changes gauge. Sizes beyond a table's range, and stainless and aluminium, get no mark",
+      "Nearby sizes under the breakdown now come from the same sourced tables",
     ],
     fixed: [
       "Steel angles read about 1% light: the leg formula leaves out the material in the root fillet. L 50×50×5 now weighs 3.77 kg/m, as the catalogue prints, instead of 3.73",
     ],
     added_bs: [
       "EN 10056-1 ugaonici kao kataloške dimenzije: 173 jednakokraka i raznokraka ugaonika, od L 20×20×3 do L 300×300×35. Unos valjane dimenzije — l50x5, l50x50x5, l60x40x5 ili l40x60x5 — računa masu iz kataloške površine, s radijusima korijena i krakova, a crtež prikazuje stvarne radijuse. Svaka druga dimenzija (l47x33x4) i aluminijski ugaonici i dalje se računaju formulom krakova",
+      "Standardne dimenzije dok kucate: dok je dimenzija još otvorena (shs40x, hea1, l50x, chs48) čipovi je dopunjuju iz standardne tabele — šuplji profili EN 10219-2 i EN 10210-2, okrugli čelik EN 10060, ugaonici EN 10056-1, EN tabele profila i lager-lista trgovca za plosnati i kvadratni čelik, lim i ploču — svaka s kg/m",
+      "Čelična dimenzija unesena ručno koje nema u tim tabelama dobija diskretnu oznaku Nestandardno pored rezultata, a obračun kaže u kojim tabelama nedostaje i nudi najbliže standardne dimenzije jednim dodirom (SHS 45×45×3 → 50×50×3, 40×40×3). Lim ili ploča zadržava komad i mijenja samo debljinu. Dimenzije izvan opsega tabele, te nehrđajući čelik i aluminij, ne dobijaju oznaku",
+      "Slične dimenzije ispod obračuna sada dolaze iz istih tabela s izvorima",
     ],
     fixed_bs: [
       "Čelični ugaonici su bili oko 1% lakši: formula krakova izostavlja materijal u zaobljenju korijena. L 50×50×5 sada ima 3,77 kg/m, kao u katalogu, umjesto 3,73",

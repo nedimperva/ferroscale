@@ -262,6 +262,33 @@ describe("cmdParse", () => {
     expect(alu.availability).toBeNull();
   });
 
+  it("says nothing about a standard steel size", () => {
+    expect(cmdParse("shs40x40x3 6m", mkSettings()).stock).toBeNull();
+    expect(cmdParse("rhs40x60x3 6m", mkSettings()).stock).toBeNull();
+    expect(cmdParse("l50x5 6m", mkSettings()).stock).toBeNull();
+  });
+
+  it("notes a non-standard steel size and offers the nearest standard ones", () => {
+    const p = cmdParse("shs45x3 6m", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.stock?.sources).toEqual(["en-10219-2", "en-10210-2"]);
+    expect(p.stock?.nearest.map((o) => o.ins)).toContain("shs40x40x3");
+    expect(p.stock?.nearest.find((o) => o.ins === "shs40x40x3")?.label).toBe("40×40×3");
+    // An angle off the EN 10056-1 table offers catalogue angles.
+    expect(cmdParse("l47x33x4 6m", mkSettings()).stock?.nearest[0].ins).toMatch(/^l\d/);
+  });
+
+  it("keeps a sheet's piece and only changes its gauge", () => {
+    const p = cmdParse("plt1500x3000x11", mkSettings());
+    expect(p.stock?.nearest.map((o) => o.ins)).toEqual(["plt1500x3000x12", "plt1500x3000x10", "plt1500x3000x15"]);
+    expect(p.stock?.nearest[0].label).toBe("12 mm");
+  });
+
+  it("leaves stainless and aluminium alone — the steel tables are not theirs", () => {
+    expect(cmdParse("shs45x3 6m 304", mkSettings()).stock).toBeNull();
+    expect(cmdParse("shs45x3 6m 6060", mkSettings()).stock).toBeNull();
+  });
+
   it("ensures all curated tee sizes correspond to valid EN sizes", () => {
     for (const size of COMMAND_SIZES.tee) {
       const p = cmdParse(`t${size} 6m`, mkSettings());
