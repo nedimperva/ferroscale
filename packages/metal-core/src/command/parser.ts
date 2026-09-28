@@ -722,7 +722,11 @@ const GLUED_QTY_RE = new RegExp(
  * sees must stay what they typed.
  */
 function stripSeparator(word: string): string {
-  return word.replace(/[,;]+$/, "");
+  // A scan from the end, not /[,;]+$/: that regex retries from every comma,
+  // which is quadratic on a pasted run of them.
+  let end = word.length;
+  while (end > 0 && (word[end - 1] === "," || word[end - 1] === ";")) end--;
+  return word.slice(0, end);
 }
 
 /** "2pcs" / "2x" → "x2"; anything else unchanged. Committed words only. */

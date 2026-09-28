@@ -425,6 +425,13 @@ describe("cmdParse reads the line the way it is said", () => {
     expect(p.alias?.alias).toBe("shs");
   });
 
+  it("tokenizes a long run of commas quickly", () => {
+    const start = performance.now();
+    expect(cmdTokenize(`${",".repeat(50_000)}x `)).toEqual([`${",".repeat(50_000)}x`]);
+    expect(cmdTokenize(`hea120${",".repeat(50_000)} `)).toEqual(["hea120"]);
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
   it("keeps a comma under the caret, where it may start a decimal", () => {
     expect(cmdTokenize("hea120 2,")).toEqual(["hea120", "2,"]);
     expect(cmdParse("hea120 2,5m ", mkSettings()).lengthM).toBe(2.5);
