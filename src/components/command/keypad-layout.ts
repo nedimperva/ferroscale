@@ -1,20 +1,23 @@
 import {
   COMMAND_SIZES,
   cmdClassifyToken,
-  cmdDetectStage,
   type CommandParseResult,
 } from "@ferroscale/metal-core";
 
-export type CommandKeypadMode = "letters" | "numpad" | "actions";
-export type CommandKeypadOverride = "letters" | "numpad" | null;
+export type CommandKeypadMode = "letters" | "actions";
+export type CommandKeypadOverride = "letters" | null;
 
 /**
- * Which phone keypad the current line wants.
+ * Which phone keypad the current line wants: the one keyboard — letters with
+ * a number row on top — whenever something is being typed, and a short action
+ * bar once the line computes and nothing is half-typed. Tweak (or a tap on the
+ * line) brings the keyboard back over a finished line.
  *
- * Letters while the next token is a word (profile, grade). A number pad once
- * the line is digits and units (size, length, quantity, rate). A short action
- * bar once the line already computes and nothing is half-typed — Tweak /
- * ABC / 123 bring a pad back, they are not inferred.
+ * There used to be a third, a number pad the keypad switched to by itself the
+ * moment the letters so far made a profile word. But `t` is a tee and `l` an
+ * angle, so it jumped on the first letter of tube, tee, lim or square — the
+ * app guessing what you meant to type next and getting it wrong. The number
+ * row makes the guess unnecessary: digits are one row up, always.
  */
 export function commandKeypadLayout(
   query: string,
@@ -22,34 +25,9 @@ export function commandKeypadLayout(
   override: CommandKeypadOverride = null,
 ): CommandKeypadMode {
   const endsSpace = query === "" || /\s$/.test(query);
-  const partial = endsSpace ? "" : query.trim().split(/\s+/).pop() || "";
-
-  if (partial) return layoutForPartial(partial, parsed);
-
-  if (override === "letters" || override === "numpad") return override;
-
-  if (parsed.valid) return "actions";
-
-  const { stage } = cmdDetectStage(query, parsed);
-  if (stage === "empty" || stage === "profile" || stage === "grade") return "letters";
-  return "numpad";
-}
-
-function layoutForPartial(
-  partial: string,
-  parsed: CommandParseResult,
-): CommandKeypadMode {
-  const kind = cmdClassifyToken(partial);
-  if (kind === "grade") return "letters";
-  // A settled alias (`hea`) is waiting for a size, so the number pad is next.
-  // Half an alias (`he`) is still a word.
-  if (kind === "profile") return parsed.alias ? "numpad" : "letters";
-  if (kind === "unknown") {
-    // `x` is the start of a quantity; `s` is the start of a grade.
-    if (/^x\d*$/i.test(partial) || /[\d.@=]/.test(partial)) return "numpad";
-    return /^[a-z]+$/i.test(partial) ? "letters" : "numpad";
-  }
-  return "numpad";
+  if (!endsSpace) return "letters";
+  if (override === "letters") return "letters";
+  return parsed.valid ? "actions" : "letters";
 }
 
 /**

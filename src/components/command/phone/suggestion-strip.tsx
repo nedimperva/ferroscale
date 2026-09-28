@@ -38,7 +38,7 @@ export function PhoneSuggestionStrip({
 }) {
   const t = useTranslations("command");
   return (
-    <div className="pb-2.5">
+    <div className="flex-shrink-0 pb-2.5">
       <div className="flex items-center gap-2 px-[18px] pb-1.5">
         <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
           {formatCommandHint(t, sug.hint)}

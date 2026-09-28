@@ -27,6 +27,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Words that carry nothing — of, long, nosač, dužina, profil, a lone x — are dropped instead of failing the line",
       "In Bosnian the empty bar's examples are said in Bosnian (cijev 40x40x3 6m 10 kom, lim 2mm 1000x2000)",
     ],
+    changed: [
+      "The phone has one keyboard: letters with a number row on top. It no longer switches to a number pad by itself — which it did the moment the letters so far made a profile name, so t (a tee) and l (an angle) threw you onto numbers in the middle of tube, tee, lim and square. Tweak opens the same keyboard, and Done returns to the action bar",
+    ],
     fixed: [
       "A count written in words at the end of the line is counted before the space after it: hea120 6m 2 pieces, 2 kom and qty 2 weighed one piece until another key was pressed, with nothing saying so. hea120 6 metres likewise read as 6 mm",
       "More of the ways people write a line are read: a glued count (2pcs, 4kom), a count first (2x hea120 6m), qty 2, and commas between words (hea 120, 6 m, 2 pcs)",
@@ -38,6 +41,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "The FAQ's Try and Open in app links now load lines the calculator reads. Nine of nineteen used spellings it never had — tub100x50x4, hex24, sht5 2000x1000, exp2 — and opened on an error. Hex bar, which the calculator has no profile for, and tees past T 60 no longer offer a link",
       "hea 6000 120 reads as HEA 120, 6000 mm, and a glued hea6000 is no longer split into HEA 600 and a length of 0",
       "Size chips for cijev, tube, box and bar offer every shape they can mean — box and round tube sizes together",
+      "On a short phone (375×667 and smaller) the command line slid under the keyboard once a line was typed, so you typed without seeing it. The answer above now scrolls instead, and the suggestions and the line stay docked on the keys",
     ],
     added_bs: [
       "Prazan ekran počinje jednom cijelom linijom rastavljenom na dijelove — hea120 · 6m · x2 · s355 · @2.50/kg, svaka riječ s oznakom profil, dužina, komada, kvalitet, cijena — pa prva posjeta pokazuje šta traka čita prije nego što išta upišete. Dodirnite je da učitate liniju i vidite rezultat. Pločice profila dolaze iza nje, kao drugi način",
@@ -46,6 +50,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Engleski nazivi čitaju se kao jedan profil: square tube, rectangular tube, round tube, box section, flat bar, round bar, square bar, angle iron, expanded metal. Tube, cijev ili box uzima oblik iz dimenzije — tri stranice su kutijasti profil, kvadratni kad su dvije iste; dvije su okrugla cijev — a bar s jednom dimenzijom je okrugli, s dvije plosnati",
       "Riječi koje ništa ne nose — of, long, nosač, dužina, profil, samo x — se izostavljaju umjesto da ruše liniju",
       "Na bosanskom primjeri u praznoj traci su na bosanskom (cijev 40x40x3 6m 10 kom, lim 2mm 1000x2000)",
+    ],
+    changed_bs: [
+      "Telefon ima jednu tastaturu: slova s redom brojeva na vrhu. Više se sama ne prebacuje na numeričku — što je radila čim bi slova činila naziv profila, pa su t (T profil) i l (ugaonik) prebacivali na brojeve usred riječi tube, tee, lim i square. Mijenjaj otvara istu tastaturu, a Gotovo vraća traku s akcijama",
     ],
     fixed_bs: [
       "Količina napisana riječima na kraju linije računa se i prije razmaka iza nje: hea120 6m 2 pieces, 2 kom i qty 2 računali su jedan komad dok se ne pritisne druga tipka, bez ikakve poruke. Isto tako hea120 6 metres čitalo se kao 6 mm",
@@ -58,6 +65,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Linkovi Isprobaj i Otvori u aplikaciji u FAQ-u sada učitavaju linije koje kalkulator čita. Devet od devetnaest koristilo je zapis koji nikad nije postojao — tub100x50x4, hex24, sht5 2000x1000, exp2 — i otvaralo se s greškom. Šestougaona šipka, za koju kalkulator nema profil, i T profili iznad T 60 više ne nude link",
       "hea 6000 120 čita se kao HEA 120, 6000 mm, a spojeni hea6000 se više ne dijeli na HEA 600 i dužinu 0",
       "Čipovi dimenzija za cijev, tube, box i bar nude sve oblike koje mogu značiti — kutijaste i okrugle cijevi zajedno",
+      "Na kratkom telefonu (375×667 i manjem) komandna linija je nakon unosa klizila ispod tastature, pa se kucalo naslijepo. Rezultat iznad se sada pomjera, a prijedlozi i linija ostaju odmah iznad tipki",
     ],
   },
   {

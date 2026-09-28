@@ -18,6 +18,10 @@ A first screen that shows the grammar, and a bar that reads how people talk — 
 - Words that carry nothing — of, long, nosač, dužina, profil, a lone x — are dropped instead of failing the line
 - In Bosnian the empty bar's examples are said in Bosnian (cijev 40x40x3 6m 10 kom, lim 2mm 1000x2000)
 
+### Changed
+
+- The phone has one keyboard: letters with a number row on top. It no longer switches to a number pad by itself — which it did the moment the letters so far made a profile name, so t (a tee) and l (an angle) threw you onto numbers in the middle of tube, tee, lim and square. Tweak opens the same keyboard, and Done returns to the action bar
+
 ### Fixed
 
 - A count written in words at the end of the line is counted before the space after it: hea120 6m 2 pieces, 2 kom and qty 2 weighed one piece until another key was pressed, with nothing saying so. hea120 6 metres likewise read as 6 mm
@@ -30,6 +34,7 @@ A first screen that shows the grammar, and a bar that reads how people talk — 
 - The FAQ's Try and Open in app links now load lines the calculator reads. Nine of nineteen used spellings it never had — tub100x50x4, hex24, sht5 2000x1000, exp2 — and opened on an error. Hex bar, which the calculator has no profile for, and tees past T 60 no longer offer a link
 - hea 6000 120 reads as HEA 120, 6000 mm, and a glued hea6000 is no longer split into HEA 600 and a length of 0
 - Size chips for cijev, tube, box and bar offer every shape they can mean — box and round tube sizes together
+- On a short phone (375×667 and smaller) the command line slid under the keyboard once a line was typed, so you typed without seeing it. The answer above now scrolls instead, and the suggestions and the line stay docked on the keys
 
 ## [3.33.0] - 2026-09-25
 

@@ -16,31 +16,26 @@ const SETTINGS: CommandParserSettings = {
   defaultLengthUnit: "m",
 };
 
-function layout(query: string, override: "letters" | "numpad" | null = null) {
+function layout(query: string, override: "letters" | null = null) {
   return commandKeypadLayout(query, cmdParse(query, SETTINGS), override);
 }
 
 describe("commandKeypadLayout", () => {
-  it("starts on letters — empty line or a half-typed alias", () => {
+  it("types on the one keyboard — letters with the number row — whatever the token", () => {
     expect(layout("")).toBe("letters");
     expect(layout("he")).toBe("letters");
+    expect(layout("hea")).toBe("letters");
+    expect(layout("hea120 ")).toBe("letters");
+    expect(layout("hea120 6")).toBe("letters");
+    expect(layout("hea120 6m x2 @2.5")).toBe("letters");
   });
 
-  it("flips to the number pad the moment the alias settles", () => {
-    expect(layout("hea")).toBe("numpad");
-    expect(layout("ipe")).toBe("numpad");
-  });
-
-  it("switches to the number pad once a size is in and a length is next", () => {
-    expect(layout("hea120 ")).toBe("numpad");
-    expect(layout("hea120")).toBe("numpad");
-    expect(layout("shs40x40x3 ")).toBe("numpad");
-  });
-
-  it("stays on the number pad for length, quantity and a rate", () => {
-    expect(layout("hea120 6")).toBe("numpad");
-    expect(layout("hea120 6m x")).toBe("numpad");
-    expect(layout("hea120 6m x2 @2.5")).toBe("numpad");
+  it("never switches away on a letter that starts a longer word", () => {
+    // `t` is a tee and `l` an angle; the old number pad jumped on both, in
+    // the middle of tube, tee, lim and square.
+    for (const q of ["t", "tu", "tube", "l", "li", "lim", "sq", "squ", "square "]) {
+      expect(layout(q), q).toBe("letters");
+    }
   });
 
   it("collapses to the action bar once the line computes and nothing is half-typed", () => {
@@ -49,21 +44,13 @@ describe("commandKeypadLayout", () => {
     expect(layout("hea120 6m x2 s235 ")).toBe("actions");
   });
 
-  it("stays open while a token is still under the caret, even if the line would compute", () => {
-    expect(layout("hea120 6m")).toBe("numpad");
-    expect(layout("hea120 6m x2")).toBe("numpad");
+  it("stays on the keyboard while a token is still under the caret", () => {
+    expect(layout("hea120 6m")).toBe("letters");
+    expect(layout("hea120 6m x2")).toBe("letters");
   });
 
-  it("uses letters for a grade under the caret", () => {
-    expect(layout("hea120 6m x2 s")).toBe("letters");
-    expect(layout("hea120 6m x2 s235")).toBe("letters");
-  });
-
-  it("honours an explicit override only when nothing is half-typed", () => {
-    expect(layout("hea120 6m x2 ", "numpad")).toBe("numpad");
+  it("keeps the keyboard over a finished line once it has been reopened", () => {
     expect(layout("hea120 6m x2 ", "letters")).toBe("letters");
-    expect(layout("hea120 ", "letters")).toBe("letters");
-    expect(layout("hea120 6m x2 s", "numpad")).toBe("letters");
   });
 });
 

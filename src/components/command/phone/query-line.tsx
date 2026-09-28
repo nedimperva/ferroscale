@@ -45,7 +45,7 @@ export function PhoneQueryLine({
   line: CommandLine;
   sug: CommandSuggestion;
   onSuggest: (item: CommandSuggestionItem) => void;
-  /** A tap on the line — the shell swaps the action keypad for the numpad. */
+  /** A tap on the line — the shell swaps the action bar for the keyboard. */
   onTap: () => void;
 }) {
   const locale = useLocale();
@@ -141,7 +141,7 @@ export function PhoneQueryLine({
     String(group.item + 1);
 
   return (
-    <div className="px-[14px] pb-2">
+    <div className="flex-shrink-0 px-[14px] pb-2">
       <div
         ref={queryLineRef}
         data-query-line=""
