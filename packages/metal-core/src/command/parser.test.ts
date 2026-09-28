@@ -380,6 +380,78 @@ describe("cmdTokenize (natural-language folding)", () => {
   });
 });
 
+describe("cmdParse reads the line the way it is said", () => {
+  const canonical = () => cmdParse("hea120 6m x2 ", mkSettings());
+
+  it("counts a spoken quantity before the space after it is typed", () => {
+    // The trailing word used to be ignored until committed: one piece, no issue.
+    for (const q of ["hea120 6m 2 pieces", "hea120 6m 2 kom", "hea120 6m qty 2"]) {
+      const p = cmdParse(q, mkSettings());
+      expect(p.realQty, q).toBe(2);
+      expect(p.totalKg, q).toBe(canonical().totalKg);
+      expect(p.issues, q).toEqual([]);
+    }
+  });
+
+  it("reads a trailing spoken unit as a length, not millimetres", () => {
+    const p = cmdParse("hea120 6 metres", mkSettings({ defaultLengthUnit: "mm" }));
+    expect(p.lengthM).toBe(6);
+    expect(p.issues).toEqual([]);
+  });
+
+  it("reads glued and number-first counts", () => {
+    for (const q of ["hea120 6m 2pcs ", "hea120 6m 2kom ", "2x hea120 6m ", "hea120 6m 2x"]) {
+      const p = cmdParse(q, mkSettings());
+      expect(p.realQty, q).toBe(2);
+      expect(p.issues, q).toEqual([]);
+    }
+    expect(cmdTokenize("hea120 6m 2pcs ")).toEqual(["hea120", "6m", "x2"]);
+    expect(cmdTokenize("2x hea120 ")).toEqual(["x2", "hea120"]);
+  });
+
+  it("treats commas between words as separators", () => {
+    const p = cmdParse("hea 120, 6 m, 2 pcs", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.totalKg).toBe(canonical().totalKg);
+    expect(p.issues).toEqual([]);
+    expect(cmdTokenize("hea 120, 6 m, 2 pcs ")).toEqual(["hea120", "6m", "x2"]);
+  });
+
+  it("reads a spaced size still being typed as a size, not a count", () => {
+    // "40x" alone would fold to x40 — the profile before it claims it first.
+    expect(cmdTokenize("shs 40x ")).toEqual(["shs40x"]);
+    const p = cmdParse("shs 40x", mkSettings());
+    expect(p.qty).toBeNull();
+    expect(p.alias?.alias).toBe("shs");
+  });
+
+  it("keeps a comma under the caret, where it may start a decimal", () => {
+    expect(cmdTokenize("hea120 2,")).toEqual(["hea120", "2,"]);
+    expect(cmdParse("hea120 2,5m ", mkSettings()).lengthM).toBe(2.5);
+  });
+
+  it("reads a three-dimension tube as box section", () => {
+    const square = cmdParse("tube 40x40x3 2m ", mkSettings());
+    expect(square.alias?.alias).toBe("shs");
+    expect(square.totalKg).toBe(cmdParse("shs 40x40x3 2m ", mkSettings()).totalKg);
+    const rect = cmdParse("tube 60x40x3 2m ", mkSettings());
+    expect(rect.alias?.alias).toBe("rhs");
+    expect(rect.totalKg).toBe(cmdParse("rhs 60x40x3 2m ", mkSettings()).totalKg);
+    // Two dimensions is still a round tube.
+    expect(cmdParse("tube 48.3x3 2m ", mkSettings()).alias?.alias).toBe("chs");
+  });
+
+  it("takes a plate's smallest side as its thickness, wherever it is written", () => {
+    const written = cmdParse("plt 200x300x10 ", mkSettings());
+    for (const q of ["plate 10x200x300 ", "plt 200x10x300 "]) {
+      const p = cmdParse(q, mkSettings());
+      expect(p.valid, q).toBe(true);
+      expect(p.issues, q).toEqual([]);
+      expect(p.totalKg, q).toBe(written.totalKg);
+    }
+  });
+});
+
 describe("cmdParse did-you-mean suggestions", () => {
   it("suggests the nearest alias for a mistyped profile (transposition)", () => {
     const p = cmdParse("hae120 ", mkSettings());

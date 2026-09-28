@@ -45,7 +45,8 @@ import { commandTargetNote } from "../target-note";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
 import { SaveControl } from "../save-control";
-import { DEMO_QUERY } from "../command-constants";
+import { EXAMPLE_QUERY, PLACEHOLDER_EXAMPLES } from "../command-constants";
+import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
   editLineToken,
   lineChipPrefix,
@@ -123,6 +124,8 @@ export function DeskCalcView({
   const partial = chips.partial;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
+  const placeholderShown = chipCount === 0 && !partial;
+  const placeholderExample = useRotatingExample(PLACEHOLDER_EXAMPLES, placeholderShown);
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
   // Which `+` item the glance row and the breakdown describe. Picked from
@@ -259,7 +262,7 @@ export function DeskCalcView({
               focusInputAtEnd();
             }}
             onTryDemo={() => {
-              setQuery(DEMO_QUERY);
+              setQuery(EXAMPLE_QUERY);
               focusInputAtEnd();
             }}
             compact={compact}
@@ -632,7 +635,7 @@ export function DeskCalcView({
             autoCapitalize="off"
             autoComplete="off"
             spellCheck={false}
-            placeholder={chipCount === 0 && !partial ? t("query.placeholderExample") : ""}
+            placeholder={placeholderShown ? t("query.placeholderExample", { example: placeholderExample }) : ""}
             aria-label={t("query.aria")}
             wrapperClassName="flex-1 min-w-[120px]"
             inputClassName="bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint"

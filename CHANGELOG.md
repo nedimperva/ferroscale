@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.34.0] - 2026-09-28
+
+A first screen that shows the grammar, and a bar that reads more of how people talk.
+
+### Added
+
+- The empty screen opens on one whole line taken apart — hea120 · 6m · x2 · s355 · @2.50/kg, each word labelled profile, length, pieces, grade, price — so a first visit shows what the bar reads before anything is typed. Tap it to load the line and see the answer. The profile tiles follow it, as the other way in
+- The empty command bar cycles through example lines — a beam, a box section, an angle counted in words, a plate, a bar with its own rate — instead of one line that disappeared on the first keystroke. It holds still when reduced motion is on. The phone's bar shows them too; before, it had no example at all
+
+### Fixed
+
+- A count written in words at the end of the line is counted before the space after it: hea120 6m 2 pieces, 2 kom and qty 2 weighed one piece until another key was pressed, with nothing saying so. hea120 6 metres likewise read as 6 mm
+- More of the ways people write a line are read: a glued count (2pcs, 4kom), a count first (2x hea120 6m), qty 2, and commas between words (hea 120, 6 m, 2 pcs)
+- tube 40x40x3 is read as square box section and tube 60x40x3 as rectangular; tube with two dimensions stays round. Before, every tube was read as a pipe and three dimensions were rejected
+- A size typed after a space — shs 40x, hea 12 — gets the same standard-size chips as shs40x and hea12, instead of the whole list or none
+- A plate can be written thickness first: plate 10x200x300 is 10 mm thick, not rejected as 300 mm. The smallest side is taken as the thickness wherever it is written
+
 ## [3.33.0] - 2026-09-25
 
 Angles weighed from the EN 10056-1 catalogue, and standard sizes offered and checked as you type.

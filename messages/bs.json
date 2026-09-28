@@ -48,7 +48,7 @@
   },
   "command": {
     "discovery": {
-      "title": "Izaberite profil za početak",
+      "title": "Ili krenite od oblika",
       "subtitle": "Kliknite na oblik za trenutni proračun ili pregled EN standarda",
       "beams": "Nosači i profili",
       "beamsSub": "HEA, HEB, IPE, UPN i nosači",
@@ -63,8 +63,20 @@
       "plates": "Limovi i ploče",
       "platesSub": "Ravni, rebrasti i profilisani limovi",
       "bars": "Šipke i profili",
-      "barsSub": "Plosnate, okrugle, kvadratne i ugaone",
-      "tryDemo": "Isprobaj demo izračun (HEA 120 6m ×2) →"
+      "barsSub": "Plosnate, okrugle, kvadratne i ugaone"
+    },
+    "anatomy": {
+      "title": "Upišite kako biste rekli",
+      "note": "Redoslijed nije bitan — izostavite ono što vam ne treba.",
+      "try": "Isprobaj ovu liniju",
+      "aria": "Isprobaj primjer: {line}",
+      "token": {
+        "profile": "profil",
+        "length": "dužina",
+        "pieces": "komada",
+        "grade": "kvalitet",
+        "price": "cijena"
+      }
     },
     "quote": {
       "title": "Ponuda",
@@ -222,7 +234,8 @@
     },
     "query": {
       "placeholder": "upišite ili dodirnite profil...",
-      "placeholderExample": "upišite profil... npr. hea120 6m x2 s235",
+      "placeholderExample": "upišite kako biste rekli — npr. {example}",
+      "placeholderPhone": "npr. {example}",
       "aria": "FerroScale komandni upit",
       "acceptGhost": "Dovrši: {text}",
       "expandItem": "Stavka {index}, {name} — prikaži tokene",

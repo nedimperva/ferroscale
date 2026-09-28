@@ -12,7 +12,8 @@ import type {
 } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { computeGhost, formatCommandIssue, issueForToken } from "../command-copy";
-import { KIND_BG } from "../command-constants";
+import { KIND_BG, PLACEHOLDER_EXAMPLES } from "../command-constants";
+import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
   editLineToken,
   lineChips,
@@ -59,6 +60,8 @@ export function PhoneQueryLine({
   const chips = useMemo(() => lineChips(query), [query]);
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
+  const placeholderShown = chipCount === 0 && !partialToken;
+  const placeholderExample = useRotatingExample(PLACEHOLDER_EXAMPLES, placeholderShown);
   // Faint completion drawn after the caret (profile letters / recent prefix).
   const ghost = computeGhost(partialToken ?? "", sug);
   const acceptGhost = () => {
@@ -170,9 +173,9 @@ export function PhoneQueryLine({
             "›"
           )}
         </span>
-        {chipCount === 0 && !partialToken && (
+        {placeholderShown && (
           <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">
-            {t("query.placeholder")}
+            {t("query.placeholderPhone", { example: placeholderExample })}
           </span>
         )}
         {chips.groups.map((group) => (

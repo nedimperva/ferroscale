@@ -702,8 +702,40 @@ const QTY_WORDS = new Set([
   "stk", "stuck", "stück", "stuecke",
 ]);
 
-/** A bare number or an x-joined dimension chain ("120", "40x40x3", "60.3x3.2"). */
-const SIZE_LIKE_RE = /^\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)*$/;
+/** Words that announce a count before it: "qty 2". */
+const QTY_LEAD_WORDS = new Set(["qty", "qty:", "quantity"]);
+
+/**
+ * A count glued to its unit — "2pcs", "4kom", "3stk" — or written the way it
+ * is said, number first: "2x". Both mean the canonical `x2`. "2x" has no other
+ * reading: a dimension chain always continues past the x.
+ */
+const GLUED_QTY_RE = new RegExp(
+  `^(\\d+)(?:${[...QTY_WORDS].join("|")}|x|×)$`,
+  "i",
+);
+
+/**
+ * A separating comma or semicolon on a finished word ("120," in "hea 120,
+ * 6 m") goes. Only ever applied to committed words — while a word is under
+ * the caret, "2," may be the start of the decimal "2,5", and the text the user
+ * sees must stay what they typed.
+ */
+function stripSeparator(word: string): string {
+  return word.replace(/[,;]+$/, "");
+}
+
+/** "2pcs" / "2x" → "x2"; anything else unchanged. Committed words only. */
+function foldGluedQty(word: string): string {
+  const qty = word.match(GLUED_QTY_RE);
+  return qty ? `x${qty[1]}` : word;
+}
+
+/**
+ * A bare number or an x-joined dimension chain ("120", "40x40x3", "60.3x3.2"),
+ * finished or still open ("40x" on its way to 40x40x3).
+ */
+const SIZE_LIKE_RE = /^\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)*x?$/;
 
 /**
  * Fold spoken word pairs into canonical tokens. `lastCommitted` is false when
@@ -734,8 +766,8 @@ function mergeWordPairs(words: string[], lastCommitted: boolean): string[] {
         i += 2;
         continue;
       }
-      // "x" "2" / "×" "2" → "x2"
-      if ((wl === "x" || wl === "×") && BARE_NUMBER_RE.test(nl)) {
+      // "x" "2" / "×" "2" / "qty" "2" → "x2"
+      if ((wl === "x" || wl === "×" || QTY_LEAD_WORDS.has(wl)) && BARE_NUMBER_RE.test(nl)) {
         out.push("x" + next);
         i += 2;
         continue;
@@ -760,12 +792,22 @@ function mergeWordPairs(words: string[], lastCommitted: boolean): string[] {
  */
 export function cmdTokenize(query: string): string[] {
   const raw = query || "";
-  const words = raw.trim().split(/\s+/).filter(Boolean);
+  const split = raw.trim().split(/\s+/).filter(Boolean);
   // The final word is committed only when the query ends in whitespace.
-  const lastCommitted = words.length > 0 && /\s$/.test(raw);
+  const lastCommitted = split.length > 0 && /\s$/.test(raw);
+  const words = split
+    .map((w, i) => (lastCommitted || i < split.length - 1 ? stripSeparator(w) : w))
+    .filter(Boolean);
+  // Pairs fold first, so "shs 40x" — a size on its way to 40x40x3 — joins its
+  // profile before a lone "40x" could be read as a count of forty.
   const merged = mergeWordPairs(words, lastCommitted);
   const out: string[] = [];
-  for (const word of merged) out.push(...splitGluedToken(word));
+  merged.forEach((word, i) => {
+    // A merge only ever joins committed words, so only the last one can still
+    // be under the caret.
+    const committed = lastCommitted || i < merged.length - 1;
+    out.push(...splitGluedToken(committed ? foldGluedQty(word) : word));
+  });
   return out;
 }
 
@@ -868,6 +910,37 @@ function suggestForUnknownSize(
  * place. Only the parsed copy is rewritten; the chip still shows what the user
  * typed.
  */
+/**
+ * "Tube" is what most people call every hollow section, but it maps to CHS,
+ * so `tube 40x40x3` was read as a pipe and rejected for its wall. The number
+ * of dimensions says which tube was meant: three is box section — square when
+ * the sides match — and two stays round.
+ */
+function routeTube(typedAlias: string, size: string): CommandAlias | null {
+  if (typedAlias !== "tube") return null;
+  const dims = size.split("x");
+  if (dims.length !== 3 || dims.some((d) => !BARE_NUMBER_RE.test(d))) return null;
+  return findAliasByKey(dims[0] === dims[1] ? "shs" : "rhs");
+}
+
+/**
+ * A plate is spelled width × length × thickness, but people say the thickness
+ * first — "10 mm plate, 200 by 300" — and `plt 10x200x300` was rejected as a
+ * 300 mm thick plate. The thickness of a plate is always its smallest side, so
+ * when it is not written last it is moved there; the other two keep their
+ * order.
+ */
+function thicknessLast(size: string): string {
+  const parts = size.split("x");
+  if (parts.length !== 3 || parts.some((d) => !BARE_NUMBER_RE.test(d))) return size;
+  const nums = parts.map(Number);
+  const min = Math.min(...nums);
+  if (nums[2] === min) return size;
+  const at = nums.indexOf(min);
+  const rest = parts.filter((_, i) => i !== at);
+  return `${rest[0]}x${rest[1]}x${parts[at]}`;
+}
+
 function normalizeDecimalComma(token: string): string {
   return token.replace(/(\d),(\d)/g, "$1.$2");
 }
@@ -912,10 +985,17 @@ export function cmdParse(
   query: string,
   settings: CommandParserSettings,
 ): CommandParseResult {
-  const toks = cmdTokenize(query).map((t) => normalizeDecimalComma(t.toLowerCase()));
   // The trailing token is still being typed unless the query ends with
   // whitespace — never flag it, or every keystroke would raise an issue.
   const lastTokenCommitted = /\s$/.test(query);
+  // But do read it as finished. The tokenizer leaves the word under the caret
+  // untouched so the input never rewrites what is being typed — which, fed
+  // straight to the calculation, priced "hea120 6m 2 pieces" as one piece and
+  // "hea120 6 metres" as 6 mm until a space was typed. The answer on screen
+  // should be what the line means now, not what it meant a word ago.
+  const toks = cmdTokenize(lastTokenCommitted ? query : `${query} `).map((t) =>
+    normalizeDecimalComma(t.toLowerCase()),
+  );
 
   let alias: CommandAlias | null = null;
   let aliasCommitted = false;
@@ -946,6 +1026,7 @@ export function cmdParse(
           alias = found;
           aliasCommitted = committed;
           size = aliasMatch[2].replace(/×/g, "x");
+          alias = routeTube(aliasMatch[1], size) ?? alias;
           continue;
         }
       }
@@ -1065,6 +1146,7 @@ export function cmdParse(
     : bookRate != null && Number.isFinite(bookRate) && bookRate >= 0
       ? { ...settings.pricing, unitPrice: bookRate }
       : settings.pricing;
+  if (alias?.fam === "panel") size = thicknessLast(size);
   let realQty = qty == null ? 1 : qty;
   const hasSize = !!size && /\d/.test(size);
 

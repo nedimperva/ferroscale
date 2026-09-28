@@ -48,7 +48,7 @@
   },
   "command": {
     "discovery": {
-      "title": "Select a profile to begin",
+      "title": "Or start from a shape",
       "subtitle": "Tap a shape to start calculating, or explore EN standards",
       "beams": "Beams & Structural",
       "beamsSub": "HEA, HEB, IPE, UPN & channels",
@@ -63,8 +63,20 @@
       "plates": "Plates & Sheets",
       "platesSub": "Flat, chequered, sheet & meshes",
       "bars": "Bars & Sections",
-      "barsSub": "Flat, round, square & angles",
-      "tryDemo": "Try demo calculation (HEA 120 6m ×2) →"
+      "barsSub": "Flat, round, square & angles"
+    },
+    "anatomy": {
+      "title": "Type it the way you'd say it",
+      "note": "Order doesn't matter — leave out what you don't need.",
+      "try": "Try this line",
+      "aria": "Try the example line: {line}",
+      "token": {
+        "profile": "profile",
+        "length": "length",
+        "pieces": "pieces",
+        "grade": "grade",
+        "price": "price"
+      }
     },
     "quote": {
       "title": "Quote",
@@ -222,7 +234,8 @@
     },
     "query": {
       "placeholder": "type or tap a profile...",
-      "placeholderExample": "type a profile... e.g. hea120 6m x2 s235",
+      "placeholderExample": "type it as you'd say it — e.g. {example}",
+      "placeholderPhone": "e.g. {example}",
       "aria": "FerroScale Command query",
       "acceptGhost": "Complete: {text}",
       "expandItem": "Item {index}, {name} — show its tokens",

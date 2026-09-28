@@ -17,6 +17,32 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.34.0",
+    date: "2026-09-28",
+    added: [
+      "The empty screen opens on one whole line taken apart — hea120 · 6m · x2 · s355 · @2.50/kg, each word labelled profile, length, pieces, grade, price — so a first visit shows what the bar reads before anything is typed. Tap it to load the line and see the answer. The profile tiles follow it, as the other way in",
+      "The empty command bar cycles through example lines — a beam, a box section, an angle counted in words, a plate, a bar with its own rate — instead of one line that disappeared on the first keystroke. It holds still when reduced motion is on. The phone's bar shows them too; before, it had no example at all",
+    ],
+    fixed: [
+      "A count written in words at the end of the line is counted before the space after it: hea120 6m 2 pieces, 2 kom and qty 2 weighed one piece until another key was pressed, with nothing saying so. hea120 6 metres likewise read as 6 mm",
+      "More of the ways people write a line are read: a glued count (2pcs, 4kom), a count first (2x hea120 6m), qty 2, and commas between words (hea 120, 6 m, 2 pcs)",
+      "tube 40x40x3 is read as square box section and tube 60x40x3 as rectangular; tube with two dimensions stays round. Before, every tube was read as a pipe and three dimensions were rejected",
+      "A size typed after a space — shs 40x, hea 12 — gets the same standard-size chips as shs40x and hea12, instead of the whole list or none",
+      "A plate can be written thickness first: plate 10x200x300 is 10 mm thick, not rejected as 300 mm. The smallest side is taken as the thickness wherever it is written",
+    ],
+    added_bs: [
+      "Prazan ekran počinje jednom cijelom linijom rastavljenom na dijelove — hea120 · 6m · x2 · s355 · @2.50/kg, svaka riječ s oznakom profil, dužina, komada, kvalitet, cijena — pa prva posjeta pokazuje šta traka čita prije nego što išta upišete. Dodirnite je da učitate liniju i vidite rezultat. Pločice profila dolaze iza nje, kao drugi način",
+      "Prazna komandna traka smjenjuje primjere — nosač, kutijasti profil, ugaonik s komadima riječima, ploču, šipku s vlastitom cijenom — umjesto jedne linije koja je nestajala na prvi pritisak tipke. Miruje kad je uključeno smanjeno kretanje. Traka na telefonu ih sada prikazuje; ranije nije imala nijedan primjer",
+    ],
+    fixed_bs: [
+      "Količina napisana riječima na kraju linije računa se i prije razmaka iza nje: hea120 6m 2 pieces, 2 kom i qty 2 računali su jedan komad dok se ne pritisne druga tipka, bez ikakve poruke. Isto tako hea120 6 metres čitalo se kao 6 mm",
+      "Čita se više načina na koje se linija piše: spojena količina (2pcs, 4kom), količina na početku (2x hea120 6m), qty 2 i zarezi između riječi (hea 120, 6 m, 2 kom)",
+      "tube 40x40x3 čita se kao kvadratni kutijasti profil, a tube 60x40x3 kao pravougaoni; tube s dvije dimenzije ostaje okrugla cijev. Ranije se svaki tube čitao kao cijev i tri dimenzije su odbijane",
+      "Dimenzija upisana nakon razmaka — shs 40x, hea 12 — dobija iste čipove standardnih dimenzija kao shs40x i hea12, umjesto cijele liste ili nijedne",
+      "Ploča se može napisati s debljinom na početku: plate 10x200x300 je debela 10 mm, a ne odbijena kao 300 mm. Najmanja stranica uzima se kao debljina gdje god da je napisana",
+    ],
+  },
+  {
     version: "3.33.0",
     date: "2026-09-25",
     added: [

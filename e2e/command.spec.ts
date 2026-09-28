@@ -374,6 +374,18 @@ test.describe("Phone fold (390x844)", () => {
     await expect(page.getByRole("button", { name: /Beams/ })).toBeVisible();
   });
 
+  test("a pristine screen opens on the example line, and tapping it answers", async ({ page }) => {
+    await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    const example = page.getByTestId("example-line");
+    // Above the fold, not below the tiles: it is the first thing to read.
+    await expect(example).toBeInViewport();
+    await example.click();
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // A sample the app loaded is not the user's work: the address stays clean.
+    await expect(page).toHaveURL(/\/en$/);
+  });
+
   test("nothing on the session row overlaps anything else", async ({ page }) => {
     await page.addInitScript(() => {
       const now = new Date().toISOString();

@@ -123,6 +123,7 @@ function sizeKgmSub(
 
 const MAX_SIZE_COMPLETIONS = 8;
 const TYPING_SIZE_RE = new RegExp(`^(${COMMAND_ALIAS_RE})(\\d[\\d.,x×]*)$`, "i");
+const TYPING_SPACED_SIZE_RE = /^\d[\d.,x×]*$/;
 const sizeTextCache = new Map<string, string[]>();
 
 /**
@@ -161,12 +162,16 @@ function sizeCompletions(
   settings: CommandParserSettings,
 ): CommandSuggestion | null {
   if (query === "" || /\s$/.test(query)) return null;
-  const last = query.trim().split(/\s+/).pop() ?? "";
-  const match = last.match(TYPING_SIZE_RE);
-  if (!match) return null;
-  const alias = findAliasByKey(match[1].toLowerCase());
+  const words = query.trim().split(/\s+/);
+  const last = words[words.length - 1] ?? "";
+  // Glued ("shs40x") or spoken with a space ("shs 40x"); the spaced chip
+  // replaces only the size word and leaves the profile word where it was.
+  const glued = last.match(TYPING_SIZE_RE);
+  const spaced = glued ? null : last.match(TYPING_SPACED_SIZE_RE);
+  const aliasKey = glued ? glued[1] : spaced && words.length > 1 ? words[words.length - 2] : "";
+  const alias = aliasKey ? findAliasByKey(aliasKey.toLowerCase()) : null;
   if (!alias) return null;
-  const typed = match[2].toLowerCase().replace(/×/g, "x").replace(/,/g, ".");
+  const typed = (glued ? glued[2] : last).toLowerCase().replace(/×/g, "x").replace(/,/g, ".");
   const items = standardSizeTexts(alias)
     .filter((text) => text.startsWith(typed) && text !== typed)
     .slice(0, MAX_SIZE_COMPLETIONS)
@@ -174,7 +179,7 @@ function sizeCompletions(
       label: text.replace(/x/g, "×"),
       sub: sizeKgmSub(alias, text, settings),
       fam: alias.fam,
-      ins: `${alias.alias}${text} `,
+      ins: glued ? `${alias.alias}${text} ` : `${text} `,
       kind: "size",
       replaceLast: true,
       group: "standard",

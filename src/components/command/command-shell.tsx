@@ -80,7 +80,7 @@ import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
-import { DEMO_QUERY } from "./command-constants";
+import { EXAMPLE_QUERY, isSampleQuery } from "./command-constants";
 
 /**
  * The rate getDefaultInput() seeds. Matching it means nobody has said what
@@ -240,7 +240,7 @@ export function CommandShell() {
   // address bar prices the same for whoever it's sent to.
   useEffect(() => {
     if (!touchedRef.current) {
-      if (!query.trim() || query === DEMO_QUERY) return;
+      if (!query.trim() || isSampleQuery(query)) return;
       touchedRef.current = true;
     }
     const id = window.setTimeout(() => {
@@ -364,7 +364,7 @@ export function CommandShell() {
   }, []);
   useEffect(() => {
     if (!p.valid) return;
-    if (!touchedRef.current && (!query.trim() || query === DEMO_QUERY)) return;
+    if (!touchedRef.current && (!query.trim() || isSampleQuery(query))) return;
     const id = window.setTimeout(() => {
       // Record the canonical query, not the raw text: this drops half-typed
       // trailing tokens (a lone "@", an incomplete grade) so mid-edit pauses
@@ -1469,7 +1469,7 @@ export function CommandShell() {
                   }}
                   onTryDemo={() => {
                     haptic("tap");
-                    setQuery(DEMO_QUERY);
+                    setQuery(EXAMPLE_QUERY);
                     markExternalValueChange();
                   }}
                 />
