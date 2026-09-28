@@ -50,16 +50,31 @@ export const EXAMPLE_QUERY = `${EXAMPLE_LINE.map((part) => part.token).join(" ")
  * Lines the empty command bar cycles through as its placeholder. Each shows
  * something the first one can't — another family, a count said in words, a
  * piece with no length, an inline rate — so a visitor who only reads the
- * placeholder still learns the bar reads more than beams. Every one must parse
+ * placeholder still learns the bar reads more than beams. In Bosnian they are
+ * said the way a Bosnian fabricator says them (cijev, lim, flah, kom), because
+ * the bar reads those words too. Every one must parse
  * (command-constants.test.ts), or the hint teaches a line that fails.
  */
-export const PLACEHOLDER_EXAMPLES = [
-  "hea120 6m x2 s235",
-  "shs 40x40x3 6m x10",
-  "angle 50x50x5 6m 2 pcs",
-  "plate 1500x3000x10",
-  "rnd20 1m @3/kg",
-];
+export const PLACEHOLDER_EXAMPLES: Record<string, string[]> = {
+  en: [
+    "hea120 6m x2 s235",
+    "square tube 40x40x3 6m x10",
+    "angle 50x50x5 6m 2 pcs",
+    "plate 1500x3000x10",
+    "round bar 20 1m @3/kg",
+  ],
+  bs: [
+    "hea120 6m x2 s235",
+    "cijev 40x40x3 6m 10 kom",
+    "lim 2mm 1000x2000",
+    "flah 50x10 6m inox",
+    "okrugli 20 1m @3/kg",
+  ],
+};
+
+export function placeholderExamples(locale: string): string[] {
+  return PLACEHOLDER_EXAMPLES[locale] ?? PLACEHOLDER_EXAMPLES.en;
+}
 
 /**
  * Lines the app loads by itself. They are not the user's own work, so they

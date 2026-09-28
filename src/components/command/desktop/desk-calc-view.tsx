@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   cmdAppendLineItem,
   cmdParse,
@@ -45,7 +45,7 @@ import { commandTargetNote } from "../target-note";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
 import { SaveControl } from "../save-control";
-import { EXAMPLE_QUERY, PLACEHOLDER_EXAMPLES } from "../command-constants";
+import { EXAMPLE_QUERY, placeholderExamples } from "../command-constants";
 import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
   editLineToken,
@@ -100,6 +100,7 @@ export function DeskCalcView({
   onCompareCurrent,
   inputRef,
 }: DeskCalcViewProps) {
+  const locale = useLocale();
   const t = useTranslations("command");
   const isW = mode === "weight";
   const targetNote = commandTargetNote(p);
@@ -125,7 +126,7 @@ export function DeskCalcView({
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   const chipPrefix = useMemo(() => lineChipPrefix(query), [query]);
   const placeholderShown = chipCount === 0 && !partial;
-  const placeholderExample = useRotatingExample(PLACEHOLDER_EXAMPLES, placeholderShown);
+  const placeholderExample = useRotatingExample(placeholderExamples(locale), placeholderShown);
   // Faint completion after the caret (profile letters / recent-query prefix).
   const ghost = useMemo(() => computeGhost(partial, sug), [partial, sug]);
   // Which `+` item the glance row and the breakdown describe. Picked from

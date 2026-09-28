@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cmdClassifyToken } from "@ferroscale/metal-core";
 import type {
   CommandLine,
@@ -12,7 +12,7 @@ import type {
 } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { computeGhost, formatCommandIssue, issueForToken } from "../command-copy";
-import { KIND_BG, PLACEHOLDER_EXAMPLES } from "../command-constants";
+import { KIND_BG, placeholderExamples } from "../command-constants";
 import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
   editLineToken,
@@ -48,6 +48,7 @@ export function PhoneQueryLine({
   /** A tap on the line — the shell swaps the action keypad for the numpad. */
   onTap: () => void;
 }) {
+  const locale = useLocale();
   const t = useTranslations("command");
   /** The chip box — kept scrolled to the caret as the line grows. */
   const queryLineRef = useRef<HTMLDivElement | null>(null);
@@ -61,7 +62,7 @@ export function PhoneQueryLine({
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
   const placeholderShown = chipCount === 0 && !partialToken;
-  const placeholderExample = useRotatingExample(PLACEHOLDER_EXAMPLES, placeholderShown);
+  const placeholderExample = useRotatingExample(placeholderExamples(locale), placeholderShown);
   // Faint completion drawn after the caret (profile letters / recent prefix).
   const ghost = computeGhost(partialToken ?? "", sug);
   const acceptGhost = () => {

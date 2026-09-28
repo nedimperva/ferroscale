@@ -18,6 +18,9 @@ import {
   COMMAND_ALIAS_RE,
   COMMAND_GRADES,
   findAliasByKey,
+  findPhraseAlias,
+  isFillerWord,
+  routeAliasByDims,
   findAliasByProfileId,
   findAliasByPrefix,
   findGradeByAlias,
@@ -631,6 +634,8 @@ function splitProfileToken(token: string, aliasKey: string): string[] | null {
     if (sizeIds.has(aliasKey + restNorm)) return null; // already a clean size
     for (let i = restNorm.length - 1; i >= 1; i--) {
       if (!sizeIds.has(aliasKey + restNorm.slice(0, i))) continue;
+      // No length starts with a bare zero: "hea6000" is not HEA 600 and 0.
+      if (/^0(?![.,])/.test(restNorm.slice(i))) continue;
       const tail = peelPieces(token.slice(aliasKey.length + i));
       if (tail) return [token.slice(0, aliasKey.length + i), ...tail];
     }
@@ -776,8 +781,11 @@ function mergeWordPairs(words: string[], lastCommitted: boolean): string[] {
         i += 2;
         continue;
       }
-      // "hea" "120" → "hea120"  (also "l" "50x50x5", "t" "30x4")
-      if (findAliasByKey(wl) && SIZE_LIKE_RE.test(nl)) {
+      // "hea" "120" → "hea120"  (also "l" "50x50x5", "t" "30x4"). A catalogue
+      // profile only takes a number that is one of its sizes: in "hea 6000 120"
+      // the 6000 is the length, and glued on it split into HEA 600 and a zero.
+      // assembleProfile finds the size wherever it is.
+      if (findAliasByKey(wl) && SIZE_LIKE_RE.test(nl) && isSizeFor(wl, nl)) {
         out.push(w + next);
         i += 2;
         continue;
@@ -802,16 +810,164 @@ export function cmdTokenize(query: string): string[] {
   const words = split
     .map((w, i) => (lastCommitted || i < split.length - 1 ? stripSeparator(w) : w))
     .filter(Boolean);
-  // Pairs fold first, so "shs 40x" — a size on its way to 40x40x3 — joins its
+  // Phrases first: "square tube" is one profile, and read word by word its
+  // first word is a different one (square bar).
+  const phrased = foldPhrases(words, lastCommitted);
+  // Pairs fold next, so "shs 40x" — a size on its way to 40x40x3 — joins its
   // profile before a lone "40x" could be read as a count of forty.
-  const merged = mergeWordPairs(words, lastCommitted);
-  const out: string[] = [];
+  const merged = mergeWordPairs(phrased, lastCommitted).filter(
+    (w, i, all) =>
+      !((lastCommitted || i < all.length - 1) && (isFillerWord(w) || w === "x" || w === "×")),
+  );
+  const out: { tok: string; committed: boolean }[] = [];
   merged.forEach((word, i) => {
     // A merge only ever joins committed words, so only the last one can still
     // be under the caret.
     const committed = lastCommitted || i < merged.length - 1;
-    out.push(...splitGluedToken(committed ? foldGluedQty(word) : word));
+    // A finished dimension chain stays whole so a profile anywhere on the line
+    // can claim it ("40x40x3 cijev"); one no profile claims is split below.
+    const lower = word.toLowerCase();
+    const pieces = committed && DIM_CHAIN_RE.test(lower) ? [word] : splitGluedToken(committed ? foldGluedQty(word) : word);
+    for (const tok of pieces) out.push({ tok, committed });
   });
+  return assembleProfile(out).flatMap((t) =>
+    t.committed && DIM_CHAIN_RE.test(t.tok.toLowerCase()) ? splitGluedToken(t.tok) : [t.tok],
+  );
+}
+
+/**
+ * Whether `size` can follow the profile word `key`: always for a free-form
+ * profile or a dimension chain, and for a bare number on a catalogue profile
+ * only when it is a size in its table. (A size still being typed never gets
+ * here — only finished words are paired.)
+ */
+function isSizeFor(key: string, size: string): boolean {
+  const alias = findAliasByKey(key);
+  if (!alias?.profileId || !BARE_NUMBER_RE.test(size)) return true;
+  const profile = getProfileById(alias.profileId);
+  if (!profile || profile.mode !== "standard") return true;
+  const id = alias.alias + size;
+  return profile.sizes.some((sz) => sz.id === id);
+}
+
+/**
+ * Fold two committed words that name one profile together ("square tube",
+ * "kvadratna cijev", "flat bar") into that profile's word.
+ */
+function foldPhrases(words: string[], lastCommitted: boolean): string[] {
+  const out: string[] = [];
+  const committed = (idx: number) => lastCommitted || idx < words.length - 1;
+  for (let i = 0; i < words.length; i++) {
+    const next = words[i + 1];
+    if (next !== undefined && committed(i) && committed(i + 1)) {
+      const alias = findPhraseAlias(words[i], next);
+      if (alias) {
+        out.push(alias);
+        i += 1;
+        continue;
+      }
+    }
+    out.push(words[i]);
+  }
+  return out;
+}
+
+const DIM_CHAIN_RE = /^\d+(?:\.\d+)?(?:x\d+(?:\.\d+)?)+$/;
+/** The thickest plate the panel profiles take — a bigger bare number is not one. */
+const MAX_PANEL_THICKNESS_MM = 250;
+
+interface LineToken {
+  tok: string;
+  committed: boolean;
+}
+
+/**
+ * Put a profile and its size together wherever they were typed. Tokens were
+ * already order-free, but a profile word and its size had to sit side by side
+ * ("hea 120"), so "hea 6m 120", "120 hea 6m" and "40x40x3 cijev 6m" all
+ * failed. Only committed tokens take part — the one under the caret is never
+ * moved. In order:
+ *
+ * - A profile word with no size beside a profile with one is a generic word
+ *   for it ("channel upn160", "tube shs40x40x3") and goes.
+ * - A profile with no size takes a dimension chain from anywhere on the line;
+ *   or a bare number that is one of its standard sizes; or, for a round or
+ *   square bar, the one bare number left when the length has its own unit.
+ * - A sheet or plate, which carries its length inside its size, takes the
+ *   rest of that size from elsewhere: "lim 5 2000x1000", "plt 2000x1000 5mm".
+ */
+function assembleProfile(tokens: LineToken[]): LineToken[] {
+  let out = tokens;
+  const sizeOf = (tok: string): { alias: CommandAlias; key: string; size: string } | null => {
+    const lower = tok.toLowerCase();
+    const alias = findAliasByPrefix(lower);
+    const m = lower.match(ALIAS_PREFIX_RE);
+    if (!alias || !m) return null;
+    return { alias, key: tok.slice(0, m[1].length), size: lower.slice(m[1].length) };
+  };
+  const profiles = () =>
+    out
+      .map((t, i) => ({ i, t, p: t.committed ? sizeOf(t.tok) : null }))
+      .filter((x) => x.p !== null) as { i: number; t: LineToken; p: NonNullable<ReturnType<typeof sizeOf>> }[];
+
+  const found = profiles();
+  if (found.length === 0) return out;
+  if (found.length > 1 && found.some((f) => f.p.size !== "")) {
+    const generic = new Set(found.filter((f) => f.p.size === "").map((f) => f.i));
+    out = out.filter((_, i) => !generic.has(i));
+  }
+
+  const [first] = profiles();
+  if (!first) return out;
+  const { alias, key } = first.p;
+  let size = first.p.size;
+  const others = () => out.map((t, i) => ({ t, i })).filter(({ t, i }) => i !== first.i && t.committed);
+  const take = (idx: number, joined: string) => {
+    size = joined;
+    out = out
+      .map((t, i) => (i === first.i ? { tok: key + joined, committed: true } : t))
+      .filter((_, i) => i !== idx);
+    first.i = idx < first.i ? first.i - 1 : first.i;
+  };
+
+  if (size === "") {
+    const chain = others().find(({ t }) => DIM_CHAIN_RE.test(t.tok.toLowerCase()));
+    const bare = others().filter(({ t }) => BARE_NUMBER_RE.test(t.tok));
+    if (chain) {
+      take(chain.i, chain.t.tok.toLowerCase());
+    } else if (alias.profileId) {
+      const profile = getProfileById(alias.profileId);
+      const ids =
+        profile && profile.mode === "standard" ? new Set(profile.sizes.map((sz) => sz.id)) : null;
+      const hit = ids ? bare.find(({ t }) => ids.has(alias.alias + t.tok)) : undefined;
+      // No real size anywhere: the number right after the profile was meant as
+      // one, and taking it lets the parser say "no HEA 125, nearest 120".
+      const next = out[first.i + 1];
+      const adjacent = next?.committed && BARE_NUMBER_RE.test(next.tok) ? first.i + 1 : -1;
+      if (hit) take(hit.i, hit.t.tok);
+      else if (adjacent >= 0) take(adjacent, out[adjacent].tok);
+    } else if (
+      (alias.fam === "round" || alias.fam === "sqbar") &&
+      bare.length === 1 &&
+      others().some(({ t }) => LENGTH_RE.test(t.tok.toLowerCase()))
+    ) {
+      take(bare[0].i, bare[0].t.tok);
+    }
+  }
+
+  if (alias.fam === "panel" && size !== "") {
+    const dims = size.split("x");
+    if (dims.length === 1) {
+      const chain = others().find(({ t }) => /^\d+(?:\.\d+)?x\d+(?:\.\d+)?$/.test(t.tok));
+      if (chain) take(chain.i, `${size}x${chain.t.tok.toLowerCase()}`);
+    } else if (dims.length === 2) {
+      const thick = others().find(({ t }) => {
+        const m = t.tok.toLowerCase().match(/^(\d+(?:\.\d+)?)(mm)?$/);
+        return !!m && parseFloat(m[1]) > 0 && parseFloat(m[1]) <= MAX_PANEL_THICKNESS_MM;
+      });
+      if (thick) take(thick.i, `${size}x${thick.t.tok.toLowerCase().replace(/mm$/, "")}`);
+    }
+  }
   return out;
 }
 
@@ -915,19 +1071,6 @@ function suggestForUnknownSize(
  * typed.
  */
 /**
- * "Tube" is what most people call every hollow section, but it maps to CHS,
- * so `tube 40x40x3` was read as a pipe and rejected for its wall. The number
- * of dimensions says which tube was meant: three is box section — square when
- * the sides match — and two stays round.
- */
-function routeTube(typedAlias: string, size: string): CommandAlias | null {
-  if (typedAlias !== "tube") return null;
-  const dims = size.split("x");
-  if (dims.length !== 3 || dims.some((d) => !BARE_NUMBER_RE.test(d))) return null;
-  return findAliasByKey(dims[0] === dims[1] ? "shs" : "rhs");
-}
-
-/**
  * A plate is spelled width × length × thickness, but people say the thickness
  * first — "10 mm plate, 200 by 300" — and `plt 10x200x300` was rejected as a
  * 300 mm thick plate. The thickness of a plate is always its smallest side, so
@@ -1030,7 +1173,7 @@ export function cmdParse(
           alias = found;
           aliasCommitted = committed;
           size = aliasMatch[2].replace(/×/g, "x");
-          alias = routeTube(aliasMatch[1], size) ?? alias;
+          alias = routeAliasByDims(aliasMatch[1], size) ?? alias;
           continue;
         }
       }
@@ -1180,6 +1323,14 @@ export function cmdParse(
   // "hea1" on the way to "hea120" is progress, not an error.
   const reportGeometry = (input: CalculationInput | null, response: CalculationResponse | null) => {
     if (!aliasCommitted || !alias) return;
+    // A sheet typed in parts — "lim 5 2000" on the way to 2000x1000 — is
+    // unfinished, not wrong, until the line is.
+    const sheetDims = size.split("x").length;
+    const sheetUnfinished =
+      SHEET_LIKE_FAMILIES.has(alias.fam) &&
+      sheetDims < (alias.fam === "chequered" ? 4 : 3) &&
+      !lastTokenCommitted;
+    if (sheetUnfinished) return;
     if (!input) {
       issues.push({
         code: "unknownSize",

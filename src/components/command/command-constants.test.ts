@@ -3,6 +3,10 @@ import { cmdParse, cmdTokenize } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { EXAMPLE_LINE, EXAMPLE_QUERY, PLACEHOLDER_EXAMPLES, isSampleQuery, DEMO_QUERY } from "./command-constants";
 
+const ALL_EXAMPLES = Object.entries(PLACEHOLDER_EXAMPLES).flatMap(([locale, lines]) =>
+  lines.map((line) => [locale, line] as const),
+);
+
 const SETTINGS: CommandParserSettings = {
   pricing: {
     priceBasis: "weight",
@@ -20,7 +24,7 @@ const SETTINGS: CommandParserSettings = {
 // The empty screen teaches with these lines. A hint that fails when typed is
 // worse than no hint, so each must parse clean — whatever the user's unit.
 describe("onboarding examples", () => {
-  it.each(PLACEHOLDER_EXAMPLES)("placeholder %s parses clean", (line) => {
+  it.each(ALL_EXAMPLES)("%s placeholder %s parses clean", (_, line) => {
     for (const unit of ["mm", "m"] as const) {
       const p = cmdParse(`${line} `, { ...SETTINGS, defaultLengthUnit: unit });
       expect(p.valid).toBe(true);

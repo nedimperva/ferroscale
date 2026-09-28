@@ -22,6 +22,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     added: [
       "The empty screen opens on one whole line taken apart — hea120 · 6m · x2 · s355 · @2.50/kg, each word labelled profile, length, pieces, grade, price — so a first visit shows what the bar reads before anything is typed. Tap it to load the line and see the answer. The profile tiles follow it, as the other way in",
       "The empty command bar cycles through example lines — a beam, a box section, an angle counted in words, a plate, a bar with its own rate — instead of one line that disappeared on the first keystroke. It holds still when reduced motion is on. The phone's bar shows them too; before, it had no example at all",
+      "The bar reads Bosnian: cijev, kutijasti, lim, ploča, flah, plosnati, šipka, okrugli, kvadrat, ugaonik, rebrasti lim, kvadratna/pravougaona/okrugla cijev, u profil — with or without č, š, đ — and inox, prohrom, aluminij for the grade. hea120 6 metara 2 komada counts two",
+      "English names read as one profile: square tube, rectangular tube, round tube, box section, flat bar, round bar, square bar, angle iron, expanded metal. A tube, cijev or box takes its shape from its size — three sides is box section, square when two match; two is round — and a bar with one size is round, with two flat",
+      "Words that carry nothing — of, long, nosač, dužina, profil, a lone x — are dropped instead of failing the line",
+      "In Bosnian the empty bar's examples are said in Bosnian (cijev 40x40x3 6m 10 kom, lim 2mm 1000x2000)",
     ],
     fixed: [
       "A count written in words at the end of the line is counted before the space after it: hea120 6m 2 pieces, 2 kom and qty 2 weighed one piece until another key was pressed, with nothing saying so. hea120 6 metres likewise read as 6 mm",
@@ -29,10 +33,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       "tube 40x40x3 is read as square box section and tube 60x40x3 as rectangular; tube with two dimensions stays round. Before, every tube was read as a pipe and three dimensions were rejected",
       "A size typed after a space — shs 40x, hea 12 — gets the same standard-size chips as shs40x and hea12, instead of the whole list or none",
       "A plate can be written thickness first: plate 10x200x300 is 10 mm thick, not rejected as 300 mm. The smallest side is taken as the thickness wherever it is written",
+      "Word order no longer matters when the profile and its size are typed apart: hea 6m 120, 120 hea 6m, 40x40x3 cijev 6m and 2000x1000 lim 5mm all read. A size typed on its own used to be cut into a number and two quantities",
+      "A sheet or plate can be typed thickness first or last, apart from its size: sht5 2000x1000, lim 5 2000x1000, plt 2000x1000 5mm. While it is still being typed in parts it no longer shows an error",
+      "The FAQ's Try and Open in app links now load lines the calculator reads. Nine of nineteen used spellings it never had — tub100x50x4, hex24, sht5 2000x1000, exp2 — and opened on an error. Hex bar, which the calculator has no profile for, and tees past T 60 no longer offer a link",
+      "hea 6000 120 reads as HEA 120, 6000 mm, and a glued hea6000 is no longer split into HEA 600 and a length of 0",
+      "Size chips for cijev, tube, box and bar offer every shape they can mean — box and round tube sizes together",
     ],
     added_bs: [
       "Prazan ekran počinje jednom cijelom linijom rastavljenom na dijelove — hea120 · 6m · x2 · s355 · @2.50/kg, svaka riječ s oznakom profil, dužina, komada, kvalitet, cijena — pa prva posjeta pokazuje šta traka čita prije nego što išta upišete. Dodirnite je da učitate liniju i vidite rezultat. Pločice profila dolaze iza nje, kao drugi način",
       "Prazna komandna traka smjenjuje primjere — nosač, kutijasti profil, ugaonik s komadima riječima, ploču, šipku s vlastitom cijenom — umjesto jedne linije koja je nestajala na prvi pritisak tipke. Miruje kad je uključeno smanjeno kretanje. Traka na telefonu ih sada prikazuje; ranije nije imala nijedan primjer",
+      "Traka čita bosanski: cijev, kutijasti, lim, ploča, flah, plosnati, šipka, okrugli, kvadrat, ugaonik, rebrasti lim, kvadratna/pravougaona/okrugla cijev, u profil — sa ili bez č, š, đ — te inox, prohrom, aluminij za kvalitet. hea120 6 metara 2 komada računa dva komada",
+      "Engleski nazivi čitaju se kao jedan profil: square tube, rectangular tube, round tube, box section, flat bar, round bar, square bar, angle iron, expanded metal. Tube, cijev ili box uzima oblik iz dimenzije — tri stranice su kutijasti profil, kvadratni kad su dvije iste; dvije su okrugla cijev — a bar s jednom dimenzijom je okrugli, s dvije plosnati",
+      "Riječi koje ništa ne nose — of, long, nosač, dužina, profil, samo x — se izostavljaju umjesto da ruše liniju",
+      "Na bosanskom primjeri u praznoj traci su na bosanskom (cijev 40x40x3 6m 10 kom, lim 2mm 1000x2000)",
     ],
     fixed_bs: [
       "Količina napisana riječima na kraju linije računa se i prije razmaka iza nje: hea120 6m 2 pieces, 2 kom i qty 2 računali su jedan komad dok se ne pritisne druga tipka, bez ikakve poruke. Isto tako hea120 6 metres čitalo se kao 6 mm",
@@ -40,6 +53,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       "tube 40x40x3 čita se kao kvadratni kutijasti profil, a tube 60x40x3 kao pravougaoni; tube s dvije dimenzije ostaje okrugla cijev. Ranije se svaki tube čitao kao cijev i tri dimenzije su odbijane",
       "Dimenzija upisana nakon razmaka — shs 40x, hea 12 — dobija iste čipove standardnih dimenzija kao shs40x i hea12, umjesto cijele liste ili nijedne",
       "Ploča se može napisati s debljinom na početku: plate 10x200x300 je debela 10 mm, a ne odbijena kao 300 mm. Najmanja stranica uzima se kao debljina gdje god da je napisana",
+      "Redoslijed više nije bitan kad su profil i dimenzija upisani odvojeno: hea 6m 120, 120 hea 6m, 40x40x3 cijev 6m i 2000x1000 lim 5mm se čitaju. Dimenzija upisana zasebno ranije se sjekla na broj i dvije količine",
+      "Lim ili ploča može se upisati s debljinom na početku ili na kraju, odvojeno od dimenzije: sht5 2000x1000, lim 5 2000x1000, plt 2000x1000 5mm. Dok se još upisuje u dijelovima više ne prikazuje grešku",
+      "Linkovi Isprobaj i Otvori u aplikaciji u FAQ-u sada učitavaju linije koje kalkulator čita. Devet od devetnaest koristilo je zapis koji nikad nije postojao — tub100x50x4, hex24, sht5 2000x1000, exp2 — i otvaralo se s greškom. Šestougaona šipka, za koju kalkulator nema profil, i T profili iznad T 60 više ne nude link",
+      "hea 6000 120 čita se kao HEA 120, 6000 mm, a spojeni hea6000 se više ne dijeli na HEA 600 i dužinu 0",
+      "Čipovi dimenzija za cijev, tube, box i bar nude sve oblike koje mogu značiti — kutijaste i okrugle cijevi zajedno",
     ],
   },
   {
