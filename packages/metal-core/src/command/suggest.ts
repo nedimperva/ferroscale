@@ -8,7 +8,7 @@ import {
   COMMAND_ALIASES,
   COMMAND_GRADES,
   COMMAND_SIZES,
-  findAliasByKey,
+  aliasCandidates,
 } from "./aliases";
 import { cmdClassifyToken, cmdParse, cmdTokenize, dimsToSizeText, SHEET_LIKE_FAMILIES } from "./parser";
 import type {
@@ -123,6 +123,7 @@ function sizeKgmSub(
 
 const MAX_SIZE_COMPLETIONS = 8;
 const TYPING_SIZE_RE = new RegExp(`^(${COMMAND_ALIAS_RE})(\\d[\\d.,x×]*)$`, "i");
+const TYPING_SPACED_SIZE_RE = /^\d[\d.,x×]*$/;
 const sizeTextCache = new Map<string, string[]>();
 
 /**
@@ -161,26 +162,44 @@ function sizeCompletions(
   settings: CommandParserSettings,
 ): CommandSuggestion | null {
   if (query === "" || /\s$/.test(query)) return null;
-  const last = query.trim().split(/\s+/).pop() ?? "";
-  const match = last.match(TYPING_SIZE_RE);
-  if (!match) return null;
-  const alias = findAliasByKey(match[1].toLowerCase());
-  if (!alias) return null;
-  const typed = match[2].toLowerCase().replace(/×/g, "x").replace(/,/g, ".");
-  const items = standardSizeTexts(alias)
-    .filter((text) => text.startsWith(typed) && text !== typed)
-    .slice(0, MAX_SIZE_COMPLETIONS)
-    .map<CommandSuggestionItem>((text) => ({
+  const words = query.trim().split(/\s+/);
+  const last = words[words.length - 1] ?? "";
+  // Glued ("shs40x") or spoken with a space ("shs 40x"); the spaced chip
+  // replaces only the size word and leaves the profile word where it was.
+  const glued = last.match(TYPING_SIZE_RE);
+  const spaced = glued ? null : last.match(TYPING_SPACED_SIZE_RE);
+  const aliasKey = glued ? glued[1] : spaced && words.length > 1 ? words[words.length - 2] : "";
+  // A word like "cijev" or "tube" may be any of several profiles — the
+  // dimensions decide — so its sizes come from all of them.
+  const candidates = aliasKey ? aliasCandidates(aliasKey) : [];
+  if (candidates.length === 0) return null;
+  const typed = (glued ? glued[2] : last).toLowerCase().replace(/×/g, "x").replace(/,/g, ".");
+  // Taken in turn from each table, so one long table can't crowd out the rest.
+  const lists = candidates.map((alias) =>
+    standardSizeTexts(alias)
+      .filter((text) => text.startsWith(typed) && text !== typed)
+      .map((text) => ({ alias, text })),
+  );
+  const picked: { alias: CommandAlias; text: string }[] = [];
+  for (let row = 0; picked.length < MAX_SIZE_COMPLETIONS; row++) {
+    const layer = lists.map((list) => list[row]).filter((x) => x !== undefined);
+    if (layer.length === 0) break;
+    picked.push(...layer.slice(0, MAX_SIZE_COMPLETIONS - picked.length));
+  }
+  const items = picked
+    .map<CommandSuggestionItem>(({ alias, text }) => ({
       label: text.replace(/x/g, "×"),
       sub: sizeKgmSub(alias, text, settings),
       fam: alias.fam,
-      ins: `${alias.alias}${text} `,
+      ins: glued ? `${alias.alias}${text} ` : `${text} `,
       kind: "size",
       replaceLast: true,
       group: "standard",
     }));
   if (items.length === 0) return null;
-  return { hint: `${alias.name} · standard size`, items };
+  const named = new Set(items.map((item) => item.fam));
+  const hintAlias = candidates.find((a) => named.has(a.fam)) ?? candidates[0];
+  return { hint: `${hintAlias.name} · standard size`, items };
 }
 
 /** Test hook — the cache is keyed by catalog data that never changes at

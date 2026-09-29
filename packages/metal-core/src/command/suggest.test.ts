@@ -341,6 +341,21 @@ describe("standard sizes while the size is typed", () => {
     expect(cmdApplyInsert("ipe200 6m + shs40x", item)).toBe("ipe200 6m + shs40x40x3 ");
   });
 
+  it("completes a size typed after a space, like the glued form", () => {
+    expect(labels("shs 40x")).toEqual(labels("shs40x"));
+    expect(labels("hea 12")).toEqual(["120"]);
+    // Only the size word is swapped; the profile word stays where it was.
+    const item = cmdSuggest("shs 40x", SETTINGS).items[3];
+    expect(cmdApplyInsert("shs 40x", item)).toBe("shs 40x40x3 ");
+    expect(cmdParse("shs 40x40x3 6m ", SETTINGS).alias?.alias).toBe("shs");
+  });
+
+  it("offers every profile a word may mean: a tube's sizes are box and round", () => {
+    const items = cmdSuggest("cijev 40x4", SETTINGS).items;
+    expect(items.map((i) => i.fam)).toContain("shs");
+    expect(items.map((i) => i.label)).toContain("40×40×4");
+  });
+
   it("steps aside once the size is complete or the token is closed", () => {
     // Only a longer continuation keeps the picker up.
     expect(labels("shs40x40x3")).toEqual(["40×40×3.2"]);

@@ -6,6 +6,8 @@ import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import type { AppLocale } from "@/i18n/routing";
 import { useTheme } from "@/hooks/useTheme";
 import { DeskIcon } from "@/components/command/desktop/desk-atoms";
+import { faqCommand } from "./faq-command";
+import { STANDARD_BEAMS, STANDARD_CHANNELS, STANDARD_TEES } from "./faq-sizes";
 
 type FaqCategoryId =
   | "all"
@@ -99,53 +101,6 @@ const MATERIAL_DENSITIES: Record<MaterialType, { density: number; grade: string 
   steel: { density: 7.85, grade: "s235" },
   stainless: { density: 7.93, grade: "inox" },
   aluminum: { density: 2.7, grade: "alu" },
-};
-
-const STANDARD_BEAMS: Record<
-  string,
-  { massKgM: number; areaMm2: number; h: number; b: number; tw: number; tf: number }
-> = {
-  "HEA 100": { massKgM: 16.7, areaMm2: 2124, h: 96, b: 100, tw: 5.0, tf: 8.0 },
-  "HEA 120": { massKgM: 19.9, areaMm2: 2534, h: 114, b: 120, tw: 5.0, tf: 8.0 },
-  "HEA 140": { massKgM: 24.7, areaMm2: 3142, h: 133, b: 140, tw: 5.5, tf: 8.5 },
-  "HEA 160": { massKgM: 30.4, areaMm2: 3877, h: 152, b: 160, tw: 6.0, tf: 9.0 },
-  "HEA 180": { massKgM: 35.5, areaMm2: 4525, h: 171, b: 180, tw: 6.0, tf: 9.5 },
-  "HEA 200": { massKgM: 42.3, areaMm2: 5383, h: 190, b: 200, tw: 6.5, tf: 10.0 },
-  "IPE 100": { massKgM: 8.1, areaMm2: 1032, h: 100, b: 55, tw: 4.1, tf: 5.7 },
-  "IPE 120": { massKgM: 10.4, areaMm2: 1321, h: 120, b: 64, tw: 4.4, tf: 6.3 },
-  "IPE 140": { massKgM: 12.9, areaMm2: 1643, h: 140, b: 73, tw: 4.7, tf: 6.9 },
-  "IPE 160": { massKgM: 15.8, areaMm2: 2009, h: 160, b: 82, tw: 5.0, tf: 7.4 },
-  "IPE 180": { massKgM: 18.8, areaMm2: 2395, h: 180, b: 91, tw: 5.3, tf: 8.0 },
-  "IPE 200": { massKgM: 22.4, areaMm2: 2848, h: 200, b: 100, tw: 5.6, tf: 8.5 },
-  "HEB 100": { massKgM: 20.4, areaMm2: 2604, h: 100, b: 100, tw: 6.0, tf: 10.0 },
-  "HEB 120": { massKgM: 26.7, areaMm2: 3401, h: 120, b: 120, tw: 6.5, tf: 11.0 },
-  "HEB 140": { massKgM: 33.7, areaMm2: 4296, h: 140, b: 140, tw: 7.0, tf: 12.0 },
-  "HEB 160": { massKgM: 42.6, areaMm2: 5425, h: 160, b: 160, tw: 8.0, tf: 13.0 },
-  "HEB 200": { massKgM: 61.3, areaMm2: 7808, h: 200, b: 200, tw: 9.0, tf: 15.0 },
-};
-
-const STANDARD_CHANNELS: Record<string, { massKgM: number; areaMm2: number }> = {
-  "UPN 80": { massKgM: 8.64, areaMm2: 1100 },
-  "UPN 100": { massKgM: 10.6, areaMm2: 1350 },
-  "UPN 120": { massKgM: 13.4, areaMm2: 1700 },
-  "UPN 140": { massKgM: 16.0, areaMm2: 2040 },
-  "UPN 160": { massKgM: 18.8, areaMm2: 2400 },
-  "UPN 200": { massKgM: 25.3, areaMm2: 3220 },
-  "UPE 80": { massKgM: 7.9, areaMm2: 1010 },
-  "UPE 100": { massKgM: 9.82, areaMm2: 1251 },
-  "UPE 120": { massKgM: 12.1, areaMm2: 1541 },
-  "UPE 140": { massKgM: 14.5, areaMm2: 1842 },
-  "UPE 160": { massKgM: 17.0, areaMm2: 2167 },
-  "UPE 200": { massKgM: 22.8, areaMm2: 2900 },
-};
-
-const STANDARD_TEES: Record<string, { massKgM: number; areaMm2: number }> = {
-  "T 40x40x5": { massKgM: 2.96, areaMm2: 377 },
-  "T 50x50x6": { massKgM: 4.44, areaMm2: 566 },
-  "T 60x60x7": { massKgM: 6.23, areaMm2: 794 },
-  "T 70x70x8": { massKgM: 8.32, areaMm2: 1060 },
-  "T 80x80x9": { massKgM: 10.7, areaMm2: 1360 },
-  "T 100x100x10": { massKgM: 15.1, areaMm2: 1920 },
 };
 
 interface SandboxPreset {
@@ -453,7 +408,7 @@ export function FaqView() {
     let step2Formula = "";
     let linearOrSurfaceMass = 0;
     let totalMass = 0;
-    let commandStr = "";
+    let commandStr: string | null = null;
 
     if (shape === "sheet") {
       const th = Math.max(0.1, parseFloat(thickness) || 1);
@@ -468,7 +423,7 @@ export function FaqView() {
       areaMm2 = th * wMm;
       step1Formula = `${th} mm × ${wMm} mm = ${areaMm2.toLocaleString(locale, { maximumFractionDigits: 1 })} mm²`;
       step2Formula = `${th} mm × ${densityGcm3.toFixed(2)} = ${kgPerM2.toFixed(2)} kg/m² (${surfaceAreaM2.toFixed(2)} m²)`;
-      commandStr = `sht${th} ${wMm}x${Math.round(lMm)} ${mat.grade}`;
+      commandStr = faqCommand("sheet", { grade: mat.grade, lengthM: L, widthMm: wMm, lengthMm: lMm, thicknessMm: th });
     } else if (shape === "chequered") {
       const th = Math.max(0.5, parseFloat(thickness) || 4);
       const wMm = Math.max(1, parseFloat(width) || 1000);
@@ -484,7 +439,7 @@ export function FaqView() {
       areaMm2 = th * wMm;
       step1Formula = `Base: ${th} mm × ${densityGcm3.toFixed(2)} = ${baseKgPerM2.toFixed(2)} kg/m²`;
       step2Formula = `Base + Tear-drop Pattern (+${patternAllowance.toFixed(2)} kg/m²) = ${totalKgPerM2.toFixed(2)} kg/m²`;
-      commandStr = `chq${th} ${wMm}x${Math.round(lMm)} ${mat.grade}`;
+      commandStr = faqCommand("chequered", { grade: mat.grade, lengthM: L, widthMm: wMm, lengthMm: lMm, thicknessMm: th });
     } else if (shape === "roundBar") {
       const d = Math.max(1, parseFloat(diameter) || 20);
       const r = d / 2;
@@ -494,7 +449,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `π × (${d}/2)² = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = `rd${d} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("roundBar", { grade: mat.grade, lengthM: L, diameterMm: d });
     } else if (shape === "hexBar") {
       const s = Math.max(2, parseFloat(hexSize) || 24);
       // Area of regular hexagon with across-flats width s: (sqrt(3)/2) * s^2
@@ -504,7 +459,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `(√3 / 2) × ${s}² mm = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = `hex${s} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("hexBar", { grade: mat.grade, lengthM: L });
     } else if (shape === "roundTube") {
       const D = Math.max(2, parseFloat(diameter) || 60.3);
       const th = Math.max(0.5, Math.min(D / 2 - 0.1, parseFloat(thickness) || 3.2));
@@ -514,7 +469,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `π × (${D} - ${th}) × ${th} = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = `tube${D}x${th} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("roundTube", { grade: mat.grade, lengthM: L, diameterMm: D, thicknessMm: th });
     } else if (shape === "rectTube") {
       const wVal = Math.max(5, parseFloat(width) || 100);
       const hVal = Math.max(5, parseFloat(height) || 50);
@@ -525,7 +480,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `(${wVal} × ${hVal}) - (${wVal - 2 * th} × ${hVal - 2 * th}) = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = `tub${wVal}x${hVal}x${th} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("rectTube", { grade: mat.grade, lengthM: L, widthMm: wVal, heightMm: hVal, thicknessMm: th });
     } else if (shape === "flatBar") {
       const wVal = Math.max(5, parseFloat(width) || 50);
       const th = Math.max(0.5, parseFloat(thickness) || 10);
@@ -535,7 +490,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `${wVal} mm × ${th} mm = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = `flat${wVal}x${th} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("flatBar", { grade: mat.grade, lengthM: L, widthMm: wVal, thicknessMm: th });
     } else if (shape === "squareBar") {
       const sVal = Math.max(2, parseFloat(side) || 20);
       areaMm2 = sVal * sVal;
@@ -544,7 +499,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `${sVal} mm × ${sVal} mm = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = `sq${sVal} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("squareBar", { grade: mat.grade, lengthM: L, sideMm: sVal });
     } else if (shape === "angle") {
       const lA = Math.max(5, parseFloat(legA) || 50);
       const lB = Math.max(5, parseFloat(legB) || 50);
@@ -555,7 +510,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `(${lA} + ${lB} - ${th}) × ${th} = ${areaMm2.toFixed(1)} mm²`;
       step2Formula = `(${areaMm2.toFixed(1)} mm² × ${densityGcm3.toFixed(2)}) ÷ 1,000 = ${kgPerM.toFixed(3)} kg/m`;
-      commandStr = lA === lB ? `l${lA}x${th} ${L}m ${mat.grade}` : `l${lA}x${lB}x${th} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("angle", { grade: mat.grade, lengthM: L, legAMm: lA, legBMm: lB, thicknessMm: th });
     } else if (shape === "beam") {
       const std = STANDARD_BEAMS[beamSize] || STANDARD_BEAMS["HEA 120"];
       areaMm2 = std.areaMm2;
@@ -564,7 +519,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `EN 10365 cross-section: ${std.h}×${std.b} mm, tw=${std.tw} mm, tf=${std.tf} mm (A = ${std.areaMm2.toLocaleString()} mm²)`;
       step2Formula = `Published EN catalog weight: ${std.massKgM.toFixed(2)} kg/m (scaled to ${mat.grade}: ${kgPerM.toFixed(2)} kg/m)`;
-      commandStr = `${beamSize.toLowerCase().replace(" ", "")} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("beam", { grade: mat.grade, lengthM: L, size: beamSize });
     } else if (shape === "channel") {
       const std = STANDARD_CHANNELS[channelSize] || STANDARD_CHANNELS["UPN 160"];
       areaMm2 = std.areaMm2;
@@ -573,7 +528,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `EN standard channel cross-section (with tapered flanges & fillets): A = ${std.areaMm2.toLocaleString()} mm²`;
       step2Formula = `Published catalog weight: ${std.massKgM.toFixed(2)} kg/m`;
-      commandStr = `${channelSize.toLowerCase().replace(" ", "")} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("channel", { grade: mat.grade, lengthM: L, size: channelSize });
     } else if (shape === "tee") {
       const std = STANDARD_TEES[teeSize] || STANDARD_TEES["T 60x60x7"];
       areaMm2 = std.areaMm2;
@@ -582,7 +537,7 @@ export function FaqView() {
       linearOrSurfaceMass = kgPerM;
       step1Formula = `EN 10055 standard cross-section: A = ${std.areaMm2.toLocaleString()} mm²`;
       step2Formula = `Standard catalog linear mass: ${std.massKgM.toFixed(2)} kg/m`;
-      commandStr = `${teeSize.toLowerCase().replace(/\s+/g, "")} ${L}m ${mat.grade}`;
+      commandStr = faqCommand("tee", { grade: mat.grade, lengthM: L, size: teeSize });
     } else if (shape === "paint") {
       const wVal = Math.max(5, parseFloat(width) || 100);
       const hVal = Math.max(5, parseFloat(height) || 50);
@@ -594,7 +549,7 @@ export function FaqView() {
       totalMass = totalAreaM2;
       step1Formula = `Outer perimeter: 2 × (${wVal} + ${hVal}) mm = ${perimeterMm} mm`;
       step2Formula = `Coating surface per metre: ${perimeterMm} ÷ 1,000 = ${areaM2PerM.toFixed(3)} m²/m`;
-      commandStr = `tub${wVal}x${hVal}x4 ${L}m`;
+      commandStr = faqCommand("paint", { lengthM: L, widthMm: wVal, heightMm: hVal });
     } else {
       // Hot-dip galvanizing pickup calculation
       const std = STANDARD_BEAMS[beamSize] || STANDARD_BEAMS["HEA 140"];
@@ -606,7 +561,7 @@ export function FaqView() {
       areaMm2 = std.areaMm2;
       step1Formula = `Black steel mass: ${std.massKgM.toFixed(2)} kg/m × ${L} m = ${baseSteelMass.toFixed(1)} kg`;
       step2Formula = `EN ISO 1461 hot-dip zinc pickup (+5.0%): +${zincMass.toFixed(1)} kg zinc`;
-      commandStr = `${beamSize.toLowerCase().replace(" ", "")} ${L}m x4`;
+      commandStr = faqCommand("galv", { lengthM: L, size: beamSize });
     }
 
     return {
@@ -1273,7 +1228,8 @@ export function FaqView() {
               </span>
             </div>
 
-            {/* Generated Command Line Token */}
+            {/* Generated Command Line Token — none for a shape the calculator lacks */}
+            {calculationTrace.commandStr && (
             <div className="mt-2 pt-3 border-t border-[var(--border-faint)] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2 overflow-x-auto py-1">
                 <span className="text-[11px] text-muted font-mono uppercase tracking-wider">
@@ -1287,7 +1243,7 @@ export function FaqView() {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   type="button"
-                  onClick={() => copyToClipboard(calculationTrace.commandStr, "sandbox")}
+                  onClick={() => copyToClipboard(calculationTrace.commandStr ?? "", "sandbox")}
                   className="px-3 py-1 text-xs border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)] transition-colors text-foreground font-medium cursor-pointer"
                 >
                   {copiedId === "sandbox" ? t("sandbox.copied") : t("sandbox.copy")}
@@ -1300,6 +1256,7 @@ export function FaqView() {
                 </Link>
               </div>
             </div>
+            )}
           </div>
         </div>
       </section>
@@ -1445,15 +1402,20 @@ export function FaqView() {
                     </p>
 
                     <div className="flex flex-wrap items-center gap-3 pt-0.5">
-                      <code className="font-mono text-[13px] px-2.5 py-1.5 bg-[var(--surface)] border border-[var(--border)] text-foreground">
-                        {command}
-                      </code>
-                      <Link
-                        href={`/?q=${encodeURIComponent(command)}`}
-                        className="px-3.5 py-2 text-[13px] font-semibold bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 transition-opacity"
-                      >
-                        {t("labels.tryCommand")} →
-                      </Link>
+                      {/* Empty for a topic the calculator has no line for (hex bar). */}
+                      {command && (
+                        <>
+                          <code className="font-mono text-[13px] px-2.5 py-1.5 bg-[var(--surface)] border border-[var(--border)] text-foreground">
+                            {command}
+                          </code>
+                          <Link
+                            href={`/?q=${encodeURIComponent(command)}`}
+                            className="px-3.5 py-2 text-[13px] font-semibold bg-[var(--action)] text-[var(--action-contrast)] hover:opacity-90 transition-opacity"
+                          >
+                            {t("labels.tryCommand")} →
+                          </Link>
+                        </>
+                      )}
                       {preset && (
                         <button
                           type="button"

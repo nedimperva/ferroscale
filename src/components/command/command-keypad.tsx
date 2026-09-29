@@ -19,12 +19,8 @@ interface CommandKeypadProps {
   onNew: () => void;
   onTweak: () => void;
   onShare: () => void;
-  onLetters: () => void;
-  onNumbers: () => void;
   onDone: () => void;
-  /** Show 123 on the letter pad — hidden while the next token is still a word. */
-  showNumbers: boolean;
-  /** Show Done on the number pad — only once the line already computes. */
+  /** Show Done — the keyboard was reopened over a line that already computes. */
   showDone: boolean;
   priceUnitLabel: string;
   valid: boolean;
@@ -319,10 +315,7 @@ export function CommandKeypad({
   onNew,
   onTweak,
   onShare,
-  onLetters,
-  onNumbers,
   onDone,
-  showNumbers,
   showDone,
   priceUnitLabel,
   valid,
@@ -349,101 +342,25 @@ export function CommandKeypad({
 
   const insertUnit = (unit: string) => onKey(`${unit} `);
 
-  if (mode === "numpad") {
-    return (
-      <KeypadChrome mode={mode}>
-        <div className="flex items-center pb-1 pr-0.5">
+  return (
+    <KeypadChrome mode={mode}>
+      {showDone && (
+        <div className="flex items-center justify-end pb-1 pr-0.5">
           <button
             type="button"
             onClick={() => {
               haptic("tap");
-              onLetters();
+              onDone();
             }}
-            className="rounded-none border border-border-faint bg-[var(--surface)] px-2.5 py-1 text-[12px] font-bold text-muted"
+            className="fs-track-wide bg-transparent border-0 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--accent-text)]"
           >
-            {t("keypad.letters")}
+            {t("common.done")}
           </button>
-          {showDone && (
-            <button
-              type="button"
-              onClick={() => {
-                haptic("tap");
-                onDone();
-              }}
-              className="fs-track-wide ml-auto bg-transparent border-0 px-2 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--accent-text)]"
-            >
-              {t("common.done")}
-            </button>
-          )}
         </div>
-        <div className="flex flex-col gap-1">
-          <div className="flex gap-1">
-            <Key tall mono label="1" onPress={() => onKey("1")} />
-            <Key tall mono label="2" onPress={() => onKey("2")} />
-            <Key tall mono label="3" onPress={() => onKey("3")} />
-            <BackspaceKey
-              tall
-              onBack={onBack}
-              onBackToken={onBackToken}
-              label={t("keypad.backspace")}
-              holdLabel={t("keypad.backspaceHold")}
-            />
-          </div>
-          <div className="flex gap-1">
-            <Key tall mono label="4" onPress={() => onKey("4")} />
-            <Key tall mono label="5" onPress={() => onKey("5")} />
-            <Key tall mono label="6" onPress={() => onKey("6")} />
-            <Key tall mono big label="×" ariaLabel={t("keypad.times")} onPress={() => onKey("x")} />
-          </div>
-          <div className="flex gap-1">
-            <Key tall mono label="7" onPress={() => onKey("7")} />
-            <Key tall mono label="8" onPress={() => onKey("8")} />
-            <Key tall mono label="9" onPress={() => onKey("9")} />
-            <Key tall mono label="0" onPress={() => onKey("0")} />
-          </div>
-          <div className="flex gap-1">
-            <Key
-              tall
-              variant="dim"
-              label={t("keypad.space")}
-              onPress={() => onKey(" ")}
-              flex={2.2}
-            />
-            <Key tall mono big label="." ariaLabel={t("keypad.decimalPoint")} onPress={() => onKey(".")} flex={0.8} />
-            <HoldPickerKey
-              tall
-              label="mm ▾"
-              ariaLabel={t("keypad.lengthUnitKey")}
-              onTap={() => insertUnit("mm")}
-              choices={LENGTH_UNIT_CHOICES}
-              onPick={insertUnit}
-              menuLabel={t("keypad.lengthUnitPicker")}
-              closeLabel={t("keypad.closeUnitPicker")}
-              align="left"
-            />
-            <HoldPickerKey
-              tall
-              label={`${priceUnitLabel} ▾`}
-              ariaLabel={t("keypad.priceUnitKey", { unit: priceUnitLabel })}
-              onTap={onPriceUnit}
-              choices={PRICE_UNIT_CHOICES}
-              onPick={onPriceUnitPick}
-              menuLabel={t("keypad.priceUnitPicker")}
-              closeLabel={t("keypad.closeUnitPicker")}
-              align="right"
-              variant="dim"
-            />
-            <Key tall variant="accent" label="↵" ariaLabel={t("keypad.enter")} onPress={onEnter} />
-          </div>
-        </div>
-        {!valid && <span className="sr-only">{t("keypad.addLength")}</span>}
-      </KeypadChrome>
-    );
-  }
-
-  return (
-    <KeypadChrome mode={mode}>
+      )}
       <div className="flex flex-col gap-1">
+        {/* Digits live on the one keyboard: sizes, lengths and counts are
+            typed without the pad changing under the thumb. */}
         <div className="flex gap-1">
           {ROW_NUM.map((k) => (
             <Key key={k} label={k} mono onPress={() => onKey(k)} />
@@ -473,18 +390,11 @@ export function CommandKeypad({
           />
         </div>
         <div className="flex gap-1">
-          {showNumbers && (
-            <Key
-              variant="dim"
-              label={t("keypad.numbers")}
-              onPress={onNumbers}
-              flex={1.15}
-            />
-          )}
           <Key label="." mono big ariaLabel={t("keypad.decimalPoint")} onPress={() => onKey(".")} flex={0.8} />
           <Key label={t("keypad.space")} variant="dim" onPress={() => onKey(" ")} flex={2.9} />
           <HoldPickerKey
             label="mm ▾"
+            ariaLabel={t("keypad.lengthUnitKey")}
             onTap={() => insertUnit("mm")}
             choices={LENGTH_UNIT_CHOICES}
             onPick={insertUnit}
@@ -495,6 +405,7 @@ export function CommandKeypad({
           />
           <HoldPickerKey
             label={`${priceUnitLabel} ▾`}
+            ariaLabel={t("keypad.priceUnitKey", { unit: priceUnitLabel })}
             onTap={onPriceUnit}
             choices={PRICE_UNIT_CHOICES}
             onPick={onPriceUnitPick}

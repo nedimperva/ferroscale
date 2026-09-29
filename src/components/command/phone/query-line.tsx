@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cmdClassifyToken } from "@ferroscale/metal-core";
 import type {
   CommandLine,
@@ -12,7 +12,8 @@ import type {
 } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { computeGhost, formatCommandIssue, issueForToken } from "../command-copy";
-import { KIND_BG } from "../command-constants";
+import { KIND_BG, placeholderExamples } from "../command-constants";
+import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
   editLineToken,
   lineChips,
@@ -44,9 +45,10 @@ export function PhoneQueryLine({
   line: CommandLine;
   sug: CommandSuggestion;
   onSuggest: (item: CommandSuggestionItem) => void;
-  /** A tap on the line — the shell swaps the action keypad for the numpad. */
+  /** A tap on the line — the shell swaps the action bar for the keyboard. */
   onTap: () => void;
 }) {
+  const locale = useLocale();
   const t = useTranslations("command");
   /** The chip box — kept scrolled to the caret as the line grows. */
   const queryLineRef = useRef<HTMLDivElement | null>(null);
@@ -59,6 +61,8 @@ export function PhoneQueryLine({
   const chips = useMemo(() => lineChips(query), [query]);
   const partialToken = chips.partial || null;
   const chipCount = chips.groups.reduce((n, group) => n + group.tokens.length, 0);
+  const placeholderShown = chipCount === 0 && !partialToken;
+  const placeholderExample = useRotatingExample(placeholderExamples(locale), placeholderShown);
   // Faint completion drawn after the caret (profile letters / recent prefix).
   const ghost = computeGhost(partialToken ?? "", sug);
   const acceptGhost = () => {
@@ -137,7 +141,7 @@ export function PhoneQueryLine({
     String(group.item + 1);
 
   return (
-    <div className="px-[14px] pb-2">
+    <div className="flex-shrink-0 px-[14px] pb-2">
       <div
         ref={queryLineRef}
         data-query-line=""
@@ -170,9 +174,9 @@ export function PhoneQueryLine({
             "›"
           )}
         </span>
-        {chipCount === 0 && !partialToken && (
+        {placeholderShown && (
           <span className="font-mono text-sm text-muted-faint whitespace-nowrap flex-shrink-0">
-            {t("query.placeholder")}
+            {t("query.placeholderPhone", { example: placeholderExample })}
           </span>
         )}
         {chips.groups.map((group) => (

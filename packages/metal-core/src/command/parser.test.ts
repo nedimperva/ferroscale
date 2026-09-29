@@ -380,6 +380,184 @@ describe("cmdTokenize (natural-language folding)", () => {
   });
 });
 
+describe("cmdParse reads the line the way it is said", () => {
+  const canonical = () => cmdParse("hea120 6m x2 ", mkSettings());
+
+  it("counts a spoken quantity before the space after it is typed", () => {
+    // The trailing word used to be ignored until committed: one piece, no issue.
+    for (const q of ["hea120 6m 2 pieces", "hea120 6m 2 kom", "hea120 6m qty 2"]) {
+      const p = cmdParse(q, mkSettings());
+      expect(p.realQty, q).toBe(2);
+      expect(p.totalKg, q).toBe(canonical().totalKg);
+      expect(p.issues, q).toEqual([]);
+    }
+  });
+
+  it("reads a trailing spoken unit as a length, not millimetres", () => {
+    const p = cmdParse("hea120 6 metres", mkSettings({ defaultLengthUnit: "mm" }));
+    expect(p.lengthM).toBe(6);
+    expect(p.issues).toEqual([]);
+  });
+
+  it("reads glued and number-first counts", () => {
+    for (const q of ["hea120 6m 2pcs ", "hea120 6m 2kom ", "2x hea120 6m ", "hea120 6m 2x"]) {
+      const p = cmdParse(q, mkSettings());
+      expect(p.realQty, q).toBe(2);
+      expect(p.issues, q).toEqual([]);
+    }
+    expect(cmdTokenize("hea120 6m 2pcs ")).toEqual(["hea120", "6m", "x2"]);
+    expect(cmdTokenize("2x hea120 ")).toEqual(["x2", "hea120"]);
+  });
+
+  it("treats commas between words as separators", () => {
+    const p = cmdParse("hea 120, 6 m, 2 pcs", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.totalKg).toBe(canonical().totalKg);
+    expect(p.issues).toEqual([]);
+    expect(cmdTokenize("hea 120, 6 m, 2 pcs ")).toEqual(["hea120", "6m", "x2"]);
+  });
+
+  it("reads a spaced size still being typed as a size, not a count", () => {
+    // "40x" alone would fold to x40 — the profile before it claims it first.
+    expect(cmdTokenize("shs 40x ")).toEqual(["shs40x"]);
+    const p = cmdParse("shs 40x", mkSettings());
+    expect(p.qty).toBeNull();
+    expect(p.alias?.alias).toBe("shs");
+  });
+
+  it("tokenizes a long run of commas quickly", () => {
+    const start = performance.now();
+    expect(cmdTokenize(`${",".repeat(50_000)}x `)).toEqual([`${",".repeat(50_000)}x`]);
+    expect(cmdTokenize(`hea120${",".repeat(50_000)} `)).toEqual(["hea120"]);
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+  it("keeps a comma under the caret, where it may start a decimal", () => {
+    expect(cmdTokenize("hea120 2,")).toEqual(["hea120", "2,"]);
+    expect(cmdParse("hea120 2,5m ", mkSettings()).lengthM).toBe(2.5);
+  });
+
+  it("reads a three-dimension tube as box section", () => {
+    const square = cmdParse("tube 40x40x3 2m ", mkSettings());
+    expect(square.alias?.alias).toBe("shs");
+    expect(square.totalKg).toBe(cmdParse("shs 40x40x3 2m ", mkSettings()).totalKg);
+    const rect = cmdParse("tube 60x40x3 2m ", mkSettings());
+    expect(rect.alias?.alias).toBe("rhs");
+    expect(rect.totalKg).toBe(cmdParse("rhs 60x40x3 2m ", mkSettings()).totalKg);
+    // Two dimensions is still a round tube.
+    expect(cmdParse("tube 48.3x3 2m ", mkSettings()).alias?.alias).toBe("chs");
+  });
+
+  it("takes a plate's smallest side as its thickness, wherever it is written", () => {
+    const written = cmdParse("plt 200x300x10 ", mkSettings());
+    for (const q of ["plate 10x200x300 ", "plt 200x10x300 "]) {
+      const p = cmdParse(q, mkSettings());
+      expect(p.valid, q).toBe(true);
+      expect(p.issues, q).toEqual([]);
+      expect(p.totalKg, q).toBe(written.totalKg);
+    }
+  });
+});
+
+describe("cmdParse vocabulary: the words people use for each shape", () => {
+  const same = (spoken: string, canonical: string) => {
+    const a = cmdParse(`${spoken} `, mkSettings());
+    const b = cmdParse(`${canonical} `, mkSettings());
+    expect(a.issues, spoken).toEqual([]);
+    expect(a.valid, spoken).toBe(true);
+    expect(a.alias?.alias, spoken).toBe(b.alias?.alias);
+    expect(a.totalKg, spoken).toBe(b.totalKg);
+  };
+
+  it("reads Bosnian profile words, with and without diacritics", () => {
+    same("cijev 40x40x3 6m", "shs40x40x3 6m");
+    same("cijev 60x40x3 6m", "rhs60x40x3 6m");
+    same("cijev 48.3x3 6m", "chs48.3x3 6m");
+    same("kutijasti 40x40x3 6m", "shs40x40x3 6m");
+    same("lim 1000x2000x2", "sht1000x2000x2");
+    same("ploča 10x1500x3000", "plt1500x3000x10");
+    same("ploca 10x1500x3000", "plt1500x3000x10");
+    same("flah 50x10 6m", "flt50x10 6m");
+    same("šipka 20 6m", "rnd20 6m");
+    same("sipka 20 6m", "rnd20 6m");
+    same("ugaonik 50x50x5 6m", "l50x50x5 6m");
+  });
+
+  it("reads two-word names as one profile", () => {
+    // "square" alone is square bar; read word by word this failed silently.
+    same("square tube 40x40x3 6m", "shs40x40x3 6m");
+    same("rectangular tube 60x40x3 6m", "rhs60x40x3 6m");
+    same("round tube 48.3x3 6m", "chs48.3x3 6m");
+    same("flat bar 50x10 6m", "flt50x10 6m");
+    same("square bar 20 6m", "sq20 6m");
+    same("angle iron 50x50x5 6m", "l50x50x5 6m");
+    same("kvadratna cijev 40x40x3 6m", "shs40x40x3 6m");
+    same("pravougaona cijev 60x40x3 6m", "rhs60x40x3 6m");
+    same("okrugli čelik 20 6m", "rnd20 6m");
+    same("rebrasti lim 1500x3000x5x2", "chq1500x3000x5x2");
+    same("u profil 160 6m", "upn160 6m");
+  });
+
+  it("drops words that carry nothing, and generic words beside a named profile", () => {
+    same("2 pieces of hea120 6m", "hea120 6m x2");
+    same("hea120 6 meters long", "hea120 6m");
+    same("nosač hea120 duzina 6m", "hea120 6m");
+    same("channel upn160 6m", "upn160 6m");
+    same("hea 120 x 6m", "hea120 6m");
+  });
+
+  it("reads material words as grades", () => {
+    expect(cmdParse("cijev 40x40x2 6m inox ", mkSettings()).gradeId).toBe("stainless-304");
+    expect(cmdParse("aluminijska cijev 40x40x2 6m ", mkSettings()).gradeId).toBe("al-6060");
+    expect(cmdParse("stainless tube 40x40x2 6m ", mkSettings()).gradeId).toBe("stainless-304");
+  });
+});
+
+describe("cmdParse word order", () => {
+  const orders = (words: string[]): string[][] =>
+    words.length <= 1
+      ? [words]
+      : words.flatMap((w, i) => orders([...words.slice(0, i), ...words.slice(i + 1)]).map((o) => [w, ...o]));
+
+  it.each([
+    [["hea", "120", "6m", "x2"], "hea120 6m x2"],
+    [["cijev", "40x40x3", "6m", "x2"], "shs40x40x3 6m x2"],
+    [["lim", "1000x2000", "5mm", "x2"], "sht1000x2000x5 x2"],
+    [["kvadratna cijev", "40x40x3", "6m", "inox"], "shs40x40x3 6m inox"],
+    [["okrugli", "20", "6m", "x3"], "rnd20 6m x3"],
+  ])("reads %j the same in every order", (words, canonical) => {
+    const want = cmdParse(`${canonical} `, mkSettings());
+    for (const order of orders(words)) {
+      const line = `${order.join(" ")} `;
+      const p = cmdParse(line, mkSettings());
+      expect(p.issues, line).toEqual([]);
+      expect(p.totalKg, line).toBe(want.totalKg);
+      expect(p.realQty, line).toBe(want.realQty);
+    }
+  });
+
+  it("takes a catalogue size from anywhere, and the other number as the length", () => {
+    expect(cmdTokenize("hea 6000 120 ")).toEqual(["hea120", "6000"]);
+    expect(cmdParse("hea 6000 120 ", mkSettings({ defaultLengthUnit: "mm" })).lengthM).toBe(6);
+  });
+
+  it("builds a sheet from its thickness and its size typed apart", () => {
+    const want = cmdParse("sht2000x1000x5 ", mkSettings()).totalKg;
+    for (const q of ["sht5 2000x1000 ", "lim 5 2000x1000 ", "lim 2000x1000 5mm ", "2000x1000 lim 5mm "]) {
+      expect(cmdParse(q, mkSettings()).totalKg, q).toBe(want);
+    }
+  });
+
+  it("does not report a sheet still being typed in parts", () => {
+    expect(cmdParse("lim 5 2000", mkSettings()).issues).toEqual([]);
+  });
+
+  it("never splits a glued length into a bare zero", () => {
+    // "hea6000" is not HEA 600 and a length of 0.
+    expect(cmdTokenize("hea6000 ")).not.toEqual(["hea600", "0"]);
+  });
+});
+
 describe("cmdParse did-you-mean suggestions", () => {
   it("suggests the nearest alias for a mistyped profile (transposition)", () => {
     const p = cmdParse("hae120 ", mkSettings());

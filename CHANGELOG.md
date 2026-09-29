@@ -5,6 +5,37 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.34.0] - 2026-09-28
+
+A first screen that shows the grammar, and a bar that reads how people talk — in English and Bosnian, in any order.
+
+### Added
+
+- The empty screen opens on one whole line taken apart — hea120 · 6m · x2 · s355 · @2.50/kg, each word labelled profile, length, pieces, grade, price — so a first visit shows what the bar reads before anything is typed. Tap it to load the line and see the answer. The profile tiles follow it, as the other way in
+- The empty command bar cycles through example lines — a beam, a box section, an angle counted in words, a plate, a bar with its own rate — instead of one line that disappeared on the first keystroke. It holds still when reduced motion is on. The phone's bar shows them too; before, it had no example at all
+- The bar reads Bosnian: cijev, kutijasti, lim, ploča, flah, plosnati, šipka, okrugli, kvadrat, ugaonik, rebrasti lim, kvadratna/pravougaona/okrugla cijev, u profil — with or without č, š, đ — and inox, prohrom, aluminij for the grade. hea120 6 metara 2 komada counts two
+- English names read as one profile: square tube, rectangular tube, round tube, box section, flat bar, round bar, square bar, angle iron, expanded metal. A tube, cijev or box takes its shape from its size — three sides is box section, square when two match; two is round — and a bar with one size is round, with two flat
+- Words that carry nothing — of, long, nosač, dužina, profil, a lone x — are dropped instead of failing the line
+- In Bosnian the empty bar's examples are said in Bosnian (cijev 40x40x3 6m 10 kom, lim 2mm 1000x2000)
+
+### Changed
+
+- The phone has one keyboard: letters with a number row on top. It no longer switches to a number pad by itself — which it did the moment the letters so far made a profile name, so t (a tee) and l (an angle) threw you onto numbers in the middle of tube, tee, lim and square. Tweak opens the same keyboard, and Done returns to the action bar
+
+### Fixed
+
+- A count written in words at the end of the line is counted before the space after it: hea120 6m 2 pieces, 2 kom and qty 2 weighed one piece until another key was pressed, with nothing saying so. hea120 6 metres likewise read as 6 mm
+- More of the ways people write a line are read: a glued count (2pcs, 4kom), a count first (2x hea120 6m), qty 2, and commas between words (hea 120, 6 m, 2 pcs)
+- tube 40x40x3 is read as square box section and tube 60x40x3 as rectangular; tube with two dimensions stays round. Before, every tube was read as a pipe and three dimensions were rejected
+- A size typed after a space — shs 40x, hea 12 — gets the same standard-size chips as shs40x and hea12, instead of the whole list or none
+- A plate can be written thickness first: plate 10x200x300 is 10 mm thick, not rejected as 300 mm. The smallest side is taken as the thickness wherever it is written
+- Word order no longer matters when the profile and its size are typed apart: hea 6m 120, 120 hea 6m, 40x40x3 cijev 6m and 2000x1000 lim 5mm all read. A size typed on its own used to be cut into a number and two quantities
+- A sheet or plate can be typed thickness first or last, apart from its size: sht5 2000x1000, lim 5 2000x1000, plt 2000x1000 5mm. While it is still being typed in parts it no longer shows an error
+- The FAQ's Try and Open in app links now load lines the calculator reads. Nine of nineteen used spellings it never had — tub100x50x4, hex24, sht5 2000x1000, exp2 — and opened on an error. Hex bar, which the calculator has no profile for, and tees past T 60 no longer offer a link
+- hea 6000 120 reads as HEA 120, 6000 mm, and a glued hea6000 is no longer split into HEA 600 and a length of 0
+- Size chips for cijev, tube, box and bar offer every shape they can mean — box and round tube sizes together
+- On a short phone (375×667 and smaller) the command line slid under the keyboard once a line was typed, so you typed without seeing it. The answer above now scrolls instead, and the suggestions and the line stay docked on the keys
+
 ## [3.33.0] - 2026-09-25
 
 Angles weighed from the EN 10056-1 catalogue, and standard sizes offered and checked as you type.

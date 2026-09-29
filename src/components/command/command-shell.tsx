@@ -20,7 +20,6 @@ import {
   cmdSuggest,
   cmdApplyInsert,
   cmdAppendLineItem,
-  cmdDetectStage,
   cmdParseLine,
   cmdPasteIntoLine,
   cmdSplitLine,
@@ -80,7 +79,7 @@ import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
-import { DEMO_QUERY } from "./command-constants";
+import { EXAMPLE_QUERY, isSampleQuery } from "./command-constants";
 
 /**
  * The rate getDefaultInput() seeds. Matching it means nobody has said what
@@ -240,7 +239,7 @@ export function CommandShell() {
   // address bar prices the same for whoever it's sent to.
   useEffect(() => {
     if (!touchedRef.current) {
-      if (!query.trim() || query === DEMO_QUERY) return;
+      if (!query.trim() || isSampleQuery(query)) return;
       touchedRef.current = true;
     }
     const id = window.setTimeout(() => {
@@ -364,7 +363,7 @@ export function CommandShell() {
   }, []);
   useEffect(() => {
     if (!p.valid) return;
-    if (!touchedRef.current && (!query.trim() || query === DEMO_QUERY)) return;
+    if (!touchedRef.current && (!query.trim() || isSampleQuery(query))) return;
     const id = window.setTimeout(() => {
       // Record the canonical query, not the raw text: this drops half-typed
       // trailing tokens (a lone "@", an incomplete grade) so mid-edit pauses
@@ -1208,12 +1207,7 @@ export function CommandShell() {
   if (activeQuery.trim() === "" && keypadOverride !== null) {
     setKeypadOverride(null);
   }
-  const keypadStage = cmdDetectStage(activeQuery, p);
   const keypadMode = commandKeypadLayout(activeQuery, p, keypadOverride);
-  const keypadShowNumbers =
-    keypadMode === "letters" &&
-    (keypadOverride === "letters" ||
-      (keypadStage.stage !== "empty" && keypadStage.stage !== "profile"));
   // A CSS variable, not a theme-derived literal: the class that selects it is
   // set before first paint by the inline script in the root layout, so the
   // server and the client emit the same style string. Reading `dark` here made
@@ -1469,7 +1463,7 @@ export function CommandShell() {
                   }}
                   onTryDemo={() => {
                     haptic("tap");
-                    setQuery(DEMO_QUERY);
+                    setQuery(EXAMPLE_QUERY);
                     markExternalValueChange();
                   }}
                 />
@@ -1507,6 +1501,14 @@ export function CommandShell() {
                   are flex, so on a short screen they collapse and nothing
                   moves. The split is weighted 1:2 so the answer lands in the
                   upper third rather than dead centre. */}
+              {/* The answer gives way, never the line. On a short phone
+                  (375x667) the figure, the actions and the tape overflowed
+                  the column and pushed the suggestions and the command line
+                  down under the keyboard — typing blind. They scroll here
+                  instead; the strip and the line below stay docked on the
+                  keys. On a tall screen the spacers take the slack and this
+                  box never scrolls. */}
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto" data-answer-area="">
               <div className="flex-[1] min-h-0" />
             {/* HERO */}
             <PhoneHero
@@ -1549,6 +1551,7 @@ export function CommandShell() {
                 `hea120` in their life — with nothing but a row of chips. It
                 fills the band that was empty on a pristine screen anyway. */}
               <div className="flex-[2] min-h-[6px]" />
+              </div>
             </>
           )}
 
@@ -1578,7 +1581,7 @@ export function CommandShell() {
               sug={sug}
               onSuggest={onSuggest}
               onTap={() => {
-                if (keypadMode === "actions") setKeypadOverride("numpad");
+                if (keypadMode === "actions") setKeypadOverride("letters");
               }}
             />
         </div>
@@ -1595,17 +1598,14 @@ export function CommandShell() {
             onNew={newCalc}
             onTweak={() => {
               setQuery((q) => tweakActiveItem(q));
-              setKeypadOverride("numpad");
+              setKeypadOverride("letters");
             }}
             onShare={shareLink}
-            onLetters={() => setKeypadOverride("letters")}
-            onNumbers={() => setKeypadOverride("numpad")}
             onDone={() => {
               setQuery((q) => (/\s$/.test(q) || q.trim() === "" ? q : `${q} `));
               setKeypadOverride(null);
             }}
-            showNumbers={keypadShowNumbers}
-            showDone={keypadMode === "numpad" && p.valid}
+            showDone={keypadMode === "letters" && keypadOverride === "letters" && p.valid}
             priceUnitLabel={priceUnitLabel}
             valid={p.valid}
           />

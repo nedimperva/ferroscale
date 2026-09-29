@@ -168,7 +168,7 @@ describe("FaqView component", () => {
     const copySpy = vi.spyOn(navigator.clipboard, "writeText");
     await user.click(screen.getByRole("button", { name: /Copy command/i }));
 
-    expect(copySpy).toHaveBeenCalledWith(expect.stringContaining("tube60.3x3.2 6m"));
+    expect(copySpy).toHaveBeenCalledWith(expect.stringContaining("chs60.3x3.2 6m"));
     await waitFor(() => {
       expect(screen.getByText(/Copied!/i)).toBeDefined();
     });

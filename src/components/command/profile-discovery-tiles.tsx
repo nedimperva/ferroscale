@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { CommandGlyph } from "./command-glyph";
+import { EXAMPLE_LINE } from "./command-constants";
 import type { CommandFamily } from "@ferroscale/metal-core";
 
 interface ProfileOption {
@@ -79,6 +80,60 @@ const DISCOVERY_CATEGORIES: DiscoveryCategory[] = [
   },
 ];
 
+/**
+ * The grammar, taken apart. The app's one promise is "type it the way you'd
+ * say it", and the empty screen used to teach the opposite — a catalogue to
+ * pick from, with the example line only in a placeholder that vanished on the
+ * first keystroke. This puts one whole line first, each word labelled with
+ * what it means, like the dimension callouts on a drawing. Tapping it loads
+ * the line, so the answer to "what does this do?" is the answer itself.
+ */
+function ExampleLine({ onTry, compact }: { onTry: () => void; compact?: boolean }) {
+  const t = useTranslations("command");
+  return (
+    <button
+      type="button"
+      onClick={onTry}
+      data-testid="example-line"
+      aria-label={t("anatomy.aria", {
+        line: EXAMPLE_LINE.map((part) => part.token).join(" "),
+      })}
+      className="group w-full text-left cursor-pointer rounded-none bg-[var(--surface)] border border-[var(--border-faint)] hover:border-[var(--border)] transition-colors"
+      style={{ padding: compact ? "12px 14px" : "14px 16px" }}
+    >
+      <span className="fs-track-label block text-[10px] font-bold uppercase text-muted">
+        {t("anatomy.title")}
+      </span>
+      <span className="flex flex-wrap items-start gap-x-3 gap-y-2 mt-2.5" aria-hidden="true">
+        {EXAMPLE_LINE.map((part) => (
+          <span key={part.token} className="flex flex-col">
+            <span
+              className="font-mono font-bold text-foreground leading-none"
+              style={{ fontSize: compact ? 15 : 17 }}
+            >
+              {part.token}
+            </span>
+            <span
+              className="font-mono text-[10px] text-muted mt-1.5 pt-1"
+              style={{ borderTop: "1px solid var(--border)" }}
+            >
+              {t(`anatomy.token.${part.label}`)}
+            </span>
+          </span>
+        ))}
+      </span>
+      <span className="flex items-baseline justify-between gap-3 mt-3 text-[12px]">
+        <span className="text-muted" style={{ lineHeight: 1.4 }}>
+          {t("anatomy.note")}
+        </span>
+        <span className="flex-shrink-0 font-bold text-foreground-secondary group-hover:text-foreground whitespace-nowrap">
+          {t("anatomy.try")} <span aria-hidden="true">→</span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
 export function ProfileDiscoveryTiles({
   onSelectProfile,
   onTryDemo,
@@ -99,6 +154,7 @@ export function ProfileDiscoveryTiles({
 
   return (
     <div className="flex flex-col gap-3 py-2" data-testid="profile-discovery">
+      <ExampleLine onTry={onTryDemo} compact={compact} />
       {!hideTitle && (
         <div className="flex items-center justify-between">
           <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
@@ -172,16 +228,6 @@ export function ProfileDiscoveryTiles({
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="flex items-center justify-start sm:justify-end pt-1">
-        <button
-          type="button"
-          onClick={onTryDemo}
-          className="text-left font-mono text-[11px] text-muted hover:text-foreground cursor-pointer bg-transparent border-0 p-0 underline-offset-4 hover:underline transition-colors"
-        >
-          {t("discovery.tryDemo")}
-        </button>
       </div>
     </div>
   );

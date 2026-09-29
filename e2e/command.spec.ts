@@ -8,17 +8,15 @@ import { test, expect } from "@playwright/test";
 const DEMO_LINK = "/en?q=hea120+6m+x2";
 
 /**
- * The keypad is server-rendered for an *empty* line (the letter pad), then
- * swaps to the number pad once `?q=` hydrates — which unmounts every key. A
- * hold that starts on the first pad's key is lost: its timer fires on a
- * component that no longer exists. Wait for the pad the query actually wants,
- * and for React's props on the key, before pressing it; visibility alone is
- * not readiness.
+ * The keypad is server-rendered for an *empty* line, then re-rendered once
+ * `?q=` hydrates. A hold that starts on a key before React has wired it is
+ * lost. Wait for the pad the query actually wants, and for React's props on
+ * the key, before pressing it; visibility alone is not readiness.
  */
 async function waitForHydratedKey(
   page: import("@playwright/test").Page,
   ariaPrefix: string,
-  pad: "numpad" | "letters" = "numpad",
+  pad: "letters" | "actions" = "letters",
 ) {
   await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", pad);
   // The shell's last start-up write is the share-URL mirror (`&r=…` once the
@@ -319,7 +317,29 @@ test.describe("Phone fold (390x844)", () => {
       const line = page.locator("[data-query-line]");
       const box = await line.boundingBox();
       expect(box!.height, `query line unbounded at ${height}`).toBeLessThanOrEqual(96);
-      expect(box!.y + box!.height, `query line clipped at ${height}`).toBeLessThan(height);
+      // Above the keys, not merely on screen: at 667 the line used to sit
+      // under the keyboard, still "on screen" and impossible to see.
+      const keys = await bar.boundingBox();
+      expect(box!.y + box!.height, `query line under the keys at ${height}`).toBeLessThanOrEqual(
+        keys!.y,
+      );
+    }
+  });
+
+  test("the command line stays above the keyboard on a small phone, whatever is typed", async ({
+    page,
+  }) => {
+    for (const [width, height] of [[375, 667], [320, 568]]) {
+      await page.setViewportSize({ width, height });
+      for (const q of ["", "t", "hea120 6m x2 s355 + ipe200 4m x3"]) {
+        await page.goto(q ? `/en?q=${encodeURIComponent(q)}` : "/en");
+        await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+        const tweak = page.getByRole("button", { name: "Edit length, quantity or rate" });
+        if (await tweak.count()) await tweak.click();
+        const line = await page.locator("[data-query-line]").boundingBox();
+        const keys = await page.locator("[data-keypad]").boundingBox();
+        expect(line!.y + line!.height, `"${q}" at ${width}x${height}`).toBeLessThanOrEqual(keys!.y);
+      }
     }
   });
 
@@ -372,6 +392,18 @@ test.describe("Phone fold (390x844)", () => {
     const box = await tiles.boundingBox();
     expect(box!.height).toBeGreaterThan(260);
     await expect(page.getByRole("button", { name: /Beams/ })).toBeVisible();
+  });
+
+  test("a pristine screen opens on the example line, and tapping it answers", async ({ page }) => {
+    await page.goto("/en");
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    const example = page.getByTestId("example-line");
+    // Above the fold, not below the tiles: it is the first thing to read.
+    await expect(example).toBeInViewport();
+    await example.click();
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    // A sample the app loaded is not the user's work: the address stays clean.
+    await expect(page).toHaveURL(/\/en$/);
   });
 
   test("nothing on the session row overlaps anything else", async ({ page }) => {
@@ -621,11 +653,11 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
     await expect(page.getByRole("button", { name: "q", exact: true })).toHaveCount(0);
   });
 
-  test("Tweak opens the number pad; Done puts the bar back", async ({ page }) => {
+  test("Tweak opens the keyboard; Done puts the bar back", async ({ page }) => {
     await page.goto(DEMO_LINK);
     await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
-    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
-    await expect(page.getByRole("button", { name: "ABC" })).toBeVisible();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
+    await expect(page.getByRole("button", { name: "5", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Done" }).click();
     await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "actions");
   });
@@ -640,12 +672,24 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
     await expect(page.locator('[data-testid="profile-discovery"]')).toBeVisible();
   });
 
-  test("a size-ready query opens on the number pad", async ({ page }) => {
-    await page.goto("/en?q=hea120");
-    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
+  test("one keyboard types words and numbers — no pad switches under the thumb", async ({
+    page,
+  }) => {
+    await page.goto(DEMO_LINK);
+    await page.getByRole("button", { name: "New", exact: true }).click();
+    // `t` is a tee and `l` an angle: the old number pad jumped on both, in the
+    // middle of tube and lim.
+    for (const word of ["tube", "lim"]) {
+      for (const key of word) {
+        await page.getByRole("button", { name: key, exact: true }).click();
+        await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
+      }
+      await page.getByRole("button", { name: "space", exact: true }).click();
+    }
+    await expect(page.locator("[data-query-line]")).toContainText("tube");
+    await expect(page.locator("[data-query-line]")).toContainText("lim");
+    // …and the digits are on the same keyboard.
     await expect(page.getByRole("button", { name: "5", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "q", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "space", exact: true })).toBeVisible();
   });
 
   test("a finished size and the next length stay two tokens", async ({ page }) => {
@@ -655,7 +699,7 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
     for (const key of ["h", "e", "a"]) {
       await page.getByRole("button", { name: key, exact: true }).click();
     }
-    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "numpad");
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
     for (const key of ["1", "2", "0", "6"]) {
       await page.getByRole("button", { name: key, exact: true }).click();
     }

@@ -39,17 +39,185 @@ export const COMMAND_ALIASES: CommandAlias[] = [
  * `unknownSize("ube60.3x3.2")`.
  */
 const COMMAND_ALIAS_SYNONYMS: Record<string, string> = {
+  // English
   rd: "rnd",
   round: "rnd",
   pipe: "chs",
   tube: "chs",
+  box: "shs",
   plate: "plt",
   sheet: "sht",
   flat: "flt",
   tee: "t",
   angle: "l",
   square: "sq",
+  bar: "rnd",
+  channel: "upn",
+  chequered: "chq",
+  checker: "chq",
+  expanded: "xpm",
+  corrugated: "corr",
+  // Bosnian / Croatian / Serbian — with and without diacritics, because the
+  // phone keypad has none and plenty of desktop keyboards are set to English.
+  cijev: "chs",
+  cijevi: "chs",
+  cev: "chs",
+  kutijasti: "shs",
+  kutija: "shs",
+  lim: "sht",
+  "ploča": "plt",
+  ploca: "plt",
+  flah: "flt",
+  plosnati: "flt",
+  plosnata: "flt",
+  pljosnati: "flt",
+  pljosnata: "flt",
+  pljosnato: "flt",
+  plosnato: "flt",
+  "šipka": "rnd",
+  sipka: "rnd",
+  okrugli: "rnd",
+  okrugla: "rnd",
+  kvadrat: "sq",
+  kvadratni: "sq",
+  kvadratna: "sq",
+  ugaonik: "l",
+  kutnik: "l",
+  rebrasti: "chq",
+  riflani: "chq",
+  trapezni: "corr",
+  valoviti: "corr",
 };
+
+/**
+ * Words that name a kind of section but not which one — "tube", "cijev", "bar".
+ * The number of dimensions typed after them says: a tube with three is box
+ * section (square when the sides match), with two it is round; a bar with one
+ * is round, with two it is flat. Without this, "tube 40x40x3" was read as a
+ * pipe and rejected for its wall.
+ */
+const ROUTED_BY_DIMS: Record<string, (dims: number[]) => string | null> = {};
+const hollow = (dims: number[]) =>
+  dims.length === 3 ? (dims[0] === dims[1] ? "shs" : "rhs") : dims.length === 2 ? "chs" : null;
+const box = (dims: number[]) =>
+  dims.length === 3 ? (dims[0] === dims[1] ? "shs" : "rhs") : dims.length === 2 ? "shs" : null;
+const bar = (dims: number[]) =>
+  dims.length === 1 ? "rnd" : dims.length === 2 ? "flt" : null;
+for (const w of ["tube", "cijev", "cijevi", "cev"]) ROUTED_BY_DIMS[w] = hollow;
+for (const w of ["box", "kutijasti", "kutija"]) ROUTED_BY_DIMS[w] = box;
+for (const w of ["bar", "šipka", "sipka"]) ROUTED_BY_DIMS[w] = bar;
+
+const ROUTE_TARGETS: Record<string, string[]> = {};
+for (const w of ["tube", "cijev", "cijevi", "cev"]) ROUTE_TARGETS[w] = ["chs", "shs", "rhs"];
+for (const w of ["box", "kutijasti", "kutija"]) ROUTE_TARGETS[w] = ["shs", "rhs"];
+for (const w of ["bar", "šipka", "sipka"]) ROUTE_TARGETS[w] = ["rnd", "flt"];
+
+/**
+ * Every profile a word can stand for: the ones a routed word ("cijev") may
+ * resolve to, or just its own. Size suggestions search all of them.
+ */
+export function aliasCandidates(typedKey: string): CommandAlias[] {
+  const keys = ROUTE_TARGETS[typedKey.toLowerCase()];
+  if (!keys) {
+    const own = ALIAS_LOOKUP.get(typedKey.toLowerCase());
+    return own ? [own] : [];
+  }
+  return keys.map((k) => ALIAS_LOOKUP.get(k)).filter((a): a is CommandAlias => !!a);
+}
+
+/**
+ * The profile a routed word means for the size typed after it, or null when
+ * the word is not routed (or the size does not settle it).
+ */
+export function routeAliasByDims(typedKey: string, size: string): CommandAlias | null {
+  const route = ROUTED_BY_DIMS[typedKey];
+  if (!route) return null;
+  const parts = size.split("x");
+  if (parts.some((d) => !/^\d+(?:\.\d+)?$/.test(d))) return null;
+  const key = route(parts.map(Number));
+  return key ? (ALIAS_LOOKUP.get(key) ?? null) : null;
+}
+
+/**
+ * Two words that together name one profile — "square tube", "kvadratna
+ * cijev", "flat bar". Read word by word, the first named a different profile
+ * ("square" is square bar) and the second was dropped as a duplicate, so the
+ * line failed with nothing said. Built from shape adjectives × nouns so every
+ * gender and spelling of the adjective works with every noun.
+ */
+const PHRASE_MODIFIERS: Record<string, string[]> = {
+  square: ["square", "kvadratna", "kvadratni", "kvadratne", "kvadratnu", "kvadratnih"],
+  rect: [
+    "rectangular", "rect",
+    "pravougaona", "pravougaoni", "pravougaone", "pravougaonu",
+    "pravokutna", "pravokutni", "pravokutne", "pravokutnu",
+  ],
+  round: ["round", "okrugla", "okrugli", "okrugle", "okruglu", "okruglih"],
+  flat: ["flat", "plosnata", "plosnati", "plosnate", "pljosnata", "pljosnati", "pljosnate"],
+  hollow: ["hollow", "box", "šuplja", "suplja", "šuplji", "suplji", "kutijasta", "kutijasti"],
+  chequered: ["chequered", "checkered", "checker", "tread", "rebrasti", "rebrasta", "riflani", "riflana", "suzasti"],
+  expanded: ["expanded", "ekspandirani", "ekspandirana", "istegnuti"],
+  corrugated: ["corrugated", "trapezni", "trapezna", "valoviti", "valovita"],
+};
+const PHRASE_NOUNS: Record<string, string[]> = {
+  tube: ["tube", "tubes", "tubing", "pipe", "section", "cijev", "cijevi", "cev", "profil"],
+  bar: ["bar", "bars", "šipka", "sipka", "šipke", "sipke", "čelik", "celik"],
+  sheet: ["sheet", "plate", "metal", "mesh", "lim", "limovi", "ploča", "ploca", "mreža", "mreza"],
+};
+const PHRASE_TABLE: Record<string, Record<string, string>> = {
+  square: { tube: "shs", bar: "sq" },
+  rect: { tube: "rhs" },
+  round: { tube: "chs", bar: "rnd" },
+  flat: { bar: "flt" },
+  hollow: { tube: "shs" },
+  chequered: { sheet: "chq" },
+  expanded: { sheet: "xpm" },
+  corrugated: { sheet: "corr" },
+};
+const PHRASES = new Map<string, string>();
+for (const [mod, nouns] of Object.entries(PHRASE_TABLE)) {
+  for (const [noun, alias] of Object.entries(nouns)) {
+    for (const m of PHRASE_MODIFIERS[mod]) {
+      for (const n of PHRASE_NOUNS[noun]) PHRASES.set(`${m} ${n}`, alias);
+    }
+  }
+}
+// A box of either shape is routed by its sides, like "box" alone.
+for (const m of PHRASE_MODIFIERS.hollow) {
+  for (const n of PHRASE_NOUNS.tube) PHRASES.set(`${m} ${n}`, "box");
+}
+for (const [phrase, alias] of Object.entries({
+  "angle iron": "l",
+  "l profil": "l",
+  "l profile": "l",
+  "t profil": "t",
+  "t profile": "t",
+  "u profil": "upn",
+  "u profile": "upn",
+  "u channel": "upn",
+})) PHRASES.set(phrase, alias);
+
+/** The profile word two adjacent words make together, or null. */
+export function findPhraseAlias(first: string, second: string): string | null {
+  return PHRASES.get(`${first.toLowerCase()} ${second.toLowerCase()}`) ?? null;
+}
+
+/**
+ * Words that carry no calculation — "2 pieces *of* hea120", "hea120 6 m
+ * *long*", "*nosač* hea120", "*dužina* 6m". Dropped once finished, so they
+ * neither fail the line nor show as a word the app didn't understand. Kept
+ * short on purpose: a word only goes here when it can never change the answer.
+ */
+const FILLER_WORDS = new Set([
+  "of", "the", "a", "an", "long", "each", "iron", "section", "profile", "beam", "beams",
+  "length", "steel", "piece", "pcs", "at",
+  "profil", "nosač", "nosac", "nosaci", "nosači", "greda", "dužina", "duzina", "dužine",
+  "duzine", "duljina", "čelik", "celik", "čelični", "celicni", "komad", "od", "po", "i",
+]);
+
+export function isFillerWord(word: string): boolean {
+  return FILLER_WORDS.has(word.toLowerCase());
+}
 
 const ALIAS_LOOKUP = new Map<string, CommandAlias>(
   COMMAND_ALIASES.map((a) => [a.alias, a]),
@@ -151,10 +319,22 @@ const GRADE_META: Record<string, { short: string; aliases: string[] }> = {
   "steel-s235jr": { short: "S235", aliases: ["s235", "s235jr"] },
   "steel-s355jr": { short: "S355", aliases: ["s355", "s355jr"] },
   "steel-s420m": { short: "S420", aliases: ["s420", "s420m"] },
-  "stainless-304": { short: "304", aliases: ["304", "1.4301", "a2", "inox"] },
+  "stainless-304": {
+    short: "304",
+    aliases: [
+      "304", "1.4301", "a2", "inox", "stainless",
+      "nehrđajući", "nehrdjajuci", "nerđajući", "nerdjajuci", "prohrom",
+    ],
+  },
   "stainless-316": { short: "316", aliases: ["316", "1.4401"] },
   "stainless-316l": { short: "316L", aliases: ["316l", "1.4404", "a4"] },
-  "al-6060": { short: "6060", aliases: ["6060", "al", "alu", "aluminium", "aluminum"] },
+  "al-6060": {
+    short: "6060",
+    aliases: [
+      "6060", "al", "alu", "aluminium", "aluminum",
+      "aluminij", "aluminijum", "aluminijski", "aluminijska", "aluminijsko",
+    ],
+  },
   "al-6082": { short: "6082", aliases: ["6082"] },
   "al-7075": { short: "7075", aliases: ["7075"] },
 };
