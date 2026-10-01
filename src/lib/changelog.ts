@@ -20,7 +20,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.35.0",
     date: "2026-10-01",
     added: [
-      "A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its assembly, its note and a count you can edit. The grouping by assembly, with its add, scale and save actions, is the next tab",
+      "A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its note and a count you can edit. An assembly is named once — on the stock line when all its cuts belong to it, on each cut only where a line mixes assemblies, and nowhere when the whole project is one. The grouping by assembly, with its add, scale and save actions, is the next tab",
       "A row of totals under the project name: weight, items, stock lines and paint surface",
     ],
     changed: [
@@ -32,7 +32,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Expense categories (hardware, transport, finishing, other) are translated; they were English in Bosnian too",
     ],
     added_bs: [
-      "Projekat se otvara na specifikaciji materijala, grupisanoj onako kako se kupuje: svaki rez istog presjeka i kvaliteta stoji pod jednom stavkom — UPN 200, L 50×50×5, rebrasti lim 5 mm — s komadima, metrima (m² za lim), težinom i cijenom, a pored nje šta kupiti (1 × 12m, 2 × 6m). Svaki rez zadržava svoj sklop, napomenu i količinu koja se može mijenjati. Grupisanje po sklopovima, s dodavanjem, skaliranjem i spremanjem, je sljedeći tab",
+      "Projekat se otvara na specifikaciji materijala, grupisanoj onako kako se kupuje: svaki rez istog presjeka i kvaliteta stoji pod jednom stavkom — UPN 200, L 50×50×5, rebrasti lim 5 mm — s komadima, metrima (m² za lim), težinom i cijenom, a pored nje šta kupiti (1 × 12m, 2 × 6m). Svaki rez zadržava napomenu i količinu koja se može mijenjati. Sklop se navodi jednom — na stavci kad svi njeni rezovi pripadaju njemu, na svakom rezu samo kad stavka miješa sklopove, i nigdje kad je cijeli projekat jedan sklop. Grupisanje po sklopovima, s dodavanjem, skaliranjem i spremanjem, je sljedeći tab",
       "Red ukupnih vrijednosti ispod naziva projekta: težina, stavke, stavke materijala i površina za boju",
     ],
     changed_bs: [

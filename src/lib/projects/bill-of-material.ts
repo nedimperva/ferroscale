@@ -136,3 +136,33 @@ export function projectBillOfMaterial(project: Project): BomLine[] {
   }
   return [...lines.values()];
 }
+
+/**
+ * Where the bill of material names an assembly — once, where it tells you
+ * something. A project with one assembly (or none) names none: every cut
+ * would carry the same word. A stock line whose cuts all belong to one
+ * assembly names it once, on the line. Only a line that mixes assemblies
+ * names each cut, since that is the line where "which one is this for" has
+ * more than one answer.
+ */
+export interface AssemblyLabels {
+  /** The assembly named on a stock line, by line key. */
+  line: Map<string, string>;
+  /** Lines whose cuts each carry their own assembly. */
+  perCut: Set<string>;
+}
+
+export function assemblyLabels(lines: BomLine[]): AssemblyLabels {
+  const labels: AssemblyLabels = { line: new Map(), perCut: new Set() };
+  const all = new Set(lines.flatMap((line) => line.cuts.map((cut) => cut.assembly ?? "")));
+  if (all.size < 2) return labels;
+  for (const line of lines) {
+    const own = new Set(line.cuts.map((cut) => cut.assembly ?? ""));
+    if (own.size > 1) labels.perCut.add(line.key);
+    else {
+      const [only] = own;
+      if (only) labels.line.set(line.key, only);
+    }
+  }
+  return labels;
+}

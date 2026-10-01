@@ -13,7 +13,12 @@ import {
   type ProjectStatus,
 } from "@/hooks/useProjects";
 import { defaultUnitStore, sharedCalcSettingsStore } from "@/lib/settings-stores";
-import { projectBillOfMaterial, type BomCut, type BomLine } from "@/lib/projects/bill-of-material";
+import {
+  assemblyLabels,
+  projectBillOfMaterial,
+  type BomCut,
+  type BomLine,
+} from "@/lib/projects/bill-of-material";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
 import { RowMenu } from "../row-menu";
@@ -636,6 +641,7 @@ export function ProjectDetail({
   const rows = useMemo(() => projectItemRows(project), [project]);
   const rowById = useMemo(() => new Map(rows.map((row) => [row.id, row])), [rows]);
   const bom = useMemo(() => projectBillOfMaterial(project), [project]);
+  const asmLabels = useMemo(() => assemblyLabels(bom), [bom]);
   const buyByKey = useStockToBuy(project);
   const sym = summary.currencySymbol;
   const activity = project.activity ?? [];
@@ -1040,7 +1046,7 @@ export function ProjectDetail({
    *  assembly it belongs to, its note, and the piece count you can edit. A
    *  part of an inserted assembly edits through that assembly, so its count
    *  is read-only here. */
-  const renderCut = (cut: BomCut) => {
+  const renderCut = (cut: BomCut, showAssembly: boolean) => {
     const row = rowById.get(cut.calc.id);
     const isPart = cut.partIndex !== undefined;
     const input = isPart ? cut.calc.templateParts![cut.partIndex!].input : cut.calc.input;
@@ -1058,26 +1064,16 @@ export function ProjectDetail({
             {compact && !editable && <span className="text-foreground-secondary">{cut.pieces} × </span>}
             {cut.cut}
           </button>
-          {cut.assembly ? (
+          {showAssembly && cut.assembly && (
             <button
               type="button"
               onClick={() => row && setPickingAssemblyRow(row)}
               title={t("projects.assemblyPickerTitle")}
               className="fs-track-label border-0 bg-transparent p-0 text-[10px] font-bold uppercase text-muted hover:text-foreground cursor-pointer"
+              style={{ fontSize: 10, lineHeight: "16px" }}
             >
               {cut.assembly}
             </button>
-          ) : (
-            row && (
-              <button
-                type="button"
-                onClick={() => setPickingAssemblyRow(row)}
-                title={t("projects.setAssembly")}
-                className="border-0 bg-transparent p-0 text-[10px] text-muted-faint opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 focus:opacity-100 cursor-pointer"
-              >
-                + Tag
-              </button>
-            )
           )}
         </span>
         {editable && <ItemNote row={editable} projectId={project.id} actions={actions} />}
@@ -1163,6 +1159,11 @@ export function ProjectDetail({
             const name = (
               <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <span className="text-[14px] font-semibold text-foreground">{line.name}</span>
+                {asmLabels.line.has(line.key) && (
+                  <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+                    {asmLabels.line.get(line.key)}
+                  </span>
+                )}
                 {compact && <span className="font-mono text-[11px] text-muted">{line.gradeLabel}</span>}
                 {!compact && line.cuts.length > 1 && (
                   <span className="font-mono text-[11px] text-muted-faint">
@@ -1206,7 +1207,7 @@ export function ProjectDetail({
                     <span />
                   </div>
                 )}
-                <ol className="m-0 flex list-none flex-col p-0">{line.cuts.map(renderCut)}</ol>
+                <ol className="m-0 flex list-none flex-col p-0">{line.cuts.map((cut) => renderCut(cut, asmLabels.perCut.has(line.key)))}</ol>
               </li>
             );
           })}

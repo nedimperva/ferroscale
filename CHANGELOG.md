@@ -11,7 +11,7 @@ A project page that reads like an order: the bill of material grouped by stock, 
 
 ### Added
 
-- A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its assembly, its note and a count you can edit. The grouping by assembly, with its add, scale and save actions, is the next tab
+- A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its note and a count you can edit. An assembly is named once — on the stock line when all its cuts belong to it, on each cut only where a line mixes assemblies, and nowhere when the whole project is one. The grouping by assembly, with its add, scale and save actions, is the next tab
 - A row of totals under the project name: weight, items, stock lines and paint surface
 
 ### Changed

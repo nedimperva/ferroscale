@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Project, ProjectCalculation } from "@/hooks/useProjects";
-import { projectBillOfMaterial } from "./bill-of-material";
+import { assemblyLabels, projectBillOfMaterial } from "./bill-of-material";
 import { computeProjectProcurementSummary } from "./cutting";
 
 type Dims = Record<string, number>;
@@ -123,5 +123,34 @@ describe("projectBillOfMaterial", () => {
     const [line] = projectBillOfMaterial(p);
     const order = computeProjectProcurementSummary(p);
     expect(order.items.map((i) => i.groupKey)).toEqual([line.key]);
+  });
+});
+
+describe("assemblyLabels", () => {
+  const cut = (assembly?: string) => calc(`c${Math.random()}`, "angle", "Angle", { dims: angle, lengthMm: 500, qty: 1, kg: 1, amount: 1, assembly });
+  const flat = (assembly?: string) =>
+    calc(`f${Math.random()}`, "flat_bar", "Flat", { dims: { width: 40, thickness: 8 }, lengthMm: 500, qty: 1, kg: 1, amount: 1, assembly });
+
+  it("names nothing when the whole project is one assembly, or none", () => {
+    for (const tag of [undefined, "Frame"]) {
+      const labels = assemblyLabels(projectBillOfMaterial(project([cut(tag), cut(tag), flat(tag)])));
+      expect(labels.line.size).toBe(0);
+      expect(labels.perCut.size).toBe(0);
+    }
+  });
+
+  it("names a one-assembly line once, and each cut only on a mixed line", () => {
+    const [angles, flats] = projectBillOfMaterial(project([cut("Treads"), cut("Landing"), flat("Handrail"), flat("Handrail")]));
+    const labels = assemblyLabels([angles, flats]);
+    expect([...labels.perCut]).toEqual([angles.key]);
+    expect(labels.line.get(flats.key)).toBe("Handrail");
+    expect(labels.line.has(angles.key)).toBe(false);
+  });
+
+  it("leaves an untagged line unnamed beside tagged ones", () => {
+    const [angles, flats] = projectBillOfMaterial(project([cut(), flat("Handrail")]));
+    const labels = assemblyLabels([angles, flats]);
+    expect(labels.line.has(angles.key)).toBe(false);
+    expect(labels.line.get(flats.key)).toBe("Handrail");
   });
 });
