@@ -666,7 +666,9 @@
         "items": "Stavke",
         "cutting": "Plan rezanja",
         "details": "Detalji",
-        "order": "Narudžba"
+        "order": "Narudžba",
+        "bom": "Specifikacija",
+        "assemblies": "Po sklopovima"
       },
       "pipeline": {
         "active": "Aktivni poslovi",
@@ -764,7 +766,10 @@
         "materialCost": "Cijena materijala",
         "quoted": "Ponuda +{margin}%",
         "grandTotalQuote": "Ukupna ponuda",
-        "paint": "Boja"
+        "paint": "Boja",
+        "pieces": "Komada",
+        "stockLines": "Stavke materijala",
+        "surface": "Površina za boju"
       },
       "itemColumns": {
         "item": "Stavka",
@@ -836,6 +841,40 @@
         "labor": "Rad",
         "extras": "Dodatno",
         "paint": "Boja"
+      },
+      "bom": {
+        "columns": {
+          "stock": "Materijal",
+          "grade": "Kvalitet",
+          "cut": "Rez · sklop",
+          "pcs": "Kom.",
+          "qty": "Količina",
+          "weight": "kg",
+          "amount": "Cijena"
+        },
+        "buy": "kupiti {units}",
+        "cutCount": "{count, plural, one {# rez} few {# reza} other {# rezova}}",
+        "total": "Materijal",
+        "summary": "{lines, plural, one {# stavka materijala} few {# stavke materijala} other {# stavki materijala}} · {cuts, plural, one {# rez} few {# reza} other {# rezova}}",
+        "lineAria": "{name}, {count, plural, one {# rez} few {# reza} other {# rezova}}"
+      },
+      "quote": {
+        "perKg": "{value}/kg ukupno",
+        "marginAria": "Postotak marže",
+        "hours": "h",
+        "perHour": "{sym}/h",
+        "addExpense": "Dodaj trošak",
+        "expenseCategory": "Vrsta troška",
+        "expenseAmount": "Iznos troška",
+        "removeExpense": "Ukloni {name}",
+        "weightByAssembly": "Težina po sklopu",
+        "expenseLabel": "Trošak"
+      },
+      "costCategories": {
+        "hardware": "Okovi i vijci",
+        "transport": "Prevoz",
+        "finishing": "Završna obrada",
+        "other": "Ostalo"
       }
     },
     "parts": {

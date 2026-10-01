@@ -5,12 +5,15 @@ import {
   STANDARD_EURO_SHEET_FORMATS,
   type CutPiece,
   type PlatePiece,
-  type CalculationInput,
 } from "@ferroscale/metal-core";
-import { toMillimeters } from "@/lib/calculator/units";
-import { getProfileById } from "@/lib/datasets/profiles";
+import {
+  getPlateWidthMm,
+  isPlateProfile,
+  stockGroupFor,
+  type CutGroupKind,
+} from "./stock";
 
-export type CutGroupKind = "1d_bar" | "2d_plate";
+export { getProfileSectionLabel, stockGroupFor, type CutGroupKind, type StockGroupKey } from "./stock";
 
 export interface ProjectCutGroup {
   groupId: string;
@@ -34,6 +37,8 @@ export interface ProjectCutGroup {
 
 export interface ProcurementStockItem {
   groupId: string;
+  /** The stock key (`stockGroupFor`) — joins an order line to its BOM line. */
+  groupKey: string;
   label: string;
   kind: CutGroupKind;
   profileId: string;
@@ -57,140 +62,6 @@ export interface ProjectProcurementSummary {
   globalScrapPercent: number;
   totalBarsCount: number;
   totalSheetsCount: number;
-}
-
-const PLATE_PROFILE_IDS = new Set([
-  "sheet",
-  "plate",
-  "chequered_plate",
-  "expanded_metal",
-  "corrugated_sheet",
-]);
-
-function isPlateProfile(profileId: string): boolean {
-  return PLATE_PROFILE_IDS.has(profileId);
-}
-
-function getPlateWidthMm(input: CalculationInput): number {
-  const w = input.manualDimensions?.width;
-  return w ? toMillimeters(w.value, w.unit) : 1000;
-}
-
-function getPlateThicknessMm(input: CalculationInput): number {
-  const t = input.manualDimensions?.thickness;
-  return t ? toMillimeters(t.value, t.unit) : 1;
-}
-
-function formatDim(val: number): string {
-  if (!Number.isFinite(val)) return "?";
-  if (Number.isInteger(val)) return String(val);
-  return Number(val.toFixed(2)).toString();
-}
-
-function dimMm(input: Partial<CalculationInput>, key: string): number | null {
-  const dim = input.manualDimensions?.[key as keyof typeof input.manualDimensions];
-  if (!dim) return null;
-  const val = toMillimeters(dim.value, dim.unit);
-  return Number.isFinite(val) ? val : null;
-}
-
-export function getProfileSectionLabel(
-  input: Partial<CalculationInput>,
-  result?: { profileId?: string; profileLabel?: string } | null,
-): string {
-  if (!input.profileId) {
-    return result?.profileLabel || "";
-  }
-  const profile = getProfileById(input.profileId);
-  if (profile?.mode === "standard") {
-    if (input.selectedSizeId) {
-      const size = profile.sizes.find((s) => s.id === input.selectedSizeId);
-      if (size) return size.label;
-    }
-    if (result?.profileLabel && result.profileLabel !== profile.label) return result.profileLabel;
-    return profile.sizes[0]?.label ?? profile.label;
-  }
-
-  switch (input.profileId) {
-    case "angle": {
-      const a = dimMm(input, "legA");
-      const b = dimMm(input, "legB");
-      const t = dimMm(input, "thickness");
-      if (a != null && b != null && t != null) {
-        return `Angle ${formatDim(a)}x${formatDim(b)}x${formatDim(t)}`;
-      }
-      break;
-    }
-    case "flat_bar": {
-      const w = dimMm(input, "width");
-      const t = dimMm(input, "thickness");
-      if (w != null && t != null) {
-        return `Flat Bar ${formatDim(w)}x${formatDim(t)}`;
-      }
-      break;
-    }
-    case "square_hollow": {
-      const s = dimMm(input, "side") ?? dimMm(input, "width");
-      const t = dimMm(input, "wallThickness") ?? dimMm(input, "thickness");
-      if (s != null && t != null) {
-        return `SHS ${formatDim(s)}x${formatDim(s)}x${formatDim(t)}`;
-      }
-      break;
-    }
-    case "rectangular_tube": {
-      const w = dimMm(input, "width");
-      const h = dimMm(input, "height");
-      const t = dimMm(input, "wallThickness") ?? dimMm(input, "thickness");
-      if (w != null && h != null && t != null) {
-        return `RHS ${formatDim(w)}x${formatDim(h)}x${formatDim(t)}`;
-      }
-      break;
-    }
-    case "pipe": {
-      const od = dimMm(input, "outerDiameter") ?? dimMm(input, "diameter");
-      const t = dimMm(input, "wallThickness") ?? dimMm(input, "thickness");
-      if (od != null && t != null) {
-        return `CHS ${formatDim(od)}x${formatDim(t)}`;
-      }
-      break;
-    }
-    case "round_bar": {
-      const d = dimMm(input, "diameter");
-      if (d != null) {
-        return `Round Bar Ø${formatDim(d)}`;
-      }
-      break;
-    }
-    case "square_bar": {
-      const s = dimMm(input, "side");
-      if (s != null) {
-        return `Square Bar ${formatDim(s)}x${formatDim(s)}`;
-      }
-      break;
-    }
-    case "sheet":
-    case "plate": {
-      const t = dimMm(input, "thickness");
-      if (t != null) {
-        return `${input.profileId === "sheet" ? "Sheet" : "Plate"} ${formatDim(t)} mm`;
-      }
-      break;
-    }
-    case "chequered_plate": {
-      const t = dimMm(input, "thickness");
-      const p = dimMm(input, "patternHeight");
-      if (t != null && p != null) {
-        return `Chequered Plate ${formatDim(t)}+${formatDim(p)} mm`;
-      } else if (t != null) {
-        return `Chequered Plate ${formatDim(t)} mm`;
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  return result?.profileLabel || profile?.label || input.profileId;
 }
 
 function extractCalculationPieces(calc: ProjectCalculation): Array<{
@@ -225,10 +96,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
 
       if (isPlate) {
         const widthMm = getPlateWidthMm(partInput);
-        const thicknessMm = getPlateThicknessMm(partInput);
-        const isChq = profileId === "chequered_plate";
-        const groupKey = `plate:${thicknessMm}:${partResult.gradeLabel}:${isChq ? "chequered" : "flat"}`;
-        const groupLabel = `${isChq ? "Chequered plate" : "Plate"} ${thicknessMm} mm · ${partResult.gradeLabel}`;
+        const { groupKey, label: groupLabel, thicknessMm = 1 } = stockGroupFor(partInput, partResult);
         const pieceAreaM2 = (widthMm * lengthMm) / 1_000_000;
         const areaM2 = pieceAreaM2 * quantity;
         const kgPerM2 = pieceAreaM2 > 0 ? partResult.unitWeightKg / pieceAreaM2 : 78.5;
@@ -256,9 +124,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
         };
       }
 
-      const sectionLabel = getProfileSectionLabel(partInput, partResult);
-      const groupKey = `${profileId}:${sectionLabel}:${partResult.gradeLabel}`;
-      const groupLabel = `${sectionLabel} · ${partResult.gradeLabel}`;
+      const { groupKey, label: groupLabel, name: sectionLabel } = stockGroupFor(partInput, partResult);
       const lengthM = lengthMm / 1000;
       const kgPerMeter = lengthM > 0 ? partResult.unitWeightKg / lengthM : 0;
 
@@ -290,10 +156,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
 
   if (isPlate) {
     const widthMm = getPlateWidthMm(input);
-    const thicknessMm = getPlateThicknessMm(input);
-    const isChq = profileId === "chequered_plate";
-    const groupKey = `plate:${thicknessMm}:${result.gradeLabel}:${isChq ? "chequered" : "flat"}`;
-    const groupLabel = `${isChq ? "Chequered plate" : "Plate"} ${thicknessMm} mm · ${result.gradeLabel}`;
+    const { groupKey, label: groupLabel, thicknessMm = 1 } = stockGroupFor(input, { ...result, profileId });
     const pieceAreaM2 = (widthMm * lengthMm) / 1_000_000;
     const areaM2 = pieceAreaM2 * quantity;
     const kgPerM2 = pieceAreaM2 > 0 ? result.unitWeightKg / pieceAreaM2 : 78.5;
@@ -323,9 +186,7 @@ function extractCalculationPieces(calc: ProjectCalculation): Array<{
     ];
   }
 
-  const sectionLabel = getProfileSectionLabel(input, result);
-  const groupKey = `${profileId}:${sectionLabel}:${result.gradeLabel}`;
-  const groupLabel = `${sectionLabel} · ${result.gradeLabel}`;
+  const { groupKey, label: groupLabel, name: sectionLabel } = stockGroupFor(input, { ...result, profileId });
   const lengthM = lengthMm / 1000;
   const kgPerMeter = lengthM > 0 ? result.unitWeightKg / lengthM : 0;
 
@@ -476,6 +337,7 @@ export function computeProjectProcurementSummary(
 
       items.push({
         groupId: group.groupId,
+        groupKey: group.groupKey,
         label: group.label,
         kind: group.kind,
         profileId: group.profileId,
@@ -518,6 +380,7 @@ export function computeProjectProcurementSummary(
 
       items.push({
         groupId: group.groupId,
+        groupKey: group.groupKey,
         label: group.label,
         kind: group.kind,
         profileId: group.profileId,

@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.35.0] - 2026-10-01
+
+A project page that reads like an order: the bill of material grouped by stock, and the quote built — and entered — beside it.
+
+### Added
+
+- A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its note and a count you can edit. An assembly is named once — on the stock line when all its cuts belong to it, on each cut only where a line mixes assemblies, and nowhere when the whole project is one. The grouping by assembly, with its add, scale and save actions, is the next tab
+- A row of totals under the project name: weight, items, stock lines and paint surface
+
+### Changed
+
+- Everything on top of the material is entered on the quote itself. The rail beside the bill of material builds the total line by line — material, markup %, labour as hours × rate, extras, paint coats — with each line's inputs on that line, so what it adds and the total move as you type. The separate labour & extras and painting cards are gone; on the phone the quote is the Details tab
+- A project's markup is set on its quote, next to what it adds, instead of behind Edit details
+- A cut's note sits on its own line instead of under it, and the word Note only shows on the row you point at or are typing in. In the By assembly view a row no longer repeats the assembly it sits under, and an assembly's Add, Scale and Save to library buttons show on the heading you point at (they are always in its ⋯ menu)
+
+### Fixed
+
+- Emptying the labour hours of a project sets them to zero. Before, the field cleared but the old hours stayed in the total
+- Expense categories (hardware, transport, finishing, other) are translated; they were English in Bosnian too
+
 ## [3.34.0] - 2026-09-28
 
 A first screen that shows the grammar, and a bar that reads how people talk — in English and Bosnian, in any order.
