@@ -370,7 +370,7 @@ function ItemNote({
       }}
       placeholder={t("projects.itemNotePlaceholder")}
       aria-label={t("projects.itemNoteAria", { name: row.specLabel })}
-      className="w-full min-w-0 border-0 bg-transparent p-0 text-[11px] text-foreground-secondary placeholder:text-muted-faint outline-none"
+      className="min-w-[6rem] flex-1 border-0 bg-transparent p-0 text-[11px] text-foreground-secondary outline-none placeholder:text-transparent group-hover:placeholder:text-muted-faint focus:placeholder:text-muted-faint"
     />
   );
 }
@@ -718,38 +718,18 @@ export function ProjectDetail({
       </span>
     );
 
+    // Every row here sits under its assembly's heading, so the row doesn't
+    // repeat the name; moving it to another assembly is in its menu.
     const name = (
-      <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            type="button"
-            onClick={() => actions.onOpenItem(row.calc.input)}
-            title={t("projects.openInBar")}
-            className="min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer font-bold text-[15px] text-foreground truncate"
-          >
-            {row.specLabel}
-          </button>
-          {row.assembly ? (
-            <button
-              type="button"
-              onClick={() => setPickingAssemblyRow(row)}
-              className="inline-flex items-center gap-1 rounded-chip px-1.5 py-0.5 text-[11px] font-semibold bg-[var(--surface-inset)] text-muted hover:text-foreground border border-[var(--border-faint)] cursor-pointer"
-              title={t("projects.assemblyPickerTitle")}
-            >
-              <DeskIcon name="tag" />
-              <span>{row.assembly}</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setPickingAssemblyRow(row)}
-              className="opacity-0 group-hover:opacity-100 hover:opacity-100 px-1 py-0.5 rounded-chip text-[10px] text-muted-faint hover:text-foreground cursor-pointer transition-opacity"
-              title={t("projects.setAssembly")}
-            >
-              + Tag
-            </button>
-          )}
-        </div>
+      <div className="flex min-w-0 flex-1 items-baseline gap-3">
+        <button
+          type="button"
+          onClick={() => actions.onOpenItem(row.calc.input)}
+          title={t("projects.openInBar")}
+          className="min-w-0 max-w-[60%] flex-shrink-0 truncate border-0 bg-transparent p-0 text-left text-[15px] font-bold text-foreground cursor-pointer"
+        >
+          {row.specLabel}
+        </button>
         <ItemNote row={row} projectId={project.id} actions={actions} />
       </div>
     );
@@ -947,7 +927,7 @@ export function ProjectDetail({
               className="border-t first:border-t-0 border-[var(--border-faint)]"
             >
               <div
-                className="flex items-center gap-2.5 bg-[var(--surface-inset)] border-b border-[var(--border-faint)]"
+                className="group/asm flex items-center gap-2.5 bg-[var(--surface-inset)] border-b border-[var(--border-faint)]"
                 style={{ padding: compact ? "9px 12px" : "9px 16px" }}
               >
                 <span className="flex-shrink-0 text-foreground-secondary">
@@ -972,7 +952,9 @@ export function ProjectDetail({
                     <span className="font-mono text-[11px] text-muted">
                       {t("projects.itemCount", { count: asmRows.length })}
                     </span>
-                    <div className="flex items-center gap-1.5">
+                    {/* The same three actions sit in this heading's menu, so on every
+                        heading at once they were noise; they show where you point. */}
+                    <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover/asm:opacity-100 focus-within:opacity-100">
                       {asmName &&
                         groupChip(
                           t("common.add"),
@@ -1075,8 +1057,8 @@ export function ProjectDetail({
               {cut.assembly}
             </button>
           )}
+          {editable && <ItemNote row={editable} projectId={project.id} actions={actions} />}
         </span>
-        {editable && <ItemNote row={editable} projectId={project.id} actions={actions} />}
       </span>
     );
 

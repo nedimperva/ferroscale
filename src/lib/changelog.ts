@@ -26,6 +26,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changed: [
       "Everything on top of the material is entered on the quote itself. The rail beside the bill of material builds the total line by line — material, markup %, labour as hours × rate, extras, paint coats — with each line's inputs on that line, so what it adds and the total move as you type. The separate labour & extras and painting cards are gone; on the phone the quote is the Details tab",
       "A project's markup is set on its quote, next to what it adds, instead of behind Edit details",
+      "A cut's note sits on its own line instead of under it, and the word Note only shows on the row you point at or are typing in. In the By assembly view a row no longer repeats the assembly it sits under, and an assembly's Add, Scale and Save to library buttons show on the heading you point at (they are always in its ⋯ menu)",
     ],
     fixed: [
       "Emptying the labour hours of a project sets them to zero. Before, the field cleared but the old hours stayed in the total",
@@ -38,6 +39,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     changed_bs: [
       "Sve što ide preko materijala unosi se na samoj ponudi. Traka pored specifikacije gradi ukupni iznos red po red — materijal, marža %, rad kao sati × satnica, dodatni troškovi, slojevi boje — a polja svakog reda su na tom redu, pa se ono što dodaje i ukupni iznos mijenjaju dok kucate. Zasebne kartice za rad i dodatne troškove i za farbanje više ne postoje; na telefonu je ponuda tab Detalji",
       "Marža projekta postavlja se na ponudi, pored iznosa koji dodaje, umjesto iza Uredi detalje",
+      "Bilješka reza stoji u istom redu umjesto ispod njega, a riječ Bilješka se vidi samo u redu na kojem je pokazivač ili u koji kucate. U prikazu Po sklopovima red više ne ponavlja sklop pod kojim stoji, a dugmad Dodaj, Skaliraj i Sačuvaj u biblioteku sklopa vide se na naslovu na koji pokažete (uvijek su u njegovom ⋯ meniju)",
     ],
     fixed_bs: [
       "Brisanje radnih sati projekta postavlja ih na nulu. Ranije se polje praznilo, a stari sati su ostajali u ukupnom iznosu",

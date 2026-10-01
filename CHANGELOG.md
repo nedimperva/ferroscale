@@ -18,6 +18,7 @@ A project page that reads like an order: the bill of material grouped by stock, 
 
 - Everything on top of the material is entered on the quote itself. The rail beside the bill of material builds the total line by line — material, markup %, labour as hours × rate, extras, paint coats — with each line's inputs on that line, so what it adds and the total move as you type. The separate labour & extras and painting cards are gone; on the phone the quote is the Details tab
 - A project's markup is set on its quote, next to what it adds, instead of behind Edit details
+- A cut's note sits on its own line instead of under it, and the word Note only shows on the row you point at or are typing in. In the By assembly view a row no longer repeats the assembly it sits under, and an assembly's Add, Scale and Save to library buttons show on the heading you point at (they are always in its ⋯ menu)
 
 ### Fixed
 
