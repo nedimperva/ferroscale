@@ -17,6 +17,34 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.35.0",
+    date: "2026-10-01",
+    added: [
+      "A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its assembly, its note and a count you can edit. The grouping by assembly, with its add, scale and save actions, is the next tab",
+      "A row of totals under the project name: weight, items, stock lines and paint surface",
+    ],
+    changed: [
+      "Everything on top of the material is entered on the quote itself. The rail beside the bill of material builds the total line by line — material, markup %, labour as hours × rate, extras, paint coats — with each line's inputs on that line, so what it adds and the total move as you type. The separate labour & extras and painting cards are gone; on the phone the quote is the Details tab",
+      "A project's markup is set on its quote, next to what it adds, instead of behind Edit details",
+    ],
+    fixed: [
+      "Emptying the labour hours of a project sets them to zero. Before, the field cleared but the old hours stayed in the total",
+      "Expense categories (hardware, transport, finishing, other) are translated; they were English in Bosnian too",
+    ],
+    added_bs: [
+      "Projekat se otvara na specifikaciji materijala, grupisanoj onako kako se kupuje: svaki rez istog presjeka i kvaliteta stoji pod jednom stavkom — UPN 200, L 50×50×5, rebrasti lim 5 mm — s komadima, metrima (m² za lim), težinom i cijenom, a pored nje šta kupiti (1 × 12m, 2 × 6m). Svaki rez zadržava svoj sklop, napomenu i količinu koja se može mijenjati. Grupisanje po sklopovima, s dodavanjem, skaliranjem i spremanjem, je sljedeći tab",
+      "Red ukupnih vrijednosti ispod naziva projekta: težina, stavke, stavke materijala i površina za boju",
+    ],
+    changed_bs: [
+      "Sve što ide preko materijala unosi se na samoj ponudi. Traka pored specifikacije gradi ukupni iznos red po red — materijal, marža %, rad kao sati × satnica, dodatni troškovi, slojevi boje — a polja svakog reda su na tom redu, pa se ono što dodaje i ukupni iznos mijenjaju dok kucate. Zasebne kartice za rad i dodatne troškove i za farbanje više ne postoje; na telefonu je ponuda tab Detalji",
+      "Marža projekta postavlja se na ponudi, pored iznosa koji dodaje, umjesto iza Uredi detalje",
+    ],
+    fixed_bs: [
+      "Brisanje radnih sati projekta postavlja ih na nulu. Ranije se polje praznilo, a stari sati su ostajali u ukupnom iznosu",
+      "Vrste troškova (okovi i vijci, prevoz, završna obrada, ostalo) su prevedene; i na bosanskom su bile na engleskom",
+    ],
+  },
+  {
     version: "3.34.0",
     date: "2026-09-28",
     added: [

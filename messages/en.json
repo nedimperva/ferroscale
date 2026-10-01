@@ -666,7 +666,9 @@
         "items": "Items",
         "cutting": "Cut plan",
         "details": "Details",
-        "order": "Order"
+        "order": "Order",
+        "bom": "Bill of material",
+        "assemblies": "By assembly"
       },
       "pipeline": {
         "active": "Active jobs",
@@ -764,7 +766,10 @@
         "materialCost": "Material cost",
         "quoted": "Quoted +{margin}%",
         "grandTotalQuote": "Grand Total Quote",
-        "paint": "Paint"
+        "paint": "Paint",
+        "pieces": "Pieces",
+        "stockLines": "Stock lines",
+        "surface": "Paint surface"
       },
       "itemColumns": {
         "item": "Item",
@@ -836,6 +841,40 @@
         "labor": "Labor",
         "extras": "Extras",
         "paint": "Paint"
+      },
+      "bom": {
+        "columns": {
+          "stock": "Stock",
+          "grade": "Grade",
+          "cut": "Cut · assembly",
+          "pcs": "Pcs",
+          "qty": "Qty",
+          "weight": "kg",
+          "amount": "Cost"
+        },
+        "buy": "buy {units}",
+        "cutCount": "{count, plural, one {# cut} other {# cuts}}",
+        "total": "Material",
+        "summary": "{lines, plural, one {# stock line} other {# stock lines}} · {cuts, plural, one {# cut} other {# cuts}}",
+        "lineAria": "{name}, {count, plural, one {# cut} other {# cuts}}"
+      },
+      "quote": {
+        "perKg": "{value}/kg all-in",
+        "marginAria": "Markup percent",
+        "hours": "h",
+        "perHour": "{sym}/h",
+        "addExpense": "Add expense",
+        "expenseCategory": "Expense category",
+        "expenseAmount": "Expense amount",
+        "removeExpense": "Remove {name}",
+        "weightByAssembly": "Weight by assembly",
+        "expenseLabel": "Expense"
+      },
+      "costCategories": {
+        "hardware": "Hardware",
+        "transport": "Transport",
+        "finishing": "Finishing",
+        "other": "Other"
       }
     },
     "parts": {

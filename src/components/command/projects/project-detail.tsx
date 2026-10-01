@@ -2,28 +2,18 @@
 
 import dynamic from "next/dynamic";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import { cmdParse, fsMoney, fsWeight, fsWeightUnit, type CalculationInput } from "@ferroscale/metal-core";
 import {
   PROJECT_CATEGORIES,
   PROJECT_STATUSES,
   type Project,
-  type ProjectAdditionalCost,
   type ProjectCategory,
   type ProjectStatus,
 } from "@/hooks/useProjects";
-import {
-  createPaintCoat,
-  type PaintCoatKind,
-  type ProjectPaintCoat,
-} from "@/lib/projects/paint";
-import {
-  defaultPaintCoverageStore,
-  defaultPaintPriceStore,
-  defaultUnitStore,
-  sharedCalcSettingsStore,
-} from "@/lib/settings-stores";
+import { defaultUnitStore, sharedCalcSettingsStore } from "@/lib/settings-stores";
+import { projectBillOfMaterial, type BomCut, type BomLine } from "@/lib/projects/bill-of-material";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput } from "../command-copy";
 import { RowMenu } from "../row-menu";
@@ -53,183 +43,15 @@ import {
   projectItemRows,
   projectSummary,
   toDateInputValue,
+  type ProjectItemRow,
 } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 import { InsertAssemblyModal } from "./insert-assembly-modal";
+import { ProjectQuote } from "./project-quote";
 import { SheetShell } from "../sheets/sheet-shell";
 import { ScaleAssemblyModal } from "./scale-assembly-modal";
 import { SaveAssemblyToLibraryModal } from "./save-assembly-modal";
 import type { SavedPart } from "@/hooks/useSaved";
-
-/** The one number that matters, with the cost breakdown beneath it. Six
- *  equal-weight tiles made the grand total no easier to find than the item
- *  count, and on a phone they filled the first screen before a single row
- *  appeared. One hero figure, the rest as chips under a rule. */
-function QuoteStrip({
-  summary,
-  sym,
-  compact,
-}: {
-  summary: ReturnType<typeof projectSummary>;
-  sym: string;
-  compact?: boolean;
-}) {
-  const t = useTranslations("command");
-
-  const chips: { key: string; label: string; qty?: string; value: string }[] = [
-    {
-      key: "material",
-      label: t("projects.breakdown.material"),
-      value: fsMoney(summary.materialQuotedTotal),
-    },
-  ];
-  if (summary.hasLabor) {
-    chips.push({
-      key: "labor",
-      label: t("projects.breakdown.labor"),
-      qty: `${summary.laborHours}h`,
-      value: fsMoney(summary.laborCost),
-    });
-  }
-  if (summary.hasAdditionalCosts) {
-    chips.push({
-      key: "extras",
-      label: t("projects.breakdown.extras"),
-      value: fsMoney(summary.additionalCostsTotal),
-    });
-  }
-  if (summary.hasPainting) {
-    chips.push({
-      key: "paint",
-      label: t("projects.breakdown.paint"),
-      qty: `${summary.paintKgNeeded} kg`,
-      value: fsMoney(summary.paintingCost),
-    });
-  }
-
-  const facts: { key: string; label: string; value: string }[] = [
-    {
-      key: "weight",
-      label: t("projects.stats.weight"),
-      value: `${fsWeight(summary.totalWeightKg)} ${fsWeightUnit()}`,
-    },
-    {
-      key: "items",
-      label: t("projects.stats.items"),
-      value: t("projects.itemCount", { count: summary.itemCount }),
-    },
-  ];
-
-  return (
-    <section
-      className="flex flex-col rounded-panel-lg"
-      style={{
-        gap: compact ? 11 : 13,
-        padding: compact ? "14px 16px" : "16px 20px",
-        border: "1px solid var(--accent-border)",
-        background: "linear-gradient(180deg, var(--surface-emphasis), var(--surface))",
-      }}
-    >
-      <div className="flex items-end gap-4">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="fs-track-label text-[10px] font-bold text-muted uppercase">
-            {t("projects.stats.grandTotalQuote")}
-          </span>
-          <span
-            className="font-mono font-bold fs-display-num truncate"
-            style={{
-              fontSize: compact ? 30 : 32,
-              letterSpacing: compact ? -0.9 : -0.8,
-              lineHeight: 1.12,
-              color: "var(--accent-text)",
-            }}
-          >
-            {sym} {fsMoney(summary.quotedTotal)}
-          </span>
-        </div>
-
-        {summary.marginPercent > 0 && compact && (
-          <span
-            className="mb-1 inline-flex flex-shrink-0 items-center rounded-chip font-mono text-[11px] font-bold"
-            style={{
-              height: 22,
-              padding: "0 8px",
-              background: "var(--accent-surface)",
-              border: "1px solid var(--accent-border)",
-              color: "var(--accent-text)",
-            }}
-          >
-            +{summary.marginPercent}%
-          </span>
-        )}
-
-        {!compact && (
-          <div className="flex flex-shrink-0 gap-7 pb-0.5">
-            {facts.map((fact) => (
-              <div key={fact.key} className="flex flex-col items-end">
-                <span className="fs-track-label text-[10px] font-bold text-muted uppercase">
-                  {fact.label}
-                </span>
-                <span className="font-mono text-[15px] font-bold fs-display-num">
-                  {fact.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {compact && (
-        <div className="flex items-center gap-2 font-mono text-[12px] text-foreground-secondary fs-display-num">
-          {facts.map((fact, index) => (
-            <span key={fact.key} className="flex items-center gap-2">
-              {index > 0 && <span style={{ color: "var(--border-strong)" }}>·</span>}
-              <span className={index === 0 ? "font-bold" : undefined}>{fact.value}</span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div style={{ height: 1, background: "var(--accent-border)", opacity: 0.55 }} />
-
-      <div className="flex flex-wrap gap-1.5">
-        {chips.map((chip) => (
-          <span
-            key={chip.key}
-            className="inline-flex items-center gap-1.5 rounded-chip font-mono fs-display-num"
-            style={{
-              height: 26,
-              padding: "0 10px",
-              fontSize: compact ? 11 : 12,
-              background: "var(--surface)",
-              border: "1px solid var(--border-faint)",
-            }}
-          >
-            <span className="text-muted">{chip.label}</span>
-            <span className="font-bold">
-              {chip.qty ? `${chip.qty} · ` : ""}
-              {sym} {chip.value}
-            </span>
-          </span>
-        ))}
-        {summary.marginPercent > 0 && !compact && (
-          <span
-            className="inline-flex items-center rounded-chip font-mono text-[12px] font-bold"
-            style={{
-              height: 26,
-              padding: "0 10px",
-              background: "var(--accent-surface)",
-              border: "1px solid var(--accent-border)",
-              color: "var(--accent-text)",
-            }}
-          >
-            +{summary.marginPercent}% {t("projects.markupMargin")}
-          </span>
-        )}
-      </div>
-    </section>
-  );
-}
 
 function StatusBadge({
   status,
@@ -757,341 +579,34 @@ function AssemblyPickerModal({
   );
 }
 
-function LaborAndExtrasForm({
-  project,
-  actions,
-  currencySymbol,
-}: {
-  project: Project;
-  actions: ProjectActions;
-  currencySymbol: string;
-}) {
-  const t = useTranslations("command");
-  const [laborHours, setLaborHours] = useState<string>(
-    project.laborHours !== undefined ? String(project.laborHours) : "",
-  );
-  const [laborRate, setLaborRate] = useState<string>(
-    project.laborRatePerHour !== undefined ? String(project.laborRatePerHour) : "45",
-  );
-  const [costs, setCosts] = useState<ProjectAdditionalCost[]>(project.additionalCosts ?? []);
-  const [newLabel, setNewLabel] = useState("");
-  const [newAmount, setNewAmount] = useState("");
-  const [newCategory, setNewCategory] = useState<"hardware" | "transport" | "finishing" | "other">("hardware");
+type DetailTab = "bom" | "assemblies" | "cutting" | "order" | "details";
 
-  const saveLabor = (hrs?: string, rate?: string) => {
-    const h = hrs !== undefined ? hrs : laborHours;
-    const r = rate !== undefined ? rate : laborRate;
-    actions.onUpdateLabor?.(project.id, {
-      laborHours: h ? Math.max(0, Number(h) || 0) : undefined,
-      laborRatePerHour: r ? Math.max(0, Number(r) || 0) : undefined,
+/** # · stock/cut · grade · pcs · qty · kg · cost · menu — one track list for
+ *  the header, every stock line, every cut under it and the total, so the
+ *  figures stand in columns all the way down. */
+const BOM_ROW =
+  "grid grid-cols-[28px_minmax(0,1fr)_72px_64px_92px_84px_100px_32px] items-center gap-x-3";
+
+/**
+ * What to buy for each stock line ("2 × 6m"), keyed like the bill of
+ * material. It runs the bar and plate optimisers, which stay off the
+ * first-load path (see `ProjectCutting` above), so the column fills in a
+ * frame after the page does.
+ */
+function useStockToBuy(project: Project): Map<string, string> | null {
+  const [state, setState] = useState<{ project: Project; byKey: Map<string, string> } | null>(null);
+  useEffect(() => {
+    let live = true;
+    void import("@/lib/projects/cutting").then(({ computeProjectProcurementSummary }) => {
+      if (!live) return;
+      const order = computeProjectProcurementSummary(project);
+      setState({ project, byKey: new Map(order.items.map((item) => [item.groupKey, item.rawStockUnits])) });
     });
-  };
-
-  const addCost = () => {
-    if (!newLabel.trim() || !newAmount) return;
-    const item: ProjectAdditionalCost = {
-      id: crypto.randomUUID(),
-      label: newLabel.trim(),
-      amount: Math.max(0, Number(newAmount) || 0),
-      category: newCategory,
+    return () => {
+      live = false;
     };
-    const next = [...costs, item];
-    setCosts(next);
-    actions.onUpdateAdditionalCosts?.(project.id, next);
-    setNewLabel("");
-    setNewAmount("");
-  };
-
-  const removeCost = (id: string) => {
-    const next = costs.filter((c) => c.id !== id);
-    setCosts(next);
-    actions.onUpdateAdditionalCosts?.(project.id, next);
-  };
-
-  const laborTotal = (Number(laborHours) || 0) * (Number(laborRate) || 0);
-  const extrasTotal = costs.reduce((s, c) => s + c.amount, 0);
-
-  return (
-    <section
-      className="rounded-panel-lg"
-      style={{
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
-        padding: "13px 15px",
-      }}
-    >
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <div className="fs-track-label text-[10px] font-bold text-muted uppercase">
-          {t("projects.laborAndExtras")}
-        </div>
-        <div className="font-mono text-xs font-bold text-foreground">
-          {currencySymbol} {fsMoney(laborTotal + extrasTotal)}
-        </div>
-      </div>
-
-      {/* Labor inputs */}
-      <div className="grid grid-cols-2 gap-2 mb-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-[10px] text-muted">{t("projects.laborHours")}:</span>
-          <input
-            type="number"
-            min={0}
-            step={0.5}
-            value={laborHours}
-            onChange={(e) => {
-              setLaborHours(e.target.value);
-              saveLabor(e.target.value, undefined);
-            }}
-            placeholder="0"
-            className="h-11 sm:h-8 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-xs font-mono text-foreground"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-[10px] text-muted">{t("projects.hourlyRate")} ({currencySymbol}/h):</span>
-          <input
-            type="number"
-            min={0}
-            step={5}
-            value={laborRate}
-            onChange={(e) => {
-              setLaborRate(e.target.value);
-              saveLabor(undefined, e.target.value);
-            }}
-            placeholder="45"
-            className="h-11 sm:h-8 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-xs font-mono text-foreground"
-          />
-        </label>
-      </div>
-
-      {/* Additional Costs List */}
-      {costs.length > 0 && (
-        <div className="space-y-1.5 mb-2.5">
-          {costs.map((cost) => (
-            <div
-              key={cost.id}
-              className="flex items-center justify-between text-xs font-mono p-1.5 rounded-chip bg-[var(--surface-raised)]"
-            >
-              <span className="text-foreground truncate max-w-[140px]">{cost.label}</span>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold">{currencySymbol} {fsMoney(cost.amount)}</span>
-                <button
-                  type="button"
-                  onClick={() => removeCost(cost.id)}
-                  className="text-muted hover:text-red-500 cursor-pointer text-xs px-1"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Add Extra Cost Form */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <select
-          value={newCategory}
-          onChange={(e) => setNewCategory(e.target.value as typeof newCategory)}
-          aria-label="Expense category"
-          className="h-11 sm:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] px-1 text-[11px] text-foreground font-semibold cursor-pointer"
-        >
-          <option value="hardware">Hardware</option>
-          <option value="transport">Transport</option>
-          <option value="finishing">Finishing</option>
-          <option value="other">Other</option>
-        </select>
-        <input
-          value={newLabel}
-          onChange={(e) => setNewLabel(e.target.value)}
-          placeholder={t("projects.extraExpensePlaceholder")}
-          className="flex-1 min-w-[120px] h-11 sm:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] px-2 text-[11px] text-foreground placeholder:text-muted-faint"
-        />
-        <input
-          type="number"
-          min={0}
-          value={newAmount}
-          onChange={(e) => setNewAmount(e.target.value)}
-          placeholder="€"
-          className="w-14 h-11 sm:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface-raised)] px-1.5 text-[11px] font-mono text-foreground"
-        />
-        <button
-          type="button"
-          onClick={addCost}
-          disabled={!newLabel.trim() || !newAmount}
-          className="h-11 sm:h-7 px-2.5 rounded-chip bg-[var(--action)] text-[var(--action-contrast)] text-[11px] font-bold disabled:opacity-40 cursor-pointer"
-        >
-          +
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function PaintingForm({
-  project,
-  actions,
-  surfaceM2,
-  coatTotals,
-  paintKg,
-  paintCost,
-  currencySymbol,
-}: {
-  project: Project;
-  actions: ProjectActions;
-  surfaceM2: number;
-  coatTotals: ReturnType<typeof projectSummary>["paintCoatTotals"];
-  paintKg: number;
-  paintCost: number;
-  currencySymbol: string;
-}) {
-  const t = useTranslations("command");
-  const defaultPrice = useSyncExternalStore(
-    defaultPaintPriceStore.subscribe,
-    defaultPaintPriceStore.getSnapshot,
-    defaultPaintPriceStore.getServerSnapshot,
-  );
-  const defaultCoverage = useSyncExternalStore(
-    defaultPaintCoverageStore.subscribe,
-    defaultPaintCoverageStore.getSnapshot,
-    defaultPaintCoverageStore.getServerSnapshot,
-  );
-  const coats = project.paintCoats ?? [];
-  const defaults = { pricePerKg: defaultPrice, coverageM2PerKg: defaultCoverage };
-  const hasKind = (kind: PaintCoatKind) => coats.some((coat) => coat.kind === kind);
-
-  const setCoats = (next: ProjectPaintCoat[]) => actions.onSetPaintCoats(project.id, next);
-  const add = (kind: PaintCoatKind) => setCoats([...coats, createPaintCoat(kind, defaults)]);
-  const patch = (id: string, next: Partial<ProjectPaintCoat>) =>
-    setCoats(coats.map((coat) => (coat.id === id ? { ...coat, ...next } : coat)));
-  const remove = (id: string) => setCoats(coats.filter((coat) => coat.id !== id));
-
-  const addBtn = (kind: PaintCoatKind, label: string, disabled?: boolean) => (
-    <button
-      type="button"
-      onClick={() => add(kind)}
-      disabled={disabled}
-      className="h-11 sm:h-8 px-3 rounded-chip font-bold text-[12px] cursor-pointer disabled:opacity-40 disabled:cursor-default"
-      style={{
-        border: "1px dashed var(--border-strong)",
-        background: "transparent",
-        color: "var(--foreground-secondary)",
-      }}
-    >
-      {label}
-    </button>
-  );
-
-  return (
-    <section
-      className="rounded-panel-lg"
-      style={{
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
-        padding: "13px 15px",
-      }}
-    >
-      <div className="flex items-baseline justify-between gap-2 mb-2">
-        <div className="fs-track-label text-[10px] font-bold text-muted uppercase">
-          {t("projects.paintingLabel")}
-        </div>
-        <div className="font-mono text-[11px] text-muted">
-          <span className="text-muted-faint">{t("projects.paintSurface")}</span>:{" "}
-          <span className="font-bold text-foreground">{surfaceM2.toFixed(2)} m²</span>
-        </div>
-      </div>
-      <div className="flex flex-col gap-2.5">
-        {coats.map((coat) => {
-          const total = coatTotals.find((c) => c.coat.id === coat.id);
-          const title =
-            coat.kind === "primer"
-              ? t("projects.paintPrimer")
-              : coat.kind === "finish"
-                ? t("projects.paintFinish")
-                : coat.name?.trim() || t("projects.paintCustom");
-          return (
-            <div
-              key={coat.id}
-              className="flex flex-col gap-2 rounded-button p-2.5"
-              style={{
-                border: "1px solid var(--border-faint)",
-                background: "var(--surface-raised)",
-              }}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-[12px] text-foreground">{title}</span>
-                <button
-                  type="button"
-                  onClick={() => remove(coat.id)}
-                  className="text-muted hover:text-red-500 cursor-pointer text-xs"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="flex items-end gap-2 flex-wrap text-xs">
-                <label className="flex flex-col gap-0.5">
-                  <span className="text-[10px] text-muted">{t("projects.paintLayers")}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={coat.layers}
-                    aria-label={`${t("projects.paintLayers")} · ${title}`}
-                    onChange={(e) => patch(coat.id, { layers: Math.max(1, Number(e.target.value) || 1) })}
-                    className="w-12 h-11 sm:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
-                  />
-                </label>
-                <label className="flex flex-col gap-0.5">
-                  <span className="text-[10px] text-muted">{t("projects.paintCoverage")}</span>
-                  <input
-                    type="number"
-                    min={0.1}
-                    step={0.5}
-                    value={coat.coverageM2PerKg}
-                    aria-label={`${t("projects.paintCoverage")} · ${title}`}
-                    onChange={(e) => patch(coat.id, { coverageM2PerKg: Number(e.target.value) || 1 })}
-                    className="w-14 h-11 sm:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
-                  />
-                </label>
-                <label className="flex flex-col gap-0.5">
-                  <span className="text-[10px] text-muted">{t("projects.paintPrice")}</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={coat.pricePerKg}
-                    aria-label={`${t("projects.paintPrice")} · ${title}`}
-                    onChange={(e) => patch(coat.id, { pricePerKg: Number(e.target.value) || 0 })}
-                    className="w-16 h-11 sm:h-7 rounded-chip border border-[var(--border-faint)] bg-[var(--surface)] px-1 font-mono text-foreground"
-                  />
-                </label>
-              </div>
-              {total && (
-                <div className="font-mono text-[11px] text-muted">
-                  {total.kg} kg · {currencySymbol} {fsMoney(total.cost)}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-wrap gap-2 mt-2.5">
-        {addBtn("primer", t("projects.paintAddPrimer"), hasKind("primer"))}
-        {addBtn("finish", t("projects.paintAddFinish"), hasKind("finish"))}
-        {addBtn("custom", t("projects.paintAddCustom"))}
-      </div>
-
-      {coats.length > 0 && (
-        <div className="flex items-baseline justify-between gap-3 mt-3 pt-2" style={{ borderTop: "1px solid var(--border-faint)" }}>
-          <span className="fs-track-label text-[10px] font-bold text-muted uppercase">
-            {t("projects.paintTotal")}
-          </span>
-          <span className="font-mono text-[13px] font-bold text-foreground">
-            {paintKg} kg · {currencySymbol} {fsMoney(paintCost)}
-          </span>
-        </div>
-      )}
-    </section>
-  );
+  }, [project]);
+  return state?.project === project ? state.byKey : null;
 }
 
 export function ProjectDetail({
@@ -1109,7 +624,7 @@ export function ProjectDetail({
 }) {
   const t = useTranslations("command");
   const [editingDetails, setEditingDetails] = useState(false);
-  const [detailTab, setDetailTab] = useState<"items" | "cutting" | "order" | "details">("items");
+  const [detailTab, setDetailTab] = useState<DetailTab>("bom");
   const [notes, setNotes] = useState(project.description ?? "");
   const [pickingAssemblyRow, setPickingAssemblyRow] = useState<(ReturnType<typeof projectItemRows>[number]) | null>(null);
   const [quickAddAssembly, setQuickAddAssembly] = useState<string>("");
@@ -1118,7 +633,10 @@ export function ProjectDetail({
   const [savingTemplateAsm, setSavingTemplateAsm] = useState<{ name: string; items: SavedPart[] } | null>(null);
 
   const summary = projectSummary(project, marginPercent);
-  const rows = projectItemRows(project);
+  const rows = useMemo(() => projectItemRows(project), [project]);
+  const rowById = useMemo(() => new Map(rows.map((row) => [row.id, row])), [rows]);
+  const bom = useMemo(() => projectBillOfMaterial(project), [project]);
+  const buyByKey = useStockToBuy(project);
   const sym = summary.currencySymbol;
   const activity = project.activity ?? [];
 
@@ -1149,8 +667,9 @@ export function ProjectDetail({
   const hasMultipleAssemblies =
     assemblyGroups.length > 1 || (assemblyGroups.length === 1 && assemblyGroups[0][0] !== "");
 
-  const tabs: { id: "items" | "cutting" | "order" | "details"; label: string }[] = [
-    { id: "items", label: t("projects.tabs.items") },
+  const tabs: { id: DetailTab; label: string }[] = [
+    { id: "bom", label: t("projects.tabs.bom") },
+    { id: "assemblies", label: t("projects.tabs.assemblies") },
     { id: "cutting", label: t("projects.tabs.cutting") },
     { id: "order", label: t("projects.tabs.order") },
     ...(compact
@@ -1499,79 +1018,303 @@ export function ProjectDetail({
     </div>
   );
 
-  const rail = (
-    <div className="flex flex-col gap-3">
-      {/* Notes / Description */}
-      <section
-        className="rounded-panel-lg"
-        style={{
-          border: "1px solid var(--border-faint)",
-          background: "var(--surface)",
-          padding: "13px 15px",
-        }}
+  const cutMenu = (cut: BomCut, row: ProjectItemRow | undefined, input: CalculationInput) => (
+    <RowMenu
+      ariaLabel={row?.specLabel ?? cut.cut}
+      items={[
+        { id: "open", label: t("projects.openInBar"), onSelect: () => actions.onOpenItem(input) },
+        ...(row
+          ? [{ id: "assembly", label: t("projects.setAssembly"), onSelect: () => setPickingAssemblyRow(row) }]
+          : []),
+        {
+          id: "remove",
+          label: t("projects.removeFromProject"),
+          danger: true,
+          onSelect: () => actions.onRemoveItem(project.id, cut.calc.id),
+        },
+      ]}
+    />
+  );
+
+  /** One cut under its stock line: the length (opens it in the bar), the
+   *  assembly it belongs to, its note, and the piece count you can edit. A
+   *  part of an inserted assembly edits through that assembly, so its count
+   *  is read-only here. */
+  const renderCut = (cut: BomCut) => {
+    const row = rowById.get(cut.calc.id);
+    const isPart = cut.partIndex !== undefined;
+    const input = isPart ? cut.calc.templateParts![cut.partIndex!].input : cut.calc.input;
+    const editable = row && !isPart ? row : null;
+
+    const label = (
+      <span className="flex min-w-0 flex-col gap-0.5 py-1.5 pl-3" style={{ borderLeft: "1px solid var(--border)" }}>
+        <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+          <button
+            type="button"
+            onClick={() => actions.onOpenItem(input)}
+            title={t("projects.openInBar")}
+            className="border-0 bg-transparent p-0 text-left font-mono text-[12.5px] text-foreground fs-display-num cursor-pointer hover:underline"
+          >
+            {compact && !editable && <span className="text-foreground-secondary">{cut.pieces} × </span>}
+            {cut.cut}
+          </button>
+          {cut.assembly ? (
+            <button
+              type="button"
+              onClick={() => row && setPickingAssemblyRow(row)}
+              title={t("projects.assemblyPickerTitle")}
+              className="fs-track-label border-0 bg-transparent p-0 text-[10px] font-bold uppercase text-muted hover:text-foreground cursor-pointer"
+            >
+              {cut.assembly}
+            </button>
+          ) : (
+            row && (
+              <button
+                type="button"
+                onClick={() => setPickingAssemblyRow(row)}
+                title={t("projects.setAssembly")}
+                className="border-0 bg-transparent p-0 text-[10px] text-muted-faint opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 focus:opacity-100 cursor-pointer"
+              >
+                + Tag
+              </button>
+            )
+          )}
+        </span>
+        {editable && <ItemNote row={editable} projectId={project.id} actions={actions} />}
+      </span>
+    );
+
+    const qty = editable ? (
+      <QuantityCell row={editable} projectId={project.id} actions={actions} />
+    ) : (
+      <span className="font-mono text-[12px] text-foreground-secondary fs-display-num">{cut.pieces}</span>
+    );
+
+    if (compact) {
+      return (
+        <li key={cut.key} className="group flex items-center gap-2">
+          <span className="min-w-0 flex-1">{label}</span>
+          {editable && qty}
+          <span className="w-[56px] text-right font-mono text-[12px] text-foreground-secondary fs-display-num">
+            {fsWeight(cut.weightKg)}
+          </span>
+          {cutMenu(cut, row, input)}
+        </li>
+      );
+    }
+
+    return (
+      <li key={cut.key} className={`group ${BOM_ROW} min-h-[40px] hover:bg-[var(--surface-raised)]`}>
+        <span />
+        {label}
+        <span />
+        <span className="flex justify-end">{qty}</span>
+        <span />
+        <span className="text-right font-mono text-[12.5px] text-foreground-secondary fs-display-num">
+          {fsWeight(cut.weightKg)}
+        </span>
+        <span className="text-right font-mono text-[12.5px] text-foreground-secondary fs-display-num">
+          {fsMoney(cut.amount)}
+        </span>
+        <span className="flex justify-end">{cutMenu(cut, row, input)}</span>
+      </li>
+    );
+  };
+
+  const lineQty = (line: BomLine) =>
+    line.kind === "2d_plate" ? `${line.areaM2.toFixed(2)} m²` : `${line.lengthM.toFixed(2)} m`;
+  const cutCount = bom.reduce((n, line) => n + line.cuts.length, 0);
+  const totalPieces = bom.reduce((n, line) => n + line.pieces, 0);
+  const NUM = "text-right font-mono text-[13px] font-semibold fs-display-num";
+
+  /** The bill of material: one line per stock bought, its cuts beneath. */
+  const bomTable =
+    rows.length === 0 ? (
+      <div
+        className="font-mono text-[12px] text-muted-faint"
+        style={{ padding: "18px 0", borderTop: "1px solid var(--foreground)" }}
       >
-        <div className="fs-track-label text-[10px] font-bold text-muted uppercase mb-2">
-          {t("projects.notesLabel")}
+        {t("projects.emptyRow")}
+      </div>
+    ) : (
+      <section aria-label={t("projects.tabs.bom")} className="flex flex-col">
+        {!compact && (
+          <div
+            aria-hidden="true"
+            className={`${BOM_ROW} fs-track-label pb-2 text-[10px] font-bold uppercase text-muted`}
+            style={{ borderBottom: "1px solid var(--foreground)" }}
+          >
+            <span>#</span>
+            <span>{t("projects.bom.columns.stock")}</span>
+            <span>{t("projects.bom.columns.grade")}</span>
+            <span className="text-right">{t("projects.bom.columns.pcs")}</span>
+            <span className="text-right">{t("projects.bom.columns.qty")}</span>
+            <span className="text-right">{t("projects.bom.columns.weight")}</span>
+            <span className="text-right">{t("projects.bom.columns.amount")}</span>
+            <span />
+          </div>
+        )}
+        <ol
+          className="m-0 list-none p-0"
+          style={compact ? { borderTop: "1px solid var(--foreground)" } : undefined}
+        >
+          {bom.map((line, index) => {
+            const buy = buyByKey?.get(line.key);
+            const name = (
+              <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span className="text-[14px] font-semibold text-foreground">{line.name}</span>
+                {compact && <span className="font-mono text-[11px] text-muted">{line.gradeLabel}</span>}
+                {!compact && line.cuts.length > 1 && (
+                  <span className="font-mono text-[11px] text-muted-faint">
+                    {t("projects.bom.cutCount", { count: line.cuts.length })}
+                  </span>
+                )}
+                {!compact && buy && (
+                  <span className="font-mono text-[11px] text-muted">{t("projects.bom.buy", { units: buy })}</span>
+                )}
+              </span>
+            );
+            return (
+              <li
+                key={line.key}
+                aria-label={t("projects.bom.lineAria", { name: line.name, count: line.cuts.length })}
+                className="py-1.5"
+                style={{ borderBottom: "1px solid var(--border)" }}
+              >
+                {compact ? (
+                  <div className="flex flex-col gap-0.5 pb-1 pt-1.5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      {name}
+                      <span className="font-mono text-[13px] font-semibold fs-display-num">{fsMoney(line.amount)}</span>
+                    </div>
+                    <div className="flex justify-between gap-3 font-mono text-[11px] text-muted fs-display-num">
+                      <span>{buy ? t("projects.bom.buy", { units: buy }) : lineQty(line)}</span>
+                      <span>
+                        {fsWeight(line.weightKg)} {fsWeightUnit()}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={`${BOM_ROW} min-h-[44px]`}>
+                    <span className="font-mono text-[12px] text-muted-faint">{String(index + 1).padStart(2, "0")}</span>
+                    {name}
+                    <span className="font-mono text-[12px] text-foreground-secondary">{line.gradeLabel}</span>
+                    <span className={NUM}>{line.pieces}</span>
+                    <span className={NUM}>{lineQty(line)}</span>
+                    <span className={NUM}>{fsWeight(line.weightKg)}</span>
+                    <span className={NUM}>{fsMoney(line.amount)}</span>
+                    <span />
+                  </div>
+                )}
+                <ol className="m-0 flex list-none flex-col p-0">{line.cuts.map(renderCut)}</ol>
+              </li>
+            );
+          })}
+        </ol>
+        <div
+          className={compact ? "flex items-baseline justify-between gap-3 py-3" : `${BOM_ROW} min-h-[52px]`}
+          style={{ borderBottom: "3px double var(--foreground)" }}
+        >
+          {!compact && <span />}
+          <span className="flex min-w-0 flex-wrap items-baseline gap-x-3">
+            <span className="text-[13px] font-semibold">{t("projects.bom.total")}</span>
+            <span className="font-mono text-[11px] text-muted">
+              {t("projects.bom.summary", { lines: bom.length, cuts: cutCount })}
+            </span>
+          </span>
+          {!compact && (
+            <>
+              <span />
+              <span className={NUM}>{totalPieces}</span>
+              <span />
+              <span className={NUM}>{fsWeight(summary.totalWeightKg)}</span>
+            </>
+          )}
+          <span className={NUM}>
+            {compact && `${sym} `}
+            {fsMoney(summary.totalCost)}
+          </span>
+          {!compact && <span />}
         </div>
+      </section>
+    );
+
+  const assemblyWeights = hasMultipleAssemblies
+    ? assemblyGroups.map(([name, asmRows]) => ({
+        name: name || t("projects.generalSection"),
+        kg: asmRows.reduce((n, r) => n + r.weightKg, 0),
+      }))
+    : [];
+  const heaviest = Math.max(1, ...assemblyWeights.map((a) => a.kg));
+
+  const rail = (
+    <div className="flex flex-col gap-8">
+      <ProjectQuote
+        project={project}
+        actions={actions}
+        summary={summary}
+        globalMarginPercent={marginPercent}
+      />
+
+      {assemblyWeights.length > 0 && (
+        <section aria-label={t("projects.quote.weightByAssembly")} className="flex flex-col">
+          <div className="fs-track-label mb-2 text-[10px] font-bold uppercase text-muted">
+            {t("projects.quote.weightByAssembly")}
+          </div>
+          {assemblyWeights.map((asm) => (
+            <div
+              key={asm.name}
+              className="grid items-center gap-2.5"
+              style={{ gridTemplateColumns: "minmax(0, 7rem) minmax(0, 1fr) 4.5rem", height: 28 }}
+            >
+              <span className="truncate text-[12.5px]">{asm.name}</span>
+              <span className="block h-1.5" style={{ background: "var(--surface-inset)" }}>
+                <span
+                  className="block h-1.5"
+                  style={{ width: `${(asm.kg / heaviest) * 100}%`, background: "var(--foreground-secondary)" }}
+                />
+              </span>
+              <span className="text-right font-mono text-[12px] fs-display-num">{fsWeight(asm.kg)}</span>
+            </div>
+          ))}
+        </section>
+      )}
+
+      <section className="flex flex-col">
+        <label
+          htmlFor={`project-notes-${project.id}`}
+          className="fs-track-label mb-2 text-[10px] font-bold uppercase text-muted"
+        >
+          {t("projects.notesLabel")}
+        </label>
         <textarea
+          id={`project-notes-${project.id}`}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           onBlur={() => actions.onUpdateNotes(project.id, notes)}
           placeholder={t("projects.notesPlaceholder")}
           rows={compact ? 3 : 4}
-          aria-label={t("projects.notesLabel")}
-          className="w-full resize-y rounded-button border border-border-faint bg-[var(--surface-raised)] px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-faint outline-none"
+          className="w-full resize-y rounded-none border border-border bg-[var(--surface)] px-3 py-2 text-[13px] leading-relaxed text-foreground placeholder:text-muted-faint outline-none"
         />
       </section>
 
-      {/* Labor and Extras Form */}
-      <LaborAndExtrasForm
-        project={project}
-        actions={actions}
-        currencySymbol={sym}
-      />
-
-      {/* Surface Area & Painting Form */}
-      <PaintingForm
-        project={project}
-        actions={actions}
-        surfaceM2={summary.totalSurfaceAreaM2}
-        coatTotals={summary.paintCoatTotals}
-        paintKg={summary.paintKgNeeded}
-        paintCost={summary.paintingCost}
-        currencySymbol={sym}
-      />
-
-      {/* Activity Log */}
-      <section
-        className="rounded-panel-lg"
-        style={{
-          border: "1px solid var(--border-faint)",
-          background: "var(--surface)",
-          padding: "13px 15px",
-        }}
-      >
-        <div className="fs-track-label text-[10px] font-bold text-muted uppercase mb-2">
+      <section className="flex flex-col">
+        <div className="fs-track-label mb-2 text-[10px] font-bold uppercase text-muted">
           {t("projects.activityLabel")}
         </div>
         {activity.length === 0 ? (
           <p className="text-[12px] text-muted-faint">{t("projects.activity.empty")}</p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {activity.slice(0, 12).map((entry, index) => (
-              <li key={entry.id} className="flex gap-2.5 items-baseline">
-                <span
-                  className="rounded-none flex-shrink-0"
-                  style={{
-                    width: 5,
-                    height: 5,
-                    background: index === 0 ? "var(--accent)" : "var(--border)",
-                  }}
-                  aria-hidden="true"
-                />
-                <span className="text-[12px] text-foreground-secondary leading-snug">
-                  {formatActivity(entry, t)}
-                  <span className="text-muted-faint"> · {formatRelativeTime(entry.at, t)}</span>
+          <ul className="m-0 flex list-none flex-col p-0">
+            {activity.slice(0, 12).map((entry) => (
+              <li
+                key={entry.id}
+                className="flex items-baseline justify-between gap-3 py-1.5 text-[12px]"
+                style={{ borderBottom: "1px solid var(--border-faint)" }}
+              >
+                <span className="leading-snug text-foreground-secondary">{formatActivity(entry, t)}</span>
+                <span className="flex-shrink-0 font-mono text-[11px] text-muted-faint">
+                  {formatRelativeTime(entry.at, t)}
                 </span>
               </li>
             ))}
@@ -1580,6 +1323,16 @@ export function ProjectDetail({
       </section>
     </div>
   );
+
+  const activeTab: DetailTab = !compact && detailTab === "details" ? "bom" : detailTab;
+  const withRail = activeTab === "bom" || activeTab === "assemblies";
+
+  const facts = [
+    { key: "weight", label: t("projects.stats.weight"), value: `${fsWeight(summary.totalWeightKg)} ${fsWeightUnit()}` },
+    { key: "items", label: t("projects.stats.items"), value: t("projects.itemCount", { count: summary.itemCount }) },
+    { key: "lines", label: t("projects.stats.stockLines"), value: String(bom.length) },
+    { key: "surface", label: t("projects.stats.surface"), value: `${summary.totalSurfaceAreaM2.toFixed(1)} m²` },
+  ];
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
@@ -1705,113 +1458,116 @@ export function ProjectDetail({
 
       <div
         className={compact ? "flex flex-col gap-3 pt-3" : "flex-1 overflow-y-auto"}
-        style={compact ? undefined : { padding: "20px 32px 32px" }}
+        style={compact ? undefined : { padding: "20px 32px 40px" }}
       >
-        {/* Items · Cut plan · Details. The third tab is what used to be a
-            "more details" button stranded below the whole item table — on a
-            36-item project that was a very long scroll to reach the notes
-            field. On the wide workspace the rail is beside the table instead,
-            so the tab is a phone affordance only. */}
         <div
-          className={`flex items-center gap-1 rounded-button bg-[var(--surface-inset)] border border-[var(--border-faint)] mb-3 max-w-full ${
-            compact ? "" : "self-start"
-          }`}
-          style={{ padding: 3 }}
-          role="tablist"
+          className={compact || !withRail ? "flex flex-col" : "grid items-start gap-x-10"}
+          style={compact || !withRail ? undefined : { gridTemplateColumns: "minmax(0, 1fr) minmax(0, 360px)" }}
         >
-          {tabs.map((tab) => {
-            const active = detailTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setDetailTab(tab.id)}
-                className={`rounded-chip font-semibold transition-colors cursor-pointer whitespace-nowrap ${
-                  compact ? "flex-1 text-[13px]" : "text-[13px]"
-                }`}
-                style={{
-                  height: compact ? 44 : 30,
-                  padding: compact ? "0 8px" : "0 16px",
-                  background: active ? "var(--surface)" : "transparent",
-                  color: active ? "var(--foreground)" : "var(--muted)",
-                  fontWeight: active ? 700 : 600,
-                  border: "none",
-                  boxShadow: active ? "0 1px 2px rgba(22, 18, 11, 0.08)" : "none",
-                }}
+          <div className="flex min-w-0 flex-col gap-4">
+            {compact ? (
+              withRail && (
+                <div
+                  className="flex items-end justify-between gap-3 py-3"
+                  style={{ borderTop: "1px solid var(--foreground)", borderBottom: "1px solid var(--border)" }}
+                >
+                  <div className="flex min-w-0 flex-col">
+                    <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+                      {t("projects.stats.grandTotalQuote")}
+                    </span>
+                    <span
+                      className="truncate font-mono fs-display-num"
+                      style={{ fontSize: 30, letterSpacing: -0.9, lineHeight: 1.15, color: "var(--accent-text)" }}
+                    >
+                      {sym} {fsMoney(summary.quotedTotal)}
+                    </span>
+                  </div>
+                  <div className="flex-shrink-0 text-right font-mono text-[12px] leading-relaxed text-foreground-secondary fs-display-num">
+                    <div>
+                      {fsWeight(summary.totalWeightKg)} {fsWeightUnit()}
+                    </div>
+                    <div>{t("projects.itemCount", { count: summary.itemCount })}</div>
+                  </div>
+                </div>
+              )
+            ) : (
+              <dl
+                className="m-0 grid grid-cols-4"
+                style={{ borderTop: "1px solid var(--foreground)", borderBottom: "1px solid var(--border)" }}
               >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+                {facts.map((fact, index) => (
+                  <div
+                    key={fact.key}
+                    className="flex min-w-0 flex-col gap-1 py-3"
+                    style={index > 0 ? { paddingLeft: 16, borderLeft: "1px solid var(--border-faint)" } : undefined}
+                  >
+                    <dt className="fs-track-label truncate text-[10px] font-bold uppercase text-muted">{fact.label}</dt>
+                    <dd className="m-0 truncate font-mono text-[19px] fs-display-num">{fact.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
 
-        {detailTab === "cutting" ? (
-          <div className="w-full min-w-0">
-            <ProjectCutting project={project} compact={compact} />
-          </div>
-        ) : detailTab === "order" ? (
-          <div className="w-full min-w-0">
-            <ProjectProcurement project={project} compact={compact} />
-          </div>
-        ) : detailTab === "details" ? (
-          <div className="flex flex-col gap-3">
+            {/* Bill of material · By assembly · Cut plan · Order, plus Details
+                on the phone, where the quote rail can't sit beside the table. */}
             <div
-              className="flex items-center gap-2.5 rounded-button"
-              style={{
-                height: 46,
-                padding: "0 14px",
-                border: "1px solid var(--accent-border)",
-                background: "var(--surface-emphasis)",
-              }}
+              role="tablist"
+              className="flex max-w-full gap-5 overflow-x-auto"
+              style={{ borderBottom: "1px solid var(--border)" }}
             >
-              <span
-                className="fs-track-label text-[10px] font-bold uppercase"
-                style={{ color: "var(--accent-text)", opacity: 0.8 }}
-              >
-                {t("projects.stats.grandTotalQuote")}
-              </span>
-              <span
-                className="font-mono text-[17px] font-bold fs-display-num truncate"
-                style={{ letterSpacing: -0.3, color: "var(--accent-text)" }}
-              >
-                {sym} {fsMoney(summary.quotedTotal)}
-              </span>
-              <span className="flex-1" />
-              <span className="font-mono text-[12px] text-foreground-secondary fs-display-num flex-shrink-0">
-                {fsWeight(summary.totalWeightKg)} {fsWeightUnit()}
-              </span>
+              {tabs.map((tab) => {
+                const active = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setDetailTab(tab.id)}
+                    className="flex-shrink-0 cursor-pointer whitespace-nowrap border-0 bg-transparent px-0 text-[13px] transition-colors"
+                    style={{
+                      height: compact ? 44 : 38,
+                      color: active ? "var(--foreground)" : "var(--muted)",
+                      fontWeight: active ? 600 : 500,
+                      boxShadow: active ? "inset 0 -2px 0 var(--foreground)" : "none",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
-            {rail}
-          </div>
-        ) : (
-          <div
-            className={compact ? "flex flex-col gap-3" : "grid gap-4 items-start"}
-            style={
-              compact
-                ? undefined
-                : { gridTemplateColumns: "minmax(0, 1fr) minmax(0, 340px)" }
-            }
-          >
-            <div className="flex flex-col gap-3 min-w-0">
-              <QuoteStrip summary={summary} sym={sym} compact={compact} />
 
-              {/* Fast Inline Quick Command Bar with Assembly Targeting */}
-              <QuickAddCommandBar
-                projectId={project.id}
-                actions={actions}
-                existingAssemblies={existingAssemblies}
-                targetAssembly={quickAddAssembly}
-                onTargetAssemblyChange={setQuickAddAssembly}
-              />
-
-              {/* Items Table */}
-              {itemsTable}
-            </div>
-            {!compact && rail}
+            {activeTab === "cutting" ? (
+              <div className="w-full min-w-0">
+                <ProjectCutting project={project} compact={compact} />
+              </div>
+            ) : activeTab === "order" ? (
+              <div className="w-full min-w-0">
+                <ProjectProcurement project={project} compact={compact} />
+              </div>
+            ) : activeTab === "details" ? (
+              rail
+            ) : (
+              <div className="flex min-w-0 flex-col">
+                <QuickAddCommandBar
+                  projectId={project.id}
+                  actions={actions}
+                  existingAssemblies={existingAssemblies}
+                  targetAssembly={quickAddAssembly}
+                  onTargetAssemblyChange={setQuickAddAssembly}
+                />
+                {activeTab === "assemblies" ? itemsTable : bomTable}
+              </div>
+            )}
           </div>
-        )}
+
+          {!compact && withRail && (
+            <aside className="min-w-0" style={{ borderLeft: "1px solid var(--border)", paddingLeft: 24 }}>
+              {rail}
+            </aside>
+          )}
+        </div>
       </div>
 
       {/* Interactive Sub-Assembly Picker Modal */}
