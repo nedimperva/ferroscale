@@ -93,7 +93,7 @@ export function DeskRail({
 }: {
   view: DeskView;
   setView: (v: DeskView) => void;
-  counts: { saved: number; projects: number; compare: number };
+  counts: { saved: number; projects: number; customers: number; compare: number };
   onNew: () => void;
   onToggleTheme: () => void;
 }) {
@@ -148,6 +148,13 @@ export function DeskRail({
           label={t("nav.projects")}
           icon={<DeskIcon name="projects" size={17} />}
           count={counts.projects}
+        />
+        <RailButton
+          active={view === "customers"}
+          onClick={() => setView("customers")}
+          label={t("nav.customers")}
+          icon={<DeskIcon name="customers" size={17} />}
+          count={counts.customers}
         />
         <RailButton
           active={view === "compare"}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname } from "@/i18n/navigation";
-import { getAppTabFromPathname } from "@/lib/app-shell";
+import { APP_TAB_SUFFIXES, getAppTabFromPathname } from "@/lib/app-shell";
+import { marginPercentStore } from "@/lib/settings-stores";
 import { isArchivedProject } from "@/hooks/useProjects";
 import type { CalculationInput } from "@/lib/calculator/types";
 import type { CommandDesktopProps, DeskView } from "./desktop-props";
@@ -13,6 +14,8 @@ import { DeskCompareView } from "./desk-compare-view";
 import { PartsView, type PartsActions } from "../parts/parts-view";
 import { DeskProjectsView } from "./desk-projects-view";
 import { DeskSettingsView } from "./desk-settings-view";
+import { CustomersView } from "../customers/customers-view";
+import type { CustomerActions } from "../customers/customer-actions";
 
 export type { CommandDesktopProps, DeskView } from "./desktop-props";
 
@@ -24,6 +27,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
         return "saved";
       case "projects":
         return "projects";
+      case "customers":
+        return "customers";
       case "settings":
         return "settings";
       default:
@@ -33,6 +38,13 @@ export function CommandDesktop(props: CommandDesktopProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   /** Which project the Projects tab has drilled into (null = the list). */
   const [openProjectId, setOpenProjectId] = useState<string | null>(null);
+  /** Which customer the Customers tab has open. */
+  const [openCustomerId, setOpenCustomerId] = useState<string | null>(null);
+  const marginPercent = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
+  );
 
   const focusInputAtEnd = useCallback(() => {
     const el = inputRef.current;
@@ -51,9 +63,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
   // tab you were on. Compare has no route of its own; it shares the base path
   // with the calculator, like every route does in this single-shell app.
   useEffect(() => {
-    const KNOWN = ["/saved", "/projects", "/settings"];
     let base = window.location.pathname;
-    for (const suffix of KNOWN) {
+    for (const suffix of APP_TAB_SUFFIXES) {
       if (base.endsWith(suffix)) {
         base = base.slice(0, -suffix.length);
         break;
@@ -64,9 +75,11 @@ export function CommandDesktop(props: CommandDesktopProps) {
         ? "/saved"
         : view === "projects"
           ? "/projects"
-          : view === "settings"
-            ? "/settings"
-            : "";
+          : view === "customers"
+            ? "/customers"
+            : view === "settings"
+              ? "/settings"
+              : "";
     const stripped = base.replace(/\/+$/, "");
     const nextPath = stripped + suffix;
     window.history.replaceState(
@@ -138,6 +151,23 @@ export function CommandDesktop(props: CommandDesktopProps) {
       props.projectActions.onDelete(id);
       setOpenProjectId((current) => (current === id ? null : current));
     },
+    onOpenCustomer: (customerId) => {
+      setOpenCustomerId(customerId);
+      setView("customers");
+    },
+  };
+
+  const openProject = useCallback((projectId: string) => {
+    setOpenProjectId(projectId);
+    setView("projects");
+  }, []);
+
+  const baseCustomerActions = props.projectActions.customerActions;
+  // A job started from a customer opens straight away, on the Projects tab.
+  const customerActions: CustomerActions | undefined = baseCustomerActions && {
+    ...baseCustomerActions,
+    onNewProject: (customerId) =>
+      baseCustomerActions.onNewProject(customerId, (project) => openProject(project.id)),
   };
 
   const partsActions: PartsActions = {
@@ -164,6 +194,7 @@ export function CommandDesktop(props: CommandDesktopProps) {
     // Archived projects are not in the list the tab opens, so counting them
     // in the badge would promise rows that are not there.
     projects: props.projects.filter((project) => !isArchivedProject(project)).length,
+    customers: (props.projectActions.customers ?? []).filter((customer) => !customer.archivedAt).length,
     compare: props.compareItems.length,
   };
 
@@ -214,6 +245,17 @@ export function CommandDesktop(props: CommandDesktopProps) {
           actions={projectActions}
           openProjectId={openProjectId}
           onOpenProject={setOpenProjectId}
+        />
+      )}
+      {view === "customers" && customerActions && (
+        <CustomersView
+          customers={props.projectActions.customers ?? []}
+          projects={props.projects}
+          marginPercent={marginPercent}
+          actions={customerActions}
+          selectedId={openCustomerId}
+          onSelect={setOpenCustomerId}
+          onOpenProject={openProject}
         />
       )}
       {view === "settings" && (

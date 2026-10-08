@@ -20,13 +20,16 @@ import { ProjectDetail } from "../projects/project-detail";
 import { ProjectQuote } from "../project-quote";
 import { useQuotePrinting } from "../projects/use-quote-printing";
 import type { ProjectActions } from "../projects/project-actions";
+import { CustomersView } from "../customers/customers-view";
+import type { CustomerActions } from "../customers/customer-actions";
 import { marginPercentStore } from "@/lib/settings-stores";
 
 /* ──────────────────────────────────────────────────────────────
  *  Library sheet: Saved · Compare · Projects
  * ────────────────────────────────────────────────────────────── */
 
-type LibraryTab = "session" | "saved" | "compare" | "projects";
+/** "customers" is the Projects tab opened on its Customers side. */
+type LibraryTab = "session" | "saved" | "compare" | "projects" | "customers";
 
 interface CommandLibrarySheetProps {
   settings: CommandParserSettings;
@@ -147,7 +150,7 @@ export function CommandLibraryWorkspace({
           label={t("nav.compare")}
         />
         <LibraryTabPill
-          active={tab === "projects"}
+          active={tab === "projects" || tab === "customers"}
           count={projects.length}
           onClick={() => setTab("projects")}
           icon={<TabIconProjects />}
@@ -198,11 +201,12 @@ export function CommandLibraryWorkspace({
           onClearAll={onClearCompare}
         />
       )}
-      {tab === "projects" && (
+      {(tab === "projects" || tab === "customers") && (
         <ProjectsTabContent
           projects={projects}
           actions={projectActions}
           marginPercent={marginPercent}
+          initialSide={tab}
         />
       )}
     </>
@@ -515,12 +519,17 @@ function ProjectsTabContent({
   projects,
   actions,
   marginPercent,
+  initialSide,
 }: {
   projects: Project[];
   actions: ProjectActions;
   marginPercent: number;
+  initialSide: "projects" | "customers";
 }) {
+  const t = useTranslations("command");
+  const [side, setSide] = useState(initialSide);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [openCustomerId, setOpenCustomerId] = useState<string | null>(null);
   const { printing, printQuote } = useQuotePrinting(actions.onPrintQuote);
   const open = openId ? (projects.find((project) => project.id === openId) ?? null) : null;
 
@@ -531,10 +540,69 @@ function ProjectsTabContent({
       actions.onDelete(id);
       setOpenId((current) => (current === id ? null : current));
     },
+    onOpenCustomer: (customerId) => {
+      setOpenCustomerId(customerId);
+      setSide("customers");
+    },
   };
+
+  const openProject = (projectId: string) => {
+    setOpenId(projectId);
+    setSide("projects");
+  };
+  const baseCustomerActions = actions.customerActions;
+  const customerActions: CustomerActions | undefined = baseCustomerActions && {
+    ...baseCustomerActions,
+    onNewProject: (customerId) =>
+      baseCustomerActions.onNewProject(customerId, (project) => openProject(project.id)),
+  };
+
+  // The switch shows only at the top of each side; inside a project or a
+  // customer the detail's own back link is the way out.
+  const atTop = side === "projects" ? !open : !openCustomerId;
+  const sideSwitch = atTop && customerActions && (
+    <div className="flex mb-3" role="group" aria-label={t("customers.switchAria")}>
+      {(["projects", "customers"] as const).map((value) => (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={side === value}
+          onClick={() => setSide(value)}
+          className="flex-1 text-[12px] font-semibold cursor-pointer"
+          style={{
+            height: 30,
+            border: `1px solid ${side === value ? "var(--foreground)" : "var(--border)"}`,
+            background: side === value ? "var(--foreground)" : "transparent",
+            color: side === value ? "var(--background)" : "var(--foreground)",
+          }}
+        >
+          {value === "projects" ? t("nav.projects") : t("nav.customers")}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (side === "customers" && customerActions) {
+    return (
+      <>
+        {sideSwitch}
+        <CustomersView
+          compact
+          customers={actions.customers ?? []}
+          projects={projects}
+          marginPercent={marginPercent}
+          actions={customerActions}
+          selectedId={openCustomerId}
+          onSelect={setOpenCustomerId}
+          onOpenProject={openProject}
+        />
+      </>
+    );
+  }
 
   return (
     <>
+      {sideSwitch}
       {open ? (
         <ProjectDetail
           compact

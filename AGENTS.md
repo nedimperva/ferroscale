@@ -30,7 +30,7 @@ Run a single test file: `npx vitest run src/lib/calculator/engine.test.ts`
 
 ### The command flow (the whole app)
 
-Every app route (`/`, `/saved`, `/projects`, `/settings`) renders `null`
+Every app route (`/`, `/saved`, `/projects`, `/customers`, `/settings`) renders `null`
 and exists only for metadata/URLs; `RouteAwareAppShell`
 (`src/components/route-aware-app-shell.tsx`) mounts the client-side
 `CommandShell` for all of them. `/qa`, `/faq` and `/contact` are ordinary
@@ -202,9 +202,9 @@ Calculation, synced, **off by default**) is on.
 - Tees are the five EN 10055 sizes T 30–T 60. Nine non-standard tees were
   removed in 3.30.0 — don't re-add a size without a published table behind it.
 
-### The three list surfaces
+### The list surfaces
 
-Settings, Projects and Parts are each one component rendered twice: full on
+Settings, Projects, Customers and Parts are each one component rendered twice: full on
 the wide workspace, `compact` inside the mobile library sheet. The desktop
 never has its own copy of a list, so a column means the same thing on both.
 
@@ -218,14 +218,30 @@ never has its own copy of a list, so a column means the same thing on both.
   the eleven callbacks travel as one `ProjectActions` bag. The list ↔ detail
   drill-down is component state, not a route: the workspace tabs are the app's
   only navigation.
+- **Customers** — `customers/customers-view.tsx` (360px list beside the open
+  customer; `compact` drills in). On the phone it is the Customers side of the
+  library sheet's Projects tab, not a fifth tab. Figures come from
+  `lib/customers/query.ts` (pure, tested) and are never stored. Its
+  `CustomerActions` bag, the customer list and `onOpenCustomer` ride in
+  `ProjectActions`, so a project's client (`customers/client-link.tsx`) can
+  jump to its customer; each surface supplies its own navigation. A customer
+  with jobs can be archived but not deleted.
 - **Parts** (the old Saved) — `parts/parts-view.tsx`. Parts vs Assemblies is
   derived, not stored: an entry with `parts.length > 1` is an assembly.
   History reads `useQuickHistory`. `sheets/saved-edit-sheet.tsx` is the one
   editor for an entry, including an assembly's trade, hours and hardware.
-  `projects/insert-assembly-modal.tsx` picks and scales one, in either of
-  two voices (`mode="insert"` into the open project, `mode="create"` to
-  start a project from it). Both entry points stay visible while the library
-  holds no assembly; the picker then explains how to make one.
+  `projects/insert-assembly-modal.tsx` picks and scales one into the open
+  project. Starting a project from one is a tile of the New project dialog.
+  Both entry points stay visible while the library holds no assembly; each
+  then explains how to make one.
+- **New project** — `projects/new-project-dialog.tsx`, one dialog for every
+  way a project starts (blank, from an assembly, a copy of a past job, a
+  pasted bar list read by `lib/projects/import-list.ts`), with name, customer
+  and due date, set in one write (`createProject(name, meta)`). The shell
+  owns it and opens it via `ProjectActions.onStartNewProject`; the caller's
+  `onCreated` opens the new job wherever that surface shows it. The
+  destination picker keeps its own name-only quick create — filing a line
+  should stay one step.
 
 ### API routes
 

@@ -203,6 +203,14 @@ export function DeskIcon({ name, stroke, size }: { name: string; stroke?: string
           <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
         </svg>
       );
+    case "customers":
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M2.5 20a6.5 6.5 0 0113 0" />
+          <path d="M16 4.6a3.5 3.5 0 010 6.8M18.5 14.2A6.5 6.5 0 0121.5 20" />
+        </svg>
+      );
     case "compare":
       return (
         <svg {...common}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   isActiveSyncEntity,
   loadCustomers,
@@ -32,9 +32,10 @@ export interface Customer {
   deletedAt?: string;
 }
 
-export type CustomerPatch = Partial<
-  Pick<Customer, "name" | "contact" | "phone" | "email" | "notes" | "marginPercent">
->;
+export type CustomerPatch = Partial<Pick<Customer, "name" | "contact" | "phone" | "email" | "notes">> & {
+  /** null clears it back to the shop default. */
+  marginPercent?: number | null;
+};
 
 export interface CustomerDraft extends CustomerPatch {
   name: string;
@@ -78,10 +79,19 @@ function cleanPatch(patch: CustomerPatch): CustomerPatch {
   if (patch.email !== undefined) out.email = cleanText(patch.email);
   if (patch.notes !== undefined) out.notes = cleanText(patch.notes);
   if (patch.marginPercent !== undefined) {
-    const m = Number(patch.marginPercent);
-    out.marginPercent = Number.isFinite(m) ? Math.max(0, Math.min(500, m)) : undefined;
+    const m = patch.marginPercent === null ? NaN : Number(patch.marginPercent);
+    out.marginPercent = Number.isFinite(m) ? Math.max(0, Math.min(500, m)) : null;
   }
   return out;
+}
+
+/** Apply a cleaned patch; a null margin removes the key rather than storing null. */
+function applyPatch(customer: Customer, clean: CustomerPatch): Customer {
+  const { marginPercent, ...rest } = clean;
+  const next: Customer = { ...customer, ...rest, name: rest.name || customer.name };
+  if (marginPercent === null) delete next.marginPercent;
+  else if (marginPercent !== undefined) next.marginPercent = marginPercent;
+  return next;
 }
 
 export function useCustomers(): UseCustomersReturn {
@@ -105,18 +115,18 @@ export function useCustomers(): UseCustomersReturn {
     customersRef.current = allCustomers;
   }, [allCustomers]);
 
-  const customers = allCustomers.filter((customer) => isActiveSyncEntity(customer));
+  const customers = useMemo(
+    () => allCustomers.filter((customer) => isActiveSyncEntity(customer)),
+    [allCustomers],
+  );
 
   const createCustomer = useCallback(
     (draft: CustomerDraft): Customer => {
       const now = new Date().toISOString();
-      const customer: Customer = {
-        ...cleanPatch(draft),
-        id: crypto.randomUUID(),
-        name: draft.name.trim(),
-        createdAt: now,
-        updatedAt: now,
-      };
+      const customer = applyPatch(
+        { id: crypto.randomUUID(), name: draft.name.trim(), createdAt: now, updatedAt: now },
+        cleanPatch(draft),
+      );
       setCustomers((prev) => {
         if (prev.filter((c) => !c.deletedAt).length >= MAX_CUSTOMERS) return prev;
         return [customer, ...prev];
@@ -133,8 +143,7 @@ export function useCustomers(): UseCustomersReturn {
         prev.map((c) => {
           if (c.id !== id || c.deletedAt) return c;
           // An emptied name keeps the old one: a customer always has a name.
-          const next = { ...c, ...clean, name: clean.name || c.name };
-          return { ...next, updatedAt: new Date().toISOString() };
+          return { ...applyPatch(c, clean), updatedAt: new Date().toISOString() };
         }),
       );
     },
