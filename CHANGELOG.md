@@ -24,6 +24,8 @@ A project page that reads like an order: the bill of material grouped by stock, 
 
 - Emptying the labour hours of a project sets them to zero. Before, the field cleared but the old hours stayed in the total
 - Expense categories (hardware, transport, finishing, other) are translated; they were English in Bosnian too
+- On the phone the command bar follows what you type: the caret stays at the right edge as the line grows, instead of the bar sitting on the first numbers while the caret ran off the screen — most noticeable when typing several items joined with +
+- Typing + folds the item before it into one chip straight away, so the bar shows the new item while you type its first word. Before, the old item stayed spelled out until the new one had a whole word
 
 ## [3.34.0] - 2026-09-28
 

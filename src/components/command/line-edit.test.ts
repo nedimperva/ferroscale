@@ -53,9 +53,10 @@ describe("lineExpandedIndex", () => {
     expect(lineExpandedIndex(groups, 0)).toBe(0);
   });
 
-  it("falls back to the last item that still has chips", () => {
-    const { groups } = lineChips("hea120 6m + ipe200 4m + ");
-    expect(lineExpandedIndex(groups, null)).toBe(1);
+  it("opens the new item as soon as a `+` is typed", () => {
+    expect(lineExpandedIndex(lineChips("hea120 6m + ipe200 4m + ").groups, null)).toBe(2);
+    // Mid-word in the new item: still the new item, not the one before it.
+    expect(lineExpandedIndex(lineChips("hea120 6m + ip").groups, null)).toBe(1);
   });
 });
 
