@@ -4,6 +4,7 @@ import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { Project, ProjectStatus } from "@/hooks/useProjects";
+import { isClosedProject } from "@/hooks/useProjects";
 import { getDueDateUrgency, type ProjectAttention } from "@/lib/projects/query";
 import { RowMenu } from "../row-menu";
 import { EmptyState } from "../empty-state";
@@ -16,6 +17,18 @@ import type { ProjectActions } from "./project-actions";
  * (what it adds up to). All three read one `ProjectSummary` per project and
  * share one menu, so a number means the same thing in each.
  */
+
+/** The columns of an active board, left to right: a job's life in order. */
+export const BOARD_STATUSES: ProjectStatus[] = ["draft", "quoted", "progress", "hold", "done"];
+
+const STATUS_DOT: Record<ProjectStatus, string> = {
+  draft: "var(--border)",
+  quoted: "var(--border-strong)",
+  progress: "var(--accent)",
+  hold: "var(--accent-text)",
+  done: "var(--green-text, var(--foreground))",
+  archived: "var(--foreground-secondary)",
+};
 
 const MIX_COLORS = ["var(--foreground)", "var(--foreground-secondary)", "var(--border-strong)", "var(--border)"];
 
@@ -30,9 +43,9 @@ function weightText(s: ProjectSummary): string {
 }
 
 /** Due label and the one colour it earns: red when late, terracotta when close. */
-function dueDisplay(t: CommandT, project: Project, summary: ProjectSummary) {
+function dueDisplay(t: CommandT, project: Project) {
   const urgency = getDueDateUrgency(project.dueDate);
-  const closed = summary.status === "archived";
+  const closed = isClosedProject(project);
   if (closed || urgency.status === "none") {
     return { text: project.dueDate && !closed ? project.dueDate : "—", color: "var(--muted)", flag: false };
   }
@@ -60,7 +73,7 @@ export function ProjectMenu({
   actions: ProjectActions;
   onOpen: () => void;
   /** Board only: the keyboard route for what dragging does. */
-  moveTo?: ProjectStatus;
+  moveTo?: ProjectStatus[];
 }) {
   const t = useTranslations("command");
   return (
@@ -68,15 +81,11 @@ export function ProjectMenu({
       ariaLabel={project.name}
       items={[
         { id: "open", label: t("common.open"), onSelect: onOpen },
-        ...(moveTo
-          ? [
-              {
-                id: "move",
-                label: t("projects.board.moveTo", { status: t(`projects.status.${moveTo}`) }),
-                onSelect: () => actions.onUpdateMeta(project.id, { status: moveTo }),
-              },
-            ]
-          : []),
+        ...(moveTo ?? []).map((status) => ({
+          id: `move-${status}`,
+          label: t("projects.board.moveTo", { status: t(`projects.status.${status}`) }),
+          onSelect: () => actions.onUpdateMeta(project.id, { status }),
+        })),
         {
           id: "quote",
           label: t("quote.short"),
@@ -181,7 +190,7 @@ function ProjectCard({
 }) {
   const t = useTranslations("command");
   const s = projectSummary(project, marginPercent);
-  const due = dueDisplay(t, project, s);
+  const due = dueDisplay(t, project);
   return (
     <div
       className="flex flex-col"
@@ -292,9 +301,8 @@ function BoardCard({
 }) {
   const t = useTranslations("command");
   const s = projectSummary(project, marginPercent);
-  const due = dueDisplay(t, project, s);
-  const moveTo: ProjectStatus | undefined =
-    s.status === "draft" ? "quoted" : s.status === "quoted" ? "draft" : undefined;
+  const due = dueDisplay(t, project);
+  const moveTo = BOARD_STATUSES.filter((status) => status !== s.status);
   return (
     <div
       draggable
@@ -390,8 +398,8 @@ export function ProjectBoard({
           }}
           className="flex flex-col"
           style={{
-            flex: "1 0 250px",
-            minWidth: 250,
+            flex: "1 0 230px",
+            minWidth: 230,
             borderRight: "1px solid var(--border-faint)",
             padding: "4px 12px 12px",
             gap: 10,
@@ -402,7 +410,11 @@ export function ProjectBoard({
             className="flex items-baseline justify-between"
             style={{ borderBottom: "1px solid var(--foreground)", padding: "10px 0 8px" }}
           >
-            <span className="font-mono text-[10px] font-medium uppercase" style={{ letterSpacing: 1.6 }}>
+            <span
+              className="flex items-center gap-[7px] font-mono text-[10px] font-medium uppercase"
+              style={{ letterSpacing: 1.6 }}
+            >
+              <span aria-hidden style={{ width: 7, height: 7, background: STATUS_DOT[col.status] }} />
               {t(`projects.status.${col.status}`)} · {col.cards.length}
             </span>
             <span className="font-mono text-[12px] text-muted">
@@ -600,7 +612,7 @@ export function ProjectPeekList({
         </div>
         {projects.map((project) => {
           const s = projectSummary(project, marginPercent);
-          const due = dueDisplay(t, project, s);
+          const due = dueDisplay(t, project);
           const active = project.id === picked.id;
           return (
             <div

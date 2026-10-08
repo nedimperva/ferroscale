@@ -7,6 +7,7 @@ import {
   exportProjectCsv,
   PROJECT_CATEGORIES,
   type Project,
+  type ProjectStatus,
 } from "@/hooks/useProjects";
 import {
   ALL_PROJECTS,
@@ -32,6 +33,7 @@ import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 import { InsertAssemblyModal } from "./insert-assembly-modal";
 import {
+  BOARD_STATUSES,
   AttentionStrip,
   ProjectBoard,
   ProjectCards,
@@ -669,8 +671,7 @@ export function ProjectList({
   );
 
   const emptyState = table;
-  const boardStatuses: Array<"draft" | "quoted" | "archived"> =
-    bucket.kind === "archived" ? ["archived"] : ["draft", "quoted"];
+  const boardStatuses: ProjectStatus[] = bucket.kind === "archived" ? ["archived"] : BOARD_STATUSES;
 
   const deskBody =
     visible.length === 0

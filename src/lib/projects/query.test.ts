@@ -205,4 +205,10 @@ describe("calculateAttention", () => {
     expect(calculateAttention(list, 0)).toEqual({ overdue: 1, dueSoon: 1, noMargin: 2, emptyDrafts: 1 });
     expect(calculateAttention(list, 10).noMargin).toBe(0);
   });
+
+  it("treats completed jobs as closed", () => {
+    const done = project({ id: "e", name: "E", updatedAt: "2026-01-01", status: "done", dueDate: day(-3), items: item });
+    expect(calculateAttention([done], 0)).toEqual({ overdue: 0, dueSoon: 0, noMargin: 0, emptyDrafts: 0 });
+    expect(calculatePipelineAggregates([done], 0).activeCount).toBe(0);
+  });
 });

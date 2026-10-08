@@ -31,9 +31,16 @@ export interface ProjectTemplatePart {
   normalizedProfile: NormalizedProfileSnapshot;
 }
 
-export type ProjectStatus = "draft" | "quoted" | "archived";
+export type ProjectStatus = "draft" | "quoted" | "progress" | "hold" | "done" | "archived";
 
-export const PROJECT_STATUSES: readonly ProjectStatus[] = ["draft", "quoted", "archived"];
+export const PROJECT_STATUSES: readonly ProjectStatus[] = [
+  "draft",
+  "quoted",
+  "progress",
+  "hold",
+  "done",
+  "archived",
+];
 
 export type ProjectCategory =
   | "structural"
@@ -179,6 +186,12 @@ export function projectStatus(project: Project): ProjectStatus {
 
 export function isArchivedProject(project: Project): boolean {
   return projectStatus(project) === "archived";
+}
+
+/** Finished work: delivered or shelved. It stays listed but stops counting as pipeline. */
+export function isClosedProject(project: Project): boolean {
+  const status = projectStatus(project);
+  return status === "done" || status === "archived";
 }
 
 /** Prepend an event and re-stamp `updatedAt`. Pure — callers map over it. */

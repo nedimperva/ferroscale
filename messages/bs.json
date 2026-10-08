@@ -757,7 +757,10 @@
       "status": {
         "draft": "Nacrt",
         "quoted": "Ponuđeno",
-        "archived": "Arhivirano"
+        "archived": "Arhivirano",
+        "progress": "U radu",
+        "hold": "Na čekanju",
+        "done": "Završeno"
       },
       "statusAria": "Status projekta {name}",
       "backToProjects": "Projekti",

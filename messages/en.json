@@ -757,7 +757,10 @@
       "status": {
         "draft": "Draft",
         "quoted": "Quoted",
-        "archived": "Archived"
+        "archived": "Archived",
+        "progress": "In progress",
+        "hold": "On hold",
+        "done": "Completed"
       },
       "statusAria": "Status of {name}",
       "backToProjects": "Projects",

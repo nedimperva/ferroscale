@@ -1,4 +1,4 @@
-import { computeAggregates, isArchivedProject, type Project } from "@/hooks/useProjects";
+import { computeAggregates, isArchivedProject, isClosedProject, type Project } from "@/hooks/useProjects";
 
 /**
  * Search, client-filter and sort for the Projects surface. Pure and UI-free,
@@ -76,7 +76,7 @@ export function calculatePipelineAggregates(
   let marginCount = 0;
 
   for (const project of projects) {
-    if (isArchivedProject(project)) continue;
+    if (isClosedProject(project)) continue;
     activeCount += 1;
     if (project.client?.trim()) clients.add(project.client.trim());
 
@@ -226,7 +226,7 @@ export interface ProjectAttention {
 export function calculateAttention(projects: Project[], globalMarginPercent: number = 0): ProjectAttention {
   const out: ProjectAttention = { overdue: 0, dueSoon: 0, noMargin: 0, emptyDrafts: 0 };
   for (const project of projects) {
-    if (isArchivedProject(project)) continue;
+    if (isClosedProject(project)) continue;
     const { status } = getDueDateUrgency(project.dueDate);
     if (status === "overdue") out.overdue += 1;
     else if (status === "today" || status === "soon") out.dueSoon += 1;
