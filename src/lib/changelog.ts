@@ -32,6 +32,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Emptying the labour hours of a project sets them to zero. Before, the field cleared but the old hours stayed in the total",
       "Expense categories (hardware, transport, finishing, other) are translated; they were English in Bosnian too",
       "On the phone the command bar follows what you type: the caret stays at the right edge as the line grows, instead of the bar sitting on the first numbers while the caret ran off the screen — most noticeable when typing several items joined with +",
+      "Typing + folds the item before it into one chip straight away, so the bar shows the new item while you type its first word. Before, the old item stayed spelled out until the new one had a whole word",
     ],
     added_bs: [
       "Projekat se otvara na specifikaciji materijala, grupisanoj onako kako se kupuje: svaki rez istog presjeka i kvaliteta stoji pod jednom stavkom — UPN 200, L 50×50×5, rebrasti lim 5 mm — s komadima, metrima (m² za lim), težinom i cijenom, a pored nje šta kupiti (1 × 12m, 2 × 6m). Svaki rez zadržava napomenu i količinu koja se može mijenjati. Sklop se navodi jednom — na stavci kad svi njeni rezovi pripadaju njemu, na svakom rezu samo kad stavka miješa sklopove, i nigdje kad je cijeli projekat jedan sklop. Grupisanje po sklopovima, s dodavanjem, skaliranjem i spremanjem, je sljedeći tab",
@@ -46,6 +47,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Brisanje radnih sati projekta postavlja ih na nulu. Ranije se polje praznilo, a stari sati su ostajali u ukupnom iznosu",
       "Vrste troškova (okovi i vijci, prevoz, završna obrada, ostalo) su prevedene; i na bosanskom su bile na engleskom",
       "Na telefonu traka za unos prati ono što kucate: kursor ostaje na desnom rubu dok red raste, umjesto da traka stoji na prvim brojevima dok kursor bježi s ekrana — najviše se primijetilo pri kucanju više stavki spojenih s +",
+      "Kucanje + odmah sklapa prethodnu stavku u jedan čip, pa traka pokazuje novu stavku dok kucate njenu prvu riječ. Ranije je stara stavka ostajala raspisana dok nova nije imala cijelu riječ",
     ],
   },
   {

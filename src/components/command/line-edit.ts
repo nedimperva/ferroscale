@@ -53,9 +53,10 @@ export function lineChips(query: string): LineChips {
 }
 
 /**
- * Which `+` item shows its tokens. `null` means the last item that still has
- * chips — an empty trailing segment (just opened with `+`) is not a reason to
- * collapse the item you were editing.
+ * Which `+` item shows its tokens. `null` means the last item — the one the
+ * caret is in. A `+` closes the item before it at once: waiting for the new
+ * item's first chip left the old one spelled out while its first word was
+ * typed, so the bar looked like it was still editing the wrong thing.
  */
 export function lineExpandedIndex(
   groups: LineChipGroup[],
@@ -63,9 +64,6 @@ export function lineExpandedIndex(
 ): number {
   if (expandedItem != null && expandedItem >= 0 && expandedItem < groups.length) {
     return expandedItem;
-  }
-  for (let i = groups.length - 1; i >= 0; i--) {
-    if (groups[i].tokens.length > 0) return i;
   }
   return Math.max(0, groups.length - 1);
 }

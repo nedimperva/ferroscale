@@ -728,6 +728,18 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
     await expect(queryLine).toContainText("12345678");
   });
 
+  test("a + folds the item before it at once, before the next one is typed", async ({ page }) => {
+    await page.goto(`/en?q=${encodeURIComponent("hea120 6m x2 s235 ")}`);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    const queryLine = page.locator("[data-query-line]");
+    await expect(queryLine.getByRole("button", { name: "Edit hea120" })).toBeVisible();
+    await page.locator("[data-suggestion-strip]").getByRole("button", { name: /\+ item/ }).click();
+    // The old item stayed spelled out until the new one had a whole token.
+    await expect(queryLine.getByRole("button", { name: /^Item 1, / })).toBeVisible();
+    await expect(queryLine.getByRole("button", { name: "Edit hea120" })).toHaveCount(0);
+  });
+
   test("holding a length chip opens a stepper", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
