@@ -28,6 +28,7 @@ import { EmptyState } from "../empty-state";
 import { RowMenu } from "../row-menu";
 import { SearchField } from "../search-field";
 import { DeskIcon } from "../desktop/desk-atoms";
+import { ClientLink } from "../customers/client-link";
 import { DeskViewHeader } from "../desktop/desk-rail";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
@@ -272,7 +273,11 @@ function ProjectRow({
         {title}
       </div>
       <div role="cell" style={{ width: 140 }} className="flex flex-col min-w-0">
-        <span className="text-[13px] text-foreground truncate">{project.client || "—"}</span>
+        <ClientLink
+          project={project}
+          onOpenCustomer={actions.onOpenCustomer}
+          className="text-[13px] text-foreground truncate"
+        />
         {urgency.status === "overdue" && (
           <span className="text-[10px] font-bold text-red-500">
             🔴 {t("projects.urgency.overdue", { days: Math.abs(urgency.daysDiff) })}

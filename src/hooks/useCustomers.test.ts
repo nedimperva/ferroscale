@@ -45,6 +45,9 @@ describe("useCustomers", () => {
       marginPercent: 14,
     });
 
+    act(() => reloaded.result.current.updateCustomer(id, { marginPercent: null }));
+    expect(reloaded.result.current.customers[0]).not.toHaveProperty("marginPercent");
+
     act(() => reloaded.result.current.deleteCustomer(id));
     expect(reloaded.result.current.customers).toEqual([]);
     expect(loadCustomers()[0].deletedAt).toBeTruthy();

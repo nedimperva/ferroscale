@@ -64,6 +64,24 @@ export interface PipelineAggregates {
   avgMarginPercent: number | null;
 }
 
+function quotedValueOf(
+  project: Project,
+  agg: ReturnType<typeof computeAggregates>,
+  margin: number,
+): number {
+  const materialQuoted = margin > 0 ? agg.totalCost * (1 + margin / 100) : agg.totalCost;
+  const paint = agg.paintCoatTotals.length > 0 ? agg.totalPaintingCost : 0;
+  const labor = (project.laborHours ?? 0) * (project.laborRatePerHour ?? 0);
+  const extras = (project.additionalCosts ?? []).reduce((s, c) => s + c.amount, 0);
+  return materialQuoted + paint + labor + extras;
+}
+
+/** What the job quotes at: material with its margin, plus paint, labour and extras. */
+export function projectQuotedValue(project: Project, globalMarginPercent: number = 0): number {
+  const margin = project.marginPercent ?? globalMarginPercent;
+  return Math.round(quotedValueOf(project, computeAggregates(project), margin) * 100) / 100;
+}
+
 export function calculatePipelineAggregates(
   projects: Project[],
   globalMarginPercent: number = 0,
@@ -88,12 +106,7 @@ export function calculatePipelineAggregates(
       marginSum += margin;
       marginCount += 1;
     }
-    const materialQuoted = margin > 0 ? agg.totalCost * (1 + margin / 100) : agg.totalCost;
-    const paint = agg.paintCoatTotals.length > 0 ? agg.totalPaintingCost : 0;
-    const labor = (project.laborHours ?? 0) * (project.laborRatePerHour ?? 0);
-    const extras = (project.additionalCosts ?? []).reduce((s, c) => s + c.amount, 0);
-
-    totalQuotedValue += materialQuoted + paint + labor + extras;
+    totalQuotedValue += quotedValueOf(project, agg, margin);
   }
 
   return {

@@ -10,6 +10,7 @@ import { RowMenu } from "../row-menu";
 import { EmptyState } from "../empty-state";
 import { formatRelativeTime, projectMix, projectSummary, type ProjectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
+import { ClientLink } from "../customers/client-link";
 
 /**
  * The three ways the wide workspace can lay the same list out: cards (what a
@@ -21,7 +22,7 @@ import type { ProjectActions } from "./project-actions";
 /** The columns of an active board, left to right: a job's life in order. */
 export const BOARD_STATUSES: ProjectStatus[] = ["draft", "quoted", "progress", "hold", "done"];
 
-const STATUS_DOT: Record<ProjectStatus, string> = {
+export const STATUS_DOT: Record<ProjectStatus, string> = {
   draft: "var(--border)",
   quoted: "var(--border-strong)",
   progress: "var(--accent)",
@@ -517,7 +518,8 @@ function QuotePeek({
         {project.name}
       </div>
       <div className="text-[12px] text-foreground-secondary">
-        {project.client || "—"} · {t("projects.peek.items", { count: s.itemCount })} · {weightText(s)}
+        <ClientLink project={project} onOpenCustomer={actions.onOpenCustomer} /> ·{" "}
+        {t("projects.peek.items", { count: s.itemCount })} · {weightText(s)}
       </div>
       <div style={{ marginTop: 14 }}>
         <MixBar project={project} height={8} />

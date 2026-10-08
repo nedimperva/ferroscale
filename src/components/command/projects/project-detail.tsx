@@ -57,6 +57,8 @@ import { SheetShell } from "../sheets/sheet-shell";
 import { ScaleAssemblyModal } from "./scale-assembly-modal";
 import { SaveAssemblyToLibraryModal } from "./save-assembly-modal";
 import type { SavedPart } from "@/hooks/useSaved";
+import { ClientLink } from "../customers/client-link";
+import { findCustomerByName } from "@/lib/customers/query";
 
 function StatusBadge({
   status,
@@ -203,8 +205,12 @@ function DetailsForm({
   );
 
   const commit = () => {
+    // A name that matches a customer links to it; anything else is linked (or
+    // a customer made for it) by name once it is saved.
+    const customer = findCustomerByName(actions.customers ?? [], client);
     actions.onUpdateMeta(project.id, {
-      client,
+      client: customer ? customer.name : client,
+      customerId: customer?.id,
       dueDate,
       category: (category as ProjectCategory) || undefined,
       marginPercent: margin ? Number(margin) : undefined,
@@ -230,8 +236,16 @@ function DetailsForm({
           onChange={(e) => setClient(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && commit()}
           placeholder={t("projects.clientPlaceholder")}
+          list={`fs-customers-${project.id}`}
           className="h-11 sm:h-9 rounded-button border border-border-faint bg-[var(--surface)] px-3 text-[13px] text-foreground placeholder:text-muted-faint"
         />
+        <datalist id={`fs-customers-${project.id}`}>
+          {(actions.customers ?? [])
+            .filter((c) => !c.archivedAt)
+            .map((c) => (
+              <option key={c.id} value={c.name} />
+            ))}
+        </datalist>
       </label>
 
       <label className="flex flex-col gap-1 min-w-0" style={{ flex: "1 1 160px" }}>
@@ -1327,17 +1341,24 @@ export function ProjectDetail({
           borderBottom: compact ? "none" : "1px solid var(--border-faint)",
         }}
       >
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1.5 bg-transparent border-0 p-0 cursor-pointer font-mono text-[11px] text-muted hover:text-foreground"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          {t("projects.backToProjects")}
-          {project.client?.trim() && <span className="text-muted-faint">› {project.client}</span>}
-        </button>
+        <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted">
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex items-center gap-1.5 bg-transparent border-0 p-0 cursor-pointer text-muted hover:text-foreground"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            {t("projects.backToProjects")}
+          </button>
+          {project.client?.trim() && (
+            <span className="text-muted-faint">
+              ›{" "}
+              <ClientLink project={project} onOpenCustomer={actions.onOpenCustomer} />
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center gap-3 flex-wrap mt-1.5">
           <div className="flex items-center gap-2.5 min-w-0 flex-wrap" style={{ flex: "1 1 240px" }}>

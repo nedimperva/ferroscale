@@ -21,9 +21,13 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-10-08",
     added: [
       "Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups",
+      "A Customers tab on the rail (on the phone, a Customers side in the library's Projects tab): each customer with their lifetime value, jobs and what is still open or overdue, and a page with their details, a default margin for new quotes, every job they have had and + New project. Customers with jobs are archived rather than deleted",
+      "A project's client is a link to its customer — in the quote peek and above the project page — and the client field on a project suggests your customers as you type",
     ],
     added_bs: [
       "Kupci su sada zasebni zapisi. Svaki klijent već upisan na projektu postaje kupac, a projekti koji ga navode povezuju se s njim. Kupac čuva kontakt osobu, telefon, e-mail, bilješke i zadanu maržu, sinhronizuje se na Google Drive i ide u sigurnosne kopije",
+      "Kartica Kupci na traci (na telefonu, strana Kupci u kartici Projekti biblioteke): svaki kupac s ukupnom vrijednošću, poslovima i onim što je još otvoreno ili kasni, te stranica s podacima, zadanom maržom za nove ponude, svim poslovima i + Novi projekat. Kupci s poslovima se arhiviraju umjesto brisanja",
+      "Klijent projekta je veza na kupca — u pregledu ponude i iznad stranice projekta — a polje klijenta na projektu nudi vaše kupce dok kucate",
     ],
   },
   {

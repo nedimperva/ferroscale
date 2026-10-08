@@ -26,6 +26,10 @@
     "faq": {
       "title": "Česta pitanja o proračunu težine metala - FerroScale",
       "description": "Formule, praktični primjeri i odgovori za proračun težine čeličnih, inox i aluminijskih profila."
+    },
+    "customers": {
+      "title": "Kupci - FerroScale",
+      "description": "Vaši kupci, njihovi poslovi i zadane postavke ponuda u FerroScale."
     }
   },
   "loading": {
@@ -227,7 +231,8 @@
       "compare": "Poređenje",
       "settings": "Postavke",
       "library": "Dijelovi",
-      "parts": "Dijelovi"
+      "parts": "Dijelovi",
+      "customers": "Kupci"
     },
     "status": {
       "live": "UŽIVO",
@@ -1156,6 +1161,70 @@
       "sheetGroup": "{name} {thickness} mm",
       "groupPieces": "{count} kom.",
       "group": "{name}, dijelova: {count}"
+    },
+    "customers": {
+      "title": "Kupci",
+      "subtitle": "{customers, plural, one {# kupac} few {# kupca} other {# kupaca}} · {jobs, plural, one {# posao} few {# posla} other {# poslova}}",
+      "newCustomer": "Novi kupac",
+      "defaultName": "Novi kupac",
+      "searchPlaceholder": "Pretraži kupce",
+      "searchAria": "Pretraži kupce po nazivu, kontaktu ili telefonu",
+      "filterActive": "Aktivni",
+      "filterArchived": "Arhivirani",
+      "filterAria": "Prikaži aktivne ili arhivirane kupce",
+      "jobsCount": "{count, plural, one {# posao} few {# posla} other {# poslova}}",
+      "openCount": "{count} otvoreno",
+      "overdueCount": "{count} kasni",
+      "noOpen": "nema otvorenih poslova",
+      "noMatch": "Nijedan kupac ne odgovara.",
+      "emptyTitle": "Još nema kupaca",
+      "emptyBody": "Dodajte ga ovdje ili upišite klijenta na projektu i on postaje kupac.",
+      "emptyArchived": "Nema arhiviranih kupaca.",
+      "selectPrompt": "Odaberite kupca ili dodajte novog.",
+      "statusActive": "Aktivan",
+      "statusArchived": "Arhiviran · ne nudi se pri novom projektu",
+      "newProject": "Novi projekat",
+      "newJobName": "{customer} — novi posao",
+      "archive": "Arhiviraj",
+      "restore": "Vrati",
+      "kpi": {
+        "lifetime": "Ukupno",
+        "jobs": "Poslovi",
+        "open": "Otvoreno",
+        "openValue": "Otvorena vrijednost"
+      },
+      "details": "Podaci",
+      "fields": {
+        "name": "Firma ili ime",
+        "namePlaceholder": "Naziv kupca",
+        "contact": "Kontakt osoba",
+        "contactPlaceholder": "Ime",
+        "phone": "Telefon",
+        "phonePlaceholder": "+387",
+        "email": "E-mail",
+        "emailPlaceholder": "ime@firma.ba",
+        "notes": "Bilješke",
+        "notesPlaceholder": "Šifra kapije za dostavu, omiljeni profili, kako plaćaju"
+      },
+      "defaults": "Zadano za nove ponude",
+      "margin": "Marža",
+      "marginDown": "Smanji maržu",
+      "marginUp": "Povećaj maržu",
+      "marginShopDefault": "Zadano radionice",
+      "marginUseShop": "Koristi zadano radionice",
+      "jobs": "Poslovi",
+      "noJobs": "Još nema poslova.",
+      "delete": "Obriši kupca",
+      "deleteFree": "Nema poslova. Može se obrisati.",
+      "deleteBlocked": "{count, plural, one {Ima # posao} few {Ima # posla} other {Ima # poslova}}. Arhivirajte ga.",
+      "back": "Svi kupci",
+      "openCustomer": "Prikaži kupca {name}",
+      "openJob": "Otvori {name}",
+      "toastCreated": "Kupac dodan",
+      "toastArchived": "Kupac arhiviran",
+      "toastRestored": "Kupac vraćen",
+      "toastDeleted": "Kupac obrisan",
+      "switchAria": "Projekti ili kupci"
     }
   },
   "contact": {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
@@ -715,7 +715,10 @@ export function useProjects(): UseProjectsReturn {
     setAllProjects(next);
   }, []);
 
-  const projects = allProjects.filter((project) => isActiveSyncEntity(project));
+  const projects = useMemo(
+    () => allProjects.filter((project) => isActiveSyncEntity(project)),
+    [allProjects],
+  );
 
   useEffect(() => {
     projectsRef.current = allProjects;
@@ -779,7 +782,9 @@ export function useProjects(): UseProjectsReturn {
                 "clientSet",
                 { to: client || undefined },
               );
-            } else if (customerId !== p.customerId) {
+            } else if (customerId && customerId !== p.customerId) {
+              // Same name, a different record picked: relink without a history line.
+              // An unchanged name with no id keeps whatever link it had.
               next = { ...next, customerId, updatedAt: new Date().toISOString() };
             }
           }

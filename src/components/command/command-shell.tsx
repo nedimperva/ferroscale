@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
-import { getAppTabFromPathname } from "@/lib/app-shell";
+import { APP_TAB_SUFFIXES, getAppTabFromPathname } from "@/lib/app-shell";
 import { useTheme } from "@/hooks/useTheme";
 import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
@@ -14,6 +14,7 @@ import { isArchivedProject, useProjects } from "@/hooks/useProjects";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCustomerLinking } from "./customers/use-customer-linking";
+import { useCustomerActions } from "./customers/use-customer-actions";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
@@ -191,7 +192,7 @@ export function CommandShell() {
   const [sheet, setSheet] = useState<null | "result" | "settings" | "library" | "help">(null);
   /** Which Library tab the next open lands on — the palette navigates here. */
   const [libraryTab, setLibraryTab] = useState<
-    "session" | "saved" | "compare" | "projects" | null
+    "session" | "saved" | "compare" | "projects" | "customers" | null
   >(null);
   const { toast, showToast, showActionToast } = useCommandToast();
   // Sync runs by itself; this is only set when it needs the user.
@@ -281,7 +282,7 @@ export function CommandShell() {
       setSheet("settings");
       return;
     }
-    setLibraryTab(routedTab === "projects" ? "projects" : "saved");
+    setLibraryTab(routedTab === "projects" || routedTab === "customers" ? routedTab : "saved");
     setSheet("library");
   }, [isPhoneViewport, routedTab]);
 
@@ -291,7 +292,7 @@ export function CommandShell() {
   const resetRouteToCalculator = useCallback(() => {
     if (typeof window === "undefined") return;
     let base = window.location.pathname;
-    for (const suffix of ["/saved", "/projects", "/settings"]) {
+    for (const suffix of APP_TAB_SUFFIXES) {
       if (base.endsWith(suffix)) {
         base = base.slice(0, -suffix.length);
         break;
@@ -1004,7 +1005,14 @@ export function CommandShell() {
     addCompareEntry(p.calc.input, p.calc.result);
   }, [p.calc, addCompareEntry]);
 
-  const projectActions = useProjectActions({
+  const customerActions = useCustomerActions({
+    customersApi,
+    projectsApi,
+    showToast,
+    showActionToast,
+  });
+
+  const baseProjectActions = useProjectActions({
     projectsApi,
     saveCalculation,
     updateSaved,
@@ -1015,6 +1023,10 @@ export function CommandShell() {
     showToast,
     showActionToast,
   });
+  const projectActions = useMemo(
+    () => ({ ...baseProjectActions, customers: customersApi.customers, customerActions }),
+    [baseProjectActions, customersApi.customers, customerActions],
+  );
 
   /** The picker, for everywhere the primary action does not go. */
   const openDestinations = useCallback(() => {

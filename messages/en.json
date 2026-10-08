@@ -26,6 +26,10 @@
     "faq": {
       "title": "Metal Weight Calculation FAQ - FerroScale",
       "description": "Formulas, practical examples, and answers for calculating weight of steel, stainless, and aluminum profiles."
+    },
+    "customers": {
+      "title": "Customers - FerroScale",
+      "description": "Your customers, their jobs and quote defaults in FerroScale."
     }
   },
   "loading": {
@@ -227,7 +231,8 @@
       "compare": "Compare",
       "settings": "Settings",
       "library": "Parts",
-      "parts": "Parts"
+      "parts": "Parts",
+      "customers": "Customers"
     },
     "status": {
       "live": "LIVE",
@@ -1156,6 +1161,70 @@
       "sheetGroup": "{name} {thickness} mm",
       "groupPieces": "{count} pcs",
       "group": "{name}, {count} parts"
+    },
+    "customers": {
+      "title": "Customers",
+      "subtitle": "{customers, plural, one {# customer} other {# customers}} · {jobs, plural, one {# job} other {# jobs}}",
+      "newCustomer": "New customer",
+      "defaultName": "New customer",
+      "searchPlaceholder": "Search customers",
+      "searchAria": "Search customers by name, contact or phone",
+      "filterActive": "Active",
+      "filterArchived": "Archived",
+      "filterAria": "Show active or archived customers",
+      "jobsCount": "{count, plural, one {# job} other {# jobs}}",
+      "openCount": "{count} open",
+      "overdueCount": "{count} overdue",
+      "noOpen": "no open jobs",
+      "noMatch": "No customers match.",
+      "emptyTitle": "No customers yet",
+      "emptyBody": "Add one here, or type a client on a project and it becomes a customer.",
+      "emptyArchived": "No archived customers.",
+      "selectPrompt": "Select a customer or add a new one.",
+      "statusActive": "Active",
+      "statusArchived": "Archived · hidden from new-project search",
+      "newProject": "New project",
+      "newJobName": "{customer} — new job",
+      "archive": "Archive",
+      "restore": "Restore",
+      "kpi": {
+        "lifetime": "Lifetime",
+        "jobs": "Jobs",
+        "open": "Open",
+        "openValue": "Open value"
+      },
+      "details": "Details",
+      "fields": {
+        "name": "Company or name",
+        "namePlaceholder": "Customer name",
+        "contact": "Contact person",
+        "contactPlaceholder": "Name",
+        "phone": "Phone",
+        "phonePlaceholder": "+387",
+        "email": "Email",
+        "emailPlaceholder": "name@company.ba",
+        "notes": "Notes",
+        "notesPlaceholder": "Delivery gate code, preferred profiles, how they pay"
+      },
+      "defaults": "Defaults for new quotes",
+      "margin": "Margin",
+      "marginDown": "Lower margin",
+      "marginUp": "Raise margin",
+      "marginShopDefault": "Shop default",
+      "marginUseShop": "Use shop default",
+      "jobs": "Jobs",
+      "noJobs": "No jobs yet.",
+      "delete": "Delete customer",
+      "deleteFree": "No jobs. This can be deleted.",
+      "deleteBlocked": "{count, plural, one {Has # job} other {Has # jobs}}. Archive instead.",
+      "back": "All customers",
+      "openCustomer": "Show customer {name}",
+      "openJob": "Open {name}",
+      "toastCreated": "Customer added",
+      "toastArchived": "Customer archived",
+      "toastRestored": "Customer restored",
+      "toastDeleted": "Customer deleted",
+      "switchAria": "Projects or customers"
     }
   },
   "contact": {
