@@ -708,6 +708,26 @@ test.describe("Stage-aware keypad (phone viewport)", () => {
     await expect(line.getByText("6", { exact: true })).toBeVisible();
   });
 
+  test("typing onto a long multi-item line keeps the caret in view", async ({ page }) => {
+    const line = "hea120 6m x2 s235 + ipe200 4500 x3 s355 + shs40x4 6m x10 s235";
+    await page.goto(`/en?q=${encodeURIComponent(line)}`);
+    await expect(page.getByText("LIVE", { exact: true })).toBeVisible();
+    await page.waitForFunction(() => document.documentElement.classList.contains("app-ready"));
+    await page.getByRole("button", { name: "Edit length, quantity or rate" }).click();
+    await expect(page.locator("[data-keypad]")).toHaveAttribute("data-keypad", "letters");
+    // The line is far wider than the box. The view sat on its first tokens
+    // while the caret ran off the right edge, so every digit went in blind.
+    const queryLine = page.locator("[data-query-line]");
+    for (const key of ["1", "2", "3", "4", "5", "6", "7", "8"]) {
+      await page.getByRole("button", { name: key, exact: true }).click();
+      const box = (await queryLine.boundingBox())!;
+      const caret = (await queryLine.locator("[data-caret]").boundingBox())!;
+      expect(caret.x).toBeGreaterThanOrEqual(box.x);
+      expect(caret.x + caret.width).toBeLessThanOrEqual(box.x + box.width);
+    }
+    await expect(queryLine).toContainText("12345678");
+  });
+
   test("holding a length chip opens a stepper", async ({ page }) => {
     await page.goto("/en?q=hea120+6m+x2");
     await expect(page.getByText("LIVE", { exact: true })).toBeVisible();

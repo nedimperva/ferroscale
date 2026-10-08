@@ -129,6 +129,8 @@ export function PhoneQueryLine({
     if (opened) {
       el.scrollLeft += opened.getBoundingClientRect().left - el.getBoundingClientRect().left - 12;
     } else {
+      // Back to the end — 0 in a reversed scroller; anything past it clamps
+      // there in engines that still count from the left.
       el.scrollLeft = el.scrollWidth;
     }
   }, [query, expandedIndex]);
@@ -152,7 +154,13 @@ export function PhoneQueryLine({
         // line grew to four rows and pushed the keypad's bottom row off
         // the screen. A fixed height keeps the input and its keys where
         // they were, whatever the line holds.
-        className="flex items-center gap-1.5 flex-nowrap rounded-none px-3 py-2.5"
+        //
+        // The scroller is `row-reverse` around one normal-order row, so its
+        // scroll origin is the *end*: as the line grows the caret stays in
+        // view by layout alone. Following it with `scrollLeft` after each
+        // keystroke lost the race on phones (iOS Safari especially) and the
+        // view sat on the first tokens while the caret ran off the right edge.
+        className="flex flex-row-reverse rounded-none"
         style={{
           height: 50,
           overflowX: "auto",
@@ -163,6 +171,9 @@ export function PhoneQueryLine({
           background: "var(--surface)",
         }}
       >
+        {/* Grows to fill a short line (so it starts at the left), never
+            shrinks below its content (so a long one overflows leftward). */}
+        <div className="flex flex-[1_0_auto] items-center gap-1.5 flex-nowrap px-3 py-2.5">
         <span
           className="flex items-center justify-center font-mono text-base font-bold mr-0.5 flex-shrink-0"
           style={{ color: "var(--accent)" }}
@@ -294,12 +305,14 @@ export function PhoneQueryLine({
           </button>
         )}
         <span
+          data-caret=""
           className="w-0.5 h-5 rounded-sm flex-shrink-0"
           style={{
             background: "var(--accent)",
             animation: "fsBlink 1s steps(1) infinite",
           }}
         />
+        </div>
       </div>
     </div>
   );
