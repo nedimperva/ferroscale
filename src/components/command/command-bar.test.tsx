@@ -56,6 +56,19 @@ describe("command bar", { timeout: 15_000 }, () => {
     expect(h.queryByRole("button", { name: "Edit 6m" })).toBeNull();
   });
 
+  it("Clear empties the line and Undo in the toast brings it back", async () => {
+    const h = await renderCommandShell();
+    await waitFor(() => expect(h.getByRole("button", { name: "Edit x2" })).toBeDefined());
+    const before = currentQuery(h);
+
+    await h.user.click(h.input());
+    await h.user.keyboard("{Escape}");
+    await waitFor(() => expect(currentQuery(h)).toBe(""));
+
+    await h.user.click(h.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(currentQuery(h)).toBe(before));
+  });
+
   it("inserts the suggestion a chip click names", async () => {
     const h = await renderCommandShell();
     await h.user.click(h.input());

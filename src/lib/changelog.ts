@@ -22,6 +22,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     added: [
       "A project opens on its bill of material, grouped the way it is bought: every cut of one section and grade sits under one stock line — UPN 200, L 50×50×5, chequered plate 5 mm — with its pieces, metres (m² for plate), weight and cost, and what to buy beside it (1 × 12m, 2 × 6m). Each cut keeps its note and a count you can edit. An assembly is named once — on the stock line when all its cuts belong to it, on each cut only where a line mixes assemblies, and nowhere when the whole project is one. The grouping by assembly, with its add, scale and save actions, is the next tab",
       "A row of totals under the project name: weight, items, stock lines and paint surface",
+      "Clearing the command line shows a 5-second Undo in the toast, so a line you wiped by mistake comes back with one tap",
     ],
     changed: [
       "Everything on top of the material is entered on the quote itself. The rail beside the bill of material builds the total line by line — material, markup %, labour as hours × rate, extras, paint coats — with each line's inputs on that line, so what it adds and the total move as you type. The separate labour & extras and painting cards are gone; on the phone the quote is the Details tab",
@@ -37,6 +38,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     added_bs: [
       "Projekat se otvara na specifikaciji materijala, grupisanoj onako kako se kupuje: svaki rez istog presjeka i kvaliteta stoji pod jednom stavkom — UPN 200, L 50×50×5, rebrasti lim 5 mm — s komadima, metrima (m² za lim), težinom i cijenom, a pored nje šta kupiti (1 × 12m, 2 × 6m). Svaki rez zadržava napomenu i količinu koja se može mijenjati. Sklop se navodi jednom — na stavci kad svi njeni rezovi pripadaju njemu, na svakom rezu samo kad stavka miješa sklopove, i nigdje kad je cijeli projekat jedan sklop. Grupisanje po sklopovima, s dodavanjem, skaliranjem i spremanjem, je sljedeći tab",
       "Red ukupnih vrijednosti ispod naziva projekta: težina, stavke, stavke materijala i površina za boju",
+      "Brisanje reda komandne linije prikazuje Vrati na 5 sekundi u obavijesti, pa se red koji je slučajno obrisan vrati jednim dodirom",
     ],
     changed_bs: [
       "Sve što ide preko materijala unosi se na samoj ponudi. Traka pored specifikacije gradi ukupni iznos red po red — materijal, marža %, rad kao sati × satnica, dodatni troškovi, slojevi boje — a polja svakog reda su na tom redu, pa se ono što dodaje i ukupni iznos mijenjaju dok kucate. Zasebne kartice za rad i dodatne troškove i za farbanje više ne postoje; na telefonu je ponuda tab Detalji",

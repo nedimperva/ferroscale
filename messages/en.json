@@ -194,6 +194,7 @@
       "copiedSummary": "Summary copied",
       "linkCopied": "Link copied",
       "linkPricingApplied": "Pricing from the link applied",
+      "lineCleared": "Line cleared",
       "lineReplaced": "Line replaced",
       "savedRemoved": "Removed from saved",
       "savedRemovedMany": "{count, plural, one {# calculation removed} other {# calculations removed}}",

@@ -194,6 +194,7 @@
       "copiedSummary": "Sažetak kopiran",
       "linkCopied": "Link kopiran",
       "linkPricingApplied": "Primijenjena cijena iz linka",
+      "lineCleared": "Linija obrisana",
       "lineReplaced": "Linija zamijenjena",
       "savedRemoved": "Uklonjeno iz sačuvanih",
       "savedRemovedMany": "{count, plural, one {# izračun uklonjen} few {# izračuna uklonjena} other {# izračuna uklonjeno}}",

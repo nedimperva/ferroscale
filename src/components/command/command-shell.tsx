@@ -1069,9 +1069,21 @@ export function CommandShell() {
     // A valid query cleared via ⌘K / CLEAR still lands on the session tape,
     // so starting a new line never loses the previous number.
     if (p.valid) pushHistory(query);
+    const cleared = query;
     setQuery("");
     markExternalValueChange();
-  }, [p.valid, query, pushHistory]);
+    // A five-part line is easy to wipe by mistake — the 5-second Undo puts it back.
+    if (cleared.trim()) {
+      showActionToast(t("toast.lineCleared"), {
+        label: t("common.undo"),
+        onAction: () => {
+          setQuery(cleared);
+          markExternalValueChange();
+          showToast(t("toast.restored"));
+        },
+      });
+    }
+  }, [p.valid, query, pushHistory, showActionToast, showToast, t]);
 
   const onSuggest = useCallback(
     (item: CommandSuggestionItem) => {
