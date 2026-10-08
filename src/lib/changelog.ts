@@ -17,6 +17,26 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.36.0",
+    date: "2026-10-08",
+    added: [
+      "Projects opens as cards, a board or a list, chosen in the header and remembered per device. A card shows what the job is made of (a strip of its profile families by weight), its quote, weight, margin, items and due date, with a terracotta rule on top when it is late or due within three days",
+      "The board has a column per status and a card moves between Draft and Quoted by dragging — or by Move to… in its ⋯ menu",
+      "The list view adds a row of things needing attention (overdue, due within 3 days, quoted with no markup, empty drafts) and a quote peek beside the rows: material, labour, extras, paint and the quoted total, with Open, Print quote and Duplicate",
+    ],
+    changed: [
+      "The client rail on Projects became a row of client chips above the jobs, with the sort control beside it, and the fourth total is now the average markup instead of the number of clients",
+    ],
+    added_bs: [
+      "Projekti se otvaraju kao kartice, ploča ili lista, po izboru u zaglavlju (pamti se po uređaju). Kartica prikazuje od čega se posao sastoji (traka porodica profila po težini), ponudu, težinu, maržu, stavke i rok, s terakota linijom na vrhu kad kasni ili rok ističe za tri dana",
+      "Ploča ima kolonu za svaki status, a kartica se između Nacrta i Ponuđeno premješta povlačenjem — ili preko Premjesti u… u ⋯ meniju",
+      "Lista dodaje red onoga što traži pažnju (kasni, rok u 3 dana, ponuđeno bez marže, prazni nacrti) i pregled ponude pored redova: materijal, rad, dodatno, farba i ukupna ponuda, uz Otvori, Štampaj ponudu i Dupliciraj",
+    ],
+    changed_bs: [
+      "Traka klijenata na Projektima postala je red čipova iznad poslova, a sortiranje je pored njih; četvrti zbir je sada prosječna marža umjesto broja klijenata",
+    ],
+  },
+  {
     version: "3.35.0",
     date: "2026-10-01",
     added: [

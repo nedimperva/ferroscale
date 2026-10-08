@@ -60,6 +60,8 @@ export interface PipelineAggregates {
   totalWeightKg: number;
   totalQuotedValue: number;
   clientCount: number;
+  /** Mean markup across active projects that have items; null when none do. */
+  avgMarginPercent: number | null;
 }
 
 export function calculatePipelineAggregates(
@@ -70,6 +72,8 @@ export function calculatePipelineAggregates(
   let totalQuotedValue = 0;
   let activeCount = 0;
   const clients = new Set<string>();
+  let marginSum = 0;
+  let marginCount = 0;
 
   for (const project of projects) {
     if (isArchivedProject(project)) continue;
@@ -80,6 +84,10 @@ export function calculatePipelineAggregates(
     totalWeightKg += agg.totalWeightKg;
 
     const margin = project.marginPercent ?? globalMarginPercent;
+    if (agg.count > 0) {
+      marginSum += margin;
+      marginCount += 1;
+    }
     const materialQuoted = margin > 0 ? agg.totalCost * (1 + margin / 100) : agg.totalCost;
     const paint = agg.paintCoatTotals.length > 0 ? agg.totalPaintingCost : 0;
     const labor = (project.laborHours ?? 0) * (project.laborRatePerHour ?? 0);
@@ -93,6 +101,7 @@ export function calculatePipelineAggregates(
     totalWeightKg: Math.round(totalWeightKg * 100) / 100,
     totalQuotedValue: Math.round(totalQuotedValue * 100) / 100,
     clientCount: clients.size,
+    avgMarginPercent: marginCount > 0 ? marginSum / marginCount : null,
   };
 }
 
@@ -198,4 +207,34 @@ export function filterSortProjects(projects: Project[], query: ProjectQuery = {}
     return true;
   });
   return filtered.sort(COMPARE[query.sort ?? "updated"]);
+}
+
+export type ProjectView = "cards" | "board" | "list";
+export const PROJECT_VIEWS: readonly ProjectView[] = ["cards", "board", "list"];
+
+export interface ProjectAttention {
+  overdue: number;
+  dueSoon: number;
+  noMargin: number;
+  emptyDrafts: number;
+}
+
+/**
+ * The four things worth a glance before opening any job. Only active
+ * projects count: an archived job that was late is history, not a to-do.
+ */
+export function calculateAttention(projects: Project[], globalMarginPercent: number = 0): ProjectAttention {
+  const out: ProjectAttention = { overdue: 0, dueSoon: 0, noMargin: 0, emptyDrafts: 0 };
+  for (const project of projects) {
+    if (isArchivedProject(project)) continue;
+    const { status } = getDueDateUrgency(project.dueDate);
+    if (status === "overdue") out.overdue += 1;
+    else if (status === "today" || status === "soon") out.dueSoon += 1;
+    if (project.calculations.length === 0) {
+      out.emptyDrafts += 1;
+    } else if ((project.marginPercent ?? globalMarginPercent) <= 0) {
+      out.noMargin += 1;
+    }
+  }
+  return out;
 }
