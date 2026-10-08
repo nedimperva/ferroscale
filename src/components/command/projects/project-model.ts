@@ -193,3 +193,41 @@ export function formatActivity(entry: ProjectActivityEntry, t: CommandT): string
   }
   return t(`projects.activity.${entry.kind}`, values);
 }
+
+export interface ProjectMixSlice {
+  label: string;
+  /** Whole percent of the project's steel by weight. */
+  pct: number;
+}
+
+/** "HEA 120" → "HEA", "L 50×50×5" → "L": the family a buyer thinks in. */
+function profileFamily(calc: ProjectCalculation): string {
+  if (calc.templateName) return "ASM";
+  const label = (calc.normalizedProfile?.shortLabel ?? calc.result.profileLabel ?? "").trim();
+  const family = label.split(/[\s×x0-9]/)[0]?.toUpperCase().slice(0, 4);
+  return family || "—";
+}
+
+/**
+ * What a project is made of, by weight and by profile family — the strip on a
+ * card. The three heaviest families are named, the remainder is folded into
+ * `otherLabel`. Empty when nothing weighs anything.
+ */
+export function projectMix(project: Project, otherLabel: string): ProjectMixSlice[] {
+  const byFamily = new Map<string, number>();
+  let total = 0;
+  for (const calc of project.calculations) {
+    const kg = calc.result.totalWeightKg;
+    if (!(kg > 0)) continue;
+    total += kg;
+    const family = profileFamily(calc);
+    byFamily.set(family, (byFamily.get(family) ?? 0) + kg);
+  }
+  if (total <= 0) return [];
+  const sorted = [...byFamily.entries()].sort((a, b) => b[1] - a[1]);
+  const named = sorted.slice(0, 3);
+  const rest = sorted.slice(3).reduce((s, [, kg]) => s + kg, 0);
+  const slices = named.map(([label, kg]) => ({ label, pct: Math.max(1, Math.round((kg / total) * 100)) }));
+  if (rest > 0) slices.push({ label: otherLabel, pct: Math.max(1, Math.round((rest / total) * 100)) });
+  return slices;
+}

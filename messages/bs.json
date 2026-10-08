@@ -675,7 +675,8 @@
         "active": "Aktivni poslovi",
         "steel": "Ukupno čelika",
         "value": "Vrijednost poslova",
-        "clients": "Klijenti"
+        "clients": "Klijenti",
+        "margin": "Prosj. marža"
       },
       "categories": {
         "all": "Sve kategorije",
@@ -756,7 +757,10 @@
       "status": {
         "draft": "Nacrt",
         "quoted": "Ponuđeno",
-        "archived": "Arhivirano"
+        "archived": "Arhivirano",
+        "progress": "U radu",
+        "hold": "Na čekanju",
+        "done": "Završeno"
       },
       "statusAria": "Status projekta {name}",
       "backToProjects": "Projekti",
@@ -770,7 +774,9 @@
         "paint": "Boja",
         "pieces": "Komada",
         "stockLines": "Stavke materijala",
-        "surface": "Površina za boju"
+        "surface": "Površina za boju",
+        "margin": "Marža",
+        "due": "Rok"
       },
       "itemColumns": {
         "item": "Stavka",
@@ -876,7 +882,33 @@
         "transport": "Prevoz",
         "finishing": "Završna obrada",
         "other": "Ostalo"
-      }
+      },
+      "view": {
+        "label": "Prikaz",
+        "cards": "Kartice",
+        "board": "Ploča",
+        "list": "Lista"
+      },
+      "attention": {
+        "overdue": "kasni",
+        "dueSoon": "rok u 3 dana",
+        "noMargin": "ponuđeno bez marže",
+        "emptyDrafts": "prazni nacrti"
+      },
+      "peek": {
+        "title": "Pregled ponude",
+        "items": "{count} stavki",
+        "material": "Materijal",
+        "labour": "Rad · {hours} h",
+        "extras": "Dodatno",
+        "paint": "Farba",
+        "total": "Ukupno ponuđeno",
+        "print": "Štampaj ponudu"
+      },
+      "board": {
+        "moveTo": "Premjesti u {status}"
+      },
+      "mixOther": "ostalo"
     },
     "parts": {
       "subtitle": "Specifikacije koje često upisuješ i sklopovi koje ponavljaš. Iskoristi jedan da ga učitaš u traku ili ga odmah ubaci u projekat.",

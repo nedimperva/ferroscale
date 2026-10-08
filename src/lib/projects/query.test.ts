@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Project, ProjectStatus } from "@/hooks/useProjects";
 import {
   ALL_PROJECTS,
+  calculateAttention,
   calculatePipelineAggregates,
   collectProjectClients,
   countProjects,
@@ -183,5 +184,31 @@ describe("getDueDateUrgency", () => {
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     expect(getDueDateUrgency(todayStr).status).toBe("today");
+  });
+});
+
+describe("calculateAttention", () => {
+  const day = (offset: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + offset);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const item = [{ label: "HEA 120", kg: 100, amount: 200 }];
+
+  it("counts late, imminent, unmargined and empty active jobs; skips archived", () => {
+    const list = [
+      project({ id: "a", name: "A", updatedAt: "2026-01-01", dueDate: day(-2), items: item }),
+      project({ id: "b", name: "B", updatedAt: "2026-01-01", dueDate: day(2), items: item }),
+      project({ id: "c", name: "C", updatedAt: "2026-01-01" }),
+      project({ id: "d", name: "D", updatedAt: "2026-01-01", status: "archived", dueDate: day(-9), items: item }),
+    ];
+    expect(calculateAttention(list, 0)).toEqual({ overdue: 1, dueSoon: 1, noMargin: 2, emptyDrafts: 1 });
+    expect(calculateAttention(list, 10).noMargin).toBe(0);
+  });
+
+  it("treats completed jobs as closed", () => {
+    const done = project({ id: "e", name: "E", updatedAt: "2026-01-01", status: "done", dueDate: day(-3), items: item });
+    expect(calculateAttention([done], 0)).toEqual({ overdue: 0, dueSoon: 0, noMargin: 0, emptyDrafts: 0 });
+    expect(calculatePipelineAggregates([done], 0).activeCount).toBe(0);
   });
 });

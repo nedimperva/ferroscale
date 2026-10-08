@@ -675,7 +675,8 @@
         "active": "Active jobs",
         "steel": "Total steel",
         "value": "Pipeline value",
-        "clients": "Clients"
+        "clients": "Clients",
+        "margin": "Avg margin"
       },
       "categories": {
         "all": "All categories",
@@ -756,7 +757,10 @@
       "status": {
         "draft": "Draft",
         "quoted": "Quoted",
-        "archived": "Archived"
+        "archived": "Archived",
+        "progress": "In progress",
+        "hold": "On hold",
+        "done": "Completed"
       },
       "statusAria": "Status of {name}",
       "backToProjects": "Projects",
@@ -770,7 +774,9 @@
         "paint": "Paint",
         "pieces": "Pieces",
         "stockLines": "Stock lines",
-        "surface": "Paint surface"
+        "surface": "Paint surface",
+        "margin": "Margin",
+        "due": "Due"
       },
       "itemColumns": {
         "item": "Item",
@@ -876,7 +882,33 @@
         "transport": "Transport",
         "finishing": "Finishing",
         "other": "Other"
-      }
+      },
+      "view": {
+        "label": "View",
+        "cards": "Cards",
+        "board": "Board",
+        "list": "List"
+      },
+      "attention": {
+        "overdue": "overdue",
+        "dueSoon": "due within 3 days",
+        "noMargin": "quoted with no margin",
+        "emptyDrafts": "empty drafts"
+      },
+      "peek": {
+        "title": "Quote peek",
+        "items": "{count} items",
+        "material": "Material",
+        "labour": "Labour · {hours} h",
+        "extras": "Extras",
+        "paint": "Paint",
+        "total": "Quoted total",
+        "print": "Print quote"
+      },
+      "board": {
+        "moveTo": "Move to {status}"
+      },
+      "mixOther": "other"
     },
     "parts": {
       "subtitle": "Specs you type often and assemblies you build repeatedly. Use one to load it into the bar, or drop it straight into a project.",

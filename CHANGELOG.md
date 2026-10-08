@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.36.0] - 2026-10-08
+
+### Added
+
+- Projects opens as cards, a board or a list, chosen in the header and remembered per device. A card shows what the job is made of (a strip of its profile families by weight), its quote, weight, margin, items and due date, with a terracotta rule on top when it is late or due within three days
+- Projects have three new statuses — In progress, On hold and Completed — beside Draft, Quoted and Archived. The board has a column for each and a card moves between them by dragging, or by Move to… in its ⋯ menu. Completed jobs stay listed but no longer count in the totals or the attention row
+- The list view adds a row of things needing attention (overdue, due within 3 days, quoted with no markup, empty drafts) and a quote peek beside the rows: material, labour, extras, paint and the quoted total, with Open, Print quote and Duplicate
+
+### Changed
+
+- The client rail on Projects became a row of client chips above the jobs, with the sort control beside it, and the fourth total is now the average markup instead of the number of clients
+
 ## [3.35.0] - 2026-10-01
 
 A project page that reads like an order: the bill of material grouped by stock, and the quote built — and entered — beside it.

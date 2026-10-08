@@ -69,7 +69,7 @@ function StatusBadge({
 }) {
   const t = useTranslations("command");
   const tone =
-    status === "quoted"
+    status === "quoted" || status === "progress"
       ? { bg: "var(--blue-surface)", border: "var(--blue-border)", text: "var(--blue-text)" }
       : status === "archived"
         ? { bg: "var(--surface-inset)", border: "var(--border-faint)", text: "var(--muted)" }

@@ -1,24 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import {
   exportProjectCsv,
   PROJECT_CATEGORIES,
   type Project,
+  type ProjectStatus,
 } from "@/hooks/useProjects";
 import {
   ALL_PROJECTS,
+  calculateAttention,
   calculatePipelineAggregates,
   collectProjectClients,
   countProjects,
   filterSortProjects,
   getDueDateUrgency,
   PROJECT_SORTS,
+  PROJECT_VIEWS,
   sameBucket,
   type ProjectBucket,
   type ProjectSort,
+  type ProjectView,
 } from "@/lib/projects/query";
 import { EmptyState } from "../empty-state";
 import { RowMenu } from "../row-menu";
@@ -28,6 +32,25 @@ import { DeskViewHeader } from "../desktop/desk-rail";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
 import { InsertAssemblyModal } from "./insert-assembly-modal";
+import {
+  BOARD_STATUSES,
+  AttentionStrip,
+  ProjectBoard,
+  ProjectCards,
+  ProjectPeekList,
+} from "./project-views";
+
+const VIEW_KEY = "ferroscale-projects-view";
+
+/** The layout is a per-device habit, so it lives in localStorage, not sync. */
+function readStoredView(): ProjectView {
+  try {
+    const v = window.localStorage.getItem(VIEW_KEY);
+    return PROJECT_VIEWS.includes(v as ProjectView) ? (v as ProjectView) : "cards";
+  } catch {
+    return "cards";
+  }
+}
 
 /**
  * One cell of the pipeline band. The four of them share a rule above and
@@ -63,37 +86,6 @@ function PipelineStatTile({
         {value}
       </div>
     </div>
-  );
-}
-
-function BucketRow({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-current={active ? "true" : undefined}
-      className="flex items-center gap-2 w-full text-left cursor-pointer"
-      style={{
-        padding: "7px 16px",
-        borderLeft: `2px solid ${active ? "var(--accent)" : "transparent"}`,
-        background: active ? "var(--accent-surface)" : "transparent",
-        color: active ? "var(--foreground)" : "var(--foreground-secondary)",
-        fontSize: 13,
-      }}
-    >
-      <span className="flex-1 min-w-0 truncate">{label}</span>
-      <span className="font-mono text-[11px] text-muted">{count}</span>
-    </button>
   );
 }
 
@@ -338,10 +330,26 @@ export function ProjectList({
   const [newName, setNewName] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [view, setView] = useState<ProjectView>("cards");
+
+  // Read after mount so the server and first client render agree.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setView(readStoredView());
+  }, []);
+  const chooseView = (next: ProjectView) => {
+    setView(next);
+    try {
+      window.localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      /* private mode: the choice just doesn't stick */
+    }
+  };
 
   const counts = useMemo(() => countProjects(projects), [projects]);
   const clients = useMemo(() => collectProjectClients(projects), [projects]);
   const pipeline = useMemo(() => calculatePipelineAggregates(projects, marginPercent), [projects, marginPercent]);
+  const attention = useMemo(() => calculateAttention(projects, marginPercent), [projects, marginPercent]);
   
   const visible = useMemo(
     () => filterSortProjects(projects, { search, bucket, category, sort }),
@@ -639,6 +647,71 @@ export function ProjectList({
     </label>
   );
 
+  const viewSwitch = (
+    <div role="group" aria-label={t("projects.view.label")} className="flex" style={{ border: "1px solid var(--border)" }}>
+      {PROJECT_VIEWS.map((v) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => chooseView(v)}
+          aria-pressed={view === v}
+          className="text-[12px] cursor-pointer"
+          style={{
+            height: 26,
+            padding: "0 13px",
+            border: 0,
+            background: view === v ? "var(--action)" : "transparent",
+            color: view === v ? "var(--action-contrast)" : "var(--foreground)",
+          }}
+        >
+          {t(`projects.view.${v}`)}
+        </button>
+      ))}
+    </div>
+  );
+
+  const emptyState = table;
+  const boardStatuses: ProjectStatus[] = bucket.kind === "archived" ? ["archived"] : BOARD_STATUSES;
+
+  const deskBody =
+    visible.length === 0
+      ? emptyState
+      : view === "board"
+        ? (
+            <ProjectBoard
+              projects={visible}
+              statuses={boardStatuses}
+              marginPercent={marginPercent}
+              actions={actions}
+              onOpenProject={onOpenProject}
+            />
+          )
+        : view === "list"
+          ? (
+              <>
+                {bucket.kind !== "archived" && <AttentionStrip attention={attention} />}
+                <ProjectPeekList
+                  projects={visible}
+                  marginPercent={marginPercent}
+                  actions={actions}
+                  onOpenProject={onOpenProject}
+                  selectedIds={selectedIds}
+                  onToggleSelect={toggleSelect}
+                  onToggleSelectAll={toggleSelectAll}
+                />
+              </>
+            )
+          : (
+              <ProjectCards
+                projects={visible}
+                marginPercent={marginPercent}
+                actions={actions}
+                onOpenProject={onOpenProject}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+              />
+            );
+
   if (compact) {
     return (
       <div className="flex flex-col gap-2.5">
@@ -702,48 +775,13 @@ export function ProjectList({
               ariaLabel={t("projects.searchAria")}
             />
           </div>
-          {sortSelect}
+          {viewSwitch}
           {newProjectButton}
           </>
         }
       />
 
       <div className="flex flex-1 min-h-0">
-        <nav
-          aria-label={t("projects.clientsLabel")}
-          className="flex-shrink-0 overflow-y-auto"
-          style={{ width: 190, borderRight: "1px solid var(--border-faint)", padding: "16px 0" }}
-        >
-          <div
-            className="font-mono text-[10px] text-muted uppercase"
-            style={{ padding: "0 13px 8px", letterSpacing: 1.6 }}
-          >
-            {t("projects.clientsLabel")}
-          </div>
-          <div className="flex flex-col">
-            {buckets.map((entry) => (
-              <BucketRow
-                key={entry.key}
-                label={entry.label}
-                count={entry.count}
-                active={sameBucket(bucket, entry.value)}
-                onClick={() => setBucket(entry.value)}
-              />
-            ))}
-          </div>
-          {counts.archived > 0 && (
-            <>
-              <div style={{ height: 1, background: "var(--border-faint)", margin: "10px 8px" }} />
-              <BucketRow
-                label={t("projects.archived")}
-                count={counts.archived}
-                active={bucket.kind === "archived"}
-                onClick={() => setBucket({ kind: "archived" })}
-              />
-            </>
-          )}
-        </nav>
-
         <div className="flex-1 min-w-0 overflow-y-auto" style={{ padding: "0 20px 28px" }}>
           <div className="min-w-0">
             {/* Pipeline KPI Summary Strip */}
@@ -774,16 +812,38 @@ export function ProjectList({
                   tone="accent"
                 />
                 <PipelineStatTile
-                  label={t("projects.pipeline.clients")}
-                  value={`${pipeline.clientCount} clients`}
+                  label={t("projects.pipeline.margin")}
+                  value={pipeline.avgMarginPercent === null ? "—" : `${pipeline.avgMarginPercent.toFixed(1)}%`}
                 />
               </div>
             )}
 
             {createRow}
             {batchBar}
+
+            <div className="flex flex-wrap items-center gap-1.5" style={{ padding: "4px 0 6px" }}>
+              {buckets.map((entry) => (
+                <ClientChip
+                  key={entry.key}
+                  label={entry.label}
+                  count={entry.count}
+                  active={sameBucket(bucket, entry.value)}
+                  onClick={() => setBucket(entry.value)}
+                />
+              ))}
+              {counts.archived > 0 && (
+                <ClientChip
+                  label={t("projects.archived")}
+                  count={counts.archived}
+                  active={bucket.kind === "archived"}
+                  onClick={() => setBucket({ kind: "archived" })}
+                />
+              )}
+              <span className="flex-1" />
+              {sortSelect}
+            </div>
             {categoryFilterStrip}
-            {table}
+            {deskBody}
           </div>
         </div>
       </div>
