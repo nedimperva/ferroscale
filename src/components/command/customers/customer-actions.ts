@@ -13,6 +13,9 @@ export interface CustomerActions {
   onSetArchived: (id: string, archived: boolean) => void;
   /** Only offered for a customer without jobs. Deletes with an undo toast. */
   onDelete: (id: string) => void;
-  /** Start a job for this customer; returns it so the surface can open it. */
-  onNewProject: (customerId: string) => Project | void;
+  /**
+   * Open the New project dialog for this customer. `onCreated` is the
+   * surface's own next step — each one opens the new job where it lives.
+   */
+  onNewProject: (customerId: string, onCreated?: (project: Project) => void) => void;
 }

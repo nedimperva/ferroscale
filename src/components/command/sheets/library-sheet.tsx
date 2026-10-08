@@ -553,11 +553,8 @@ function ProjectsTabContent({
   const baseCustomerActions = actions.customerActions;
   const customerActions: CustomerActions | undefined = baseCustomerActions && {
     ...baseCustomerActions,
-    onNewProject: (customerId) => {
-      const project = baseCustomerActions.onNewProject(customerId);
-      if (project) openProject(project.id);
-      return project;
-    },
+    onNewProject: (customerId) =>
+      baseCustomerActions.onNewProject(customerId, (project) => openProject(project.id)),
   };
 
   // The switch shows only at the top of each side; inside a project or a

@@ -32,7 +32,6 @@ import { ClientLink } from "../customers/client-link";
 import { DeskViewHeader } from "../desktop/desk-rail";
 import { formatRelativeTime, projectSummary } from "./project-model";
 import type { ProjectActions } from "./project-actions";
-import { InsertAssemblyModal } from "./insert-assembly-modal";
 import {
   BOARD_STATUSES,
   AttentionStrip,
@@ -331,10 +330,7 @@ export function ProjectList({
   const [bucket, setBucket] = useState<ProjectBucket>(ALL_PROJECTS);
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<ProjectSort>("updated");
-  const [creating, setCreating] = useState(false);
-  const [newName, setNewName] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [view, setView] = useState<ProjectView>("cards");
 
   // Read after mount so the server and first client render agree.
@@ -399,14 +395,6 @@ export function ProjectList({
     }
   };
 
-  const submitNew = () => {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    actions.onCreate(trimmed);
-    setNewName("");
-    setCreating(false);
-  };
-
   const buckets: Array<{ key: string; label: string; count: number; value: ProjectBucket }> = [
     { key: "all", label: t("projects.allProjects"), count: counts.active, value: ALL_PROJECTS },
     ...clients.map((entry) => ({
@@ -428,64 +416,21 @@ export function ProjectList({
   ];
 
   const newProjectButton = (
-    <div className="flex items-center gap-1.5 flex-shrink-0">
-      <button
-        type="button"
-        onClick={() => setShowTemplateModal(true)}
-        className="inline-flex items-center gap-1.5 text-[12px] cursor-pointer whitespace-nowrap"
-        style={{
-          height: 28,
-          padding: "0 11px",
-          border: "1px solid var(--border)",
-          background: "transparent",
-          color: "var(--foreground-secondary)",
-        }}
-        title={t("assembly.newFromAssembly")}
-      >
-        <DeskIcon name="layers" />
-        <span>{t("assembly.fromButton")}</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => setCreating((v) => !v)}
-        className="inline-flex items-center gap-1.5 text-[12px] cursor-pointer whitespace-nowrap"
-        style={{
-          height: 28,
-          padding: "0 12px",
-          border: "none",
-          background: "var(--action)",
-          color: "var(--action-contrast)",
-        }}
-      >
-        <DeskIcon name="plus" stroke="var(--action-contrast)" />
-        {t("library.newProject")}
-      </button>
-    </div>
-  );
-
-  const createRow = creating && (
-    <div className="flex gap-2 mb-3" style={{ maxWidth: 420 }}>
-      <input
-        value={newName}
-        onChange={(e) => setNewName(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") submitNew();
-          if (e.key === "Escape") setCreating(false);
-        }}
-        autoFocus
-        placeholder={t("library.newProjectName")}
-        aria-label={t("library.newProjectName")}
-        className="flex-1 h-10 rounded-button border border-border-faint bg-[var(--surface)] px-3 text-sm text-foreground placeholder:text-muted-faint"
-      />
-      <button
-        type="button"
-        onClick={submitNew}
-        disabled={!newName.trim()}
-        className="h-10 px-4 rounded-button bg-[var(--action)] text-[var(--action-contrast)] font-bold text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {t("common.create")}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={() => actions.onStartNewProject?.({ onCreated: (project) => onOpenProject(project.id) })}
+      className="inline-flex items-center gap-1.5 text-[12px] cursor-pointer whitespace-nowrap flex-shrink-0"
+      style={{
+        height: 28,
+        padding: "0 12px",
+        border: "none",
+        background: "var(--action)",
+        color: "var(--action-contrast)",
+      }}
+    >
+      <DeskIcon name="plus" stroke="var(--action-contrast)" />
+      {t("library.newProject")}
+    </button>
   );
 
   const batchBar = selectedIds.size > 0 && (
@@ -732,7 +677,6 @@ export function ProjectList({
           </div>
           {newProjectButton}
         </div>
-        {createRow}
         {batchBar}
         {categoryFilterStrip}
         {(clients.length > 0 || counts.archived > 0) && (
@@ -823,7 +767,6 @@ export function ProjectList({
               </div>
             )}
 
-            {createRow}
             {batchBar}
 
             <div className="flex flex-wrap items-center gap-1.5" style={{ padding: "4px 0 6px" }}>
@@ -853,21 +796,6 @@ export function ProjectList({
         </div>
       </div>
 
-      {showTemplateModal && (
-        <InsertAssemblyModal
-          mode="create"
-          assemblies={actions.libraryAssemblies ?? []}
-          onInsert={(entry, mult, name) => {
-            // The name field is the project's in this mode, so honour it
-            // rather than silently naming the project after the assembly.
-            const created = actions.onCreateFromAssembly?.(name?.trim() || entry.name, entry, mult);
-            if (created && typeof created === "object" && "id" in created) {
-              onOpenProject(created.id);
-            }
-          }}
-          onClose={() => setShowTemplateModal(false)}
-        />
-      )}
     </div>
   );
 }

@@ -135,3 +135,42 @@ describe("normalizeProject", () => {
     expect(project?.customerId).toBe("cust-1");
   });
 });
+
+describe("creating a project with its customer, due date and margin", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("sets them in the same write, with one history line", () => {
+    const { result } = renderHook(() => useProjects());
+    act(() => {
+      result.current.createProject("Railing", {
+        client: "Marko Group",
+        customerId: "c1",
+        dueDate: "2026-10-22",
+        marginPercent: 14,
+      });
+    });
+    const project = result.current.projects[0];
+    expect(project).toMatchObject({ client: "Marko Group", customerId: "c1", dueDate: "2026-10-22", marginPercent: 14 });
+    expect(project.activity?.map((a) => a.kind)).toEqual(["created"]);
+  });
+
+  it("copies a job under a new name and customer", () => {
+    const { result } = renderHook(() => useProjects());
+    let id = "";
+    act(() => {
+      id = result.current.createProject("Gate", { client: "Kovač", customerId: "c2", marginPercent: 9 }).id;
+    });
+    act(() => {
+      result.current.duplicateProject(id, { name: "Gate II", client: "Hadžić", customerId: "c3", dueDate: "" });
+    });
+    expect(result.current.projects[0]).toMatchObject({
+      name: "Gate II",
+      client: "Hadžić",
+      customerId: "c3",
+      marginPercent: 9,
+    });
+    expect(result.current.projects[0].dueDate).toBeUndefined();
+  });
+});

@@ -108,7 +108,7 @@ export function ProjectMenu({
   );
 }
 
-function MixBar({ project, height, showLabels }: { project: Project; height: number; showLabels?: boolean }) {
+export function MixBar({ project, height, showLabels }: { project: Project; height: number; showLabels?: boolean }) {
   const t = useTranslations("command");
   const mix = useMemo(() => projectMix(project, t("projects.mixOther")), [project, t]);
   if (mix.length === 0) {

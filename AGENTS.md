@@ -230,10 +230,18 @@ never has its own copy of a list, so a column means the same thing on both.
   derived, not stored: an entry with `parts.length > 1` is an assembly.
   History reads `useQuickHistory`. `sheets/saved-edit-sheet.tsx` is the one
   editor for an entry, including an assembly's trade, hours and hardware.
-  `projects/insert-assembly-modal.tsx` picks and scales one, in either of
-  two voices (`mode="insert"` into the open project, `mode="create"` to
-  start a project from it). Both entry points stay visible while the library
-  holds no assembly; the picker then explains how to make one.
+  `projects/insert-assembly-modal.tsx` picks and scales one into the open
+  project. Starting a project from one is a tile of the New project dialog.
+  Both entry points stay visible while the library holds no assembly; each
+  then explains how to make one.
+- **New project** — `projects/new-project-dialog.tsx`, one dialog for every
+  way a project starts (blank, from an assembly, a copy of a past job, a
+  pasted bar list read by `lib/projects/import-list.ts`), with name, customer
+  and due date, set in one write (`createProject(name, meta)`). The shell
+  owns it and opens it via `ProjectActions.onStartNewProject`; the caller's
+  `onCreated` opens the new job wherever that surface shows it. The
+  destination picker keeps its own name-only quick create — filing a line
+  should stay one step.
 
 ### API routes
 

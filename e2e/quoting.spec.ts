@@ -213,10 +213,10 @@ test.describe("Session", () => {
 test.describe("Assemblies", () => {
   test("the way into the library is offered before the library has anything in it", async ({ page }) => {
     await page.goto("/en/projects");
-    // Hiding these until an assembly existed meant the feature vanished for
+    // Hiding this until an assembly existed meant the feature vanished for
     // anyone who had not already used it, with nothing left to learn it from.
-    await expect(page.getByRole("button", { name: "From assembly" }).first()).toBeVisible();
-    await page.getByRole("button", { name: "From assembly" }).first().click();
+    await page.getByRole("button", { name: "New project" }).first().click();
+    await page.getByRole("button", { name: /^From assembly/ }).click();
     await expect(page.getByText("No assemblies yet").first()).toBeVisible();
     await expect(page.getByText(/Save a line with several cuts/).first()).toBeVisible();
   });
@@ -257,13 +257,13 @@ test.describe("Assemblies", () => {
     await expect(page.getByLabel("Save to library as one assembly")).toHaveValue("HEA 140 +1");
     await page.getByRole("button", { name: "Create", exact: true }).click();
 
-    // Now it is offered, and the picker starts a project rather than adding
-    // to one — the same dialog, saying which of the two it is doing.
+    // Now it is offered as a starting point of the New project dialog.
     await page.goto("/en/projects");
-    await page.getByRole("button", { name: "From assembly" }).first().click();
-    await expect(page.getByText("Start from an assembly")).toBeVisible();
-    await page.getByRole("textbox", { name: "" }).nth(1).fill("Warehouse mezzanine");
-    await page.getByRole("button", { name: /Create project/ }).click();
+    await page.getByRole("button", { name: "New project" }).first().click();
+    await page.getByRole("button", { name: /^From assembly/ }).click();
+    await expect(page.getByRole("button", { name: "HEA 140 +1" })).toBeVisible();
+    await page.getByPlaceholder("Project name").fill("Warehouse mezzanine");
+    await page.getByRole("button", { name: "Create project" }).click();
 
     // The project is named what was typed, and carries both cuts.
     await expect(page.getByText("Warehouse mezzanine").first()).toBeVisible();
