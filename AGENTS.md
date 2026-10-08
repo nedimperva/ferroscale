@@ -100,6 +100,14 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   (`advanced-calc-projects-v2`, max 20×50), `useCompare`,
   `useQuickHistory` (`ferroscale-quick-history` — the session tape and
   recency suggestions, capped at 50).
+- **Customers are records** (`useCustomers`, `ferroscale-customers-v1`). A
+  project points at one by `customerId` and keeps the name in `client` too, so
+  quotes and CSVs need no lookup; renaming a customer rewrites `client` on its
+  jobs (`renameCustomerOnProjects`). `useCustomerLinking` (mounted once in the
+  shell) links any project that names a client but has no `customerId` — the
+  migration from free-text clients, and projects pulled from older devices.
+  Customers it creates get an id derived from the name
+  (`lib/customers/link.ts`) so two devices migrating the same data agree.
 - **The library is one store.** Parts, assemblies and what used to be
   "assembly templates" are all `SavedEntry`: `parts.length > 1` (or an
   explicit `isAssembly`) makes it an assembly, and `category`,

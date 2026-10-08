@@ -12,6 +12,8 @@ import type { SavedEntry, SavedPartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
 import { isArchivedProject, useProjects } from "@/hooks/useProjects";
 import { usePriceBook } from "@/hooks/usePriceBook";
+import { useCustomers } from "@/hooks/useCustomers";
+import { useCustomerLinking } from "./customers/use-customer-linking";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
@@ -155,6 +157,8 @@ export function CommandShell() {
     insertAssembly,
   } = projectsApi;
   const priceBook = usePriceBook();
+  const customersApi = useCustomers();
+  useCustomerLinking(projectsApi, customersApi);
 
   const currentProjectId = useSyncExternalStore(
     currentProjectStore.subscribe,

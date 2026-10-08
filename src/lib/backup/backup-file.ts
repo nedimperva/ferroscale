@@ -3,13 +3,16 @@ import {
   getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
+  loadCustomers,
   loadPriceBook,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
+  normalizeCustomer,
   normalizeProject,
   normalizeSavedEntry,
   persistCompareItems,
+  persistCustomers,
   persistPriceBook,
   persistProjects,
   persistQuickHistory,
@@ -23,6 +26,7 @@ import type { PriceBookEntry } from "@/hooks/usePriceBook";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem as SyncCompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
+import type { Customer } from "@/hooks/useCustomers";
 import {
   defaultPaintCoverageStore,
   defaultPaintPriceStore,
@@ -40,6 +44,8 @@ import { downloadBlob } from "@/lib/csv-utils";
 export interface FerroscaleBackupData {
   saved: SavedEntry[];
   projects: Project[];
+  /** Absent in backups written before customers existed. */
+  customers?: Customer[];
   compare: {
     updatedAt: string;
     items: SyncCompareItem[];
@@ -81,6 +87,7 @@ export function buildBackupFile(appVersion = "3.22.0"): FerroscaleBackupFile {
     data: {
       saved: loadSavedEntries(),
       projects: loadProjects(),
+      customers: loadCustomers(),
       compare: {
         updatedAt: getCompareUpdatedAt(),
         items: loadCompareItems(),
@@ -131,6 +138,11 @@ export function validateBackupFile(raw: unknown): FerroscaleBackupFile {
   const d = candidate.data as Partial<FerroscaleBackupData>;
   const saved = Array.isArray(d.saved) ? d.saved.map(normalizeSavedEntry).filter(Boolean) as SavedEntry[] : [];
   const projects = Array.isArray(d.projects) ? d.projects.map(normalizeProject).filter(Boolean) as Project[] : [];
+  // An older backup has no customers: leave them out rather than as [], so a
+  // replace restore keeps this device's customers instead of wiping them.
+  const customers = Array.isArray(d.customers)
+    ? (d.customers.map(normalizeCustomer).filter(Boolean) as Customer[])
+    : undefined;
   const compare = {
     updatedAt: typeof d.compare?.updatedAt === "string" ? d.compare.updatedAt : new Date().toISOString(),
     items: Array.isArray(d.compare?.items) ? d.compare.items : [],
@@ -151,6 +163,7 @@ export function validateBackupFile(raw: unknown): FerroscaleBackupFile {
     data: {
       saved,
       projects,
+      customers,
       compare,
       quickHistory,
       priceBook,
@@ -174,6 +187,7 @@ export function restoreBackupFile(
   if (mode === "replace") {
     persistSavedEntries(d.saved, { markDirty: true });
     persistProjects(d.projects, { markDirty: true });
+    if (d.customers) persistCustomers(d.customers, { markDirty: true });
     persistCompareItems(d.compare.items, { markDirty: true, updatedAt: d.compare.updatedAt });
     persistQuickHistory(d.quickHistory.items, { markDirty: true, updatedAt: d.quickHistory.updatedAt });
     persistPriceBook(d.priceBook.items, { markDirty: true, updatedAt: d.priceBook.updatedAt });
@@ -181,6 +195,7 @@ export function restoreBackupFile(
     // Merge mode
     const mergedSaved = mergeEntityPayload({ items: loadSavedEntries() }, { items: d.saved });
     const mergedProjects = mergeEntityPayload({ items: loadProjects() }, { items: d.projects });
+    const mergedCustomers = mergeEntityPayload({ items: loadCustomers() }, { items: d.customers ?? [] });
     const mergedCompare = mergeListPayload(
       { updatedAt: getCompareUpdatedAt(), items: loadCompareItems() },
       d.compare,
@@ -196,6 +211,7 @@ export function restoreBackupFile(
 
     persistSavedEntries(mergedSaved.items, { markDirty: true });
     persistProjects(mergedProjects.items, { markDirty: true });
+    persistCustomers(mergedCustomers.items, { markDirty: true });
     persistCompareItems(mergedCompare.items, { markDirty: true, updatedAt: mergedCompare.updatedAt });
     persistQuickHistory(mergedHistory.items, { markDirty: true, updatedAt: mergedHistory.updatedAt });
     persistPriceBook(mergedPriceBook.items, { markDirty: true, updatedAt: mergedPriceBook.updatedAt });

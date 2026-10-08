@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.37.0] - 2026-10-08
+
+### Added
+
+- Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups
+
 ## [3.36.0] - 2026-10-08
 
 ### Added

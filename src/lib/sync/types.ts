@@ -1,14 +1,15 @@
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
+import type { Customer } from "@/hooks/useCustomers";
 import type { PriceBookEntry } from "@/hooks/usePriceBook";
 import { GOOGLE_SYNC_PROVIDER_ID } from "./keys";
 
-export type { CompareItem, CompareItem as SyncCompareItem, Project, SavedEntry, PriceBookEntry };
+export type { CompareItem, CompareItem as SyncCompareItem, Customer, Project, SavedEntry, PriceBookEntry };
 
 export type SyncProviderId = typeof GOOGLE_SYNC_PROVIDER_ID;
 
-export type SyncEntityCollectionKey = "saved" | "projects";
+export type SyncEntityCollectionKey = "saved" | "projects" | "customers";
 export type SyncListCollectionKey = "compare" | "quickHistory" | "priceBook";
 /**
  * Collections that neither replace wholesale nor key by entity: usage stats
@@ -67,6 +68,8 @@ export interface SyncSnapshotV1 {
   collections: {
     saved: SyncEntityPayload<SavedEntry>;
     projects: SyncEntityPayload<Project>;
+    /** Absent in snapshots written before customers existed. */
+    customers?: SyncEntityPayload<Customer>;
     compare: SyncListPayload<CompareItem>;
     quickHistory: SyncListPayload<string>;
     priceBook: SyncListPayload<PriceBookEntry>;
@@ -133,6 +136,7 @@ export type SyncRecordKind =
   | "bootstrap"
   | "saved"
   | "project"
+  | "customer"
   | "compare"
   | "quickHistory"
   | "priceBook"

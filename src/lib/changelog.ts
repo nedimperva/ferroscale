@@ -17,6 +17,16 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.37.0",
+    date: "2026-10-08",
+    added: [
+      "Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups",
+    ],
+    added_bs: [
+      "Kupci su sada zasebni zapisi. Svaki klijent već upisan na projektu postaje kupac, a projekti koji ga navode povezuju se s njim. Kupac čuva kontakt osobu, telefon, e-mail, bilješke i zadanu maržu, sinhronizuje se na Google Drive i ide u sigurnosne kopije",
+    ],
+  },
+  {
     version: "3.36.0",
     date: "2026-10-08",
     added: [

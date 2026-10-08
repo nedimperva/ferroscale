@@ -116,8 +116,13 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
-  /** Who the job is for. Free text — it drives the client rail's grouping. */
+  /**
+   * Who the job is for, by name. Kept alongside `customerId` so a quote or a
+   * CSV never needs a lookup; renaming the customer rewrites it.
+   */
   client?: string;
+  /** The customer record (see useCustomers). Absent → linked by name on load. */
+  customerId?: string;
   /** Absent means `draft`; stored only once it moves off the default. */
   status?: ProjectStatus;
   /** Fabrication category/tag. */
@@ -609,12 +614,21 @@ export interface UseProjectsReturn {
     id: string,
     patch: {
       client?: string;
+      /**
+       * With `client`: the customer that name belongs to. A client set without
+       * one drops the old link, and the name is matched to a customer again.
+       */
+      customerId?: string;
       status?: ProjectStatus;
       dueDate?: string;
       category?: ProjectCategory;
       marginPercent?: number;
     },
   ) => void;
+  /** Attach customers found by the client-name migration. Does not touch `updatedAt`. */
+  linkProjectCustomers: (links: Record<string, string>) => void;
+  /** A customer was renamed: rewrite the stored name on every job of theirs. */
+  renameCustomerOnProjects: (customerId: string, name: string) => void;
   updateProjectLabor: (
     id: string,
     labor: { laborHours?: number; laborRatePerHour?: number },
@@ -695,6 +709,7 @@ export function useProjects(): UseProjectsReturn {
     const next = typeof updater === "function"
       ? (updater as (prev: Project[]) => Project[])(previous)
       : updater;
+    if (next === previous) return;
     projectsRef.current = next;
     persistProjects(next);
     setAllProjects(next);
@@ -744,6 +759,7 @@ export function useProjects(): UseProjectsReturn {
       id: string,
       patch: {
         client?: string;
+        customerId?: string;
         status?: ProjectStatus;
         dueDate?: string;
         category?: ProjectCategory;
@@ -756,10 +772,15 @@ export function useProjects(): UseProjectsReturn {
           let next = p;
           if (patch.client !== undefined) {
             const client = patch.client.trim();
+            const customerId = client ? patch.customerId || undefined : undefined;
             if (client !== (p.client ?? "")) {
-              next = withActivity({ ...next, client: client || undefined }, "clientSet", {
-                to: client || undefined,
-              });
+              next = withActivity(
+                { ...next, client: client || undefined, customerId },
+                "clientSet",
+                { to: client || undefined },
+              );
+            } else if (customerId !== p.customerId) {
+              next = { ...next, customerId, updatedAt: new Date().toISOString() };
             }
           }
           if (patch.status !== undefined && patch.status !== projectStatus(p)) {
@@ -786,6 +807,41 @@ export function useProjects(): UseProjectsReturn {
           return next;
         }),
       );
+    },
+    [setProjects],
+  );
+
+  const linkProjectCustomers = useCallback(
+    (links: Record<string, string>) => {
+      if (Object.keys(links).length === 0) return;
+      setProjects((prev) => {
+        let changed = false;
+        const next = prev.map((p) => {
+          const customerId = links[p.id];
+          if (!customerId || p.customerId === customerId) return p;
+          changed = true;
+          return { ...p, customerId };
+        });
+        return changed ? next : prev;
+      });
+    },
+    [setProjects],
+  );
+
+  const renameCustomerOnProjects = useCallback(
+    (customerId: string, name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      setProjects((prev) => {
+        let changed = false;
+        const now = new Date().toISOString();
+        const next = prev.map((p) => {
+          if (p.deletedAt || p.customerId !== customerId || p.client === trimmed) return p;
+          changed = true;
+          return { ...p, client: trimmed, updatedAt: now };
+        });
+        return changed ? next : prev;
+      });
     },
     [setProjects],
   );
@@ -1353,6 +1409,8 @@ export function useProjects(): UseProjectsReturn {
     createProject,
     renameProject,
     updateProjectMeta,
+    linkProjectCustomers,
+    renameCustomerOnProjects,
     updateProjectLabor,
     updateProjectAdditionalCosts,
     updateItemAssembly,

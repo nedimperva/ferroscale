@@ -15,6 +15,7 @@ import {
 } from "@/hooks/useProjects";
 import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
+import type { Customer } from "@/hooks/useCustomers";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
 import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_PRICE_BOOK_REMOVED_KEY, SYNC_STORAGE_KEYS } from "./keys";
 import { stampPriceBookEdit, type PriceBookRemovals } from "./price-book-merge";
@@ -168,6 +169,10 @@ export function normalizeProject(raw: unknown): Project | null {
     name: candidate.name,
     description: candidate.description?.trim() || undefined,
     client: candidate.client?.trim() || undefined,
+    customerId:
+      typeof candidate.customerId === "string" && candidate.customerId.trim()
+        ? candidate.customerId.trim()
+        : undefined,
     // A status written by a newer build (or corrupted on disk) falls back to
     // the default rather than hiding the project in a bucket nothing lists.
     status: PROJECT_STATUSES.includes(candidate.status as ProjectStatus)
@@ -212,6 +217,39 @@ export function normalizeProject(raw: unknown): Project | null {
       paintingCoats: (candidate as { paintingCoats?: number }).paintingCoats,
     }),
   };
+}
+
+function optionalText(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+export function normalizeCustomer(raw: unknown): Customer | null {
+  if (!raw || typeof raw !== "object") return null;
+  const candidate = raw as Partial<Customer>;
+  const name = optionalText(candidate.name);
+  if (!candidate.id || !name || !candidate.createdAt || !candidate.updatedAt) return null;
+  return {
+    id: candidate.id,
+    name,
+    contact: optionalText(candidate.contact),
+    phone: optionalText(candidate.phone),
+    email: optionalText(candidate.email),
+    notes: optionalText(candidate.notes),
+    marginPercent:
+      typeof candidate.marginPercent === "number" && Number.isFinite(candidate.marginPercent)
+        ? Math.max(0, Math.min(500, candidate.marginPercent))
+        : undefined,
+    archivedAt: optionalText(candidate.archivedAt),
+    createdAt: candidate.createdAt,
+    updatedAt: candidate.updatedAt,
+    deletedAt: optionalText(candidate.deletedAt),
+  };
+}
+
+export function normalizeCustomers(entries: unknown[]): Customer[] {
+  return entries
+    .map((entry) => normalizeCustomer(entry))
+    .filter((entry): entry is Customer => Boolean(entry));
 }
 
 function normalizeCompareItem(raw: unknown): CompareItem | null {
@@ -267,6 +305,15 @@ export function loadProjects(): Project[] {
 export function persistProjects(entries: Project[], options?: PersistOptions): void {
   persistToStorage(SYNC_STORAGE_KEYS.projects, entries);
   maybeNotify("projects", options?.markDirty ?? true);
+}
+
+export function loadCustomers(): Customer[] {
+  return normalizeCustomers(loadArrayFromStorage<unknown>(SYNC_STORAGE_KEYS.customers));
+}
+
+export function persistCustomers(entries: Customer[], options?: PersistOptions): void {
+  persistToStorage(SYNC_STORAGE_KEYS.customers, entries);
+  maybeNotify("customers", options?.markDirty ?? true);
 }
 
 export function loadCompareItems(): CompareItem[] {
