@@ -12,7 +12,7 @@ import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import type { ProjectActions } from "../projects/project-actions";
 
-export type DeskView = "calc" | "saved" | "projects" | "compare" | "settings";
+export type DeskView = "calc" | "saved" | "projects" | "customers" | "compare" | "settings";
 
 export interface CommandDesktopProps {
   /** Below 1024: one column, no side rail, tighter chrome. */

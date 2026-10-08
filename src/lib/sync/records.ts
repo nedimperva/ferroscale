@@ -3,23 +3,27 @@
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
+import type { Customer } from "@/hooks/useCustomers";
 import { sha256Text } from "./crypto";
 import {
   getCompareUpdatedAt,
   getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
+  loadCustomers,
   loadPriceBook,
   loadPriceBookRemovals,
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
   normalizeCompareItems,
+  normalizeCustomers,
   normalizePriceBook,
   normalizePriceBookRemovals,
   normalizeProjects,
   normalizeSavedEntries,
   persistCompareItems,
+  persistCustomers,
   persistPriceBook,
   persistProjects,
   persistQuickHistory,
@@ -185,6 +189,7 @@ export async function buildLocalSyncRecords(deviceId: string) {
     },
     ...loadSavedEntries().map((item) => buildEntityRecord("saved", item.id, item)),
     ...loadProjects().map((item) => buildEntityRecord("project", item.id, item)),
+    ...loadCustomers().map((item) => buildEntityRecord("customer", item.id, item)),
     buildListRecord("compare", loadCompareItems()),
     buildPriceBookRecord(),
     buildListRecord("quickHistory", loadQuickHistory()),
@@ -276,6 +281,7 @@ function resolveRecordUpdatedAt(kind: SyncRecordKind, payload: string) {
 export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId?: string) {
   let saved = loadSavedEntries();
   let projects = loadProjects();
+  let customers = loadCustomers();
   let compare = loadCompareItems();
   let quickHistory = loadQuickHistory();
   let priceBook = { items: loadPriceBook(), removed: loadPriceBookRemovals() };
@@ -285,6 +291,7 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
 
   let savedChanged = false;
   let projectsChanged = false;
+  let customersChanged = false;
   let compareChanged = false;
   let quickHistoryChanged = false;
   let priceBookChanged = false;
@@ -309,6 +316,14 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
         const next = mergeEntityItem(projects, entry);
         projectsChanged = projectsChanged || next !== projects;
         projects = next;
+        break;
+      }
+      case "customer": {
+        const [entry] = normalizeCustomers([JSON.parse(record.payload) as Customer]);
+        if (!entry) break;
+        const next = mergeEntityItem(customers, entry);
+        customersChanged = customersChanged || next !== customers;
+        customers = next;
         break;
       }
       case "compare": {
@@ -368,6 +383,7 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
 
   if (savedChanged) persistSavedEntries(saved, { markDirty: false });
   if (projectsChanged) persistProjects(projects, { markDirty: false });
+  if (customersChanged) persistCustomers(customers, { markDirty: false });
   if (compareChanged) persistCompareItems(compare, { markDirty: false, updatedAt: compareUpdatedAt });
   if (quickHistoryChanged) persistQuickHistory(quickHistory, { markDirty: false, updatedAt: quickHistoryUpdatedAt });
   if (priceBookChanged) {

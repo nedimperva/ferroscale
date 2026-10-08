@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
@@ -116,8 +116,13 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
-  /** Who the job is for. Free text — it drives the client rail's grouping. */
+  /**
+   * Who the job is for, by name. Kept alongside `customerId` so a quote or a
+   * CSV never needs a lookup; renaming the customer rewrites it.
+   */
   client?: string;
+  /** The customer record (see useCustomers). Absent → linked by name on load. */
+  customerId?: string;
   /** Absent means `draft`; stored only once it moves off the default. */
   status?: ProjectStatus;
   /** Fabrication category/tag. */
@@ -140,6 +145,33 @@ export interface Project {
   calculations: ProjectCalculation[];
   /** One row per paint (primer, finish, extra). Surface comes from the items. */
   paintCoats?: ProjectPaintCoat[];
+}
+
+/**
+ * What a project can be born with, set in the same write that creates it so
+ * its history opens with one "created" line rather than four edits.
+ */
+export interface NewProjectMeta {
+  client?: string;
+  customerId?: string;
+  /** ISO date, YYYY-MM-DD. */
+  dueDate?: string;
+  marginPercent?: number;
+}
+
+function withNewMeta(project: Project, meta: NewProjectMeta | undefined): Project {
+  if (!meta) return project;
+  const client = meta.client?.trim();
+  const next: Project = { ...project };
+  if (meta.client !== undefined) {
+    next.client = client || undefined;
+    next.customerId = client ? meta.customerId || undefined : undefined;
+  }
+  if (meta.dueDate !== undefined) next.dueDate = meta.dueDate.slice(0, 10) || undefined;
+  if (meta.marginPercent !== undefined) {
+    next.marginPercent = Math.max(0, Math.min(500, Number(meta.marginPercent) || 0));
+  }
+  return next;
 }
 
 export interface ProjectAggregates {
@@ -603,18 +635,27 @@ export interface UseProjectsReturn {
   /** The project currently being viewed in the drawer (null = list view). */
   activeProjectId: string | null;
   setActiveProjectId: (id: string | null) => void;
-  createProject: (name: string) => Project;
+  createProject: (name: string, meta?: NewProjectMeta) => Project;
   renameProject: (id: string, name: string) => void;
   updateProjectMeta: (
     id: string,
     patch: {
       client?: string;
+      /**
+       * With `client`: the customer that name belongs to. A client set without
+       * one drops the old link, and the name is matched to a customer again.
+       */
+      customerId?: string;
       status?: ProjectStatus;
       dueDate?: string;
       category?: ProjectCategory;
       marginPercent?: number;
     },
   ) => void;
+  /** Attach customers found by the client-name migration. Does not touch `updatedAt`. */
+  linkProjectCustomers: (links: Record<string, string>) => void;
+  /** A customer was renamed: rewrite the stored name on every job of theirs. */
+  renameCustomerOnProjects: (customerId: string, name: string) => void;
   updateProjectLabor: (
     id: string,
     labor: { laborHours?: number; laborRatePerHour?: number },
@@ -627,7 +668,8 @@ export interface UseProjectsReturn {
   deleteProject: (id: string) => void;
   /** Undo a delete — clears the tombstone so sync keeps the project alive. */
   restoreProject: (id: string) => void;
-  duplicateProject: (id: string) => Project | null;
+  /** With `meta`, the copy is a new job: its own name, customer and due date. */
+  duplicateProject: (id: string, meta?: NewProjectMeta & { name?: string }) => Project | null;
   addCalculation: (
     projectId: string,
     input: CalculationInput,
@@ -660,6 +702,7 @@ export interface UseProjectsReturn {
     name: string,
     entry: SavedEntry,
     multiplier?: number,
+    meta?: NewProjectMeta,
   ) => Project;
   removeCalculation: (projectId: string, calcId: string) => void;
   updateCalculationQuantity: (projectId: string, calcId: string, quantity: number) => void;
@@ -695,28 +738,35 @@ export function useProjects(): UseProjectsReturn {
     const next = typeof updater === "function"
       ? (updater as (prev: Project[]) => Project[])(previous)
       : updater;
+    if (next === previous) return;
     projectsRef.current = next;
     persistProjects(next);
     setAllProjects(next);
   }, []);
 
-  const projects = allProjects.filter((project) => isActiveSyncEntity(project));
+  const projects = useMemo(
+    () => allProjects.filter((project) => isActiveSyncEntity(project)),
+    [allProjects],
+  );
 
   useEffect(() => {
     projectsRef.current = allProjects;
   }, [allProjects]);
 
-  const createProject = useCallback((name: string): Project => {
+  const createProject = useCallback((name: string, meta?: NewProjectMeta): Project => {
     const now = new Date().toISOString();
     const trimmed = name.trim();
-    const project: Project = {
-      id: crypto.randomUUID(),
-      name: trimmed.length > 0 ? trimmed : `P-${now.slice(0, 10)}`,
-      createdAt: now,
-      updatedAt: now,
-      calculations: [],
-      activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
-    };
+    const project: Project = withNewMeta(
+      {
+        id: crypto.randomUUID(),
+        name: trimmed.length > 0 ? trimmed : `P-${now.slice(0, 10)}`,
+        createdAt: now,
+        updatedAt: now,
+        calculations: [],
+        activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
+      },
+      meta,
+    );
     setProjects((prev) => {
       if (prev.filter((project) => !project.deletedAt).length >= MAX_PROJECTS) return prev;
       return [project, ...prev];
@@ -744,6 +794,7 @@ export function useProjects(): UseProjectsReturn {
       id: string,
       patch: {
         client?: string;
+        customerId?: string;
         status?: ProjectStatus;
         dueDate?: string;
         category?: ProjectCategory;
@@ -756,10 +807,17 @@ export function useProjects(): UseProjectsReturn {
           let next = p;
           if (patch.client !== undefined) {
             const client = patch.client.trim();
+            const customerId = client ? patch.customerId || undefined : undefined;
             if (client !== (p.client ?? "")) {
-              next = withActivity({ ...next, client: client || undefined }, "clientSet", {
-                to: client || undefined,
-              });
+              next = withActivity(
+                { ...next, client: client || undefined, customerId },
+                "clientSet",
+                { to: client || undefined },
+              );
+            } else if (customerId && customerId !== p.customerId) {
+              // Same name, a different record picked: relink without a history line.
+              // An unchanged name with no id keeps whatever link it had.
+              next = { ...next, customerId, updatedAt: new Date().toISOString() };
             }
           }
           if (patch.status !== undefined && patch.status !== projectStatus(p)) {
@@ -786,6 +844,41 @@ export function useProjects(): UseProjectsReturn {
           return next;
         }),
       );
+    },
+    [setProjects],
+  );
+
+  const linkProjectCustomers = useCallback(
+    (links: Record<string, string>) => {
+      if (Object.keys(links).length === 0) return;
+      setProjects((prev) => {
+        let changed = false;
+        const next = prev.map((p) => {
+          const customerId = links[p.id];
+          if (!customerId || p.customerId === customerId) return p;
+          changed = true;
+          return { ...p, customerId };
+        });
+        return changed ? next : prev;
+      });
+    },
+    [setProjects],
+  );
+
+  const renameCustomerOnProjects = useCallback(
+    (customerId: string, name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      setProjects((prev) => {
+        let changed = false;
+        const now = new Date().toISOString();
+        const next = prev.map((p) => {
+          if (p.deletedAt || p.customerId !== customerId || p.client === trimmed) return p;
+          changed = true;
+          return { ...p, client: trimmed, updatedAt: now };
+        });
+        return changed ? next : prev;
+      });
     },
     [setProjects],
   );
@@ -924,17 +1017,17 @@ export function useProjects(): UseProjectsReturn {
     );
   }, [setProjects]);
 
-  const duplicateProject = useCallback((id: string): Project | null => {
+  const duplicateProject = useCallback((id: string, meta?: NewProjectMeta & { name?: string }): Project | null => {
     let duplicate: Project | null = null;
     setProjects((prev) => {
       if (prev.filter((project) => !project.deletedAt).length >= MAX_PROJECTS) return prev;
       const original = prev.find((p) => p.id === id && !p.deletedAt);
       if (!original) return prev;
       const now = new Date().toISOString();
-      duplicate = {
+      duplicate = withNewMeta({
         ...original,
         id: crypto.randomUUID(),
-        name: `${original.name} (copy)`,
+        name: meta?.name?.trim() || `${original.name} (copy)`,
         createdAt: now,
         updatedAt: now,
         deletedAt: undefined,
@@ -943,7 +1036,7 @@ export function useProjects(): UseProjectsReturn {
         status: undefined,
         activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
         calculations: original.calculations.map((c) => ({ ...c, id: crypto.randomUUID() })),
-      };
+      }, meta);
       return [duplicate, ...prev];
     });
     return duplicate;
@@ -1211,7 +1304,7 @@ export function useProjects(): UseProjectsReturn {
   );
 
   const createProjectFromAssembly = useCallback(
-    (name: string, entry: SavedEntry, multiplier = 1): Project => {
+    (name: string, entry: SavedEntry, multiplier = 1, meta?: NewProjectMeta): Project => {
       const mult = Math.max(1, Math.floor(multiplier || 1));
       const now = new Date().toISOString();
       const newId = crypto.randomUUID();
@@ -1243,7 +1336,7 @@ export function useProjects(): UseProjectsReturn {
           }))
         : undefined;
 
-      const project: Project = {
+      const project: Project = withNewMeta({
         id: newId,
         name: name.trim() || entry.name,
         category: entry.category,
@@ -1255,7 +1348,7 @@ export function useProjects(): UseProjectsReturn {
         laborRatePerHour: 45,
         additionalCosts: scaledCosts,
         activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
-      };
+      }, meta);
 
       setProjects((prev) => [project, ...prev]);
       setActiveProjectId(newId);
@@ -1353,6 +1446,8 @@ export function useProjects(): UseProjectsReturn {
     createProject,
     renameProject,
     updateProjectMeta,
+    linkProjectCustomers,
+    renameCustomerOnProjects,
     updateProjectLabor,
     updateProjectAdditionalCosts,
     updateItemAssembly,

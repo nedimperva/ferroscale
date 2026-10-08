@@ -26,6 +26,10 @@
     "faq": {
       "title": "Metal Weight Calculation FAQ - FerroScale",
       "description": "Formulas, practical examples, and answers for calculating weight of steel, stainless, and aluminum profiles."
+    },
+    "customers": {
+      "title": "Customers - FerroScale",
+      "description": "Your customers, their jobs and quote defaults in FerroScale."
     }
   },
   "loading": {
@@ -227,7 +231,8 @@
       "compare": "Compare",
       "settings": "Settings",
       "library": "Parts",
-      "parts": "Parts"
+      "parts": "Parts",
+      "customers": "Customers"
     },
     "status": {
       "live": "LIVE",
@@ -1156,6 +1161,148 @@
       "sheetGroup": "{name} {thickness} mm",
       "groupPieces": "{count} pcs",
       "group": "{name}, {count} parts"
+    },
+    "customers": {
+      "title": "Customers",
+      "subtitle": "{customers, plural, one {# customer} other {# customers}} · {jobs, plural, one {# job} other {# jobs}}",
+      "newCustomer": "New customer",
+      "defaultName": "New customer",
+      "searchPlaceholder": "Search customers",
+      "searchAria": "Search customers by name, contact or phone",
+      "filterActive": "Active",
+      "filterArchived": "Archived",
+      "filterAria": "Show active or archived customers",
+      "jobsCount": "{count, plural, one {# job} other {# jobs}}",
+      "openCount": "{count} open",
+      "overdueCount": "{count} overdue",
+      "noOpen": "no open jobs",
+      "noMatch": "No customers match.",
+      "emptyTitle": "No customers yet",
+      "emptyBody": "Add one here, or type a client on a project and it becomes a customer.",
+      "emptyArchived": "No archived customers.",
+      "selectPrompt": "Select a customer or add a new one.",
+      "statusActive": "Active",
+      "statusArchived": "Archived · hidden from new-project search",
+      "newProject": "New project",
+      "newJobName": "{customer} — new job",
+      "archive": "Archive",
+      "restore": "Restore",
+      "kpi": {
+        "lifetime": "Lifetime",
+        "jobs": "Jobs",
+        "open": "Open",
+        "openValue": "Open value"
+      },
+      "details": "Details",
+      "fields": {
+        "name": "Company or name",
+        "namePlaceholder": "Customer name",
+        "contact": "Contact person",
+        "contactPlaceholder": "Name",
+        "phone": "Phone",
+        "phonePlaceholder": "+387",
+        "email": "Email",
+        "emailPlaceholder": "name@company.ba",
+        "notes": "Notes",
+        "notesPlaceholder": "Delivery gate code, preferred profiles, how they pay"
+      },
+      "defaults": "Defaults for new quotes",
+      "margin": "Margin",
+      "marginDown": "Lower margin",
+      "marginUp": "Raise margin",
+      "marginShopDefault": "Shop default",
+      "marginUseShop": "Use shop default",
+      "jobs": "Jobs",
+      "noJobs": "No jobs yet.",
+      "delete": "Delete customer",
+      "deleteFree": "No jobs. This can be deleted.",
+      "deleteBlocked": "{count, plural, one {Has # job} other {Has # jobs}}. Archive instead.",
+      "back": "All customers",
+      "openCustomer": "Show customer {name}",
+      "openJob": "Open {name}",
+      "toastCreated": "Customer added",
+      "toastArchived": "Customer archived",
+      "toastRestored": "Customer restored",
+      "toastDeleted": "Customer deleted",
+      "switchAria": "Projects or customers"
+    },
+    "newProject": {
+      "title": "New project",
+      "stepStart": "Start",
+      "stepDetails": "Details",
+      "startPrompt": "How do you want to start?",
+      "tiles": {
+        "blank": {
+          "name": "Blank",
+          "body": "Empty quote, add items as you go"
+        },
+        "assembly": {
+          "name": "From assembly",
+          "body": "One from your library, scaled by a multiplier"
+        },
+        "copy": {
+          "name": "Copy a past job",
+          "body": "Same items, new name and customer"
+        },
+        "import": {
+          "name": "Import list",
+          "body": "Paste a bar list from a drawing or Excel"
+        }
+      },
+      "startNames": {
+        "blank": "Blank",
+        "assembly": "Assembly",
+        "copy": "Copy",
+        "import": "Import"
+      },
+      "assemblyLabel": "Assembly",
+      "multiplier": "Multiplier",
+      "multDown": "Fewer",
+      "multUp": "More",
+      "partsNote": "{count, plural, one {# cut} other {# cuts}}",
+      "copyLabel": "Job to copy",
+      "noJobs": "No projects to copy yet.",
+      "importLabel": "Bar list",
+      "importPlaceholder": "One per line: profile, length mm, qty\nSHS 40x40x3, 2400, 12\nflat 100x8, 600, 4",
+      "importHint": "Profile, length in mm, quantity — or a line as you would type it in the calculator.",
+      "importRecognised": "{count, plural, one {# bar recognised} other {# bars recognised}}",
+      "importUnread": "{count, plural, one {# line not read} other {# lines not read}}",
+      "name": "Name",
+      "namePlaceholder": "Project name",
+      "customer": "Customer",
+      "customerSearch": "Type to find or add a customer",
+      "customerAdd": "+ Add “{name}” as new customer",
+      "customerMargin": "Margin {margin}%",
+      "customerShopMargin": "Shop margin {margin}%",
+      "change": "Change",
+      "noCustomer": "No customer",
+      "due": "Due",
+      "dueWeek": "1 week",
+      "due2Weeks": "2 weeks",
+      "dueMonth": "1 month",
+      "due2Months": "2 months",
+      "dueNone": "No date",
+      "preview": "Preview",
+      "untitled": "Untitled project",
+      "rows": {
+        "quoted": "Quoted",
+        "start": "Start",
+        "items": "Items",
+        "margin": "Margin",
+        "due": "Due"
+      },
+      "dueIn": "in {days} d",
+      "back": "Back",
+      "create": "Create project",
+      "close": "Close",
+      "footPick": "Pick a starting point",
+      "footName": "Give the project a name.",
+      "footCustomer": "The customer's margin fills in the quote.",
+      "footShop": "The quote starts at the shop margin.",
+      "footAssembly": "Pick an assembly to continue.",
+      "footCopy": "Pick a job to copy.",
+      "footImport": "Paste at least one line the calculator can read.",
+      "toastCreated": "Created “{name}”"
     }
   },
   "contact": {

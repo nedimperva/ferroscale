@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.37.0] - 2026-10-08
+
+### Added
+
+- Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups
+- A Customers tab on the rail (on the phone, a Customers side in the library's Projects tab): each customer with their lifetime value, jobs and what is still open or overdue, and a page with their details, a default margin for new quotes, every job they have had and + New project. Customers with jobs are archived rather than deleted
+- A project's client is a link to its customer — in the quote peek and above the project page — and the client field on a project suggests your customers as you type
+- New project is one dialog in two steps. First, how it starts: blank, from an assembly in your library (scaled by a multiplier), a copy of a past job, or a pasted bar list (profile, length in mm, quantity — or lines as you type them in the calculator). Then its name, customer and due date, with a preview of the quote beside it. Typing a customer that does not exist yet adds it, the customer's margin fills in the quote, and the name suggests itself — "Railing, Marko Group" — until you type one
+
+### Changed
+
+- The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in
+
 ## [3.36.0] - 2026-10-08
 
 ### Added

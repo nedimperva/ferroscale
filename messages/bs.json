@@ -26,6 +26,10 @@
     "faq": {
       "title": "Česta pitanja o proračunu težine metala - FerroScale",
       "description": "Formule, praktični primjeri i odgovori za proračun težine čeličnih, inox i aluminijskih profila."
+    },
+    "customers": {
+      "title": "Kupci - FerroScale",
+      "description": "Vaši kupci, njihovi poslovi i zadane postavke ponuda u FerroScale."
     }
   },
   "loading": {
@@ -227,7 +231,8 @@
       "compare": "Poređenje",
       "settings": "Postavke",
       "library": "Dijelovi",
-      "parts": "Dijelovi"
+      "parts": "Dijelovi",
+      "customers": "Kupci"
     },
     "status": {
       "live": "UŽIVO",
@@ -1156,6 +1161,148 @@
       "sheetGroup": "{name} {thickness} mm",
       "groupPieces": "{count} kom.",
       "group": "{name}, dijelova: {count}"
+    },
+    "customers": {
+      "title": "Kupci",
+      "subtitle": "{customers, plural, one {# kupac} few {# kupca} other {# kupaca}} · {jobs, plural, one {# posao} few {# posla} other {# poslova}}",
+      "newCustomer": "Novi kupac",
+      "defaultName": "Novi kupac",
+      "searchPlaceholder": "Pretraži kupce",
+      "searchAria": "Pretraži kupce po nazivu, kontaktu ili telefonu",
+      "filterActive": "Aktivni",
+      "filterArchived": "Arhivirani",
+      "filterAria": "Prikaži aktivne ili arhivirane kupce",
+      "jobsCount": "{count, plural, one {# posao} few {# posla} other {# poslova}}",
+      "openCount": "{count} otvoreno",
+      "overdueCount": "{count} kasni",
+      "noOpen": "nema otvorenih poslova",
+      "noMatch": "Nijedan kupac ne odgovara.",
+      "emptyTitle": "Još nema kupaca",
+      "emptyBody": "Dodajte ga ovdje ili upišite klijenta na projektu i on postaje kupac.",
+      "emptyArchived": "Nema arhiviranih kupaca.",
+      "selectPrompt": "Odaberite kupca ili dodajte novog.",
+      "statusActive": "Aktivan",
+      "statusArchived": "Arhiviran · ne nudi se pri novom projektu",
+      "newProject": "Novi projekat",
+      "newJobName": "{customer} — novi posao",
+      "archive": "Arhiviraj",
+      "restore": "Vrati",
+      "kpi": {
+        "lifetime": "Ukupno",
+        "jobs": "Poslovi",
+        "open": "Otvoreno",
+        "openValue": "Otvorena vrijednost"
+      },
+      "details": "Podaci",
+      "fields": {
+        "name": "Firma ili ime",
+        "namePlaceholder": "Naziv kupca",
+        "contact": "Kontakt osoba",
+        "contactPlaceholder": "Ime",
+        "phone": "Telefon",
+        "phonePlaceholder": "+387",
+        "email": "E-mail",
+        "emailPlaceholder": "ime@firma.ba",
+        "notes": "Bilješke",
+        "notesPlaceholder": "Šifra kapije za dostavu, omiljeni profili, kako plaćaju"
+      },
+      "defaults": "Zadano za nove ponude",
+      "margin": "Marža",
+      "marginDown": "Smanji maržu",
+      "marginUp": "Povećaj maržu",
+      "marginShopDefault": "Zadano radionice",
+      "marginUseShop": "Koristi zadano radionice",
+      "jobs": "Poslovi",
+      "noJobs": "Još nema poslova.",
+      "delete": "Obriši kupca",
+      "deleteFree": "Nema poslova. Može se obrisati.",
+      "deleteBlocked": "{count, plural, one {Ima # posao} few {Ima # posla} other {Ima # poslova}}. Arhivirajte ga.",
+      "back": "Svi kupci",
+      "openCustomer": "Prikaži kupca {name}",
+      "openJob": "Otvori {name}",
+      "toastCreated": "Kupac dodan",
+      "toastArchived": "Kupac arhiviran",
+      "toastRestored": "Kupac vraćen",
+      "toastDeleted": "Kupac obrisan",
+      "switchAria": "Projekti ili kupci"
+    },
+    "newProject": {
+      "title": "Novi projekat",
+      "stepStart": "Početak",
+      "stepDetails": "Podaci",
+      "startPrompt": "Kako želite početi?",
+      "tiles": {
+        "blank": {
+          "name": "Prazan",
+          "body": "Prazna ponuda, stavke dodajete usput"
+        },
+        "assembly": {
+          "name": "Iz sklopa",
+          "body": "Jedan iz vaše biblioteke, pomnožen po potrebi"
+        },
+        "copy": {
+          "name": "Kopija starog posla",
+          "body": "Iste stavke, novi naziv i kupac"
+        },
+        "import": {
+          "name": "Uvoz liste",
+          "body": "Zalijepite listu šipki iz crteža ili Excela"
+        }
+      },
+      "startNames": {
+        "blank": "Prazan",
+        "assembly": "Sklop",
+        "copy": "Kopija",
+        "import": "Uvoz"
+      },
+      "assemblyLabel": "Sklop",
+      "multiplier": "Množilac",
+      "multDown": "Manje",
+      "multUp": "Više",
+      "partsNote": "{count, plural, one {# rez} few {# reza} other {# rezova}}",
+      "copyLabel": "Posao za kopiranje",
+      "noJobs": "Još nema projekata za kopiranje.",
+      "importLabel": "Lista šipki",
+      "importPlaceholder": "Jedna po redu: profil, dužina mm, kom\nSHS 40x40x3, 2400, 12\nflat 100x8, 600, 4",
+      "importHint": "Profil, dužina u mm, količina — ili red kakav biste upisali u kalkulator.",
+      "importRecognised": "{count, plural, one {# šipka prepoznata} few {# šipke prepoznate} other {# šipki prepoznato}}",
+      "importUnread": "{count, plural, one {# red nije pročitan} few {# reda nisu pročitana} other {# redova nije pročitano}}",
+      "name": "Naziv",
+      "namePlaceholder": "Naziv projekta",
+      "customer": "Kupac",
+      "customerSearch": "Kucajte da nađete ili dodate kupca",
+      "customerAdd": "+ Dodaj „{name}” kao novog kupca",
+      "customerMargin": "Marža {margin}%",
+      "customerShopMargin": "Marža radionice {margin}%",
+      "change": "Promijeni",
+      "noCustomer": "Bez kupca",
+      "due": "Rok",
+      "dueWeek": "1 sedmica",
+      "due2Weeks": "2 sedmice",
+      "dueMonth": "1 mjesec",
+      "due2Months": "2 mjeseca",
+      "dueNone": "Bez roka",
+      "preview": "Pregled",
+      "untitled": "Projekat bez naziva",
+      "rows": {
+        "quoted": "Ponuđeno",
+        "start": "Početak",
+        "items": "Stavke",
+        "margin": "Marža",
+        "due": "Rok"
+      },
+      "dueIn": "za {days} d",
+      "back": "Nazad",
+      "create": "Napravi projekat",
+      "close": "Zatvori",
+      "footPick": "Odaberite početak",
+      "footName": "Dajte projektu naziv.",
+      "footCustomer": "Marža kupca se upisuje u ponudu.",
+      "footShop": "Ponuda počinje s maržom radionice.",
+      "footAssembly": "Odaberite sklop za nastavak.",
+      "footCopy": "Odaberite posao za kopiranje.",
+      "footImport": "Zalijepite barem jedan red koji kalkulator može pročitati.",
+      "toastCreated": "Napravljen „{name}”"
     }
   },
   "contact": {

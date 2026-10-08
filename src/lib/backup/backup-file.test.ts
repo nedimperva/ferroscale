@@ -5,7 +5,13 @@ import {
   validateBackupFile,
   type FerroscaleBackupFile,
 } from "./backup-file";
-import { loadProjects, persistProjects, persistSavedEntries } from "@/lib/sync/collections";
+import {
+  loadCustomers,
+  loadProjects,
+  persistCustomers,
+  persistProjects,
+  persistSavedEntries,
+} from "@/lib/sync/collections";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
 
@@ -168,5 +174,20 @@ describe("backup-file", () => {
     const replaced = loadProjects();
     expect(replaced.length).toBe(1);
     expect(replaced[0].id).toBe("p2");
+  });
+
+  it("carries customers, and an older backup without them leaves them in place", () => {
+    const stamp = "2026-01-01T00:00:00.000Z";
+    persistCustomers([{ id: "c1", name: "Marko Group", phone: "+387", createdAt: stamp, updatedAt: stamp }]);
+
+    const backup = validateBackupFile(JSON.parse(JSON.stringify(buildBackupFile())));
+    expect(backup.data.customers).toEqual([
+      expect.objectContaining({ id: "c1", name: "Marko Group", phone: "+387" }),
+    ]);
+
+    const older = validateBackupFile({ ...backup, data: { ...backup.data, customers: undefined } });
+    expect(older.data.customers).toBeUndefined();
+    restoreBackupFile(older, "replace");
+    expect(loadCustomers().map((c) => c.id)).toEqual(["c1"]);
   });
 });

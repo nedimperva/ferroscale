@@ -7,6 +7,8 @@ import type {
 } from "@/hooks/useProjects";
 import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import type { ProjectPaintCoat } from "@/lib/projects/paint";
+import type { Customer } from "@/hooks/useCustomers";
+import type { CustomerActions } from "../customers/customer-actions";
 
 /**
  * Everything the Projects surfaces can do to a project, in one bag. The list
@@ -22,12 +24,27 @@ export interface ProjectActions {
    * mounted down here would hold its own snapshot and silently drift.
    */
   libraryAssemblies?: SavedEntry[];
+  /**
+   * The customer records and what can be done to them. They ride here for
+   * the same reason the assemblies do — one shell-owned store — and because
+   * Customers lives beside Projects on every surface that shows either.
+   */
+  customers?: Customer[];
+  customerActions?: CustomerActions;
+  /**
+   * Open the New project dialog. `onCreated` is the surface's next step (open
+   * the job); `customerId` prefills the customer.
+   */
+  onStartNewProject?: (opts?: { customerId?: string; onCreated?: (project: Project) => void }) => void;
+  /** Show this customer (from a project's client). Each surface supplies its own. */
+  onOpenCustomer?: (customerId: string) => void;
   onCreate: (name: string) => Project | void;
   onRename: (id: string, name: string) => void;
   onUpdateMeta: (
     id: string,
     patch: {
       client?: string;
+      customerId?: string;
       status?: ProjectStatus;
       dueDate?: string;
       category?: ProjectCategory;

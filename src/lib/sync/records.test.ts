@@ -1,7 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPendingSyncRecords, applyRemoteSyncRecords } from "./records";
 import { clearAllIndexedRecords } from "./records";
-import { loadPriceBook, persistCompareItems, persistPriceBook, persistSavedEntries } from "./collections";
+import {
+  loadCustomers,
+  loadPriceBook,
+  persistCompareItems,
+  persistCustomers,
+  persistPriceBook,
+  persistSavedEntries,
+} from "./collections";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
 import { saveSyncRecordIndex } from "./metadata";
@@ -304,5 +311,65 @@ describe("usage records", () => {
     const pending = await getPendingSyncRecords("device-a");
     const book = JSON.parse(pending.find((record) => record.recordKey === "priceBook:root")!.payload);
     expect(Object.keys(book.removed)).toEqual(["s355"]);
+  });
+
+  it("pushes customers as one record each and merges pulled ones by version", async () => {
+    persistCustomers([
+      {
+        id: "cust-a",
+        name: "Marko Group",
+        contact: "Marko Jurić",
+        marginPercent: 14,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-05-01T00:00:00.000Z",
+      },
+    ]);
+
+    const pending = await getPendingSyncRecords("device-a");
+    const record = pending.find((r) => r.recordKey === "customer:cust-a");
+    expect(record?.kind).toBe("customer");
+    expect(JSON.parse(record!.payload).marginPercent).toBe(14);
+
+    applyRemoteSyncRecords([
+      {
+        recordKey: "customer:cust-a",
+        kind: "customer",
+        driveFileId: "drive-cust-a",
+        removed: false,
+        // Older than ours — ignored.
+        payload: JSON.stringify({
+          id: "cust-a",
+          name: "Old name",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-02-01T00:00:00.000Z",
+        }),
+        contentHash: "h1",
+        modifiedTime: "2026-02-01T00:00:00.000Z",
+      },
+      {
+        recordKey: "customer:cust-b",
+        kind: "customer",
+        driveFileId: "drive-cust-b",
+        removed: false,
+        payload: JSON.stringify({
+          id: "cust-b",
+          name: "Bosna Steel",
+          phone: "+387 62 120 330",
+          archivedAt: "2026-06-01T00:00:00.000Z",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-06-01T00:00:00.000Z",
+        }),
+        contentHash: "h2",
+        modifiedTime: "2026-06-01T00:00:00.000Z",
+      },
+    ]);
+
+    const customers = loadCustomers();
+    expect(customers.find((c) => c.id === "cust-a")?.name).toBe("Marko Group");
+    expect(customers.find((c) => c.id === "cust-b")).toMatchObject({
+      name: "Bosna Steel",
+      phone: "+387 62 120 330",
+      archivedAt: "2026-06-01T00:00:00.000Z",
+    });
   });
 });
