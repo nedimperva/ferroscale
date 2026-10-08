@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
 import type { UseCustomersReturn } from "@/hooks/useCustomers";
-import { MAX_PROJECTS, type UseProjectsReturn } from "@/hooks/useProjects";
+import type { Project, UseProjectsReturn } from "@/hooks/useProjects";
 import type { CustomerActions } from "./customer-actions";
 
 interface UseCustomerActionsArgs {
@@ -11,6 +11,8 @@ interface UseCustomerActionsArgs {
   projectsApi: UseProjectsReturn;
   showToast: (msg: string) => void;
   showActionToast: (msg: string, action: { label: string; onAction: () => void }) => void;
+  /** Open the New project dialog. */
+  onStartNewProject: (opts: { customerId?: string; onCreated?: (project: Project) => void }) => void;
 }
 
 export function useCustomerActions({
@@ -18,11 +20,12 @@ export function useCustomerActions({
   projectsApi,
   showToast,
   showActionToast,
+  onStartNewProject,
 }: UseCustomerActionsArgs): CustomerActions {
   const t = useTranslations("command");
   const { customers, createCustomer, updateCustomer, setCustomerArchived, deleteCustomer, upsertCustomers } =
     customersApi;
-  const { projects, createProject, updateProjectMeta, renameCustomerOnProjects } = projectsApi;
+  const { projects, renameCustomerOnProjects } = projectsApi;
 
   return useMemo<CustomerActions>(
     () => ({
@@ -55,21 +58,7 @@ export function useCustomerActions({
           },
         });
       },
-      onNewProject: (customerId) => {
-        const customer = customers.find((c) => c.id === customerId);
-        if (!customer) return;
-        if (projects.length >= MAX_PROJECTS) {
-          showToast(t("projects.full"));
-          return;
-        }
-        const project = createProject(t("customers.newJobName", { customer: customer.name }));
-        updateProjectMeta(project.id, {
-          client: customer.name,
-          customerId: customer.id,
-          ...(customer.marginPercent !== undefined ? { marginPercent: customer.marginPercent } : {}),
-        });
-        return project;
-      },
+      onNewProject: (customerId, onCreated) => onStartNewProject({ customerId, onCreated }),
     }),
     [
       customers,
@@ -79,9 +68,8 @@ export function useCustomerActions({
       setCustomerArchived,
       deleteCustomer,
       upsertCustomers,
-      createProject,
-      updateProjectMeta,
       renameCustomerOnProjects,
+      onStartNewProject,
       showToast,
       showActionToast,
       t,

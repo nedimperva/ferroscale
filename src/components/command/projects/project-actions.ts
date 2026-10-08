@@ -31,6 +31,11 @@ export interface ProjectActions {
    */
   customers?: Customer[];
   customerActions?: CustomerActions;
+  /**
+   * Open the New project dialog. `onCreated` is the surface's next step (open
+   * the job); `customerId` prefills the customer.
+   */
+  onStartNewProject?: (opts?: { customerId?: string; onCreated?: (project: Project) => void }) => void;
   /** Show this customer (from a project's client). Each surface supplies its own. */
   onOpenCustomer?: (customerId: string) => void;
   onCreate: (name: string) => Project | void;

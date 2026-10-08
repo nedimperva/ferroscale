@@ -23,11 +23,19 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups",
       "A Customers tab on the rail (on the phone, a Customers side in the library's Projects tab): each customer with their lifetime value, jobs and what is still open or overdue, and a page with their details, a default margin for new quotes, every job they have had and + New project. Customers with jobs are archived rather than deleted",
       "A project's client is a link to its customer — in the quote peek and above the project page — and the client field on a project suggests your customers as you type",
+      "New project is one dialog in two steps. First, how it starts: blank, from an assembly in your library (scaled by a multiplier), a copy of a past job, or a pasted bar list (profile, length in mm, quantity — or lines as you type them in the calculator). Then its name, customer and due date, with a preview of the quote beside it. Typing a customer that does not exist yet adds it, the customer's margin fills in the quote, and the name suggests itself — \"Railing, Marko Group\" — until you type one",
+    ],
+    changed: [
+      "The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in",
     ],
     added_bs: [
       "Kupci su sada zasebni zapisi. Svaki klijent već upisan na projektu postaje kupac, a projekti koji ga navode povezuju se s njim. Kupac čuva kontakt osobu, telefon, e-mail, bilješke i zadanu maržu, sinhronizuje se na Google Drive i ide u sigurnosne kopije",
       "Kartica Kupci na traci (na telefonu, strana Kupci u kartici Projekti biblioteke): svaki kupac s ukupnom vrijednošću, poslovima i onim što je još otvoreno ili kasni, te stranica s podacima, zadanom maržom za nove ponude, svim poslovima i + Novi projekat. Kupci s poslovima se arhiviraju umjesto brisanja",
       "Klijent projekta je veza na kupca — u pregledu ponude i iznad stranice projekta — a polje klijenta na projektu nudi vaše kupce dok kucate",
+      "Novi projekat je jedan dijalog u dva koraka. Prvo, kako počinje: prazan, iz sklopa u biblioteci (pomnožen po potrebi), kao kopija starog posla ili iz zalijepljene liste šipki (profil, dužina u mm, količina — ili redovi kakve kucate u kalkulatoru). Zatim naziv, kupac i rok, s pregledom ponude pored. Upisani kupac koji još ne postoji se dodaje, marža kupca se upisuje u ponudu, a naziv se sam predlaže — „Ograda, Marko Group” — dok ne upišete svoj",
+    ],
+    changed_bs: [
+      "Posebno dugme Iz sklopa na Projektima sada je početak unutar Novog projekta, a + Novi projekat na stranici kupca otvara isti dijalog s već upisanim kupcem",
     ],
   },
   {

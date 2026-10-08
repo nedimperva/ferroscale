@@ -10,11 +10,13 @@ import { isAssemblyEntry, useSaved } from "@/hooks/useSaved";
 import { libraryAssemblies } from "./projects/insert-assembly-modal";
 import type { SavedEntry, SavedPartDraft } from "@/hooks/useSaved";
 import { useCompare } from "@/hooks/useCompare";
-import { isArchivedProject, useProjects } from "@/hooks/useProjects";
+import { MAX_PROJECTS, isArchivedProject, useProjects, type Project } from "@/hooks/useProjects";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCustomerLinking } from "./customers/use-customer-linking";
 import { useCustomerActions } from "./customers/use-customer-actions";
+import { NewProjectDialog } from "./projects/new-project-dialog";
+import type { NewProjectRequest } from "./projects/new-project";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
@@ -32,6 +34,7 @@ import { CURRENCY_SYMBOLS, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/m
 import {
   currentProjectStore,
   defaultUnitStore,
+  marginPercentStore,
   massTolerancePercentStore,
   sharedCalcSettingsStore,
   weightAsMainStore,
@@ -119,6 +122,12 @@ export function CommandShell() {
     weightAsMainStore.subscribe,
     weightAsMainStore.getSnapshot,
     weightAsMainStore.getServerSnapshot,
+  );
+  /** The shop margin a quote starts from when its customer has none. */
+  const marginPercentForQuotes = useSyncExternalStore(
+    marginPercentStore.subscribe,
+    marginPercentStore.getSnapshot,
+    marginPercentStore.getServerSnapshot,
   );
   const defaultUnit = useSyncExternalStore(
     defaultUnitStore.subscribe,
@@ -1005,11 +1014,28 @@ export function CommandShell() {
     addCompareEntry(p.calc.input, p.calc.result);
   }, [p.calc, addCompareEntry]);
 
+  /** The New project dialog, while open: who it is for and what happens after. */
+  const [newProjectFor, setNewProjectFor] = useState<{
+    customerId?: string;
+    onCreated?: (project: Project) => void;
+  } | null>(null);
+  const startNewProject = useCallback(
+    (opts?: { customerId?: string; onCreated?: (project: Project) => void }) => {
+      if (projects.length >= MAX_PROJECTS) {
+        showToast(t("projects.full"));
+        return;
+      }
+      setNewProjectFor(opts ?? {});
+    },
+    [projects.length, showToast, t],
+  );
+
   const customerActions = useCustomerActions({
     customersApi,
     projectsApi,
     showToast,
     showActionToast,
+    onStartNewProject: startNewProject,
   });
 
   const baseProjectActions = useProjectActions({
@@ -1024,8 +1050,13 @@ export function CommandShell() {
     showActionToast,
   });
   const projectActions = useMemo(
-    () => ({ ...baseProjectActions, customers: customersApi.customers, customerActions }),
-    [baseProjectActions, customersApi.customers, customerActions],
+    () => ({
+      ...baseProjectActions,
+      customers: customersApi.customers,
+      customerActions,
+      onStartNewProject: startNewProject,
+    }),
+    [baseProjectActions, customersApi.customers, customerActions, startNewProject],
   );
 
   /** The picker, for everywhere the primary action does not go. */
@@ -1348,6 +1379,61 @@ export function CommandShell() {
     })()
   ) : null;
 
+  const parseQueryForImport = useCallback(
+    (q: string) => {
+      const parsed = cmdParse(q, parserSettings);
+      return parsed.calc ? { input: parsed.calc.input, result: parsed.calc.result } : null;
+    },
+    [parserSettings],
+  );
+
+  /** One write per start, so a project's history opens with a single line. */
+  const createNewProject = (request: NewProjectRequest): Project | null => {
+    const customer = request.customerId
+      ? customersApi.customers.find((c) => c.id === request.customerId)
+      : undefined;
+    const meta = {
+      client: customer?.name ?? "",
+      customerId: customer?.id,
+      dueDate: request.dueDate ?? "",
+      ...(customer?.marginPercent !== undefined ? { marginPercent: customer.marginPercent } : {}),
+    };
+    const { start } = request;
+    if (start.kind === "assembly") {
+      return projectsApi.createProjectFromAssembly(request.name, start.entry, start.multiplier, meta);
+    }
+    if (start.kind === "copy") {
+      return projectsApi.duplicateProject(start.projectId, { ...meta, name: request.name });
+    }
+    const project = createProject(request.name, meta);
+    if (start.kind === "import") addCalculations(project.id, start.items);
+    return project;
+  };
+
+  const newProjectDialog = newProjectFor ? (
+    <NewProjectDialog
+      projects={projects}
+      customers={customersApi.customers}
+      assemblies={assembliesInLibrary}
+      marginPercent={marginPercentForQuotes}
+      currencySymbol={sym}
+      initialCustomerId={newProjectFor.customerId}
+      parseQuery={parseQueryForImport}
+      onCreateCustomer={(name) => customerActions.onCreate({ name })}
+      onCreate={(request) => {
+        const project = createNewProject(request);
+        if (!project) {
+          showToast(t("projects.full"));
+          return;
+        }
+        setNewProjectFor(null);
+        showToast(t("newProject.toastCreated", { name: project.name }));
+        newProjectFor.onCreated?.(project);
+      }}
+      onClose={() => setNewProjectFor(null)}
+    />
+  ) : null;
+
   const savedEditSheet = editingEntry ? (
     <SavedEditSheet
       entry={editingEntry}
@@ -1426,6 +1512,7 @@ export function CommandShell() {
         {helpSheet}
         {savedEditSheet}
         {destinationSheet}
+        {newProjectDialog}
         <CommandToast toast={toast} bottom={32} dark={dark} />
         <ResultAnnouncer text={liveResultText} />
       </div>
@@ -1723,6 +1810,7 @@ export function CommandShell() {
           {helpSheet}
           {savedEditSheet}
           {destinationSheet}
+          {newProjectDialog}
 
           {/* TOAST */}
           <CommandToast toast={toast} bottom={120} dark={dark} />

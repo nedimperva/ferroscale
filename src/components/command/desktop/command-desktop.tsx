@@ -166,11 +166,8 @@ export function CommandDesktop(props: CommandDesktopProps) {
   // A job started from a customer opens straight away, on the Projects tab.
   const customerActions: CustomerActions | undefined = baseCustomerActions && {
     ...baseCustomerActions,
-    onNewProject: (customerId) => {
-      const project = baseCustomerActions.onNewProject(customerId);
-      if (project) openProject(project.id);
-      return project;
-    },
+    onNewProject: (customerId) =>
+      baseCustomerActions.onNewProject(customerId, (project) => openProject(project.id)),
   };
 
   const partsActions: PartsActions = {
