@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
   // top of them and swallows the click. The badge is a development-only
   // affordance and affects nothing in a production build.
   devIndicators: false,
+  // The per-page Open Graph cards read their fonts from disk at request time,
+  // which file tracing cannot see.
+  outputFileTracingIncludes: {
+    "/**/opengraph-image": ["./src/lib/og/fonts/**"],
+  },
   async headers() {
     return [
       {
