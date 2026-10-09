@@ -16,6 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Project cards show their quote build-up — material, labour, extras and paint — a yield figure from the cut list, and "N items · updated …" at the foot, and sit in wider columns. A margin set below your default is called out on the card. The select box and menu appear when you hover or focus a card
 - The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in
 
 ## [3.36.0] - 2026-10-08

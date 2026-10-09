@@ -6,6 +6,7 @@ import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { Project, ProjectStatus } from "@/hooks/useProjects";
 import { isClosedProject } from "@/hooks/useProjects";
 import { getDueDateUrgency, type ProjectAttention } from "@/lib/projects/query";
+import { computeProjectProcurementSummary } from "@/lib/projects/cutting";
 import { RowMenu } from "../row-menu";
 import { EmptyState } from "../empty-state";
 import { formatRelativeTime, projectMix, projectSummary, type ProjectSummary } from "./project-model";
@@ -170,6 +171,19 @@ function marginColor(s: ProjectSummary): string {
 
 const selectBox = "accent-[var(--accent)] cursor-pointer";
 
+/** One ruled line of a card's cost build-up: a label on the left, a figure on the right. */
+function CostLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      className="flex justify-between text-[12px]"
+      style={{ padding: "5px 0", borderBottom: "1px solid var(--border-faint)" }}
+    >
+      <span className="text-foreground-secondary truncate">{label}</span>
+      <span className="font-mono whitespace-nowrap">{value}</span>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Cards                                                              */
 /* ------------------------------------------------------------------ */
@@ -192,14 +206,20 @@ function ProjectCard({
   const t = useTranslations("command");
   const s = projectSummary(project, marginPercent);
   const due = dueDisplay(t, project);
+  // Yield is the cut-list result for the whole job: only a job with bars or
+  // plates to cut has one.
+  const yieldPercent = useMemo(() => computeProjectProcurementSummary(project).globalYieldPercent, [project]);
+  const belowDefault = !s.isEmpty && project.marginPercent !== undefined && project.marginPercent < marginPercent;
+  // The checkbox and menu stay out of the way until the card is in play.
+  const reveal = `transition-opacity ${selected ? "opacity-100" : "opacity-0"} group-hover:opacity-100 group-focus-within:opacity-100`;
   return (
     <div
-      className="flex flex-col"
+      className="group flex flex-col"
       style={{
         background: selected ? "var(--accent-surface)" : "var(--surface)",
         border: "1px solid var(--border-faint)",
         borderTop: due.flag ? "2px solid var(--accent)" : "1px solid var(--border)",
-        padding: "16px 16px 12px",
+        padding: "18px 18px 14px",
       }}
     >
       <div className="flex items-start gap-2">
@@ -207,7 +227,7 @@ function ProjectCard({
           type="checkbox"
           checked={selected}
           onChange={onToggleSelect}
-          className={`${selectBox} mt-1.5`}
+          className={`${selectBox} ${reveal} mt-2`}
           aria-label={`Select ${project.name}`}
         />
         <button
@@ -217,8 +237,8 @@ function ProjectCard({
           className="flex-1 min-w-0 border-0 bg-transparent p-0 text-left cursor-pointer"
         >
           <span className="flex items-baseline justify-between gap-2.5">
-            <span className="fs-title text-[21px] leading-[1.15] truncate">{project.name}</span>
-            <span className="font-mono text-[17px] font-medium whitespace-nowrap" style={{ color: "var(--accent)" }}>
+            <span className="fs-title text-[23px] leading-[1.15] truncate">{project.name}</span>
+            <span className="font-mono text-[18px] font-medium whitespace-nowrap" style={{ color: "var(--accent)" }}>
               {s.isEmpty ? "—" : money(s, s.quotedTotal)}
             </span>
           </span>
@@ -227,11 +247,13 @@ function ProjectCard({
             <StatusTag status={s.status} />
           </span>
         </button>
-        <ProjectMenu project={project} summary={s} actions={actions} onOpen={onOpen} />
+        <div className={reveal}>
+          <ProjectMenu project={project} summary={s} actions={actions} onOpen={onOpen} />
+        </div>
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <MixBar project={project} height={12} showLabels />
+        <MixBar project={project} height={14} showLabels />
       </div>
 
       <div
@@ -244,14 +266,33 @@ function ProjectCard({
           value={s.isEmpty ? "—" : `${s.marginPercent}%`}
           color={marginColor(s)}
         />
-        <Stat label={t("projects.stats.items")} value={s.isEmpty ? "—" : String(s.itemCount)} />
+        <Stat label={t("projects.stats.yield")} value={yieldPercent > 0 ? `${Math.round(yieldPercent)}%` : "—"} />
         <Stat label={t("projects.stats.due")} value={due.text} color={due.color} />
       </div>
 
-      <div className="font-mono text-[11px] text-muted-faint" style={{ marginTop: 10 }}>
+      {!s.isEmpty && (
+        <div style={{ marginTop: 12, borderTop: "1px solid var(--border-faint)" }}>
+          <CostLine label={t("projects.peek.material")} value={money(s, s.materialQuotedTotal)} />
+          {s.hasLabor && (
+            <CostLine label={t("projects.peek.labour", { hours: s.laborHours })} value={money(s, s.laborCost)} />
+          )}
+          {s.additionalCosts.map((cost) => (
+            <CostLine key={cost.id} label={cost.label} value={money(s, cost.amount)} />
+          ))}
+          {s.hasPainting && <CostLine label={t("projects.peek.paint")} value={money(s, s.paintingCost)} />}
+          {belowDefault && (
+            <CostLine
+              label={t("projects.card.marginBelow", { margin: s.marginPercent, default: marginPercent })}
+              value={t("projects.card.included")}
+            />
+          )}
+        </div>
+      )}
+
+      <div className="font-mono text-[11px] text-muted-faint mt-auto" style={{ paddingTop: 10 }}>
         {s.isEmpty
           ? t("projects.emptyRow")
-          : t("projects.updatedAgo", { ago: formatRelativeTime(project.updatedAt, t) })}
+          : `${t("projects.peek.items", { count: s.itemCount })} · ${t("projects.updatedAgo", { ago: formatRelativeTime(project.updatedAt, t) })}`}
       </div>
     </div>
   );
@@ -268,7 +309,7 @@ export function ProjectCards(props: {
   return (
     <div
       className="grid"
-      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 16, padding: "8px 0 4px" }}
+      style={{ gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: 20, padding: "8px 0 4px" }}
     >
       {props.projects.map((project) => (
         <ProjectCard
