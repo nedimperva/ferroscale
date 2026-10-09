@@ -781,6 +781,7 @@
         "stockLines": "Stock lines",
         "surface": "Paint surface",
         "margin": "Margin",
+        "yield": "Yield",
         "due": "Due"
       },
       "itemColumns": {
@@ -899,6 +900,10 @@
         "dueSoon": "due within 3 days",
         "noMargin": "quoted with no margin",
         "emptyDrafts": "empty drafts"
+      },
+      "card": {
+        "marginBelow": "Margin {margin}% (below {default}% default)",
+        "included": "incl."
       },
       "peek": {
         "title": "Quote peek",

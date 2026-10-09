@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { ProjectAdditionalCost, ProjectCategory } from "@/hooks/useProjects";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
+import { subscribeCollectionsReplaced } from "@/lib/sync/external-changes";
 import { savedFingerprint } from "@/lib/calculator/fingerprint";
 import {
   createSavedPart,
@@ -131,6 +132,8 @@ export function useSaved(): UseSavedReturn {
   useEffect(() => {
     setAllSaved(loadSavedEntries()); // eslint-disable-line react-hooks/set-state-in-effect
     hydrated.current = true;
+    // A restored backup or a Drive pull rewrites storage behind this hook.
+    return subscribeCollectionsReplaced(() => setAllSaved(loadSavedEntries()));
   }, []);
 
   const setSavedWithPersist: React.Dispatch<React.SetStateAction<SavedEntry[]>> = useCallback(

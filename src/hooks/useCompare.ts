@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
+import { subscribeCollectionsReplaced } from "@/lib/sync/external-changes";
 import { fingerprint } from "@/lib/calculator/fingerprint";
 import {
   loadCompareItems,
@@ -109,6 +110,16 @@ export function useCompare(): UseCompareReturn {
 
     return () => media.removeEventListener("change", syncDesktop);
   }, [setItemsWithPersist]);
+
+  // A restored backup or a Drive pull rewrites storage behind this hook.
+  useEffect(
+    () =>
+      subscribeCollectionsReplaced(() => {
+        const effectiveLimit = isDesktop ? compareLimitRef.current : Math.min(compareLimitRef.current, 3);
+        setItems(loadCompareItems().slice(0, effectiveLimit));
+      }),
+    [isDesktop],
+  );
 
   useEffect(() => {
     if (!hydrated.current) return;

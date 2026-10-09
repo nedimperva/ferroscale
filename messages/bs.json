@@ -781,6 +781,7 @@
         "stockLines": "Stavke materijala",
         "surface": "Površina za boju",
         "margin": "Marža",
+        "yield": "Iskorištenje",
         "due": "Rok"
       },
       "itemColumns": {
@@ -899,6 +900,10 @@
         "dueSoon": "rok u 3 dana",
         "noMargin": "ponuđeno bez marže",
         "emptyDrafts": "prazni nacrti"
+      },
+      "card": {
+        "marginBelow": "Marža {margin}% (ispod zadanih {default}%)",
+        "included": "uklj."
       },
       "peek": {
         "title": "Pregled ponude",

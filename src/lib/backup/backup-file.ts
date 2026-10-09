@@ -39,6 +39,7 @@ import {
   type SharedCalcSettings,
 } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
+import { notifyCollectionsReplaced } from "@/lib/sync/external-changes";
 import { downloadBlob } from "@/lib/csv-utils";
 
 export interface FerroscaleBackupData {
@@ -230,10 +231,8 @@ export function restoreBackupFile(
     if (s.sharedCalcSettings) sharedCalcSettingsStore.update(s.sharedCalcSettings);
   }
 
-  // Trigger storage event so external stores and other tabs react immediately
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("storage"));
-  }
+  // The hooks own their lists in React state; tell them storage changed.
+  notifyCollectionsReplaced();
 
   return {
     savedCount: d.saved.length,

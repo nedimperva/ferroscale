@@ -5,6 +5,7 @@ import type { CalculationInput, CalculationResult, CurrencyCode } from "@/lib/ca
 import type { NormalizedProfileSnapshot } from "@/lib/profiles/normalize";
 import { normalizeProfileSnapshot } from "@/lib/profiles/normalize";
 import { fingerprint } from "@/lib/calculator/fingerprint";
+import { subscribeCollectionsReplaced } from "@/lib/sync/external-changes";
 import { calculateMetal } from "@/lib/calculator/engine";
 import {
   isActiveSyncEntity,
@@ -752,6 +753,17 @@ export function useProjects(): UseProjectsReturn {
   useEffect(() => {
     projectsRef.current = allProjects;
   }, [allProjects]);
+
+  // A restored backup or a Drive pull rewrites storage behind this hook.
+  useEffect(
+    () =>
+      subscribeCollectionsReplaced(() => {
+        const next = loadProjects();
+        projectsRef.current = next;
+        setAllProjects(next);
+      }),
+    [],
+  );
 
   const createProject = useCallback((name: string, meta?: NewProjectMeta): Project => {
     const now = new Date().toISOString();

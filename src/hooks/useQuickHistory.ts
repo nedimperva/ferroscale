@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { subscribeCollectionsReplaced } from "@/lib/sync/external-changes";
 import { loadQuickHistory, persistQuickHistory } from "@/lib/sync/collections";
 
 const MAX_QUICK_HISTORY = 50;
@@ -26,6 +27,10 @@ export function useQuickHistory(): UseQuickHistoryReturn {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHistory(loadQuickHistory().slice(0, MAX_QUICK_HISTORY));
     hydrated.current = true;
+    // A restored backup or a Drive pull rewrites storage behind this hook.
+    return subscribeCollectionsReplaced(() =>
+      setHistory(loadQuickHistory().slice(0, MAX_QUICK_HISTORY)),
+    );
   }, []);
 
   const update = useCallback((action: (prev: string[]) => string[]) => {
