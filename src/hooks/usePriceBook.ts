@@ -1,5 +1,6 @@
 "use client";
 
+import { subscribeCollectionsReplaced } from "@/lib/sync/external-changes";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { loadPriceBook, persistPriceBook } from "@/lib/sync/collections";
 
@@ -43,7 +44,13 @@ function serverSnapshot(): PriceBookEntry[] {
 
 function subscribe(onChange: () => void): () => void {
   listeners = [...listeners, onChange];
+  // A restored backup or a Drive pull rewrites storage behind the cache.
+  const stopExternal = subscribeCollectionsReplaced(() => {
+    cache = null;
+    onChange();
+  });
   return () => {
+    stopExternal();
     listeners = listeners.filter((listener) => listener !== onChange);
   };
 }

@@ -15,6 +15,7 @@ import {
   persistQuickHistory,
   persistSavedEntries,
 } from "./collections";
+import { notifyCollectionsReplaced } from "./external-changes";
 import type {
   SyncEntityPayload,
   SyncEntityRecord,
@@ -135,6 +136,7 @@ export function applySnapshotToLocal(snapshot: SyncSnapshotV1): void {
     markDirty: false,
     updatedAt: snapshot.collections.priceBook?.updatedAt ?? new Date(0).toISOString(),
   });
+  notifyCollectionsReplaced();
 }
 
 export function isSyncSnapshotV1(value: unknown): value is SyncSnapshotV1 {

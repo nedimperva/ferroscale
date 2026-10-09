@@ -29,6 +29,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Project cards show their quote build-up — material, labour, extras and paint — a yield figure from the cut list, and \"N items · updated …\" at the foot, and sit in wider columns. A margin set below your default is called out on the card. The select box and menu appear when you hover or focus a card",
       "The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in",
     ],
+    fixed: [
+      "Restoring a backup, or pulling changes from Google Drive, now shows up immediately. Projects, customers, parts, compare, the session tape and the price book used to load once and ignore what was written to storage afterwards, so a restore only appeared after a refresh",
+    ],
     added_bs: [
       "Kupci su sada zasebni zapisi. Svaki klijent već upisan na projektu postaje kupac, a projekti koji ga navode povezuju se s njim. Kupac čuva kontakt osobu, telefon, e-mail, bilješke i zadanu maržu, sinhronizuje se na Google Drive i ide u sigurnosne kopije",
       "Kartica Kupci na traci (na telefonu, strana Kupci u kartici Projekti biblioteke): svaki kupac s ukupnom vrijednošću, poslovima i onim što je još otvoreno ili kasni, te stranica s podacima, zadanom maržom za nove ponude, svim poslovima i + Novi projekat. Kupci s poslovima se arhiviraju umjesto brisanja",
@@ -38,6 +41,9 @@ export const CHANGELOG: ChangelogEntry[] = [
     changed_bs: [
       "Kartice projekata prikazuju sastav ponude — materijal, rad, dodatke i boju — iskorištenje iz liste rezanja i „N stavki · ažurirano …” pri dnu, u širim kolonama. Marža postavljena ispod zadane ističe se na kartici. Okvir za odabir i meni pojavljuju se kad pređete mišem ili fokusirate karticu",
       "Posebno dugme Iz sklopa na Projektima sada je početak unutar Novog projekta, a + Novi projekat na stranici kupca otvara isti dijalog s već upisanim kupcem",
+    ],
+    fixed_bs: [
+      "Vraćanje sigurnosne kopije ili povlačenje promjena s Google Drivea sada se odmah vidi. Projekti, kupci, dijelovi, poređenje, traka sesije i cjenovnik su se učitavali jednom i ignorisali kasnije upise, pa se vraćanje pojavilo tek nakon osvježavanja",
     ],
   },
   {

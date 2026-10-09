@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { subscribeCollectionsReplaced } from "@/lib/sync/external-changes";
 import {
   isActiveSyncEntity,
   loadCustomers,
@@ -114,6 +115,17 @@ export function useCustomers(): UseCustomersReturn {
   useEffect(() => {
     customersRef.current = allCustomers;
   }, [allCustomers]);
+
+  // A restored backup or a Drive pull rewrites storage behind this hook.
+  useEffect(
+    () =>
+      subscribeCollectionsReplaced(() => {
+        const next = loadCustomers();
+        customersRef.current = next;
+        setAllCustomers(next);
+      }),
+    [],
+  );
 
   const customers = useMemo(
     () => allCustomers.filter((customer) => isActiveSyncEntity(customer)),

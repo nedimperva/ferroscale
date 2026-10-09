@@ -1,5 +1,6 @@
 "use client";
 
+import { notifyCollectionsReplaced } from "./external-changes";
 import type { CompareItem } from "@/hooks/useCompare";
 import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
@@ -392,5 +393,8 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
       updatedAt: priceBookUpdatedAt,
       removed: priceBook.removed,
     });
+  }
+  if (savedChanged || projectsChanged || customersChanged || compareChanged || quickHistoryChanged || priceBookChanged) {
+    notifyCollectionsReplaced();
   }
 }
