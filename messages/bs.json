@@ -32,6 +32,48 @@
       "description": "Vaši kupci, njihovi poslovi i zadane postavke ponuda u FerroScale."
     }
   },
+  "og": {
+    "home": {
+      "kicker": "FerroScale · Kalkulator",
+      "title": "FerroScale",
+      "detail": "Masa i cijena metala, iz jedne otkucane linije."
+    },
+    "faq": {
+      "kicker": "FerroScale · Pitanja",
+      "title": "Proračun mase metala, objašnjen",
+      "detail": "Formule, primjeri i odgovori za čelične, nehrđajuće i aluminijske profile."
+    },
+    "qa": {
+      "kicker": "FerroScale · Provjera formula",
+      "title": "Provjera formula",
+      "detail": "Aktivni proračun provjeren prema objavljenim EN katalog masama i ručno izračunatim formulama."
+    },
+    "contact": {
+      "kicker": "FerroScale · Kontakt",
+      "title": "Javite nam se",
+      "detail": "Pošaljite prijavu ili pitanje o FerroScale-u."
+    },
+    "saved": {
+      "kicker": "FerroScale · Dijelovi",
+      "title": "Dijelovi",
+      "detail": "Vaši sačuvani proračuni i sklopovi."
+    },
+    "projects": {
+      "kicker": "FerroScale · Projekti",
+      "title": "Projekti",
+      "detail": "Liste rezanja, ponude i poslovi na jednom mjestu."
+    },
+    "customers": {
+      "kicker": "FerroScale · Kupci",
+      "title": "Kupci",
+      "detail": "Za koga radite ponude, njihovi poslovi i šta je još otvoreno."
+    },
+    "settings": {
+      "kicker": "FerroScale · Postavke",
+      "title": "Postavke",
+      "detail": "Zadane vrijednosti kalkulatora, cijene i postavke."
+    }
+  },
   "loading": {
     "title": "Učitavanje radnog prostora",
     "subtitle": "Pripremamo kalkulator, projekte i žive rezultate."

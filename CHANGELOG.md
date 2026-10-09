@@ -16,6 +16,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Every page now has its own link-preview card in the app's day style — a mono kicker, the page's name in the serif, one line of detail, a single ridgeline and its address — in English and Bosnian. Before, FAQ, Formula QA, Contact and the workspace tabs all previewed as the calculator's card
 - Project cards show their quote build-up — material, labour, extras and paint — a yield figure from the cut list, and "N items · updated …" at the foot, and sit in wider columns. A margin set below your default is called out on the card. The select box and menu appear when you hover or focus a card
 - The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in
 

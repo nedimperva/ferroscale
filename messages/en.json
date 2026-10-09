@@ -32,6 +32,48 @@
       "description": "Your customers, their jobs and quote defaults in FerroScale."
     }
   },
+  "og": {
+    "home": {
+      "kicker": "FerroScale · Calculator",
+      "title": "FerroScale",
+      "detail": "Metal weight and price, from a typed line."
+    },
+    "faq": {
+      "kicker": "FerroScale · FAQ",
+      "title": "Metal weight calculation, answered",
+      "detail": "Formulas, worked examples and answers for steel, stainless and aluminium profiles."
+    },
+    "qa": {
+      "kicker": "FerroScale · Formula QA",
+      "title": "Formula QA",
+      "detail": "The live engine checked against published EN catalogue masses and hand-computed formulas."
+    },
+    "contact": {
+      "kicker": "FerroScale · Contact",
+      "title": "Get in touch",
+      "detail": "Send a report or a question about FerroScale."
+    },
+    "saved": {
+      "kicker": "FerroScale · Parts",
+      "title": "Parts",
+      "detail": "Your saved calculations and assemblies."
+    },
+    "projects": {
+      "kicker": "FerroScale · Projects",
+      "title": "Projects",
+      "detail": "Cut lists, quotes and jobs in one place."
+    },
+    "customers": {
+      "kicker": "FerroScale · Customers",
+      "title": "Customers",
+      "detail": "Who you quote for, their jobs and what is still open."
+    },
+    "settings": {
+      "kicker": "FerroScale · Settings",
+      "title": "Settings",
+      "detail": "Calculator defaults, pricing and preferences."
+    }
+  },
   "loading": {
     "title": "Loading workspace",
     "subtitle": "Preparing your calculator, projects, and live results."

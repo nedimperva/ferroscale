@@ -10,5 +10,5 @@ export default async function OpengraphImage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  return pageCard(locale, "home", "");
+  return pageCard(locale, "contact", "/contact");
 }
