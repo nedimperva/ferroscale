@@ -19,6 +19,8 @@ import { NewProjectDialog } from "./projects/new-project-dialog";
 import type { NewProjectRequest } from "./projects/new-project";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
+import { todaysHistory } from "@/lib/command/history";
+import { useDayClock } from "@/hooks/useDayClock";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
 import { calculateMetal, cmdParse, cmdTokenize, inputToQuery } from "@ferroscale/metal-core";
 import {
@@ -44,7 +46,7 @@ import type {
   CommandParserSettings,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
-import { formatCommandParseName, buildCommandSummary } from "./command-copy";
+import { formatCommandParseName, buildCommandSummary, buildCommandOneLine } from "./command-copy";
 import { buildShareCardModel } from "./line-summary";
 import { CommandHelpSheet } from "./sheets/help-sheet";
 import { commandTargetNote } from "./target-note";
@@ -210,10 +212,18 @@ export function CommandShell() {
   // collection. Backs the desktop session tape and recency suggestions.
   const {
     history: quickHistory,
+    times: historyTimes,
     push: pushHistory,
     remove: removeHistoryEntry,
     clear: clearHistory,
   } = useQuickHistory();
+  // The session is today's lines: the history keeps weeks of them, and a
+  // running total or a project made from all of that would mean nothing.
+  const now = useDayClock();
+  const sessionToday = useMemo(
+    () => todaysHistory(quickHistory, historyTimes, now),
+    [quickHistory, historyTimes, now],
+  );
   /**
    * The destination overlay: what it is acting on, and which row it opens on.
    * A null subject means it is closed. It replaces the save picker, the
@@ -498,6 +508,16 @@ export function CommandShell() {
     navigator.clipboard?.writeText(summary).catch(() => {});
     showToast(t("toast.copiedSummary"));
   }, [t, p, line, showToast, rateIsUserSupplied]);
+
+  // The answer as one line — a click (desk) or a long press (phone) on the
+  // headline figure, for pasting into a message.
+  const copyAnswer = useCallback(() => {
+    const text = buildCommandOneLine(t, p, line);
+    if (!text) return;
+    navigator.clipboard?.writeText(text).catch(() => {});
+    haptic("tap");
+    showToast(t("toast.copiedAnswer"));
+  }, [t, p, line, showToast]);
 
   const shareLink = useCallback(() => {
     if (!p.valid) return;
@@ -1089,7 +1109,7 @@ export function CommandShell() {
    * rounds of recall → open picker → pick.
    */
   const saveSessionAsProject = useCallback(() => {
-    const lines = quickHistory
+    const lines = sessionToday
       .map((entry) => cmdParse(entry, parserSettings))
       .filter((rp) => rp.calc != null);
     if (lines.length === 0) {
@@ -1110,7 +1130,7 @@ export function CommandShell() {
     currentProjectStore.set(project.id);
     haptic("commit");
     showToast(t("toast.sessionSaved", { count: entries.length, project: name }));
-  }, [quickHistory, parserSettings, createProject, addCalculations, showToast, t]);
+  }, [sessionToday, parserSettings, createProject, addCalculations, showToast, t]);
 
   const newCalc = useCallback(() => {
     // A valid query cleared via ⌘K / CLEAR still lands on the session tape,
@@ -1200,7 +1220,7 @@ export function CommandShell() {
   // The session's running totals — the desktop rail has shown these since
   // 3.10.0; the phone had no session surface at all until the fold.
   const sessionSummary = useMemo(() => {
-    const rows = quickHistory
+    const rows = sessionToday
       .map((entry) => cmdParse(entry, parserSettings))
       .filter((parsed) => parsed.valid);
     return {
@@ -1208,7 +1228,7 @@ export function CommandShell() {
       kg: rows.reduce((sum, r) => sum + (r.totalKg ?? 0), 0),
       amount: rows.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0),
     };
-  }, [quickHistory, parserSettings]);
+  }, [sessionToday, parserSettings]);
 
   /** ↵ commits the open token (a space) so the next kind can start; if the
    *  token is already committed, it logs the line to the session. */
@@ -1478,8 +1498,9 @@ export function CommandShell() {
             weightAsMainStore.set(value);
             setModeOverride(null);
           }}
-          sessionTape={quickHistory.slice(0, 8)}
+          sessionTape={sessionToday}
           history={quickHistory}
+          historyTimes={historyTimes}
           onLoadQuery={loadQuery}
           onSaveSessionAsProject={saveSessionAsProject}
           onRemoveTapeEntry={removeHistoryEntry}
@@ -1491,6 +1512,7 @@ export function CommandShell() {
           onLogSession={logToSession}
           rateIsUserSupplied={rateIsUserSupplied}
           onCopySummary={copySummary}
+          onCopyAnswer={copyAnswer}
           onShareLink={shareLink}
           onNew={newCalc}
           onSuggest={onSuggest}
@@ -1645,6 +1667,7 @@ export function CommandShell() {
               onOpenDestinations={openDestinations}
               onCompare={doCompare}
               onShare={shareLink}
+              onCopyAnswer={copyAnswer}
             />
 
             {/* SESSION RIBBON — the tape, at phone size. It carries the same two
@@ -1792,7 +1815,8 @@ export function CommandShell() {
                 closeSheet();
                 setLibraryTab(null);
               }}
-              sessionTape={quickHistory}
+              history={quickHistory}
+              historyTimes={historyTimes}
               onLoadQuery={(entry) => {
                 loadQuery(entry);
                 setLibraryTab(null);

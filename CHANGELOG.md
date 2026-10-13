@@ -9,6 +9,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A history of every line you log, by day — Today, Yesterday, This week, Earlier — with a search over all of it ("120 hea" finds hea120 6m). On the phone it is the Session tab of the library; on the desk, History beside the session tape. It keeps 200 lines instead of 50
+- Click the big result figure on the desk, or hold it on the phone, to copy the answer as one line — HEA 120 · S235JR · 6m × 2 pcs = 238.7 kg · € 286.44 — ready to paste into a message. A tap on the phone still opens the breakdown
 - Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups
 - A Customers tab on the rail (on the phone, a Customers side in the library's Projects tab): each customer with their lifetime value, jobs and what is still open or overdue, and a page with their details, a default margin for new quotes, every job they have had and + New project. Customers with jobs are archived rather than deleted
 - A project's client is a link to its customer — in the quote peek and above the project page — and the client field on a project suggests your customers as you type
@@ -16,6 +18,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The session — its running total and Save as project — is today's lines. Older ones stay in the history, and ↑ on the desk walks back through all of it
+- The history keeps calculations, not keystrokes: a line that only finishes the one you logged a moment ago (hea120 6m, then hea120 6m x2) replaces it, and the same line typed with different spacing or capitals is kept once
 - Every page now has its own link-preview card in the app's day style — a mono kicker, the page's name in the serif, one line of detail, a single ridgeline and its address — in English and Bosnian. Before, FAQ, Formula QA, Contact and the workspace tabs all previewed as the calculator's card
 - Project cards show their quote build-up — material, labour, extras and paint — a yield figure from the cut list, and "N items · updated …" at the foot, and sit in wider columns. A margin set below your default is called out on the card. The select box and menu appear when you hover or focus a card
 - The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in

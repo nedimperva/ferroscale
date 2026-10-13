@@ -262,6 +262,39 @@ export function buildCommandSummary(
 }
 
 /**
+ * The answer as one line, ready to paste into a message:
+ * `HEA 120 · S235 · 6m × 2 pcs = 47.7 kg · € 119.25`. A `+` line names each
+ * item and ends on the line's totals. Null until there is an answer to copy.
+ */
+export function buildCommandOneLine(
+  t: CommandT,
+  p: CommandParseResult,
+  line?: CommandLine,
+): string | null {
+  const parses = line && line.multi ? line.items.map((item) => item.parse) : [p];
+  if (parses.some((parse) => !parse.valid || !parse.calc)) return null;
+  const totalKg = line && line.multi ? line.totalKg : p.totalKg;
+  const totalAmount = line && line.multi ? line.totalAmount : p.totalAmount;
+
+  const what = parses
+    .map((parse) => {
+      const name = formatCommandParseName(t, parse) ?? parse.name ?? "";
+      const grade = parse.gradeLabel ?? parse.calc!.result.gradeLabel;
+      const size = `${parse.lengthRaw}${parse.lengthUnit} × ${parse.realQty} ${t("result.pcs")}`;
+      return [name, grade, size].filter(Boolean).join(" · ");
+    })
+    .join(" + ");
+  const sym = CURRENCY_SYMBOLS[parses[0].calc!.result.currency] ?? "€";
+  const figures = [
+    totalKg != null ? `${fsWeight(totalKg)} ${fsWeightUnit()}` : null,
+    totalAmount != null ? `${sym} ${fsMoney(totalAmount)}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return figures ? `${what} = ${figures}` : what;
+}
+
+/**
  * Every item, then the line's totals. Each block is the single-item summary,
  * so the two forms can't drift apart in wording or in rounding.
  */

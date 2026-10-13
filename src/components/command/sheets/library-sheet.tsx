@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
+import { todaysHistory, type HistoryTimes } from "@/lib/command/history";
+import { useDayClock } from "@/hooks/useDayClock";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
@@ -13,6 +15,7 @@ import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 import { EmptyState } from "../empty-state";
+import { HistoryList } from "../history-list";
 import { SheetShell } from "./sheet-shell";
 import { PartsView } from "../parts/parts-view";
 import { ProjectList } from "../projects/project-list";
@@ -56,7 +59,10 @@ interface CommandLibrarySheetProps {
   onClearCompare: () => void;
   projectActions: ProjectActions;
   /** The session tape, newest first — the phone's only view of it. */
-  sessionTape: string[];
+  /** Every logged line, newest first. */
+  history: string[];
+  /** When each line in `history` was logged (epoch ms). */
+  historyTimes: HistoryTimes;
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (query: string) => void;
   onSaveSessionAsProject: () => void;
@@ -100,7 +106,8 @@ export function CommandLibraryWorkspace({
   onRemoveCompare,
   onClearCompare,
   projectActions,
-  sessionTape,
+  history,
+  historyTimes,
   onLoadQuery,
   onRemoveTapeEntry,
   onSaveSessionAsProject,
@@ -124,13 +131,18 @@ export function CommandLibraryWorkspace({
           ? "projects"
           : "saved");
   const [tab, setTab] = useState<LibraryTab>(openOn);
+  const now = useDayClock();
+  const sessionToday = useMemo(
+    () => todaysHistory(history, historyTimes, now),
+    [history, historyTimes, now],
+  );
 
   return (
     <>
       <div className="flex gap-1 mb-3" role="tablist">
         <LibraryTabPill
           active={tab === "session"}
-          count={sessionTape.length}
+          count={sessionToday.length}
           onClick={() => setTab("session")}
           icon={<TabIconSession />}
           label={t("desktop.session")}
@@ -160,7 +172,9 @@ export function CommandLibraryWorkspace({
 
       {tab === "session" && (
         <SessionTabContent
-          tape={sessionTape}
+          history={history}
+          times={historyTimes}
+          today={sessionToday}
           settings={settings}
           mode={mode}
           onLoad={onLoadQuery}
@@ -640,7 +654,9 @@ function ProjectsTabContent({
  * made the running total on the ribbon a number with nothing behind it.
  */
 function SessionTabContent({
-  tape,
+  history,
+  times,
+  today,
   settings,
   mode,
   onLoad,
@@ -648,7 +664,10 @@ function SessionTabContent({
   onClear,
   onSaveAsProject,
 }: {
-  tape: string[];
+  history: string[];
+  times: HistoryTimes;
+  /** Today's lines — what the total and Save as project cover. */
+  today: string[];
   settings: CommandParserSettings;
   mode: "weight" | "price";
   onLoad: (query: string) => void;
@@ -658,13 +677,13 @@ function SessionTabContent({
 }) {
   const t = useTranslations("command");
   const sym = CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€";
-  const rows = tape
+  const rows = today
     .map((query) => ({ query, parsed: cmdParse(query, settings) }))
     .filter((row) => row.parsed.valid);
   const totalKg = rows.reduce((sum, r) => sum + (r.parsed.totalKg ?? 0), 0);
   const totalAmount = rows.reduce((sum, r) => sum + (r.parsed.totalAmount ?? 0), 0);
 
-  if (rows.length === 0) {
+  if (history.length === 0) {
     return (
       <div
         className="rounded-2xl text-center text-[13px] text-muted"
@@ -677,48 +696,21 @@ function SessionTabContent({
 
   return (
     <div className="flex flex-col gap-2.5">
-      {rows.map((row) => (
+      {rows.length > 0 && (
         <div
-          key={row.query}
-          className="flex items-center gap-2.5 rounded-none border border-border-faint bg-[var(--surface)]"
-          style={{ padding: "12px 13px" }}
+          className="flex items-center gap-2.5 rounded-none"
+          style={{ padding: "12px 13px", background: "var(--surface-inset)" }}
         >
-          <button
-            type="button"
-            onClick={() => onLoad(row.query)}
-            className="flex-1 min-w-0 text-left bg-transparent border-0 p-0"
-          >
-            <div className="font-mono text-[13px] font-bold truncate">{row.query}</div>
-            <div className="font-mono text-[12px] text-muted mt-0.5">
-              {row.parsed.totalKg != null ? `${fsWeight(row.parsed.totalKg)} ${fsWeightUnit()}` : "—"}
-              {row.parsed.totalAmount != null ? ` · ${sym}${fsMoney(row.parsed.totalAmount)}` : ""}
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => onRemove(row.query)}
-            aria-label={t("common.remove")}
-            className="flex items-center justify-center rounded-none border border-border-faint text-muted text-[14px] leading-none"
-            style={{ width: 30, height: 30, background: "var(--surface-raised)" }}
-          >
-            ×
-          </button>
+          <span className="fs-track-wide text-[11px] font-bold uppercase text-muted">
+            {t("history.todayTotal")}
+          </span>
+          <span className="ml-auto font-mono text-[14px] font-bold">
+            {mode === "weight"
+              ? `${fsWeight(totalKg)} ${fsWeightUnit()}`
+              : `${sym}${fsMoney(totalAmount)}`}
+          </span>
         </div>
-      ))}
-
-      <div
-        className="flex items-center gap-2.5 rounded-none"
-        style={{ padding: "12px 13px", background: "var(--surface-inset)" }}
-      >
-        <span className="fs-track-wide text-[11px] font-bold uppercase text-muted">
-          {t("library.total")}
-        </span>
-        <span className="ml-auto font-mono text-[14px] font-bold">
-          {mode === "weight"
-            ? `${fsWeight(totalKg)} ${fsWeightUnit()}`
-            : `${sym}${fsMoney(totalAmount)}`}
-        </span>
-      </div>
+      )}
 
       <div className="flex items-center gap-2">
         <button
@@ -735,20 +727,31 @@ function SessionTabContent({
         >
           {t("common.clearAll")}
         </button>
-        <button
-          type="button"
-          onClick={onSaveAsProject}
-          className="rounded-button text-[13px] font-bold flex-1"
-          style={{
-            height: 40,
-            border: "1px solid var(--accent-border)",
-            background: "var(--accent-surface)",
-            color: "var(--accent-text)",
-          }}
-        >
-          {t("desktop.saveAsProject")}
-        </button>
+        {rows.length > 0 && (
+          <button
+            type="button"
+            onClick={onSaveAsProject}
+            className="rounded-button text-[13px] font-bold flex-1"
+            style={{
+              height: 40,
+              border: "1px solid var(--accent-border)",
+              background: "var(--accent-surface)",
+              color: "var(--accent-text)",
+            }}
+          >
+            {t("history.saveTodayAsProject")}
+          </button>
+        )}
       </div>
+
+      <HistoryList
+        items={history}
+        times={times}
+        settings={settings}
+        mode={mode}
+        onLoad={onLoad}
+        onRemove={onRemove}
+      />
     </div>
   );
 }

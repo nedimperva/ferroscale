@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { cmdParse, cmdParseLine } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
-import { buildCommandSummary, formatCommandHint } from "./command-copy";
+import { buildCommandOneLine, buildCommandSummary, formatCommandHint } from "./command-copy";
 import { buildShareCardModel } from "./line-summary";
 
 const SETTINGS: CommandParserSettings = {
@@ -60,6 +60,28 @@ describe("buildCommandSummary", () => {
     const line = cmdParseLine("hea120 6m x2", SETTINGS);
     const single = buildCommandSummary(t, line.items[0].parse);
     expect(buildCommandSummary(t, line.items[0].parse, line)).toBe(single);
+  });
+});
+
+describe("buildCommandOneLine", () => {
+  it("puts the item and its answer on one line", () => {
+    const line = buildCommandOneLine(t, cmdParse("hea120 6m x2", SETTINGS))!;
+    expect(line).not.toContain("\n");
+    expect(line).toMatch(/^HEA 120 · .* · 6m × 2 result\.pcs = 238\.7 kg · € /);
+  });
+
+  it("names every item of a + line and ends on the line total", () => {
+    const line = cmdParseLine("hea120 6m x2 + ipe200 4m x3", SETTINGS);
+    const text = buildCommandOneLine(t, line.items[line.activeIndex].parse, line)!;
+    expect(text).toContain("HEA 120");
+    expect(text).toContain(" + IPE 200");
+    expect(text).toContain("506.98");
+  });
+
+  it("is null until every item is a calculation", () => {
+    expect(buildCommandOneLine(t, cmdParse("hea120", SETTINGS))).toBeNull();
+    const line = cmdParseLine("hea120 6m x2 + ipe200", SETTINGS);
+    expect(buildCommandOneLine(t, line.items[line.activeIndex].parse, line)).toBeNull();
   });
 });
 

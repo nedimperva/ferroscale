@@ -20,12 +20,16 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "3.37.0",
     date: "2026-10-08",
     added: [
+      "A history of every line you log, by day — Today, Yesterday, This week, Earlier — with a search over all of it (\"120 hea\" finds hea120 6m). On the phone it is the Session tab of the library; on the desk, History beside the session tape. It keeps 200 lines instead of 50",
+      "Click the big result figure on the desk, or hold it on the phone, to copy the answer as one line — HEA 120 · S235JR · 6m × 2 pcs = 238.7 kg · € 286.44 — ready to paste into a message. A tap on the phone still opens the breakdown",
       "Customers are records of their own. Every client already typed on a project becomes a customer, and the projects that named it are linked to it. A customer keeps a contact person, phone, email, notes and a default margin, syncs to Google Drive and travels in backups",
       "A Customers tab on the rail (on the phone, a Customers side in the library's Projects tab): each customer with their lifetime value, jobs and what is still open or overdue, and a page with their details, a default margin for new quotes, every job they have had and + New project. Customers with jobs are archived rather than deleted",
       "A project's client is a link to its customer — in the quote peek and above the project page — and the client field on a project suggests your customers as you type",
       "New project is one dialog in two steps. First, how it starts: blank, from an assembly in your library (scaled by a multiplier), a copy of a past job, or a pasted bar list (profile, length in mm, quantity — or lines as you type them in the calculator). Then its name, customer and due date, with a preview of the quote beside it. Typing a customer that does not exist yet adds it, the customer's margin fills in the quote, and the name suggests itself — \"Railing, Marko Group\" — until you type one",
     ],
     changed: [
+      "The session — its running total and Save as project — is today's lines. Older ones stay in the history, and ↑ on the desk walks back through all of it",
+      "The history keeps calculations, not keystrokes: a line that only finishes the one you logged a moment ago (hea120 6m, then hea120 6m x2) replaces it, and the same line typed with different spacing or capitals is kept once",
       "Every page now has its own link-preview card in the app's day style — a mono kicker, the page's name in the serif, one line of detail, a single ridgeline and its address — in English and Bosnian. Before, FAQ, Formula QA, Contact and the workspace tabs all previewed as the calculator's card",
       "Project cards show their quote build-up — material, labour, extras and paint — a yield figure from the cut list, and \"N items · updated …\" at the foot, and sit in wider columns. A margin set below your default is called out on the card. The select box and menu appear when you hover or focus a card",
       "The separate From assembly button on Projects is now a starting point inside New project, and + New project on a customer's page opens the same dialog with them filled in",
@@ -34,12 +38,16 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Restoring a backup, or pulling changes from Google Drive, now shows up immediately. Projects, customers, parts, compare, the session tape and the price book used to load once and ignore what was written to storage afterwards, so a restore only appeared after a refresh",
     ],
     added_bs: [
+      "Historija svake upisane linije, po danima — Danas, Jučer, Ove sedmice, Ranije — s pretragom kroz sve (\"120 hea\" nalazi hea120 6m). Na telefonu je to kartica Sesija u biblioteci; na desktopu, Historija pored trake sesije. Čuva 200 linija umjesto 50",
+      "Kliknite veliki rezultat na desktopu, ili ga zadržite na telefonu, da kopirate odgovor u jednom redu — HEA 120 · S235JR · 6m × 2 kom = 238.7 kg · € 286.44 — spreman za poruku. Dodir na telefonu i dalje otvara detalje",
       "Kupci su sada zasebni zapisi. Svaki klijent već upisan na projektu postaje kupac, a projekti koji ga navode povezuju se s njim. Kupac čuva kontakt osobu, telefon, e-mail, bilješke i zadanu maržu, sinhronizuje se na Google Drive i ide u sigurnosne kopije",
       "Kartica Kupci na traci (na telefonu, strana Kupci u kartici Projekti biblioteke): svaki kupac s ukupnom vrijednošću, poslovima i onim što je još otvoreno ili kasni, te stranica s podacima, zadanom maržom za nove ponude, svim poslovima i + Novi projekat. Kupci s poslovima se arhiviraju umjesto brisanja",
       "Klijent projekta je veza na kupca — u pregledu ponude i iznad stranice projekta — a polje klijenta na projektu nudi vaše kupce dok kucate",
       "Novi projekat je jedan dijalog u dva koraka. Prvo, kako počinje: prazan, iz sklopa u biblioteci (pomnožen po potrebi), kao kopija starog posla ili iz zalijepljene liste šipki (profil, dužina u mm, količina — ili redovi kakve kucate u kalkulatoru). Zatim naziv, kupac i rok, s pregledom ponude pored. Upisani kupac koji još ne postoji se dodaje, marža kupca se upisuje u ponudu, a naziv se sam predlaže — „Ograda, Marko Group” — dok ne upišete svoj",
     ],
     changed_bs: [
+      "Sesija — njen tekući zbir i Sačuvaj kao projekat — su današnje linije. Starije ostaju u historiji, a ↑ na desktopu ide kroz sve",
+      "Historija čuva izračune, ne pritiske tipki: linija koja samo dovršava onu upisanu maloprije (hea120 6m, pa hea120 6m x2) je zamjenjuje, a ista linija upisana s drugačijim razmacima ili velikim slovima čuva se jednom",
       "Svaka stranica sada ima vlastitu karticu za pregled linka u dnevnom stilu aplikacije — mono oznaka, naziv stranice u serifu, jedan red detalja, jedna linija grebena i adresa — na engleskom i bosanskom. Prije su FAQ, Provjera formula, Kontakt i kartice radnog prostora imali karticu kalkulatora",
       "Kartice projekata prikazuju sastav ponude — materijal, rad, dodatke i boju — iskorištenje iz liste rezanja i „N stavki · ažurirano …” pri dnu, u širim kolonama. Marža postavljena ispod zadane ističe se na kartici. Okvir za odabir i meni pojavljuju se kad pređete mišem ili fokusirate karticu",
       "Posebno dugme Iz sklopa na Projektima sada je početak unutar Novog projekta, a + Novi projekat na stranici kupca otvara isti dijalog s već upisanim kupcem",

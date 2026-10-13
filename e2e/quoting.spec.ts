@@ -208,6 +208,98 @@ test.describe("Session", () => {
     // Every logged line came across, in one gesture.
     await expect(page.getByText(/^[2-9] items$/)).toBeVisible();
   });
+
+  test("is today's lines; older ones wait in the history, by day and searchable", async ({ page }) => {
+    await page.addInitScript(() => {
+      const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["hea120 6m x2", "upn100 3m x4", "shs40x40x3 4m"]),
+      );
+      localStorage.setItem(
+        "ferroscale-quick-history-times-v1",
+        JSON.stringify({
+          "hea120 6m x2": Date.now(),
+          "upn100 3m x4": tenDaysAgo,
+          "shs40x40x3 4m": tenDaysAgo,
+        }),
+      );
+    });
+    await page.goto("/en");
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    // The running total covers today alone.
+    await expect(page.getByText("1 ITEM · RUNNING TOTAL")).toBeVisible();
+
+    await page.getByRole("button", { name: "HISTORY" }).click();
+    await expect(page.getByRole("region", { name: "Today" })).toContainText("hea120 6m x2");
+    const earlier = page.getByRole("region", { name: "Earlier" });
+    await expect(earlier).toContainText("upn100 3m x4");
+    await expect(earlier).toContainText("shs40x40x3 4m");
+
+    await page.getByLabel("Search history").fill("upn");
+    await expect(page.getByRole("button", { name: /^upn100 3m x4/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^shs40x40x3 4m/ })).toHaveCount(0);
+
+    // A line from the history goes back into the bar.
+    await page.getByRole("button", { name: /^upn100 3m x4/ }).click();
+    await expect(page.getByRole("dialog", { name: "History" })).toHaveCount(0);
+    await expect(page.getByText("127.17", { exact: true })).toBeVisible();
+  });
+
+  test("a line that finishes the one just logged replaces it", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m ");
+    await page.keyboard.press("Enter");
+    await page.getByLabel("FerroScale Command query").press("End");
+    await page.getByLabel("FerroScale Command query").pressSequentially("x2 ", { delay: 5 });
+    await page.keyboard.press("Enter");
+
+    await expect
+      .poll(() =>
+        page.evaluate(() => JSON.parse(localStorage.getItem("ferroscale-quick-history") ?? "[]")),
+      )
+      .toEqual(["hea120 6m x2"]);
+  });
+});
+
+test.describe("Copying the answer", () => {
+  test("a click on the headline figure copies it as one line", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(DEMO_LINK);
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    await page.getByRole("button", { name: /Click to copy the answer/ }).click();
+    await expect(page.getByText("Answer copied")).toBeVisible();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toMatch(/^HEA 120 · .*6m × 2 pcs = 238\.7 kg · € /);
+  });
+  test.describe("on the phone", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("holding the figure copies; a tap still opens the breakdown", async ({ page, context }) => {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.goto(DEMO_LINK);
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains("app-ready"),
+      );
+      const hero = page.getByRole("button", { name: /Hold to copy the answer/ });
+      const box = (await hero.boundingBox())!;
+      await page.mouse.move(box.x + 40, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.waitForTimeout(700);
+      await page.mouse.up();
+      await expect(page.getByText("Answer copied")).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("238.7 kg");
+      // The long press did not also open the sheet.
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+
+      await hero.click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+    });
+  });
 });
 
 test.describe("Assemblies", () => {

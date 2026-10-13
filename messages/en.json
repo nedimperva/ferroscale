@@ -255,7 +255,8 @@
       "addedItemsToSession": "{count} items added to session",
       "savedAssembly": "{count, plural, one {# line} other {# lines}} saved as one assembly",
       "pasteFailed": "Nothing to paste",
-      "pasted": "Pasted {count} rows"
+      "pasted": "Pasted {count} rows",
+      "copiedAnswer": "Answer copied"
     },
     "aria": {
       "toggleTheme": "Toggle theme",
@@ -264,7 +265,9 @@
       "addToSession": "Add this line to the session",
       "openBreakdown": "Open result breakdown",
       "suggestionStrip": "Suggestions — scroll sideways for more",
-      "openSession": "Open the session tape"
+      "openSession": "Open the session tape",
+      "holdToCopy": "Hold to copy the answer",
+      "clickToCopy": "Click to copy the answer"
     },
     "nav": {
       "workspace": "WORKSPACE",
@@ -621,7 +624,9 @@
       "saveAsProject": "Save as project",
       "anotherItem": "+ item",
       "anotherItemAria": "Add another item to the line",
-      "saveSessionAsProjectShort": "→ PROJECT"
+      "saveSessionAsProjectShort": "→ PROJECT",
+      "history": "HISTORY",
+      "backToSession": "← TODAY"
     },
     "suggest": {
       "standardSize": "standard size",
@@ -1350,6 +1355,18 @@
       "footCopy": "Pick a job to copy.",
       "footImport": "Paste at least one line the calculator can read.",
       "toastCreated": "Created “{name}”"
+    },
+    "history": {
+      "title": "History",
+      "search": "Search history",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This week",
+      "earlier": "Earlier",
+      "todayTotal": "Today's total",
+      "saveTodayAsProject": "Save today as project",
+      "empty": "Nothing logged yet.",
+      "noMatch": "Nothing in the history matches “{search}”"
     }
   },
   "contact": {
