@@ -339,6 +339,10 @@ test.describe("Session", () => {
             "upn100 3m x4": Date.now() - 10 * 24 * 60 * 60 * 1000,
           }),
         );
+        localStorage.setItem(
+          "ferroscale-quick-history-counts-v1",
+          JSON.stringify({ "upn100 3m x4": 3 }),
+        );
       });
       await page.goto("/en");
       await page.waitForFunction(() =>
@@ -354,7 +358,10 @@ test.describe("Session", () => {
 
       await today.getByRole("button", { name: "CLEAR", exact: true }).click();
       await expect(today).toContainText("Nothing logged today");
+      // Often is not on the first view; it heads Everything, by day.
+      await expect(page.getByRole("region", { name: "Often" })).toHaveCount(0);
       await page.getByRole("button", { name: "Everything, by day →" }).click();
+      await expect(page.getByRole("region", { name: "Often" })).toContainText("upn100 3m x4");
       await expect(page.getByRole("region", { name: "Earlier" })).toContainText("upn100 3m x4");
     });
   });

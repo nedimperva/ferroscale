@@ -32,7 +32,7 @@ export function YourLines({
   onClear,
   compact,
   showRecent = true,
-  showOften = true,
+  oftenIn = "lines",
 }: {
   items: string[];
   times: HistoryTimes;
@@ -49,8 +49,11 @@ export function YourLines({
    * everything older is under "Everything, by day".
    */
   showRecent?: boolean;
-  /** The phone leaves Often out too: its history is Everything, by day. */
-  showOften?: boolean;
+  /**
+   * Where Often sits: on this first view, or (the phone) at the head of
+   * Everything, by day — the phone's first view is today's session alone.
+   */
+  oftenIn?: "lines" | "everything";
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
@@ -96,6 +99,48 @@ export function YourLines({
     );
   }
 
+  const heading = (label: string, sub: string) => (
+    <div
+      className="flex items-baseline justify-between gap-3"
+      style={{ paddingBottom: 6, borderBottom: "1px solid var(--foreground)" }}
+    >
+      <h3 className="fs-track-label text-[10px] font-bold uppercase text-muted m-0">{label}</h3>
+      <span className="text-[11px] text-muted truncate">{sub}</span>
+    </div>
+  );
+
+  const oftenSection =
+    often.length > 0 ? (
+      <section aria-label={t("history.often")} style={{ marginBottom: 18 }}>
+        {heading(t("history.often"), t("history.oftenSub"))}
+        <div
+          className="grid gap-2"
+          style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", paddingTop: 10 }}
+        >
+          {often.map((query) => (
+            <button
+              key={query}
+              type="button"
+              onClick={() => onLoad(query)}
+              className="flex flex-col gap-1 text-left cursor-pointer min-w-0"
+              style={{
+                minHeight: compact ? 52 : 64,
+                padding: "10px 12px",
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--foreground)",
+              }}
+            >
+              <span className="font-mono text-[14px] font-semibold truncate w-full">{query}</span>
+              <span className="text-[11px] text-muted">
+                {t("history.timesUsed", { count: counts[query] ?? 1 })} · {figure(query)}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+    ) : null;
+
   if (showAll) {
     return (
       <div className="flex flex-col gap-2">
@@ -107,6 +152,7 @@ export function YourLines({
         >
           {t("history.backToLines")}
         </button>
+        {oftenIn === "everything" && oftenSection}
         <HistoryList
           compact={compact}
           items={items}
@@ -128,48 +174,9 @@ export function YourLines({
     );
   }
 
-  const heading = (label: string, sub: string) => (
-    <div
-      className="flex items-baseline justify-between gap-3"
-      style={{ paddingBottom: 6, borderBottom: "1px solid var(--foreground)" }}
-    >
-      <h3 className="fs-track-label text-[10px] font-bold uppercase text-muted m-0">{label}</h3>
-      <span className="text-[11px] text-muted truncate">{sub}</span>
-    </div>
-  );
-
   return (
     <div className="flex flex-col">
-      {showOften && often.length > 0 && (
-        <section aria-label={t("history.often")} style={{ marginBottom: 18 }}>
-          {heading(t("history.often"), t("history.oftenSub"))}
-          <div
-            className="grid gap-2"
-            style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", paddingTop: 10 }}
-          >
-            {often.map((query) => (
-              <button
-                key={query}
-                type="button"
-                onClick={() => onLoad(query)}
-                className="flex flex-col gap-1 text-left cursor-pointer min-w-0"
-                style={{
-                  minHeight: compact ? 52 : 64,
-                  padding: "10px 12px",
-                  border: "1px solid var(--border)",
-                  background: "var(--surface)",
-                  color: "var(--foreground)",
-                }}
-              >
-                <span className="font-mono text-[14px] font-semibold truncate w-full">{query}</span>
-                <span className="text-[11px] text-muted">
-                  {t("history.timesUsed", { count: counts[query] ?? 1 })} · {figure(query)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
+      {oftenIn === "lines" && oftenSection}
 
       {showRecent && (
         <section aria-label={t("history.recent")}>
