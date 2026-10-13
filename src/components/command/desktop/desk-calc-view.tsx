@@ -1049,10 +1049,21 @@ export function DeskCalcView({
             </div>
             {tapeRows.length === 0 ? (
               <div
-                className="flex-1 min-h-0 flex items-center font-mono text-[12px] text-muted-faint"
+                className="flex-1 min-h-0 flex items-center gap-3 font-mono text-[12px] text-muted-faint"
                 style={{ padding: "6px 2px" }}
               >
                 {t("desktop.emptyTape")}
+                {/* Nothing today, but earlier days are a click away. */}
+                {history.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowHistory(true)}
+                    aria-haspopup="dialog"
+                    className="bg-transparent border-0 p-0 font-mono text-[12px] cursor-pointer underline underline-offset-2 text-foreground-secondary hover:text-foreground"
+                  >
+                    {t("history.open")}
+                  </button>
+                )}
               </div>
             ) : (
               <>

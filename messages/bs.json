@@ -1366,7 +1366,8 @@
       "todayTotal": "Današnji zbir",
       "saveTodayAsProject": "Sačuvaj današnje kao projekat",
       "empty": "Još ništa nije upisano.",
-      "noMatch": "Ništa u historiji ne odgovara „{search}“"
+      "noMatch": "Ništa u historiji ne odgovara „{search}“",
+      "open": "Historija →"
     }
   },
   "contact": {

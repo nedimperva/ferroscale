@@ -16,6 +16,7 @@ export interface SessionSummary {
  */
 export function SessionRibbon({
   summary,
+  hasHistory,
   isWeight,
   sym,
   onOpen,
@@ -23,6 +24,8 @@ export function SessionRibbon({
   onAdd,
 }: {
   summary: SessionSummary;
+  /** Older lines exist even when today has none — the tap leads to them. */
+  hasHistory: boolean;
   isWeight: boolean;
   sym: string;
   onOpen: () => void;
@@ -63,7 +66,9 @@ export function SessionRibbon({
             it — the full breakdown is one tap away. */}
         <span className="font-mono text-[13px] font-bold whitespace-nowrap flex-shrink-0">
           {summary.count === 0
-            ? "—"
+            ? hasHistory
+              ? <span className="text-muted font-normal">{t("history.open")}</span>
+              : "—"
             : isWeight
               ? `${fsWeight(summary.kg)} ${fsWeightUnit()}`
               : `${sym}${fsMoney(summary.amount)}`}

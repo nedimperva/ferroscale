@@ -1605,7 +1605,10 @@ export function CommandShell() {
                   }}
                 />
               </div>
-              {sessionSummary.count > 0 && (
+              {/* Shown whenever there is any history, not only today's: on a
+                  morning with nothing logged yet it is still the way back to
+                  yesterday's lines. */}
+              {quickHistory.length > 0 && (
                 <>
             {/* SESSION RIBBON — the tape, at phone size. It carries the same two
                 actions the workspace pane does: open it, or turn it into a
@@ -1613,6 +1616,7 @@ export function CommandShell() {
                 which is the point of the tape. */}
             <SessionRibbon
               summary={sessionSummary}
+              hasHistory={quickHistory.length > 0}
               isWeight={isW}
               sym={sym}
               onOpen={() => openLibrary("session")}
@@ -1676,6 +1680,7 @@ export function CommandShell() {
                 which is the point of the tape. */}
             <SessionRibbon
               summary={sessionSummary}
+              hasHistory={quickHistory.length > 0}
               isWeight={isW}
               sym={sym}
               onOpen={() => openLibrary("session")}

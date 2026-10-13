@@ -1366,7 +1366,8 @@
       "todayTotal": "Today's total",
       "saveTodayAsProject": "Save today as project",
       "empty": "Nothing logged yet.",
-      "noMatch": "Nothing in the history matches “{search}”"
+      "noMatch": "Nothing in the history matches “{search}”",
+      "open": "History →"
     }
   },
   "contact": {

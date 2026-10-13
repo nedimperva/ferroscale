@@ -248,6 +248,42 @@ test.describe("Session", () => {
     await expect(page.getByText("127.17", { exact: true })).toBeVisible();
   });
 
+  test.describe("with nothing logged today", () => {
+    const seedOldHistory = async (page: Page) => {
+      await page.addInitScript(() => {
+        localStorage.setItem("ferroscale-quick-history", JSON.stringify(["upn100 3m x4"]));
+        localStorage.setItem(
+          "ferroscale-quick-history-times-v1",
+          JSON.stringify({ "upn100 3m x4": Date.now() - 3 * 24 * 60 * 60 * 1000 }),
+        );
+      });
+    };
+
+    test("the empty tape still leads to the history", async ({ page }) => {
+      await seedOldHistory(page);
+      await page.goto("/en");
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains("app-ready"),
+      );
+      await page.getByRole("button", { name: "History →" }).click();
+      await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+    });
+
+    test.describe("on the phone", () => {
+      test.use({ viewport: { width: 390, height: 844 } });
+
+      test("the session row stays, and opens the history", async ({ page }) => {
+        await seedOldHistory(page);
+        await page.goto("/en");
+        await page.waitForFunction(() =>
+          document.documentElement.classList.contains("app-ready"),
+        );
+        await page.getByRole("button", { name: "Open the session tape" }).click();
+        await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+      });
+    });
+  });
+
   test("a line that finishes the one just logged replaces it", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m ");
