@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
+import { todaysHistory, type HistoryCounts, type HistoryTimes } from "@/lib/command/history";
+import { useDayClock } from "@/hooks/useDayClock";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem } from "@/hooks/useCompare";
@@ -13,6 +14,8 @@ import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 import { EmptyState } from "../empty-state";
+import { YourLines } from "../your-lines";
+import { SessionToday } from "../session-today";
 import { SheetShell } from "./sheet-shell";
 import { PartsView } from "../parts/parts-view";
 import { ProjectList } from "../projects/project-list";
@@ -56,11 +59,19 @@ interface CommandLibrarySheetProps {
   onClearCompare: () => void;
   projectActions: ProjectActions;
   /** The session tape, newest first — the phone's only view of it. */
-  sessionTape: string[];
+  /** Every logged line, newest first. */
+  history: string[];
+  /** When each line in `history` was logged (epoch ms). */
+  historyTimes: HistoryTimes;
+  /** How many times each line was logged. */
+  historyCounts: HistoryCounts;
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (query: string) => void;
-  onSaveSessionAsProject: () => void;
   onClearHistory: () => void;
+  /** Clears today's lines only. */
+  onClearSession: () => void;
+  /** Turns today's lines into a project. */
+  onSaveSessionAsProject: () => void;
   /** Open on a named tab (the `>` palette navigates here); null picks one. */
   initialTab?: LibraryTab | null;
 }
@@ -100,11 +111,14 @@ export function CommandLibraryWorkspace({
   onRemoveCompare,
   onClearCompare,
   projectActions,
-  sessionTape,
+  history,
+  historyTimes,
+  historyCounts,
   onLoadQuery,
   onRemoveTapeEntry,
-  onSaveSessionAsProject,
   onClearHistory,
+  onClearSession,
+  onSaveSessionAsProject,
   initialTab,
 }: CommandLibraryWorkspaceProps) {
   const t = useTranslations("command");
@@ -124,16 +138,21 @@ export function CommandLibraryWorkspace({
           ? "projects"
           : "saved");
   const [tab, setTab] = useState<LibraryTab>(openOn);
+  const now = useDayClock();
+  const sessionToday = useMemo(
+    () => todaysHistory(history, historyTimes, now),
+    [history, historyTimes, now],
+  );
 
   return (
     <>
       <div className="flex gap-1 mb-3" role="tablist">
         <LibraryTabPill
           active={tab === "session"}
-          count={sessionTape.length}
+          count={sessionToday.length}
           onClick={() => setTab("session")}
           icon={<TabIconSession />}
-          label={t("desktop.session")}
+          label={t("history.title")}
         />
         <LibraryTabPill
           active={tab === "saved"}
@@ -159,15 +178,29 @@ export function CommandLibraryWorkspace({
       </div>
 
       {tab === "session" && (
-        <SessionTabContent
-          tape={sessionTape}
+        <>
+        <SessionToday
+          today={sessionToday}
+          settings={settings}
+          mode={mode}
+          onLoad={onLoadQuery}
+          onRemove={onRemoveTapeEntry}
+          onClear={onClearSession}
+          onSaveAsProject={onSaveSessionAsProject}
+        />
+        <YourLines
+          showRecent={false}
+          oftenIn="everything"
+          items={history}
+          times={historyTimes}
+          counts={historyCounts}
           settings={settings}
           mode={mode}
           onLoad={onLoadQuery}
           onRemove={onRemoveTapeEntry}
           onClear={onClearHistory}
-          onSaveAsProject={onSaveSessionAsProject}
         />
+        </>
       )}
       {tab === "saved" && (
         <PartsView
@@ -639,116 +672,3 @@ function ProjectsTabContent({
  * 3.10.0; the phone could only add to the session, never look at it — which
  * made the running total on the ribbon a number with nothing behind it.
  */
-function SessionTabContent({
-  tape,
-  settings,
-  mode,
-  onLoad,
-  onRemove,
-  onClear,
-  onSaveAsProject,
-}: {
-  tape: string[];
-  settings: CommandParserSettings;
-  mode: "weight" | "price";
-  onLoad: (query: string) => void;
-  onRemove: (query: string) => void;
-  onClear: () => void;
-  onSaveAsProject: () => void;
-}) {
-  const t = useTranslations("command");
-  const sym = CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€";
-  const rows = tape
-    .map((query) => ({ query, parsed: cmdParse(query, settings) }))
-    .filter((row) => row.parsed.valid);
-  const totalKg = rows.reduce((sum, r) => sum + (r.parsed.totalKg ?? 0), 0);
-  const totalAmount = rows.reduce((sum, r) => sum + (r.parsed.totalAmount ?? 0), 0);
-
-  if (rows.length === 0) {
-    return (
-      <div
-        className="rounded-2xl text-center text-[13px] text-muted"
-        style={{ padding: "26px 14px", border: "1px dashed var(--border-strong)", lineHeight: 1.5 }}
-      >
-        {t("desktop.sessionEmpty")}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      {rows.map((row) => (
-        <div
-          key={row.query}
-          className="flex items-center gap-2.5 rounded-none border border-border-faint bg-[var(--surface)]"
-          style={{ padding: "12px 13px" }}
-        >
-          <button
-            type="button"
-            onClick={() => onLoad(row.query)}
-            className="flex-1 min-w-0 text-left bg-transparent border-0 p-0"
-          >
-            <div className="font-mono text-[13px] font-bold truncate">{row.query}</div>
-            <div className="font-mono text-[12px] text-muted mt-0.5">
-              {row.parsed.totalKg != null ? `${fsWeight(row.parsed.totalKg)} ${fsWeightUnit()}` : "—"}
-              {row.parsed.totalAmount != null ? ` · ${sym}${fsMoney(row.parsed.totalAmount)}` : ""}
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => onRemove(row.query)}
-            aria-label={t("common.remove")}
-            className="flex items-center justify-center rounded-none border border-border-faint text-muted text-[14px] leading-none"
-            style={{ width: 30, height: 30, background: "var(--surface-raised)" }}
-          >
-            ×
-          </button>
-        </div>
-      ))}
-
-      <div
-        className="flex items-center gap-2.5 rounded-none"
-        style={{ padding: "12px 13px", background: "var(--surface-inset)" }}
-      >
-        <span className="fs-track-wide text-[11px] font-bold uppercase text-muted">
-          {t("library.total")}
-        </span>
-        <span className="ml-auto font-mono text-[14px] font-bold">
-          {mode === "weight"
-            ? `${fsWeight(totalKg)} ${fsWeightUnit()}`
-            : `${sym}${fsMoney(totalAmount)}`}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onClear}
-          className="rounded-button text-[13px] font-bold flex-shrink-0"
-          style={{
-            height: 40,
-            padding: "0 14px",
-            border: "1px solid var(--border-faint)",
-            background: "var(--surface)",
-            color: "var(--muted)",
-          }}
-        >
-          {t("common.clearAll")}
-        </button>
-        <button
-          type="button"
-          onClick={onSaveAsProject}
-          className="rounded-button text-[13px] font-bold flex-1"
-          style={{
-            height: 40,
-            border: "1px solid var(--accent-border)",
-            background: "var(--accent-surface)",
-            color: "var(--accent-text)",
-          }}
-        >
-          {t("desktop.saveAsProject")}
-        </button>
-      </div>
-    </div>
-  );
-}

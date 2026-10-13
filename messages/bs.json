@@ -255,7 +255,8 @@
       "addedItemsToSession": "{count} stavki dodano u sesiju",
       "savedAssembly": "{count, plural, one {# linija} few {# linije} other {# linija}} sačuvano kao jedan sklop",
       "pasteFailed": "Nema šta zalijepiti",
-      "pasted": "Zalijepljeno {count} redova"
+      "pasted": "Zalijepljeno {count} redova",
+      "copiedAnswer": "Rezultat kopiran"
     },
     "aria": {
       "toggleTheme": "Promijeni temu",
@@ -264,7 +265,9 @@
       "addToSession": "Dodaj ovu liniju u sesiju",
       "openBreakdown": "Otvori detalje rezultata",
       "suggestionStrip": "Prijedlozi — pomakni bočno za više",
-      "openSession": "Otvori traku sesije"
+      "openSession": "Otvori traku sesije",
+      "holdToCopy": "Zadržite za kopiranje rezultata",
+      "clickToCopy": "Kliknite za kopiranje rezultata"
     },
     "nav": {
       "workspace": "RADNI PROSTOR",
@@ -621,7 +624,9 @@
       "saveAsProject": "Sačuvaj kao projekat",
       "anotherItem": "+ stavka",
       "anotherItemAria": "Dodaj još jednu stavku u liniju",
-      "saveSessionAsProjectShort": "→ PROJEKAT"
+      "saveSessionAsProjectShort": "→ PROJEKAT",
+      "history": "VAŠE LINIJE",
+      "backToSession": "← DANAS"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",
@@ -1350,6 +1355,26 @@
       "footCopy": "Odaberite posao za kopiranje.",
       "footImport": "Zalijepite barem jedan red koji kalkulator može pročitati.",
       "toastCreated": "Napravljen „{name}”"
+    },
+    "history": {
+      "title": "Vaše linije",
+      "search": "Pretraži historiju",
+      "today": "Danas",
+      "yesterday": "Jučer",
+      "week": "Ove sedmice",
+      "earlier": "Ranije",
+      "empty": "Još ništa nije upisano.",
+      "noMatch": "Ništa u historiji ne odgovara „{search}“",
+      "open": "Vaše linije →",
+      "often": "Često",
+      "oftenSub": "ono što mjerite iznova",
+      "recent": "Nedavno",
+      "recentSub": "najnovije prvo",
+      "everything": "Sve, po danima →",
+      "backToLines": "← Vaše linije",
+      "whenYesterday": "jučer",
+      "timesUsed": "×{count}",
+      "nothingToday": "Danas još ništa nije upisano — pritisnite + na gotovoj liniji."
     }
   },
   "contact": {

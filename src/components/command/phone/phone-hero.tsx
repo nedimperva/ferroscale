@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { cmdAppendLineItem, fsKgm, fsLength, fsMoney, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
@@ -17,6 +18,44 @@ import { Chev, MetricStrip, PhoneIconBtn } from "./phone-atoms";
 // — same rule everywhere: numbers are mono, and at this size they carry
 // without extra weight.
 const HERO_FONT_WEIGHT = 400;
+
+/** How long a press on the figure is held before it copies instead of opening. */
+const LONG_PRESS_MS = 500;
+
+/**
+ * A tap on the figure opens the breakdown; holding it copies the answer. The
+ * click that ends a long press is swallowed so it doesn't open the sheet too.
+ */
+function useLongPress(onLongPress: () => void) {
+  const timer = useRef<number | null>(null);
+  const fired = useRef(false);
+  const cancel = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  return {
+    onPointerDown: () => {
+      fired.current = false;
+      cancel();
+      timer.current = window.setTimeout(() => {
+        fired.current = true;
+        timer.current = null;
+        onLongPress();
+      }, LONG_PRESS_MS);
+    },
+    onPointerUp: cancel,
+    onPointerLeave: cancel,
+    onPointerCancel: cancel,
+    // The phone's own long-press menu would cover the toast.
+    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+    /** True (once) when the click that follows was the end of a long press. */
+    consumeLongPress: () => {
+      const was = fired.current;
+      fired.current = false;
+      return was;
+    },
+  };
+}
 
 /**
  * The answer: mode switch, the figure, the line under it, the per-piece strip
@@ -41,6 +80,7 @@ export function PhoneHero({
   onOpenDestinations,
   onCompare,
   onShare,
+  onCopyAnswer,
 }: {
   p: CommandParseResult;
   line: CommandLine;
@@ -61,9 +101,14 @@ export function PhoneHero({
   onOpenDestinations: () => void;
   onCompare: () => void;
   onShare: () => void;
+  /** Holding the figure copies the answer as one line. */
+  onCopyAnswer: () => void;
 }) {
   const t = useTranslations("command");
   const isW = mode === "weight";
+  const { consumeLongPress, ...pressHandlers } = useLongPress(() => {
+    if (p.valid) onCopyAnswer();
+  });
   return (
     <div className="px-[18px] pt-1.5 flex-shrink-0">
       {/* The mode switch rides in the hero's label row rather than taking
@@ -116,11 +161,15 @@ export function PhoneHero({
       <button
         type="button"
         disabled={!p.valid}
-        onClick={() => p.valid && onOpenResult()}
+        {...pressHandlers}
+        onClick={() => {
+          if (consumeLongPress()) return;
+          if (p.valid) onOpenResult();
+        }}
         aria-haspopup="dialog"
-        aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-        className="block w-full text-left p-0 m-0 bg-transparent border-0"
-        style={{ cursor: p.valid ? "pointer" : "default" }}
+        aria-label={p.valid ? `${t("aria.openBreakdown")}. ${t("aria.holdToCopy")}` : undefined}
+        className="block w-full text-left p-0 m-0 bg-transparent border-0 select-none"
+        style={{ cursor: p.valid ? "pointer" : "default", WebkitTouchCallout: "none" }}
       >
         <div className="flex items-baseline gap-2">
           {!isW && p.totalAmount != null && (

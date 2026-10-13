@@ -36,12 +36,20 @@ export interface CommandDesktopProps {
   onUpdateShared: (patch: Partial<SharedCalcSettings>) => void;
   weightAsMain: boolean;
   onSetWeightAsMain: (value: boolean) => void;
+  /** Today's lines — the tape and its running total. */
   sessionTape: string[];
-  /** The full command history — the Parts surface's History tab. */
+  /** Every logged line, newest first — ↑/↓ and the History view. */
   history: string[];
+  /** When each line in `history` was logged (epoch ms). */
+  historyTimes: Record<string, number>;
+  /** How many times each line in `history` was logged. */
+  historyCounts: Record<string, number>;
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (q: string) => void;
+  /** Clears today's lines — the tape. */
   onClearTape: () => void;
+  /** Clears the whole history. */
+  onClearHistory: () => void;
   /** Turn everything on the tape into a project, in one action. */
   onSaveSessionAsProject: () => void;
   saved: SavedEntry[];
@@ -64,6 +72,8 @@ export interface CommandDesktopProps {
   rateIsUserSupplied: boolean;
   /** Copy a clean, paste-ready text summary of the current result. */
   onCopySummary: () => void;
+  /** Copy the answer as one line — a click on the headline figure. */
+  onCopyAnswer: () => void;
   onShareLink: () => void;
   onNew: () => void;
   onSuggest: (item: CommandSuggestionItem) => void;

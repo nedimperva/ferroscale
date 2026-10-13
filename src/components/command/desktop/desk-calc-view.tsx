@@ -58,6 +58,7 @@ import {
   replaceLineToken,
 } from "../line-edit";
 import { InlineTokenEditor } from "../inline-token-editor";
+import { YourLines } from "../your-lines";
 import { massTolerancePercentStore } from "@/lib/settings-stores";
 import { useExpandedItem } from "../use-expanded-item";
 
@@ -83,8 +84,12 @@ export function DeskCalcView({
   shared,
   defaultUnit,
   sessionTape,
+  history,
+  historyTimes,
+  historyCounts,
   onRemoveTapeEntry,
   onClearTape,
+  onClearHistory,
   onSaveSessionAsProject,
   onSave,
   onPrimarySave,
@@ -94,6 +99,7 @@ export function DeskCalcView({
   onOpenHelp,
   onLogSession,
   onCopySummary,
+  onCopyAnswer,
   onShareLink,
   onNew,
   onSuggest,
@@ -114,7 +120,7 @@ export function DeskCalcView({
     .filter(Boolean)
     .join(" · ");
   const firstSuggestionRef = useRef<HTMLButtonElement | null>(null);
-  // ↑/↓ recall through the session tape; draft holds the in-progress query so
+  // ↑/↓ recall through the whole history; draft holds the in-progress query so
   // ↓ past the newest entry restores it.
   const historyIdxRef = useRef(-1);
   const draftRef = useRef("");
@@ -158,6 +164,8 @@ export function DeskCalcView({
   );
 
   const [moreOpen, setMoreOpen] = useState(false);
+  /** The tape shows today's session, or every logged line by day. */
+  const [showHistory, setShowHistory] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -283,7 +291,7 @@ export function DeskCalcView({
               valid={p.valid}
               hasGhost={!!ghost}
               suggestionCount={sug.items.length}
-              historyLength={sessionTape.length}
+              historyLength={history.length}
               onOpenHelp={onOpenHelp}
             />
           </span>
@@ -569,7 +577,7 @@ export function DeskCalcView({
                   e.currentTarget.selectionStart === e.currentTarget.selectionEnd,
                 suggestionCount: sug.items.length,
                 chipCount,
-                historyLength: sessionTape.length,
+                historyLength: history.length,
                 browsingHistory: historyIdxRef.current >= 0,
               });
               if (!action) return;
@@ -608,9 +616,9 @@ export function DeskCalcView({
                   if (historyIdxRef.current === -1) draftRef.current = query;
                   historyIdxRef.current = Math.min(
                     historyIdxRef.current + 1,
-                    sessionTape.length - 1,
+                    history.length - 1,
                   );
-                  setQuery(sessionTape[historyIdxRef.current] + " ");
+                  setQuery(history[historyIdxRef.current] + " ");
                   markExternalValueChange();
                   focusInputAtEnd();
                   return;
@@ -618,7 +626,7 @@ export function DeskCalcView({
                 case "historyNext": {
                   const nextIdx = historyIdxRef.current - 1;
                   historyIdxRef.current = nextIdx;
-                  setQuery(nextIdx < 0 ? draftRef.current : sessionTape[nextIdx] + " ");
+                  setQuery(nextIdx < 0 ? draftRef.current : history[nextIdx] + " ");
                   markExternalValueChange();
                   focusInputAtEnd();
                   return;
@@ -670,7 +678,7 @@ export function DeskCalcView({
       >
         {/* LEFT column — result + session tape */}
         <div
-          className="flex flex-col gap-4 min-w-0"
+          className="relative flex flex-col gap-4 min-w-0"
           style={{
             flex: compact ? undefined : ANSWER_FLEX,
             minWidth: compact ? undefined : ANSWER_MIN,
@@ -725,7 +733,17 @@ export function DeskCalcView({
                 regular weight: at this size the digits carry on their own, and
                 mono keeps them from reflowing as the value counts up. */}
             <div style={{ padding: "10px 0 14px" }}>
-              <div className="flex items-baseline gap-3">
+              {/* A click on the figure copies the answer as one line — the
+                  thing most often done with it is pasting it somewhere. */}
+              <button
+                type="button"
+                onClick={onCopyAnswer}
+                disabled={!p.valid}
+                title={p.valid ? t("aria.clickToCopy") : undefined}
+                aria-label={p.valid ? `${heroVal} — ${t("aria.clickToCopy")}` : undefined}
+                className="flex items-baseline gap-3 p-0 m-0 bg-transparent border-0 text-left"
+                style={{ cursor: p.valid ? "copy" : "default", color: "inherit" }}
+              >
                 {!isW && p.totalAmount != null && (
                   <span
                     className="font-mono leading-none"
@@ -752,7 +770,7 @@ export function DeskCalcView({
                     {fsWeightUnit()}
                   </span>
                 )}
-              </div>
+              </button>
               {band && (
                 <div className="font-mono text-[12px] text-foreground-secondary mt-2.5">
                   {band.percentLabel} · {band.rangeLabel}
@@ -999,11 +1017,22 @@ export function DeskCalcView({
               <span className="font-mono text-[10px] text-muted-faint">
                 {t("desktop.sessionSub")}
               </span>
+              {/* Always there: the history is reachable before anything is
+                  logged today. */}
+              <button
+                type="button"
+                onClick={() => setShowHistory(true)}
+                aria-haspopup="dialog"
+                className="ml-auto bg-transparent border-0 text-muted text-[10px] font-bold cursor-pointer hover:text-foreground"
+                style={{ letterSpacing: 0.4 }}
+              >
+                {t("desktop.history")}
+              </button>
               {tapeRows.length > 0 && (
                 <button
                   type="button"
                   onClick={onSaveSessionAsProject}
-                  className="ml-auto bg-transparent border-0 text-[10px] font-bold cursor-pointer"
+                  className="bg-transparent border-0 text-[10px] font-bold cursor-pointer"
                   style={{ letterSpacing: 0.4, color: "var(--accent-text)" }}
                 >
                   {t("desktop.saveSessionAsProject")}
@@ -1111,6 +1140,62 @@ export function DeskCalcView({
               </>
             )}
           </div>
+
+          {/* HISTORY — every logged line by day, over the whole answer column:
+              the tape's own slot is a few rows tall on a laptop screen. */}
+          {showHistory && (
+            <div
+              role="dialog"
+              aria-label={t("history.title")}
+              className="absolute inset-0 z-10 flex flex-col"
+              style={{
+                background: "var(--screen)",
+                padding: compact ? undefined : "20px clamp(14px, 1.6vw, 24px) 0",
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.stopPropagation();
+                  setShowHistory(false);
+                }
+              }}
+            >
+              <div
+                className="flex items-baseline gap-2.5 mb-2 flex-shrink-0"
+                style={{ borderTop: "1px solid var(--foreground)", paddingTop: 10 }}
+              >
+                <SectionLabel as="h2">{t("desktop.history")}</SectionLabel>
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={() => setShowHistory(false)}
+                  className="ml-auto bg-transparent border-0 text-muted text-[10px] font-bold cursor-pointer hover:text-foreground"
+                  style={{ letterSpacing: 0.4 }}
+                >
+                  {t("desktop.backToSession")}
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+                <YourLines
+                  compact
+                  startInAll
+                  oftenIn="everything"
+                  items={history}
+                  times={historyTimes}
+                  counts={historyCounts}
+                  settings={parserSettings}
+                  mode={mode}
+                  onClear={onClearHistory}
+                  onLoad={(q) => {
+                    setShowHistory(false);
+                    setQuery(q + " ");
+                    markExternalValueChange();
+                    focusInputAtEnd();
+                  }}
+                  onRemove={onRemoveTapeEntry}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT column — the breakdown as a ledger sheet. It takes the

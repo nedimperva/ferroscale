@@ -208,6 +208,227 @@ test.describe("Session", () => {
     // Every logged line came across, in one gesture.
     await expect(page.getByText(/^[2-9] items$/)).toBeVisible();
   });
+
+  test("is today's lines; your lines show what you use often, then every day", async ({ page }) => {
+    await page.addInitScript(() => {
+      const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["hea120 6m x2", "upn100 3m x4", "shs40x40x3 4m"]),
+      );
+      localStorage.setItem(
+        "ferroscale-quick-history-times-v1",
+        JSON.stringify({
+          "hea120 6m x2": Date.now(),
+          "upn100 3m x4": tenDaysAgo,
+          "shs40x40x3 4m": tenDaysAgo,
+        }),
+      );
+      localStorage.setItem(
+        "ferroscale-quick-history-counts-v1",
+        JSON.stringify({ "upn100 3m x4": 3 }),
+      );
+    });
+    await page.goto("/en");
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    // The running total covers today alone.
+    await expect(page.getByText("1 ITEM · RUNNING TOTAL")).toBeVisible();
+
+    await page.getByRole("button", { name: "YOUR LINES" }).click();
+    const often = page.getByRole("region", { name: "Often" });
+    await expect(often).toContainText("upn100 3m x4");
+    await expect(often).toContainText("×3");
+    await expect(often).not.toContainText("hea120 6m x2");
+    // The panel opens straight on the days: no Recent, no extra step.
+    await expect(page.getByRole("region", { name: "Recent" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Today" })).toContainText("hea120 6m x2");
+    await expect(page.getByRole("region", { name: "Earlier" })).toContainText("shs40x40x3 4m");
+    await page.getByLabel("Search history").fill("upn");
+    await expect(page.getByRole("button", { name: /^shs40x40x3 4m/ })).toHaveCount(0);
+
+    // A line goes back into the bar.
+    await page
+      .getByRole("region", { name: "Earlier" })
+      .getByRole("button", { name: /^upn100 3m x4/ })
+      .click();
+    await expect(page.getByRole("dialog", { name: "Your lines" })).toHaveCount(0);
+    await expect(page.getByText("127.17", { exact: true })).toBeVisible();
+  });
+
+  test("the tape's Clear empties today and keeps earlier days", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["hea120 6m x2", "upn100 3m x4"]),
+      );
+      localStorage.setItem(
+        "ferroscale-quick-history-times-v1",
+        JSON.stringify({
+          "hea120 6m x2": Date.now(),
+          "upn100 3m x4": Date.now() - 10 * 24 * 60 * 60 * 1000,
+        }),
+      );
+    });
+    await page.goto("/en");
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    await page.getByRole("button", { name: "CLEAR", exact: true }).last().click();
+    await expect
+      .poll(() =>
+        page.evaluate(() => JSON.parse(localStorage.getItem("ferroscale-quick-history") ?? "[]")),
+      )
+      .toEqual(["upn100 3m x4"]);
+  });
+
+  test.describe("with nothing logged today", () => {
+    const seedOldHistory = async (page: Page) => {
+      await page.addInitScript(() => {
+        localStorage.setItem("ferroscale-quick-history", JSON.stringify(["upn100 3m x4"]));
+        localStorage.setItem(
+          "ferroscale-quick-history-times-v1",
+          JSON.stringify({ "upn100 3m x4": Date.now() - 3 * 24 * 60 * 60 * 1000 }),
+        );
+      });
+    };
+
+    test("the empty tape still leads to your lines", async ({ page }) => {
+      await seedOldHistory(page);
+      await page.goto("/en");
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains("app-ready"),
+      );
+      await page.getByRole("button", { name: "YOUR LINES", exact: true }).click();
+      await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+    });
+
+    test.describe("on the phone", () => {
+      test.use({ viewport: { width: 390, height: 844 } });
+
+      test("the top bar opens your lines from any screen", async ({ page }) => {
+        await seedOldHistory(page);
+        await page.goto("/en?q=hea120+6m+x2");
+        await page.waitForFunction(() =>
+          document.documentElement.classList.contains("app-ready"),
+        );
+        await page.getByRole("button", { name: "Your lines", exact: true }).click();
+        await expect(page.getByRole("region", { name: "Today" })).toContainText("Nothing logged today");
+        await page.getByRole("button", { name: "Everything, by day →" }).click();
+        await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+      });
+
+      test("the session row stays, and opens your lines", async ({ page }) => {
+        await seedOldHistory(page);
+        await page.goto("/en");
+        await page.waitForFunction(() =>
+          document.documentElement.classList.contains("app-ready"),
+        );
+        await page.getByRole("button", { name: "Open the session tape" }).click();
+        // The phone has no Recent list: older lines are under Everything, by day.
+        await expect(page.getByRole("region", { name: "Recent" })).toHaveCount(0);
+        await page.getByRole("button", { name: "Everything, by day →" }).click();
+        await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+      });
+    });
+  });
+
+  test.describe("on the phone", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("today's session reads like the tape, and Clear empties only today", async ({ page }) => {
+      await page.addInitScript(() => {
+        localStorage.setItem(
+          "ferroscale-quick-history",
+          JSON.stringify(["hea120 6m x2", "upn100 3m x4"]),
+        );
+        localStorage.setItem(
+          "ferroscale-quick-history-times-v1",
+          JSON.stringify({
+            "hea120 6m x2": Date.now(),
+            "upn100 3m x4": Date.now() - 10 * 24 * 60 * 60 * 1000,
+          }),
+        );
+        localStorage.setItem(
+          "ferroscale-quick-history-counts-v1",
+          JSON.stringify({ "upn100 3m x4": 3 }),
+        );
+      });
+      await page.goto("/en");
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains("app-ready"),
+      );
+      await page.getByRole("button", { name: "Open the session tape" }).click();
+      const today = page.getByRole("region", { name: "Today" });
+      // The profile, its length × pieces and the weight, apart — as on the desk.
+      await expect(today).toContainText("HEA 120");
+      await expect(today).toContainText("6 m × 2");
+      await expect(today).toContainText("238.7 kg");
+      await expect(today).not.toContainText("UPN");
+
+      await today.getByRole("button", { name: "CLEAR", exact: true }).click();
+      await expect(today).toContainText("Nothing logged today");
+      // Often is not on the first view; it heads Everything, by day.
+      await expect(page.getByRole("region", { name: "Often" })).toHaveCount(0);
+      await page.getByRole("button", { name: "Everything, by day →" }).click();
+      await expect(page.getByRole("region", { name: "Often" })).toContainText("upn100 3m x4");
+      await expect(page.getByRole("region", { name: "Earlier" })).toContainText("upn100 3m x4");
+    });
+  });
+
+  test("a line that finishes the one just logged replaces it", async ({ page }) => {
+    await page.goto("/en");
+    await typeQuery(page, "hea120 6m ");
+    await page.keyboard.press("Enter");
+    await page.getByLabel("FerroScale Command query").press("End");
+    await page.getByLabel("FerroScale Command query").pressSequentially("x2 ", { delay: 5 });
+    await page.keyboard.press("Enter");
+
+    await expect
+      .poll(() =>
+        page.evaluate(() => JSON.parse(localStorage.getItem("ferroscale-quick-history") ?? "[]")),
+      )
+      .toEqual(["hea120 6m x2"]);
+  });
+});
+
+test.describe("Copying the answer", () => {
+  test("a click on the headline figure copies it as one line", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto(DEMO_LINK);
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    await page.getByRole("button", { name: /Click to copy the answer/ }).click();
+    await expect(page.getByText("Answer copied")).toBeVisible();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toMatch(/^HEA 120 · .*6m × 2 pcs = 238\.7 kg · € /);
+  });
+  test.describe("on the phone", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("holding the figure copies; a tap still opens the breakdown", async ({ page, context }) => {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.goto(DEMO_LINK);
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains("app-ready"),
+      );
+      const hero = page.getByRole("button", { name: /Hold to copy the answer/ });
+      const box = (await hero.boundingBox())!;
+      await page.mouse.move(box.x + 40, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.waitForTimeout(700);
+      await page.mouse.up();
+      await expect(page.getByText("Answer copied")).toBeVisible();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("238.7 kg");
+      // The long press did not also open the sheet.
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+
+      await hero.click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+    });
+  });
 });
 
 test.describe("Assemblies", () => {
