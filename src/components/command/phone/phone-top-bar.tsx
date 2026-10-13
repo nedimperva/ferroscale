@@ -12,7 +12,7 @@ export function PhoneTopBar({
   syncAttention,
 }: {
   onToggleTheme: () => void;
-  onOpenLibrary: (tab: "saved" | "projects") => void;
+  onOpenLibrary: (tab: "session" | "saved" | "projects") => void;
   onOpenSettings: () => void;
   syncAttention: SyncAttention | null;
 }) {
@@ -58,6 +58,17 @@ export function PhoneTopBar({
             bookmark glyph used to stand for Parts, Projects, Compare and
             the session tape at once, so the two surfaces disagreed about
             what the app even contains. */}
+        {/* Your lines — the history — from any screen, whether or not
+            anything was logged today. */}
+        <IconBtn
+          onClick={() => onOpenLibrary("session")}
+          ariaLabel={t("history.title")}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </IconBtn>
         <IconBtn
           onClick={() => onOpenLibrary("saved")}
           ariaLabel={t("nav.parts")}

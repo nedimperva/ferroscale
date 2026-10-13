@@ -1017,17 +1017,17 @@ export function DeskCalcView({
               <span className="font-mono text-[10px] text-muted-faint">
                 {t("desktop.sessionSub")}
               </span>
-              {history.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowHistory(true)}
-                  aria-haspopup="dialog"
-                  className="ml-auto bg-transparent border-0 text-muted text-[10px] font-bold cursor-pointer hover:text-foreground"
-                  style={{ letterSpacing: 0.4 }}
-                >
-                  {t("desktop.history")}
-                </button>
-              )}
+              {/* Always there: the history is reachable before anything is
+                  logged today. */}
+              <button
+                type="button"
+                onClick={() => setShowHistory(true)}
+                aria-haspopup="dialog"
+                className="ml-auto bg-transparent border-0 text-muted text-[10px] font-bold cursor-pointer hover:text-foreground"
+                style={{ letterSpacing: 0.4 }}
+              >
+                {t("desktop.history")}
+              </button>
               {tapeRows.length > 0 && (
                 <button
                   type="button"
@@ -1051,21 +1051,10 @@ export function DeskCalcView({
             </div>
             {tapeRows.length === 0 ? (
               <div
-                className="flex-1 min-h-0 flex items-center gap-3 font-mono text-[12px] text-muted-faint"
+                className="flex-1 min-h-0 flex items-center font-mono text-[12px] text-muted-faint"
                 style={{ padding: "6px 2px" }}
               >
                 {t("desktop.emptyTape")}
-                {/* Nothing today, but earlier days are a click away. */}
-                {history.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowHistory(true)}
-                    aria-haspopup="dialog"
-                    className="bg-transparent border-0 p-0 font-mono text-[12px] cursor-pointer underline underline-offset-2 text-foreground-secondary hover:text-foreground"
-                  >
-                    {t("history.open")}
-                  </button>
-                )}
               </div>
             ) : (
               <>
@@ -1188,6 +1177,8 @@ export function DeskCalcView({
               <div className="flex-1 min-h-0 overflow-y-auto pb-4">
                 <YourLines
                   compact
+                  startInAll
+                  oftenIn="everything"
                   items={history}
                   times={historyTimes}
                   counts={historyCounts}

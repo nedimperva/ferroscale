@@ -17,9 +17,10 @@ import { HistoryList } from "./history-list";
 const RECENT_COUNT = 8;
 
 /**
- * Your lines: what you weigh again and again (Often), then the newest few
- * (Recent), then everything by day behind one link. One component for the
- * phone's library sheet and the workspace's history panel.
+ * Your lines: Often (what you weigh again and again), Recent, and
+ * everything by day with a search. One component for the phone's library
+ * sheet (today's session above it, then a link to the by-day view, which
+ * Often heads) and the workspace's panel (straight onto the by-day view).
  */
 export function YourLines({
   items,
@@ -33,6 +34,7 @@ export function YourLines({
   compact,
   showRecent = true,
   oftenIn = "lines",
+  startInAll = false,
 }: {
   items: string[];
   times: HistoryTimes;
@@ -54,11 +56,16 @@ export function YourLines({
    * Everything, by day — the phone's first view is today's session alone.
    */
   oftenIn?: "lines" | "everything";
+  /**
+   * Open straight on Everything, by day, with no way back to a first view
+   * (the desk's panel: its tape is today's session already).
+   */
+  startInAll?: boolean;
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
   const now = useDayClock();
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(startInAll);
   const sym = CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€";
 
   const often = useMemo(() => oftenLines(items, counts), [items, counts]);
@@ -144,14 +151,16 @@ export function YourLines({
   if (showAll) {
     return (
       <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => setShowAll(false)}
-          className="self-start bg-transparent border-0 p-0 text-[13px] font-semibold cursor-pointer"
-          style={{ minHeight: 32, color: "var(--accent-text)" }}
-        >
-          {t("history.backToLines")}
-        </button>
+        {!startInAll && (
+          <button
+            type="button"
+            onClick={() => setShowAll(false)}
+            className="self-start bg-transparent border-0 p-0 text-[13px] font-semibold cursor-pointer"
+            style={{ minHeight: 32, color: "var(--accent-text)" }}
+          >
+            {t("history.backToLines")}
+          </button>
+        )}
         {oftenIn === "everything" && oftenSection}
         <HistoryList
           compact={compact}

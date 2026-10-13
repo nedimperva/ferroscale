@@ -209,7 +209,7 @@ test.describe("Session", () => {
     await expect(page.getByText(/^[2-9] items$/)).toBeVisible();
   });
 
-  test("is today's lines; your lines show what you use often, then the newest", async ({ page }) => {
+  test("is today's lines; your lines show what you use often, then every day", async ({ page }) => {
     await page.addInitScript(() => {
       const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
       localStorage.setItem(
@@ -241,19 +241,18 @@ test.describe("Session", () => {
     await expect(often).toContainText("upn100 3m x4");
     await expect(often).toContainText("×3");
     await expect(often).not.toContainText("hea120 6m x2");
-    const recent = page.getByRole("region", { name: "Recent" });
-    await expect(recent).toContainText("hea120 6m x2");
-    await expect(recent).toContainText("shs40x40x3 4m");
-
-    // Everything is one link away, by day and searchable.
-    await page.getByRole("button", { name: "Everything, by day →" }).click();
+    // The panel opens straight on the days: no Recent, no extra step.
+    await expect(page.getByRole("region", { name: "Recent" })).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Today" })).toContainText("hea120 6m x2");
     await expect(page.getByRole("region", { name: "Earlier" })).toContainText("shs40x40x3 4m");
     await page.getByLabel("Search history").fill("upn");
     await expect(page.getByRole("button", { name: /^shs40x40x3 4m/ })).toHaveCount(0);
 
     // A line goes back into the bar.
-    await page.getByRole("button", { name: /^upn100 3m x4/ }).click();
+    await page
+      .getByRole("region", { name: "Earlier" })
+      .getByRole("button", { name: /^upn100 3m x4/ })
+      .click();
     await expect(page.getByRole("dialog", { name: "Your lines" })).toHaveCount(0);
     await expect(page.getByText("127.17", { exact: true })).toBeVisible();
   });
@@ -301,12 +300,24 @@ test.describe("Session", () => {
       await page.waitForFunction(() =>
         document.documentElement.classList.contains("app-ready"),
       );
-      await page.getByRole("button", { name: "Your lines →" }).click();
-      await expect(page.getByRole("region", { name: "Recent" })).toContainText("upn100 3m x4");
+      await page.getByRole("button", { name: "YOUR LINES", exact: true }).click();
+      await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
     });
 
     test.describe("on the phone", () => {
       test.use({ viewport: { width: 390, height: 844 } });
+
+      test("the top bar opens your lines from any screen", async ({ page }) => {
+        await seedOldHistory(page);
+        await page.goto("/en?q=hea120+6m+x2");
+        await page.waitForFunction(() =>
+          document.documentElement.classList.contains("app-ready"),
+        );
+        await page.getByRole("button", { name: "Your lines", exact: true }).click();
+        await expect(page.getByRole("region", { name: "Today" })).toContainText("Nothing logged today");
+        await page.getByRole("button", { name: "Everything, by day →" }).click();
+        await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+      });
 
       test("the session row stays, and opens your lines", async ({ page }) => {
         await seedOldHistory(page);
