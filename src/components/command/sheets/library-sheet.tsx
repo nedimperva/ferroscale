@@ -190,6 +190,7 @@ export function CommandLibraryWorkspace({
         />
         <YourLines
           showRecent={false}
+          showOften={false}
           items={history}
           times={historyTimes}
           counts={historyCounts}

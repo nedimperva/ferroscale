@@ -32,6 +32,7 @@ export function YourLines({
   onClear,
   compact,
   showRecent = true,
+  showOften = true,
 }: {
   items: string[];
   times: HistoryTimes;
@@ -48,6 +49,8 @@ export function YourLines({
    * everything older is under "Everything, by day".
    */
   showRecent?: boolean;
+  /** The phone leaves Often out too: its history is Everything, by day. */
+  showOften?: boolean;
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
@@ -137,7 +140,7 @@ export function YourLines({
 
   return (
     <div className="flex flex-col">
-      {often.length > 0 && (
+      {showOften && often.length > 0 && (
         <section aria-label={t("history.often")} style={{ marginBottom: 18 }}>
           {heading(t("history.often"), t("history.oftenSub"))}
           <div
