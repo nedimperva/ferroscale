@@ -3,6 +3,7 @@ import {
   filterHistory,
   groupHistoryByDay,
   historyDay,
+  oftenLines,
   pushHistoryEntry,
   REFINE_WINDOW_MS,
   stampMissingTimes,
@@ -13,7 +14,7 @@ const NOON = new Date(2026, 9, 13, 12, 0, 0).getTime();
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 
-const empty = { items: [], times: {} };
+const empty = { items: [], times: {}, counts: {} };
 
 describe("pushHistoryEntry", () => {
   it("puts the newest line first and stamps it", () => {
@@ -57,10 +58,25 @@ describe("pushHistoryEntry", () => {
   });
 
   it("caps the list and drops the times of lines that fall off", () => {
-    let s = { items: [] as string[], times: {} };
+    let s = { items: [] as string[], times: {}, counts: {} };
     for (let i = 0; i < 5; i++) s = pushHistoryEntry(s, `fl${i}0x5 1m`, NOON + i * HOUR, 3);
     expect(s.items).toEqual(["fl40x5 1m", "fl30x5 1m", "fl20x5 1m"]);
     expect(Object.keys(s.times)).toHaveLength(3);
+  });
+
+  it("counts every time a line is logged, whatever its spacing", () => {
+    let s = pushHistoryEntry(empty, "hea120 6m", NOON);
+    s = pushHistoryEntry(s, "upn100 3m", NOON + HOUR);
+    s = pushHistoryEntry(s, "HEA120  6m", NOON + 2 * HOUR);
+    expect(s.counts).toEqual({ "HEA120 6m": 2, "upn100 3m": 1 });
+  });
+
+  it("keeps a line used before when a longer one follows it", () => {
+    let s = pushHistoryEntry(empty, "hea120 6m", NOON);
+    s = pushHistoryEntry(s, "hea120 6m", NOON + HOUR);
+    s = pushHistoryEntry(s, "hea120 6m x2", NOON + HOUR + 10_000);
+    expect(s.items).toEqual(["hea120 6m x2", "hea120 6m"]);
+    expect(s.counts["hea120 6m"]).toBe(2);
   });
 
   it("ignores an empty line", () => {
@@ -92,6 +108,14 @@ describe("grouping by day", () => {
       { day: "earlier", items: ["c", "d"] },
     ]);
     expect(todaysHistory(items, times, NOON)).toEqual(["a", "b"]);
+  });
+});
+
+describe("oftenLines", () => {
+  it("lists lines used twice or more, most used first, newest on a tie", () => {
+    const items = ["a", "b", "c", "d"];
+    expect(oftenLines(items, { a: 2, b: 5, c: 1, d: 2 })).toEqual(["b", "a", "d"]);
+    expect(oftenLines(items, { a: 2, b: 5, d: 2 }, 2)).toEqual(["b", "a"]);
   });
 });
 

@@ -209,7 +209,7 @@ test.describe("Session", () => {
     await expect(page.getByText(/^[2-9] items$/)).toBeVisible();
   });
 
-  test("is today's lines; older ones wait in the history, by day and searchable", async ({ page }) => {
+  test("is today's lines; your lines show what you use often, then the newest", async ({ page }) => {
     await page.addInitScript(() => {
       const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
       localStorage.setItem(
@@ -224,6 +224,10 @@ test.describe("Session", () => {
           "shs40x40x3 4m": tenDaysAgo,
         }),
       );
+      localStorage.setItem(
+        "ferroscale-quick-history-counts-v1",
+        JSON.stringify({ "upn100 3m x4": 3 }),
+      );
     });
     await page.goto("/en");
     await page.waitForFunction(() =>
@@ -232,20 +236,52 @@ test.describe("Session", () => {
     // The running total covers today alone.
     await expect(page.getByText("1 ITEM · RUNNING TOTAL")).toBeVisible();
 
-    await page.getByRole("button", { name: "HISTORY" }).click();
-    await expect(page.getByRole("region", { name: "Today" })).toContainText("hea120 6m x2");
-    const earlier = page.getByRole("region", { name: "Earlier" });
-    await expect(earlier).toContainText("upn100 3m x4");
-    await expect(earlier).toContainText("shs40x40x3 4m");
+    await page.getByRole("button", { name: "YOUR LINES" }).click();
+    const often = page.getByRole("region", { name: "Often" });
+    await expect(often).toContainText("upn100 3m x4");
+    await expect(often).toContainText("×3");
+    await expect(often).not.toContainText("hea120 6m x2");
+    const recent = page.getByRole("region", { name: "Recent" });
+    await expect(recent).toContainText("hea120 6m x2");
+    await expect(recent).toContainText("shs40x40x3 4m");
 
+    // Everything is one link away, by day and searchable.
+    await page.getByRole("button", { name: "Everything, by day →" }).click();
+    await expect(page.getByRole("region", { name: "Today" })).toContainText("hea120 6m x2");
+    await expect(page.getByRole("region", { name: "Earlier" })).toContainText("shs40x40x3 4m");
     await page.getByLabel("Search history").fill("upn");
-    await expect(page.getByRole("button", { name: /^upn100 3m x4/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /^shs40x40x3 4m/ })).toHaveCount(0);
 
-    // A line from the history goes back into the bar.
+    // A line goes back into the bar.
     await page.getByRole("button", { name: /^upn100 3m x4/ }).click();
-    await expect(page.getByRole("dialog", { name: "History" })).toHaveCount(0);
+    await expect(page.getByRole("dialog", { name: "Your lines" })).toHaveCount(0);
     await expect(page.getByText("127.17", { exact: true })).toBeVisible();
+  });
+
+  test("the tape's Clear empties today and keeps earlier days", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        "ferroscale-quick-history",
+        JSON.stringify(["hea120 6m x2", "upn100 3m x4"]),
+      );
+      localStorage.setItem(
+        "ferroscale-quick-history-times-v1",
+        JSON.stringify({
+          "hea120 6m x2": Date.now(),
+          "upn100 3m x4": Date.now() - 10 * 24 * 60 * 60 * 1000,
+        }),
+      );
+    });
+    await page.goto("/en");
+    await page.waitForFunction(() =>
+      document.documentElement.classList.contains("app-ready"),
+    );
+    await page.getByRole("button", { name: "CLEAR", exact: true }).last().click();
+    await expect
+      .poll(() =>
+        page.evaluate(() => JSON.parse(localStorage.getItem("ferroscale-quick-history") ?? "[]")),
+      )
+      .toEqual(["upn100 3m x4"]);
   });
 
   test.describe("with nothing logged today", () => {
@@ -259,27 +295,27 @@ test.describe("Session", () => {
       });
     };
 
-    test("the empty tape still leads to the history", async ({ page }) => {
+    test("the empty tape still leads to your lines", async ({ page }) => {
       await seedOldHistory(page);
       await page.goto("/en");
       await page.waitForFunction(() =>
         document.documentElement.classList.contains("app-ready"),
       );
-      await page.getByRole("button", { name: "History →" }).click();
-      await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+      await page.getByRole("button", { name: "Your lines →" }).click();
+      await expect(page.getByRole("region", { name: "Recent" })).toContainText("upn100 3m x4");
     });
 
     test.describe("on the phone", () => {
       test.use({ viewport: { width: 390, height: 844 } });
 
-      test("the session row stays, and opens the history", async ({ page }) => {
+      test("the session row stays, and opens your lines", async ({ page }) => {
         await seedOldHistory(page);
         await page.goto("/en");
         await page.waitForFunction(() =>
           document.documentElement.classList.contains("app-ready"),
         );
         await page.getByRole("button", { name: "Open the session tape" }).click();
-        await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
+        await expect(page.getByRole("region", { name: "Recent" })).toContainText("upn100 3m x4");
       });
     });
   });

@@ -100,9 +100,10 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   (`advanced-calc-projects-v2`, max 20×50), `useCompare`,
   `useQuickHistory` (`ferroscale-quick-history` — the history, the session
   tape and recency suggestions, capped at 200; rules in
-  `lib/command/history.ts`). When each line was logged is a device-only
-  map (`ferroscale-quick-history-times-v1`), so the synced list stays a plain
-  `string[]`; the session is today's lines.
+  `lib/command/history.ts`). When each line was logged and how often are
+  device-only maps (`ferroscale-quick-history-times-v1`, `-counts-v1`), so
+  the synced list stays a plain `string[]`; the session is today's lines, and
+  `your-lines.tsx` (Often, Recent, everything by day) is the one history view.
 - **Customers are records** (`useCustomers`, `ferroscale-customers-v1`). A
   project points at one by `customerId` and keeps the name in `client` too, so
   quotes and CSVs need no lookup; renaming a customer rewrites `client` on its

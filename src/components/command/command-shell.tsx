@@ -213,6 +213,7 @@ export function CommandShell() {
   const {
     history: quickHistory,
     times: historyTimes,
+    counts: historyCounts,
     push: pushHistory,
     remove: removeHistoryEntry,
     clear: clearHistory,
@@ -224,6 +225,11 @@ export function CommandShell() {
     () => todaysHistory(quickHistory, historyTimes, now),
     [quickHistory, historyTimes, now],
   );
+  // The tape's Clear empties today; older days stay in the history, and only
+  // its own Clear all removes them.
+  const clearSession = useCallback(() => {
+    for (const q of sessionToday) removeHistoryEntry(q);
+  }, [sessionToday, removeHistoryEntry]);
   /**
    * The destination overlay: what it is acting on, and which row it opens on.
    * A null subject means it is closed. It replaces the save picker, the
@@ -1501,10 +1507,12 @@ export function CommandShell() {
           sessionTape={sessionToday}
           history={quickHistory}
           historyTimes={historyTimes}
+          historyCounts={historyCounts}
           onLoadQuery={loadQuery}
           onSaveSessionAsProject={saveSessionAsProject}
           onRemoveTapeEntry={removeHistoryEntry}
-          onClearTape={clearHistory}
+          onClearTape={clearSession}
+          onClearHistory={clearHistory}
           saved={savedEntries}
           compareItems={compareItems}
           projects={projects}
@@ -1822,13 +1830,13 @@ export function CommandShell() {
               }}
               history={quickHistory}
               historyTimes={historyTimes}
+              historyCounts={historyCounts}
               onLoadQuery={(entry) => {
                 loadQuery(entry);
                 setLibraryTab(null);
               }}
               onRemoveTapeEntry={removeHistoryEntry}
               onClearHistory={clearHistory}
-              onSaveSessionAsProject={saveSessionAsProject}
               onLoadInput={loadInput}
               {...savedHandlers}
               onRemoveCompare={removeCompareItem}

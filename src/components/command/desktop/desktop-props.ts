@@ -42,9 +42,14 @@ export interface CommandDesktopProps {
   history: string[];
   /** When each line in `history` was logged (epoch ms). */
   historyTimes: Record<string, number>;
+  /** How many times each line in `history` was logged. */
+  historyCounts: Record<string, number>;
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (q: string) => void;
+  /** Clears today's lines — the tape. */
   onClearTape: () => void;
+  /** Clears the whole history. */
+  onClearHistory: () => void;
   /** Turn everything on the tape into a project, in one action. */
   onSaveSessionAsProject: () => void;
   saved: SavedEntry[];

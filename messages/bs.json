@@ -625,7 +625,7 @@
       "anotherItem": "+ stavka",
       "anotherItemAria": "Dodaj još jednu stavku u liniju",
       "saveSessionAsProjectShort": "→ PROJEKAT",
-      "history": "HISTORIJA",
+      "history": "VAŠE LINIJE",
       "backToSession": "← DANAS"
     },
     "suggest": {
@@ -1357,17 +1357,23 @@
       "toastCreated": "Napravljen „{name}”"
     },
     "history": {
-      "title": "Historija",
+      "title": "Vaše linije",
       "search": "Pretraži historiju",
       "today": "Danas",
       "yesterday": "Jučer",
       "week": "Ove sedmice",
       "earlier": "Ranije",
-      "todayTotal": "Današnji zbir",
-      "saveTodayAsProject": "Sačuvaj današnje kao projekat",
       "empty": "Još ništa nije upisano.",
       "noMatch": "Ništa u historiji ne odgovara „{search}“",
-      "open": "Historija →"
+      "open": "Vaše linije →",
+      "often": "Često",
+      "oftenSub": "ono što mjerite iznova",
+      "recent": "Nedavno",
+      "recentSub": "najnovije prvo",
+      "everything": "Sve, po danima →",
+      "backToLines": "← Vaše linije",
+      "whenYesterday": "jučer",
+      "timesUsed": "×{count}"
     }
   },
   "contact": {

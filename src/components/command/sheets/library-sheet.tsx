@@ -3,10 +3,9 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
-import { CURRENCY_SYMBOLS, cmdParse, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import type { CommandParserSettings } from "@ferroscale/metal-core";
 import { computeCompareDeltas } from "@/lib/command/compare";
-import { todaysHistory, type HistoryTimes } from "@/lib/command/history";
+import { todaysHistory, type HistoryCounts, type HistoryTimes } from "@/lib/command/history";
 import { useDayClock } from "@/hooks/useDayClock";
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
@@ -15,7 +14,7 @@ import type { Project } from "@/hooks/useProjects";
 import { CommandGlyph } from "../command-glyph";
 import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 import { EmptyState } from "../empty-state";
-import { HistoryList } from "../history-list";
+import { YourLines } from "../your-lines";
 import { SheetShell } from "./sheet-shell";
 import { PartsView } from "../parts/parts-view";
 import { ProjectList } from "../projects/project-list";
@@ -63,9 +62,10 @@ interface CommandLibrarySheetProps {
   history: string[];
   /** When each line in `history` was logged (epoch ms). */
   historyTimes: HistoryTimes;
+  /** How many times each line was logged. */
+  historyCounts: HistoryCounts;
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (query: string) => void;
-  onSaveSessionAsProject: () => void;
   onClearHistory: () => void;
   /** Open on a named tab (the `>` palette navigates here); null picks one. */
   initialTab?: LibraryTab | null;
@@ -108,9 +108,9 @@ export function CommandLibraryWorkspace({
   projectActions,
   history,
   historyTimes,
+  historyCounts,
   onLoadQuery,
   onRemoveTapeEntry,
-  onSaveSessionAsProject,
   onClearHistory,
   initialTab,
 }: CommandLibraryWorkspaceProps) {
@@ -145,7 +145,7 @@ export function CommandLibraryWorkspace({
           count={sessionToday.length}
           onClick={() => setTab("session")}
           icon={<TabIconSession />}
-          label={t("desktop.session")}
+          label={t("history.title")}
         />
         <LibraryTabPill
           active={tab === "saved"}
@@ -171,16 +171,15 @@ export function CommandLibraryWorkspace({
       </div>
 
       {tab === "session" && (
-        <SessionTabContent
-          history={history}
+        <YourLines
+          items={history}
           times={historyTimes}
-          today={sessionToday}
+          counts={historyCounts}
           settings={settings}
           mode={mode}
           onLoad={onLoadQuery}
           onRemove={onRemoveTapeEntry}
           onClear={onClearHistory}
-          onSaveAsProject={onSaveSessionAsProject}
         />
       )}
       {tab === "saved" && (
@@ -653,105 +652,3 @@ function ProjectsTabContent({
  * 3.10.0; the phone could only add to the session, never look at it — which
  * made the running total on the ribbon a number with nothing behind it.
  */
-function SessionTabContent({
-  history,
-  times,
-  today,
-  settings,
-  mode,
-  onLoad,
-  onRemove,
-  onClear,
-  onSaveAsProject,
-}: {
-  history: string[];
-  times: HistoryTimes;
-  /** Today's lines — what the total and Save as project cover. */
-  today: string[];
-  settings: CommandParserSettings;
-  mode: "weight" | "price";
-  onLoad: (query: string) => void;
-  onRemove: (query: string) => void;
-  onClear: () => void;
-  onSaveAsProject: () => void;
-}) {
-  const t = useTranslations("command");
-  const sym = CURRENCY_SYMBOLS[settings.pricing.currency] ?? "€";
-  const rows = today
-    .map((query) => ({ query, parsed: cmdParse(query, settings) }))
-    .filter((row) => row.parsed.valid);
-  const totalKg = rows.reduce((sum, r) => sum + (r.parsed.totalKg ?? 0), 0);
-  const totalAmount = rows.reduce((sum, r) => sum + (r.parsed.totalAmount ?? 0), 0);
-
-  if (history.length === 0) {
-    return (
-      <div
-        className="rounded-2xl text-center text-[13px] text-muted"
-        style={{ padding: "26px 14px", border: "1px dashed var(--border-strong)", lineHeight: 1.5 }}
-      >
-        {t("desktop.sessionEmpty")}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-2.5">
-      {rows.length > 0 && (
-        <div
-          className="flex items-center gap-2.5 rounded-none"
-          style={{ padding: "12px 13px", background: "var(--surface-inset)" }}
-        >
-          <span className="fs-track-wide text-[11px] font-bold uppercase text-muted">
-            {t("history.todayTotal")}
-          </span>
-          <span className="ml-auto font-mono text-[14px] font-bold">
-            {mode === "weight"
-              ? `${fsWeight(totalKg)} ${fsWeightUnit()}`
-              : `${sym}${fsMoney(totalAmount)}`}
-          </span>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onClear}
-          className="rounded-button text-[13px] font-bold flex-shrink-0"
-          style={{
-            height: 40,
-            padding: "0 14px",
-            border: "1px solid var(--border-faint)",
-            background: "var(--surface)",
-            color: "var(--muted)",
-          }}
-        >
-          {t("common.clearAll")}
-        </button>
-        {rows.length > 0 && (
-          <button
-            type="button"
-            onClick={onSaveAsProject}
-            className="rounded-button text-[13px] font-bold flex-1"
-            style={{
-              height: 40,
-              border: "1px solid var(--accent-border)",
-              background: "var(--accent-surface)",
-              color: "var(--accent-text)",
-            }}
-          >
-            {t("history.saveTodayAsProject")}
-          </button>
-        )}
-      </div>
-
-      <HistoryList
-        items={history}
-        times={times}
-        settings={settings}
-        mode={mode}
-        onLoad={onLoad}
-        onRemove={onRemove}
-      />
-    </div>
-  );
-}

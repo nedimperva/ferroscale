@@ -18,6 +18,8 @@ export const MAX_HISTORY = 200;
 export const REFINE_WINDOW_MS = 2 * 60 * 1000;
 
 export type HistoryTimes = Record<string, number>;
+/** How many times each line has been logged — what makes a line "often". */
+export type HistoryCounts = Record<string, number>;
 
 /** Whitespace collapsed — what the line says, not how it was spaced. */
 export function normalizeHistoryQuery(query: string): string {
@@ -37,6 +39,7 @@ function extendsLine(next: string, prev: string): boolean {
 export interface HistoryState {
   items: string[];
   times: HistoryTimes;
+  counts: HistoryCounts;
 }
 
 /**
@@ -56,20 +59,29 @@ export function pushHistoryEntry(
 
   let items = state.items;
   const newest = items[0];
+  // Only a one-off is folded into the line that finishes it; a line already
+  // logged before stays, so finishing a variant never costs its count.
   if (
     newest !== undefined &&
+    (state.counts[newest] ?? 1) <= 1 &&
     now - (state.times[newest] ?? 0) <= REFINE_WINDOW_MS &&
     extendsLine(key, historyKey(newest))
   ) {
     items = items.slice(1);
   }
+  const previous = items.filter((entry) => historyKey(entry) === key);
+  const count = previous.reduce((sum, entry) => sum + (state.counts[entry] ?? 1), 0) + 1;
   items = [q, ...items.filter((entry) => historyKey(entry) !== key)].slice(0, max);
-  return { items, times: pruneTimes({ ...state.times, [q]: now }, items) };
+  return {
+    items,
+    times: pruneTimes({ ...state.times, [q]: now }, items),
+    counts: pruneTimes({ ...state.counts, [q]: count }, items),
+  };
 }
 
-/** Times for lines no longer in the list are dropped, so the map can't grow. */
-export function pruneTimes(times: HistoryTimes, items: string[]): HistoryTimes {
-  const next: HistoryTimes = {};
+/** Entries for lines no longer in the list are dropped, so a map can't grow. */
+export function pruneTimes(times: Record<string, number>, items: string[]): Record<string, number> {
+  const next: Record<string, number> = {};
   for (const item of items) {
     const at = times[item];
     if (typeof at === "number" && Number.isFinite(at)) next[item] = at;
@@ -123,6 +135,16 @@ export function groupHistoryByDay(items: string[], times: HistoryTimes, now: num
   return order
     .map((day) => ({ day, items: buckets.get(day)! }))
     .filter((group) => group.items.length > 0);
+}
+
+/** Lines logged more than once, most used first (newest first on a tie). */
+export function oftenLines(items: string[], counts: HistoryCounts, max = 6): string[] {
+  return items
+    .map((item, index) => ({ item, index, n: counts[item] ?? 1 }))
+    .filter((row) => row.n >= 2)
+    .sort((a, b) => b.n - a.n || a.index - b.index)
+    .slice(0, max)
+    .map((row) => row.item);
 }
 
 /** Today's lines — the session the running total and Save as project cover. */

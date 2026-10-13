@@ -58,7 +58,7 @@ import {
   replaceLineToken,
 } from "../line-edit";
 import { InlineTokenEditor } from "../inline-token-editor";
-import { HistoryList } from "../history-list";
+import { YourLines } from "../your-lines";
 import { massTolerancePercentStore } from "@/lib/settings-stores";
 import { useExpandedItem } from "../use-expanded-item";
 
@@ -86,8 +86,10 @@ export function DeskCalcView({
   sessionTape,
   history,
   historyTimes,
+  historyCounts,
   onRemoveTapeEntry,
   onClearTape,
+  onClearHistory,
   onSaveSessionAsProject,
   onSave,
   onPrimarySave,
@@ -1184,12 +1186,14 @@ export function DeskCalcView({
                 </button>
               </div>
               <div className="flex-1 min-h-0 overflow-y-auto pb-4">
-                <HistoryList
+                <YourLines
                   compact
                   items={history}
                   times={historyTimes}
+                  counts={historyCounts}
                   settings={parserSettings}
                   mode={mode}
+                  onClear={onClearHistory}
                   onLoad={(q) => {
                     setShowHistory(false);
                     setQuery(q + " ");

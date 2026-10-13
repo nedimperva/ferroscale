@@ -625,7 +625,7 @@
       "anotherItem": "+ item",
       "anotherItemAria": "Add another item to the line",
       "saveSessionAsProjectShort": "→ PROJECT",
-      "history": "HISTORY",
+      "history": "YOUR LINES",
       "backToSession": "← TODAY"
     },
     "suggest": {
@@ -1357,17 +1357,23 @@
       "toastCreated": "Created “{name}”"
     },
     "history": {
-      "title": "History",
+      "title": "Your lines",
       "search": "Search history",
       "today": "Today",
       "yesterday": "Yesterday",
       "week": "This week",
       "earlier": "Earlier",
-      "todayTotal": "Today's total",
-      "saveTodayAsProject": "Save today as project",
       "empty": "Nothing logged yet.",
       "noMatch": "Nothing in the history matches “{search}”",
-      "open": "History →"
+      "open": "Your lines →",
+      "often": "Often",
+      "oftenSub": "what you weigh again and again",
+      "recent": "Recent",
+      "recentSub": "newest first",
+      "everything": "Everything, by day →",
+      "backToLines": "← Your lines",
+      "whenYesterday": "yesterday",
+      "timesUsed": "×{count}"
     }
   },
   "contact": {
