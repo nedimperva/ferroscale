@@ -31,6 +31,7 @@ export function YourLines({
   onRemove,
   onClear,
   compact,
+  showRecent = true,
 }: {
   items: string[];
   times: HistoryTimes;
@@ -42,6 +43,11 @@ export function YourLines({
   onClear: () => void;
   /** Tighter rows for the workspace. */
   compact?: boolean;
+  /**
+   * The phone leaves Recent out: today's session sits right above, and
+   * everything older is under "Everything, by day".
+   */
+  showRecent?: boolean;
 }) {
   const t = useTranslations("command");
   const locale = useLocale();
@@ -162,30 +168,32 @@ export function YourLines({
         </section>
       )}
 
-      <section aria-label={t("history.recent")}>
-        {heading(t("history.recent"), t("history.recentSub"))}
-        {recent.map((query) => (
-          <button
-            key={query}
-            type="button"
-            onClick={() => onLoad(query)}
-            className="w-full flex items-center gap-2.5 text-left bg-transparent border-0 p-0 cursor-pointer"
-            style={{
-              minHeight: compact ? 38 : 44,
-              borderBottom: "1px solid var(--border-faint)",
-              color: "var(--foreground)",
-            }}
-          >
-            <span className="flex-1 min-w-0 font-mono text-[14px] font-semibold truncate">{query}</span>
-            <span className="font-mono text-[12px] text-foreground-secondary whitespace-nowrap">
-              {figure(query)}
-            </span>
-            <span className="text-[11px] text-muted text-right whitespace-nowrap" style={{ width: 62 }}>
-              {when(query)}
-            </span>
-          </button>
-        ))}
-      </section>
+      {showRecent && (
+        <section aria-label={t("history.recent")}>
+          {heading(t("history.recent"), t("history.recentSub"))}
+          {recent.map((query) => (
+            <button
+              key={query}
+              type="button"
+              onClick={() => onLoad(query)}
+              className="w-full flex items-center gap-2.5 text-left bg-transparent border-0 p-0 cursor-pointer"
+              style={{
+                minHeight: compact ? 38 : 44,
+                borderBottom: "1px solid var(--border-faint)",
+                color: "var(--foreground)",
+              }}
+            >
+              <span className="flex-1 min-w-0 font-mono text-[14px] font-semibold truncate">{query}</span>
+              <span className="font-mono text-[12px] text-foreground-secondary whitespace-nowrap">
+                {figure(query)}
+              </span>
+              <span className="text-[11px] text-muted text-right whitespace-nowrap" style={{ width: 62 }}>
+                {when(query)}
+              </span>
+            </button>
+          ))}
+        </section>
+      )}
 
       <button
         type="button"

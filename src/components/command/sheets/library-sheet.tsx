@@ -189,6 +189,7 @@ export function CommandLibraryWorkspace({
           onSaveAsProject={onSaveSessionAsProject}
         />
         <YourLines
+          showRecent={false}
           items={history}
           times={historyTimes}
           counts={historyCounts}

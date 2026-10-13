@@ -315,7 +315,10 @@ test.describe("Session", () => {
           document.documentElement.classList.contains("app-ready"),
         );
         await page.getByRole("button", { name: "Open the session tape" }).click();
-        await expect(page.getByRole("region", { name: "Recent" })).toContainText("upn100 3m x4");
+        // The phone has no Recent list: older lines are under Everything, by day.
+        await expect(page.getByRole("region", { name: "Recent" })).toHaveCount(0);
+        await page.getByRole("button", { name: "Everything, by day →" }).click();
+        await expect(page.getByRole("region", { name: "This week" })).toContainText("upn100 3m x4");
       });
     });
   });
@@ -351,7 +354,8 @@ test.describe("Session", () => {
 
       await today.getByRole("button", { name: "CLEAR", exact: true }).click();
       await expect(today).toContainText("Nothing logged today");
-      await expect(page.getByRole("region", { name: "Recent" })).toContainText("upn100 3m x4");
+      await page.getByRole("button", { name: "Everything, by day →" }).click();
+      await expect(page.getByRole("region", { name: "Earlier" })).toContainText("upn100 3m x4");
     });
   });
 
