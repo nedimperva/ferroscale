@@ -1373,7 +1373,8 @@
       "everything": "Sve, po danima →",
       "backToLines": "← Vaše linije",
       "whenYesterday": "jučer",
-      "timesUsed": "×{count}"
+      "timesUsed": "×{count}",
+      "nothingToday": "Danas još ništa nije upisano — pritisnite + na gotovoj liniji."
     }
   },
   "contact": {

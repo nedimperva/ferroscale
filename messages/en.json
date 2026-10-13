@@ -1373,7 +1373,8 @@
       "everything": "Everything, by day →",
       "backToLines": "← Your lines",
       "whenYesterday": "yesterday",
-      "timesUsed": "×{count}"
+      "timesUsed": "×{count}",
+      "nothingToday": "Nothing logged today — press + on a finished line."
     }
   },
   "contact": {

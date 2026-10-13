@@ -15,6 +15,7 @@ import { CommandGlyph } from "../command-glyph";
 import { familyForInput, formatWeightPriceSubtitle } from "../command-copy";
 import { EmptyState } from "../empty-state";
 import { YourLines } from "../your-lines";
+import { SessionToday } from "../session-today";
 import { SheetShell } from "./sheet-shell";
 import { PartsView } from "../parts/parts-view";
 import { ProjectList } from "../projects/project-list";
@@ -67,6 +68,10 @@ interface CommandLibrarySheetProps {
   onLoadQuery: (query: string) => void;
   onRemoveTapeEntry: (query: string) => void;
   onClearHistory: () => void;
+  /** Clears today's lines only. */
+  onClearSession: () => void;
+  /** Turns today's lines into a project. */
+  onSaveSessionAsProject: () => void;
   /** Open on a named tab (the `>` palette navigates here); null picks one. */
   initialTab?: LibraryTab | null;
 }
@@ -112,6 +117,8 @@ export function CommandLibraryWorkspace({
   onLoadQuery,
   onRemoveTapeEntry,
   onClearHistory,
+  onClearSession,
+  onSaveSessionAsProject,
   initialTab,
 }: CommandLibraryWorkspaceProps) {
   const t = useTranslations("command");
@@ -171,6 +178,16 @@ export function CommandLibraryWorkspace({
       </div>
 
       {tab === "session" && (
+        <>
+        <SessionToday
+          today={sessionToday}
+          settings={settings}
+          mode={mode}
+          onLoad={onLoadQuery}
+          onRemove={onRemoveTapeEntry}
+          onClear={onClearSession}
+          onSaveAsProject={onSaveSessionAsProject}
+        />
         <YourLines
           items={history}
           times={historyTimes}
@@ -181,6 +198,7 @@ export function CommandLibraryWorkspace({
           onRemove={onRemoveTapeEntry}
           onClear={onClearHistory}
         />
+        </>
       )}
       {tab === "saved" && (
         <PartsView

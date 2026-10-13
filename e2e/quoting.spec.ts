@@ -320,6 +320,41 @@ test.describe("Session", () => {
     });
   });
 
+  test.describe("on the phone", () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("today's session reads like the tape, and Clear empties only today", async ({ page }) => {
+      await page.addInitScript(() => {
+        localStorage.setItem(
+          "ferroscale-quick-history",
+          JSON.stringify(["hea120 6m x2", "upn100 3m x4"]),
+        );
+        localStorage.setItem(
+          "ferroscale-quick-history-times-v1",
+          JSON.stringify({
+            "hea120 6m x2": Date.now(),
+            "upn100 3m x4": Date.now() - 10 * 24 * 60 * 60 * 1000,
+          }),
+        );
+      });
+      await page.goto("/en");
+      await page.waitForFunction(() =>
+        document.documentElement.classList.contains("app-ready"),
+      );
+      await page.getByRole("button", { name: "Open the session tape" }).click();
+      const today = page.getByRole("region", { name: "Today" });
+      // The profile, its length × pieces and the weight, apart — as on the desk.
+      await expect(today).toContainText("HEA 120");
+      await expect(today).toContainText("6 m × 2");
+      await expect(today).toContainText("238.7 kg");
+      await expect(today).not.toContainText("UPN");
+
+      await today.getByRole("button", { name: "CLEAR", exact: true }).click();
+      await expect(today).toContainText("Nothing logged today");
+      await expect(page.getByRole("region", { name: "Recent" })).toContainText("upn100 3m x4");
+    });
+  });
+
   test("a line that finishes the one just logged replaces it", async ({ page }) => {
     await page.goto("/en");
     await typeQuery(page, "hea120 6m ");

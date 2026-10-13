@@ -1837,6 +1837,8 @@ export function CommandShell() {
               }}
               onRemoveTapeEntry={removeHistoryEntry}
               onClearHistory={clearHistory}
+              onClearSession={clearSession}
+              onSaveSessionAsProject={saveSessionAsProject}
               onLoadInput={loadInput}
               {...savedHandlers}
               onRemoveCompare={removeCompareItem}
