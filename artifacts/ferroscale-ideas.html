@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FerroScale — Product Ideas &amp; Improvements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --background:#f4f3f0; --screen:#f4f0e7; --surface:#fbfaf8; --surface-raised:#fbfaf8;
+    --surface-inset:#eceae4; --surface-emphasis:#f7e9e2; --surface-inverted:#191817;
+    --foreground:#191817; --foreground-secondary:#57544e; --muted:#6f6b64; --muted-faint:#726d66;
+    --border:#cec9c0; --border-strong:#8b8781; --border-faint:#e3e0d9;
+    --overlay:rgba(25,24,23,.32);
+    --accent:#c4471a; --accent-contrast:#fbfaf8; --accent-hover:#8a3110; --accent-surface:#f7e9e2;
+    --accent-border:#e0b7a3; --accent-text:#a4380f;
+    --green-surface:#eaeee4; --green-text:#3d5730; --green-border:#c8d4ba;
+    --amber-surface:#f5eeda; --amber-text:#77571a; --amber-border:#ddcda1;
+    --red-surface:#f6e6e4; --red-text:#8f2420; --red-border:#e0bcb7;
+    --action:#191817; --action-contrast:#f4f3f0;
+    --font-sans:var(--font-archivo); --font-mono:var(--font-ibm-plex-mono); --font-serif:var(--font-newsreader);
+    --radius:0;
+    --measure:1180px;
+  }
+  html[data-theme="dark"]{
+    --background:#171614; --screen:#161109; --surface:#1e1d1a; --surface-raised:#1e1d1a;
+    --surface-inset:#272521; --surface-emphasis:#2e1c13; --surface-inverted:#f4f3f0;
+    --foreground:#f0eee9; --foreground-secondary:#b9b4aa; --muted:#979188; --muted-faint:#958f85;
+    --border:#38352f; --border-strong:#565049; --border-faint:#2a2823;
+    --overlay:rgba(0,0,0,.6);
+    --accent:#e0703f; --accent-contrast:#171614; --accent-hover:#f0916a; --accent-surface:#2e1c13;
+    --accent-border:#5d3620; --accent-text:#ef8d5a;
+    --green-surface:#1d241a; --green-text:#a8c294; --green-border:#3a462f;
+    --amber-surface:#2a2416; --amber-text:#d3b071; --amber-border:#4d4227;
+    --red-surface:#2c1a18; --red-text:#e0938c; --red-border:#54302c;
+    --action:#f0eee9; --action-contrast:#171614;
+  }
+  *{box-sizing:border-box;border-radius:var(--radius)}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--background);color:var(--foreground);
+    font-family:var(--font-sans),ui-sans-serif,system-ui,sans-serif;
+    font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  .mono{font-family:var(--font-mono),ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+  .serif{font-family:var(--font-serif),Newsreader,Georgia,serif}
+  .wrap{max-width:var(--measure);margin:0 auto;padding:0 28px}
+
+  /* ---------- Masthead ---------- */
+  header.masthead{border-bottom:1px solid var(--border);background:var(--screen)}
+  .masthead .wrap{padding-top:54px;padding-bottom:34px}
+  .eyebrow{font-family:var(--font-mono),monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--font-serif),serif;font-weight:400;font-size:clamp(34px,5.2vw,58px);line-height:1.04;letter-spacing:-.02em;margin:14px 0 0;max-width:19ch}
+  .standfirst{font-family:var(--font-serif),serif;font-size:clamp(17px,2vw,21px);line-height:1.5;color:var(--foreground-secondary);max-width:60ch;margin:20px 0 0}
+  .meta-row{display:flex;flex-wrap:wrap;gap:0 26px;margin-top:30px;border-top:1px solid var(--border);padding-top:14px;font-family:var(--font-mono),monospace;font-size:11.5px;color:var(--muted)}
+  .meta-row b{font-weight:500;color:var(--foreground)}
+  .theme-toggle{position:absolute;top:22px;right:28px;background:var(--surface);border:1px solid var(--border);color:var(--foreground);
+    font-family:var(--font-mono),monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:7px 12px;cursor:pointer}
+  .theme-toggle:hover{border-color:var(--border-strong)}
+  header.masthead{position:relative}
+
+  /* ---------- Nav ---------- */
+  nav.jump{border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:20}
+  nav.jump .wrap{display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+  nav.jump .wrap::-webkit-scrollbar{display:none}
+  nav.jump a{padding:11px 14px;font-family:var(--font-mono),monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--muted);text-decoration:none;white-space:nowrap;border-right:1px solid var(--border-faint)}
+  nav.jump a:hover{color:var(--accent);background:var(--accent-surface)}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{position:sticky;top:37px;z-index:19;background:var(--background);border-bottom:1px solid var(--border)}
+  .toolbar .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-top:12px;padding-bottom:12px}
+  .search{flex:1 1 260px;min-width:200px;display:flex;align-items:center;border:1px solid var(--border-strong);background:var(--surface)}
+  .search input{flex:1;border:0;background:transparent;padding:9px 12px;font-family:var(--font-mono),monospace;font-size:13px;color:var(--foreground);outline:none}
+  .search .hint{font-family:var(--font-mono),monospace;font-size:11px;color:var(--muted);padding-right:10px}
+  .filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);font-family:var(--font-mono),monospace;
+    font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;padding:7px 9px;cursor:pointer;white-space:nowrap}
+  .chip:hover{border-color:var(--border-strong);color:var(--foreground)}
+  .chip[aria-pressed="true"]{background:var(--action);color:var(--action-contrast);border-color:var(--action)}
+  .chip[data-tone="accent"][aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-contrast)}
+  select{font-family:var(--font-mono),monospace;font-size:11px;letter-spacing:.05em;padding:7px 8px;border:1px solid var(--border);
+    background:var(--surface);color:var(--foreground);text-transform:uppercase}
+  .viewtoggle{display:flex}
+
+  /* ---------- Sections ---------- */
+  main{padding-bottom:100px}
+  section.area{padding-top:46px;scroll-margin-top:96px}
+  .area-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--foreground);padding-bottom:10px;margin-bottom:6px}
+  .area-head h2{font-family:var(--font-serif),serif;font-weight:400;font-size:26px;letter-spacing:-.01em;margin:0}
+  .area-head .num{font-family:var(--font-mono),monospace;font-size:11px;color:var(--muted)}
+  .area-note{font-family:var(--font-serif),serif;font-size:15.5px;color:var(--foreground-secondary);max-width:78ch;margin:12px 0 22px}
+
+  /* ---------- Cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:0;border-left:1px solid var(--border-faint)}
+  .card{border-right:1px solid var(--border-faint);border-bottom:1px solid var(--border-faint);padding:18px 20px 20px;background:transparent}
+  .card:hover{background:var(--surface)}
+  .card-top{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .card .id{font-family:var(--font-mono),monospace;font-size:11px;color:var(--accent);min-width:26px}
+  .card h3{font-family:var(--font-serif),serif;font-weight:400;font-size:19px;line-height:1.25;margin:0;letter-spacing:-.005em}
+  .what{font-size:13.5px;color:var(--foreground-secondary);margin:8px 0 10px}
+  .why{border-left:2px solid var(--accent-border);padding-left:12px;font-size:13.5px;line-height:1.55}
+  .why b{font-family:var(--font-mono),monospace;font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-text);font-weight:500}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .tag{font-family:var(--font-mono),monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:3px 6px;border:1px solid var(--border);color:var(--muted)}
+  .tag.e-S{border-color:var(--green-border);background:var(--green-surface);color:var(--green-text)}
+  .tag.e-M{border-color:var(--amber-border);background:var(--amber-surface);color:var(--amber-text)}
+  .tag.e-L{border-color:var(--red-border);background:var(--red-surface);color:var(--red-text)}
+  .tag.st{border-color:var(--accent-border);background:var(--accent-surface);color:var(--accent-text)}
+  .lands{font-family:var(--font-mono),monospace;font-size:10.5px;color:var(--muted-faint);margin-top:9px;word-break:break-word}
+  .lands::before{content:"lands in ";color:var(--border-strong)}
+  code.mono{font-family:var(--font-mono),monospace;font-size:.88em;background:var(--surface-inset);border:1px solid var(--border-faint);padding:0 3px;white-space:nowrap}
+  .why code, .what code{font-size:.85em}
+
+  /* ---------- Table view ---------- */
+  .tablewrap{border:1px solid var(--border);overflow-x:auto;margin-top:8px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border-faint);vertical-align:top}
+  th{font-family:var(--font-mono),monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;background:var(--surface-inset);position:sticky;top:0}
+  td.id{font-family:var(--font-mono),monospace;color:var(--accent);white-space:nowrap}
+  td.t{font-family:var(--font-serif),serif;font-size:15px}
+  td.why-cell{color:var(--foreground-secondary);max-width:52ch}
+  tbody tr:hover{background:var(--surface)}
+  .hidden{display:none !important}
+
+  /* ---------- Bets ---------- */
+  .bet{border:1px solid var(--border);background:var(--surface);padding:0;margin-bottom:18px}
+  .bet-hd{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;padding:16px 20px;border-bottom:1px solid var(--border-faint);background:var(--surface-inset)}
+  .bet-hd h3{font-family:var(--font-serif),serif;font-weight:400;font-size:22px;margin:0}
+  .bet-body{padding:18px 20px;display:grid;grid-template-columns:150px 1fr;gap:16px 28px;align-items:start}
+  .bet-body dt{font-family:var(--font-mono),monospace;font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0;padding-top:2px}
+  .bet-body dd{margin:0;font-size:13.5px;line-height:1.55;color:var(--foreground-secondary)}
+  .bet-body dd strong{color:var(--foreground);font-weight:500}
+  .bet-body dd + dt{border-top:1px solid var(--border-faint);padding-top:16px;margin-top:2px}
+  @media (max-width:720px){.bet-body{grid-template-columns:1fr;gap:8px}.bet-body dd + dt{padding-top:12px}}
+
+  /* ---------- Anti ---------- */
+  .anti{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0;border-left:1px solid var(--border-faint)}
+  .anti .card{border-right:1px solid var(--border-faint);border-bottom:1px solid var(--border-faint)}
+  .anti .card h3{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--border-strong)}
+  .anti .card .why{border-left-color:var(--border-strong)}
+
+  /* ---------- Scorer + waves ---------- */
+  .scorer{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;border:1px solid var(--border);margin:6px 0 0}
+  .scorer > div{padding:16px 18px;border-right:1px solid var(--border-faint)}
+  .scorer h4{font-family:var(--font-mono),monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:500}
+  .scorer p{margin:0;font-size:13.5px;color:var(--foreground-secondary)}
+  .wave{border:1px solid var(--border);margin-bottom:14px;background:var(--surface)}
+  .wave h4{margin:0;padding:12px 18px;background:var(--action);color:var(--action-contrast);font-family:var(--font-mono),monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:500}
+  .wave .wbody{padding:14px 18px}
+  .wave ul{margin:0;padding-left:18px}
+  .wave li{margin:4px 0;font-size:13.5px;color:var(--foreground-secondary)}
+  .wave li b{color:var(--foreground);font-weight:500;font-family:var(--font-mono),monospace;font-size:11.5px}
+
+  /* ---------- Footer ---------- */
+  footer{border-top:1px solid var(--border);padding:30px 0 60px;color:var(--muted);font-size:13px}
+  footer .mono{font-size:11px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--font-mono),monospace;font-size:10.5px;color:var(--muted);margin-top:16px}
+  .legend span::before{content:"■ ";color:var(--accent)}
+  .legend span.g::before{color:var(--green-text)}
+  .legend span.a::before{color:var(--amber-text)}
+  .legend span.r::before{color:var(--red-text)}
+  .count{font-family:var(--font-mono),monospace;font-size:11px;color:var(--muted)}
+  @media print{
+    nav.jump,.toolbar,.theme-toggle{display:none}
+    body{background:#fff}
+    .card:hover{background:none}
+    section.area{page-break-inside:auto}
+    .card{page-break-inside:avoid}
+  }
+  @media (max-width:640px){
+    .wrap{padding:0 18px}
+    .cards{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <button class="theme-toggle" id="themeToggle" type="button">dark</button>
+  <div class="wrap">
+    <div class="eyebrow">FerroScale · Product catalog · v3.37.0</div>
+    <h1>A hundred ways to make the bar faster, the numbers more trusted, and the shop more profitable.</h1>
+    <p class="standfirst">Every idea below is written against the app as it stands today: a command-bar estimator for EU metal profiles with projects, customers, a Drive sync, and a benchmark suite that holds the engine to published EN catalogue masses. Each one carries a <em>why</em> — the reason it matters, the user it is for, and the thing it would break. Nothing here is committed work; it is a menu to choose from.</p>
+    <div class="meta-row">
+      <span>written <b>21 Oct 2026</b></span>
+      <span>against <b>v3.37.0</b></span>
+      <span>dataset <b>2026.09.5</b></span>
+      <span>ideas <b id="ideaTotal">—</b></span>
+      <span>bets <b>6</b></span>
+      <span>anti-ideas <b>7</b></span>
+    </div>
+  </div>
+</header>
+
+<nav class="jump" aria-label="Sections">
+  <div class="wrap" id="jumpNav"></div>
+</nav>
+
+<div class="toolbar">
+  <div class="wrap">
+    <label class="search">
+      <input id="q" type="search" placeholder="search ideas, e.g. pdf, kerf, csv, rebar, vat" aria-label="Search ideas" />
+      <span class="hint">/</span>
+    </label>
+    <div class="filters" id="effortFilters">
+      <button class="chip" data-effort="S" aria-pressed="false">effort S</button>
+      <button class="chip" data-effort="M" aria-pressed="false">effort M</button>
+      <button class="chip" data-effort="L" aria-pressed="false">effort L</button>
+    </div>
+    <div class="filters" id="statusFilters">
+      <button class="chip" data-tone="accent" data-status="new" aria-pressed="false">new</button>
+      <button class="chip" data-tone="accent" data-status="shipped" aria-pressed="false">extends shipped</button>
+    </div>
+    <select id="sort" aria-label="Sort">
+      <option value="impact">sort: impact</option>
+      <option value="effort">sort: effort</option>
+      <option value="area">sort: area</option>
+      <option value="id">sort: number</option>
+    </select>
+    <div class="viewtoggle">
+      <button class="chip" data-view="cards" aria-pressed="true">cards</button>
+      <button class="chip" data-view="table" aria-pressed="false">table</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+
+    <section class="area" id="how-to-read">
+      <div class="area-head"><h2>How to read this</h2><span class="num">00</span></div>
+      <p class="area-note">Three numbers decide everything: effort, impact, and what it is worth if it goes wrong. Impact is judged against one question — <em>does this make the app more trusted, faster, or more valuable to a working metal shop?</em> — because those three are the only currencies a shop cares about. A feature that is technically elegant and answers none of them is marked low impact, however good the code would be.</p>
+      <div class="scorer">
+        <div>
+          <h4>Effort</h4>
+          <p><span class="tag e-S">S</span> hours · <span class="tag e-M">M</span> days · <span class="tag e-L">L</span> a week or more, including tests, e2e, and the changelog entry that AGENTS.md requires for every user-visible change.</p>
+        </div>
+        <div>
+          <h4>Impact</h4>
+          <p>5 = the app is a different product afterwards. 3 = a real shop would notice and use it. 1 = tidy, and honestly optional. Impact assumes the feature is built <em>well</em>; a half-built 5 is a 2.</p>
+        </div>
+        <div>
+          <h4>Status</h4>
+          <p><span class="tag st">extends shipped</span> means the foundation already exists and the idea is the next step on it — usually worth less effort than the tag suggests, because the hard part was the earlier release.</p>
+        </div>
+        <div>
+          <h4>Lands in</h4>
+          <p>The file a developer would open first. It is there so the list is not wishful thinking — every idea names a real home in the codebase, and the ones that need a new file say so.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div id="areas"></div>
+
+  <div class="wrap">
+    <section class="area" id="bets">
+      <div class="area-head"><h2>Big bets</h2><span class="num">—</span></div>
+      <p class="area-note">The list above is a hundred incremental moves inside the current product. These six are different bets: each one changes what the app <em>is</em>, and each one is written with what it costs and where it breaks. A bet is worth doing only if the "why" survives the answer to "and what stops being true if we do this?"</p>
+
+      <div class="bet">
+        <div class="bet-hd"><h3>FerroScale Quote</h3><span class="tag e-L">L</span><span class="tag">value: document</span></div>
+        <dl class="bet-body">
+          <dt>The bet</dt>
+          <dd>The calculator becomes a <strong>quoting product</strong>: every project ends in a real document — branded PDF, line items, terms, margin, validity — that goes to a customer and comes back signed. The command bar stays, but it becomes the <em>input</em> to a document rather than the product itself.</dd>
+          <dt>Why now</dt>
+          <dd>Every feature already shipped (projects, BOM, margins, paint coats, labour hours, procurement, printable quote) points at the same missing object: <strong>there is no quote</strong>. The value of the app today stops at a number; the value a shop wants is a price a customer accepts. The groundwork — BOM, margin, customer records, price book — is already built and idle without this.</dd>
+          <dt>First step</dt>
+          <dd>A real PDF route for one project: company header from Settings, line items from the BOM, VAT and margin, terms, and a QR back to the live calculation. Client-side print stylesheet first (zero deps, works offline), library only if the output demands it.</dd>
+          <dt>What it breaks</dt>
+          <dd>Print layout becomes a permanent surface that needs its own e2e coverage, and "no account, no tracking" starts to strain once a customer's name and price live on a link. Decide early whether a quote link is a public URL with the customer's data in it.</dd>
+        </dl>
+      </div>
+
+      <div class="bet">
+        <div class="bet-hd"><h3>FerroScale Shop</h3><span class="tag e-L">L</span><span class="tag">value: money saved</span></div>
+        <dl class="bet-body">
+          <dt>The bet</dt>
+          <dd>Extend the product from <strong>estimating what a job needs</strong> to <strong>knowing what the shop already owns</strong>: a stock and offcut register, with remnant lengths recorded at every cut, and the optimiser and the estimator both reading it. Buying steel is often the largest single line on a job.</dd>
+          <dt>Why now</dt>
+          <dd>The 1D bar optimiser already exists and already answers "how many 6 m bars do I need" — but it assumes the shop buys everything new. A shop with 2.4 m of HEA 120 in the rack is either free material or scrap. Nothing in the app models inventory, so the optimiser quietly recommends buying steel the shop already owns.</dd>
+          <dt>First step</dt>
+          <dd>An offcut ledger: after a project, every cut becomes a remnant (profile, length, location). The optimiser then subtracts remnants from the buy list and reports "1 bar needed, 2 remnants cover it". Small, contained, and immediately money.</dd>
+          <dt>What it breaks</dt>
+          <dd>Inventory is state that goes stale and must be maintained by hand — the opposite of the app's current promise that you never maintain anything. Every design decision has to survive "will a shop keep this up to date?"</dd>
+        </dl>
+      </div>
+
+      <div class="bet">
+        <div class="bet-hd"><h3>FerroScale Field</h3><span class="tag e-L">L</span><span class="tag">value: capture</span></div>
+        <dl class="bet-body">
+          <dt>The bet</dt>
+          <dd>A <strong>capture-only mode</strong> for the person on site: measure, photograph, type a rough note, and queue it offline. It syncs later into the estimator's line, where the arithmetic and the standards live.</dd>
+          <dt>Why now</dt>
+          <dd>The estimator and the measurer are different people in most shops — one with a laptop and a price book, one with a tape measure and a phone. Today the second person has to call the first, who then types it in. The PWA is already installable and offline-capable; the missing piece is a mode that captures without calculating.</dd>
+          <dt>First step</dt>
+          <dd>A capture queue in the existing local storage: each entry is a free-text line plus optional photo and location, stored with a timestamp, presented as "3 measurements waiting" on the estimator's desk.</dd>
+          <dt>What it breaks</dt>
+          <dd>Photos mean blob storage in the sync layer, which was explicitly rejected in 3.19.0 because base64 blobs ride on every Drive push. Queueing text-only measurements is the version that survives that decision.</dd>
+        </dl>
+      </div>
+
+      <div class="bet">
+        <div class="bet-hd"><h3>FerroScale Public Data</h3><span class="tag e-M">M</span><span class="tag">value: reach</span></div>
+        <dl class="bet-body">
+          <dt>The bet</dt>
+          <dd>Publish the <strong>dataset and the engine as a public product</strong>: metal-core on npm, a documented JSON/CSV API over the size tables, and server-rendered pages per size that work without JavaScript. The calculator stays free; the data becomes the asset.</dd>
+          <dt>Why now</dt>
+          <dd>AGENTS.md already insists metal-core stay UI-free and i18n-free <em>so other surfaces can reuse it</em> — this bet is that promise taken literally. A competitor's engineers can build on the same catalogue, the shop's SEO is solved by the same tables, and the app's authority comes from being the source rather than a consumer of it.</dd>
+          <dt>First step</dt>
+          <dd>One size page done properly: dimensions, kg/m, section properties with their source citations, and a form that calculates server-side. One page, done to the standard of a reference document, is a better test than a hundred thin ones.</dd>
+          <dt>What it breaks</dt>
+          <dd>Public data means public error reports. The 3.26.0 release — five wrong channel areas and a tautological benchmark — is exactly the kind of story that must never happen on a public surface. The coverage test has to be mandatory for publication, not optional.</dd>
+        </dl>
+      </div>
+
+      <div class="bet">
+        <div class="bet-hd"><h3>FerroScale White Label</h3><span class="tag e-L">L</span><span class="tag">value: revenue</span></div>
+        <dl class="bet-body">
+          <dt>The bet</dt>
+          <dd>Let a <strong>steel merchant or fabricator embed a branded calculator</strong> on their own site — their colours, their price list, their contact details — with the same engine underneath. The app becomes infrastructure.</dd>
+          <dt>Why now</dt>
+          <dd>Every merchant's site already has a quote form that emails a human. A merchant who embeds a calculator with their own stock prices converts better and stops fielding "how much is 12 m of HEA 140" emails — which is a lead, sold at a 0% margin, to a competitor's price list.</dd>
+          <dt>First step</dt>
+          <dd>An iframe-able mini bar with a `?q=`-style API and a per-tenant price list, plus a link back. The share-link and price-book work already exists; this is mostly packaging and a tenant key.</dd>
+          <dt>What it breaks</dt>
+          <dd>"No account, no tracking" is a real promise to the current user. Tenants, branding and rate limits all imply a server, a key, and someone who owns the uptime. This is the bet most likely to be wrong about the audience.</dd>
+        </dl>
+      </div>
+
+      <div class="bet">
+        <div class="bet-hd"><h3>FerroScale Advisor</h3><span class="tag e-L">L</span><span class="tag">value: reach</span></div>
+        <dl class="bet-body">
+          <dt>The bet</dt>
+          <dd>An <strong>advisor layer over the local catalogue</strong>: you describe the job in a sentence, it proposes a spec and a price, and every number it states is computed locally by the same engine you already trust. The model never computes — it only translates intent into a query the parser understands.</dd>
+          <dt>Why now</dt>
+          <dd>The grammar is strong but the *entry point* is still specialist. `hea120 6m x2 s235` requires knowing that HEA is the right family, that a beam is 6 m, and that S235 is the default. A sentence in the shop's own vocabulary ("six metre 120 beams, two of them, mild steel") should be enough — and the command bar is already the natural place to type it.</dd>
+          <dt>First step</dt>
+          <dd>Not the model. First, the vocabulary layer: local shop names for profiles, synonyms per locale, and a dialect of the query language — then measure how often people still fail to type a valid query. If the offline grammar closes 90% of the gap, the model earns its place only for the rest.</dd>
+          <dt>What it breaks</dt>
+          <dd>Trust. An LLM in the bar that produces a confident, plausible and wrong answer is the single worst thing this product could do — the whole thesis is that the number is traceable. The translation must always be shown as a confirmable query, never applied silently, and the offline path must be complete.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="area" id="not-worth">
+      <div class="area-head"><h2>Not worth doing</h2><span class="num">—</span></div>
+      <p class="area-note">A list of ideas that get proposed, that sound ambitious, and that would cost more than they return. Written down so they stop being re-proposed — the value of a roadmap is as much in what it refuses as in what it plans.</p>
+      <div class="anti" id="antiList"></div>
+    </section>
+
+    <section class="area" id="waves">
+      <div class="area-head"><h2>Suggested waves</h2><span class="num">—</span></div>
+      <p class="area-note">Not a schedule — an order. The waves below are arranged so that each one makes the next one cheaper: foundations before features, trust before reach, the bar before the documents it fills in.</p>
+
+      <div class="wave">
+        <h4>Wave 1 · Foundations — make the next wave safe</h4>
+        <div class="wbody"><ul>
+          <li><b>84</b> Shell decomposition — the shell and desktop command components are 1.3–2.3k lines; every idea in the bar section is safer once the query state, keyboard handling and toast state are hooks.</li>
+          <li><b>85</b> Component tests for command interactions — chip editing, keyboard routing, ghost accept, history arrows. The precondition for touching the bar without fear.</li>
+          <li><b>1</b> Per-line note token — the smallest grammar extension, and the one that unlocks the most downstream work.</li>
+          <li><b>60</b> Automatic local backup snapshots — the cheapest insurance in the catalogue, and the only one that protects against silent data loss.</li>
+        </ul></div>
+      </div>
+
+      <div class="wave">
+        <h4>Wave 2 · The bar learns</h4>
+        <div class="wbody"><ul>
+          <li><b>15</b> Shop profile defaults · <b>17</b> Learning from corrections · <b>16</b> Cross-device habits · <b>20</b> Repeat-with-one-change · <b>11</b> Query diff</li>
+          <li>The theme: the bar stops asking questions it already knows the answer to. Every item here removes keystrokes from a query the shop types twenty times a week.</li>
+        </ul></div>
+      </div>
+
+      <div class="wave">
+        <h4>Wave 3 · The answer earns its trust</h4>
+        <div class="wbody"><ul>
+          <li><b>70</b> Clickable citations · <b>71</b> Explicit certainty · <b>24</b> Real EN tolerance classes · <b>23</b> Standard-length snapping</li>
+          <li>The theme: the app's differentiator against every other calculator is traceable numbers. These make that visible instead of merely true.</li>
+        </ul></div>
+      </div>
+
+      <div class="wave">
+        <h4>Wave 4 · Fabricator's tool</h4>
+        <div class="wbody"><ul>
+          <li><b>21</b> Cut-length pricing · <b>22</b> Cost breakdown waterfall · <b>25</b> Coating weight · <b>27</b> Rebar &amp; threaded rod · <b>30</b> Supplier surcharge rules · <b>106</b> Offcut ledger</li>
+          <li>The theme: the app stops being a calculator and starts pricing the work around the steel.</li>
+        </ul></div>
+      </div>
+
+      <div class="wave">
+        <h4>Wave 5 · The document</h4>
+        <div class="wbody"><ul>
+          <li><b>33</b> PDF quote · <b>34</b> Quote version history · <b>35</b> Price snapshot per quote · <b>39</b> Change orders · <b>48</b> Customer self-service estimates</li>
+          <li>The theme: value moves from the number to the artefact the customer receives.</li>
+        </ul></div>
+      </div>
+
+      <div class="wave">
+        <h4>Wave 6 · Reach</h4>
+        <div class="wbody"><ul>
+          <li><b>91</b> SEO size pages · <b>93</b> Embeddable widget · <b>94</b> WhatsApp-native share · <b>87</b> metal-core on npm · <b>96</b> Locale expansion</li>
+          <li>The theme: the dataset and the engine stop being private implementation and become the distribution channel.</li>
+        </ul></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><span class="mono">FerroScale — Product Ideas &amp; Improvements · written 21 Oct 2026 against v3.37.0 · dataset 2026.09.5</span></p>
+    <p>Every entry names the file it would touch. Nothing here is committed work, and nothing here has been promised to anyone. Where an idea repeats the older <span class="mono">docs/IMPROVEMENT_IDEAS.md</span> catalog (written against v3.6.2), it is because that catalog is still partly unbuilt — the older items are marked as extending shipped work rather than repeated verbatim.</p>
+    <div class="legend">
+      <span class="g">effort S — hours</span>
+      <span class="a">effort M — days</span>
+      <span class="r">effort L — a week or more</span>
+      <span>impact 1–5</span>
+      <span>status: new / extends shipped</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ------------------------------------------------------------------ *
+ *  Data
+ * ------------------------------------------------------------------ */
+const AREAS = [
+  {k:"bar",      n:"01", t:"The bar",              note:"The command bar is the product. Everything in the list below is about making a query shorter, a mistake cheaper, or an intent expressible that currently is not."},
+  {k:"suggest",  n:"02", t:"Suggestions & learning",note:"The chip bar already ranks by frequency and recency. These are the moves that turn a static suggestion list into something that knows the shop."},
+  {k:"calc",     n:"03", t:"The answer",           note:"The engine is the asset. These ideas add the domain knowledge a fabricator assumes but the calculator does not yet model — cost of cutting, coatings, tolerances, stock lengths."},
+  {k:"projects", n:"04", t:"Projects & quotes",    note:"Projects, the bill of material and the printable quote are the most developed surface after the bar. The gap is the document."},
+  {k:"customers",n:"05", t:"Customers & shop",     note:"Customers became records in 3.37.0. The next step is the commerce around a customer: their prices, their terms, their repeat orders."},
+  {k:"library",  n:"06", t:"Library & parts",      note:"Parts and assemblies, with no shipped content. The library is the shop's memory; these ideas make it memory that can be re-priced and re-used."},
+  {k:"sync",     n:"07", t:"Sync & data safety",   note:"Encrypted Drive sync and a JSON backup file already exist. These are the trust and recovery work that makes a sync feature usable in a real shop with real money in it."},
+  {k:"offline",  n:"08", t:"Offline & field",      note:"The app claims to work offline and mostly delivers. These are the places where the claim gets tested by a real shop floor."},
+  {k:"trust",    n:"09", t:"Trust & provenance",   note:"Traceability is the stated differentiator and it is currently mostly hidden. These ideas surface it — the cheapest differentiator available."},
+  {k:"design",   n:"10", t:"Design & accessibility",note:"Direction 1a — a precision instrument, not a dashboard. These ideas respect that language while making the tool work harder for more people."},
+  {k:"perf",     n:"11", t:"Performance & architecture",note:"Structural work that does not show up in a screenshot. Unglamorous, and it decides whether the ideas above are cheap or expensive."},
+  {k:"reach",    n:"12", t:"Reach & distribution", note:"The app is a client-rendered SPA with no account system. These ideas put the dataset and the calculator in front of people who are not yet users."},
+  {k:"collab",   n:"13", t:"Collaboration & integrations",note:"A shop is not one person. These ideas connect FerroScale to the other tools a shop already runs, without turning it into an ERP."},
+];
+
+const IDEAS = [
+/* ---- 01 The bar ---- */
+{id:1,a:"bar",t:"Per-line note token",w:"Let a line carry a note: `hea120 6m x2 #column-beam` or `… \"leave 50mm\"`. The note travels with the line into the BOM and onto the quote.",
+ y:"Notes exist today only on projects and library entries — but a fabricator annotates the <em>line</em>: which member is this, where it goes, what to leave off. Today that context is retyped into the project by hand after the fact, and it is the most common reason a quote comes back wrong. The grammar already supports `+` separated items and per-item grades and prices; a trailing note token is the same machinery with a string instead of a number.",
+ e:"M",i:3,s:"new",f:"packages/metal-core/src/command/parser.ts, command/line.ts"},
+{id:2,a:"bar",t:"Per-line waste and margin override",w:"`hea120 6m x2 w12%` overrides the global waste allowance for one line; `… m20` overrides margin.",
+ y:"Waste and margin are global settings today, so one galvanised item with 15% coating allowance drags every other line's waste with it, and a job negotiated at 22% margin has to be repriced globally to quote it. Shops run a small number of one-off rates per job, and the inline `@` price already establishes the pattern: the most specific rule wins.",
+ e:"S",i:4,s:"new",f:"packages/metal-core/src/calculator/types.ts, command/parser.ts"},
+{id:3,a:"bar",t:"Currency inside the price token",w:"`@2.50 EUR/kg` sets the currency for that line as well as the rate; the result shows EUR while the shop default stays BAM.",
+ y:"A Balkan shop buys in EUR and sells in BAM, and a quote for a customer in Germany is in EUR. Right now currency is a single global setting, which means one of those three numbers is always wrong and the user has to switch the whole app mid-job. The price token already carries a unit (`@2.50/kg`); carrying a currency alongside it is the same amount of parser work and removes a category of silent mistake.",
+ e:"S",i:4,s:"new",f:"packages/metal-core/src/command/parser.ts (price token), calculator/types.ts"},
+{id:4,a:"bar",t:"Local names for profiles",w:"A per-shop dictionary: `main beam` → `hea120`, `rail` → `ipe200`. Users define them in Settings; the parser accepts them as aliases.",
+ y:"In a real shop nobody says \"HEA 120\" — they say \"the 120 beam\", \"the main beam\", \"the rail\". Every alias in the catalogue today is an industry term, so the first minute of every new estimator's day is spent learning the vocabulary rather than doing the job. A local alias dictionary is also the honest answer to localisation: the shop's words, not a translator's words.",
+ e:"M",i:5,s:"new",f:"packages/metal-core/src/command/aliases.ts (new local table), src/lib/settings-stores.ts"},
+{id:5,a:"bar",t:"Undo and redo in the bar",w:"Cmd/Ctrl+Z restores the previous query, on the phone too — the keypad cannot select text, so undo is the only escape hatch.",
+ y:"The phone keypad is the primary input for most users, and on a phone you cannot put the caret back and fix a typo mid-token. Today the only recovery is clearing the field and retyping. Undo is the cheapest possible fix and it works identically on both platforms because the query is a single string — the history is just a stack of strings.",
+ e:"M",i:4,s:"new",f:"src/components/command/command-shell.tsx (use-command-query hook)"},
+{id:6,a:"bar",t:"The bar answers plain arithmetic",w:"If the query has no profile in it and is a valid arithmetic expression, the bar answers the arithmetic instead of reporting an unknown token.",
+ y:"Estimators do arithmetic all day, and they do it here because the app is already open. Today `2*3.5` produces a parse issue that reads like an error message from a machine. Answering it costs one branch in the parser, and it is the cheapest possible demonstration that the bar is a calculator, not a form.",
+ e:"S",i:2,s:"new",f:"packages/metal-core/src/command/arith.ts"},
+{id:7,a:"bar",t:"Same profile, several lengths, in one line",w:"`hea120 6m x2 + 4m x3` currently produces two items. Group them by profile so the BOM shows one line with two lengths.",
+ y:"A job that uses the same section in two lengths is completely ordinary, and today it splits into two BOM lines that the shop then has to re-merge before cutting. The multi-item parser already keeps them distinct because per-item grades may differ; grouping is a presentation rule over the parsed items, not a parser change.",
+ e:"S",i:3,s:"shipped", f:"src/lib/projects/bill-of-material.ts"},
+{id:8,a:"bar",t:"Named groups inside a line",w:"`grp:handrail` labels a run of items so they appear together in the BOM and the quote.",
+ y:"Quotes are organised by assembly or by area — handrail, balustrade, gate — and the app has no way to express that. The BOM is currently a flat list of items with a category field inherited from library entries. Grouping labels are how a fabricator reads their own job, and they are how the cut list gets handed to the shop.",
+ e:"M",i:3,s:"new",f:"packages/metal-core/src/command/line.ts, src/lib/projects/bill-of-material.ts"},
+{id:9,a:"bar",t:"Percent-of-a-line adjustments",w:"`hea120 6m x2 +50%` scales a line, for the estimate that grew by half.",
+ y:"The most common change to a quote is not a different profile — it is \"actually make it half as much again\". Today that means retyping the quantity, and the arithmetic token support already in the parser (`x2+3`) extends naturally to a proportional change on an existing item.",
+ e:"S",i:2,s:"shipped", f:"packages/metal-core/src/command/arith.ts"},
+{id:10,a:"bar",t:"Explain a parse issue in place",w:"Each issue chip can be expanded into one sentence of plain language about what the bar expected and what it saw.",
+ y:"Parse issues are the app's most important teaching surface — they are where a user learns what the grammar accepts. Today they report a code that maps to a localized string, which tells the user they were wrong but not what the right form is. One extra line per issue (\"expected a length like 6m or 6000mm\") converts an error into a lesson, and it is the difference between a new user retrying and a new user giving up.",
+ e:"S",i:4,s:"shipped", f:"src/app/[locale] message keys, packages/metal-core/src/command/parser.ts (issue codes)"},
+{id:11,a:"bar",t:"Diff two queries in the bar",w:"Compare the current line with any recent line and see exactly what changed and what it did to the weight and the price.",
+ y:"The compare view already does this for saved entries — but the decision that matters happens <em>before</em> the entry is saved, when the estimator is choosing between hea120 and hea140. A diff in the bar turns five queries into two, and turns a gut feeling into a number: \"this change costs 74 kg and 190 €\". Everything the compare view does already exists; it just happens in the wrong place.",
+ e:"M",i:4,s:"shipped", f:"src/lib/command/compare.ts, src/components/command/desktop/desk-compare-view.tsx"},
+{id:12,a:"bar",t:"Pipe schedule aliases",w:"`dn50` resolves to the matching tube size (CHS 60.3), `dn100` to CHS 114.3, with the wall thickness shown.",
+ y:"Plumbers' and HVAC shops think in DN, and the EN tube tables are indexed by outside diameter. A fabricator who orders \"DN 50\" needs a 60.3 mm CHS and a mill certificate to match; the app currently requires the user to know that mapping themselves. It is a small alias table with a large practical payoff, and it is exactly the kind of thing that makes a tool credible to a trade.",
+ e:"S",i:3,s:"new", f:"packages/metal-core/src/command/aliases.ts, datasets/profiles"},
+{id:13,a:"bar",t:"Grade family tokens",w:"`steel`, `inox`, `alu` resolve to the shop's default grade within that family, and show which one was chosen.",
+ y:"Many queries genuinely do not care about the exact class — \"some stainless\" is a real sentence in a workshop — but the answer has to assume one, and the user should see which. The grade stage currently requires a specific code; a family token that resolves to the shop default, displayed as a ghost chip you can override with one keystroke, removes a step from a large fraction of queries.",
+ e:"S",i:3,s:"new", f:"packages/metal-core/src/command/aliases.ts (grades), src/lib/settings-stores.ts"},
+{id:14,a:"bar",t:"Total and per-item readback in the bar",w:"While typing a multi-item line, show the running total next to the cursor, so the sum is never a surprise.",
+ y:"The `+` multi-item line is powerful and slightly dangerous: four items parse fine and the total is wrong because item three was intended at a different grade. The app already computes the running total — it is simply shown only after the whole line settles. Moving it into the typing state turns the sum from a check-after-the-fact into a guide-while-you-type.",
+ e:"S",i:3,s:"shipped", f:"packages/metal-core/src/command/line.ts, src/components/command/command-shell.tsx"},
+
+/* ---- 02 Suggestions & learning ---- */
+{id:15,a:"suggest",t:"Shop profile defaults",w:"After enough use, the bar pre-fills the shop's usual length, grade, currency and quantity — and shows them as confirmed ghosts, not as silent assumptions.",
+ y:"Every shop has a house style: 6 m lengths, S235, EUR, painted, two per order. The bar currently asks for the same four things on every single query, forever. A shop profile is the obvious fix, but it has to be visible — a silent default is indistinguishable from a wrong default, and a silently wrong default produces a silently wrong quote.",
+ e:"M",i:5,s:"new", f:"src/lib/settings-stores.ts, packages/metal-core/src/command/suggest.ts"},
+{id:16,a:"suggest",t:"Cross-device learning",w:"The usage stats that rank your suggestions sync with the rest of your data, so the phone teaches the desk.",
+ y:"Typing habits are explicitly device-local today — a deliberate choice to keep the synced list a plain `string[]`. But the shop's most common query is usually typed on the phone at the yard and the desk at the office, and today each device re-learns it. Syncing the habits is a merge of counts and timestamps; the collection plumbing (`sync/keys.ts`, `collections.ts`, `records.ts`) already exists for six other collections.",
+ e:"M",i:3,s:"shipped", f:"src/lib/command/usage-stats.ts, src/lib/sync/keys.ts"},
+{id:17,a:"suggest",t:"Learn from corrections",w:"When you change a suggested size or grade, the bar remembers that for this profile family and stops suggesting it.",
+ y:"The suggestion engine ranks by frequency and recency, so a suggestion you always ignore keeps its high score — it is frequent in the only sense that matters to the algorithm. Explicit negative signal (\"not this one\") is the missing half of the model, and it is the cheapest possible learning: one stored id per profile family.",
+ e:"M",i:4,s:"new", f:"src/lib/command/usage-stats.ts, packages/metal-core/src/command/suggest.ts"},
+{id:18,a:"suggest",t:"Explain why a chip is suggested",w:"A chip can show its reason: \"used 14 times\", \"last used Tuesday\", \"your usual length\".",
+ y:"A learning system that cannot explain itself feels arbitrary, and arbitrary suggestions get dismissed rather than used. The data is already there — the counts, the timestamps, the family match. One line of sub-text converts the chip row from a shrug into a set of claims the user can check.",
+ e:"S",i:3,s:"new", f:"packages/metal-core/src/command/suggest.ts"},
+{id:19,a:"suggest",t:"Size chips show the resulting weight",w:"Every length chip carries the weight it would produce: `6m → 160.2 kg`, not just `6m`.",
+ y:"The size chips already show kg/m — the missing number is the one the user is actually shopping for. Showing the weight per length chip means the estimator can compare lengths by consequence rather than by dimension, and it is the same computation the suggestion engine already performs to validate candidates.",
+ e:"S",i:4,s:"shipped", f:"packages/metal-core/src/command/suggest.ts (candidate re-parse)"},
+{id:20,a:"suggest",t:"Repeat the last query with one thing changed",w:"The empty bar's first row is the last query, split into tappable segments; tapping `6m` reopens only the length choices.",
+ y:"Most queries are yesterday's query with one value changed. Re-typing the whole string to move a length from 6 m to 4 m is the single most repeated waste of time in the app. The history already stores the exact query string; segmenting it into per-token chips is a rendering job over data that exists.",
+ e:"M",i:4,s:"new", f:"src/lib/command/history.ts, src/components/command/command-shell.tsx"},
+
+/* ---- 03 The answer ---- */
+{id:21,a:"calc",t:"Price the cut, not just the metal",w:"Add a cut-length cost: `€0.35 per metre of cut`, applied to the perimeter of every cut in the project.",
+ y:"A laser or plasma operator is paid by the metre of cut, and a profile with a complex shape can cost more to cut than the steel is worth. The engine already computes surface area for paint; cut length is the same geometric step with a different consumer. This is the single most common line a fabricator's quote is missing, and its absence is why quotes from this app lose to quotes from the estimating software that has it.",
+ e:"M",i:5,s:"new", f:"packages/metal-core/src/calculator/engine.ts, src/lib/calculator/breakdown-rows.ts"},
+{id:22,a:"calc",t:"Cost breakdown waterfall",w:"The breakdown shows material, cutting, welding, coating, freight, overhead and margin as separate rows that sum to the sell price.",
+ y:"The breakdown ledger today is a description of how the number was derived — area, volume, unit weight, subtotal, waste. A quote needs something different: a buyer who asks \"why is this 2,400 €\" needs to see the cost base, not the arithmetic. Splitting the sell price into its parts is what turns a calculator output into a defensible price, and it is the same reason margin is already a setting.",
+ e:"M",i:5,s:"new", f:"src/lib/calculator/breakdown-rows.ts, src/components/command/breakdown-ledger.tsx"},
+{id:23,a:"calc",t:"Standard-length snapping",w:"A length that is not a stock length offers the nearest ones: `6.4m → 6m (2 bars of 6m, 0.4m offcut each) or 6.5m`.",
+ y:"You cannot buy a 6.4 m beam; the mill sells 6 m and 12 m and the shop cuts the rest. Today the calculator computes the exact weight of 6.4 m and presents it as a real quantity, which is quietly wrong for procurement and quietly wrong for the price. Snapping to purchasable lengths, and showing the offcut that results, is the kind of correction that makes a shop trust the tool completely — and it is the input a cutting optimiser needs anyway.",
+ e:"M",i:5,s:"new", f:"packages/metal-core/src/cutting/optimizer.ts, command/suggest.ts"},
+{id:24,a:"calc",t:"Real EN mass tolerance classes",w:"Show the published tolerance band per product standard (EN 10034 for structural sections) rather than a user-set percentage.",
+ y:"The mechanism is shipped and the EN part is deliberately not — the percentage is the user's own because tolerances differ per product standard. That decision was right in March and is a gap now: a mill certificate states a tolerance class, and a shop that quotes against one is more defensible than a shop that guesses. The band belongs under the hero figure, as a min–max range, with the standard named and cited — the same citation discipline already applied to section properties.",
+ e:"M",i:4,s:"shipped", f:"packages/metal-core/src/datasets/section-properties.ts (new tolerance table)"},
+{id:25,a:"calc",t:"Coating weight",w:"Galvanising adds weight: zinc at 275 g/m² adds a computable mass to every surface.",
+ y:"Galvanised steel is 3–5% heavier than the mill figure and it is quoted on the coated weight, so the price per kilo of the purchase order is different from the price per kilo of the catalogue. The engine already computes surface area for paint costing, so the coating mass is one more multiplication away — and it is a classic silent error that costs a shop money on every galvanised order it quotes with the current tool.",
+ e:"M",i:4,s:"shipped", f:"packages/metal-core/src/calculator/engine.ts (surfaceAreaM2 → coating mass)"},
+{id:26,a:"calc",t:"Perimeter and edge length output",w:"Show the total cut edge length in metres, alongside weight and price.",
+ y:"Cutting is priced per metre of edge, and several shops buy and sell on that basis instead of weight. It is also the input for the cut-cost line, so the two features reinforce each other. The geometry already exists — it is the same perimeter the manual profiles compute.",
+ e:"M",i:3,s:"shipped", f:"packages/metal-core/src/calculator/engine.ts, src/lib/calculator/breakdown-rows.ts"},
+{id:27,a:"calc",t:"Rebar",w:"`ø12` / `d12` / `rebar12` gives ribbed bar mass per EN 10080, with the nominal area and the mill tolerance class.",
+ y:"Rebar is a large fraction of a fabricator's tonnage by weight and the app cannot quote it at all — a plain round bar is not rebar, and a shop with rebar work has no use for this tool today. Mass per metre for a nominal diameter is a formula with a published table, which is exactly the kind of dataset work the project has done well. The scope note in AGENTS.md about citing sources applies directly: the masses must come from the standard.",
+ e:"M",i:5,s:"new", f:"packages/metal-core/src/datasets/profiles (new), datasets/aliases.ts"},
+{id:28,a:"calc",t:"Threaded rod and fixings",w:"`m16x1.5` threaded rod, `m20` nuts and washers, with masses and a cut length.",
+ y:"Mechanical steel — threaded rod, flat bars for base plates, plate anchors — is standard fabrication work that the app cannot express, because there is no thread dimension and no counting of small items. Each part is a cheap formula; the interest is that it widens the addressable shop from \"structural\" to \"structural and mechanical\".",
+ e:"M",i:3,s:"new", f:"packages/metal-core/src/datasets/profiles (new)"},
+{id:29,a:"calc",t:"Embodied carbon",w:"An optional row: kg CO₂e from weight and grade, with the factor shown and overridable.",
+ y:"EU tenders increasingly ask for the carbon figure of the steel in a bid. The factors are public, rough, and exactly as imprecise as the app's other datasets — which makes them appropriate here. The row must always show its factor, because a number presented without its provenance is the one thing this app must never do.",
+ e:"S",i:3,s:"new", f:"packages/metal-core/src/datasets/materials.ts (factors), breakdown-rows.ts"},
+{id:30,a:"calc",t:"Supplier surcharge rules",w:"Per-supplier rules on top of the rate: cut-to-length fee, minimum order value, surcharge above a weight threshold, delivery charge.",
+ y:"A merchant's price is not one number; it is a rate plus a dozen small conditions, and a quote that ignores them is either losing money or getting rejected. Today the price book stores a single rate per grade, which is the simplest version of a complicated truth. Rules are a natural extension of the same store and they are the difference between a rate that is occasionally right and one that is right every time.",
+ e:"M",i:4,s:"shipped", f:"src/hooks/usePriceBook.ts, src/lib/calculator/engine.ts (pricing resolution)"},
+{id:31,a:"calc",t:"Unit price by shape and size class",w:"Price books keyed by supplier, grade and size class, so 12 m bars price differently from 6 m.",
+ y:"Longer lengths carry a discount, a surcharge, or simply a different rate sheet — the merchant's price depends on the length in a way that a single per-grade rate cannot express. Extending the price book's key from grade to grade-plus-length-class is a small change to the pricing resolution order and closes a visible gap in real price lists.",
+ e:"M",i:3,s:"shipped", f:"src/hooks/usePriceBook.ts, src/lib/calculator/engine.ts"},
+{id:32,a:"calc",t:"Weighted grade output",w:"When a line mixes grades, the result reports the total mass per grade alongside the total.",
+ y:"A mixed job is normal — mild steel frame, stainless fixings — and a single blended figure is not something anyone can buy. The engine already computes per-item totals; grouping them by grade for the summary is presentation work over data that already exists, and it is what the buyer needs to order.",
+ e:"S",i:3,s:"shipped", f:"packages/metal-core/src/command/line.ts, src/components/command/breakdown-ledger.tsx"},
+
+/* ---- 04 Projects & quotes ---- */
+{id:33,a:"projects",t:"PDF quote",w:"A real PDF per project: company header and logo from Settings, line items, totals, VAT, terms, validity date.",
+ y:"The printable quote is an HTML print sheet — it works, and it is what a shop can send today. But a PDF is what a customer expects, what can be emailed from a phone without a browser print dialog, and what can be attached to a procurement platform. This is the highest-value single artefact the app could produce, and the material for it — BOM, margin, VAT, customer record, terms — is already modelled.",
+ e:"M",i:5,s:"shipped", f:"src/components/command/projects/use-quote-printing.ts, new print route"},
+{id:34,a:"projects",t:"Quote versioning and re-issue",w:"Quote v2 that shows a change order against v1: line added, quantity changed, price difference.",
+ y:"The second quote is the one that gets accepted, and today re-quoting a job overwrites the first estimate — losing the ability to say \"this change costs 340 €\". Shops negotiate; versioned quotes with a delta between them are how a shop keeps the negotiation inside a document instead of inside an email thread.",
+ e:"M",i:4,s:"new", f:"src/components/command/projects/project-detail.tsx, useProjects.ts"},
+{id:35,a:"projects",t:"Freeze the price snapshot on a quote",w:"When a project is quoted, the rates used are stored with it and never drift, even if the price book changes.",
+ y:"A quote is a promise about a price at a date. Today the project recomputes against the live price book, so opening a two-month-old project can silently show a different total than the one that was sent — and nobody notices until a customer compares. This is the same class of bug as the library's re-pricing badge, but with money attached, and it is cheap to fix by snapshotting the rates at quote time.",
+ e:"S",i:5,s:"shipped", f:"src/components/command/projects/project-detail.tsx, useProjects.ts"},
+{id:36,a:"projects",t:"Cost versus actual",w:"Record the hours actually spent and the material actually bought; the project shows estimate against reality.",
+ y:"The app currently estimates forward and never learns backward, so a shop that is consistently wrong about its weld times has no way to find out. Estimate-versus-actual is the loop that turns a calculator into a tool that improves the shop's margin — and it needs only two extra fields and one comparison row. This is also the honest answer to the question a shop owner always asks: are we actually making money on this kind of work?",
+ e:"L",i:5,s:"new", f:"src/components/command/projects/project-detail.tsx, useProjects.ts"},
+{id:37,a:"projects",t:"Typical-job templates",w:"Save a finished job as a reusable template — the balcony, the gate, the stair stringer — with quantities to edit.",
+ y:"A large share of a fabrication shop's work is the same job repeated with different dimensions. The library can hold assemblies, but not whole jobs with their own structure, and starting from a blank project throws away the structure every time. A job template that arrives pre-filled with the typical quantities is the difference between a two-minute estimate and a twenty-minute one.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/projects/new-project-dialog.tsx, src/lib/projects/import-list.ts"},
+{id:38,a:"projects",t:"Cut map to the shop floor",w:"Print a cut list per project: each member, its length, quantity, and a position label matching the drawing.",
+ y:"The workshop needs paper. Today the quote prints and the cut map is a screen, but a cut list that a welder can work from — grouped by profile, in cutting order, with the offcuts accounted for — is a sheet that travels. It is the same data the optimiser already produces, printed in the order the saw needs.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/projects/project-procurement.tsx, use-quote-printing.ts"},
+{id:39,a:"projects",t:"Change orders and variations",w:"A project can carry a variation line: added work, its cost, and its effect on the total.",
+ y:"Every fabrication job changes after the first visit, and the question \"does this still fit the budget?\" needs a document. Today a variation is a manual edit that silently rewrites the original quote. A first-class variation is a small data model and it makes the estimate-vs-actual comparison in idea 36 possible.",
+ e:"M",i:3,s:"new", f:"src/components/command/projects/project-detail.tsx, useProjects.ts"},
+{id:40,a:"projects",t:"Quote validity, terms and payment days",w:"Validity date, payment terms, delivery terms and incoterms on the quote, per customer.",
+ y:"A quote without a validity date is an open-ended offer, and terms are what a customer's procurement department asks for as often as the price. These are strings on a document, and they belong to the customer record so they are written once. It is the cheapest possible improvement to how the output reads as professional.",
+ e:"S",i:4,s:"new", f:"src/components/command/customers/customers-view.tsx, project print view"},
+{id:41,a:"projects",t:"Project status from sent to accepted",w:"A quote can be marked sent, seen, accepted or rejected, with the customer link that shows it was seen.",
+ y:"The app has no idea whether a quote reached anybody. A read-only link that reports a view (once, anonymously, if the customer allows it) turns \"did they get it?\" from a phone call into a fact — and \"accepted\" is the event a shop actually runs its business on.",
+ e:"M",i:4,s:"new", f:"src/app/[locale]/share route, useProjects.ts"},
+{id:42,a:"projects",t:"Multi-project comparison",w:"Compare two or three projects side by side: value, margin, hours, outcome.",
+ y:"A shop's owner thinks in batches — \"how did the March jobs do?\" — and the app stores projects as isolated silos with no way to compare them. A portfolio view with the numbers side by side is the level above the individual job, and it is where ideas 36 and 37 start to pay off.",
+ e:"M",i:3,s:"new", f:"src/components/command/projects/project-list.tsx, lib/projects/query.ts"},
+{id:43,a:"projects",t:"Delivery schedule and a simple gantt",w:"Due dates already exist; a small schedule view per project shows what is late, what is due, and in what order.",
+ y:"The project list already flags overdue and near-due work, which means the data is there and the shop already cares. A schedule view adds nothing conceptually and a lot operationally — it is the view a fabrication shop runs the week from, and today the app gives no order to the work.",
+ e:"M",i:3,s:"shipped", f:"src/components/command/projects/project-list.tsx, lib/projects/query.ts"},
+{id:44,a:"projects",t:"Assemblies with a drawing",w:"A library assembly can carry a dimensioned layout drawing, so a quote shows the shape of what is being sold.",
+ y:"Assemblies exist and carry labour, trade and hardware — but nothing shows what they are. A wireframe or dimensioned layout of a typical assembly turns a line of text into something a customer can picture and a shop can build from, and it is the natural home for the cross-section drawing work that already exists for profiles.",
+ e:"L",i:4,s:"new", f:"src/components/command/sheets/saved-edit-sheet.tsx, parts/parts-view.tsx"},
+{id:106,a:"projects",t:"Offcut ledger",w:"Every remnant the shop owns, by profile and length; the optimiser subtracts them from the buy list.",
+ y:"Steel shops are full of steel they have already paid for and usually cannot see. A 2.4 m HEA 120 in the rack is free material, and the 1D optimiser currently answers \"how many bars do I need\" by assuming every bar must be bought new — which quietly recommends spending money the shop already spent. Recording remnants as a byproduct of each cut, and letting the optimiser spend them first, is the single most direct way this app can stop a shop from buying steel it owns. It is also the substrate for the Shop bet: once the ledger exists, purchasing becomes a natural next question.",
+ e:"L",i:5,s:"new", f:"packages/metal-core/src/cutting/optimizer.ts, new remnants store, useProjects.ts"},
+
+/* ---- 05 Customers & shop ---- */
+{id:45,a:"customers",t:"Per-customer discount and price list",w:"A customer carries a default discount or their own rate card; quotes apply it automatically.",
+ y:"Big customers negotiate and shops remember their discount — usually in the estimator's head, which is exactly where it gets forgotten. A per-customer rate turns a memory into a record, and it is the feature that makes the customers area (new in 3.37.0) more than an address book.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/customers/customers-view.tsx, usePriceBook.ts"},
+{id:46,a:"customers",t:"Repeat-order detection",w:"\"Customer Novak ordered hea120 6m ×8 in March\" appears on the customer record as a one-tap starter.",
+ y:"Most fabrication work is a repeat of something the shop has already made, and the repeat order is the cheapest order to quote because every dimension is known. Surfacing past projects for a customer — sorted by profile — turns history into a template without inventing one.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/customers/customers-view.tsx, lib/customers/query.ts"},
+{id:47,a:"customers",t:"Customer terms by default",w:"Delivery terms, payment days, site address and notes pre-fill every quote for that customer.",
+ y:"Typing the same delivery address into every quote is exactly the kind of friction that makes people abandon a tool. The customer record already exists with contact fields; making the quote read from it is a small defaulting change with a disproportionate effect on how fast a quote goes out.",
+ e:"S",i:4,s:"shipped", f:"src/components/command/customers/customers-view.tsx, project print view"},
+{id:48,a:"customers",t:"Customer self-service estimates",w:"Send a customer a link; they change quantities and send it back as a request, not a decision.",
+ y:"The estimator is the bottleneck in a small shop: every change to a quote has to go through them. A link that lets the customer propose a revision — without ever setting a price — cuts the round trips and, crucially, keeps the pricing authority where it belongs. It is the customer-portal idea limited to the part that is safe to give away.",
+ e:"L",i:4,s:"new", f:"new share route, projects/project-detail.tsx"},
+{id:49,a:"customers",t:"Customer profitability view",w:"Revenue, margin and hours per customer, sorted by value.",
+ y:"The lifetime value already exists on the customer record. What is missing is the cost side — a customer that generates 40,000 € of revenue at 6% margin is worse than one at 20,000 € and 30%. This is the shop-owner view, and it is the one that decides which customers to keep.",
+ e:"M",i:3,s:"shipped", f:"src/components/command/customers/customers-view.tsx, lib/customers/query.ts"},
+{id:50,a:"customers",t:"Public lead capture with the bar",w:"A page where a prospect describes their job in the same syntax and sends it, without becoming a user.",
+ y:"The app's grammar is a genuinely good interface for describing steel work, and it is currently only visible to people who already know it. A public page that accepts a job description and turns it into a structured request gives a merchant a lead channel that costs nothing to run — and the estimate comes back attached to the enquiry, which is far more valuable than a name and a phone number.",
+ e:"L",i:4,s:"new", f:"new /[locale]/estimate route, api/contact (extended)"},
+{id:51,a:"customers",t:"Job numbering and a printed job card",w:"Sequential job numbers, and a job card carrying the drawing, the cut list and the materials.",
+ y:"Small shops track work on paper cards taped to the steel. A printed job card with a number that appears on the quote, the cut list, the offcut and the invoice closes the loop that spreadsheets and apps always leave open: which job was this piece for? The number is a tiny change; the card is the existing print view plus a label.",
+ e:"M",i:3,s:"shipped", f:"src/components/command/projects/project-detail.tsx, useProjects.ts"},
+
+/* ---- 06 Library & parts ---- */
+{id:52,a:"library",t:"Library entries that recompute",w:"A part stores its canonical query and re-derives its figures on use, instead of a frozen snapshot.",
+ y:"The library stores a rate and re-prices against today's price book — the re-pricing badge shows when they have diverged. That is half the right idea: the same staleness applies to the geometry, the grade alias, the dataset version. A part that remembers <em>how to compute itself</em> survives a dataset correction, which 3.28.0 and 3.30.0 both had to do by hand.",
+ e:"M",i:4,s:"shipped", f:"src/hooks/useSaved.ts, src/lib/sync/collections.ts (normalizeSavedEntry)"},
+{id:53,a:"library",t:"Parametric assembly templates",w:"A template with variables — a table frame with four legs of a given length, a given top — that recalculates when a variable changes.",
+ y:"Assemblies today are fixed lists of parts. The reusable thing in a real shop is not a fixed list but a <em>rule</em>: four legs of L, one top of U, at a given width. Parametric templates are how a shop reuses its designs, and the assembly data model is already structured enough to carry the parameters — it just needs the variables and the recomputation.",
+ e:"L",i:5,s:"new", f:"src/components/command/sheets/saved-edit-sheet.tsx, src/lib/projects/insert-assembly-modal.tsx"},
+{id:54,a:"library",t:"Import parts from a spreadsheet",w:"A CSV of profile, length and quantity becomes a set of library entries, one import rather than forty saves.",
+ y:"The backlog item since 3.22.0, and still the largest hole in the input story: the parser can read a pasted cut list, but there is no file path into the library. A shop's existing spreadsheet of standard sections is exactly the shape the paste parser already understands, so the import is the file wrapper around a working capability.",
+ e:"M",i:4,s:"shipped", f:"src/lib/projects/import-list.ts, src/lib/calculator/csv.ts"},
+{id:55,a:"library",t:"Search everything from one field",w:"One search across parts, projects, customers and history, matched on name, profile and grade.",
+ y:"There are four stores and four separate search boxes, and the person looking for something rarely knows which store it is in. One field over the loaded stores is a small derived filter — no new persistence, no new index — and it removes the \"where did I put that\" moment that sends people back to the history.",
+ e:"S",i:4,s:"new", f:"src/components/command/parts/parts-view.tsx, your-lines.tsx"},
+{id:56,a:"library",t:"Bulk operations on the library",w:"Select several parts and export them, move them into a project, or delete them together.",
+ y:"The library already has a bulk-select path for compare and delete; the operations that are missing are the ones a shop does during a migration or a cleanup — export a selection to CSV, or move a set of parts into a project in one go. When the library grows to a hundred entries, per-row menus stop being viable and bulk becomes the primary way to work.",
+ e:"S",i:3,s:"shipped", f:"src/components/command/parts/parts-view.tsx, lib/saved/query.ts"},
+{id:57,a:"library",t:"Recently deleted, with restore",w:"Deleted parts and projects go to a 30-day trash that syncs and can be restored.",
+ y:"A destructive action on a synced collection is the one place where a bug becomes data loss: the delete propagates to every device before anyone notices. The toast Undo covers the accidental case, but not the \"I deleted it on the wrong device an hour ago\" case. Soft delete with a purge window is standard practice and, importantly, makes a bad sync merge recoverable.",
+ e:"M",i:4,s:"new", f:"src/hooks/useSaved.ts, src/lib/sync/collections.ts"},
+
+/* ---- 07 Sync & data safety ---- */
+{id:58,a:"sync",t:"Visible sync status",w:"A persistent, quiet indicator: last synced, pending changes, error — and what to do about an error.",
+ y:"Silent sync is scary sync: when something has clearly gone wrong, the user cannot tell whether they are looking at stale data. A single quiet row — with the last successful sync time and a plain explanation of any failure — costs almost nothing and is the difference between trusting the Drive sync and ignoring it.",
+ e:"S",i:4,s:"new", f:"src/lib/sync/google-client.ts, settings/sync panel"},
+{id:59,a:"sync",t:"Sync conflict resolution you can see",w:"When a merge drops or overwrites something, say so — with a way to keep both.",
+ y:"The merge logic exists and the price book already carries removal tombstones, which means conflicts are already being resolved silently by rule. Every rule that drops data should be visible at least once, because the alternative is a shop discovering a missing customer record months later with no explanation and no way to recover it.",
+ e:"M",i:4,s:"shipped", f:"src/lib/sync/collections.ts, src/lib/sync/snapshot.ts"},
+{id:60,a:"sync",t:"Rolling local snapshots",w:"A daily local snapshot of everything, kept for fourteen days, restorable in one tap from Settings.",
+ y:"The JSON backup file exists and is manual, which means it happens when someone remembers. localStorage can be cleared by a browser update, a private-mode session, or a device that runs out of space. A rolling snapshot is silent, cheap, and the difference between \"I lost a week of jobs\" and \"I lost nothing\".",
+ e:"M",i:5,s:"new", f:"src/lib/backup/backup-file.ts, new snapshot store"},
+{id:61,a:"sync",t:"Key management that a human can operate",w:"Export the sync passphrase, restore it on a new device, and warn loudly when a device is new or unrecognised.",
+ y:"The sync is AES-GCM encrypted with a key held in IndexedDB. That is right, and it means a lost passphrase is unrecoverable data — with no account to fall back on, there is no recovery path at all. Export/import of the key plus an explicit \"this is a new device\" moment is what turns a technically correct design into an operable one.",
+ e:"M",i:5,s:"shipped", f:"src/lib/sync/key-store.ts, settings/sync panel"},
+{id:62,a:"sync",t:"Second sync provider: WebDAV / Nextcloud",w:"Sync to Nextcloud or another WebDAV host, since a lot of EU SMEs already run one.",
+ y:"Google Drive is a reasonable default and a poor requirement: a Nextcloud instance is what a European SME's IT department has already bought, provisioned and secured. The sync layer's push/pull/records structure was built provider-shaped on purpose, so the work is extracting the provider interface rather than rewriting the engine.",
+ e:"L",i:3,s:"new", f:"src/lib/sync/ (provider interface), src/app/api/sync/"},
+{id:63,a:"sync",t:"Per-collection sync toggles",w:"Choose which collections sync: price book yes, history no, customer notes no.",
+ y:"Sync today is all-or-nothing across six collections, and different shops have different sensitivities — a customer list with contact details may not belong in a consumer Drive account at all. Toggles are a small UI change over an existing record layer, and they make the encryption story less load-bearing.",
+ e:"M",i:3,s:"shipped", f:"src/lib/sync/keys.ts, src/lib/sync/registry.ts"},
+{id:64,a:"sync",t:"Read-only team device",w:"Add a second device that can read everything and change nothing, for a colleague or a shared workshop tablet.",
+ y:"A shop with two estimators currently either shares one device (and one history) or runs two separate installations (and two sets of numbers). A read-only join — where the device syncs but cannot delete or overwrite — solves the shared-tablet case without introducing accounts.",
+ e:"M",i:3,s:"new", f:"src/lib/sync/registry.ts, settings/sync panel"},
+
+/* ---- 08 Offline & field ---- */
+{id:65,a:"offline",t:"Capture mode for on-site measurement",w:"A mode that records raw measurements and notes without calculating, and syncs them later as lines.",
+ y:"The estimator and the measurer are usually different people, and the measurer has the phone and the tape measure. Today they must phone the estimate in, who types it — losing the length, the quantity and the context. A capture queue that stores a rough line offline and hands it to the desk as a structured suggestion removes the most common source of transcription error in the whole workflow.",
+ e:"M",i:4,s:"new", f:"new capture store, src/components/command/phone/"},
+{id:66,a:"offline",t:"QR labels for stock and offcuts",w:"Print a label with a QR encoding the profile and length; scanning it loads the line into the bar.",
+ y:"Steel is stacked and moved and re-found by eye until it is labelled. A QR that encodes `hea120 6m` makes the shelf self-describing — and the same label on an offcut is the seed of the offcut ledger in the Shop bet. The encoding is the share-link format that already exists.",
+ e:"M",i:3,s:"new", f:"src/lib/command/share.ts, print view"},
+{id:67,a:"offline",t:"Full offline dataset verification",w:"An offline check that every size the app can quote is present in the local bundle, tested in CI and on device.",
+ y:"The datasets are bundled in JavaScript, so the app does work offline — but that is an accident of the build rather than a stated guarantee, and a future lazy-loading change could quietly break it. A test that opens the app with the network disabled and quotes a catalogue size turns an assumption into a guarantee, which matters because \"works offline\" is in the README.",
+ e:"S",i:4,s:"new", f:"e2e/command.spec.ts, offline context"},
+{id:68,a:"offline",t:"Background sync for queued work",w:"When a project or customer is edited offline, it queues and pushes when the connection returns.",
+ y:"The service worker already queues contact-form submissions for background sync. The same mechanism would carry project edits made in a yard with no signal, and it is the difference between the app being usable in a basement steel store and being not.",
+ e:"M",i:4,s:"shipped", f:"public/sw.js, src/lib/sync/registry.ts"},
+{id:69,a:"offline",t:"Install prompt at the right moment",w:"Ask to install after the app has been used a few times and a project has been saved, not on the first visit.",
+ y:"The install prompt exists but timing decides its conversion rate, and a prompt on first visit is the classic way to get dismissed forever. Asking after a saved project is the moment the user has seen the value and has a reason to want it on the phone.",
+ e:"S",i:2,s:"shipped", f:"src/lib/install-prompt.ts, pwa-register.tsx"},
+
+/* ---- 09 Trust & provenance ---- */
+{id:70,a:"trust",t:"Clickable citations on every number",w:"The kg/m figure is a link: it opens the formula, the EN standard, the catalogue and the page it came from.",
+ y:"This is the app's stated differentiator — every figure traceable to a source — and right now the provenance lives in a reference label that most users never tap. One click from the hero number to the source turns a claim into a demonstration, and it costs nothing but the plumbing to surface `referenceLabels[]` as a link.",
+ e:"S",i:5,s:"shipped", f:"packages/metal-core/src/calculator/engine.ts (referenceLabels), breakdown-ledger.tsx"},
+{id:71,a:"trust",t:"Explicit certainty on every result",w:"\"Catalogue value, exact\" versus \"Calculated from dimensions, ±2%\" versus \"Off-catalogue size\" — shown as a badge.",
+ y:"The engine distinguishes manual geometry from catalogue geometry, but the user sees a number either way. A calculator that says \"this is exact\" and one that says \"this is my estimate from the dimensions you typed\" are different products; the second is honest and the first is not, and only the second can be trusted with a big order. The certainty badge is the cheapest trust feature in the app.",
+ e:"S",i:5,s:"shipped", f:"packages/metal-core/src/calculator/engine.ts, availability.ts"},
+{id:72,a:"trust",t:"A formula explainer per profile family",w:"A short page per family: how the area is derived, which standard governs it, where the catalogue numbers come from.",
+ y:"The `/qa` page proves the engine is right, but it reads like an audit rather than an explanation. A per-family explainer is the same content aimed at the estimator who wants to know whether the number can be trusted — and it is the page that would rank, because it answers a question people actually type into a search engine.",
+ e:"M",i:4,s:"shipped", f:"src/app/[locale]/qa, new per-family route"},
+{id:73,a:"trust",t:"Show the dataset version in the app, not only in the QA page",w:"A small \"data 2026.09.5\" marker in the result, linking to what changed.",
+ y:"Every result already carries a dataset version, and it is invisible. Surfacing it — and a plain-language list of what changed in that version — is how a shop learns that the tool is maintained, which is what makes the numbers worth relying on. It also converts a maintenance chore into a reason to open the app.",
+ e:"S",i:3,s:"shipped", f:"packages/metal-core/src/datasets/version.ts, changelog"},
+{id:74,a:"trust",t:"A public correctness statement",w:"How the accuracy is verified, what the coverage is, what is known to be wrong — in plain language, on the site.",
+ y:"The app has a benchmark suite, a coverage test that fails when a size ships without a catalogue mass, and a release history that documents real errors honestly. Almost none of that is visible to a user. Publishing it is a credibility asset that costs one page and cannot be faked, because the numbers are generated from the dataset.",
+ e:"S",i:4,s:"shipped", f:"src/app/[locale]/qa/page.tsx"},
+{id:75,a:"trust",t:"Independent spot checks in the app",w:"\"Compare against the EN catalogue\" runs the published mass for the selected size and shows the delta.",
+ y:"The benchmark proves the engine on the test suite, and the user cannot see it. Running one comparison on demand, for the size they are actually quoting, turns the project's strongest asset — its rigorous verification — into something a user experiences directly, and it would have caught the 3.26.0 channel-area bug at the moment it mattered.",
+ e:"M",i:4,s:"shipped", f:"src/lib/qa/benchmark.ts, api route"},
+
+/* ---- 10 Design & accessibility ---- */
+{id:76,a:"design",t:"A density setting",w:"Compact mode tightens spacing and type for power users on small laptops and shop tablets.",
+ y:"The layout is tuned for one screen size and one information density. A workshop tablet on a bench is a very different constraint from a desk monitor, and the settings model already has a place for this — one field, one control, and a handful of spacing tokens in `globals.css`. It is the only settings addition that makes the existing design work harder.",
+ e:"M",i:3,s:"new", f:"src/app/globals.css, src/components/command/settings-model.ts"},
+{id:77,a:"design",t:"Keyboard-first desktop",w:"`/` focuses the bar, `⌘K` searches everything, `⌘S` saves, `⌘↵` accepts the suggestion — and every action is reachable without a mouse.",
+ y:"A command bar is a keyboard instrument, and the app is used by people who type for a living. Some shortcuts exist already (`⌘S`, `⌘↵`), but the surface is not systematically keyboard-driven: focus order, the suggestion row, the panels. Making the whole app keyboard-operable is both an accessibility win and the single biggest speed-up for a heavy user.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/command-shell.tsx, command-desktop.tsx"},
+{id:78,a:"design",t:"High-contrast theme for bright shops",w:"A theme with stronger borders and darker ink for tablets used under shop lighting.",
+ y:"A fabrication shop is a bright, dusty, glare-prone environment, and the paper palette — warm, low-contrast, hairline rules — is tuned for a desk. A high-contrast variant is a token swap plus a theme flag, and it is the kind of detail that makes a tool look like it was made for the job rather than for a design portfolio.",
+ e:"S",i:3,s:"new", f:"src/app/globals.css, settings-model.ts"},
+{id:79,a:"design",t:"Announce the result to screen readers",w:"A live region announces \"238.7 kilograms, 402 euro\" when the query settles.",
+ y:"The parse-issue work, focus traps and axe scans have made the app genuinely accessible, but the single most important event on the screen — the number — is announced as nothing. A live region is a few lines, and it is the difference between an app a blind estimator can use and one they cannot.",
+ e:"S",i:4,s:"shipped", f:"src/components/command/command-shell.tsx"},
+{id:80,a:"design",t:"A print stylesheet for the whole app",w:"Printing the result or the breakdown produces a clean, deliberate sheet, not a screenshot of a screen.",
+ y:"Shops print. The quote has its own print view, but printing the app — the breakdown, the ledger, a single calculation — currently produces whatever the browser makes of a screen layout. A proper print stylesheet is a modest amount of CSS that makes the whole app printable, which also makes a screenshot of it worth sharing.",
+ e:"S",i:3,s:"new", f:"src/app/globals.css (@media print)"},
+{id:81,a:"design",t:"Undo on every destructive action",w:"Not just delete — bulk delete, archive, purge, reset-to-defaults, all with an undo.",
+ y:"The toast with Undo exists for one action. Every other destructive action in the app — bulk delete in the library, archiving a customer, resetting a setting — is irreversible or confusing. A single undo mechanism, applied everywhere, is the difference between a tool that feels safe to explore and one that people are careful with.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/use-command-toast.ts"},
+{id:82,a:"design",t:"Motion that respects the setting and the machine",w:"Count-ups, sheet transitions and haptics all obey `prefers-reduced-motion`, and the whole thing stays under one frame budget.",
+ y:"Direction 1a is a calm instrument, and the app has motion tokens already. The risk is not slowness but inconsistency — one animated number in an otherwise still interface reads as a bug. A small motion budget, applied consistently, keeps the instrument metaphor intact.",
+ e:"S",i:2,s:"shipped", f:"src/app/globals.css (motion tokens), command components"},
+{id:83,a:"design",t:"A tablet layout that is designed, not stretched",w:"An explicit 640–1024 breakpoint with its own composition rather than the phone stack scaled up.",
+ y:"The phone fold and the desk rail were each designed; the middle is neither, and the breakpoint between them has been a compromise. The current viewport logic is a two-way split (phone / wide), so the awkward middle gets whatever falls out. A third composition — probably the desk rail with a collapsed panel — is a design task, and it is the size of screen a workshop tablet actually is.",
+ e:"M",i:3,s:"shipped", f:"src/components/command/use-shell-viewport.ts, command/desktop/"},
+
+/* ---- 11 Performance & architecture ---- */
+{id:84,a:"perf",t:"Decompose the command shell",w:"Pull the query state, keyboard routing and toast state out of the 1.3–2.3k-line shell into hooks and a reducer.",
+ y:"The shell is the reason every idea in the bar section is more expensive than it looks: the query, the parse, the share URL, the usage recording, the keyboard handlers and the toast all live in one component. A reducer over the query string would make the undo idea trivial, the diff idea natural, and the tests possible — this is the refactor that pays for itself in the features it enables.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/command-shell.tsx, command-desktop.tsx"},
+{id:85,a:"perf",t:"Component tests for the command surface",w:"Testing-library tests for chip insertion, keyboard routing, ghost accept, history arrows and issue rendering.",
+ y:"The e2e suite covers the grammar well and the interactions thinly — and the changelog records that several 3.17.x fold bugs were found by screenshotting rather than by testing. Unit tests at the interaction level are faster, more precise and the only way to change the bar without fear.",
+ e:"M",i:4,s:"shipped", f:"src/components/command/*.test.tsx"},
+{id:86,a:"perf",t:"Code-split the non-calculator views",w:"Projects, Customers, Settings, Compare and the library load on demand.",
+ y:"The app ships the whole surface to render a number. On a phone in a yard with poor signal that matters more than anything in this section — the first paint is the bar, and the bar should not wait for the optimiser, the customer list and the OG card renderer. The optimiser is already lazily loaded, which proves the pattern works.",
+ e:"M",i:3,s:"shipped", f:"src/components/command/command-shell.tsx (next/dynamic)"},
+{id:87,a:"perf",t:"Publish metal-core as an npm package",w:"The engine, the parser and the datasets as a versioned package with typed APIs and no web imports.",
+ y:"AGENTS.md insists the core stays UI-free and i18n-free so other surfaces can reuse it — a rule maintained by discipline rather than by a boundary. Publishing it enforces the boundary, lets the same engine run in a script, an ERP or a competitor's tool, and turns the dataset into something other people depend on, which is a durable reason to keep it correct.",
+ e:"M",i:4,s:"shipped", f:"packages/metal-core/package.json"},
+{id:88,a:"perf",t:"A public JSON and CSV API over the dataset",w:"`GET /api/sizes/hea120` returns dimensions, kg/m and section properties as JSON, and the same data as CSV.",
+ y:"The engine already runs server-side for the `/qa` page. Exposing it as a documented API turns the dataset into infrastructure: the SEO pages consume it, the embeddable widget consumes it, and a third party's tool can consume it. It is the technical prerequisite for the Public Data bet, and it makes the data citable.",
+ e:"M",i:5,s:"shipped", f:"src/app/api/ (new route), packages/metal-core"},
+{id:89,a:"perf",t:"A bundle budget in CI",w:"A size gate that fails the build when the app shell grows past a threshold.",
+ y:"The app is a fast, quiet tool; a bundle that creeps upward is how that quietly stops being true, and nobody notices until a phone in a yard feels slow. A budget line in CI is a few lines of config and turns performance from a virtue into a constraint.",
+ e:"S",i:2,s:"new", f:".github/workflows, package.json scripts"},
+{id:90,a:"perf",t:"Parse large pasted lists off the main thread",w:"A worker handles cut lists of hundreds of lines so the UI never drops a frame.",
+ y:"The paste parser is synchronous and runs on every keystroke-triggered re-parse. For a twenty-line cut list that is fine; for the four-hundred-line list a big job produces, the bar locks while it parses. A worker keeps the typing responsive, and the parser is pure enough to move without ceremony.",
+ e:"S",i:2,s:"new", f:"packages/metal-core/src/command/line.ts, new worker"},
+
+/* ---- 12 Reach & distribution ---- */
+{id:91,a:"reach",t:"Server-rendered pages per profile size",w:"A page per size — dimensions, kg/m, section properties with sources, and a calculator that works without JavaScript.",
+ y:"The dataset is the asset and it is invisible to search engines because the app is a client-rendered SPA. Every size is a page somebody searches for, and each one can be generated from data the project already maintains. The no-JavaScript form matters as much as the ranking: it makes the page work in a captive-portal or ancient browser and it makes the content indexable.",
+ e:"M",i:5,s:"new", f:"src/app/[locale]/sizes/[id]/page.tsx (new)"},
+{id:92,a:"reach",t:"Comparison pages",w:"\"HEA 120 vs HEA 140\" — a real table, real weights, a link into the calculator.",
+ y:"Comparison searches are how people who do not know the right size actually find it, and they are the hardest query for an estimator to answer in a spreadsheet. Generating them from the same tables gives a page that ranks and a decision the user can act on in one tap — and it is the natural companion to idea 91.",
+ e:"M",i:4,s:"shipped", f:"src/app/[locale]/compare/[a]/[b]/page.tsx (new)"},
+{id:93,a:"reach",t:"An embeddable calculator widget",w:"A minimal iframe-able bar that any merchant can drop into their own site, with their own prices.",
+ y:"Every steel merchant's website ends in a contact form. A widget that answers \"how much is 6 m of HEA 140\" in the visitor's own currency and with the merchant's own rate is a lead-capture tool that works while the competitor's form does not. It is also the most likely path to the app paying for itself without accounts.",
+ e:"L",i:4,s:"new", f:"src/app/embed/ (new route), api/calc"},
+{id:94,a:"reach",t:"WhatsApp-native sharing",w:"A share button that hands a formatted result to WhatsApp, and a link that opens a chat with a pre-written enquiry.",
+ y:"The metal trade communicates on WhatsApp, and the app already produces a clean one-line copy. A native share target turns the same content into a message with the profile, the weight and the price, in the app the customer already uses — which is a distribution decision, not a feature.",
+ e:"S",i:3,s:"shipped", f:"src/lib/command/share.ts, src/components/command/command-copy.tsx"},
+{id:95,a:"reach",t:"PWA share target and app shortcuts",w:"Sharing text like \"hea120 6m\" from any app opens Ferroscale with it loaded; long-press shortcuts for New calc, Compare and Parts.",
+ y:"The share link and the `?q=` hydration path already exist, so the share target is manifest plumbing with no new server work. It turns every WhatsApp message about a section into a one-tap calculation, which is how the tool reaches the shop floor rather than the office.",
+ e:"S",i:3,s:"shipped", f:"src/app/manifest.ts"},
+{id:96,a:"reach",t:"More locales",w:"German first — the largest EU steel market — then Croatian or Serbian, then Turkish and Polish.",
+ y:"The i18n infrastructure and the parity check are already in place, so each locale is mostly translation plus the unit-word vocabulary the parser needs. German is the one that changes the audience rather than the polish, and the Bosnian work already proved the grammar can carry a second language.",
+ e:"S",i:4,s:"shipped", f:"messages/*.json, src/i18n, command/aliases.ts (unit words)"},
+{id:97,a:"reach",t:"A browser extension that captures a supplier's page",w:"Select a table of sizes on a merchant's site and send it into FerroScale as a price list or a cut list.",
+ y:"Prices and sizes live on merchant websites, and copying them into a calculator by hand is where the errors start. A selection-to-ferroscale extension makes the merchant's page a structured input, and it works today because the parser already understands a cut list.",
+ e:"M",i:3,s:"new", f:"new extension, share/import endpoint"},
+{id:98,a:"reach",t:"A monthly price bulletin from your own price book",w:"A short, dated note: what you paid for steel last month, what changed, and what you quoted.",
+ y:"A tool that produces a monthly artifact gets used monthly, and a note built from the shop's own price history is both useful to the customer and the reason to open the app. It also solves the habit problem: the app currently has no recurring reason to be opened.",
+ e:"M",i:3,s:"new", f:"new route, usePriceBook.ts"},
+{id:99,a:"reach",t:"A public API with documented examples",w:"A documented, keyless GET endpoint for calculations, plus a page showing a worked example.",
+ y:"The API in idea 88 is only interesting if people can find it. A keyless read-only endpoint with a live example page is what makes an API adoptable — and the metal-core package (idea 87) is the other half, for people who want the engine rather than the URL.",
+ e:"S",i:3,s:"shipped", f:"src/app/api/calc (new), docs page"},
+
+/* ---- 13 Collaboration & integrations ---- */
+{id:100,a:"collab",t:"ICS calendar events for delivery dates",w:"A project with a due date exports an ICS event, so the shop's calendar knows when the steel arrives.",
+ y:"The due date is already tracked and already flagged as overdue, but it exists only inside the app. An ICS file is a few lines, works with every calendar, and turns a job's date into something the shop can actually schedule against.",
+ e:"S",i:2,s:"new", f:"src/components/command/projects/project-detail.tsx"},
+{id:101,a:"collab",t:"Google Sheets export of a project",w:"A spreadsheet with the BOM, quantities, weights and rates as real numbers.",
+ y:"CSV exists and XLSX does not, but a plain CSV of a BOM is a table of text that nobody can sum. A Sheets export where the weight and price columns are numeric changes the export from a report into something the shop can actually work with in its own accounting flow.",
+ e:"S",i:3,s:"shipped", f:"src/lib/calculator/csv.ts, projects export"},
+{id:102,a:"collab",t:"Accounting export",w:"A structured export for the accountant: jobs, invoices, VAT, in the shape their software expects.",
+ y:"The invoice step lives outside the app, and every job that leaves the estimator's screen loses its structure on the way. A defined export — even a documented CSV with stable columns — is how the shop's books stay consistent without asking anyone to re-enter a weight.",
+ e:"M",i:3,s:"new", f:"src/lib/calculator/csv.ts (new export type)"},
+{id:103,a:"collab",t:"Notifications for the events that matter",w:"A webhook or Slack message when a project is quoted, accepted or overdue — opt-in, per shop.",
+ y:"Some shop events matter to someone other than the estimator: a quote sent, a job accepted, a delivery overdue. A generic webhook covers Slack, Teams and a spreadsheet trigger without committing to a vendor, and it is a small surface over the project's status events that already exist.",
+ e:"M",i:2,s:"new", f:"src/lib/sync/registry.ts (event hook), new route"},
+{id:104,a:"collab",t:"An estimator hand-off between devices mid-job",w:"Finish a query on the phone, open it on the desk, and the desk knows what the phone was doing.",
+ y:"Sync moves whole collections, not the working state. The estimator's in-progress line — the thing they were halfway through when they put the phone down — does not travel, so one device starts from zero. Sharing the live query as part of the sync payload, or simply opening the app on the other device to the same last line, is a small change to a very visible friction.",
+ e:"M",i:3,s:"new", f:"src/lib/sync/collections.ts (quickHistory), command-shell.tsx"},
+{id:105,a:"collab",t:"A second estimator in the same shop, without accounts",w:"Two devices belonging to one shop share a namespace in the encrypted sync file, distinguished by a shop key.",
+ y:"Shops with two estimators are the growth case, and today two people in one shop either share a device (and fight over the history) or run separate installations (and never see each other's work). A shop key inside the existing encrypted payload would let them share a workspace with no account system at all — but it needs the key-management work in idea 61 first, and it needs a decision about whether a shop key is a password or a key.",
+ e:"L",i:4,s:"new", f:"src/lib/sync/key-store.ts, collections.ts"},
+];
+
+const ANTI = [
+  {t:"A full ERP or CRM suite", y:"The app's edge is speed to a trusted number. Feature depth in the direction of stock, invoicing, payroll and HR makes it heavier, slower and worse at the one thing it is for. Every customer-related idea above stays inside the estimator's job."},
+  {t:"User accounts and passwords", y:"The account system would cost the friction advantage that makes the app worth opening: Google Drive sync already solves cross-device, and the audience has shown it will use it. Accounts become worth it only when monetisation arrives — which is exactly when they should be added, and not before."},
+  {t:"Machine-learned price prediction", y:"Commodity prices are set by markets, and a model trained on a shop's own small history would be confidently wrong. It would also be the first number in the app that cannot be traced to a source, which breaks the product's central promise. If price data ever arrives from a real feed, that feed is the answer, not a model."},
+  {t:"Native mobile apps", y:"The PWA is installable, offline-capable, camera-ready and shareable, and it costs a fraction of what a second codebase costs to maintain. Every hour spent on native is an hour not spent on the bar or the document."},
+  {t:"A server database and account backend", y:"The local-first model is not a limitation, it is the product: no account, no tracking, no lock-in, no server to pay for, and the whole shop's data in a file the user owns. Everything above can be added without a backend; a backend would change the fundamental shape of the thing."},
+  {t:"In-app chat or a support inbox", y:"The audience is a working shop with a working phone. Support belongs in email, and a chat widget in an app whose entire visual language is a precision instrument is noise."},
+  {t:"Gamification, streaks or badges", y:"This is a tool that earns trust by being boring and correct. Playful mechanics would clash with the design direction and, worse, would optimise for return frequency rather than for a right answer."},
+];
+</script>
+
+<script>
+/* ------------------------------------------------------------------ *
+ *  Render
+ * ------------------------------------------------------------------ */
+const EFFORT_RANK = {S:1, M:2, L:3};
+const state = { q:"", eff:new Set(), status:new Set(), sort:"impact", view:"cards" };
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function escNoQ(s){ return String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function code(s){ return quotes(escNoQ(s)).replace(/`([^`]+)`/g, '<code class="mono">$1</code>'); }
+function codeRaw(s){ return quotes(String(s)).replace(/`([^`]+)`/g, '<code class="mono">$1</code>'); }
+function quotes(s){
+  const parts = String(s).split('"');
+  if(parts.length < 3) return s;
+  return parts.map((p,i)=> i%2===1 ? '“'+p+'”' : p).join('');
+}
+
+function matches(d){
+  if(state.eff.size && !state.eff.has(d.e)) return false;
+  if(state.status.size && !state.status.has(d.s)) return false;
+  if(state.q){
+    const hay = (d.t+" "+d.w+" "+d.y+" "+d.f+" "+d.a).toLowerCase();
+    if(!hay.includes(state.q)) return false;
+  }
+  return true;
+}
+function sortList(list){
+  const by = state.sort;
+  return list.slice().sort((a,b)=>{
+    if(by==="impact") return (b.i-a.i) || (EFFORT_RANK[a.e]-EFFORT_RANK[b.e]) || (a.id-b.id);
+    if(by==="effort") return (EFFORT_RANK[a.e]-EFFORT_RANK[b.e]) || (b.i-a.i) || (a.id-b.id);
+    if(by==="area")   return AREAS.findIndex(x=>x.k===a.a)-AREAS.findIndex(x=>x.k===b.a) || (b.i-a.i);
+    return a.id-b.id;
+  });
+}
+function card(d){
+  const st = d.s==="shipped" ? '<span class="tag st">extends shipped</span>' : "";
+  return `<article class="card" data-id="${d.id}">
+    <div class="card-top"><span class="id mono">${String(d.id).padStart(3,"0")}</span><h3>${esc(d.t)}</h3></div>
+    <p class="what">${code(d.w)}</p>
+    <div class="why"><b>Why</b> — ${codeRaw(d.y)}</div>
+    <div class="tags"><span class="tag e-${d.e}">effort ${d.e}</span><span class="tag">impact ${d.i}</span>${st}<span class="tag">${esc(d.a)}</span></div>
+    <div class="lands">${esc(d.f)}</div>
+  </article>`;
+}
+function row(d){
+  const st = d.s==="shipped" ? "extends shipped" : "new";
+  return `<tr data-id="${d.id}">
+    <td class="id">${String(d.id).padStart(3,"0")}</td>
+    <td class="t">${esc(d.t)}</td>
+    <td>${code(d.w)}</td>
+    <td class="why-cell">${codeRaw(d.y)}</td>
+    <td>${d.e}</td><td>${d.i}</td><td>${st}</td><td>${esc(d.a)}</td>
+  </tr>`;
+}
+
+const areasEl = document.getElementById("areas");
+AREAS.forEach(a=>{
+  const sec = document.createElement("section");
+  sec.className = "area"; sec.id = a.k;
+  sec.innerHTML = `<div class="wrap">
+    <div class="area-head"><h2>${a.t}</h2><span class="num">${a.n}</span></div>
+    <p class="area-note">${a.note}</p>
+    <div class="cards" data-area="${a.k}"></div>
+    <div class="tablewrap hidden" data-areatable="${a.k}">
+      <table><thead><tr><th>#</th><th>Idea</th><th>What</th><th>Why</th><th>Effort</th><th>Impact</th><th>Status</th><th>Area</th></tr></thead>
+      <tbody></tbody></table>
+    </div>
+  </div>`;
+  areasEl.appendChild(sec);
+});
+
+document.getElementById("antiList").innerHTML = ANTI.map((x,i)=>
+  `<article class="card"><div class="card-top"><span class="id mono">${String(i+1).padStart(2,"0")}</span><h3>${esc(x.t)}</h3></div>
+   <div class="why"><b>Why not</b> — ${x.y}</div></article>`).join("");
+
+document.getElementById("jumpNav").innerHTML = AREAS.map(a=>`<a href="#${a.k}">${a.n} ${a.t}</a>`).join("")
+  + `<a href="#bets">Bets</a><a href="#not-worth">Not worth doing</a><a href="#waves">Waves</a>`;
+
+function render(){
+  let shown = 0;
+  AREAS.forEach(a=>{
+    const list = sortList(IDEAS.filter(d=>d.a===a.k && matches(d)));
+    shown += list.length;
+    const c = document.querySelector(`[data-area="${a.k}"]`);
+    const t = document.querySelector(`[data-areatable="${a.k}"] tbody`);
+    c.innerHTML = list.map(card).join("");
+    t.innerHTML = list.map(row).join("");
+    c.classList.toggle("hidden", state.view!=="cards" || list.length===0);
+    t.closest(".tablewrap").classList.toggle("hidden", state.view!=="table" || list.length===0);
+  });
+  document.getElementById("count").textContent = shown + " of " + IDEAS.length + " shown";
+}
+
+/* --- controls --- */
+document.getElementById("q").addEventListener("input", e=>{ state.q = e.target.value.trim().toLowerCase(); render(); });
+document.addEventListener("keydown", e=>{
+  if(e.key === "/" && document.activeElement.tagName !== "INPUT"){ e.preventDefault(); document.getElementById("q").focus(); }
+  if(e.key === "Escape"){ document.getElementById("q").blur(); }
+});
+document.getElementById("effortFilters").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const v = b.dataset.effort;
+  state.eff.has(v) ? state.eff.delete(v) : state.eff.add(v);
+  b.setAttribute("aria-pressed", state.eff.has(v)); render();
+});
+document.getElementById("statusFilters").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  const v = b.dataset.status;
+  state.status.has(v) ? state.status.delete(v) : state.status.add(v);
+  b.setAttribute("aria-pressed", state.status.has(v)); render();
+});
+document.getElementById("sort").addEventListener("change", e=>{ state.sort = e.target.value; render(); });
+document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click", ()=>{
+  state.view = b.dataset.view;
+  document.querySelectorAll("[data-view]").forEach(x=>x.setAttribute("aria-pressed", x.dataset.view===state.view));
+  render();
+}));
+
+const themeBtn = document.getElementById("themeToggle");
+themeBtn.addEventListener("click", ()=>{
+  const dark = document.documentElement.dataset.theme === "dark";
+  document.documentElement.dataset.theme = dark ? "light" : "dark";
+  themeBtn.textContent = dark ? "dark" : "light";
+});
+
+document.getElementById("ideaTotal").textContent = IDEAS.length;
+render();
+</script>
+</body>
+</html>
