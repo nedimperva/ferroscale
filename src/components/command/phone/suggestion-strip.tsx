@@ -3,6 +3,7 @@
 import type React from "react";
 import { useTranslations } from "next-intl";
 import type { CommandSuggestion, CommandSuggestionItem } from "@ferroscale/metal-core";
+import { fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
 import { CommandGlyph } from "../command-glyph";
 import { formatCommandHint, formatCommandSuggestionLabel } from "../command-copy";
 
@@ -158,11 +159,23 @@ export function PhoneSuggestionStrip({
               >
                 {formatCommandSuggestionLabel(t, it)}
               </span>
-              {it.sub && (
+              {it.weightKg != null ? (
+                // The line already fixes the length and the quantity, so the
+                // chip can say what the size would weigh — the number the
+                // choice is actually made on.
+                <span className="font-mono text-[11px] font-semibold text-[var(--accent-text)]">
+                  {fsWeight(it.weightKg)} {fsWeightUnit()}
+                </span>
+              ) : it.sub ? (
                 <span className="text-[10px] text-muted font-semibold">
                   {it.sub}
                 </span>
-              )}
+              ) : null}
+              {it.learned ? (
+                <span className="text-[10px] text-muted-faint font-semibold">
+                  {t("learned.why", { count: it.learnedCount ?? 1 })}
+                </span>
+              ) : null}
             </span>
           </button>
         ))}

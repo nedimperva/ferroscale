@@ -3,6 +3,7 @@ import type { Project } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { Customer } from "@/hooks/useCustomers";
 import type { PriceBookEntry } from "@/hooks/usePriceBook";
+import type { CorrectionEntry } from "./corrections-merge";
 import { GOOGLE_SYNC_PROVIDER_ID } from "./keys";
 
 export type { CompareItem, CompareItem as SyncCompareItem, Customer, Project, SavedEntry, PriceBookEntry };
@@ -10,7 +11,7 @@ export type { CompareItem, CompareItem as SyncCompareItem, Customer, Project, Sa
 export type SyncProviderId = typeof GOOGLE_SYNC_PROVIDER_ID;
 
 export type SyncEntityCollectionKey = "saved" | "projects" | "customers";
-export type SyncListCollectionKey = "compare" | "quickHistory" | "priceBook";
+export type SyncListCollectionKey = "compare" | "quickHistory" | "priceBook" | "corrections";
 /**
  * Collections that neither replace wholesale nor key by entity: usage stats
  * are a grow-only counter per device, so every device owns one record and the
@@ -53,6 +54,15 @@ export interface SyncUsagePayload {
  */
 export interface SyncPriceBookPayload extends SyncListPayload<PriceBookEntry> {
   removed?: Record<string, string>;
+}
+
+/**
+ * The learned corrections record. One shared table — a correction is a fact
+ * about the user, not about a device — merged key by key, with tombstones so
+ * a forgotten correction does not come back.
+ */
+export interface SyncCorrectionsPayload extends SyncListPayload<CorrectionEntry> {
+  removed?: Record<string, number>;
 }
 
 /** The synced settings record. `values` is settings-sync.ts's own shape. */
@@ -141,6 +151,7 @@ export type SyncRecordKind =
   | "quickHistory"
   | "priceBook"
   | "usage"
+  | "corrections"
   | "settings";
 
 export interface SyncSessionDescriptor {

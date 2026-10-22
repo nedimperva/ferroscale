@@ -1,6 +1,7 @@
 import {
   COMMAND_ITEM_SEPARATOR,
   cmdClassifyToken,
+  cmdPlanLine,
   cmdSplitLine,
   cmdTokenize,
 } from "@ferroscale/metal-core";
@@ -21,6 +22,21 @@ export interface LineChipGroup {
   item: number;
   /** Completed tokens, rendered as chips. */
   tokens: string[];
+  /** Which run of items this item belongs to — items that share a profile. */
+  group: number;
+  /** True when the run holds more than one item. */
+  groupMulti: boolean;
+  /** True on the first item of the run — where the header is drawn. */
+  groupStart: boolean;
+  /** How many items the run holds. */
+  groupItems: number;
+  /**
+   * The profile token the run shares, when it holds more than one item. The
+   * item that owns it renders it once, as the run's header.
+   */
+  groupProfile: string | null;
+  /** Where that token sits in this item's tokens — set on the item that owns it. */
+  groupProfileIndex: number | null;
 }
 
 export interface LineChips {
@@ -39,10 +55,28 @@ function tokensFor(text: string, isLast: boolean): string[] {
 
 export function lineChips(query: string): LineChips {
   const segments = cmdSplitLine(query);
-  const groups: LineChipGroup[] = segments.map((segment, index) => ({
-    item: index,
-    tokens: tokensFor(segment.text, index === segments.length - 1),
-  }));
+  const plan = cmdPlanLine(query);
+  const groups: LineChipGroup[] = segments.map((segment, index) => {
+    const tokens = tokensFor(segment.text, index === segments.length - 1);
+    const group = plan.groups.find((entry) => entry.items.includes(index)) ?? null;
+    const groupProfile = group && group.multi ? group.profile : null;
+    // The token that names the profile sits in the item that typed it; that
+    // item renders it once, as the run's header.
+    const groupProfileIndex =
+      groupProfile == null
+        ? -1
+        : tokens.findIndex((token) => token.toLowerCase() === groupProfile.toLowerCase());
+    return {
+      item: index,
+      tokens,
+      group: plan.groups.indexOf(group as never),
+      groupMulti: Boolean(group?.multi),
+      groupStart: Boolean(group && group.items[0] === index),
+      groupItems: group?.items.length ?? 1,
+      groupProfile: groupProfileIndex >= 0 ? groupProfile : null,
+      groupProfileIndex: groupProfileIndex >= 0 ? groupProfileIndex : null,
+    };
+  });
 
   const last = groups[groups.length - 1];
   const hasPartial = !/\s$/.test(query) && last.tokens.length > 0;
@@ -50,6 +84,40 @@ export function lineChips(query: string): LineChips {
   if (hasPartial) last.tokens = last.tokens.slice(0, -1);
 
   return { groups, partial };
+}
+
+/**
+ * Drop a whole run of items — the bar's answer to "remove this bar and the
+ * cuts I made from it". The profile belongs to the first item of the run, so
+ * removing only that token would leave the rest of the run naming nothing.
+ */
+export function removeLineGroup(query: string, group: number): string {
+  const plan = cmdPlanLine(query);
+  const target = plan.groups[group];
+  if (!target) return query;
+  let next = query;
+  // Back to front, so the offsets of the items still to go stay valid.
+  for (const item of [...target.items].sort((a, b) => b - a)) {
+    next = removeLineItem(next, item);
+  }
+  return next;
+}
+
+/**
+ * Add another cut to a run. The new item names only its length, and the
+ * length inherits the run's profile — which is the whole point of the run.
+ */
+export function addLengthToGroup(query: string, group: number, length: string): string {
+  const plan = cmdPlanLine(query);
+  const target = plan.groups[group];
+  if (!target) return query;
+  const text = length.trim();
+  if (!text) return query;
+  const last = target.items[target.items.length - 1];
+  const segments = cmdSplitLine(query);
+  const end = segments[last]?.end ?? query.length;
+  const head = query.slice(0, end).replace(/\s+$/, "");
+  return `${head} ${COMMAND_ITEM_SEPARATOR} ${text} `;
 }
 
 /**

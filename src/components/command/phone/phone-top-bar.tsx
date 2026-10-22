@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import type { SyncAttention } from "@/lib/sync/types";
+import { SyncStatusMark } from "../sync-status-mark";
 import { IconBtn } from "./phone-atoms";
 
 /** The phone shell's header: the mark, the title, and its four doors. */
@@ -38,7 +39,10 @@ export function PhoneTopBar({
           FerroScale
         </h1>
       </div>
-      <div className="flex gap-1.5">
+      <div className="flex items-center gap-1.5">
+        {/* Where the data is. A square that is nearly always grey says
+            "everything is fine" without a word. */}
+        <SyncStatusMark compact onClick={onOpenSettings} />
         <IconBtn onClick={onToggleTheme} ariaLabel={t("aria.toggleTheme")}>
           {/* Both glyphs ship and CSS picks one. Choosing in JS from the
               resolved theme meant the server drew the moon and a

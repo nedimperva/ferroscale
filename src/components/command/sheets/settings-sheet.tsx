@@ -30,6 +30,7 @@ import { SyncSection } from "./sync-section";
 import { BackupSection } from "../backup-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
+import { LearnedSection } from "../learned-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
 
@@ -442,6 +443,11 @@ export function CommandSettingsSheet({
               </div>
             )}
           </SheetCard>
+
+          <SheetSectionLabel>{t("settings.groups.learned")}</SheetSectionLabel>
+          <div className="rounded-2xl border border-border-faint bg-[var(--surface-raised)] px-4 py-3">
+            <LearnedSection />
+          </div>
 
           <p className="text-[11px] text-muted mt-3 px-1">{t("settings.applyAcrossCommand")}</p>
           <p className="text-[11px] text-muted mt-1 px-1">

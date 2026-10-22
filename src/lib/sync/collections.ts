@@ -17,8 +17,20 @@ import { normalizePaintCoats } from "@/lib/projects/paint";
 import type { SavedEntry, SavedPart } from "@/hooks/useSaved";
 import type { Customer } from "@/hooks/useCustomers";
 import { invalidatePriceBookCache, type PriceBookEntry } from "@/hooks/usePriceBook";
-import { SYNC_COLLECTION_UPDATED_AT_KEYS, SYNC_PRICE_BOOK_REMOVED_KEY, SYNC_STORAGE_KEYS } from "./keys";
+import {
+  SYNC_COLLECTION_UPDATED_AT_KEYS,
+  SYNC_CORRECTION_REMOVED_KEY,
+  SYNC_PRICE_BOOK_REMOVED_KEY,
+  SYNC_STORAGE_KEYS,
+} from "./keys";
 import { stampPriceBookEdit, type PriceBookRemovals } from "./price-book-merge";
+import {
+  correctionKey,
+  stampCorrectionEdit,
+  type CorrectionEntry,
+  type CorrectionRemovals,
+  type CorrectionState,
+} from "./corrections-merge";
 import { notifySyncedCollectionDirty } from "./registry";
 import type { SyncEntityCollectionKey, SyncListCollectionKey, SyncEntityRecord } from "./types";
 
@@ -395,6 +407,85 @@ export function persistPriceBook(items: PriceBookEntry[], options?: PriceBookPer
 
 export function loadQuickHistory(): string[] {
   return loadArrayFromStorage<string>(SYNC_STORAGE_KEYS.quickHistory).filter((entry) => typeof entry === "string" && entry.trim().length > 0);
+}
+
+/* ── learned corrections ─────────────────────────────────────────────────── */
+
+/**
+ * The whitelist for a learned correction. A field this does not name is
+ * dropped on every load, so a correction that gained a field has to be named
+ * here as well as in the type.
+ */
+export function normalizeCorrections(raw: unknown[]): CorrectionEntry[] {
+  const seen = new Set<string>();
+  const out: CorrectionEntry[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const candidate = item as Partial<CorrectionEntry>;
+    if (typeof candidate.from !== "string" || typeof candidate.to !== "string") continue;
+    const n = Number(candidate.n);
+    const t = Number(candidate.t);
+    const entry: CorrectionEntry = {
+      from: candidate.from.trim(),
+      to: candidate.to.trim(),
+      n: Number.isFinite(n) && n > 0 ? Math.round(n) : 1,
+      t: Number.isFinite(t) && t > 0 ? t : 0,
+    };
+    // A correction that says nothing, or says the same thing twice, is not a
+    // correction.
+    if (!entry.from || !entry.to) continue;
+    if (entry.from.toLowerCase() === entry.to.toLowerCase()) continue;
+    if (entry.from.length > 64 || entry.to.length > 64) continue;
+    const key = correctionKey(entry.from);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(entry);
+  }
+  return out;
+}
+
+/** Typed text → when it was forgotten, so a forgotten correction stays gone. */
+export function normalizeCorrectionRemovals(raw: unknown): CorrectionRemovals {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: CorrectionRemovals = {};
+  for (const [key, at] of Object.entries(raw as Record<string, unknown>)) {
+    const value = Number(at);
+    if (key && Number.isFinite(value) && value > 0) out[key] = value;
+  }
+  return out;
+}
+
+export function loadCorrections(): CorrectionEntry[] {
+  return normalizeCorrections(loadArrayFromStorage<unknown>(SYNC_STORAGE_KEYS.corrections));
+}
+
+export function loadCorrectionRemovals(): CorrectionRemovals {
+  return normalizeCorrectionRemovals(loadFromStorage<unknown>(SYNC_CORRECTION_REMOVED_KEY, {}));
+}
+
+export function loadCorrectionState(): CorrectionState {
+  return { items: loadCorrections(), removed: loadCorrectionRemovals() };
+}
+
+export function getCorrectionsUpdatedAt(): string {
+  return readListUpdatedAt("corrections");
+}
+
+export function persistCorrections(
+  items: CorrectionEntry[],
+  options?: PersistOptions & { removed?: CorrectionRemovals },
+): void {
+  const updatedAt = options?.updatedAt ?? nowIso();
+  const markDirty = options?.markDirty ?? true;
+  // A user edit is stamped here, so every writer gets the per-key merge
+  // without knowing about it. Writes from Drive already carry their stamps.
+  const next = markDirty
+    ? stampCorrectionEdit(loadCorrectionState(), items, Date.now())
+    : { items, removed: options?.removed ?? loadCorrectionRemovals() };
+  persistToStorage(SYNC_STORAGE_KEYS.corrections, next.items);
+  persistToStorage(SYNC_CORRECTION_REMOVED_KEY, next.removed);
+  writeListUpdatedAt("corrections", updatedAt);
+  maybeNotify("corrections", markDirty);
 }
 
 export function getQuickHistoryUpdatedAt(): string {

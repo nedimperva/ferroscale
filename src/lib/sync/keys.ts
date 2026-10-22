@@ -19,10 +19,14 @@ export const SYNC_COLLECTION_UPDATED_AT_KEYS = {
   compare: "ferroscale-sync-compare-updated-at-v1",
   quickHistory: "ferroscale-sync-quick-history-updated-at-v1",
   priceBook: "ferroscale-sync-price-book-updated-at-v1",
+  corrections: "ferroscale-sync-corrections-updated-at-v1",
 } as const;
 
 /** gradeId → when that rate was removed; lets a removal sync instead of reappearing. */
 export const SYNC_PRICE_BOOK_REMOVED_KEY = "ferroscale-price-book-removed-v1";
+
+/** Typed text → when it was forgotten; a forgotten correction must not come back. */
+export const SYNC_CORRECTION_REMOVED_KEY = "ferroscale-corrections-removed-v1";
 
 /** When the synced settings last changed on this device (or arrived from Drive). */
 export const SYNC_SETTINGS_UPDATED_AT_KEY = "ferroscale-sync-settings-updated-at-v1";
@@ -38,6 +42,9 @@ export const SYNC_STORAGE_KEYS = {
   // Typing habits. Synced per device (see usage-stats.ts), so this key holds
   // this device's own tally only.
   usage: "ferroscale-usage-v1",
+  // What the app learned from the user's own corrections. One shared table:
+  // a correction is a fact about the user, not about a device.
+  corrections: "ferroscale-corrections-v1",
 } as const;
 
 export const GOOGLE_SYNC_PROVIDER_ID = "google-drive";

@@ -153,7 +153,8 @@
       "pick": "pick",
       "save": "save",
       "recall": "recall",
-      "shortcuts": "shortcuts"
+      "shortcuts": "shortcuts",
+      "undo": "undo"
     },
     "help": {
       "title": "Command reference",
@@ -183,7 +184,11 @@
         "compare": "Add to compare",
         "new": "New calculation",
         "clear": "Clear the line",
-        "backspace": "On an empty line, pull the last chip back"
+        "backspace": "On an empty line, pull the last chip back",
+        "undo": "Undo the last action — a line edit or a delete",
+        "redo": "Redo what you just undid",
+        "diff": "Compare the line with the previous one",
+        "search": "Search parts, projects and earlier lines"
       }
     },
     "common": {
@@ -373,7 +378,18 @@
       "invalidLength": "Length out of range: \"{token}\"",
       "invalidSetting": "A setting is out of range — check Settings",
       "invalidQtyRange": "Quantity must be a whole number, 1 to {max}",
-      "shortLength": "\"{token}\" read as {value} {unit}"
+      "shortLength": "\"{token}\" read as {value} {unit}",
+      "useInstead": "Use {value}",
+      "explain": {
+        "unknownToken": "The app does not know this word. It may be a misspelling, or a size written without its profile.",
+        "unknownSize": "There is no catalogue size with that name.",
+        "invalidQty": "A quantity is how many pieces you are weighing, and it has to be at least one.",
+        "invalidExpression": "This is arithmetic that does not come to a usable amount.",
+        "invalidGeometry": "These dimensions do not describe a real section.",
+        "invalidLength": "That length is outside what the app can weigh.",
+        "invalidSetting": "A setting behind this number is out of range.",
+        "shortLength": "A bare number is read in your default unit. On a long product that is almost always metres."
+      }
     },
     "sheets": {
       "resultBreakdown": "Result breakdown",
@@ -463,7 +479,8 @@
         "appearance": "Appearance",
         "priceBook": "Price book",
         "sync": "Backup & sync",
-        "help": "Help & about"
+        "help": "Help & about",
+        "learned": "What the app learned"
       },
       "groupHints": {
         "pricing": "what turns kilograms into money",
@@ -472,6 +489,7 @@
         "appearance": "language, theme and feedback",
         "priceBook": "rates you keep per grade",
         "sync": "keeping this device's data safe",
+        "learned": "spellings the app has learned from you",
         "help": "everything the bar understands"
       },
       "sheetGroupUnitsApp": "Units & app",
@@ -586,7 +604,8 @@
       "savePassphrase": "Unlock",
       "attentionReconnect": "Sync needs you to sign in again",
       "attentionPassphrase": "Sync needs your passphrase",
-      "justNow": "just now"
+      "justNow": "just now",
+      "queueWaiting": "{count} waiting"
     },
     "library": {
       "emptySaved": "Saved calculations show here. Tap Save on a result.",
@@ -641,7 +660,8 @@
       "group": {
         "usage": "Yours",
         "preset": "Parts",
-        "standard": "Standard"
+        "standard": "Standard",
+        "learned": "Learned"
       },
       "addItem": "+ item"
     },
@@ -1375,6 +1395,73 @@
       "whenYesterday": "yesterday",
       "timesUsed": "×{count}",
       "nothingToday": "Nothing logged today — press + on a finished line."
+    },
+    "undo": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "undoLabel": "Undo {label}",
+      "redoLabel": "Redo {label}",
+      "historyTitle": "What you can undo",
+      "historyEmpty": "Nothing to undo yet",
+      "groupLine": "Line",
+      "groupAction": "Action",
+      "labelLineReplaced": "Replace the line",
+      "labelLineCleared": "Clear the line",
+      "labelRemovedSaved": "Remove {name}"
+    },
+    "diff": {
+      "title": "Compare with",
+      "current": "Current",
+      "reference": "Reference",
+      "pickReference": "Pick a line…",
+      "clear": "Stop comparing",
+      "weight": "Weight",
+      "cost": "Cost",
+      "quantity": "Pieces",
+      "identical": "The same line"
+    },
+    "search": {
+      "placeholder": "Search everything…",
+      "noResults": "Nothing found",
+      "kinds": {
+        "line": "Your lines",
+        "part": "Parts",
+        "project": "Projects",
+        "customer": "Customers",
+        "size": "Sizes",
+        "setting": "Settings"
+      }
+    },
+    "learned": {
+      "why": "corrected {count}×",
+      "description": "Spellings you have corrected. The app offers them again before you finish typing, and they sync with your other devices.",
+      "empty": "Nothing learned yet",
+      "forget": "Forget",
+      "forgetAll": "Forget everything"
+    },
+    "conflicts": {
+      "title": "Sync conflicts",
+      "resolved": "{count} to review",
+      "none": "No conflicts",
+      "noneBody": "When two devices change the same thing, the app keeps the newer one and writes down what it dropped. Nothing to review.",
+      "keepMine": "Keep mine",
+      "keepTheirs": "Keep theirs",
+      "keepBoth": "Keep both",
+      "mine": "This device",
+      "theirs": "The other device",
+      "dismiss": "Dismiss",
+      "changedFields": "{count} fields",
+      "keptMine": "kept yours",
+      "keptTheirs": "kept theirs"
+    },
+    "restorePoints": {
+      "title": "Restore points",
+      "description": "Snapshots of your library, kept on this device. A restore puts back what was there before something went wrong.",
+      "empty": "No restore points yet",
+      "write": "Take one now",
+      "restore": "Restore",
+      "delete": "Delete",
+      "summary": "{parts} parts · {projects} projects · {customers} customers"
     }
   },
   "contact": {

@@ -1,10 +1,12 @@
 import type {
   CommandLine,
+  CommandParseIssue,
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestion,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
+import type { SearchResult } from "@/lib/command/search";
 import type { SharedCalcSettings } from "@/lib/settings-stores";
 import type { CalculationInput, CalculationResult, LengthUnit } from "@/lib/calculator/types";
 import type { SavedEntry } from "@/hooks/useSaved";
@@ -17,6 +19,8 @@ export type DeskView = "calc" | "saved" | "projects" | "customers" | "compare" |
 export interface CommandDesktopProps {
   /** Below 1024: one column, no side rail, tighter chrome. */
   compact: boolean;
+  /** A held device: the rail moves to the bottom and the targets grow. */
+  tablet?: boolean;
   dark: boolean;
   onToggleTheme: () => void;
   query: string;
@@ -104,4 +108,30 @@ export interface CommandDesktopProps {
   onRemovePartSaved: (entry: SavedEntry, partId: string) => void;
   /** Open the project picker for a saved part or assembly. */
   onAddSavedToProject: (entry: SavedEntry) => void;
+  /* ── the bar's second mode, and the things the line can be compared to ── */
+
+  /** True while the bar is searching rather than calculating. */
+  searchMode: boolean;
+  /** What the user has typed in search mode. */
+  searchTerm: string;
+  onSearchTerm: (value: string) => void;
+  onOpenSearch: () => void;
+  onCloseSearch: () => void;
+  /** The results of the search, best first. */
+  searchResults: SearchResult[];
+  onPickSearchResult: (result: SearchResult) => void;
+  /** The line the bar is compared against, if any. */
+  referenceQuery: string | null;
+  onSetReference: (query: string) => void;
+  onClearReference: () => void;
+  /** ⌘D — compare with the line before this one, or close the comparison. */
+  onDiff: () => void;
+  /** The issue being explained under the bar, if any. */
+  openIssue: CommandParseIssue | null;
+  onOpenIssue: (issue: CommandParseIssue | null) => void;
+  onApplyIssueFix: (value: string) => void;
+  /** Open the whole undo stack. */
+  onOpenUndoHistory: () => void;
+  /** A request from the search to open a project or a customer. */
+  navigationRequest: { kind: "project" | "customer"; id: string } | null;
 }

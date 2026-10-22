@@ -5,6 +5,32 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [3.38.0] - 2026-10-22
+
+### Added
+
+- The bar says what it could not read, where it was read: a word it does not know, a size that is not in the catalogue, a quantity that is not a quantity — with a plain reason and, when it can tell, the line you probably meant, one tap away
+- A length after a finished item is read as another length of the same profile. hea120 6m + 3m is one job, drawn as a run with its profile once at the head, and the ×N and the lengths grouped under it
+- Size suggestions show the weight of the size as you choose it, in the unit you work in
+- The app learns your spellings. Correct hae120 to hea120 once and the right one is offered before you finish typing next time. Settings › What the app learned lists them with how often they were seen, and forgets one or all — on every device
+- Search everything with ⌘F (Ctrl+F): your lines, parts, projects, customers, sizes and settings in one list, and a project or a customer opens straight from the result
+- Compare with a reference line — ⌘D, or the compare button on the result — for the difference in weight, cost and pieces, line by line and field by field
+- Undo and redo for the whole app with ⌘Z and ⇧⌘Z (Ctrl+Y): the line, clearing it, deleting a part. The history lists what can be undone, by what kind of thing it was
+- A sync mark on the rail and in the phone's top bar: waiting, syncing, synced, with how many records your other device has not seen yet
+- When two devices change the same thing, the merge keeps the newer one and writes down the one it dropped. Settings › Sync conflicts shows both sides, with Keep mine, Keep theirs and Dismiss
+- Restore points: snapshots of your library kept on this device and taken as you work, listed with what each one holds and restorable in one tap
+- A failed upload is retried on its own — half a minute, then a minute, up to a quarter of an hour — and the queue survives a closed tab
+- Tablets get their own workspace: a bottom tab bar and a type scale between the phone and the wide desk
+- ⌘/ shows the keyboard shortcuts, and the desk's other views load when you open them, so the calculator opens on the calculator
+
+### Changed
+
+- A multi-item line is drawn as a group. The profile appears once at the head of the run; each length after it is a chip of its own, and removing the head removes the run
+
+### Fixed
+
+- Two devices that learned the same correction keep one count between them instead of doubling it on every sync
+
 ## [3.37.0] - 2026-10-08
 
 ### Added

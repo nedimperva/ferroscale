@@ -45,6 +45,10 @@ import { commandTargetNote } from "../target-note";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
 import { SaveControl } from "../save-control";
+import { IssueExplainer } from "../issue-explainer";
+import { UndoControls } from "../undo-controls";
+import { DiffPanel } from "../diff-panel";
+import { SearchResultsList } from "../search-results";
 import { EXAMPLE_QUERY, placeholderExamples } from "../command-constants";
 import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
@@ -59,6 +63,7 @@ import {
 } from "../line-edit";
 import { InlineTokenEditor } from "../inline-token-editor";
 import { YourLines } from "../your-lines";
+import { undo as undoLast, redo as redoLast } from "@/hooks/use-undo-stack";
 import { massTolerancePercentStore } from "@/lib/settings-stores";
 import { useExpandedItem } from "../use-expanded-item";
 
@@ -71,6 +76,7 @@ type DeskCalcViewProps = CommandDesktopProps & {
 
 export function DeskCalcView({
   compact,
+  tablet,
   query,
   setQuery,
   p,
@@ -105,6 +111,19 @@ export function DeskCalcView({
   onSuggest,
   onCompareCurrent,
   inputRef,
+  searchMode,
+  searchTerm,
+  onSearchTerm,
+  onCloseSearch,
+  searchResults,
+  onPickSearchResult,
+  referenceQuery,
+  onClearReference,
+  onDiff,
+  onOpenSearch,
+  openIssue,
+  onOpenIssue,
+  onApplyIssueFix,
 }: DeskCalcViewProps) {
   const locale = useLocale();
   const t = useTranslations("command");
@@ -367,9 +386,21 @@ export function DeskCalcView({
                 >
                   {formatCommandSuggestionLabel(t, it)}
                 </span>
-                {it.sub && (
+                {it.weightKg != null ? (
+                  // The line already fixes the length and the quantity, so the
+                  // chip can say what the size would weigh — the number the
+                  // choice is actually made on.
+                  <span className="font-mono text-[11px] font-semibold text-[var(--accent-text)]">
+                    {fsWeight(it.weightKg)} {fsWeightUnit()}
+                  </span>
+                ) : it.sub ? (
                   <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
-                )}
+                ) : null}
+                {it.learned ? (
+                  <span className="text-[10px] text-muted-faint font-semibold">
+                    {t("learned.why", { count: it.learnedCount ?? 1 })}
+                  </span>
+                ) : null}
               </span>
               {/* The ⌥-digit that picks this chip, so the shortcut is
                   learnable by looking rather than by being told. */}
@@ -471,9 +502,24 @@ export function DeskCalcView({
                     +
                   </span>
                 ))}
+              {group.groupStart && group.groupProfile ? (
+                // The run's header: one profile, several cuts. The item that
+                // typed the profile does not show it again as a chip.
+                <span
+                  className="inline-flex items-center gap-1.5 flex-shrink-0 font-mono text-[14px] font-bold px-1.5"
+                  style={{
+                    border: "1px solid var(--border-faint)",
+                    background: "var(--surface-inset)",
+                    color: "var(--accent-text)",
+                  }}
+                >
+                  {group.groupProfile}
+                  <span className="text-[11px] text-muted-faint">×{group.groupItems}</span>
+                </span>
+              ) : null}
               {group.item === expandedIndex ? (
                 group.tokens.map((tok, i) =>
-                  editing && editing.item === group.item && editing.idx === i && editing.tok === tok ? (
+                  i === group.groupProfileIndex ? null : editing && editing.item === group.item && editing.idx === i && editing.tok === tok ? (
                     <InlineTokenEditor
                       key={`edit-${tok}-${i}`}
                       tok={tok}
@@ -538,6 +584,27 @@ export function DeskCalcView({
               )}
             </Fragment>
           ))}
+          {searchMode ? (
+            <input
+              value={searchTerm}
+              onChange={(e) => onSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  onCloseSearch();
+                  focusInputAtEnd();
+                }
+              }}
+              placeholder={t("search.placeholder")}
+              aria-label={t("search.placeholder")}
+              autoFocus
+              autoCapitalize="off"
+              autoComplete="off"
+              spellCheck={false}
+              className="flex-1 min-w-[120px] bg-transparent font-mono text-base font-semibold text-foreground placeholder:text-muted-faint"
+              style={{ outline: "none" }}
+            />
+          ) : (
           <GhostField
             ref={inputRef}
             type="text"
@@ -609,7 +676,26 @@ export function DeskCalcView({
                 case "help":
                   onOpenHelp();
                   return;
+                case "undo":
+                  undoLast();
+                  return;
+                case "redo":
+                  redoLast();
+                  return;
+                case "diff":
+                  onDiff();
+                  return;
+                case "search":
+                  onOpenSearch();
+                  return;
+                case "shortcuts":
+                  onOpenHelp();
+                  return;
                 case "clear":
+                  if (openIssue) {
+                    onOpenIssue(null);
+                    return;
+                  }
                   onNew();
                   return;
                 case "historyPrev": {
@@ -653,17 +739,54 @@ export function DeskCalcView({
             // global :focus-visible ring on the inner input is just noise.
             style={{ outline: "none" }}
           />
-          {query !== "" && (
-            <button
-              type="button"
-              onClick={onNew}
-              className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold cursor-pointer"
-              style={{ letterSpacing: 0.4 }}
-            >
-              {t("common.clear")}
-            </button>
           )}
+          <span className="ml-auto flex items-center gap-2">
+            <UndoControls compact={compact} />
+            {searchMode ? (
+              <button
+                type="button"
+                onClick={onCloseSearch}
+                className="bg-transparent border-0 text-muted text-[11px] font-bold cursor-pointer"
+                style={{ letterSpacing: 0.4 }}
+              >
+                {t("common.close")}
+              </button>
+            ) : query !== "" ? (
+              <button
+                type="button"
+                onClick={onNew}
+                className="bg-transparent border-0 text-muted text-[11px] font-bold cursor-pointer"
+                style={{ letterSpacing: 0.4 }}
+              >
+                {t("common.clear")}
+              </button>
+            ) : null}
+          </span>
         </div>
+
+        {searchMode ? (
+          <SearchResultsList
+            results={searchResults}
+            onPick={onPickSearchResult}
+          />
+        ) : null}
+        {openIssue && !searchMode ? (
+          <IssueExplainer
+            issue={openIssue}
+            onFix={onApplyIssueFix}
+            onClose={() => onOpenIssue(null)}
+          />
+        ) : null}
+        {referenceQuery != null && !searchMode ? (
+          <DiffPanel
+            reference={referenceQuery}
+            current={query}
+            parserSettings={parserSettings}
+            symbol={sym}
+            onClear={onClearReference}
+            onPickReference={onOpenSearch}
+          />
+        ) : null}
 
         {compact && strip}
       </div>
@@ -756,8 +879,14 @@ export function DeskCalcView({
                   className="font-mono fs-display-num"
                   style={{
                     // The sheet beside it takes most of the width; the figure
-                    // scales to what is left.
-                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(46px, 4.4vw, 76px)",
+                    // scales to what is left. A tablet is held, not looked
+                    // across a desk, so it gets the bigger figure the phone
+                    // has and a full desk would not.
+                    fontSize: compact
+                      ? "clamp(48px, 11vw, 72px)"
+                      : tablet
+                        ? "clamp(52px, 7.5vw, 64px)"
+                        : "clamp(46px, 4.4vw, 76px)",
                     lineHeight: 0.86,
                     letterSpacing: -4,
                     color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
@@ -814,6 +943,7 @@ export function DeskCalcView({
                           );
                           focusInputAtEnd();
                         }}
+                        onExplain={() => onOpenIssue(p.issues[0])}
                       />
                     )}
                     {p.availability && (
@@ -852,7 +982,13 @@ export function DeskCalcView({
                     style={{ color: "var(--amber-text)" }}
                     role="status"
                   >
-                    <span>{formatCommandIssue(t, p.issues[0])}</span>
+                    <button
+                      type="button"
+                      onClick={() => onOpenIssue(p.issues[0])}
+                      className="cursor-pointer text-left underline decoration-dotted underline-offset-2"
+                    >
+                      {formatCommandIssue(t, p.issues[0])}
+                    </button>
                     {p.issues[0].suggestion && (
                       <button
                         type="button"

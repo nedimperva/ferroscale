@@ -153,7 +153,8 @@
       "pick": "izaberi",
       "save": "sačuvaj",
       "recall": "vrati",
-      "shortcuts": "prečice"
+      "shortcuts": "prečice",
+      "undo": "vrati"
     },
     "help": {
       "title": "Pregled komandi",
@@ -183,7 +184,11 @@
         "compare": "Dodaj za poređenje",
         "new": "Novi izračun",
         "clear": "Očisti liniju",
-        "backspace": "Na praznoj liniji vraća zadnji čip"
+        "backspace": "Na praznoj liniji vraća zadnji čip",
+        "undo": "Vrati posljednju radnju — izmjenu linije ili brisanje",
+        "redo": "Ponovi ono što si upravo vratio",
+        "diff": "Uporedi liniju s prethodnom",
+        "search": "Pretraži dijelove, projekte i ranije linije"
       }
     },
     "common": {
@@ -373,7 +378,18 @@
       "invalidLength": "Dužina izvan opsega: \"{token}\"",
       "invalidSetting": "Postavka je izvan opsega — provjerite Postavke",
       "invalidQtyRange": "Količina mora biti cijeli broj, 1 do {max}",
-      "shortLength": "\"{token}\" pročitano kao {value} {unit}"
+      "shortLength": "\"{token}\" pročitano kao {value} {unit}",
+      "useInstead": "Koristi {value}",
+      "explain": {
+        "unknownToken": "Aplikacija ne poznaje ovu riječ. Možda je pogreška u pisanju, ili dimenzija napisana bez profila.",
+        "unknownSize": "Nema te dimenzije u katalogu.",
+        "invalidQty": "Količina je broj komada koje vagate, i mora biti barem jedan.",
+        "invalidExpression": "Ovo je račun koji ne daje upotrebljivu vrijednost.",
+        "invalidGeometry": "Ove dimenzije ne opisuju stvarni presjek.",
+        "invalidLength": "Ta dužina je izvan onoga što aplikacija može izvagati.",
+        "invalidSetting": "Postavka iza ovog broja je izvan raspona.",
+        "shortLength": "Broj bez mjere čita se u vašoj zadanoj jedinici. Na dugom proizvodu to je gotovo uvijek metar."
+      }
     },
     "sheets": {
       "resultBreakdown": "Detalji rezultata",
@@ -463,7 +479,8 @@
         "appearance": "Izgled",
         "priceBook": "Cjenovnik",
         "sync": "Kopija i sinhronizacija",
-        "help": "Pomoć i o aplikaciji"
+        "help": "Pomoć i o aplikaciji",
+        "learned": "Šta je aplikacija naučila"
       },
       "groupHints": {
         "pricing": "ono što kilograme pretvara u novac",
@@ -472,6 +489,7 @@
         "appearance": "jezik, tema i odziv",
         "priceBook": "cijene koje čuvaš po kvalitetu",
         "sync": "sigurnost podataka ovog uređaja",
+        "learned": "pravopisi koje je aplikacija naučila od vas",
         "help": "sve što traka razumije"
       },
       "sheetGroupUnitsApp": "Jedinice i aplikacija",
@@ -586,7 +604,8 @@
       "savePassphrase": "Otključaj",
       "attentionReconnect": "Sinhronizacija traži ponovnu prijavu",
       "attentionPassphrase": "Sinhronizacija traži lozinku",
-      "justNow": "upravo"
+      "justNow": "upravo",
+      "queueWaiting": "{count} čeka"
     },
     "library": {
       "emptySaved": "Sačuvani izračuni će se prikazati ovdje. Dodirnite Sačuvaj na rezultatu.",
@@ -641,7 +660,8 @@
       "group": {
         "usage": "Vaše",
         "preset": "Dijelovi",
-        "standard": "Standardno"
+        "standard": "Standardno",
+        "learned": "Naučeno"
       },
       "addItem": "+ stavka"
     },
@@ -1375,6 +1395,73 @@
       "whenYesterday": "jučer",
       "timesUsed": "×{count}",
       "nothingToday": "Danas još ništa nije upisano — pritisnite + na gotovoj liniji."
+    },
+    "undo": {
+      "undo": "Vrati",
+      "redo": "Ponovi",
+      "undoLabel": "Vrati: {label}",
+      "redoLabel": "Ponovi: {label}",
+      "historyTitle": "Šta možeš vratiti",
+      "historyEmpty": "Još ništa za vraćanje",
+      "groupLine": "Linija",
+      "groupAction": "Radnja",
+      "labelLineReplaced": "Zamijeni liniju",
+      "labelLineCleared": "Očisti liniju",
+      "labelRemovedSaved": "Ukloni {name}"
+    },
+    "diff": {
+      "title": "Uporedi sa",
+      "current": "Trenutno",
+      "reference": "Referenca",
+      "pickReference": "Odaberi liniju…",
+      "clear": "Prestani porediti",
+      "weight": "Težina",
+      "cost": "Cijena",
+      "quantity": "Komadi",
+      "identical": "Ista linija"
+    },
+    "search": {
+      "placeholder": "Pretraži sve…",
+      "noResults": "Ništa nije nađeno",
+      "kinds": {
+        "line": "Vaše linije",
+        "part": "Dijelovi",
+        "project": "Projekti",
+        "customer": "Kupci",
+        "size": "Dimenzije",
+        "setting": "Postavke"
+      }
+    },
+    "learned": {
+      "why": "ispravljeno {count}×",
+      "description": "Kako ste vi ispravljali napisanu riječ. Aplikacija ih nudi ponovo prije nego što završite pisati, i sinkronizuju se s vašim drugim uređajima.",
+      "empty": "Još ništa naučeno",
+      "forget": "Zaboravi",
+      "forgetAll": "Zaboravi sve"
+    },
+    "conflicts": {
+      "title": "Sukobi sinkronizacije",
+      "resolved": "{count} za pregled",
+      "none": "Nema sukoba",
+      "noneBody": "Kada dva uređaja promijene istu stvar, aplikacija zadržava noviju i zapisuje ono što je odbacila. Nema šta pregledati.",
+      "keepMine": "Zadrži moje",
+      "keepTheirs": "Zadrži njihovo",
+      "keepBoth": "Zadrži oboje",
+      "mine": "Ovaj uređaj",
+      "theirs": "Drugi uređaj",
+      "dismiss": "Odbaci",
+      "changedFields": "{count} polja",
+      "keptMine": "zadržano vaše",
+      "keptTheirs": "zadržano njihovo"
+    },
+    "restorePoints": {
+      "title": "Tačke vraćanja",
+      "description": "Snimci vaše biblioteke, čuvani na ovom uređaju. Vraćanje vraća ono što je bilo prije nego što nešto krene po zlu.",
+      "empty": "Još nema tačaka vraćanja",
+      "write": "Snimi sada",
+      "restore": "Vrati",
+      "delete": "Obriši",
+      "summary": "{parts} dijelova · {projects} projekata · {customers} kupaca"
     }
   },
   "contact": {

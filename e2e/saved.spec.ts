@@ -62,7 +62,9 @@ test.describe("Saved library", () => {
     await expect(savedTab(page, 1)).toBeVisible();
 
     await saveButton(page).click();
-    await page.getByRole("button", { name: "Undo" }).click();
+    // The toast's own Undo — the action row also carries one, labelled with
+    // what it will undo, so the two must be told apart.
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
     await expect(saveButton(page)).toHaveAccessibleName("Saved");
   });
 

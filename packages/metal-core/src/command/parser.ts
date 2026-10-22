@@ -1158,6 +1158,9 @@ export function cmdParse(
   const issues: CommandParseIssue[] = [];
   /** Recognized tokens whose slot was already filled — real input, no effect. */
   const shadowed: number[] = [];
+  /** Which token filled each slot, so an issue can name the word it is about. */
+  let aliasTokenIndex: number | null = null;
+  let lengthTokenIndex: number | null = null;
 
   for (let i = 0; i < toks.length; i++) {
     const tk = toks[i];
@@ -1172,6 +1175,7 @@ export function cmdParse(
         if (found) {
           alias = found;
           aliasCommitted = committed;
+          aliasTokenIndex = i;
           size = aliasMatch[2].replace(/×/g, "x");
           alias = routeAliasByDims(aliasMatch[1], size) ?? alias;
           continue;
@@ -1205,6 +1209,7 @@ export function cmdParse(
       lengthM = expr.mm / 1000;
       lengthRaw = fromMillimeters(expr.mm, expr.unit);
       lengthExplicit = expr.explicit;
+      lengthTokenIndex = i;
       continue;
     }
     const qtyExpr: number | null = qty == null ? parseQtyExpression(tk) : null;
@@ -1220,6 +1225,7 @@ export function cmdParse(
         code: "invalidExpression",
         token: tk,
         message: `"${tk}" doesn't come to a usable amount.`,
+        tokenIndex: i,
       });
       continue;
     }
@@ -1230,6 +1236,7 @@ export function cmdParse(
       lengthRaw = v;
       lengthM = toMillimeters(v, lengthUnit) / 1000;
       lengthExplicit = true;
+      lengthTokenIndex = i;
       continue;
     }
     const qm = tk.match(QTY_RE);
@@ -1240,6 +1247,7 @@ export function cmdParse(
           code: "invalidQty",
           token: tk,
           message: "Quantity must be at least 1.",
+          tokenIndex: i,
         });
       }
       continue;
@@ -1258,6 +1266,7 @@ export function cmdParse(
       lengthRaw = v;
       lengthM = toMillimeters(v, lengthUnit) / 1000;
       lengthExplicit = false;
+      lengthTokenIndex = i;
       continue;
     }
     // Fell through every matcher. Duplicates of an already-filled slot keep
@@ -1271,6 +1280,7 @@ export function cmdParse(
           token: tk,
           message: `Didn't understand "${tk}".`,
           suggestion: suggestForUnknownToken(tk),
+          tokenIndex: i,
         });
       } else {
         shadowed.push(i);
@@ -1338,6 +1348,7 @@ export function cmdParse(
         message: `No ${alias.name} size "${size}".`,
         params: { profile: alias.name, size },
         suggestion: suggestForUnknownSize(alias, size),
+        tokenIndex: aliasTokenIndex ?? undefined,
       });
       return;
     }
@@ -1348,6 +1359,7 @@ export function cmdParse(
         message: first?.message ?? "Invalid dimensions.",
         messageKey: first?.messageKey,
         messageValues: first?.messageValues,
+        tokenIndex: aliasTokenIndex ?? undefined,
       });
     }
   };
@@ -1449,6 +1461,7 @@ export function cmdParse(
           message: `"${lengthRaw}" was read as ${lengthRaw} ${lengthUnit}.`,
           params: { value: lengthRaw, unit: lengthUnit },
           suggestion: `${lengthRaw}m`,
+          tokenIndex: lengthTokenIndex ?? undefined,
         });
       }
       if (target) {

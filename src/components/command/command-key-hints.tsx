@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { commandKeyHints } from "./command-keys";
+import { useUndoStack } from "@/hooks/use-undo-stack";
 
 /**
  * The strip under the command line. Every binding it names already worked —
@@ -29,6 +30,7 @@ export function CommandKeyHints({
   compact?: boolean;
 }) {
   const t = useTranslations("command");
+  const { canUndo } = useUndoStack();
   const [coarsePointer, setCoarsePointer] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(pointer: coarse)");
@@ -40,7 +42,7 @@ export function CommandKeyHints({
 
   if (coarsePointer) return null;
 
-  const hints = commandKeyHints({ valid, hasGhost, suggestionCount, historyLength });
+  const hints = commandKeyHints({ valid, hasGhost, suggestionCount, historyLength, canUndo });
 
   return (
     <div

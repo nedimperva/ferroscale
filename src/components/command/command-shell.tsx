@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/navigation";
 import { APP_TAB_SUFFIXES, getAppTabFromPathname } from "@/lib/app-shell";
@@ -15,7 +16,6 @@ import { usePriceBook } from "@/hooks/usePriceBook";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useCustomerLinking } from "./customers/use-customer-linking";
 import { useCustomerActions } from "./customers/use-customer-actions";
-import { NewProjectDialog } from "./projects/new-project-dialog";
 import type { NewProjectRequest } from "./projects/new-project";
 import { buildSizePresetLookup } from "@/lib/saved/size-presets";
 import { useQuickHistory } from "@/hooks/useQuickHistory";
@@ -42,13 +42,13 @@ import {
   weightAsMainStore,
 } from "@/lib/settings-stores";
 import type {
+  CommandParseIssue,
   CommandParseResult,
   CommandParserSettings,
   CommandSuggestionItem,
 } from "@ferroscale/metal-core";
 import { formatCommandParseName, buildCommandSummary, buildCommandOneLine } from "./command-copy";
 import { buildShareCardModel } from "./line-summary";
-import { CommandHelpSheet } from "./sheets/help-sheet";
 import { commandTargetNote } from "./target-note";
 import { massBand } from "./mass-band";
 import { activeItemText, applyToActiveItem, dropEmptyLastItem, tweakActiveItem } from "./line-edit";
@@ -56,6 +56,12 @@ import { CommandToast, ResultAnnouncer } from "./command-atoms";
 import { useCommandToast } from "./use-command-toast";
 import { useShellViewport } from "./use-shell-viewport";
 import { CommandKeypad } from "./command-keypad";
+import { IssueExplainer } from "./issue-explainer";
+import { UndoHistorySheet } from "./undo-controls";
+import { DiffPanel } from "./diff-panel";
+import { SearchResultsList } from "./search-results";
+import { ConflictSheet } from "./sheets/conflict-sheet";
+import { RestorePointsSheet } from "./sheets/restore-points-sheet";
 import { ProfileDiscoveryTiles } from "./profile-discovery-tiles";
 import {
   commandKeypadInsert,
@@ -68,12 +74,8 @@ import { PhoneHero } from "./phone/phone-hero";
 import { SessionRibbon } from "./phone/session-ribbon";
 import { PhoneSuggestionStrip } from "./phone/suggestion-strip";
 import { PhoneQueryLine } from "./phone/query-line";
-import { CommandLibrarySheet } from "./sheets/library-sheet";
 import { useProjectActions } from "./projects/use-project-actions";
-import { CommandResultSheet } from "./sheets/result-sheet";
-import { CommandSettingsSheet } from "./sheets/settings-sheet";
-import { SavedEditSheet } from "./sheets/saved-edit-sheet";
-import { DestinationSheet, type DestinationSubject } from "./sheets/destination-sheet";
+import type { DestinationSubject } from "./sheets/destination-sheet";
 import { PwaRegister } from "@/components/pwa-register";
 import {
   buildShareUrl,
@@ -81,13 +83,54 @@ import {
   readSharedQuery,
   sharedPricingDiffers,
 } from "@/lib/command/share";
-import { shareCalculation } from "@/lib/command/share-card";
 import { buildUsageSource, recordCommandUsage, usageStatsVersionStore } from "@/lib/usage-stats";
+import { lookupCorrections, recordCorrection } from "@/lib/corrections";
+import { pushUndo } from "@/hooks/use-undo-stack";
+import { searchEverything, type SearchResult } from "@/lib/command/search";
+import { loadConflicts, resolveConflict, dismissConflict } from "@/lib/sync/conflicts";
 import { loadQuickHistory } from "@/lib/sync/collections";
 import { haptic } from "@/lib/haptics";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 
 import { EXAMPLE_QUERY, isSampleQuery } from "./command-constants";
+
+/**
+ * The overlays load on demand.
+ *
+ * Every route renders this shell, so the overlays used to be in the first
+ * paint even though almost nobody opens one. The cheat sheet, the settings
+ * sheet, the library, the destination picker, the new-project dialog and the
+ * quote card are each a separate chunk now, fetched when they are about to
+ * appear.
+ */
+const CommandHelpSheet = dynamic(
+  () => import("./sheets/help-sheet").then((mod) => mod.CommandHelpSheet),
+  { ssr: false },
+);
+const CommandSettingsSheet = dynamic(
+  () => import("./sheets/settings-sheet").then((mod) => mod.CommandSettingsSheet),
+  { ssr: false },
+);
+const CommandLibrarySheet = dynamic(
+  () => import("./sheets/library-sheet").then((mod) => mod.CommandLibrarySheet),
+  { ssr: false },
+);
+const CommandResultSheet = dynamic(
+  () => import("./sheets/result-sheet").then((mod) => mod.CommandResultSheet),
+  { ssr: false },
+);
+const SavedEditSheet = dynamic(
+  () => import("./sheets/saved-edit-sheet").then((mod) => mod.SavedEditSheet),
+  { ssr: false },
+);
+const DestinationSheet = dynamic(
+  () => import("./sheets/destination-sheet").then((mod) => mod.DestinationSheet),
+  { ssr: false },
+);
+const NewProjectDialog = dynamic(
+  () => import("./projects/new-project-dialog").then((mod) => mod.NewProjectDialog),
+  { ssr: false },
+);
 
 /**
  * The rate getDefaultInput() seeds. Matching it means nobody has said what
@@ -239,7 +282,30 @@ export function CommandShell() {
   // Which saved entry the name/notes/tags editor is open for (id, not the
   // record, so the sheet always renders the live version of it).
   const [editingSavedId, setEditingSavedId] = useState<string | null>(null);
-  const { isPhoneViewport, isWideViewport, isCompactDesktop } = useShellViewport();
+  /**
+   * The bar in search mode. The command line is a grammar, not a search box,
+   * so search is a mode it can enter and leave — the same field, a different
+   * job, and a chip in the field saying which one is happening.
+   */
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  /** The line the bar is compared against, if any. */
+  const [referenceQuery, setReferenceQuery] = useState<string | null>(null);
+  /** The issue being explained under the bar, if any. */
+  const [openIssue, setOpenIssue] = useState<CommandParseIssue | null>(null);
+  const [undoHistoryOpen, setUndoHistoryOpen] = useState(false);
+  const [conflictSheetOpen, setConflictSheetOpen] = useState(false);
+  const [restorePointsOpen, setRestorePointsOpen] = useState(false);
+  /**
+   * A request from the search to open something the workspace owns — a
+   * project, a customer. The desk keeps its own tab state, so the request
+   * travels down and the desk answers it.
+   */
+  const [navigationRequest, setNavigationRequest] = useState<{
+    kind: "project" | "customer";
+    id: string;
+  } | null>(null);
+  const { isPhoneViewport, isWideViewport, isCompactDesktop, isTabletViewport } = useShellViewport();
   /** Letters / number pad chosen by hand. Cleared when the active item empties. */
   const [keypadOverride, setKeypadOverride] = useState<CommandKeypadOverride>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -351,6 +417,14 @@ export function CommandShell() {
   );
   const p: CommandParseResult = line.items[line.activeIndex].parse;
   const targetNote = commandTargetNote(p);
+  // An explanation belongs to the issue it was opened for. Once the line is
+  // fixed, the panel goes with it rather than explaining a token that is no
+  // longer there.
+  const activeIssue =
+    openIssue &&
+    p.issues.some((issue) => issue.code === openIssue.code && issue.token === openIssue.token)
+      ? openIssue
+      : null;
 
   /**
    * Has anyone told the app what steel costs? The seeded rate is a
@@ -419,8 +493,43 @@ export function CommandShell() {
     // usageVersion is the invalidation signal, not an input: recording a query
     // or pulling a peer's habits bumps it, and the source rebuilds from storage.
     void usageVersion;
-    return usageHydrated ? buildUsageSource() : undefined;
+    if (!usageHydrated) return undefined;
+    const base = buildUsageSource();
+    return {
+      ...base,
+      // What the user corrected this word into — the app's memory of a
+      // spelling it has seen them make before.
+      learnedCorrections: (from: string) => lookupCorrections(from),
+    };
   }, [usageHydrated, usageVersion]);
+
+  /**
+   * Learn from corrections.
+   *
+   * A word the parser does not know is noticed the moment it is typed, and
+   * the moment the line comes out right the difference between the two is the
+   * correction. "hae120" was really "hea120"; next time it is typed the right
+   * answer can be offered before the word is finished.
+   */
+  const unknownTokenRef = useRef<string | null>(null);
+  useEffect(() => {
+    const unknown = p.issues.find((issue) => issue.code === "unknownToken");
+    if (unknown) {
+      unknownTokenRef.current = unknown.token;
+      return;
+    }
+    const typed = unknownTokenRef.current;
+    if (!typed || !p.valid || !p.alias) return;
+    unknownTokenRef.current = null;
+    // A word that starts with a letter was meant to be a profile; one that
+    // starts with a digit was meant to be a size.
+    const canonical = /^[a-z]/i.test(typed)
+      ? `${p.alias.alias}${p.size}`
+      : p.size;
+    if (canonical && canonical.toLowerCase() !== typed.toLowerCase()) {
+      recordCorrection(typed, canonical);
+    }
+  }, [p, query]);
 
   // `p` is handed over so the suggestion engine doesn't parse the same query
   // a second time on every keystroke.
@@ -530,14 +639,21 @@ export function CommandShell() {
     const url = buildShareUrl(query, window.location, shared);
     if (isPhoneViewport) {
       const card = buildShareCardModel(t, p, line, query);
-      void shareCalculation({
-        summary: buildCommandSummary(t, p, line, { rateIsUserSupplied }),
-        url,
-        title: card.title,
-        card,
-      }).then((how) => {
-        if (how === "copied") showToast(t("toast.copiedSummary"));
-      });
+      // The quote card draws on a canvas, and the canvas renderer is a chunk
+      // of its own — fetched when someone actually shares.
+      void import("@/lib/command/share-card")
+        .then((mod) =>
+          mod.shareCalculation({
+            summary: buildCommandSummary(t, p, line, { rateIsUserSupplied }),
+            url,
+            title: card.title,
+            card,
+          }),
+        )
+        .then((how) => {
+          if (how === "copied") showToast(t("toast.copiedSummary"));
+        })
+        .catch(() => {});
       return;
     }
     navigator.clipboard?.writeText(url).catch(() => {});
@@ -571,6 +687,12 @@ export function CommandShell() {
   const removeSavedEntry = useCallback(
     (entry: SavedEntry) => {
       removeSaved(entry.id);
+      pushUndo({
+        label: t("undo.labelRemovedSaved", { name: entry.name }),
+        group: "action",
+        undo: () => restoreSaved(entry.id),
+        redo: () => removeSaved(entry.id),
+      });
       showActionToast(t("toast.savedRemoved"), {
         label: t("common.undo"),
         onAction: () => {
@@ -825,6 +947,18 @@ export function CommandShell() {
       markExternalValueChange();
       setSheet(null);
       if (prevTrim && prevTrim !== nextTrim) {
+        pushUndo({
+          label: t("undo.labelLineReplaced"),
+          group: "line",
+          undo: () => {
+            setQuery(`${prevTrim} `);
+            markExternalValueChange();
+          },
+          redo: () => {
+            setQuery(next);
+            markExternalValueChange();
+          },
+        });
         showActionToast(t("toast.lineReplaced"), {
           label: t("common.undo"),
           onAction: () => {
@@ -1147,6 +1281,18 @@ export function CommandShell() {
     markExternalValueChange();
     // A five-part line is easy to wipe by mistake — the 5-second Undo puts it back.
     if (cleared.trim()) {
+      pushUndo({
+        label: t("undo.labelLineCleared"),
+        group: "line",
+        undo: () => {
+          setQuery(cleared);
+          markExternalValueChange();
+        },
+        redo: () => {
+          setQuery("");
+          markExternalValueChange();
+        },
+      });
       showActionToast(t("toast.lineCleared"), {
         label: t("common.undo"),
         onAction: () => {
@@ -1337,6 +1483,112 @@ export function CommandShell() {
   const editingEntry = editingSavedId
     ? savedEntries.find((entry) => entry.id === editingSavedId) ?? null
     : null;
+
+  // ── one field, everything ────────────────────────────────────────────────
+  const searchResults = useMemo(() => {
+    if (!searchMode) return [];
+    return searchEverything(
+      {
+        lines: quickHistory,
+        parts: savedEntries,
+        projects,
+        customers: customersApi.customers,
+        compare: compareItems,
+      },
+      searchTerm,
+    ).items;
+  }, [
+    searchMode,
+    searchTerm,
+    quickHistory,
+    savedEntries,
+    projects,
+    customersApi.customers,
+    compareItems,
+  ]);
+
+  const openSearch = useCallback(() => {
+    setSearchMode(true);
+    setSearchTerm("");
+  }, []);
+
+  const closeSearch = useCallback(() => {
+    setSearchMode(false);
+    setSearchTerm("");
+  }, []);
+
+  const pickSearchResult = useCallback(
+    (result: SearchResult) => {
+      setSearchMode(false);
+      setSearchTerm("");
+      // With the diff panel open, the line you pick is the one the bar is
+      // compared against — not the line that replaces it.
+      if (referenceQuery != null) {
+        if (result.query) setReferenceQuery(result.query.trim());
+        return;
+      }
+      if (result.kind === "project") {
+        setNavigationRequest({ kind: "project", id: result.id });
+        setLibraryTab("projects");
+        setSheet("library");
+        return;
+      }
+      if (result.kind === "customer") {
+        setNavigationRequest({ kind: "customer", id: result.id });
+        setLibraryTab("customers");
+        setSheet("library");
+        return;
+      }
+      if (result.kind === "part") {
+        const entry = savedEntries.find((item) => item.id === result.id);
+        if (entry) loadSavedEntry(entry);
+        return;
+      }
+      if (result.query) replaceQuery(result.query);
+    },
+    [savedEntries, loadSavedEntry, replaceQuery, referenceQuery],
+  );
+
+  /** Put a line of the user's own history on the desk as the comparison. */
+  const setReference = useCallback((value: string) => {
+    setReferenceQuery(value.trim() || null);
+  }, []);
+
+  /**
+   * ⌘D: compare the bar against the line you weighed just before it. With
+   * nothing to compare against — a first line, or the same line — the panel
+   * opens empty and the search picks the reference, so the gesture always
+   * does something.
+   */
+  const toggleDiff = useCallback(() => {
+    if (referenceQuery != null) {
+      setReferenceQuery(null);
+      return;
+    }
+    const previous = quickHistory.find(
+      (entry) => entry.trim() !== "" && entry.trim() !== query.trim(),
+    );
+    setReferenceQuery(previous ? previous.trim() : "");
+    if (!previous) openSearch();
+  }, [referenceQuery, quickHistory, query, openSearch]);
+
+  const applyIssueFix = useCallback(
+    (value: string) => {
+      const issue = openIssue;
+      if (!issue) return;
+      const token = issue.token;
+      const at = query.toLowerCase().indexOf(token.toLowerCase());
+      if (at < 0) {
+        setOpenIssue(null);
+        return;
+      }
+      const next = query.slice(0, at) + value + query.slice(at + token.length);
+      setQuery(/\s$/.test(next) ? next : `${next} `);
+      markExternalValueChange();
+      setOpenIssue(null);
+    },
+    [openIssue, query],
+  );
   const savedHandlers = {
     onLoadSaved: loadSavedEntry,
     onRemoveSaved: removeSavedEntry,
@@ -1484,6 +1736,7 @@ export function CommandShell() {
         <PwaRegister />
         <CommandDesktop
           compact={isCompactDesktop}
+          tablet={isTabletViewport}
           dark={dark}
           onToggleTheme={cycleTheme}
           query={query}
@@ -1537,12 +1790,47 @@ export function CommandShell() {
           currentSaved={!!currentSavedEntry}
           onOpenHelp={() => setSheet("help")}
           onRemoveSavedMany={removeSavedEntries}
+          searchMode={searchMode}
+          searchTerm={searchTerm}
+          onSearchTerm={setSearchTerm}
+          onOpenSearch={openSearch}
+          onCloseSearch={closeSearch}
+          searchResults={searchResults}
+          onPickSearchResult={pickSearchResult}
+          referenceQuery={referenceQuery}
+          onSetReference={setReference}
+          onClearReference={() => setReferenceQuery(null)}
+          onDiff={toggleDiff}
+          openIssue={activeIssue}
+          onOpenIssue={setOpenIssue}
+          onApplyIssueFix={applyIssueFix}
+          onOpenUndoHistory={() => setUndoHistoryOpen(true)}
+          navigationRequest={navigationRequest}
           {...savedHandlers}
         />
         {helpSheet}
         {savedEditSheet}
         {destinationSheet}
         {newProjectDialog}
+        {undoHistoryOpen ? <UndoHistorySheet onClose={() => setUndoHistoryOpen(false)} /> : null}
+        {conflictSheetOpen ? (
+          <ConflictSheet
+            conflicts={loadConflicts()}
+            onClose={() => setConflictSheetOpen(false)}
+            onKeepLocal={(conflict) => {
+              resolveConflict(conflict.id);
+              setConflictSheetOpen(false);
+            }}
+            onKeepRemote={(conflict) => {
+              resolveConflict(conflict.id);
+              setConflictSheetOpen(false);
+            }}
+            onDismiss={(conflict) => dismissConflict(conflict.id)}
+          />
+        ) : null}
+        {restorePointsOpen ? (
+          <RestorePointsSheet onClose={() => setRestorePointsOpen(false)} />
+        ) : null}
         <CommandToast toast={toast} bottom={32} dark={dark} />
         <ResultAnnouncer text={liveResultText} />
       </div>
@@ -1680,6 +1968,7 @@ export function CommandShell() {
               onCompare={doCompare}
               onShare={shareLink}
               onCopyAnswer={copyAnswer}
+              onOpenIssue={setOpenIssue}
             />
 
             {/* SESSION RIBBON — the tape, at phone size. It carries the same two
@@ -1710,6 +1999,7 @@ export function CommandShell() {
           {/* The gap under the strip has to clear the query line's 3px focus
               ring, not just its border box — at pb-1.5 the chips sat on the
               glow and the two read as one collided control. */}
+          {searchMode ? null : (
           <PhoneSuggestionStrip
             sug={sug}
             activeAlias={p.alias?.alias}
@@ -1721,9 +2011,83 @@ export function CommandShell() {
             onClear={newCalc}
             onExit={focusInput}
           />
+          )}
+
+          {/* SEARCH — the same field, a different job. The phone has no text
+              input of its own, so the search brings one: a real field above
+              the keypad, with the results under it. */}
+          {searchMode ? (
+            <div className="flex-shrink-0 px-[14px] pb-2">
+              <div
+                className="flex items-center gap-2"
+                style={{
+                  height: 50,
+                  border: "1px solid var(--foreground)",
+                  background: "var(--surface)",
+                  padding: "0 12px",
+                }}
+              >
+                <span className="font-mono text-[13px] text-muted-faint" aria-hidden>
+                  ⌕
+                </span>
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      closeSearch();
+                    }
+                  }}
+                  placeholder={t("search.placeholder")}
+                  aria-label={t("search.placeholder")}
+                  autoFocus
+                  autoCapitalize="off"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="flex-1 min-w-0 bg-transparent font-mono text-sm font-semibold text-foreground placeholder:text-muted-faint"
+                  style={{ outline: "none" }}
+                />
+                <button
+                  type="button"
+                  onClick={closeSearch}
+                  className="font-mono text-[12px] font-bold text-muted"
+                >
+                  {t("common.close")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {searchMode ? (
+            <SearchResultsList
+              results={searchResults}
+              onPick={pickSearchResult}
+            />
+          ) : null}
+
+          {activeIssue && !searchMode ? (
+            <IssueExplainer
+              issue={activeIssue}
+              onFix={applyIssueFix}
+              onClose={() => setOpenIssue(null)}
+            />
+          ) : null}
+
+          {referenceQuery != null && !searchMode ? (
+            <DiffPanel
+              reference={referenceQuery}
+              current={query}
+              parserSettings={parserSettings}
+              symbol={sym}
+              onClear={() => setReferenceQuery(null)}
+              onPickReference={openSearch}
+            />
+          ) : null}
 
           {/* QUERY AREA */}
           {/* QUERY LINE — chips plus the caret; the keypad below types into it */}
+            {searchMode ? null : (
             <PhoneQueryLine
               query={query}
               setQuery={setQuery}
@@ -1735,6 +2099,7 @@ export function CommandShell() {
                 if (keypadMode === "actions") setKeypadOverride("letters");
               }}
             />
+            )}
         </div>
 
           {/* On-screen keypad */}
@@ -1850,6 +2215,25 @@ export function CommandShell() {
           {savedEditSheet}
           {destinationSheet}
           {newProjectDialog}
+          {undoHistoryOpen ? <UndoHistorySheet onClose={() => setUndoHistoryOpen(false)} /> : null}
+          {conflictSheetOpen ? (
+            <ConflictSheet
+              conflicts={loadConflicts()}
+              onClose={() => setConflictSheetOpen(false)}
+              onKeepLocal={(conflict) => {
+                resolveConflict(conflict.id);
+                setConflictSheetOpen(false);
+              }}
+              onKeepRemote={(conflict) => {
+                resolveConflict(conflict.id);
+                setConflictSheetOpen(false);
+              }}
+              onDismiss={(conflict) => dismissConflict(conflict.id)}
+            />
+          ) : null}
+          {restorePointsOpen ? (
+            <RestorePointsSheet onClose={() => setRestorePointsOpen(false)} />
+          ) : null}
 
           {/* TOAST */}
           <CommandToast toast={toast} bottom={120} dark={dark} />

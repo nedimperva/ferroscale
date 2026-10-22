@@ -17,6 +17,52 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.38.0",
+    date: "2026-10-22",
+    added: [
+      "The bar says what it could not read, where it was read: a word it does not know, a size that is not in the catalogue, a quantity that is not a quantity — with a plain reason and, when it can tell, the line you probably meant, one tap away",
+      "A length after a finished item is read as another length of the same profile. hea120 6m + 3m is one job, drawn as a run with its profile once at the head, and the ×N and the lengths grouped under it",
+      "Size suggestions show the weight of the size as you choose it, in the unit you work in",
+      "The app learns your spellings. Correct hae120 to hea120 once and the right one is offered before you finish typing next time. Settings › What the app learned lists them with how often they were seen, and forgets one or all — on every device",
+      "Search everything with ⌘F (Ctrl+F): your lines, parts, projects, customers, sizes and settings in one list, and a project or a customer opens straight from the result",
+      "Compare with a reference line — ⌘D, or the compare button on the result — for the difference in weight, cost and pieces, line by line and field by field",
+      "Undo and redo for the whole app with ⌘Z and ⇧⌘Z (Ctrl+Y): the line, clearing it, deleting a part. The history lists what can be undone, by what kind of thing it was",
+      "A sync mark on the rail and in the phone's top bar: waiting, syncing, synced, with how many records your other device has not seen yet",
+      "When two devices change the same thing, the merge keeps the newer one and writes down the one it dropped. Settings › Sync conflicts shows both sides, with Keep mine, Keep theirs and Dismiss",
+      "Restore points: snapshots of your library kept on this device and taken as you work, listed with what each one holds and restorable in one tap",
+      "A failed upload is retried on its own — half a minute, then a minute, up to a quarter of an hour — and the queue survives a closed tab",
+      "Tablets get their own workspace: a bottom tab bar and a type scale between the phone and the wide desk",
+      "⌘/ shows the keyboard shortcuts, and the desk's other views load when you open them, so the calculator opens on the calculator",
+    ],
+    changed: [
+      "A multi-item line is drawn as a group. The profile appears once at the head of the run; each length after it is a chip of its own, and removing the head removes the run",
+    ],
+    fixed: [
+      "Two devices that learned the same correction keep one count between them instead of doubling it on every sync",
+    ],
+    added_bs: [
+      "Traka kaže šta nije mogla pročitati, tamo gdje je pročitano: riječ koju ne poznaje, dimenziju koje nema u katalogu, količinu koja nije količina — s običnim objašnjenjem i, kad može, linijom koju ste vjerovatno htjeli, jedan dodir dalje",
+      "Dužina nakon završene stavke čita se kao još jedna dužina istog profila. hea120 6m + 3m je jedan posao, nacrtan kao niz s profilom jednom na čelu, a ×N i dužine grupirani pod njim",
+      "Prijedlozi dimenzija pokazuju težinu dimenzije dok je birate, u jedinici u kojoj radite",
+      "Aplikacija uči vaše pravopise. Ispravite hae120 u hea120 jednom i sljedeći put se ispravno nudi prije nego što završite kucanje. Postavke › Šta je aplikacija naučila ih nabrajaju s brojem viđanja i zaboravljaju jedno ili sve — na svakom uređaju",
+      "Pretražite sve s ⌘F (Ctrl+F): vaše linije, dijelovi, projekti, kupci, dimenzije i postavke u jednoj listi, a projekat ili kupac se otvara direktno iz rezultata",
+      "Uporedite s referentnom linijom — ⌘D ili dugme za poređenje na rezultatu — za razliku u težini, cijeni i komadima, red po red i polje po polje",
+      "Vraćanje i ponavljanje za cijelu aplikaciju s ⌘Z i ⇧⌘Z (Ctrl+Y): linija, njeno čišćenje, brisanje dijela. Historija nabraja šta se može vratiti, po vrsti stvari",
+      "Oznaka sinkronizacije na traci i u gornjoj traci telefona: čeka, sinhronizuje, sinhronizovano, s brojem zapisa koje vaš drugi uređaj još nije vidio",
+      "Kada dva uređaja promijene istu stvar, spajanje zadržava noviju i zapisuje onu koju je odbacilo. Postavke › Sukobi sinkronizacije pokazuju obje strane, uz Zadrži moje, Zadrži njihovo i Odbaci",
+      "Tačke vraćanja: snimci vaše biblioteke čuvani na ovom uređaju i pravljeni dok radite, nabrojani sa sadržajem i vraćeni jednim dodirom",
+      "Neuspjelo slanje se samo ponavlja — pola minute, pa minuta, do četvrt sata — a red čekanja preživi zatvorenu karticu",
+      "Tableti dobijaju svoj radni prostor: donju traku kartica i veličinu slova između telefona i širokog desktopa",
+      "⌘/ prikazuje prečice na tastaturi, a ostali prikazi desktopa se učitavaju kad ih otvorite, pa se kalkulator otvara na kalkulatoru",
+    ],
+    changed_bs: [
+      "Linija s više stavki crta se kao grupa. Profil se pojavljuje jednom na čelu niza; svaka dužina nakon njega je zaseban čip, a uklanjanje čela uklanja cijeli niz",
+    ],
+    fixed_bs: [
+      "Dva uređaja koja su naučila istu ispravku drže jedan broj između sebe umjesto da ga udvostruče pri svakoj sinkronizaciji",
+    ],
+  },
+  {
     version: "3.37.0",
     date: "2026-10-08",
     added: [

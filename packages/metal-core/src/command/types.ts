@@ -188,6 +188,18 @@ export interface CommandParseIssue {
    * the raw query. Never applied automatically.
    */
   suggestion?: string;
+  /**
+   * Tokenize-order index of the token the issue is about, within its own item.
+   * The UI turns this into a marked chip, so the explanation can sit on the
+   * word that caused it instead of under the answer. Absent when the issue is
+   * about the item as a whole (a geometry problem, say) rather than one word.
+   */
+  tokenIndex?: number;
+  /**
+   * Which `+`-joined item the issue came from. Set when the issues are
+   * collected onto a line; a single item is always 0.
+   */
+  itemIndex?: number;
 }
 
 export type CommandTokenKind =
@@ -219,7 +231,7 @@ export interface CommandTarget {
  * Where a suggestion came from, so the UI can group the row: the user's own
  * habits first, then their saved presets, then the curated catalog.
  */
-export type CommandSuggestionGroup = "usage" | "preset" | "standard";
+export type CommandSuggestionGroup = "usage" | "preset" | "standard" | "learned";
 
 export interface CommandSuggestionItem {
   label: string;
@@ -251,6 +263,24 @@ export interface CommandSuggestionItem {
    * `size` rewrites the profile token's size suffix.
    */
   replaceKind?: CommandTokenKind | "size";
+  /**
+   * The total weight this suggestion would produce, when the line already
+   * fixes the length and quantity — the number the user is actually choosing
+   * by. Absent when the context is missing (the size stage of a line that has
+   * not reached its length yet), in which case the chip shows kg/m instead.
+   */
+  weightKg?: number;
+  /**
+   * True when this suggestion comes from something the user taught the app
+   * rather than from the catalogue. Shown in its own group, and never allowed
+   * to outrank an exact catalogue match.
+   */
+  learned?: boolean;
+  /**
+   * How many times the user made this correction. Shown next to a learned
+   * chip so the reason it is being offered is visible.
+   */
+  learnedCount?: number;
 }
 
 export interface CommandSuggestion {

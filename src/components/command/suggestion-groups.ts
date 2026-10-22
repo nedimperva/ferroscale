@@ -8,6 +8,7 @@ import type { CommandSuggestionGroup, CommandSuggestionItem } from "@ferroscale/
  */
 
 export const SUGGESTION_GROUP_ORDER: CommandSuggestionGroup[] = [
+  "learned",
   "usage",
   "preset",
   "standard",

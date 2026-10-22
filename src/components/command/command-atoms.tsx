@@ -140,14 +140,27 @@ export function InlineIssue({
   text,
   suggestionLabel,
   onApply,
+  onExplain,
 }: {
   text: string;
   suggestionLabel?: string | null;
   onApply?: () => void;
+  /** Open the longer explanation of what was dropped and why. */
+  onExplain?: () => void;
 }) {
   return (
     <span className="inline-flex items-center gap-1.5 flex-wrap" role="status" style={{ color: "var(--amber-text)" }}>
-      <span>{text}</span>
+      {onExplain ? (
+        <button
+          type="button"
+          onClick={onExplain}
+          className="cursor-pointer text-left underline decoration-dotted underline-offset-2"
+        >
+          {text}
+        </button>
+      ) : (
+        <span>{text}</span>
+      )}
       {suggestionLabel && onApply ? (
         <button
           type="button"

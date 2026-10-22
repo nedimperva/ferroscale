@@ -8,6 +8,7 @@ import type { Customer } from "@/hooks/useCustomers";
 import { sha256Text } from "./crypto";
 import {
   getCompareUpdatedAt,
+  getCorrectionsUpdatedAt,
   getPriceBookUpdatedAt,
   getQuickHistoryUpdatedAt,
   loadCompareItems,
@@ -18,18 +19,26 @@ import {
   loadQuickHistory,
   loadSavedEntries,
   normalizeCompareItems,
+  normalizeCorrectionRemovals,
+  normalizeCorrections,
   normalizeCustomers,
   normalizePriceBook,
   normalizePriceBookRemovals,
   normalizeProjects,
   normalizeSavedEntries,
   persistCompareItems,
+  persistCorrections,
   persistCustomers,
   persistPriceBook,
   persistProjects,
   persistQuickHistory,
   persistSavedEntries,
 } from "./collections";
+import {
+  canonicalCorrections,
+  mergeCorrections,
+  sameCorrections,
+} from "./corrections-merge";
 import {
   getUsageUpdatedAt,
   loadOwnUsageStats,
@@ -38,10 +47,12 @@ import {
 import { BOOTSTRAP_RECORD_KEY, SYNC_SCHEMA_VERSION } from "./keys";
 import { applySyncedSettings, buildSettingsPayload } from "./settings-sync";
 import { canonicalPriceBook, mergePriceBooks, samePriceBook } from "./price-book-merge";
+import { loadCorrectionState } from "./collections";
 import { loadSyncRecordIndex, saveSyncRecordIndex } from "./metadata";
 import type {
   AppliedSyncRecord,
   SyncBootstrapPayload,
+  SyncCorrectionsPayload,
   SyncEntityRecord,
   SyncListPayload,
   SyncLocalRecord,
@@ -82,6 +93,7 @@ function mergeEntityItem<T extends SyncEntityRecord>(items: T[], incoming: T) {
 function singletonUpdatedAt(key: SyncListCollectionKey) {
   if (key === "compare") return getCompareUpdatedAt();
   if (key === "priceBook") return getPriceBookUpdatedAt();
+  if (key === "corrections") return getCorrectionsUpdatedAt();
   return getQuickHistoryUpdatedAt();
 }
 
@@ -151,6 +163,27 @@ function buildPriceBookRecord(): Omit<SyncLocalRecord, "contentHash"> {
   };
 }
 
+/**
+ * The learned corrections, canonical so two devices holding the same
+ * corrections hash the same way. The table is shared, not per device: a
+ * correction is a fact about the user.
+ */
+function buildCorrectionsRecord(): Omit<SyncLocalRecord, "contentHash"> {
+  const state = canonicalCorrections(loadCorrectionState());
+  const payload: SyncCorrectionsPayload = {
+    updatedAt: singletonUpdatedAt("corrections"),
+    items: state.items,
+    removed: state.removed,
+  };
+  return {
+    recordKey: "corrections:root",
+    kind: "corrections",
+    entityId: "root",
+    updatedAt: payload.updatedAt,
+    payload: JSON.stringify(payload),
+  };
+}
+
 function buildSettingsRecord(): Omit<SyncLocalRecord, "contentHash"> {
   const payload = buildSettingsPayload();
   return {
@@ -194,6 +227,7 @@ export async function buildLocalSyncRecords(deviceId: string) {
     buildListRecord("compare", loadCompareItems()),
     buildPriceBookRecord(),
     buildListRecord("quickHistory", loadQuickHistory()),
+    buildCorrectionsRecord(),
     buildUsageRecord(deviceId),
     buildSettingsRecord(),
   ];
@@ -286,9 +320,11 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
   let compare = loadCompareItems();
   let quickHistory = loadQuickHistory();
   let priceBook = { items: loadPriceBook(), removed: loadPriceBookRemovals() };
+  let corrections = loadCorrectionState();
   let compareUpdatedAt = getCompareUpdatedAt();
   let quickHistoryUpdatedAt = getQuickHistoryUpdatedAt();
   let priceBookUpdatedAt = getPriceBookUpdatedAt();
+  let correctionsUpdatedAt = getCorrectionsUpdatedAt();
 
   let savedChanged = false;
   let projectsChanged = false;
@@ -296,6 +332,7 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
   let compareChanged = false;
   let quickHistoryChanged = false;
   let priceBookChanged = false;
+  let correctionsChanged = false;
 
   for (const record of records) {
     if (record.removed || !record.payload) continue;
@@ -367,6 +404,25 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
         }
         break;
       }
+      case "corrections": {
+        // Correction by correction, not table by table: two devices that
+        // learned different corrections keep both.
+        const payload = JSON.parse(record.payload) as SyncCorrectionsPayload;
+        const remote = {
+          items: normalizeCorrections(Array.isArray(payload.items) ? payload.items : []),
+          removed: normalizeCorrectionRemovals(payload.removed),
+        };
+        const merged = mergeCorrections(corrections, remote);
+        if (!sameCorrections(merged, corrections)) {
+          corrections = merged;
+          correctionsChanged = true;
+        }
+        if (payload.updatedAt > correctionsUpdatedAt) {
+          correctionsUpdatedAt = payload.updatedAt;
+          correctionsChanged = true;
+        }
+        break;
+      }
       case "usage": {
         // Every device keeps its own record; our own comes back on a pull and
         // is skipped, because local storage is already the authority on it.
@@ -394,7 +450,22 @@ export function applyRemoteSyncRecords(records: AppliedSyncRecord[], ownDeviceId
       removed: priceBook.removed,
     });
   }
-  if (savedChanged || projectsChanged || customersChanged || compareChanged || quickHistoryChanged || priceBookChanged) {
+  if (correctionsChanged) {
+    persistCorrections(corrections.items, {
+      markDirty: false,
+      updatedAt: correctionsUpdatedAt,
+      removed: corrections.removed,
+    });
+  }
+  if (
+    savedChanged ||
+    projectsChanged ||
+    customersChanged ||
+    compareChanged ||
+    quickHistoryChanged ||
+    priceBookChanged ||
+    correctionsChanged
+  ) {
     notifyCollectionsReplaced();
   }
 }

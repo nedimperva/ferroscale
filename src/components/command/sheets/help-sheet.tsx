@@ -21,6 +21,10 @@ const SHORTCUTS: { keys: string; key: string }[] = [
   { keys: "⌘S", key: "save" },
   { keys: "⌘⏎", key: "compare" },
   { keys: "⌘K", key: "new" },
+  { keys: "⌘Z", key: "undo" },
+  { keys: "⇧⌘Z", key: "redo" },
+  { keys: "⌘D", key: "diff" },
+  { keys: "⌘F", key: "search" },
   { keys: "Esc", key: "clear" },
   { keys: "⌫", key: "backspace" },
 ];

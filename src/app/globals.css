@@ -660,6 +660,18 @@ samp {
   }
 }
 
+/* The sync mark, turning while a push is in flight. A slow rotation rather
+   than a pulse: the mark is in the corner of the eye, and a pulse there is
+   an alarm the app has not earned. */
+@keyframes fsSyncSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Momentum scrolling for lists / panels — no scroll-behavior: smooth
    (it conflicts with programmatic scrollIntoView and causes mobile jank) */
 .scroll-native {

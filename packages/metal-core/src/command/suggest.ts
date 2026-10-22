@@ -9,6 +9,7 @@ import {
   COMMAND_GRADES,
   COMMAND_SIZES,
   aliasCandidates,
+  findAliasByPrefix,
 } from "./aliases";
 import { cmdClassifyToken, cmdParse, cmdTokenize, dimsToSizeText, SHEET_LIKE_FAMILIES } from "./parser";
 import type {
@@ -121,6 +122,28 @@ function sizeKgmSub(
   return kgm != null ? kgmSub(kgm) : undefined;
 }
 
+/**
+ * The weight a candidate size would come to, when the line already fixes the
+ * length and the quantity. The parser reads tokens in any order, so a line
+ * that leads with its length ("6m hea") knows the length while the size is
+ * still being chosen — and a size picked against a known length can be
+ * judged by what it weighs instead of by its millimetres.
+ *
+ * Null when the context is missing, or for families priced per piece.
+ */
+function sizeWeightKg(
+  alias: CommandAlias,
+  sizeText: string,
+  settings: CommandParserSettings,
+  p: CommandParseResult,
+): number | undefined {
+  if (p.lengthM == null || SHEET_LIKE_FAMILIES.has(alias.fam)) return undefined;
+  const kgm = sizeKgm(alias, sizeText, settings);
+  if (kgm == null) return undefined;
+  const total = kgm * p.lengthM * p.realQty;
+  return Number.isFinite(total) && total > 0 ? total : undefined;
+}
+
 const MAX_SIZE_COMPLETIONS = 8;
 const TYPING_SIZE_RE = new RegExp(`^(${COMMAND_ALIAS_RE})(\\d[\\d.,x×]*)$`, "i");
 const TYPING_SPACED_SIZE_RE = /^\d[\d.,x×]*$/;
@@ -160,6 +183,8 @@ function standardSizeTexts(alias: CommandAlias): string[] {
 function sizeCompletions(
   query: string,
   settings: CommandParserSettings,
+  p: CommandParseResult,
+  usage?: CommandUsageSource,
 ): CommandSuggestion | null {
   if (query === "" || /\s$/.test(query)) return null;
   const words = query.trim().split(/\s+/);
@@ -190,6 +215,7 @@ function sizeCompletions(
     .map<CommandSuggestionItem>(({ alias, text }) => ({
       label: text.replace(/x/g, "×"),
       sub: sizeKgmSub(alias, text, settings),
+      weightKg: sizeWeightKg(alias, text, settings, p),
       fam: alias.fam,
       ins: glued ? `${alias.alias}${text} ` : `${text} `,
       kind: "size",
@@ -197,9 +223,15 @@ function sizeCompletions(
       group: "standard",
     }));
   if (items.length === 0) return null;
+  // A size the app has seen this user correct to comes first — but only when
+  // the typed text is not itself a size in the catalogue.
+  const learned =
+    typed && !items.some((item) => item.label === typed)
+      ? learnedItem(typed, usage, "size")
+      : null;
   const named = new Set(items.map((item) => item.fam));
   const hintAlias = candidates.find((a) => named.has(a.fam)) ?? candidates[0];
-  return { hint: `${hintAlias.name} · standard size`, items };
+  return { hint: `${hintAlias.name} · standard size`, items: learned ? [learned, ...items] : items };
 }
 
 /** Test hook — the cache is keyed by catalog data that never changes at
@@ -227,6 +259,15 @@ export interface CommandUsageSource {
   topQuantities(fam: CommandFamily): string[];
   /** Material grade ids for the family, best first. */
   topGradeIds(fam: CommandFamily): string[];
+  /**
+   * What the user corrected this exact text into, best first — the app's
+   * memory of a mistake it has seen the user make before. Each entry carries
+   * how many times it happened, so a chip can say why it is being offered.
+   *
+   * Optional: a consumer with nothing learned simply omits it, and the
+   * suggestions fall back to the catalogue.
+   */
+  learnedCorrections?(from: string): Array<{ to: string; n: number }>;
 }
 
 /** Rounded total weight for a hypothetical length/quantity, from the parse we
@@ -240,6 +281,42 @@ function totalKgSub(kgm: number | null, lengthM: number | null, qty: number): st
 
 const REFINE_LENGTHS_M = [3, 4, 6, 12];
 const MAX_REFINE_PER_KIND = 2;
+
+/**
+ * A correction the app has learned: the text the user typed, and what they
+ * changed it to. Offered as a chip of its own, above the catalogue, and only
+ * when the typed text is not something the catalogue already knows — a
+ * correction must never outrank a match that is simply right.
+ */
+function learnedItem(
+  from: string,
+  usage: CommandUsageSource | undefined,
+  kind: CommandSuggestionItem["kind"],
+): CommandSuggestionItem | null {
+  if (!usage?.learnedCorrections) return null;
+  const text = from.trim();
+  if (!text) return null;
+  const best = usage.learnedCorrections(text)[0];
+  if (!best) return null;
+  return {
+    label: best.to,
+    kind,
+    // A trailing space, so the corrected token lands as a finished chip and
+    // the next stage starts clean.
+    ins: `${best.to} `,
+    replaceLast: true,
+    group: "learned",
+    learned: true,
+    learnedCount: best.n,
+  };
+}
+
+/** The last whitespace-separated word of a query — the token being typed. */
+function lastWord(query: string): string {
+  const trimmed = (query ?? "").trim();
+  if (!trimmed) return "";
+  return trimmed.split(/\s+/).pop() ?? "";
+}
 
 /**
  * The finished-query stage. A complete line used to offer exactly one chip
@@ -306,6 +383,7 @@ function refineSuggestions(
       items.push({
         label: neighbour.replace(/x/g, "×"),
         sub: sizeKgmSub(alias, neighbour, settings),
+        weightKg: sizeWeightKg(alias, neighbour, settings, p),
         fam,
         kind: "refine",
         ins: `${alias.alias}${neighbour}`,
@@ -375,7 +453,7 @@ export function cmdSuggest(
   const { stage, partial } = cmdDetectStage(query, p);
 
   if (p.alias && stage !== "empty" && stage !== "profile") {
-    const completions = sizeCompletions(query, settings);
+    const completions = sizeCompletions(query, settings, p, usage);
     if (completions) return completions;
   }
 
@@ -402,6 +480,14 @@ export function cmdSuggest(
       }
     }
 
+    // A spelling the app has seen corrected comes first — but only when the
+    // typed word is not a profile the catalogue already knows.
+    const typed = lastWord(query);
+    const learned =
+      typed && !findAliasByPrefix(typed)
+        ? learnedItem(typed, usage, "profile")
+        : null;
+
     const list = COMMAND_ALIASES.filter((a) => FRONT_ALIASES.includes(a.alias));
     const matches = partial
       ? list.filter(
@@ -414,6 +500,7 @@ export function cmdSuggest(
     return {
       hint: partial ? "Profiles" : "Pick a profile",
       items: [
+        ...(learned ? [learned] : []),
         ...recentItems,
         ...final.map<CommandSuggestionItem>((a) => ({
           label: a.name,
@@ -431,6 +518,13 @@ export function cmdSuggest(
     const standard = COMMAND_SIZES[alias.fam] ?? [];
     const seen = new Set<string>();
 
+    // A size the app has seen this user correct to.
+    const typedSize = lastWord(query);
+    const learned =
+      typedSize && !standard.includes(typedSize) && !findAliasByPrefix(typedSize)
+        ? learnedItem(typedSize, usage, "size")
+        : null;
+
     // The sizes this user actually uses for THIS family, best first. Each is
     // re-validated against the current catalog so stale entries never render.
     const usageSizeItems: CommandSuggestionItem[] = [];
@@ -444,6 +538,7 @@ export function cmdSuggest(
         usageSizeItems.push({
           label: text.replace(/x/g, "×"),
           sub: SHEET_LIKE_FAMILIES.has(alias.fam) ? undefined : kgmSub(rp.kgm),
+          weightKg: sizeWeightKg(alias, text, settings, p),
           fam: alias.fam,
           ins: text,
           kind: "size",
@@ -474,11 +569,13 @@ export function cmdSuggest(
     return {
       hint: `${alias.name} · standard size`,
       items: [
+        ...(learned ? [learned] : []),
         ...usageSizeItems,
         ...presetItems,
         ...standard.map<CommandSuggestionItem>((s) => ({
           label: s.replace(/x/g, "×"),
           sub: sizeKgmSub(alias, s, settings),
+          weightKg: sizeWeightKg(alias, s, settings, p),
           ins: s,
           kind: "size",
           appendProfile: true,

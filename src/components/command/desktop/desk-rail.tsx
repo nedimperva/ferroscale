@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useSyncAttention } from "@/hooks/useSyncAttention";
+import { SyncStatusMark } from "../sync-status-mark";
 import { DeskIcon } from "./desk-atoms";
 import type { DeskView } from "./desktop-props";
 
@@ -166,6 +167,10 @@ export function DeskRail({
       </div>
 
       <div className="mt-auto flex flex-col items-center" style={{ gap: 4 }}>
+        {/* Where the data is. A square that is nearly always grey says
+            "everything is fine" without a word; it turns when there is
+            something to know. */}
+        <SyncStatusMark compact onClick={() => setView("settings")} />
         <RailButton
           active={false}
           onClick={onToggleTheme}

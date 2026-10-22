@@ -4,7 +4,7 @@ import type React from "react";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import { cmdAppendLineItem, fsKgm, fsLength, fsMoney, fsWeightUnit } from "@ferroscale/metal-core";
-import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseIssue, CommandParseResult } from "@ferroscale/metal-core";
 import { haptic } from "@/lib/haptics";
 import { applyIssueSuggestion, formatAvailability, formatStockSources, formatCommandIssue } from "../command-copy";
 import { AvailabilityBadge, InlineIssue, PricingBadge, StockBadge, TargetBadge } from "../command-atoms";
@@ -81,6 +81,7 @@ export function PhoneHero({
   onCompare,
   onShare,
   onCopyAnswer,
+  onOpenIssue,
 }: {
   p: CommandParseResult;
   line: CommandLine;
@@ -103,6 +104,7 @@ export function PhoneHero({
   onShare: () => void;
   /** Holding the figure copies the answer as one line. */
   onCopyAnswer: () => void;
+  onOpenIssue: (issue: CommandParseIssue) => void;
 }) {
   const t = useTranslations("command");
   const isW = mode === "weight";
@@ -253,6 +255,7 @@ export function PhoneHero({
                     applyIssueSuggestion(query, p.issues[0].token, p.issues[0].suggestion!),
                   )
                 }
+                onExplain={() => onOpenIssue(p.issues[0])}
               />
             )}
             {p.availability && (
@@ -287,7 +290,13 @@ export function PhoneHero({
             style={{ color: "var(--amber-text)" }}
             role="status"
           >
-            <span>{formatCommandIssue(t, p.issues[0])}</span>
+            <button
+              type="button"
+              onClick={() => onOpenIssue(p.issues[0])}
+              className="cursor-pointer text-left underline decoration-dotted underline-offset-2"
+            >
+              {formatCommandIssue(t, p.issues[0])}
+            </button>
             {p.issues[0].suggestion && (
               <button
                 type="button"

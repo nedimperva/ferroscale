@@ -31,6 +31,7 @@ export const SETTINGS_GROUPS = [
   "units",
   "appearance",
   "priceBook",
+  "learned",
   "sync",
   "help",
 ] as const;

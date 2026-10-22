@@ -10,6 +10,7 @@ import { SyncSection } from "../sheets/sync-section";
 import { BackupSection } from "../backup-section";
 import { InstallAppSection } from "../install-section";
 import { PriceBookSection } from "../price-book-section";
+import { LearnedSection } from "../learned-section";
 import { usePriceBook } from "@/hooks/usePriceBook";
 import {
   hapticsStore,
@@ -34,7 +35,7 @@ import { SearchField } from "../search-field";
 import { DeskViewHeader } from "./desk-rail";
 
 /** Groups whose pane is a panel of its own rather than a list of fields. */
-const PANEL_GROUPS: readonly SettingsGroupId[] = ["priceBook", "sync", "help"];
+const PANEL_GROUPS: readonly SettingsGroupId[] = ["priceBook", "learned", "sync", "help"];
 
 function GroupRailItem({
   active,
@@ -223,6 +224,20 @@ export function DeskSettingsView({
             }}
           >
             <PriceBookSection shared={shared} priceBook={priceBook} />
+          </div>
+        );
+      case "learned":
+        return (
+          <div
+            className="rounded-panel-lg"
+            style={{
+              border: "1px solid var(--border-faint)",
+              background: "var(--surface)",
+              boxShadow: "var(--panel-shadow-soft)",
+              padding: "18px 20px",
+            }}
+          >
+            <LearnedSection />
           </div>
         );
       case "sync":

@@ -26,7 +26,17 @@ export type CommandKeyAction =
   | { type: "clear" }
   | { type: "save" }
   | { type: "compare" }
-  | { type: "help" };
+  | { type: "help" }
+  /** Undo the last thing — a line edit or a destructive action. */
+  | { type: "undo" }
+  /** Redo it. */
+  | { type: "redo" }
+  /** Compare the line with another one. */
+  | { type: "diff" }
+  /** Search everything from the bar. */
+  | { type: "search" }
+  /** The keyboard shortcut list. */
+  | { type: "shortcuts" };
 
 export interface CommandKeyContext {
   key: string;
@@ -59,6 +69,18 @@ export function resolveCommandKey(ctx: CommandKeyContext): CommandKeyAction | nu
   // ── shortcuts that work whatever the line contains
   if (mod && ctx.key === "Enter") return { type: "compare" };
   if (mod && ctx.key.toLowerCase() === "s") return { type: "save" };
+  // Undo and redo are one stack: the last thing the user did, whatever it
+  // was — a line edit, a delete, a project removed.
+  if (mod && ctx.key.toLowerCase() === "z") {
+    return { type: ctx.shiftKey ? "redo" : "undo" };
+  }
+  // Ctrl-Y is redo on the keyboards that have no shift to spare.
+  if (ctx.ctrlKey && !ctx.metaKey && ctx.key.toLowerCase() === "y") {
+    return { type: "redo" };
+  }
+  if (mod && ctx.key.toLowerCase() === "d") return { type: "diff" };
+  if (mod && ctx.key.toLowerCase() === "f") return { type: "search" };
+  if (mod && ctx.key === "/") return { type: "shortcuts" };
 
   // ⌥1–9 picks a chip without leaving the input. Routed by physical key, so
   // it survives the character ⌥ produces on Mac layouts.
@@ -123,6 +145,7 @@ export function commandKeyHints(ctx: {
   hasGhost: boolean;
   suggestionCount: number;
   historyLength: number;
+  canUndo?: boolean;
 }): CommandKeyHint[] {
   const hints: CommandKeyHint[] = [];
   if (ctx.hasGhost) hints.push({ keys: "Tab", labelKey: "complete" });
@@ -134,6 +157,9 @@ export function commandKeyHints(ctx: {
   if (ctx.suggestionCount > 1) hints.push({ keys: "⌥1–9", labelKey: "pick" });
   if (ctx.valid) hints.push({ keys: "⌘S", labelKey: "save" });
   if (ctx.historyLength > 0) hints.push({ keys: "↑", labelKey: "recall" });
+  // The hint strip is read at a glance, so it stays short: the full list is
+  // one keystroke away (⌘/).
+  if (ctx.canUndo) hints.push({ keys: "⌘Z", labelKey: "undo" });
   hints.push({ keys: "?", labelKey: "shortcuts" });
   return hints;
 }

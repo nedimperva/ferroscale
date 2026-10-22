@@ -216,9 +216,24 @@ export function PhoneQueryLine({
                   +
                 </span>
               ))}
+            {group.groupStart && group.groupProfile ? (
+              // The run's header: one profile, several cuts. The item that
+              // typed the profile does not show it again as a chip.
+              <span
+                className="inline-flex items-center gap-1 flex-shrink-0 font-mono text-sm font-bold px-1.5 py-1 whitespace-nowrap"
+                style={{
+                  border: "1px solid var(--border-faint)",
+                  background: "var(--surface-inset)",
+                  color: "var(--accent-text)",
+                }}
+              >
+                {group.groupProfile}
+                <span className="text-[10px] text-muted-faint">×{group.groupItems}</span>
+              </span>
+            ) : null}
             {group.item === expandedIndex ? (
               group.tokens.map((tok, i) =>
-                editing && editing.item === group.item && editing.idx === i && editing.tok === tok ? (
+                i === group.groupProfileIndex ? null : editing && editing.item === group.item && editing.idx === i && editing.tok === tok ? (
                   <InlineTokenEditor
                     key={`edit-${tok}-${i}`}
                     tok={tok}
