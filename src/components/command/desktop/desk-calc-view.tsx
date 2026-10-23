@@ -35,6 +35,7 @@ import {
 } from "../command-copy";
 import { GhostField } from "../ghost-field";
 import { resolveCommandKey } from "../command-keys";
+import { stepToken } from "../token-step";
 import { CommandKeyHints } from "../command-key-hints";
 import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
@@ -218,11 +219,15 @@ export function DeskCalcView({
     setQuery(removeLineItem(query, item));
     focusInputAtEnd();
   };
-  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
-    line.items[group.item]?.parse.name ||
-    group.tokens[0] ||
-    partial ||
-    String(group.item + 1);
+  const collapsedItemLabel = (group: (typeof chips.groups)[number]) => {
+    const itemParse = line.items[group.item]?.parse;
+    const base =
+      itemParse?.name ||
+      group.tokens[0] ||
+      partial ||
+      String(group.item + 1);
+    return itemParse?.label ? `${itemParse.label} · ${base}` : base;
+  };
 
   // Hero metric counts up when the query settles (see useCountUp). Weight
   // always counts up in exact kilograms (no tonne conversion).
@@ -497,6 +502,9 @@ export function DeskCalcView({
                     })()}
                     onEdit={() => editTokenAt(group.item, i)}
                     onRemove={() => removeTokenAt(group.item, i)}
+                    onStep={(next) =>
+                      keepExpanded(group.item, replaceLineToken(query, group.item, i, next))
+                    }
                   />
                   ),
                 )
@@ -600,6 +608,30 @@ export function DeskCalcView({
                   onSuggest(sug.items[action.index]);
                   focusInputAtEnd();
                   return;
+                case "stepActiveToken": {
+                  if (partial) {
+                    const stepped = stepToken(partial, action.direction);
+                    if (stepped && stepped !== partial) {
+                      setQuery(chipPrefix + stepped);
+                      focusInputAtEnd();
+                      return;
+                    }
+                  }
+                  const activeGroup = chips.groups[expandedIndex];
+                  if (activeGroup) {
+                    for (let idx = activeGroup.tokens.length - 1; idx >= 0; idx--) {
+                      const stepped = stepToken(activeGroup.tokens[idx], action.direction);
+                      if (stepped && stepped !== activeGroup.tokens[idx]) {
+                        keepExpanded(
+                          expandedIndex,
+                          replaceLineToken(query, expandedIndex, idx, stepped),
+                        );
+                        return;
+                      }
+                    }
+                  }
+                  return;
+                }
                 case "save":
                   onSave();
                   return;
@@ -781,10 +813,17 @@ export function DeskCalcView({
                 {line.multi ? (
                   <span className="font-mono text-[14px] text-muted">
                     {t("result.assembly", { count: line.items.length })}
+                    {line.lineMultiplier > 1 ? ` · ×${line.lineMultiplier}` : ""}
                   </span>
                 ) : p.valid && p.kgm != null ? (
                   <span className="font-mono text-[14px] text-muted flex items-center gap-1.5 flex-wrap">
                     <span>
+                      {p.label ? (
+                        <>
+                          <span className="font-semibold text-foreground">{p.label}</span>
+                          {" · "}
+                        </>
+                      ) : null}
                       <span className="text-foreground-secondary">{fsKgm(p.kgm)}</span> kg/m ×{" "}
                       <span className="text-foreground-secondary">{fsLength(p.lengthM ?? 0)}</span> m ×{" "}
                       <span className="text-foreground-secondary">{p.realQty}</span>
@@ -829,7 +868,13 @@ export function DeskCalcView({
                     {targetNote && (
                       <TargetBadge>
                         {t(
-                          `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                          `target.${
+                            targetNote.solvedFor === "qty"
+                              ? "solvedQty"
+                              : targetNote.solvedFor === "size"
+                                ? "solvedSize"
+                                : "solvedLength"
+                          }`,
                           { target: targetNote.target },
                         )}
                         {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}

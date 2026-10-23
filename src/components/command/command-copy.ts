@@ -228,7 +228,7 @@ export function buildCommandSummary(
   const name = formatCommandParseName(t, p) ?? p.name ?? "";
   const grade = p.gradeLabel ?? r.gradeLabel;
 
-  const header = grade ? `${name} · ${grade}` : name;
+  const header = [p.label ? `#${p.label}` : null, name, grade].filter(Boolean).join(" · ");
   const targetNote = commandTargetNote(p);
   const meta = [
     `${p.lengthRaw}${p.lengthUnit} × ${p.realQty} ${t("result.pcs")} · ${fsKgm(p.kgm)} kg/m`,
@@ -281,7 +281,7 @@ export function buildCommandOneLine(
       const name = formatCommandParseName(t, parse) ?? parse.name ?? "";
       const grade = parse.gradeLabel ?? parse.calc!.result.gradeLabel;
       const size = `${parse.lengthRaw}${parse.lengthUnit} × ${parse.realQty} ${t("result.pcs")}`;
-      return [name, grade, size].filter(Boolean).join(" · ");
+      return [parse.label ? `#${parse.label}` : null, name, grade, size].filter(Boolean).join(" · ");
     })
     .join(" + ");
   const sym = CURRENCY_SYMBOLS[parses[0].calc!.result.currency] ?? "€";
@@ -314,8 +314,12 @@ function buildMultiItemSummary(t: CommandT, line: CommandLine): string | null {
   }
   // Only claim a line total when every item contributed one; a partial sum
   // presented as "the total" is worse than no total at all.
+  const totalHeader =
+    line.lineMultiplier && line.lineMultiplier > 1
+      ? `${t("line.total")} (×${line.lineMultiplier})`
+      : t("line.total");
   const footer = totals.length > 0 && line.valid
-    ? `\n\n${"═".repeat(28)}\n${t("line.total")}\n${totals.join("\n")}`
+    ? `\n\n${"═".repeat(28)}\n${totalHeader}\n${totals.join("\n")}`
     : "";
   return `${blocks.join("\n\n")}${footer}`;
 }

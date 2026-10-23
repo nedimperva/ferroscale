@@ -353,6 +353,7 @@
     "target": {
       "solvedQty": "pieces for {target}",
       "solvedLength": "length for {target}",
+      "solvedSize": "size for {target}",
       "over": "{over} over"
     },
     "line": {
