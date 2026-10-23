@@ -305,7 +305,12 @@ function PartSheet({
     line?.multi && line.totalKg && p.totalKg != null
       ? Math.round((p.totalKg / line.totalKg) * 100)
       : null;
-  const spec = [p.gradeLabel ?? p.calc.result.gradeLabel, partSpec(p), share != null ? t("ledger.share", { percent: share }) : ""]
+  const spec = [
+    p.label ? `#${p.label}` : "",
+    p.gradeLabel ?? p.calc.result.gradeLabel,
+    partSpec(p),
+    share != null ? t("ledger.share", { percent: share }) : "",
+  ]
     .filter(Boolean)
     .join(" · ");
   const count = line?.multi ? line.items.length : 0;
@@ -689,7 +694,8 @@ function BillOfMaterial({
   const money = (v: number | null | undefined) => (v != null ? `${sym} ${fsMoney(v)}` : "—");
   const pieces = line.items.reduce((n, item) => n + (item.parse.valid ? item.parse.realQty : 0), 0);
   const count = line.items.length;
-  const sub = t("ledger.partsPieces", { parts: count, pieces });
+  const baseSub = t("ledger.partsPieces", { parts: count, pieces });
+  const sub = line.lineMultiplier > 1 ? `${baseSub} · ×${line.lineMultiplier}` : baseSub;
   const num = "whitespace-nowrap text-right font-mono text-[14px] tabular-nums";
   const hasSheet = groups.some((group) => group.kind === "sheet");
   const grades = new Set(groups.map((group) => group.gradeLabel).filter(Boolean));
@@ -716,7 +722,8 @@ function BillOfMaterial({
     const active = index === picked;
     const kg = parse.totalKg;
     const unitKg = parse.calc?.result.unitWeightKg;
-    const name = nested ? cut : groupLabel(t, group);
+    const baseName = nested ? cut : groupLabel(t, group);
+    const name = parse.label ? `${baseName} · #${parse.label}` : baseName;
     const ariaName = nested ? `${groupLabel(t, group)} ${cut}` : name;
     const narrowSpec = [
       nested ? `× ${parse.realQty}` : [cut, parse.lengthRaw != null ? `× ${parse.realQty}` : ""].filter(Boolean).join(" "),

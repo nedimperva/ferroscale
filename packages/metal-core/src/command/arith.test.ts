@@ -59,13 +59,23 @@ describe("parseLengthExpression", () => {
     expect(parseLengthExpression("6m", "m")).toBeNull();
     expect(parseLengthExpression("40x40x3", "m")).toBeNull();
   });
+
+  it("supports multiplication and division in length expressions", () => {
+    expect(parseLengthExpression("3*1850mm+100mm", "m")?.mm).toBe(5650);
+    expect(parseLengthExpression("1850mm*3", "m")?.mm).toBe(5550);
+    expect(parseLengthExpression("6m/2-3mm", "m")?.mm).toBe(2997);
+    expect(parseLengthExpression("6m/2", "m")?.mm).toBe(3000);
+    expect(parseLengthExpression("3*2m", "m")?.mm).toBe(6000);
+  });
 });
 
 describe("parseQtyExpression", () => {
-  it("adds and subtracts pieces", () => {
+  it("adds, subtracts and multiplies pieces", () => {
     expect(parseQtyExpression("x2+3")).toBe(5);
     expect(parseQtyExpression("x10-2")).toBe(8);
     expect(parseQtyExpression("x2+3+4")).toBe(9);
+    expect(parseQtyExpression("x2*4")).toBe(8);
+    expect(parseQtyExpression("x3*2+1")).toBe(7);
   });
 
   it("refuses a count that isn't at least one piece", () => {
@@ -84,13 +94,22 @@ describe("arithmetic in a query", () => {
     const plain = cmdParse("hea120 5.95m x2", mkSettings());
     expect(cut.valid).toBe(true);
     expect(cut.lengthM).toBeCloseTo(5.95, 6);
+    expect(cut.lengthExpr).toBe("6m-50mm");
     expect(cut.totalKg).toBeCloseTo(plain.totalKg!, 6);
   });
 
-  it("adds pieces without retyping the total", () => {
+  it("adds and multiplies pieces without retyping the total", () => {
     const p = cmdParse("hea120 6m x2+3", mkSettings());
     expect(p.realQty).toBe(5);
+    expect(p.qtyExpr).toBe("x2+3");
     expect(p.valid).toBe(true);
+
+    const mult = cmdParse("hea120 3*1850mm+100mm x2*4", mkSettings());
+    expect(mult.valid).toBe(true);
+    expect(mult.lengthM).toBeCloseTo(5.65, 6);
+    expect(mult.lengthExpr).toBe("3*1850mm+100mm");
+    expect(mult.realQty).toBe(8);
+    expect(mult.qtyExpr).toBe("x2*4");
   });
 
   it("survives the tokenizer as one token", () => {
@@ -99,7 +118,10 @@ describe("arithmetic in a query", () => {
 
   it("classifies each kind so the chip is coloured as what it is", () => {
     expect(cmdClassifyToken("6m-50mm")).toBe("len");
+    expect(cmdClassifyToken("3*1850mm+100mm")).toBe("len");
+    expect(cmdClassifyToken("6m/2")).toBe("len");
     expect(cmdClassifyToken("x2+3")).toBe("qty");
+    expect(cmdClassifyToken("x2*4")).toBe("qty");
   });
 
   it("reports an impossible cut rather than pricing something wrong", () => {

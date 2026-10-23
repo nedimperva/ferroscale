@@ -676,11 +676,12 @@ export interface UseProjectsReturn {
     input: CalculationInput,
     result: CalculationResult,
     assembly?: string,
+    note?: string,
   ) => boolean;
   /** Bulk add in one state update — see the note on the implementation. */
   addCalculations: (
     projectId: string,
-    entries: Array<{ input: CalculationInput; result: CalculationResult }>,
+    entries: Array<{ input: CalculationInput; result: CalculationResult; note?: string }>,
   ) => void;
   /**
    * Drop a library assembly into a project: its cuts become items tagged with
@@ -1060,6 +1061,7 @@ export function useProjects(): UseProjectsReturn {
       input: CalculationInput,
       result: CalculationResult,
       assembly?: string,
+      note?: string,
     ): boolean => {
       const fp = fingerprint(result);
       const target = projectsRef.current.find((p) => p.id === projectId && !p.deletedAt);
@@ -1077,6 +1079,7 @@ export function useProjects(): UseProjectsReturn {
             result,
             normalizedProfile: normalizeProfileSnapshot(input),
             assembly: assembly?.trim() || undefined,
+            note: note?.trim() || undefined,
           };
           return withActivity({ ...p, calculations: [...p.calculations, calc] }, "itemAdded", {
             detail: calc.normalizedProfile.shortLabel,
@@ -1099,7 +1102,7 @@ export function useProjects(): UseProjectsReturn {
   const addCalculations = useCallback(
     (
       projectId: string,
-      entries: Array<{ input: CalculationInput; result: CalculationResult }>,
+      entries: Array<{ input: CalculationInput; result: CalculationResult; note?: string }>,
     ): void => {
       if (entries.length === 0) return;
       setProjects((prev) =>
@@ -1118,6 +1121,7 @@ export function useProjects(): UseProjectsReturn {
               input: entry.input,
               result: entry.result,
               normalizedProfile: normalizeProfileSnapshot(entry.input),
+              note: entry.note?.trim() || undefined,
             });
           }
           if (next.length === 0) return p;

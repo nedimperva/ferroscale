@@ -223,10 +223,17 @@ export function PhoneHero({
         {line.multi ? (
           <span className="font-mono text-[12px] text-muted">
             {t("result.assembly", { count: line.items.length })}
+            {line.lineMultiplier > 1 ? ` · ×${line.lineMultiplier}` : ""}
           </span>
         ) : p.valid && p.kgm != null ? (
           <span className="font-mono text-[12px] text-muted flex items-center gap-1.5 flex-wrap">
             <span>
+              {p.label ? (
+                <>
+                  <span className="font-semibold text-foreground">{p.label}</span>
+                  {" · "}
+                </>
+              ) : null}
               <span className="text-foreground-secondary">
                 {fsKgm(p.kgm)}
               </span>{" "}
@@ -268,7 +275,13 @@ export function PhoneHero({
             {targetNote && (
               <TargetBadge>
                 {t(
-                  `target.${targetNote.solvedFor === "qty" ? "solvedQty" : "solvedLength"}`,
+                  `target.${
+                    targetNote.solvedFor === "qty"
+                      ? "solvedQty"
+                      : targetNote.solvedFor === "size"
+                        ? "solvedSize"
+                        : "solvedLength"
+                  }`,
                   { target: targetNote.target },
                 )}
                 {targetNote.over ? ` · ${t("target.over", { over: targetNote.over })}` : ""}
