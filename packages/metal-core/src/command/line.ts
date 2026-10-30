@@ -1,5 +1,6 @@
-import { findGradeByAlias } from "./aliases";
-import { cmdParse } from "./parser";
+import { calculateMetal } from "../calculator/engine";
+import { COMMAND_ALIAS_RE, findAliasByPrefix, findGradeByAlias } from "./aliases";
+import { cmdClassifyToken, cmdParse, cmdTokenize, SHEET_LIKE_FAMILIES } from "./parser";
 import type { CommandParseIssue, CommandParseResult, CommandParserSettings } from "./types";
 
 /**
@@ -25,6 +26,34 @@ export interface CommandLineItem {
   /** Where it ends (exclusive). */
   end: number;
   parse: CommandParseResult;
+  /**
+   * The profile token this item borrowed from the item before it, when it
+   * named a length but no profile of its own. Null for an item that names its
+   * own profile — which is most of them.
+   */
+  inheritedProfile: string | null;
+  /** The grade token this item borrowed, the same way. */
+  inheritedGrade: string | null;
+  /** The inline `@price/unit` token this item borrowed, if any. */
+  inheritedPrice?: string | null;
+}
+
+/**
+ * A run of items that share one profile — the "one bar, several cuts" shape.
+ * `hea120 6m + 8m + 10m` is one group of three, not three groups: the cuts
+ * belong to the same section, and a fabricator thinks of them that way.
+ */
+export interface CommandLineGroup {
+  /** Index of the first item in the group. */
+  start: number;
+  /** The item indexes in the group, in order. */
+  items: number[];
+  /** The profile token the group shares, or null when it has none. */
+  profile: string | null;
+  /** The grade token the group shares, or null when it has none. */
+  grade: string | null;
+  /** True when the group holds more than one item. */
+  multi: boolean;
 }
 
 export interface CommandLine {
@@ -33,6 +62,11 @@ export interface CommandLine {
   items: CommandLineItem[];
   /** True once the line joins more than one item. */
   multi: boolean;
+  /**
+   * Whole-line assembly multiplier (`1` unless scaled via `**N`, `== xN`, or
+   * `(...) xN`).
+   */
+  lineMultiplier: number;
   /**
    * The item the user is working on — the last one, which is where typing
    * happens. Suggestions and chip edits act on this segment alone.
@@ -51,6 +85,51 @@ interface RawSegment {
   text: string;
   start: number;
   end: number;
+}
+
+const PAREN_LINE_MULT_RE = /^\s*\(([\s\S]+)\)\s*(?:[x×*]|\*\*|==\s*[x×*]?)(\d+)\s*$/i;
+const TRAILING_LINE_MULT_RE = /(?:^|\s)(?:\*\*(\d+)|==\s*[x×*]?(\d+))\s*$/i;
+const TWO_DIM_CHAIN_RE = /(?:^|\s)\d+(?:[.,]\d+)?[x×]\d+(?:[.,]\d+)?(?=\s|$)/i;
+
+function extractLineMultiplier(raw: string): {
+  multiplier: number;
+  hasParenWrap: boolean;
+} {
+  const parenMatch = raw.match(PAREN_LINE_MULT_RE);
+  if (parenMatch) {
+    const n = parseInt(parenMatch[2], 10);
+    if (Number.isFinite(n) && n >= 1) {
+      return { multiplier: n, hasParenWrap: true };
+    }
+  }
+  const trailMatch = raw.match(TRAILING_LINE_MULT_RE);
+  if (trailMatch) {
+    const n = parseInt(trailMatch[1] ?? trailMatch[2], 10);
+    if (Number.isFinite(n) && n >= 1) {
+      return { multiplier: n, hasParenWrap: false };
+    }
+  }
+  return { multiplier: 1, hasParenWrap: false };
+}
+
+function cleanSegmentForParse(
+  text: string,
+  index: number,
+  totalSegments: number,
+  hasParenWrap: boolean,
+): string {
+  let out = text;
+  if (hasParenWrap && index === 0) {
+    out = out.replace(/^(\s*)\(/, "$1");
+  }
+  if (index === totalSegments - 1) {
+    if (hasParenWrap) {
+      out = out.replace(/\)\s*(?:[x×*]|\*\*|==\s*[x×*]?)\d+(\s*)$/i, "$1");
+    } else {
+      out = out.replace(/(?:^|\s)(?:\*\*\d+|==\s*[x×*]?\d+)(\s*)$/i, "$1");
+    }
+  }
+  return out;
 }
 
 /**
@@ -117,19 +196,280 @@ export function cmdSplitLine(query: string): RawSegment[] {
   return out;
 }
 
+/* ── the profile a cut belongs to ─────────────────────────────────────────── */
+
+/**
+ * The raw token that named the profile in a segment, if any. The token is
+ * taken as written — "hea120" — because that is the text an edit has to
+ * replace, not the canonical form the parser resolves it to.
+ */
+function profileTokenOf(tokens: string[]): string | null {
+  for (const token of tokens) {
+    if (cmdClassifyToken(token) === "profile") return token;
+  }
+  return null;
+}
+
+/** The raw token that named a grade, the same way. */
+function gradeTokenOf(tokens: string[]): string | null {
+  for (const token of tokens) {
+    if (cmdClassifyToken(token) === "grade") return token;
+  }
+  return null;
+}
+
+/** The raw token that named an inline `@price/unit` rate, if any. */
+function priceTokenOf(tokens: string[]): string | null {
+  for (const token of tokens) {
+    if (cmdClassifyToken(token) === "price") return token;
+  }
+  return null;
+}
+
+/**
+ * For a sheet-like profile token (`plt1000x2000x10`, `lim2000x1000x5`,
+ * `chq1500x3000x5x2`), extract the alias + thickness gauge token (`plt10`,
+ * `lim5`, `chq5x2`) so subsequent `+ 400x600 x4` cuts can inherit the plate
+ * thickness and specify only their 2D `W×L` dimensions.
+ */
+function sheetGaugeTokenOf(profileToken: string): string | null {
+  const lower = profileToken.toLowerCase().replace(/×/g, "x");
+  const alias = findAliasByPrefix(lower);
+  const match = lower.match(new RegExp(`^(${COMMAND_ALIAS_RE})(.*)$`));
+  if (!alias || !match || !SHEET_LIKE_FAMILIES.has(alias.fam)) return null;
+  const prefix = profileToken.slice(0, match[1].length);
+  const dims = match[2].split("x").filter(Boolean);
+  if (alias.fam === "chequered") {
+    if (dims.length === 4) return `${prefix}${dims[2]}x${dims[3]}`;
+    if (dims.length === 2) return `${prefix}${dims[0]}x${dims[1]}`;
+    return null;
+  }
+  if (dims.length === 3) {
+    if (alias.fam === "panel" && dims.every((d) => /^\d+(?:\.\d+)?$/.test(d))) {
+      const nums = dims.map(Number);
+      const minIdx = nums.indexOf(Math.min(...nums));
+      return `${prefix}${dims[minIdx]}`;
+    }
+    return `${prefix}${dims[2]}`;
+  }
+  if (dims.length === 1 && /^\d+(?:\.\d+)?$/.test(dims[0])) {
+    return `${prefix}${dims[0]}`;
+  }
+  return null;
+}
+
+/** How one item of the line is to be parsed. */
+export interface CommandLineItemPlan {
+  /** The segment's own tokens, as the tokenizer sees them. */
+  tokens: string[];
+  /** The profile token this item borrows from the item before it, if any. */
+  inheritedProfile: string | null;
+  /** The grade token this item borrows, the same way. */
+  inheritedGrade: string | null;
+  /** The inline `@price/unit` token this item borrows, if any. */
+  inheritedPrice?: string | null;
+}
+
+export interface CommandLinePlan {
+  /** One plan per `+`-joined segment, in order. */
+  items: CommandLineItemPlan[];
+  /** Runs of items that share a profile. */
+  groups: CommandLineGroup[];
+}
+
+/**
+ * Work out which profile each item belongs to, before anything is parsed.
+ *
+ * A cut of the bar before it needs no profile of its own: `hea120 6m + 8m`
+ * is one section in two lengths, and repeating "hea120" three times to say so
+ * is the kind of typing the command bar exists to remove. So an item that
+ * names a length but no profile borrows the profile — and the explicitly
+ * typed grade and inline rate — of the item before it.
+ *
+ * For sheets and plates (`plt 1000x2000x10 + 400x600 x4`), a subsequent cut
+ * that names a 2D `W×L` dimension chain borrows the plate's alias and gauge
+ * (`plt10`).
+ *
+ * Everything else is left alone. An item with no profile *and* no length
+ * ("+ s235") is not a cut of anything, and guessing would turn a typo into a
+ * number.
+ */
+export function cmdPlanLine(query: string): CommandLinePlan {
+  const raw = query ?? "";
+  const { hasParenWrap } = extractLineMultiplier(raw);
+  const segments = cmdSplitLine(raw);
+  const plans: CommandLineItemPlan[] = [];
+  /** The profile in force for the next item, and the grade/rate that came with it. */
+  let carriedProfile: string | null = null;
+  let carriedSheetGauge: string | null = null;
+  let carriedGrade: string | null = null;
+  let carriedPrice: string | null = null;
+
+  for (let index = 0; index < segments.length; index++) {
+    const segment = segments[index];
+    const isLast = index === segments.length - 1;
+    const cleaned = cleanSegmentForParse(segment.text, index, segments.length, hasParenWrap);
+    const tokens = cmdTokenize(isLast ? cleaned : `${cleaned.trim()} `);
+    const ownProfile = profileTokenOf(tokens);
+    const ownGrade = gradeTokenOf(tokens);
+    const ownPrice = priceTokenOf(tokens);
+    const hasLength = tokens.some((token) => cmdClassifyToken(token) === "len");
+    const hasTwoDimSheetCut = TWO_DIM_CHAIN_RE.test(cleaned);
+
+    let borrows = false;
+    let inheritedProfile: string | null = null;
+
+    if (index > 0 && ownProfile == null) {
+      if (carriedSheetGauge != null && hasTwoDimSheetCut) {
+        borrows = true;
+        inheritedProfile = carriedSheetGauge;
+      } else if (carriedProfile != null && carriedSheetGauge == null && hasLength) {
+        borrows = true;
+        inheritedProfile = carriedProfile;
+      }
+    }
+
+    const inheritedGrade = borrows && ownGrade == null ? carriedGrade : null;
+    const inheritedPrice = borrows && ownPrice == null ? carriedPrice : null;
+
+    // When a sheet cut borrows its gauge ("plt10" + "400x600 x4"), re-tokenize
+    // with the borrowed gauge so `400x600` stays a profile token instead of
+    // splitting into a bare 400 and x600.
+    const effectiveTokens =
+      borrows && carriedSheetGauge != null && inheritedProfile
+        ? cmdTokenize(
+            isLast
+              ? `${inheritedProfile} ${cleaned}`
+              : `${inheritedProfile} ${cleaned.trim()} `,
+          )
+        : tokens;
+
+    plans.push({
+      tokens: effectiveTokens,
+      inheritedProfile,
+      inheritedGrade,
+      inheritedPrice,
+    });
+
+    if (!borrows && ownProfile) {
+      carriedProfile = ownProfile;
+      carriedSheetGauge = sheetGaugeTokenOf(ownProfile);
+      // Only an explicitly typed grade/rate travels with the borrowed profile;
+      // a fresh profile starts with its own grade and rate.
+      carriedGrade = ownGrade;
+      carriedPrice = ownPrice;
+    } else if (borrows) {
+      if (ownGrade != null) carriedGrade = ownGrade;
+      if (ownPrice != null) carriedPrice = ownPrice;
+    }
+  }
+
+  return { items: plans, groups: groupPlans(plans) };
+}
+
+/**
+ * Group the planned items into runs that share a profile. Two items are in
+ * the same group when the profile in force for them is the same token (or
+ * same sheet gauge) and the grade in force for them is the same token.
+ */
+function groupPlans(plans: CommandLineItemPlan[]): CommandLineGroup[] {
+  const groups: CommandLineGroup[] = [];
+  let carriedProfileKey: string | null = null;
+  let carriedGrade: string | null = null;
+
+  for (let index = 0; index < plans.length; index++) {
+    const plan = plans[index];
+    const ownProfile = profileTokenOf(plan.tokens);
+    const ownGrade = gradeTokenOf(plan.tokens);
+    const profile = plan.inheritedProfile ?? ownProfile;
+    const profileKey = profile ? (sheetGaugeTokenOf(profile) ?? profile) : null;
+    const grade = plan.inheritedGrade ?? ownGrade;
+    const sameAsPrevious =
+      groups.length > 0 &&
+      profileKey != null &&
+      profileKey === carriedProfileKey &&
+      (grade ?? null) === (carriedGrade ?? null);
+
+    if (sameAsPrevious) {
+      groups[groups.length - 1].items.push(index);
+    } else {
+      groups.push({
+        start: index,
+        items: [index],
+        profile,
+        grade,
+        multi: false,
+      });
+    }
+    carriedProfileKey = profileKey;
+    carriedGrade = grade;
+  }
+
+  for (const group of groups) group.multi = group.items.length > 1;
+  return groups;
+}
+
+/**
+ * The text one item is parsed as — its own text, plus what it borrows. The
+ * item's own text is passed through verbatim: the parser reads the trailing
+ * whitespace to know whether the last token is finished, and re-joining the
+ * tokens would lose that and re-space a glued size.
+ */
+function planText(
+  plan: CommandLineItemPlan,
+  ownText: string,
+): string {
+  const borrowed = [
+    ...(plan.inheritedProfile ? [plan.inheritedProfile] : []),
+    ...(plan.inheritedGrade ? [plan.inheritedGrade] : []),
+    ...(plan.inheritedPrice ? [plan.inheritedPrice] : []),
+  ];
+  if (borrowed.length === 0) return ownText;
+  return `${borrowed.join(" ")} ${ownText}`;
+}
+
+function scaleParseByMultiplier(parse: CommandParseResult, mult: number): CommandParseResult {
+  if (mult <= 1 || !parse.calc) return parse;
+  const scaledQty = parse.realQty * mult;
+  const scaledInput = { ...parse.calc.input, quantity: scaledQty };
+  const response = calculateMetal(scaledInput);
+  if (!response.ok) return parse;
+  return {
+    ...parse,
+    realQty: scaledQty,
+    calc: { input: scaledInput, result: response.result },
+    totalKg: response.result.totalWeightKg,
+    totalAmount: response.result.grandTotalAmount,
+  };
+}
+
 export function cmdParseLine(query: string, settings: CommandParserSettings): CommandLine {
   const raw = query ?? "";
+  const { multiplier: lineMultiplier, hasParenWrap } = extractLineMultiplier(raw);
   const segments = cmdSplitLine(raw);
+  const plan = cmdPlanLine(raw);
 
   const items: CommandLineItem[] = segments.map((segment, index) => {
+    const cleaned = cleanSegmentForParse(segment.text, index, segments.length, hasParenWrap);
     // Everything before the final segment is finished by definition — the `+`
     // committed it — so the parser must not treat its last token as half-typed.
-    const committed = index < segments.length - 1 ? `${segment.text.trim()} ` : segment.text;
+    const ownText = index < segments.length - 1 ? `${cleaned.trim()} ` : cleaned;
+    const itemPlan = plan.items[index] ?? {
+      tokens: [],
+      inheritedProfile: null,
+      inheritedGrade: null,
+      inheritedPrice: null,
+    };
+    const rawParse = cmdParse(planText(itemPlan, ownText), settings);
+    const parse = scaleParseByMultiplier(rawParse, lineMultiplier);
     return {
       text: segment.text,
       start: segment.start,
       end: segment.end,
-      parse: cmdParse(committed, settings),
+      parse,
+      inheritedProfile: itemPlan.inheritedProfile,
+      inheritedGrade: itemPlan.inheritedGrade,
+      inheritedPrice: itemPlan.inheritedPrice ?? null,
     };
   });
 
@@ -146,6 +486,7 @@ export function cmdParseLine(query: string, settings: CommandParserSettings): Co
     raw,
     items,
     multi,
+    lineMultiplier,
     activeIndex: items.length - 1,
     valid,
     totalKg: sum((parse) => parse.totalKg),

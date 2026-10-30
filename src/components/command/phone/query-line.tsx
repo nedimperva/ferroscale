@@ -136,11 +136,15 @@ export function PhoneQueryLine({
   }, [query, expandedIndex]);
 
   /** One chip standing in for a whole item, labelled as the hero numbers it. */
-  const collapsedItemLabel = (group: (typeof chips.groups)[number]) =>
-    line.items[group.item]?.parse.name ||
-    group.tokens[0] ||
-    partialToken ||
-    String(group.item + 1);
+  const collapsedItemLabel = (group: (typeof chips.groups)[number]) => {
+    const itemParse = line.items[group.item]?.parse;
+    const base =
+      itemParse?.name ||
+      group.tokens[0] ||
+      partialToken ||
+      String(group.item + 1);
+    return itemParse?.label ? `${itemParse.label} · ${base}` : base;
+  };
 
   return (
     <div className="flex-shrink-0 px-[14px] pb-2">

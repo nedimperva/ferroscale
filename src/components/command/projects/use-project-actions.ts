@@ -20,6 +20,8 @@ interface UseProjectActionsArgs {
   onOpenItem: (input: CalculationInput) => void;
   /** The live line's calculation, for "add the current line". */
   currentCalc: { input: CalculationInput; result: CalculationResult } | null | undefined;
+  /** Optional inline `#label` from the live line. */
+  currentLabel?: string | null;
   parserSettings: CommandParserSettings;
   showToast: (msg: string) => void;
   showActionToast: (msg: string, action: { label: string; onAction: () => void }) => void;
@@ -37,6 +39,7 @@ export function useProjectActions({
   libraryAssemblies,
   onOpenItem,
   currentCalc,
+  currentLabel,
   parserSettings,
   showToast,
   showActionToast,
@@ -118,7 +121,13 @@ export function useProjectActions({
           showToast(t("toast.addLength"));
           return false;
         }
-        const ok = addCalculation(projectId, currentCalc.input, currentCalc.result);
+        const ok = addCalculation(
+          projectId,
+          currentCalc.input,
+          currentCalc.result,
+          undefined,
+          currentLabel ?? undefined,
+        );
         const name = projects.find((project) => project.id === projectId)?.name;
         showToast(
           ok
@@ -133,7 +142,13 @@ export function useProjectActions({
           showToast(t("toast.addLength"));
           return false;
         }
-        const ok = addCalculation(projectId, parsed.calc.input, parsed.calc.result, assembly);
+        const ok = addCalculation(
+          projectId,
+          parsed.calc.input,
+          parsed.calc.result,
+          assembly,
+          parsed.label ?? undefined,
+        );
         const name = projects.find((project) => project.id === projectId)?.name;
         showToast(
           ok
@@ -207,6 +222,7 @@ export function useProjectActions({
       createProjectFromAssembly,
       logQuotePrinted,
       currentCalc,
+      currentLabel,
       parserSettings,
       showToast,
       showActionToast,

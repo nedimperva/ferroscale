@@ -24,6 +24,7 @@ export const KIND_BG: Record<CommandTokenKind, string> = {
   grade: "bg-[var(--surface-inset)] text-foreground-secondary",
   price: "bg-[var(--blue-surface)] text-[var(--blue-text)]",
   target: "bg-[var(--purple-surface)] text-[var(--purple-text)]",
+  label: "bg-[var(--surface-inset)] text-foreground font-medium",
   unknown: "bg-[var(--amber-surface)] text-[var(--amber-text)]",
 };
 
@@ -83,4 +84,3 @@ export function placeholderExamples(locale: string): string[] {
 export function isSampleQuery(query: string): boolean {
   return query === DEMO_QUERY || query === EXAMPLE_QUERY;
 }
-

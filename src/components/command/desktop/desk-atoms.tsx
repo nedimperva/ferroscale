@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { stepToken } from "../token-step";
 
 /**
  * The workspace button. Two weights, and the primary one is ink rather than
@@ -122,6 +123,7 @@ export function DeskTokenChip({
   kindClass,
   onEdit,
   onRemove,
+  onStep,
   shadowed,
   note,
 }: {
@@ -129,6 +131,8 @@ export function DeskTokenChip({
   kindClass: string;
   onEdit: () => void;
   onRemove: () => void;
+  /** Step the token up or down in place (mouse wheel or ArrowUp/ArrowDown). */
+  onStep?: (next: string) => void;
   /** Recognized but inert: its slot was already filled by an earlier token. */
   shadowed?: boolean;
   /** What the parser said about this token (e.g. "Didn't understand"), if anything. */
@@ -141,10 +145,39 @@ export function DeskTokenChip({
       className={`inline-flex items-stretch font-mono text-base font-semibold ${kindClass}`}
       style={shadowed ? { opacity: 0.55 } : undefined}
       title={shadowNote ?? undefined}
+      onWheel={
+        onStep
+          ? (e) => {
+              if (e.deltaY === 0) return;
+              const dir = e.deltaY < 0 ? 1 : -1;
+              const next = stepToken(tok, dir);
+              if (next && next !== tok) {
+                e.preventDefault();
+                e.stopPropagation();
+                onStep(next);
+              }
+            }
+          : undefined
+      }
     >
       <button
         type="button"
         onClick={onEdit}
+        onKeyDown={
+          onStep
+            ? (e) => {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                  const dir = e.key === "ArrowUp" ? 1 : -1;
+                  const next = stepToken(tok, dir);
+                  if (next && next !== tok) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onStep(next);
+                  }
+                }
+              }
+            : undefined
+        }
         aria-label={shadowNote ? `${t("token.edit", { token: tok })} — ${shadowNote}` : t("token.edit", { token: tok })}
         style={shadowed ? { textDecoration: "line-through" } : undefined}
         className="pl-2.5 pr-1 py-1"

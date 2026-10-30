@@ -327,3 +327,61 @@ describe("cmdSplitLine — comma and semicolon boundaries", () => {
     );
   });
 });
+
+describe("cmdParseLine — sheet gauge inheritance, rate inheritance & whole-line multipliers", () => {
+  const settings: CommandParserSettings = {
+    pricing: {
+      priceBasis: "weight",
+      priceUnit: "kg",
+      unitPrice: 1.2,
+      currency: "EUR",
+      wastePercent: 0,
+      includeVat: false,
+      vatPercent: 21,
+    },
+    defaultGradeId: "steel-s235jr",
+    defaultLengthUnit: "m",
+  };
+
+  it("inherits plate/sheet thickness across + segments with 2D W×L cuts", () => {
+    const line = cmdParseLine("plt 1000x2000x10 + 400x600 x4", settings);
+    const explicit = cmdParseLine("plt 1000x2000x10 + plt 400x600x10 x4", settings);
+    expect(line.valid).toBe(true);
+    expect(line.items).toHaveLength(2);
+    expect(line.items[1].inheritedProfile).toBe("plt10");
+    expect(line.items[1].parse.realQty).toBe(4);
+    expect(line.totalKg).toBeCloseTo(explicit.totalKg!, 6);
+  });
+
+  it("inherits chequered plate gauge across + segments", () => {
+    const line = cmdParseLine("chq 1500x3000x5x2 + 500x500 x2", settings);
+    const explicit = cmdParseLine("chq 1500x3000x5x2 + chq 500x500x5x2 x2", settings);
+    expect(line.valid).toBe(true);
+    expect(line.items[1].inheritedProfile).toBe("chq5x2");
+    expect(line.totalKg).toBeCloseTo(explicit.totalKg!, 6);
+  });
+
+  it("carries an inline @rate/unit to borrowed cuts", () => {
+    const line = cmdParseLine("hea120 6m @2.10/kg + 4m x2", settings);
+    expect(line.valid).toBe(true);
+    expect(line.items[0].parse.calc!.input.unitPrice).toBe(2.1);
+    expect(line.items[1].inheritedPrice).toBe("@2.10/kg");
+    expect(line.items[1].parse.calc!.input.unitPrice).toBe(2.1);
+  });
+
+  it("scales an entire assembly line by **N, == xN, or (...) xN", () => {
+    const base = cmdParseLine("hea120 6m x2 + ipe200 4m x3", settings);
+    const star = cmdParseLine("hea120 6m x2 + ipe200 4m x3 **4", settings);
+    const eq = cmdParseLine("hea120 6m x2 + ipe200 4m x3 == x4", settings);
+    const paren = cmdParseLine("(hea120 6m x2 + ipe200 4m x3) x4", settings);
+
+    for (const scaled of [star, eq, paren]) {
+      expect(scaled.valid).toBe(true);
+      expect(scaled.lineMultiplier).toBe(4);
+      expect(scaled.items[0].parse.realQty).toBe(8);
+      expect(scaled.items[1].parse.realQty).toBe(12);
+      expect(scaled.totalKg).toBeCloseTo(base.totalKg! * 4, 5);
+      expect(scaled.totalAmount).toBeCloseTo(base.totalAmount! * 4, 2);
+    }
+  });
+});
