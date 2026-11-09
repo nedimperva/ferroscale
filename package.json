@@ -19,7 +19,7 @@
     "test:all": "npm run test && npm run test:core"
   },
   "dependencies": {
-    "next": "16.4.3",
+    "next": "16.4.5",
     "next-intl": "^4.14.9",
     "react": "19.3.1",
     "react-dom": "19.3.1"
@@ -41,5 +41,10 @@
     "tailwindcss": "^4",
     "typescript": "5.9.3",
     "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.5"
+    }
   }
 }
