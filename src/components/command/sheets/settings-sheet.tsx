@@ -358,7 +358,7 @@ export function CommandSettingsSheet({
 
   return (
     <SheetShell
-      fullScreen
+      size="full"
       title={t("sheets.settings")}
       onClose={onClose}
       headerAction={

@@ -89,7 +89,7 @@ export function SavedEditSheet({
     <SheetShell
       title={isAssembly ? t("saved.editAssemblyTitle") : t("saved.editTitle")}
       onClose={onClose}
-      maxWidth={520}
+      size="standard"
       footer={
         <div className="flex gap-2">
           <button

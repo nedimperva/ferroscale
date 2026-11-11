@@ -88,7 +88,7 @@ export function CommandHelpSheet({
   const grades = COMMAND_GRADES.slice(0, 6);
 
   return (
-    <SheetShell title={t("help.title")} onClose={onClose} maxWidth={560}>
+    <SheetShell title={t("help.title")} onClose={onClose} size="standard">
       <button
         type="button"
         onClick={() => onTryExample("hea120 6m x2 s355 @2.50/kg")}

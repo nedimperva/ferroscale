@@ -11,9 +11,9 @@ interface RouteAwareAppShellProps {
 }
 
 /**
- * Command is now the only shell. /saved /projects /settings /compare all
- * render Command — the legacy FerroScaleAppShell is no longer mounted.
- * Pages outside the app tabs (e.g. /contact) still render their own content.
+ * Command is the only shell: every app tab (/, /saved, /projects, /customers,
+ * /settings) renders it. Pages outside the app tabs (/contact, /faq, /qa)
+ * render their own content.
  */
 export function RouteAwareAppShell({ children }: RouteAwareAppShellProps) {
   const pathname = usePathname();

@@ -7,12 +7,6 @@ import type { CommandSuggestionGroup, CommandSuggestionItem } from "@ferroscale/
  * "your sizes come first" visible rather than merely true.
  */
 
-export const SUGGESTION_GROUP_ORDER: CommandSuggestionGroup[] = [
-  "usage",
-  "preset",
-  "standard",
-];
-
 export interface SuggestionGroup {
   group: CommandSuggestionGroup | null;
   items: { item: CommandSuggestionItem; index: number }[];

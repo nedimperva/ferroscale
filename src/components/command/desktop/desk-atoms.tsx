@@ -41,38 +41,6 @@ export function DeskBtn({
   );
 }
 
-/**
- * The workspace panel: one hairline, one surface, square corners. It was
- * written out by hand in every desktop view, so a change to the app's panel
- * look was a find-and-replace instead of an edit. The `radius` prop is gone
- * with the radii themselves — see the geometry note in globals.css.
- */
-export function DeskPanel({
-  children,
-  className = "",
-  padding,
-  style,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  padding?: string | number;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <div
-      className={className}
-      style={{
-        border: "1px solid var(--border-faint)",
-        background: "var(--surface)",
-        padding,
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 export function Kbd({ children }: { children: React.ReactNode }) {
   return (
     <span
