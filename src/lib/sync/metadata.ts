@@ -141,8 +141,3 @@ export function saveSyncRecordIndex(index: SyncRecordIndex) {
   persistToStorage(SYNC_RECORD_INDEX_KEY, index);
   emitChange();
 }
-
-export function clearSyncRecordIndex() {
-  persistToStorage(SYNC_RECORD_INDEX_KEY, {});
-  emitChange();
-}

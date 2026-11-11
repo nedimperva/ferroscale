@@ -1,28 +1,14 @@
-import {
-  getCompareUpdatedAt,
-  getPriceBookUpdatedAt,
-  getQuickHistoryUpdatedAt,
-  loadCompareItems,
-  loadPriceBook,
-  loadProjects,
-  loadCustomers,
-  loadQuickHistory,
-  loadSavedEntries,
-  persistCompareItems,
-  persistPriceBook,
-  persistProjects,
-  persistCustomers,
-  persistQuickHistory,
-  persistSavedEntries,
-} from "./collections";
-import { notifyCollectionsReplaced } from "./external-changes";
 import type {
   SyncEntityPayload,
   SyncEntityRecord,
   SyncListPayload,
-  SyncSnapshotV1,
 } from "./types";
 
+/**
+ * The merge rules for one collection: entities by id, newest version wins (a
+ * tombstone beats an update of the same moment); whole lists by `updatedAt`.
+ * Used by the backup restore's merge mode.
+ */
 function isoOrEpoch(value: string | undefined): string {
   return value?.trim() || new Date(0).toISOString();
 }
@@ -71,84 +57,4 @@ export function mergeListPayload<T>(
   remote: SyncListPayload<T>,
 ): SyncListPayload<T> {
   return isoOrEpoch(remote.updatedAt) > isoOrEpoch(local.updatedAt) ? remote : local;
-}
-
-export function buildLocalSyncSnapshot(deviceId: string): SyncSnapshotV1 {
-  const snapshotUpdatedAt = new Date().toISOString();
-  return {
-    schemaVersion: 1,
-    snapshotUpdatedAt,
-    deviceId,
-    collections: {
-      saved: { items: loadSavedEntries() },
-      projects: { items: loadProjects() },
-      customers: { items: loadCustomers() },
-      compare: {
-        updatedAt: getCompareUpdatedAt(),
-        items: loadCompareItems(),
-      },
-      quickHistory: {
-        updatedAt: getQuickHistoryUpdatedAt(),
-        items: loadQuickHistory(),
-      },
-      priceBook: {
-        updatedAt: getPriceBookUpdatedAt(),
-        items: loadPriceBook(),
-      },
-    },
-  };
-}
-
-export function mergeSnapshots(local: SyncSnapshotV1, remote: SyncSnapshotV1, deviceId: string): SyncSnapshotV1 {
-  return {
-    schemaVersion: 1,
-    snapshotUpdatedAt: new Date().toISOString(),
-    deviceId,
-    collections: {
-      saved: mergeEntityPayload(local.collections.saved, remote.collections.saved),
-      projects: mergeEntityPayload(local.collections.projects, remote.collections.projects),
-      customers: mergeEntityPayload(
-        local.collections.customers ?? { items: [] },
-        remote.collections.customers ?? { items: [] },
-      ),
-      compare: mergeListPayload(local.collections.compare, remote.collections.compare),
-      quickHistory: mergeListPayload(local.collections.quickHistory, remote.collections.quickHistory),
-      priceBook: mergeListPayload(local.collections.priceBook, remote.collections.priceBook),
-    },
-  };
-}
-
-export function applySnapshotToLocal(snapshot: SyncSnapshotV1): void {
-  persistSavedEntries(snapshot.collections.saved.items, { markDirty: false });
-  persistProjects(snapshot.collections.projects.items, { markDirty: false });
-  if (snapshot.collections.customers) {
-    persistCustomers(snapshot.collections.customers.items, { markDirty: false });
-  }
-  persistCompareItems(snapshot.collections.compare.items, {
-    markDirty: false,
-    updatedAt: snapshot.collections.compare.updatedAt,
-  });
-  persistQuickHistory(snapshot.collections.quickHistory.items, {
-    markDirty: false,
-    updatedAt: snapshot.collections.quickHistory.updatedAt,
-  });
-  persistPriceBook(snapshot.collections.priceBook?.items ?? [], {
-    markDirty: false,
-    updatedAt: snapshot.collections.priceBook?.updatedAt ?? new Date(0).toISOString(),
-  });
-  notifyCollectionsReplaced();
-}
-
-export function isSyncSnapshotV1(value: unknown): value is SyncSnapshotV1 {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<SyncSnapshotV1>;
-  return candidate.schemaVersion === 1 && typeof candidate.snapshotUpdatedAt === "string" && Boolean(candidate.collections);
-}
-
-export function parseSyncSnapshot(json: string): SyncSnapshotV1 {
-  const parsed = JSON.parse(json) as unknown;
-  if (!isSyncSnapshotV1(parsed)) {
-    throw new Error("Invalid sync snapshot.");
-  }
-  return parsed;
 }

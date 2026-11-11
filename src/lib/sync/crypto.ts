@@ -25,6 +25,20 @@ async function deriveKey(secret: SyncSecret, salt: Uint8Array, usage: KeyUsage[]
   );
 }
 
+/**
+ * Bytes → base64 in slices. `String.fromCharCode(...bytes)` passes every byte
+ * as an argument, and engines cap those (about 65k in Safari, 125k in V8) —
+ * a full project is larger than that, and its sync threw a RangeError.
+ */
+function bytesToBase64(bytes: Uint8Array): string {
+  const CHUNK = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
 export async function encryptAESGCM(plaintext: string, secret: SyncSecret): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -34,7 +48,7 @@ export async function encryptAESGCM(plaintext: string, secret: SyncSecret): Prom
   packed.set(salt, 0);
   packed.set(iv, salt.length);
   packed.set(new Uint8Array(ciphertext), salt.length + iv.length);
-  return btoa(String.fromCharCode(...packed));
+  return bytesToBase64(packed);
 }
 
 export async function decryptAESGCM(encoded: string, secret: SyncSecret): Promise<string> {
