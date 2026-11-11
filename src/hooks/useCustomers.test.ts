@@ -24,7 +24,7 @@ describe("useCustomers", () => {
     const { result, unmount } = renderHook(() => useCustomers());
     let id = "";
     act(() => {
-      id = result.current.createCustomer({ name: "  Marko Group ", phone: " +387 61 555 012 " }).id;
+      id = result.current.createCustomer({ name: "  Marko Group ", phone: " +387 61 555 012 " })!.id;
     });
     act(() => result.current.updateCustomer(id, { contact: "Marko Jurić", marginPercent: 14, name: "" }));
     act(() => result.current.setCustomerArchived(id, true));
@@ -87,7 +87,7 @@ describe("client → customer migration", () => {
     const { result } = renderHook(() => useBoth());
     let projectId = "";
     act(() => {
-      projectId = result.current.projectsApi.createProject("Railing").id;
+      projectId = result.current.projectsApi.createProject("Railing")!.id;
     });
     act(() => result.current.projectsApi.updateProjectMeta(projectId, { client: "Kovač" }));
     const auto = result.current.projectsApi.projects[0].customerId;
@@ -95,7 +95,7 @@ describe("client → customer migration", () => {
 
     let explicit = "";
     act(() => {
-      explicit = result.current.customersApi.createCustomer({ name: "Delić Trans" }).id;
+      explicit = result.current.customersApi.createCustomer({ name: "Delić Trans" })!.id;
     });
     act(() =>
       result.current.projectsApi.updateProjectMeta(projectId, { client: "Delić Trans", customerId: explicit }),
@@ -107,7 +107,7 @@ describe("client → customer migration", () => {
     const { result } = renderHook(() => useBoth());
     let projectId = "";
     act(() => {
-      projectId = result.current.projectsApi.createProject("Railing").id;
+      projectId = result.current.projectsApi.createProject("Railing")!.id;
     });
     act(() => result.current.projectsApi.updateProjectMeta(projectId, { client: "Kovac" }));
     const customerId = result.current.projectsApi.projects[0].customerId!;
@@ -160,7 +160,7 @@ describe("creating a project with its customer, due date and margin", () => {
     const { result } = renderHook(() => useProjects());
     let id = "";
     act(() => {
-      id = result.current.createProject("Gate", { client: "Kovač", customerId: "c2", marginPercent: 9 }).id;
+      id = result.current.createProject("Gate", { client: "Kovač", customerId: "c2", marginPercent: 9 })!.id;
     });
     act(() => {
       result.current.duplicateProject(id, { name: "Gate II", client: "Hadžić", customerId: "c3", dueDate: "" });

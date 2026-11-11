@@ -1126,6 +1126,10 @@ export function CommandShell() {
       date: new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" }),
     });
     const project = createProject(name);
+    if (!project) {
+      showToast(t("projects.full"));
+      return;
+    }
     // Oldest first, so the project reads in the order the work happened.
     const entries = [...lines]
       .reverse()
@@ -1398,7 +1402,11 @@ export function CommandShell() {
           onSaveNew={saveLineAsNew}
           onAppendTo={(entryId, count) => appendSubjectTo(entryId, entry, count)}
           onAddToProject={(projectId, count) => handlePickProject(projectId, entry, count)}
-          onCreateProject={createProject}
+          onCreateProject={(name) => {
+            const project = createProject(name);
+            if (!project) showToast(t("projects.full"));
+            return project;
+          }}
           onClose={() => setDestination(null)}
         />
       );
@@ -1432,7 +1440,7 @@ export function CommandShell() {
       return projectsApi.duplicateProject(start.projectId, { ...meta, name: request.name });
     }
     const project = createProject(request.name, meta);
-    if (start.kind === "import") addCalculations(project.id, start.items);
+    if (project && start.kind === "import") addCalculations(project.id, start.items);
     return project;
   };
 
@@ -1532,7 +1540,6 @@ export function CommandShell() {
           onOpenDestinations={openDestinations}
           currentProjectName={currentProject?.name ?? null}
           onLoadInput={loadInput}
-          onCreateProject={createProject}
           projectActions={projectActions}
           currentSaved={!!currentSavedEntry}
           onOpenHelp={() => setSheet("help")}

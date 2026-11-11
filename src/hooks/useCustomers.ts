@@ -44,10 +44,6 @@ export interface CustomerDraft extends CustomerPatch {
 
 export const MAX_CUSTOMERS = 500;
 
-export function isArchivedCustomer(customer: Customer): boolean {
-  return Boolean(customer.archivedAt);
-}
-
 /* ------------------------------------------------------------------ */
 /*  Hook                                                              */
 /* ------------------------------------------------------------------ */
@@ -55,7 +51,8 @@ export function isArchivedCustomer(customer: Customer): boolean {
 export interface UseCustomersReturn {
   /** Every live customer, archived ones included. */
   customers: Customer[];
-  createCustomer: (draft: CustomerDraft) => Customer;
+  /** Null when the customer limit is reached; nothing is stored then. */
+  createCustomer: (draft: CustomerDraft) => Customer | null;
   updateCustomer: (id: string, patch: CustomerPatch) => void;
   setCustomerArchived: (id: string, archived: boolean) => void;
   /** Callers check the customer has no jobs — the store does not know about projects. */
@@ -133,16 +130,16 @@ export function useCustomers(): UseCustomersReturn {
   );
 
   const createCustomer = useCallback(
-    (draft: CustomerDraft): Customer => {
+    (draft: CustomerDraft): Customer | null => {
+      // Checked against the ref before writing, so a full list never hands
+      // the caller a customer that was not stored.
+      if (customersRef.current.filter((c) => !c.deletedAt).length >= MAX_CUSTOMERS) return null;
       const now = new Date().toISOString();
       const customer = applyPatch(
         { id: crypto.randomUUID(), name: draft.name.trim(), createdAt: now, updatedAt: now },
         cleanPatch(draft),
       );
-      setCustomers((prev) => {
-        if (prev.filter((c) => !c.deletedAt).length >= MAX_CUSTOMERS) return prev;
-        return [customer, ...prev];
-      });
+      setCustomers((prev) => [customer, ...prev]);
       return customer;
     },
     [setCustomers],

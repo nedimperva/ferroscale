@@ -52,7 +52,7 @@ describe("Library assemblies inserted into a project", () => {
 
     let projectId = "";
     act(() => {
-      const p = result.current.createProject("Industrial Staircase Job");
+      const p = result.current.createProject("Industrial Staircase Job")!;
       projectId = p.id;
     });
 
@@ -107,7 +107,7 @@ describe("Library assemblies inserted into a project", () => {
 
     let projectId = "";
     act(() => {
-      const p = result.current.createProject("Canopy Frame");
+      const p = result.current.createProject("Canopy Frame")!;
       projectId = p.id;
     });
 
@@ -144,7 +144,7 @@ describe("Library assemblies inserted into a project", () => {
 
     let newProjId = "";
     act(() => {
-      const p = result.current.createProjectFromAssembly("Warehouse Perimeter Fence", fencePanel, 5);
+      const p = result.current.createProjectFromAssembly("Warehouse Perimeter Fence", fencePanel, 5)!;
       newProjId = p.id;
     });
 

@@ -74,7 +74,9 @@ export function useProjectActions({
           showToast(t("projects.full"));
           return;
         }
-        return createProject(name);
+        const project = createProject(name);
+        if (!project) showToast(t("projects.full"));
+        return project ?? undefined;
       },
       onRename: renameProject,
       onUpdateMeta: (id, patch) => {
@@ -174,6 +176,10 @@ export function useProjectActions({
       },
       onCreateFromAssembly: (name, entry, multiplier) => {
         const project = createProjectFromAssembly(name, entry, multiplier);
+        if (!project) {
+          showToast(t("projects.full"));
+          return;
+        }
         showToast(t("projects.templateProjectCreated", { name: project.name }));
         return project;
       },

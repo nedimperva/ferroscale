@@ -275,7 +275,7 @@ function BarSvgDiagram({
                   {cut.startMm} → {cut.endMm} mm
                 </td>
                 <td className="py-1 text-foreground truncate max-w-[200px]">
-                  {cut.label || `Piece ${idx + 1}`}
+                  {cut.label || t("cutting.pieceFallback", { number: idx + 1 })}
                 </td>
               </tr>
             ))}
@@ -445,7 +445,7 @@ function PlateSvgDiagram({
               >
                 <td className="py-1 text-muted">#{cut.cutIndex}</td>
                 <td className="py-1 font-bold text-foreground truncate max-w-[180px]">
-                  {cut.label || `Part ${idx + 1}`}
+                  {cut.label || t("cutting.partFallback", { number: idx + 1 })}
                 </td>
                 <td className="py-1 text-foreground">{cut.widthMm} × {cut.lengthMm} mm</td>
                 <td className="py-1 text-muted">X: {cut.xMm} mm, Y: {cut.yMm} mm</td>

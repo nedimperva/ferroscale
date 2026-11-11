@@ -7,7 +7,8 @@ import type { Project } from "@/hooks/useProjects";
  * rendered on the wide workspace and inside the phone sheet.
  */
 export interface CustomerActions {
-  onCreate: (draft: CustomerDraft) => Customer;
+  /** Null when the customer limit is reached (the action has said so). */
+  onCreate: (draft: CustomerDraft) => Customer | null;
   /** A rename also rewrites the client name stored on the customer's jobs. */
   onUpdate: (id: string, patch: CustomerPatch) => void;
   onSetArchived: (id: string, archived: boolean) => void;

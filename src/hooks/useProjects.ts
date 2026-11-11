@@ -19,6 +19,7 @@ import {
   type ProjectPaintCoat,
 } from "@/lib/projects/paint";
 import type { SavedEntry } from "@/hooks/useSaved";
+import { csvEscape, downloadCsvString } from "@/lib/csv-utils";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -210,6 +211,38 @@ export interface ProjectCsvLabels {
 /** A project list you can hold in your head; also the sync payload ceiling. */
 export const MAX_PROJECTS = 20;
 const MAX_CALCS_PER_PROJECT = 50;
+/** The hourly rate a project started from an assembly opens with (editable). */
+export const DEFAULT_ASSEMBLY_LABOR_RATE = 45;
+
+function activeCount(projects: Project[]): number {
+  return projects.filter((project) => !project.deletedAt).length;
+}
+
+/** An assembly's parts as project items, each quantity scaled by `mult`. */
+function assemblyCalcs(
+  entry: SavedEntry,
+  mult: number,
+  asmTag: string,
+  now: string,
+): ProjectCalculation[] {
+  const calcs: ProjectCalculation[] = [];
+  for (const part of entry.parts ?? []) {
+    const itemQty = Math.max(1, Math.floor((part.input.quantity || 1) * mult));
+    const nextInput = { ...part.input, quantity: itemQty };
+    const calc = calculateMetal(nextInput);
+    if (!calc.ok) continue;
+    calcs.push({
+      id: crypto.randomUUID(),
+      timestamp: now,
+      input: nextInput,
+      result: calc.result,
+      normalizedProfile: normalizeProfileSnapshot(nextInput),
+      assembly: asmTag,
+      note: part.name,
+    });
+  }
+  return calcs;
+}
 /** The right rail shows a history, not an audit trail — old lines fall off. */
 const MAX_ACTIVITY = 40;
 
@@ -320,12 +353,12 @@ export function exportProjectCsv(
 ): void {
   if (project.calculations.length === 0) return;
 
-  const headers = labels.headers;
+  const line = (cells: ReadonlyArray<string | number>) => cells.map(csvEscape).join(",");
   const rows = project.calculations.map((calc) => {
     const r = calc.result;
     if (calc.templateName) {
-      return [
-        `"${calc.templateName} x${calc.quantityMultiplier ?? 1}"`,
+      return line([
+        `${calc.templateName} x${calc.quantityMultiplier ?? 1}`,
         "",
         "Mixed",
         "",
@@ -336,9 +369,9 @@ export function exportProjectCsv(
         "",
         r.grandTotalAmount,
         r.currency,
-      ].join(",");
+      ]);
     }
-    return [
+    return line([
       calc.normalizedProfile.shortLabel,
       labels.resolveProfileLabel
         ? labels.resolveProfileLabel(r.profileId, r.profileLabel)
@@ -352,276 +385,33 @@ export function exportProjectCsv(
       r.vatAmount,
       r.grandTotalAmount,
       r.currency,
-    ].join(",");
+    ]);
   });
 
+  // One cell per header: the totals sit under Total Weight, Surface Area,
+  // Grand Total and Currency. The row used to be nine cells wide, which put
+  // the weight under Unit Weight and the cost under Waste.
   const agg = computeAggregates(project);
   rows.push("");
-  rows.push(`${labels.total},,,"${agg.totalWeightKg}","${agg.totalSurfaceAreaM2}",,,"${agg.totalCost}","${agg.currency}"`);
-
-  const csv = [headers.join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${labels.filePrefix}-${project.name.replace(/[^a-zA-Z0-9_-]/g, "_")}-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* ------------------------------------------------------------------ */
-/*  PDF export                                                        */
-/* ------------------------------------------------------------------ */
-
-export interface ProjectPdfLabels {
-  title: string;
-  description: string;
-  date: string;
-  items: string;
-  totalWeight: string;
-  totalCost: string;
-  costPerKg: string;
-  totalSurfaceArea: string;
-  paintNeeded: string;
-  paintingCost: string;
-  profileColumn: string;
-  materialColumn: string;
-  qtyColumn: string;
-  unitWeightColumn: string;
-  weightColumn: string;
-  surfaceAreaColumn: string;
-  costColumn: string;
-  noteColumn: string;
-  total: string;
-  subtotal: string;
-  materialSummary: string;
-  resolveCategoryLabel: (iconKey: string) => string;
-  resolveGradeLabel?: (label: string) => string;
-  resolveProfileLabel?: (profileId: string, fallback: string) => string;
-}
-
-const CATEGORY_ORDER = ["bars", "plates_sheets", "tubes", "structural"];
-
-export function exportProjectPdf(
-  project: Project,
-  labels: ProjectPdfLabels,
-  currencySymbols: Record<string, string>,
-): void {
-  if (project.calculations.length === 0) return;
-
-  const agg = computeAggregates(project);
-  const currency = currencySymbols[agg.currency] ?? agg.currency;
-  const dateStr = new Date().toLocaleDateString();
-
-  /* Group calculations by profile category (iconKey) */
-  const categoryGroups = new Map<string, ProjectCalculation[]>();
-  for (const calc of project.calculations) {
-    const cat = calc.normalizedProfile.iconKey as string;
-    if (!categoryGroups.has(cat)) categoryGroups.set(cat, []);
-    categoryGroups.get(cat)!.push(calc);
-  }
-  const sortedCategories = [...categoryGroups.entries()].sort(
-    (a, b) => CATEGORY_ORDER.indexOf(a[0]) - CATEGORY_ORDER.indexOf(b[0]),
+  rows.push(
+    line([
+      labels.total,
+      "",
+      "",
+      "",
+      agg.totalWeightKg,
+      agg.totalSurfaceAreaM2,
+      "",
+      "",
+      "",
+      agg.totalCost,
+      agg.currency,
+    ]),
   );
-  const multiCategory = sortedCategories.length > 1;
 
-  /* Build items table rows grouped by category */
-  let tableBody = "";
-  for (const [cat, calcs] of sortedCategories) {
-    const catLabel = labels.resolveCategoryLabel(cat);
-
-    if (multiCategory) {
-      tableBody += `<tr class="cat-row"><td colspan="8">${catLabel}</td></tr>`;
-    }
-
-    let catWeight = 0;
-    let catCost = 0;
-    let catSurface = 0;
-
-    for (const calc of calcs) {
-      const totalWt = calc.result.totalWeightKg;
-      const surfArea = calc.result.surfaceAreaM2;
-      const cost = calc.result.grandTotalAmount;
-      catWeight += totalWt;
-      catCost += cost;
-      if (surfArea != null) catSurface += surfArea;
-
-      if (calc.templateName) {
-        tableBody += `<tr>
-        <td>${calc.templateName} x${calc.quantityMultiplier ?? 1}</td>
-        <td>Mixed</td>
-        <td class="num">${calc.templateParts?.length ?? 0} parts</td>
-        <td class="num">—</td>
-        <td class="num">${totalWt} kg</td>
-        <td class="num">${surfArea != null ? surfArea + " m²" : "—"}</td>
-        <td class="num">${cost} ${currency}</td>
-        <td>${calc.note ?? ""}</td>
-      </tr>`;
-      } else {
-        const profileLabel = calc.normalizedProfile.shortLabel;
-        const gradeLabel = labels.resolveGradeLabel
-          ? labels.resolveGradeLabel(calc.result.gradeLabel)
-          : calc.result.gradeLabel;
-        const qty = calc.result.quantity;
-        const unitWt = calc.result.unitWeightKg;
-        tableBody += `<tr>
-        <td>${profileLabel}</td>
-        <td>${gradeLabel}</td>
-        <td class="num">${qty}</td>
-        <td class="num">${unitWt}</td>
-        <td class="num">${totalWt} kg</td>
-        <td class="num">${surfArea != null ? surfArea + " m²" : "—"}</td>
-        <td class="num">${cost} ${currency}</td>
-        <td>${calc.note ?? ""}</td>
-      </tr>`;
-      }
-    }
-
-    if (multiCategory) {
-      const rw = Math.round(catWeight * 100) / 100;
-      const rc = Math.round(catCost * 100) / 100;
-      const rs = Math.round(catSurface * 100) / 100;
-      tableBody += `<tr class="subtotal-row">
-        <td colspan="4">${catLabel} — ${labels.subtotal}</td>
-        <td class="num">${rw} kg</td>
-        <td class="num">${rs > 0 ? rs + " m²" : "—"}</td>
-        <td class="num">${rc} ${currency}</td>
-        <td></td>
-      </tr>`;
-    }
-  }
-
-  /* Grand total row */
-  tableBody += `<tr class="total-row">
-    <td colspan="4">${labels.total}</td>
-    <td class="num">${agg.totalWeightKg} kg</td>
-    <td class="num">${agg.totalSurfaceAreaM2 > 0 ? agg.totalSurfaceAreaM2 + " m²" : "—"}</td>
-    <td class="num">${agg.totalCost} ${currency}</td>
-    <td></td>
-  </tr>`;
-
-  /* Material grade summary */
-  const materialMap = new Map<string, { count: number; weight: number; cost: number }>();
-  for (const calc of project.calculations) {
-    if (calc.templateName) {
-      // Template entries contribute to "Mixed" material
-      const mk = "Mixed";
-      if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
-      const entry = materialMap.get(mk)!;
-      entry.count++;
-      entry.weight += calc.result.totalWeightKg;
-      entry.cost += calc.result.grandTotalAmount;
-    } else {
-      const mk = labels.resolveGradeLabel
-        ? labels.resolveGradeLabel(calc.result.gradeLabel)
-        : calc.result.gradeLabel;
-      if (!materialMap.has(mk)) materialMap.set(mk, { count: 0, weight: 0, cost: 0 });
-      const entry = materialMap.get(mk)!;
-      entry.count++;
-      entry.weight += calc.result.totalWeightKg;
-      entry.cost += calc.result.grandTotalAmount;
-    }
-  }
-  const materialRows = [...materialMap.entries()]
-    .sort((a, b) => b[1].weight - a[1].weight)
-    .map(([k, v]) => {
-      const rw = Math.round(v.weight * 100) / 100;
-      const rc = Math.round(v.cost * 100) / 100;
-      const cpk = rw > 0 ? Math.round((rc / rw) * 100) / 100 : 0;
-      return `<tr>
-        <td>${k}</td>
-        <td class="num">${v.count}</td>
-        <td class="num">${rw} kg</td>
-        <td class="num">${rc} ${currency}</td>
-        <td class="num">${cpk} ${currency}/kg</td>
-      </tr>`;
-    })
-    .join("");
-
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>${project.name}</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, Arial, sans-serif; font-size: 12px; color: #1a1a1a; padding: 32px; }
-  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #888; margin-bottom: 8px; font-weight: 600; }
-  .meta { color: #666; font-size: 11px; margin-bottom: 4px; }
-  .description { color: #444; font-size: 12px; margin: 8px 0 20px; font-style: italic; border-left: 3px solid #e5e7eb; padding-left: 10px; }
-  .stats { display: flex; gap: 12px; margin-bottom: 24px; }
-  .stat { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; flex: 1; }
-  .stat-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
-  .stat-value { font-size: 17px; font-weight: 700; margin-top: 2px; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-  th { background: #f3f4f6; text-align: left; padding: 7px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #555; border-bottom: 2px solid #e5e7eb; }
-  th.num, td.num { text-align: right; }
-  td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: top; font-size: 11px; }
-  .cat-row td { background: #f9fafb; font-weight: 700; font-size: 11px; color: #374151; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 6px 10px; }
-  .subtotal-row td { font-weight: 600; background: #f3f4f6; border-top: 1px solid #e5e7eb; color: #374151; }
-  .total-row td { font-weight: 700; border-top: 2px solid #374151; padding-top: 9px; }
-  .footer { color: #aaa; font-size: 10px; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 12px; }
-  @media print { body { padding: 20px; } }
-</style>
-</head>
-<body>
-<h1>${project.name}</h1>
-<p class="meta">${labels.date}: ${dateStr}</p>
-${project.description ? `<p class="description">${project.description}</p>` : ""}
-
-<div class="stats">
-  <div class="stat"><div class="stat-label">${labels.items}</div><div class="stat-value">${agg.count}</div></div>
-  <div class="stat"><div class="stat-label">${labels.totalWeight}</div><div class="stat-value">${agg.totalWeightKg} kg</div></div>
-  <div class="stat"><div class="stat-label">${labels.totalCost}</div><div class="stat-value">${agg.totalCost} ${currency}</div></div>
-  <div class="stat"><div class="stat-label">${labels.costPerKg}</div><div class="stat-value">${agg.costPerKg} ${currency}/kg</div></div>
-</div>
-${agg.totalSurfaceAreaM2 > 0 ? `<div class="stats">
-  <div class="stat"><div class="stat-label">${labels.totalSurfaceArea}</div><div class="stat-value">${agg.totalSurfaceAreaM2} m²</div></div>
-  <div class="stat"><div class="stat-label">${labels.paintNeeded}</div><div class="stat-value">${agg.paintKgNeeded} kg</div></div>
-  <div class="stat"><div class="stat-label">${labels.paintingCost}</div><div class="stat-value">${agg.totalPaintingCost} ${currency}</div></div>
-</div>` : ""}
-
-<table>
-  <thead>
-    <tr>
-      <th>${labels.profileColumn}</th>
-      <th>${labels.materialColumn}</th>
-      <th class="num">${labels.qtyColumn}</th>
-      <th class="num">${labels.unitWeightColumn}</th>
-      <th class="num">${labels.weightColumn}</th>
-      <th class="num">${labels.surfaceAreaColumn}</th>
-      <th class="num">${labels.costColumn}</th>
-      <th>${labels.noteColumn}</th>
-    </tr>
-  </thead>
-  <tbody>${tableBody}</tbody>
-</table>
-
-${materialMap.size > 1 ? `<h2>${labels.materialSummary}</h2>
-<table>
-  <thead>
-    <tr>
-      <th>${labels.materialColumn}</th>
-      <th class="num">#</th>
-      <th class="num">${labels.weightColumn}</th>
-      <th class="num">${labels.costColumn}</th>
-      <th class="num">${labels.costPerKg}</th>
-    </tr>
-  </thead>
-  <tbody>${materialRows}</tbody>
-</table>` : ""}
-
-<div class="footer">FerroScale &middot; ${dateStr}</div>
-</body>
-</html>`;
-
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 300);
+  const csv = [line(labels.headers), ...rows].join("\n");
+  const safeName = project.name.replace(/[^a-zA-Z0-9_-]/g, "_");
+  downloadCsvString(csv, `${labels.filePrefix}-${safeName}-${new Date().toISOString().slice(0, 10)}.csv`);
 }
 
 /* ------------------------------------------------------------------ */
@@ -636,7 +426,8 @@ export interface UseProjectsReturn {
   /** The project currently being viewed in the drawer (null = list view). */
   activeProjectId: string | null;
   setActiveProjectId: (id: string | null) => void;
-  createProject: (name: string, meta?: NewProjectMeta) => Project;
+  /** Null when the project limit is reached; nothing is stored then. */
+  createProject: (name: string, meta?: NewProjectMeta) => Project | null;
   renameProject: (id: string, name: string) => void;
   updateProjectMeta: (
     id: string,
@@ -704,7 +495,7 @@ export interface UseProjectsReturn {
     entry: SavedEntry,
     multiplier?: number,
     meta?: NewProjectMeta,
-  ) => Project;
+  ) => Project | null;
   removeCalculation: (projectId: string, calcId: string) => void;
   updateCalculationQuantity: (projectId: string, calcId: string, quantity: number) => void;
   updateCalculationNote: (projectId: string, calcId: string, note: string) => void;
@@ -765,7 +556,7 @@ export function useProjects(): UseProjectsReturn {
     [],
   );
 
-  const createProject = useCallback((name: string, meta?: NewProjectMeta): Project => {
+  const createProject = useCallback((name: string, meta?: NewProjectMeta): Project | null => {
     const now = new Date().toISOString();
     const trimmed = name.trim();
     const project: Project = withNewMeta(
@@ -779,10 +570,10 @@ export function useProjects(): UseProjectsReturn {
       },
       meta,
     );
-    setProjects((prev) => {
-      if (prev.filter((project) => !project.deletedAt).length >= MAX_PROJECTS) return prev;
-      return [project, ...prev];
-    });
+    // The ref is folded synchronously, so a full list is known before returning:
+    // a caller never gets back a project that was not stored.
+    if (activeCount(projectsRef.current) >= MAX_PROJECTS) return null;
+    setProjects((prev) => [project, ...prev]);
     return project;
   }, [setProjects]);
 
@@ -1091,10 +882,8 @@ export function useProjects(): UseProjectsReturn {
   /**
    * Add several calculations in one state update.
    *
-   * `addCalculation` reports success through a flag its updater sets, which
-   * only reads back correctly for a single call — in a loop every call after
-   * the first is queued, so the flag lies. Bulk work goes through here: one
-   * updater, one pass, fingerprint-deduped against the project and itself.
+   * One write, one history line ("3 items added") instead of one per call, and
+   * fingerprint-deduped against the project and against the batch itself.
    */
   const addCalculations = useCallback(
     (
@@ -1149,22 +938,11 @@ export function useProjects(): UseProjectsReturn {
       const now = new Date().toISOString();
       const asmTag = customAssemblyName?.trim() || entry.name;
 
-      const newCalcs: ProjectCalculation[] = [];
-      for (const part of entry.parts) {
-        const itemQty = Math.max(1, Math.floor((part.input.quantity || 1) * mult));
-        const nextInput = { ...part.input, quantity: itemQty };
-        const calc = calculateMetal(nextInput);
-        if (!calc.ok) continue;
-        newCalcs.push({
-          id: crypto.randomUUID(),
-          timestamp: now,
-          input: nextInput,
-          result: calc.result,
-          normalizedProfile: normalizeProfileSnapshot(nextInput),
-          assembly: asmTag,
-          note: part.name,
-        });
-      }
+      // Only as many parts as the project still has room for.
+      const newCalcs = assemblyCalcs(entry, mult, asmTag, now).slice(
+        0,
+        MAX_CALCS_PER_PROJECT - project.calculations.length,
+      );
 
       if (newCalcs.length === 0) return false;
 
@@ -1316,28 +1094,13 @@ export function useProjects(): UseProjectsReturn {
   );
 
   const createProjectFromAssembly = useCallback(
-    (name: string, entry: SavedEntry, multiplier = 1, meta?: NewProjectMeta): Project => {
+    (name: string, entry: SavedEntry, multiplier = 1, meta?: NewProjectMeta): Project | null => {
+      if (activeCount(projectsRef.current) >= MAX_PROJECTS) return null;
       const mult = Math.max(1, Math.floor(multiplier || 1));
       const now = new Date().toISOString();
       const newId = crypto.randomUUID();
-      const asmTag = entry.name;
 
-      const newCalcs: ProjectCalculation[] = [];
-      for (const part of entry.parts) {
-        const itemQty = Math.max(1, Math.floor((part.input.quantity || 1) * mult));
-        const nextInput = { ...part.input, quantity: itemQty };
-        const calc = calculateMetal(nextInput);
-        if (!calc.ok) continue;
-        newCalcs.push({
-          id: crypto.randomUUID(),
-          timestamp: now,
-          input: nextInput,
-          result: calc.result,
-          normalizedProfile: normalizeProfileSnapshot(nextInput),
-          assembly: asmTag,
-          note: part.name,
-        });
-      }
+      const newCalcs = assemblyCalcs(entry, mult, entry.name, now).slice(0, MAX_CALCS_PER_PROJECT);
 
       const scaledCosts: ProjectAdditionalCost[] | undefined = entry.additionalCosts
         ? entry.additionalCosts.map((c) => ({
@@ -1357,7 +1120,7 @@ export function useProjects(): UseProjectsReturn {
         updatedAt: now,
         calculations: newCalcs,
         laborHours: entry.laborHours ? entry.laborHours * mult : undefined,
-        laborRatePerHour: 45,
+        laborRatePerHour: DEFAULT_ASSEMBLY_LABOR_RATE,
         additionalCosts: scaledCosts,
         activity: [{ id: crypto.randomUUID(), at: now, kind: "created" }],
       }, meta);

@@ -31,7 +31,7 @@ export function useCustomerActions({
     () => ({
       onCreate: (draft) => {
         const customer = createCustomer(draft);
-        showToast(t("customers.toastCreated"));
+        showToast(t(customer ? "customers.toastCreated" : "customers.full"));
         return customer;
       },
       onUpdate: (id, patch) => {
