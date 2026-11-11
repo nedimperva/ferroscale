@@ -169,11 +169,13 @@ describe("backup-file", () => {
     expect(merged.some((p) => p.id === "p1")).toBe(true);
     expect(merged.some((p) => p.id === "p2")).toBe(true);
 
-    // 2. Replace mode: should have only p2
+    // 2. Replace mode: only p2 stays live; p1 is tombstoned so sync deletes it
+    // on the other devices too, and p2 is restamped so it wins the next merge.
     restoreBackupFile(backupFile, "replace");
     const replaced = loadProjects();
-    expect(replaced.length).toBe(1);
-    expect(replaced[0].id).toBe("p2");
+    expect(replaced.filter((p) => !p.deletedAt).map((p) => p.id)).toEqual(["p2"]);
+    expect(replaced.find((p) => p.id === "p1")?.deletedAt).toBeTruthy();
+    expect(replaced.find((p) => p.id === "p2")!.updatedAt > backupProject.updatedAt).toBe(true);
   });
 
   it("carries customers, and an older backup without them leaves them in place", () => {
