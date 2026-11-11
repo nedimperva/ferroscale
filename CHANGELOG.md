@@ -27,6 +27,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - Restoring a backup, or pulling changes from Google Drive, now shows up immediately. Projects, customers, parts, compare, the session tape and the price book used to load once and ignore what was written to storage afterwards, so a restore only appeared after a refresh
+- Google Drive sync no longer stops on a large project (a job with a few dozen lines could fail to upload), and a library of more than 100 records now reaches a new device whole instead of only its first 100
+- A project's CSV export puts the totals under the right columns — the weight under Total Weight, the cost under Grand Total — and a name with a comma in it no longer shifts the cells after it
+- A backup file records the app version it was made with (it always said 3.22.0) and now carries the Section properties setting
+- Update now on the new-version banner reloads the app; it used to do nothing once the update had installed itself
+- A first visit on a device set to dark mode opens dark, without a flash of the light theme
+- The FAQ, Contact and Formula QA pages state their own address to search engines instead of pointing at the home page
+- Links without a language in them — ferroscale…/saved, /projects, a bare share link — now open the app instead of a missing page, and a first visit opens in the browser's language. The language redirect had never been switched on; only the home, FAQ and Contact addresses were covered
+- Changing the sync passphrase now uploads everything again. It cleared Google Drive and then sent back only what had changed since the last sync, so the rest was missing on other devices
+- A first Google Drive sync of a big library goes up in batches and keeps what it has sent, instead of one request that could time out and send nothing
+- Saved entries from older versions no longer upload to Google Drive on every sync
+- Replacing your data from a backup now also replaces it on your other synced devices. Entries the backup did not have came back from Drive, and older ones in it lost to the copy on Drive
+- At the 20-project or 500-customer limit, a new project or customer says so instead of seeming to be made and then vanishing — including a project started from an assembly or from the session tape, which ignored the limit. Inserting an assembly stops at a project's 50 lines
+- The contact form, sent offline, says it could not be sent. It used to say the message was queued, but the queued copy could not get through
+- Shared links to the FAQ, Contact and Formula QA pages preview as those pages, not as the home page
+- The cut plan names unnamed pieces in Bosnian too
 
 ## [3.36.0] - 2026-10-08
 
