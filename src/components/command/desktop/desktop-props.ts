@@ -82,7 +82,6 @@ export interface CommandDesktopProps {
   onRemoveCompare: (id: string) => void;
   onClearCompare: () => void;
   onLoadInput: (input: CalculationInput) => void;
-  onCreateProject: (name: string) => Project;
   /** Everything the Projects surface can do to a project. */
   projectActions: ProjectActions;
   /** True when the line in the bar is already bookmarked (Save is a toggle). */

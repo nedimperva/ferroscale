@@ -61,21 +61,6 @@ export interface SyncSettingsPayload {
   values: unknown;
 }
 
-export interface SyncSnapshotV1 {
-  schemaVersion: 1;
-  snapshotUpdatedAt: string;
-  deviceId: string;
-  collections: {
-    saved: SyncEntityPayload<SavedEntry>;
-    projects: SyncEntityPayload<Project>;
-    /** Absent in snapshots written before customers existed. */
-    customers?: SyncEntityPayload<Customer>;
-    compare: SyncListPayload<CompareItem>;
-    quickHistory: SyncListPayload<string>;
-    priceBook: SyncListPayload<PriceBookEntry>;
-  };
-}
-
 export interface SyncMetadata {
   deviceId: string;
   providerId: SyncProviderId | null;

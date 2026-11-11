@@ -114,7 +114,12 @@ export function PwaRegister({ onOpenChangelog }: PwaRegisterProps) {
     if (reg?.waiting) {
       reloadRequestedRef.current = true;
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      return;
     }
+    // sw.js skips waiting on install, so by the time this is pressed the new
+    // worker is usually already in control and nothing is "waiting" — the
+    // button did nothing. The page only needs to load the new build.
+    window.location.reload();
   }
 
   if (activeBanner === "offline") {

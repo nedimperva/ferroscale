@@ -55,10 +55,6 @@ interface SheetShellProps {
   footer?: React.ReactNode;
   /** The body manages its own scrolling and padding (two-pane layouts). */
   bare?: boolean;
-  /** @deprecated Pass `size` instead — kept so existing callers still read well. */
-  maxWidth?: number;
-  /** @deprecated Pass `size="full"`. */
-  fullScreen?: boolean;
 }
 
 export function SheetShell({
@@ -71,8 +67,6 @@ export function SheetShell({
   headerAction,
   footer,
   bare,
-  maxWidth,
-  fullScreen,
 }: SheetShellProps) {
   const t = useTranslations("command");
   const titleId = useId();
@@ -89,7 +83,7 @@ export function SheetShell({
     }
   };
 
-  const resolved: OverlaySize = size ?? (fullScreen ? "full" : "standard");
+  const resolved: OverlaySize = size ?? "standard";
 
   if (resolved === "full") {
     return (
@@ -128,7 +122,7 @@ export function SheetShell({
     );
   }
 
-  const width = maxWidth ?? SIZE_WIDTH[resolved];
+  const width = SIZE_WIDTH[resolved];
 
   return (
     <div

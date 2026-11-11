@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { fsMoney } from "@ferroscale/metal-core";
 import type { CalculationInput, CalculationResult } from "@/lib/calculator/types";
 import type { Customer } from "@/hooks/useCustomers";
-import type { Project, ProjectCalculation } from "@/hooks/useProjects";
+import { DEFAULT_ASSEMBLY_LABOR_RATE, type Project, type ProjectCalculation } from "@/hooks/useProjects";
 import type { SavedEntry } from "@/hooks/useSaved";
 import { customerJobs, filterCustomers, findCustomerByName } from "@/lib/customers/query";
 import { barListQueries } from "@/lib/projects/import-list";
@@ -82,7 +82,7 @@ export function NewProjectDialog({
   initialCustomerId?: string;
   /** A command-line query to a calculation, or null when it does not read. */
   parseQuery: (query: string) => Parsed | null;
-  onCreateCustomer: (name: string) => Customer;
+  onCreateCustomer: (name: string) => Customer | null;
   onCreate: (request: NewProjectRequest) => void;
   onClose: () => void;
 }) {
@@ -142,7 +142,7 @@ export function NewProjectDialog({
         ...base,
         calculations: asCalcs(scaled),
         laborHours: assembly.laborHours ? assembly.laborHours * multiplier : undefined,
-        laborRatePerHour: 45,
+        laborRatePerHour: DEFAULT_ASSEMBLY_LABOR_RATE,
         additionalCosts: assembly.additionalCosts?.map((c) => ({ ...c, amount: c.amount * multiplier })),
       };
     }
@@ -198,6 +198,7 @@ export function NewProjectDialog({
   const exact = q ? findCustomerByName(customers, q) : undefined;
   const addCustomer = () => {
     const created = onCreateCustomer(q);
+    if (!created) return;
     setAdded(created);
     setCustomerId(created.id);
     setCustomerQuery("");

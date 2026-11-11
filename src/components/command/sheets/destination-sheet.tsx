@@ -73,7 +73,8 @@ export function DestinationSheet({
   onSaveNew: (name: string, asAssembly: boolean) => void;
   onAppendTo: (entryId: string, count: number) => void;
   onAddToProject: (projectId: string, count: number) => void;
-  onCreateProject: (name: string) => Project;
+  /** Null when the project limit is reached (the caller has said so). */
+  onCreateProject: (name: string) => Project | null;
   onClose: () => void;
 }) {
   const t = useTranslations("command");
@@ -134,7 +135,8 @@ export function DestinationSheet({
     if (!creating) return;
     if (creating === "project") {
       if (!trimmed) return;
-      onAddToProject(onCreateProject(trimmed).id, count);
+      const project = onCreateProject(trimmed);
+      if (project) onAddToProject(project.id, count);
       return;
     }
     onSaveNew(trimmed || subject.defaultName, Boolean(subject.multi));

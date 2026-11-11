@@ -49,10 +49,12 @@ async function sendContactEmail(body: {
   const from = getEnv("RESEND_FROM", "resend_from");
   const toRaw = getEnv("RESEND_TO", "resend_to") ?? from;
 
+  // Not configured is not a server fault: 503 tells the form (and any
+  // monitor) that the service is off, and nothing is sent or stored.
   if (!apiKey || !from || !toRaw) {
     return {
       ok: false as const,
-      status: 500,
+      status: 503,
       messageKey: "contact.api.notConfigured",
       message:
         "Contact service is not configured. Set RESEND_API_KEY, RESEND_FROM, and optionally RESEND_TO.",

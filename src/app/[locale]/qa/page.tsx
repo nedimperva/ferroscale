@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { contentPageMetadata } from "@/lib/page-metadata";
 import { runFormulaQa } from "@/lib/qa/run";
 
 interface QaPageProps {
@@ -10,7 +11,7 @@ interface QaPageProps {
 export async function generateMetadata({ params }: QaPageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "qa" });
-  return { title: t("title"), description: t("subtitle") };
+  return contentPageMetadata({ locale, path: "/qa", title: t("title"), description: t("subtitle") });
 }
 
 /**

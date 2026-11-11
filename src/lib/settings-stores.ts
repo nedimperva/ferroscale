@@ -14,6 +14,7 @@ import {
 import type { CalculationInput, LengthUnit } from "@/lib/calculator/types";
 import type { CommandPricing } from "@ferroscale/metal-core";
 import { markSettingsDirty } from "@/lib/sync/settings-dirty";
+import { DEFAULT_PAINT_COVERAGE_M2_PER_KG, DEFAULT_PAINT_PRICE_PER_KG } from "@/lib/projects/paint";
 
 /**
  * Stores passing `synced` travel to every device through Drive sync (see
@@ -76,13 +77,13 @@ export const currentProjectStore = createStringStore<string>("ferroscale-current
 /** Shop default when adding a paint coat on a project. The project can override. */
 export const defaultPaintPriceStore = createNumberStore(
   "ferroscale-paint-price",
-  8,
+  DEFAULT_PAINT_PRICE_PER_KG,
   (value) => Math.min(10_000, Math.max(0, value)),
   synced,
 );
 export const defaultPaintCoverageStore = createNumberStore(
   "ferroscale-paint-coverage",
-  8,
+  DEFAULT_PAINT_COVERAGE_M2_PER_KG,
   (value) => Math.min(200, Math.max(0.1, value)),
   synced,
 );

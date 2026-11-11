@@ -58,6 +58,7 @@ export function CustomersView({
 
   const addCustomer = () => {
     const customer = actions.onCreate({ name: t("customers.defaultName") });
+    if (!customer) return;
     setSearch("");
     setArchivedFilter(false);
     onSelect(customer.id);

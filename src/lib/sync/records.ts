@@ -213,12 +213,6 @@ export async function getPendingSyncRecords(deviceId: string) {
   });
 }
 
-export function clearIndexedRecord(recordKey: string) {
-  const next = { ...loadSyncRecordIndex() };
-  delete next[recordKey];
-  saveSyncRecordIndex(next);
-}
-
 export function clearAllIndexedRecords() {
   saveSyncRecordIndex({});
 }

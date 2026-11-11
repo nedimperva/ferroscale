@@ -40,6 +40,9 @@ type SyncOutcome = {
 
 type SyncSession = NonNullable<SyncAuthPollResponse & { status: "complete" }>["session"];
 
+/** Records per push request (see the push loop in `runSyncOnce`). */
+const PUSH_BATCH_SIZE = 25;
+
 /** Local edits settle for this long before a push. */
 const DIRTY_DEBOUNCE_MS = 1500;
 /** A visible tab checks Drive for other devices' changes this often. */
@@ -451,38 +454,55 @@ async function runSyncOnce(opts?: { resetRemote?: boolean }): Promise<SyncOutcom
       pendingDownloadCount: 0,
     });
 
+    // A reset deletes every file on Drive, so every record has to go back up —
+    // not only the ones the index says have changed since the last push.
+    if (opts?.resetRemote) clearAllIndexedRecords();
+
     const pending = await getPendingSyncRecords(getSyncMetadata().deviceId);
     saveSyncMetadata({ pendingUploadCount: pending.length });
 
     if (pending.length > 0 || opts?.resetRemote) {
-      const activeSession = loadSyncSession();
-      if (!activeSession) throw new SyncRequestError("Google Drive session missing", 401, "reauth");
+      // In batches: the server uploads one Drive file at a time, so a first
+      // sync of a big library in a single request could outlast a serverless
+      // time limit or a body-size cap — and then nothing would be recorded as
+      // pushed. Each batch is marked as soon as it lands, so a failure part
+      // way only re-sends what did not make it.
+      let remaining = pending.length;
+      for (let start = 0; start === 0 || start < pending.length; start += PUSH_BATCH_SIZE) {
+        const batch = pending.slice(start, start + PUSH_BATCH_SIZE);
+        const activeSession = loadSyncSession();
+        if (!activeSession) throw new SyncRequestError("Google Drive session missing", 401, "reauth");
 
-      const push = await apiJson<SyncPushResponse>("/api/sync/google/push", {
-        method: "POST",
-        body: JSON.stringify({
-          sessionToken: activeSession.sessionToken,
-          resetRemote: !!opts?.resetRemote,
-          records: await Promise.all(pending.map(async (record) => ({
-            recordKey: record.recordKey,
-            kind: record.kind,
-            entityId: record.entityId,
-            updatedAt: record.updatedAt,
-            contentHash: record.contentHash,
-            encryptedPayload: await encryptAESGCM(record.payload, passphrase),
-            existingFileId: opts?.resetRemote ? null : record.existingFileId,
-          }))),
-        }),
-      });
-
-      if (push.sessionToken && push.sessionToken !== activeSession.sessionToken) {
-        saveSyncSession({
-          ...activeSession,
-          sessionToken: push.sessionToken,
+        const push = await apiJson<SyncPushResponse>("/api/sync/google/push", {
+          method: "POST",
+          body: JSON.stringify({
+            sessionToken: activeSession.sessionToken,
+            // Only the first batch clears Drive; later ones add to it.
+            resetRemote: start === 0 && !!opts?.resetRemote,
+            records: await Promise.all(batch.map(async (record) => ({
+              recordKey: record.recordKey,
+              kind: record.kind,
+              entityId: record.entityId,
+              updatedAt: record.updatedAt,
+              contentHash: record.contentHash,
+              encryptedPayload: await encryptAESGCM(record.payload, passphrase),
+              existingFileId: opts?.resetRemote ? null : record.existingFileId,
+            }))),
+          }),
         });
-      }
 
-      markSyncPushResults(pending, push.records);
+        if (push.sessionToken && push.sessionToken !== activeSession.sessionToken) {
+          saveSyncSession({
+            ...activeSession,
+            sessionToken: push.sessionToken,
+          });
+        }
+
+        markSyncPushResults(batch, push.records);
+        remaining -= batch.length;
+        saveSyncMetadata({ pendingUploadCount: remaining });
+        if (pending.length === 0) break;
+      }
       saveSyncMetadata({
         lastSuccessfulPushAt: new Date().toISOString(),
         pendingUploadCount: 0,
@@ -710,15 +730,6 @@ async function disconnect() {
   setCurrentAction(undefined);
 }
 
-async function resetRemoteCopy() {
-  setCurrentAction("reset-remote");
-  try {
-    return await syncNow({ resetRemote: true });
-  } finally {
-    setCurrentAction(undefined);
-  }
-}
-
 /**
  * This device's passphrase was missing or wrong: store the one the user typed
  * and pull again. Unlike `changePassphrase`, Drive is left as it is — if this
@@ -849,7 +860,6 @@ export function useGoogleDriveSync() {
     connect,
     reconnect,
     disconnect,
-    resetRemoteCopy,
     changePassphrase,
     setPassphrase,
     syncNow: () => syncNow(),

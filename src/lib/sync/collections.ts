@@ -58,12 +58,17 @@ function maybeNotify(collectionKey: SyncEntityCollectionKey | SyncListCollection
   });
 }
 
-function normalizeTemplatePart(raw: unknown): SavedPart | null {
+/**
+ * `fallbackId` is derived from the entry, never random: normalizing runs on
+ * every load, and a fresh id each time would change the record's content hash
+ * and push the same entry to Drive again and again.
+ */
+function normalizeTemplatePart(raw: unknown, fallbackId: string): SavedPart | null {
   if (!raw || typeof raw !== "object") return null;
   const candidate = raw as Partial<SavedPart>;
   if (!candidate.input || !candidate.result) return null;
   return {
-    id: candidate.id ?? crypto.randomUUID(),
+    id: candidate.id ?? fallbackId,
     name: candidate.name?.trim() || candidate.result.profileLabel,
     input: candidate.input,
     result: candidate.result,
@@ -103,12 +108,12 @@ export function normalizeSavedEntry(raw: unknown): SavedEntry | null {
 
   const normalizedParts = Array.isArray(candidate.parts)
     ? candidate.parts
-        .map((part) => normalizeTemplatePart(part))
+        .map((part, index) => normalizeTemplatePart(part, `${candidate.id}:part-${index}`))
         .filter((part): part is SavedPart => Boolean(part))
     : [];
 
   const fallbackPart: SavedPart = {
-    id: crypto.randomUUID(),
+    id: `${candidate.id}:part-0`,
     name: candidate.result.profileLabel,
     input: candidate.input,
     result: candidate.result,
@@ -413,13 +418,6 @@ export function persistQuickHistory(items: string[], options?: PersistOptions): 
   persistToStorage(SYNC_STORAGE_KEYS.quickHistory, items);
   writeListUpdatedAt("quickHistory", updatedAt);
   maybeNotify("quickHistory", options?.markDirty ?? true);
-}
-
-export function stampEntityUpdate<T extends SyncEntityRecord>(entity: Omit<T, "updatedAt"> & Partial<Pick<T, "updatedAt">>, updatedAt = nowIso()): T {
-  return {
-    ...entity,
-    updatedAt,
-  } as T;
 }
 
 export function markEntityDeleted<T extends SyncEntityRecord>(entity: T, deletedAt = nowIso()): T {

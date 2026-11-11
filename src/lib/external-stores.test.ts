@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { createBoolStore, createStringStore, createSidebarStore } from "./external-stores";
+import { createBoolStore, createStringStore } from "./external-stores";
 
 const mockStorage = new Map<string, string>();
 
@@ -97,26 +97,5 @@ describe("createStringStore", () => {
   it("getServerSnapshot returns default", () => {
     const store = createStringStore("server-str", "default");
     expect(store.getServerSnapshot()).toBe("default");
-  });
-});
-
-describe("createSidebarStore", () => {
-  it("defaults to false (not collapsed)", () => {
-    const store = createSidebarStore();
-    expect(store.getSnapshot()).toBe(false);
-  });
-
-  it("reads persisted sidebar state", () => {
-    mockStorage.set("ferroscale-sidebar-collapsed", "true");
-    const store = createSidebarStore();
-    expect(store.getSnapshot()).toBe(true);
-  });
-
-  it("toggles sidebar state", () => {
-    const store = createSidebarStore();
-    store.toggle();
-    expect(store.getSnapshot()).toBe(true);
-    store.toggle();
-    expect(store.getSnapshot()).toBe(false);
   });
 });

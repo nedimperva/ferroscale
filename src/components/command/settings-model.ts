@@ -37,14 +37,6 @@ export const SETTINGS_GROUPS = [
 
 export type SettingsGroupId = (typeof SETTINGS_GROUPS)[number];
 
-/** The groups that hold `SettingsField`s (the rest render their own panels). */
-export const SETTINGS_FIELD_GROUPS: readonly SettingsGroupId[] = [
-  "pricing",
-  "calculation",
-  "units",
-  "appearance",
-];
-
 export interface SettingsChoiceOption {
   value: string;
   /** Compact label (pills, segmented controls, options without decoration). */

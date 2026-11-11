@@ -79,7 +79,7 @@ interface CommandLibrarySheetProps {
 export function CommandLibrarySheet(props: CommandLibrarySheetProps) {
   const t = useTranslations("command");
   return (
-    <SheetShell fullScreen title={t("sheets.library")} onClose={props.onClose}>
+    <SheetShell size="full" title={t("sheets.library")} onClose={props.onClose}>
       <CommandLibraryWorkspace {...props} />
     </SheetShell>
   );
@@ -525,23 +525,6 @@ function CompareTabContent({
 }
 
 /* ─────────────────── Projects tab ─────────────────── */
-
-export function FolderGlyph({ size = 19 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-    </svg>
-  );
-}
 
 /**
  * Projects on the phone: the same list (2c) and the same detail page (2d) the

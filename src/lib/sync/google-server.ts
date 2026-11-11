@@ -4,6 +4,7 @@ import {
   buildRemoteFileName,
   parseRemoteFileName,
   SYNC_FILE_PREFIX,
+  SYNC_SCOPE,
 } from "./sync-shared";
 import type {
   SyncPushRecord,
@@ -125,7 +126,7 @@ export function buildGoogleAuthUrl(request: NextRequest, state: string, codeChal
   url.searchParams.set("response_type", "code");
   url.searchParams.set("access_type", "offline");
   url.searchParams.set("prompt", "consent");
-  url.searchParams.set("scope", "https://www.googleapis.com/auth/drive.appdata openid email");
+  url.searchParams.set("scope", SYNC_SCOPE);
   url.searchParams.set("state", state);
   url.searchParams.set("code_challenge", codeChallenge);
   url.searchParams.set("code_challenge_method", "S256");
@@ -214,14 +215,28 @@ async function driveFetch(accessToken: string, input: string, init?: RequestInit
   return response;
 }
 
+/**
+ * Every sync file in the app folder. Drive pages `files.list` (100 per page
+ * unless asked otherwise) and there is one file per record, so a library past
+ * the first page used to come back truncated: a new device pulled only part
+ * of it, and a reset left the rest of the old files behind.
+ */
 async function listPrefixedDriveFiles(accessToken: string) {
-  const url = new URL("https://www.googleapis.com/drive/v3/files");
-  url.searchParams.set("spaces", "appDataFolder");
-  url.searchParams.set("fields", "files(id,name,modifiedTime)");
-  url.searchParams.set("q", `name contains '${SYNC_FILE_PREFIX}' and ${DRIVE_SPACE_QUERY}`);
-  const response = await driveFetch(accessToken, url.toString());
-  const payload = await response.json() as { files?: DriveFile[] };
-  return payload.files ?? [];
+  const files: DriveFile[] = [];
+  let pageToken: string | undefined;
+  do {
+    const url = new URL("https://www.googleapis.com/drive/v3/files");
+    url.searchParams.set("spaces", "appDataFolder");
+    url.searchParams.set("pageSize", "1000");
+    url.searchParams.set("fields", "nextPageToken,files(id,name,modifiedTime)");
+    url.searchParams.set("q", `name contains '${SYNC_FILE_PREFIX}' and ${DRIVE_SPACE_QUERY}`);
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+    const response = await driveFetch(accessToken, url.toString());
+    const payload = await response.json() as { files?: DriveFile[]; nextPageToken?: string };
+    files.push(...(payload.files ?? []));
+    pageToken = payload.nextPageToken || undefined;
+  } while (pageToken);
+  return files;
 }
 
 async function getDriveStartPageToken(accessToken: string) {

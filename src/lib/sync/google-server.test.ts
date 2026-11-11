@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildRemoteFileName, parseRemoteFileName } from "./sync-shared";
-import { pushRecordsToDrive } from "./google-server";
+import { pullInitialRecords, pushRecordsToDrive } from "./google-server";
 import { sealSyncSession, unsealSyncSession } from "./sync-session";
 
 describe("sync helpers", () => {
@@ -38,6 +38,31 @@ describe("sync helpers", () => {
       accountEmail: "test@example.com",
       accountSub: "sub-123",
     });
+  });
+
+  it("lists every page of Drive files on a first pull", async () => {
+    const json = (body: unknown) =>
+      new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/drive/v3/files") {
+        return url.searchParams.get("pageToken") === "page-2"
+          ? json({ files: [{ id: "f2", name: buildRemoteFileName("saved", "saved:2") }] })
+          : json({
+              files: [{ id: "f1", name: buildRemoteFileName("saved", "saved:1") }],
+              nextPageToken: "page-2",
+            });
+      }
+      if (url.pathname === "/drive/v3/changes/startPageToken") return json({ startPageToken: "start" });
+      return new Response(`payload-${url.pathname.split("/").pop()}`, { status: 200 });
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await pullInitialRecords("access-token");
+
+    expect(result.records.map((record) => record.recordKey)).toEqual(["saved:1", "saved:2"]);
+    expect(result.records.map((record) => record.encryptedPayload)).toEqual(["payload-f1", "payload-f2"]);
+    expect(result.nextPageToken).toBe("start");
   });
 
   it("round-trips remote file names", () => {

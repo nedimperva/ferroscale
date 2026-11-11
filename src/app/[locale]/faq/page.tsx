@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { contentPageMetadata } from "@/lib/page-metadata";
 import { getTranslations } from "next-intl/server";
 import { FaqView } from "@/components/faq/faq-view";
 
@@ -12,10 +13,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.faq" });
 
-  return {
-    title: t("title"),
-    description: t("description"),
-  };
+  return contentPageMetadata({ locale, path: "/faq", title: t("title"), description: t("description") });
 }
 
 export default async function FaqPage() {

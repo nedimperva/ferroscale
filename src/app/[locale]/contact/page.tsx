@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { contentPageMetadata } from "@/lib/page-metadata";
 import { getTranslations } from "next-intl/server";
 import { ContactForm } from "@/components/contact-form";
 import { Link } from "@/i18n/navigation";
@@ -13,10 +14,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "meta.contact" });
 
-  return {
-    title: t("title"),
-    description: t("description"),
-  };
+  return contentPageMetadata({ locale, path: "/contact", title: t("title"), description: t("description") });
 }
 
 export default async function ContactPage({ params }: ContactPageProps) {

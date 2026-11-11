@@ -8,6 +8,7 @@ import {
   loadProjects,
   loadQuickHistory,
   loadSavedEntries,
+  markEntityDeleted,
   normalizeCustomer,
   normalizeProject,
   normalizeSavedEntry,
@@ -22,6 +23,7 @@ import {
   mergeEntityPayload,
   mergeListPayload,
 } from "@/lib/sync/snapshot";
+import type { SyncEntityRecord } from "@/lib/sync/types";
 import type { PriceBookEntry } from "@/hooks/usePriceBook";
 import type { SavedEntry } from "@/hooks/useSaved";
 import type { CompareItem as SyncCompareItem } from "@/hooks/useCompare";
@@ -35,12 +37,14 @@ import {
   marginPercentStore,
   massTolerancePercentStore,
   sharedCalcSettingsStore,
+  showSectionPropertiesStore,
   weightAsMainStore,
   type SharedCalcSettings,
 } from "@/lib/settings-stores";
 import type { LengthUnit } from "@/lib/calculator/types";
 import { notifyCollectionsReplaced } from "@/lib/sync/external-changes";
 import { downloadBlob } from "@/lib/csv-utils";
+import { APP_VERSION } from "@/lib/changelog";
 
 export interface FerroscaleBackupData {
   saved: SavedEntry[];
@@ -61,6 +65,7 @@ export interface FerroscaleBackupData {
   };
   settings: {
     weightAsMain?: boolean;
+    showSectionProperties?: boolean;
     haptics?: boolean;
     marginPercent?: number;
     massTolerancePercent?: number;
@@ -78,7 +83,7 @@ export interface FerroscaleBackupFile {
   data: FerroscaleBackupData;
 }
 
-export function buildBackupFile(appVersion = "3.22.0"): FerroscaleBackupFile {
+export function buildBackupFile(appVersion: string = APP_VERSION): FerroscaleBackupFile {
   const exportedAt = new Date().toISOString();
 
   return {
@@ -103,6 +108,7 @@ export function buildBackupFile(appVersion = "3.22.0"): FerroscaleBackupFile {
       },
       settings: {
         weightAsMain: weightAsMainStore.getSnapshot(),
+        showSectionProperties: showSectionPropertiesStore.getSnapshot(),
         haptics: hapticsStore.getSnapshot(),
         marginPercent: marginPercentStore.getSnapshot(),
         massTolerancePercent: massTolerancePercentStore.getSnapshot(),
@@ -173,6 +179,20 @@ export function validateBackupFile(raw: unknown): FerroscaleBackupFile {
   };
 }
 
+/** The backup's entities, restamped, plus a tombstone for each local one it lacks. */
+function replaceEntities<T extends SyncEntityRecord>(local: T[], incoming: T[], now: string): T[] {
+  const keep = new Set(incoming.map((entity) => entity.id));
+  const restored = incoming.map((entity) =>
+    entity.deletedAt ? entity : { ...entity, updatedAt: now },
+  );
+  const removed = local
+    .filter((entity) => !keep.has(entity.id) && !entity.deletedAt)
+    .map((entity) => markEntityDeleted(entity, now));
+  return [...restored, ...removed];
+}
+
+const LENGTH_UNITS: readonly LengthUnit[] = ["mm", "cm", "m", "in", "ft"];
+
 export interface RestoreSummary {
   savedCount: number;
   projectsCount: number;
@@ -186,12 +206,19 @@ export function restoreBackupFile(
   const d = backup.data;
 
   if (mode === "replace") {
-    persistSavedEntries(d.saved, { markDirty: true });
-    persistProjects(d.projects, { markDirty: true });
-    if (d.customers) persistCustomers(d.customers, { markDirty: true });
-    persistCompareItems(d.compare.items, { markDirty: true, updatedAt: d.compare.updatedAt });
-    persistQuickHistory(d.quickHistory.items, { markDirty: true, updatedAt: d.quickHistory.updatedAt });
-    persistPriceBook(d.priceBook.items, { markDirty: true, updatedAt: d.priceBook.updatedAt });
+    // Replace has to win over Drive too, not only over this device: what the
+    // backup holds is stamped now (an older stamp loses the next sync merge),
+    // and what it lacks is tombstoned rather than dropped, so the delete
+    // reaches the other devices instead of being pulled straight back.
+    const now = new Date().toISOString();
+    persistSavedEntries(replaceEntities(loadSavedEntries(), d.saved, now), { markDirty: true });
+    persistProjects(replaceEntities(loadProjects(), d.projects, now), { markDirty: true });
+    if (d.customers) {
+      persistCustomers(replaceEntities(loadCustomers(), d.customers, now), { markDirty: true });
+    }
+    persistCompareItems(d.compare.items, { markDirty: true, updatedAt: now });
+    persistQuickHistory(d.quickHistory.items, { markDirty: true, updatedAt: now });
+    persistPriceBook(d.priceBook.items, { markDirty: true, updatedAt: now });
   } else {
     // Merge mode
     const mergedSaved = mergeEntityPayload({ items: loadSavedEntries() }, { items: d.saved });
@@ -222,10 +249,13 @@ export function restoreBackupFile(
   const s = d.settings;
   if (s) {
     if (typeof s.weightAsMain === "boolean") weightAsMainStore.set(s.weightAsMain);
+    if (typeof s.showSectionProperties === "boolean") {
+      showSectionPropertiesStore.set(s.showSectionProperties);
+    }
     if (typeof s.haptics === "boolean") hapticsStore.set(s.haptics);
     if (typeof s.marginPercent === "number") marginPercentStore.set(s.marginPercent);
     if (typeof s.massTolerancePercent === "number") massTolerancePercentStore.set(s.massTolerancePercent);
-    if (typeof s.defaultUnit === "string") defaultUnitStore.set(s.defaultUnit);
+    if (LENGTH_UNITS.includes(s.defaultUnit as LengthUnit)) defaultUnitStore.set(s.defaultUnit as LengthUnit);
     if (typeof s.defaultPaintPrice === "number") defaultPaintPriceStore.set(s.defaultPaintPrice);
     if (typeof s.defaultPaintCoverage === "number") defaultPaintCoverageStore.set(s.defaultPaintCoverage);
     if (s.sharedCalcSettings) sharedCalcSettingsStore.update(s.sharedCalcSettings);

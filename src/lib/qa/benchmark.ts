@@ -38,12 +38,8 @@ export const QA_TOLERANCE_PCT = 0.5;
  * published catalog mass disagree by more than the tolerance and which of the
  * two is wrong has not been settled against a primary catalog. They are exempt
  * from the check, not from the fix - resolve each against an EN table, correct
- * whichever side is wrong, and move it into QA_BENCHMARK_ROWS.
- *
- * Deviation of stored area vs catalog mass at the time of writing:
- *   IPN 80 3.87% - IPN 120 0.56% - IPN 320 0.72%
- *   HEM 140 1.04% - HEM 260 0.60%
- *   T 30x30x4 1.12% - T 40x40x5 0.55%
+ * whichever side is wrong, and move it into QA_BENCHMARK_ROWS. Empty since
+ * 3.28.0 (see below).
  */
 export const QA_UNVERIFIED_SIZES: string[] = [
   // 3.28.0: the seven disagreements were settled against EN 10024 / EN 10365 /
@@ -56,15 +52,10 @@ export const QA_BENCHMARK_ROWS: QaBenchmarkRow[] = [
   /* ------------------------------------------------------------------ */
   /*  Standard profiles - published catalog masses                       */
   /*                                                                     */
-  /*  Every EN size whose catalog mass corroborates the stored area.     */
-  /*  Seven sizes are deliberately ABSENT because catalog mass and the   */
-  /*  stored area disagree by more than the tolerance, and which of the  */
-  /*  two is wrong has not been settled against a primary catalog:       */
-  /*    IPN 80 (3.87%), IPN 120 (0.56%), IPN 320 (0.72%),                */
-  /*    HEM 140 (1.04%), HEM 260 (0.60%),                                */
-  /*    T 30x30x4 (1.12%), T 40x40x5 (0.55%)                             */
-  /*  Resolve those against an EN table and add them here; do not        */
-  /*  silence them by copying the app's own output.                      */
+  /*  Every EN size has a row (a coverage test fails otherwise). A size  */
+  /*  whose catalog mass and stored area disagree goes in                */
+  /*  QA_UNVERIFIED_SIZES until it is settled against an EN table; do    */
+  /*  not silence one by copying the app's own output.                   */
   /* ------------------------------------------------------------------ */
   /* ---- IPE (EN 10365) ---- */
   { id: "ipe80", label: "IPE 80", profileId: "beam_ipe_en", selectedSizeId: "ipe80", expectedKgPerM: 6, source: "EN 10365 catalog" },
