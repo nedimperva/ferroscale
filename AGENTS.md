@@ -84,7 +84,7 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
 - `src/` — Next.js app. `src/lib/calculator/*` and `src/lib/datasets/*`
   are one-line re-export shims over metal-core (kept so app imports stay
   short); real web-only logic lives in `src/lib/command/share.ts`,
-  `profile-specs.ts`, `standard-sizes.ts`, `csv.ts`, `fingerprint.ts`,
+  `profile-specs.ts`, `standard-sizes.ts`, `fingerprint.ts`,
   `input-storage.ts`, `settings-stores.ts`, `sync/`.
 - `packages/metal-core/` — shared package (engine, validation, units,
   datasets, command parser/suggestions). UI-independent — keep it free of
@@ -97,7 +97,7 @@ every view opens with). Shared primitives are in `desktop/desk-atoms.tsx`.
   `CalculationInput`) and `src/lib/external-stores.ts` factories.
 - Collections (all localStorage + Google Drive sync):
   `useSaved` (`ferroscale-saved-v2`), `useProjects`
-  (`advanced-calc-projects-v2`, max 20×50), `useCompare`,
+  (`ferroscale-projects-v2`, max 20×50), `useCompare`,
   `useQuickHistory` (`ferroscale-quick-history` — the history, the session
   tape and recency suggestions, capped at 200; rules in
   `lib/command/history.ts`). When each line was logged and how often are
@@ -261,10 +261,11 @@ never has its own copy of a list, so a column means the same thing on both.
 
 ## Testing
 
-Vitest with `@/` and `@ferroscale/metal-core` aliases (see both
-`vitest.config.ts` files). The benchmark suite in `engine.test.ts` runs
+Vitest with `@/` and `@ferroscale/metal-core` aliases (see
+`vitest.config.mts` and `packages/metal-core/vitest.config.ts`). The benchmark suite in `engine.test.ts` runs
 200+ cases and enforces ≤0.5% deviation. e2e lives in `e2e/`:
-`command.spec.ts`, `quoting.spec.ts`, `saved.spec.ts`, `a11y.spec.ts`; the
+`command.spec.ts`, `quoting.spec.ts`, `saved.spec.ts`, `customers.spec.ts`,
+`routing.spec.ts` (the locale redirect — `src/proxy.ts`), `a11y.spec.ts`; the
 phone-viewport tests (390×844) are the only coverage the `phone/` layout gets
 — vitest's jsdom renders at 1024px, i.e. the workspace.
 
@@ -278,7 +279,7 @@ issues carry a `code` the web maps to `command.issues.*`.
 ## Tech Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript 5 · Tailwind CSS 4
-(CSS-first, tokens in `src/app/globals.css`) · Vitest 4 · Playwright
+(CSS-first, tokens in `src/app/globals.css`) · Vitest 5 · Playwright
 
 ## Changelog Maintenance
 

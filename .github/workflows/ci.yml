@@ -24,8 +24,6 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    # Smoke coverage only — keep non-blocking until it has proven stable in CI.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

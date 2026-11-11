@@ -11,7 +11,7 @@ Public EU-focused web app that provides fast, accurate metal profile weight and 
 | Milestone | Status | Notes |
 | --- | --- | --- |
 | V1 foundation (Next.js + TS + UI shell) | Completed | Core app, responsive layout |
-| Calculation engine + strict validation | Completed | 20 profile types, EN standard sizes, unit conversion, pricing modes |
+| Calculation engine + strict validation | Completed | 21 profile types, EN standard sizes, unit conversion, pricing modes |
 | Traceability + transparency | Completed | Dataset versioning, formula label, detailed breakdown |
 | Local persistence | Completed | Saved library, projects, compare, presets, query history |
 | Abuse-safe feedback channel | Completed | Contact endpoint, rate limiting, CAPTCHA challenge flow |

@@ -32,7 +32,7 @@ The query mirrors to `?q=`, so every result is a shareable link.
 
 ## Features
 
-- **Calculator** — 20 profile types (manual + EN-standard sizes), steel /
+- **Calculator** — 21 profile types (manual + EN-standard sizes), steel /
   stainless / aluminum grades, per-grade price book, margin, waste, VAT,
   mass tolerance bands, dimensioned cross-section drawings.
 - **The breakdown is a ledger sheet** — weight and cost in one table, every
@@ -45,7 +45,8 @@ The query mirrors to `?q=`, so every result is a shareable link.
   one ruled total, the weight split by part and the cost built up. A strip of
   tabs opens any part on its own.
 - **Section properties** — Iy, Wel, Wpl and the weak axis for every standard
-  size, cited to the catalogue page (Settings › Calculation; off by default).
+  beam, channel and tee, cited to the catalogue page (Settings › Calculation;
+  off by default).
 - **Projects** — quotes with sub-assemblies, labor and hardware costing,
   per-project margin, 1D bar + 2D plate cutting optimizers with visual cut
   maps, supplier BOM/RFQ export, printable quotes, CSV export.
@@ -85,17 +86,18 @@ one column.
 
 ## Accuracy
 
-- Dataset version `2026.09.4`
+- Dataset version `2026.09.5`
   (`packages/metal-core/src/datasets/version.ts`).
 - The live engine is validated against references that are independent of
   the datasets: **published EN catalog masses** for standard sizes,
   hand-computed cross-section formulas for manual ones. **≤0.5% tolerance**,
-  every one of the 129 EN sizes has a row, and a test fails if a new size
+  every one of the 302 EN sizes has a row, and a test fails if a new size
   ships without one.
 - The same benchmark runs as a vitest gate in CI and as an interactive
   table in the app at `/qa`, which states its own coverage.
 - **Section properties** (Iy, Wel, Wpl, Iz, radii of gyration) and real
-  dimensions (h, b, tw, tf, r) for all 129 standard sizes, transcribed from
+  dimensions (h, b, tw, tf, r) for the 129 beam, channel and tee sizes (the
+  173 EN 10056-1 angles are not tabulated yet), transcribed from
   the ArcelorMittal *Sections and Merchant Bars* 2024-1 catalogue and a
   DIN EN 10055 table, each row cited to its source page
   (`packages/metal-core/src/datasets/section-properties.ts`). Tests hold
@@ -103,7 +105,7 @@ one column.
 
 ## Quickstart
 
-Prerequisites: Node.js 20+, npm 10+. No env vars needed to run.
+Prerequisites: Node.js 22+ (what CI runs), npm 10+. No env vars needed to run.
 
 ```bash
 npm install
@@ -129,7 +131,8 @@ a system Chromium instead of downloading browsers).
 
 - `src/` — Next.js app. `src/lib/calculator/*` and `src/lib/datasets/*`
   are one-line re-export shims over metal-core; web-only logic lives in
-  `src/lib/command/` (`share.ts`, `csv.ts`, `profile-specs.ts`, …).
+  `src/lib/command/` (`share.ts`, `history.ts`, …) and beside the shims
+  (`calculator/profile-specs.ts`, `fingerprint.ts`, `datasets/standard-sizes.ts`).
 - `packages/metal-core/` — shared, UI-independent package: engine,
   validation, units, datasets, command parser/suggestions. Kept free of
   web imports and i18n so non-web surfaces can reuse it.
@@ -153,7 +156,7 @@ From `@ferroscale/metal-core`:
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | Deploy only | Base URL for sitemap, robots, and metadata (defaults to `https://ferroscale.nedimp.com`) |
-| `RESEND_*` | No | Contact-form email; form logs and rate-limits without them |
+| `RESEND_*` | No | Contact-form email; without them the form says the service is not configured |
 | `GOOGLE_*` | No | Drive sync only; everything else works without them |
 
 Local `.env` files are gitignored — never commit secrets.

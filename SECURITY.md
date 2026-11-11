@@ -21,8 +21,9 @@ layer. Expect an initial response within 7 days.
   see the rest of your Drive). Snapshots are **AES-GCM encrypted
   client-side** before upload; the server never holds keys.
 - **Secrets stay out of the repo.** `.env*` is gitignored. Builds need
-  no secrets: sync routes read env at request time, and the contact
-  form degrades to logging without `RESEND_*`.
+  no secrets: sync routes read env at request time, and without
+  `RESEND_*` the contact form answers "not configured" (503) and sends
+  nothing.
 - **Contact form abuse controls:** rate limiting plus a CAPTCHA
   challenge flow (`GET /api/captcha`, `POST /api/contact`). Note the
   limiter is currently in-memory and resets on redeploy — see
