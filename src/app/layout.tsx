@@ -161,10 +161,12 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="overflow-x-hidden" suppressHydrationWarning>
       <head>
-        {/* Synchronous theme script — runs before first paint to prevent flash */}
+        {/* Synchronous theme script — runs before first paint to prevent flash.
+            No stored choice means "system" (as in useTheme), so a first visit
+            on a dark OS must not paint light first. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("ferroscale-theme");if(t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem("ferroscale-theme");if(t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
           }}
         />
         <script

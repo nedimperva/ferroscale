@@ -1,7 +1,8 @@
-const CACHE_NAME = "ferroscale-v3.35.0-ds2026.09.5";
+const CACHE_NAME = "ferroscale-v3.37.0-ds2026.09.5";
 const OFFLINE_FALLBACK_URL = "/offline.html";
+// Not "/": it is a locale redirect, and a cached redirect cannot answer a
+// navigation (Safari rejects it outright).
 const APP_SHELL_URLS = [
-  "/",
   "/en",
   "/bs",
   "/manifest.webmanifest",
@@ -31,6 +32,15 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
       )
+      // The offline contact queue this worker used to keep is gone (a queued
+      // message carried a captcha that expired long before it was replayed).
+      .then(() => {
+        try {
+          indexedDB.deleteDatabase("ferroscale-offline");
+        } catch {
+          /* not available in this context */
+        }
+      })
       .then(() => self.clients.claim()),
   );
 });
@@ -39,61 +49,6 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
-  }
-});
-
-// Background Sync for contact form
-const CONTACT_QUEUE_STORE = "contact-queue";
-
-async function openContactQueue() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open("ferroscale-offline", 1);
-    req.onupgradeneeded = () => {
-      req.result.createObjectStore(CONTACT_QUEUE_STORE, { keyPath: "id", autoIncrement: true });
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function enqueueContact(body) {
-  const db = await openContactQueue();
-  const tx = db.transaction(CONTACT_QUEUE_STORE, "readwrite");
-  tx.objectStore(CONTACT_QUEUE_STORE).add({ body, timestamp: Date.now() });
-  return new Promise((resolve) => {
-    tx.oncomplete = resolve;
-  });
-}
-
-async function replayContactQueue() {
-  const db = await openContactQueue();
-  const tx = db.transaction(CONTACT_QUEUE_STORE, "readonly");
-  const store = tx.objectStore(CONTACT_QUEUE_STORE);
-  const all = await new Promise((resolve) => {
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result);
-  });
-
-  for (const entry of all) {
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry.body),
-      });
-      if (res.ok) {
-        const delTx = db.transaction(CONTACT_QUEUE_STORE, "readwrite");
-        delTx.objectStore(CONTACT_QUEUE_STORE).delete(entry.id);
-      }
-    } catch {
-      /* still offline, will retry later */
-    }
-  }
-}
-
-self.addEventListener("sync", (event) => {
-  if (event.tag === "contact-sync") {
-    event.waitUntil(replayContactQueue());
   }
 });
 
@@ -110,23 +65,6 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Background Sync: queue failed POST /api/contact and replay when online
-  if (request.method === "POST" && url.pathname === "/api/contact") {
-    event.respondWith(
-      fetch(request.clone()).catch(async () => {
-        const body = await request.json();
-        await enqueueContact(body);
-        if (self.registration.sync) {
-          await self.registration.sync.register("contact-sync");
-        }
-        return new Response(JSON.stringify({ ok: true, queued: true }), {
-          headers: { "Content-Type": "application/json" },
-        });
-      }),
-    );
-    return;
-  }
-
   if (request.method !== "GET") {
     return;
   }
@@ -142,8 +80,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          // Only a real page is worth replaying offline — not an error, and
+          // not a followed redirect, which a navigation cannot be answered with.
+          if (response.ok && !response.redirected) {
+            const cloned = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
+          }
           return response;
         })
         .catch(async () => {
@@ -151,7 +93,6 @@ self.addEventListener("fetch", (event) => {
           const cached =
             (await cache.match(request)) ||
             (await cache.match(url.pathname.startsWith("/bs") ? "/bs" : "/en")) ||
-            (await cache.match("/")) ||
             (await cache.match(OFFLINE_FALLBACK_URL));
           if (cached) {
             return cached;
