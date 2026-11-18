@@ -213,6 +213,12 @@ export function buildBreakdownRows(
     totalWeight: `${fsKgm(p.kgm)} kg/m × ${fsLength(p.lengthM ?? 0)} m`,
     subtotal: t(`ledger.basisSubtotal.${r.priceBasis}`, { rate }),
   };
+  if (p.lengthExpr) {
+    basis.length = p.lengthExpr;
+  }
+  if (p.qtyExpr) {
+    basis.pieces = p.qtyExpr;
+  }
   if (massRateRow.id === "massPerMetre") {
     const area = (r.areaMm2 / 100).toLocaleString("en-US", { maximumFractionDigits: 2 });
     basis.massPerMetre = `${area} cm² × ${r.densityKgPerM3.toLocaleString("en-US")} kg/m³`;

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { stepToken } from "./token-step";
 
 /**
  * Edit one token of an earlier `+` item where it stands. The caret (and the
@@ -10,7 +11,8 @@ import { useTranslations } from "next-intl";
  * moved to the end of its own item and nothing became editable.
  *
  * Enter, Tab or leaving the field commits; an empty field removes the token;
- * Escape puts it back as it was.
+ * Escape puts it back as it was; ArrowUp/ArrowDown steps numeric, catalogue,
+ * stock-size and grade tokens.
  */
 export function InlineTokenEditor({
   tok,
@@ -55,6 +57,13 @@ export function InlineTokenEditor({
         } else if (e.key === "Escape") {
           e.preventDefault();
           finish(false);
+        } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          const dir = e.key === "ArrowUp" ? 1 : -1;
+          const stepped = stepToken(value, dir);
+          if (stepped && stepped !== value) {
+            e.preventDefault();
+            setValue(stepped);
+          }
         }
       }}
       onBlur={() => finish(true)}

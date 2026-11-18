@@ -101,10 +101,16 @@ export interface CommandParseResult {
   lengthUnit: LengthUnit;
   /** False when the bare-number fallback supplied the unit. */
   lengthExplicit: boolean;
+  /** Non-null when the length came from an arithmetic expression (`6m-50mm`, `3*1850mm`). */
+  lengthExpr?: string | null;
   qty: number | null;
   realQty: number;
+  /** Non-null when the quantity came from an arithmetic expression (`x2+3`, `x2*4`). */
+  qtyExpr?: string | null;
   gradeId: string | null;
   gradeLabel: string | null;
+  /** Inline part label / callout from `#label` or `"label"`, without the leading `#`. */
+  label?: string | null;
   density: number;
   kgm: number | null;
   /** Non-null iff valid. */
@@ -197,22 +203,27 @@ export type CommandTokenKind =
   | "grade"
   | "price"
   | "target"
+  | "label"
   | "unknown";
+
+export type CommandSectionTargetProp = "iy" | "iz" | "welY" | "wplY";
 
 /**
  * A query that asked the question backwards: "=500kg" means *how much of this
- * makes 500 kg*, and the parser solves for whichever of length or quantity the
- * line left open. Pieces round up — you buy whole bars — so `achieved*` is
- * what the solution actually comes to, which is ≥ the target.
+ * makes 500 kg*, and the parser solves for whichever of length, quantity or
+ * size the line left open. Section property targets (`=wel200`, `=iy1500`)
+ * solve for the smallest catalogue size meeting the required property.
  */
 export interface CommandTarget {
   raw: string;
-  kind: "weight" | "money";
-  /** Kilograms for a weight target, currency units for a money target. */
+  kind: "weight" | "money" | "section";
+  /** Kilograms for a weight target, currency units for a money target, cm⁴/cm³ for a section target. */
   value: number;
-  solvedFor: "qty" | "length";
+  solvedFor: "qty" | "length" | "size";
+  sectionProp?: CommandSectionTargetProp;
   achievedKg: number | null;
   achievedAmount: number | null;
+  achievedSection?: number | null;
 }
 
 /**

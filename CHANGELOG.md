@@ -15,6 +15,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A Customers tab on the rail (on the phone, a Customers side in the library's Projects tab): each customer with their lifetime value, jobs and what is still open or overdue, and a page with their details, a default margin for new quotes, every job they have had and + New project. Customers with jobs are archived rather than deleted
 - A project's client is a link to its customer — in the quote peek and above the project page — and the client field on a project suggests your customers as you type
 - New project is one dialog in two steps. First, how it starts: blank, from an assembly in your library (scaled by a multiplier), a copy of a past job, or a pasted bar list (profile, length in mm, quantity — or lines as you type them in the calculator). Then its name, customer and due date, with a preview of the quote beside it. Typing a customer that does not exist yet adds it, the customer's margin fills in the quote, and the name suggests itself — "Railing, Marko Group" — until you type one
+- Part callouts on the line with #label or "label" (e.g. hea120 6m x2 #stub or plt 200x200x10 x4 "base plate"), shown in the result equation, bill of material, copied summaries, saved part names and project item notes
+- Sheet and plate runs inherit thickness across + segments (plt 1000x2000x10 + 400x600 x4), and inline @price/unit rates carry forward to borrowed segments on the same line
+- Whole-line multipliers with **N, == xN, or (...) xN scale an entire multi-item assembly at once
+- Multiplication and division in length and quantity tokens (e.g. 3*1850mm+100mm, 6m/2-3mm, x2*4), with the original expression shown in the breakdown ledger
+- Scroll the mouse wheel or press Alt+↑/↓ (or ↑/↓ on a focused chip) to step lengths, quantities, prices, catalogue/stock sizes, grades within the same family, and line multipliers
+- Reverse target solver finds the optimal profile size when the size is omitted (hea 6m =200kg) or solves against section properties (=wel200, =wpl250, =iy1500, =iz300)
 
 ### Changed
 
