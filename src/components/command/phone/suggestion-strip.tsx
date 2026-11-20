@@ -42,7 +42,7 @@ export function PhoneSuggestionStrip({
 }) {
   const t = useTranslations("command");
   return (
-    <div className="flex-shrink-0 pt-1.5 pb-2.5">
+    <div className="flex-shrink-0 pt-1.5 pb-3">
       <div className="flex items-center gap-2 px-[14px] pb-1">
         <span
           className="inline-flex items-center gap-1 flex-shrink-0"
@@ -92,9 +92,7 @@ export function PhoneSuggestionStrip({
         // happened to produce, and the second row was clipped by the
         // query line — the layout has no vertical give to lend it.
         data-suggestion-strip=""
-        // `overflowY: hidden` clips at the padding edge, so the chips
-        // need room below them or their own borders get shaved off.
-        className="flex gap-1.5 px-[14px] pb-0.5"
+        className="flex items-stretch gap-1.5 px-[14px] [scrollbar-width:none]"
         style={{ overflowX: "auto", overflowY: "hidden" }}
         // The chips themselves stay out of the Tab order (typing flow),
         // so the strip is the one focusable stop: a keyboard can scroll
@@ -140,11 +138,9 @@ export function PhoneSuggestionStrip({
                 onExit();
               }
             }}
-            className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-none font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
+            className="fs-pop flex-shrink-0 inline-flex items-center gap-1.5 min-h-[38px] rounded-none font-bold active:bg-[var(--surface-inset)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
             style={{
-              // 44px touch targets — the strip is the phone's main
-              // input accelerator, tapped with thumbs on the jobsite.
-              padding: it.sub ? "9px 13px" : "12px 14px",
+              padding: it.sub ? "5px 11px" : "7px 12px",
               border:
                 it.kind === "save"
                   ? "none"
@@ -160,17 +156,17 @@ export function PhoneSuggestionStrip({
             }}
           >
             {it.fam && (
-              <span style={{ color: "var(--foreground-secondary)" }}>
+              <span className="flex flex-shrink-0" style={{ color: "var(--foreground-secondary)" }}>
                 <CommandGlyph
                   fam={it.fam}
                   alias={it.kind === "profile" ? it.ins : activeAlias}
-                  size={17}
+                  size={15}
                 />
               </span>
             )}
             <span className="flex flex-col items-start leading-tight">
               <span
-                className={`text-sm font-bold ${
+                className={`text-[13px] font-bold whitespace-nowrap ${
                   it.kind === "size" || it.kind === "length" || it.kind === "qty"
                     ? "font-mono"
                     : ""
@@ -179,7 +175,7 @@ export function PhoneSuggestionStrip({
                 {formatCommandSuggestionLabel(t, it)}
               </span>
               {it.sub && (
-                <span className="text-[10px] text-muted font-semibold">
+                <span className="text-[10px] text-muted font-medium whitespace-nowrap">
                   {it.sub}
                 </span>
               )}
@@ -187,21 +183,10 @@ export function PhoneSuggestionStrip({
           </button>
         ))}
       </div>
-      {/* Bottom fade hints that more chips are below the fold */}
+      {/* Right-edge scroll fade only — single horizontal row, never clips chip bottom edges. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-3"
-        style={{
-          background: `linear-gradient(to bottom, transparent, ${deckBg})`,
-        }}
-      />
-      {/* The strip scrolls sideways, so the fade that says "there is
-          more" belongs on the right edge. Without it the last chip was
-          simply cut mid-word and the row read as clipped, not
-          scrollable. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-0 w-8"
+        className="pointer-events-none absolute inset-y-0 right-0 w-7"
         style={{
           background: `linear-gradient(to right, transparent, ${deckBg})`,
         }}

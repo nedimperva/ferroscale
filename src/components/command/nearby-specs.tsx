@@ -45,9 +45,12 @@ function formatKgm(value: number | null): string | null {
 export function NearbySpecs({
   input,
   onPick,
+  showScrubber: allowScrubber = true,
 }: {
   input: CalculationInput;
   onPick: (row: ProfileSpecsFamilyRow) => void;
+  /** Show the 1-row ← lighter | current | heavier → scrubber above peers (desktop rail). */
+  showScrubber?: boolean;
 }) {
   const t = useTranslations("command");
   // Loaded on demand so the command-shell import graph does not pull in the
@@ -69,20 +72,20 @@ export function NearbySpecs({
   const currentMass = currentRow?.massPerMeterKg ?? null;
 
   const lighter =
-    currentMass != null
+    allowScrubber && currentMass != null
       ? sameFamily
           .filter((r) => r.massPerMeterKg != null && r.massPerMeterKg < currentMass)
           .sort((a, b) => (b.massPerMeterKg ?? 0) - (a.massPerMeterKg ?? 0))[0] ?? null
       : null;
   const heavier =
-    currentMass != null
+    allowScrubber && currentMass != null
       ? sameFamily
           .filter((r) => r.massPerMeterKg != null && r.massPerMeterKg > currentMass)
           .sort((a, b) => (a.massPerMeterKg ?? 0) - (b.massPerMeterKg ?? 0))[0] ?? null
       : null;
 
   const scrubberIds = new Set([lighter?.id, heavier?.id].filter(Boolean));
-  const showScrubber = Boolean(currentRow && (lighter || heavier));
+  const showScrubber = Boolean(allowScrubber && currentRow && (lighter || heavier));
   const alternatives = allRows.filter((row) => !row.selected && !scrubberIds.has(row.id));
 
   if (!showScrubber && alternatives.length === 0) return null;

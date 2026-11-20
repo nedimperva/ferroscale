@@ -49,11 +49,14 @@ const LONG_PRESS_MS = 450;
 const KEY_BASE =
   "min-w-0 rounded-none flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
 
-type KeyVariant = "default" | "accent" | "dim" | "hint";
+type KeyVariant = "default" | "accent" | "action" | "dim" | "hint";
 
 function variantClass(variant: KeyVariant): string {
   if (variant === "accent") {
     return "bg-[var(--accent)] text-[var(--accent-contrast)] font-bold border border-transparent";
+  }
+  if (variant === "action") {
+    return "bg-[var(--action)] text-[var(--action-contrast)] font-bold border border-transparent";
   }
   if (variant === "hint") {
     return "bg-[var(--accent-surface)] text-[var(--accent-text)] font-bold border border-[var(--accent-border)]";
@@ -338,7 +341,7 @@ export function CommandKeypad({
           <Key
             tall
             label={t("keypad.tweak")}
-            variant="accent"
+            variant="action"
             onPress={onTweak}
             ariaLabel={t("keypad.tweakAria")}
           />
