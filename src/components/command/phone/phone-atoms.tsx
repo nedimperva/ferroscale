@@ -2,7 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import type { CommandParseResult } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
+import { formatCommandParseName } from "../command-copy";
 import { AlertDot } from "../desktop/desk-rail";
 
 export function IconBtn({
@@ -23,7 +24,7 @@ export function IconBtn({
       onClick={onClick}
       aria-label={alert ? `${ariaLabel}, ${alert}` : ariaLabel}
       title={alert ?? undefined}
-      className="relative w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
+      className="relative w-[36px] h-[36px] rounded-button border border-transparent bg-transparent hover:bg-[var(--surface)] active:bg-[var(--surface-inset)] flex items-center justify-center cursor-pointer text-foreground-secondary hover:text-foreground transition-colors"
     >
       {children}
       {alert && <AlertDot />}
@@ -39,61 +40,91 @@ export function Chev() {
   );
 }
 
-
 /**
- * The fold's one-line answer to "show me more": per-piece and the other
- * headline metric side by side, with the whole strip acting as the way into
- * the full breakdown. It replaces a 109px two-stat card with a 34px row —
- * the single biggest saving on the phone after the mode pills.
+ * Single hairline secondary readout beneath the phone hero: tappable opposite
+ * metric (weight ↔ price) on the left, per-piece mass (or joined assembly
+ * names) on the right. Tapping the hero figure above already opens Breakdown,
+ * so no second breakdown bar is stacked here.
  */
 export function MetricStrip({
   p,
+  line,
   isWeight,
   sym,
-  onOpen,
+  onSwapMode,
 }: {
   p: CommandParseResult;
+  line: CommandLine;
   isWeight: boolean;
   sym: string;
-  onOpen: () => void;
+  onSwapMode: () => void;
 }) {
   const t = useTranslations("command");
-  const dim = { color: "var(--muted-faint)" };
+  const totalKg = line.multi ? line.totalKg : p.totalKg;
+  const totalAmount = line.multi ? line.totalAmount : p.totalAmount;
   const perPiece =
-    p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—";
+    !line.multi && p.valid && p.perPieceKg != null
+      ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
+      : null;
+  const assemblyNames = line.multi
+    ? line.items
+        .map((item) => formatCommandParseName(t, item.parse) ?? item.parse.name)
+        .filter(Boolean)
+        .join(" + ")
+    : null;
   const second =
-    p.valid && p.totalKg != null && p.totalAmount != null
+    p.valid && totalKg != null && totalAmount != null
       ? isWeight
-        ? `${sym} ${fsMoney(p.totalAmount)}`
-        : `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
+        ? `${sym} ${fsMoney(totalAmount)}`
+        : `${fsWeight(totalKg)} ${fsWeightUnit()}`
       : "—";
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      disabled={!p.valid}
-      aria-haspopup="dialog"
-      aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-      className="flex items-center gap-3 w-full mt-2.5 rounded-button text-left border border-border-faint"
-      style={{
-        padding: "7px 11px",
-        background: "var(--surface-raised)",
-        cursor: p.valid ? "pointer" : "default",
-      }}
+    <div
+      className="flex items-baseline justify-between gap-3 mt-2.5 pt-2"
+      style={{ borderTop: "1px solid var(--border-faint)" }}
     >
-      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
-        {perPiece}
-        <span className="text-muted">{t("preview.perPieceSuffix")}</span>
-      </span>
-      <span className="w-px h-3.5 bg-border-faint" />
-      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
-        {second}
-      </span>
-      <span className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint whitespace-nowrap">
-        {t("preview.breakdown")} ›
-      </span>
-    </button>
+      <button
+        type="button"
+        onClick={onSwapMode}
+        disabled={!p.valid}
+        aria-label={
+          p.valid
+            ? t("preview.swapMetric", {
+                metric: (isWeight ? t("settings.price") : t("settings.weight")).toLowerCase(),
+              })
+            : undefined
+        }
+        className="inline-flex items-baseline gap-1.5 p-0 m-0 bg-transparent border-0 text-left cursor-pointer disabled:cursor-default flex-shrink-0"
+      >
+        <span
+          className="font-mono text-[15px] font-bold whitespace-nowrap"
+          style={{
+            color: p.valid ? "var(--foreground)" : "var(--muted-faint)",
+            borderBottom: p.valid ? "1px dashed var(--border-strong)" : undefined,
+            paddingBottom: 1,
+          }}
+        >
+          {second}
+        </span>
+        {p.valid && (
+          <span className="font-mono text-[11px] text-muted-faint" aria-hidden="true">
+            ⇄
+          </span>
+        )}
+      </button>
+
+      {perPiece ? (
+        <span className="font-mono text-[12px] text-foreground-secondary whitespace-nowrap">
+          {perPiece}
+          <span className="text-muted">{t("preview.perPieceSuffix")}</span>
+        </span>
+      ) : assemblyNames ? (
+        <span className="font-mono text-[11.5px] text-muted truncate min-w-0">
+          {assemblyNames}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -123,13 +154,13 @@ export function PhoneIconBtn({
       disabled={disabled}
       aria-label={label}
       title={label}
-      className="flex flex-shrink-0 items-center justify-center rounded-button cursor-pointer disabled:cursor-default"
+      className="flex flex-shrink-0 items-center justify-center rounded-button cursor-pointer disabled:cursor-default active:bg-[var(--surface-inset)] transition-colors"
       style={{
         width: 44,
         height: 44,
         border: dashed
           ? "1px dashed var(--border-strong)"
-          : "1px solid var(--border-faint)",
+          : "1px solid var(--border)",
         background: dashed ? "transparent" : "var(--surface)",
         color: dashed ? "var(--muted)" : "var(--foreground-secondary)",
         opacity: disabled ? 0.4 : 1,

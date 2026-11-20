@@ -422,7 +422,7 @@ function PartSheet({
 
         <div className="flex min-w-0 flex-col gap-4 @[36rem]:col-start-1 @[36rem]:row-start-2">
           {showSection && rows.section.length > 0 && <SectionProperties rows={rows.section} />}
-          <NearbySpecs input={p.calc.input} onPick={onNearby} />
+          <NearbySpecs input={p.calc.input} onPick={onNearby} showScrubber={variant === "rail"} />
         </div>
 
         <div className="min-w-0 @[36rem]:col-start-2 @[36rem]:row-start-3">

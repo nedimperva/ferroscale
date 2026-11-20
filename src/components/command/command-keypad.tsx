@@ -24,6 +24,8 @@ interface CommandKeypadProps {
   showDone: boolean;
   priceUnitLabel: string;
   valid: boolean;
+  /** Subtle stage-aware tint on the next likely operator key without moving keys. */
+  nextHint?: "length" | "qty" | "price" | null;
 }
 
 const ROW_NUM = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
@@ -47,9 +49,17 @@ const LONG_PRESS_MS = 450;
 const KEY_BASE =
   "min-w-0 rounded-none flex items-center justify-center cursor-pointer select-none transition-colors font-semibold";
 
-function variantClass(variant: "default" | "accent" | "dim"): string {
+type KeyVariant = "default" | "accent" | "action" | "dim" | "hint";
+
+function variantClass(variant: KeyVariant): string {
   if (variant === "accent") {
     return "bg-[var(--accent)] text-[var(--accent-contrast)] font-bold border border-transparent";
+  }
+  if (variant === "action") {
+    return "bg-[var(--action)] text-[var(--action-contrast)] font-bold border border-transparent";
+  }
+  if (variant === "hint") {
+    return "bg-[var(--accent-surface)] text-[var(--accent-text)] font-bold border border-[var(--accent-border)]";
   }
   if (variant === "dim") {
     return "bg-[var(--surface)] dark:bg-[var(--surface-raised)] text-muted border border-border-faint";
@@ -61,7 +71,7 @@ interface KeyProps {
   label: string;
   onPress: () => void;
   flex?: number;
-  variant?: "default" | "accent" | "dim";
+  variant?: KeyVariant;
   mono?: boolean;
   big?: boolean;
   tall?: boolean;
@@ -195,7 +205,7 @@ function HoldPickerKey({
   closeLabel: string;
   align?: "left" | "right";
   flex?: number;
-  variant?: "default" | "dim";
+  variant?: KeyVariant;
   tall?: boolean;
   /** Spoken name: "mm ▾" reads as "mm black down-pointing triangle" otherwise. */
   ariaLabel?: string;
@@ -319,6 +329,7 @@ export function CommandKeypad({
   showDone,
   priceUnitLabel,
   valid,
+  nextHint = null,
 }: CommandKeypadProps) {
   const t = useTranslations("command");
 
@@ -330,7 +341,7 @@ export function CommandKeypad({
           <Key
             tall
             label={t("keypad.tweak")}
-            variant="accent"
+            variant="action"
             onPress={onTweak}
             ariaLabel={t("keypad.tweakAria")}
           />
@@ -378,7 +389,15 @@ export function CommandKeypad({
         </div>
         <div className="flex gap-1">
           {/* Shows × but types x — the canonical quantity token. */}
-          <Key label="×" mono big ariaLabel={t("keypad.times")} onPress={() => onKey("x")} flex={1.3} />
+          <Key
+            label="×"
+            mono
+            big
+            variant={nextHint === "qty" ? "hint" : "default"}
+            ariaLabel={t("keypad.times")}
+            onPress={() => onKey("x")}
+            flex={1.3}
+          />
           {ROW_BOT.map((k) => (
             <Key key={k} label={k} onPress={() => onKey(k)} />
           ))}
@@ -401,6 +420,7 @@ export function CommandKeypad({
             menuLabel={t("keypad.lengthUnitPicker")}
             closeLabel={t("keypad.closeUnitPicker")}
             align="left"
+            variant={nextHint === "length" ? "hint" : "default"}
             flex={1.35}
           />
           <HoldPickerKey
@@ -412,7 +432,7 @@ export function CommandKeypad({
             menuLabel={t("keypad.priceUnitPicker")}
             closeLabel={t("keypad.closeUnitPicker")}
             align="right"
-            variant="dim"
+            variant={nextHint === "price" ? "hint" : "dim"}
             flex={1.55}
           />
           <Key label="↵" variant="accent" ariaLabel={t("keypad.enter")} onPress={onEnter} flex={1.4} />

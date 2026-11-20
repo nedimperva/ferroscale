@@ -356,5 +356,67 @@ describe("multi-item lines", { timeout: 15_000 }, () => {
       expect(currentQuery(h)).toContain("chq");
     });
   });
+
+  it("opens quick defaults in the command deck and updates default unit and grade", async () => {
+    const h = await renderCommandShell();
+    const trigger = h.getByRole("button", { name: "Quick defaults — currency, unit and grade" });
+    await h.user.click(trigger);
+
+    const dialog = await h.findByRole("dialog", { name: "Quick defaults — currency, unit and grade" });
+    await h.user.click(within(dialog).getByRole("button", { name: "mm" }));
+    await h.user.click(within(dialog).getByRole("button", { name: /304/ }));
+
+    await waitFor(() => {
+      expect(trigger.textContent).toContain("mm");
+      expect(trigger.textContent).toContain("304");
+    });
+  });
+
+  it("swaps weight and price when clicking the paired secondary hero metric", async () => {
+    const h = await renderCommandShell();
+    const swapToPrice = await h.findByRole("button", { name: "Switch primary readout to price" });
+    await h.user.click(swapToPrice);
+
+    await waitFor(() => {
+      expect(h.getByRole("button", { name: "Switch primary readout to weight" })).toBeDefined();
+    });
+  });
+
+  it("nudges length and quantity inline without leaving the command bar", async () => {
+    const h = await renderCommandShell();
+    await h.user.click(h.getByRole("button", { name: "Increase length" }));
+    await waitFor(() => expect(currentQuery(h)).toContain("7m"));
+
+    await h.user.click(h.getByRole("button", { name: "Increase quantity" }));
+    await waitFor(() => expect(currentQuery(h)).toContain("x3"));
+
+    await h.user.click(h.getByRole("button", { name: "Decrease quantity" }));
+    await waitFor(() => expect(currentQuery(h)).toContain("x2"));
+  });
+
+  it("shows the Command Grammar sheet on an empty bar and loads a clickable example", async () => {
+    const h = await renderCommandShell({ query: "" });
+    expect(h.getByText("COMMAND GRAMMAR")).toBeDefined();
+
+    await h.user.click(h.getByRole("button", { name: /rhs 80x40x3 4\.5m @2\.4\/kg/ }));
+    await waitFor(() => {
+      expect(screen.getByText("LIVE")).toBeDefined();
+      expect(currentQuery(h)).toContain("rhs");
+      expect(currentQuery(h)).toContain("80x40x3");
+    });
+  });
+
+  it("steps to an adjacent EN size from the breakdown scrubber", async () => {
+    const h = await renderCommandShell();
+    const scrubber = await h.findByRole("group", { name: "Adjacent sizes in this family" });
+    const nextSize = within(scrubber).getByRole("button", { name: /Use HEA 140 instead/ });
+    await h.user.click(nextSize);
+
+    await waitFor(() => {
+      expect(currentQuery(h)).toContain("hea140");
+      expect(currentQuery(h)).toContain("6m");
+    });
+  });
 });
+
 

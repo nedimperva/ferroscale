@@ -279,7 +279,8 @@
       "expandItem": "Stavka {index}, {name} — prikaži tokene",
       "newItem": "Nedovršena stavka",
       "removeItem": "Ukloni stavku {index}, {name}",
-      "removeEmptyItem": "Ukloni praznu stavku"
+      "removeEmptyItem": "Ukloni praznu stavku",
+      "stageProgress": "Korak {current} od {total}"
     },
     "keypad": {
       "space": "razmak",
@@ -316,11 +317,13 @@
       "length": "dužina",
       "grade": "kvalitet",
       "perPieceSuffix": "/kom",
-      "breakdown": "Pregled"
+      "breakdown": "Pregled",
+      "swapMetric": "Prebaci glavni prikaz na {metric}"
     },
     "nearby": {
       "title": "Slične dimenzije",
-      "pickAria": "Koristi {label} umjesto toga"
+      "pickAria": "Koristi {label} umjesto toga",
+      "scrubberAria": "Susjedne dimenzije u ovoj porodici"
     },
     "profiles": {
       "round": "Okruglo",
@@ -596,9 +599,25 @@
       "saveSessionAsProject": "SAČUVAJ KAO PROJEKAT",
       "sessionEmpty": "Još ništa nije upisano. Pritisnite + na gotovoj liniji i sesija vodi ukupan zbir.",
       "anotherItem": "+ stavka",
+      "addAnotherItem": "Dodaj još jednu stavku",
       "saveSessionAsProjectShort": "→ PROJEKAT",
       "history": "VAŠE LINIJE",
-      "backToSession": "← DANAS"
+      "backToSession": "← DANAS",
+      "defaultsAria": "Brze zadane postavke — valuta, jedinica i kvalitet",
+      "defaultsCurrency": "Valuta",
+      "defaultsUnit": "Zadana jedinica",
+      "defaultsGrade": "Zadani kvalitet",
+      "nudgeLengthDown": "Smanji dužinu",
+      "nudgeLengthUp": "Povećaj dužinu",
+      "nudgeQtyDown": "Smanji količinu",
+      "nudgeQtyUp": "Povećaj količinu",
+      "syntaxTitle": "SINTAKSA KOMANDE",
+      "syntaxHeadline": "Upišite onako kako biste rekli",
+      "syntaxBeam": "EN nosač · dužina · komadi · kvalitet",
+      "syntaxTube": "Šuplji profil s cijenom u redu",
+      "syntaxPlate": "Inox lim · dimenzije u mm",
+      "syntaxAssembly": "Višedijelni sklop sa sastavnicom",
+      "syntaxTarget": "Rješavanje po ciljnoj masi"
     },
     "suggest": {
       "standardSize": "standardna dimenzija",

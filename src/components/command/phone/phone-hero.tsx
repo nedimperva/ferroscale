@@ -111,16 +111,27 @@ export function PhoneHero({
   });
   return (
     <div className="px-[18px] pt-1.5 flex-shrink-0">
-      {/* The mode switch rides in the hero's label row rather than taking
-          a full-width row of its own — the fold's single biggest saving. */}
-      <div className="flex items-center justify-between mb-0.5">
-        {/* Names the metric rather than the mode — the highlighted pill
-            already says which mode is on. */}
-        <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
-          {isW ? t("preview.totalWeight") : t("preview.totalCost")}
+      {/* Unified eyebrow: status dot on the left, connected ink mode toggle on the right */}
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="w-1.5 h-1.5"
+            style={{
+              background: p.valid ? "var(--accent)" : "var(--muted-faint)",
+            }}
+          />
+          <span
+            className="font-mono text-[10px] uppercase"
+            style={{
+              letterSpacing: 1.5,
+              color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
+            }}
+          >
+            {p.valid ? t("status.live") : t("status.waiting")}
+          </span>
         </span>
-        <div className="flex gap-1">
-          {(["weight", "price"] as const).map((m) => {
+        <div className="inline-flex" style={{ border: "1px solid var(--border)" }}>
+          {(["weight", "price"] as const).map((m, i) => {
             const active = mode === m;
             const isWeight = m === "weight";
             return (
@@ -129,28 +140,16 @@ export function PhoneHero({
                 type="button"
                 onClick={() => onSetMode(m)}
                 aria-pressed={active}
-                className="fs-track-label rounded-none text-[11px] font-bold"
+                className="cursor-pointer border-0 font-mono text-[10px] font-bold rounded-none"
                 style={{
-                  // 5px of vertical padding puts the control at 25px, over
-                  // the 24px floor in WCAG 2.5.8. It measured 23px.
-                  padding: "5px 12px",
-                  border: active
-                    ? `1px solid ${isWeight ? "var(--accent-border)" : "var(--blue-border)"}`
-                    : "1px solid var(--border-faint)",
-                  background: active
-                    ? isWeight
-                      ? "var(--accent-surface)"
-                      : "var(--blue-surface)"
-                    : "transparent",
-                  color: active
-                    ? isWeight
-                      ? "var(--accent-text)"
-                      : "var(--blue-text)"
-                    : "var(--muted)",
+                  // 6px vertical padding clears the 24px WCAG 2.5.8 target floor.
+                  padding: "6px 12px",
+                  letterSpacing: 1.2,
+                  borderLeft: i === 0 ? undefined : "1px solid var(--border)",
+                  background: active ? "var(--foreground)" : "transparent",
+                  color: active ? "var(--background)" : "var(--muted)",
                 }}
               >
-                {/* Same words as the desktop toggle — the concept is
-                    one, so the label is one (KG/€ read as units). */}
                 {(isWeight ? t("settings.weight") : t("settings.price")).toUpperCase()}
               </button>
             );
@@ -212,14 +211,17 @@ export function PhoneHero({
             </span>
           )}
           {p.valid && (
-            <span className="ml-auto self-center text-muted-faint">
+            <span className="ml-auto self-center inline-flex items-center gap-1.5 text-muted-faint">
+              <span className="fs-track-wide font-mono text-[9.5px] font-bold uppercase">
+                {t("preview.breakdown")}
+              </span>
               <Chev />
             </span>
           )}
         </div>
       </button>
 
-      <div className="flex items-center gap-2.5 mt-2.5 min-h-[18px]">
+      <div className="flex items-center gap-2 mt-2 min-h-[18px]">
         {line.multi ? (
           <span className="font-mono text-[12px] text-muted">
             {t("result.assembly", { count: line.items.length })}
@@ -322,30 +324,14 @@ export function PhoneHero({
               : t("hint.startProfile")}
           </span>
         )}
-        <span className="ml-auto flex items-center gap-1.5">
-          <span
-            className="w-1.5 h-1.5"
-            style={{
-              background: p.valid ? "var(--accent)" : "var(--muted-faint)",
-            }}
-          />
-          <span
-            className="font-mono text-[10px] uppercase"
-            style={{
-              letterSpacing: 1.6,
-              color: p.valid ? "var(--accent-text)" : "var(--muted-faint)",
-            }}
-          >
-            {p.valid ? t("status.live") : t("status.waiting")}
-          </span>
-        </span>
       </div>
 
       <MetricStrip
         p={p}
+        line={line}
         isWeight={isW}
         sym={sym}
-        onOpen={() => p.valid && onOpenResult()}
+        onSwapMode={() => onSetMode(isW ? "price" : "weight")}
       />
 
       {/* The save control takes the row; the other three are icons.
@@ -354,7 +340,7 @@ export function PhoneHero({
           just "Save" — with about 60px to say it in, and it came out as
           a bookmark and the letter S. Compare and Share have glyphs that
           carry them; the primary action is the one that needs words. */}
-      <div className="flex gap-1.5 mt-2">
+      <div className="flex gap-1.5 mt-3">
         <div className="flex-1 min-w-0">
           <SaveControl
             compact

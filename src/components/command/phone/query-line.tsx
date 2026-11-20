@@ -143,7 +143,7 @@ export function PhoneQueryLine({
     String(group.item + 1);
 
   return (
-    <div className="flex-shrink-0 px-[14px] pb-2">
+    <div className="flex-shrink-0 px-[14px] pb-1.5">
       <div
         ref={queryLineRef}
         data-query-line=""
@@ -167,8 +167,8 @@ export function PhoneQueryLine({
           overflowY: "hidden",
           // Ink edge, no glow — the same command line as the
           // workspace, drawn as a rule rather than lit.
-          border: "1px solid var(--foreground)",
-          background: "var(--surface)",
+          border: "1.5px solid var(--foreground)",
+          background: "var(--background)",
         }}
       >
         {/* Grows to fill a short line (so it starts at the left), never

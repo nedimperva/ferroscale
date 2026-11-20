@@ -279,7 +279,8 @@
       "expandItem": "Item {index}, {name} — show its tokens",
       "newItem": "Unfinished item",
       "removeItem": "Remove item {index}, {name}",
-      "removeEmptyItem": "Remove the empty item"
+      "removeEmptyItem": "Remove the empty item",
+      "stageProgress": "Step {current} of {total}"
     },
     "keypad": {
       "space": "space",
@@ -316,11 +317,13 @@
       "length": "length",
       "grade": "grade",
       "perPieceSuffix": "/pc",
-      "breakdown": "Breakdown"
+      "breakdown": "Breakdown",
+      "swapMetric": "Switch primary readout to {metric}"
     },
     "nearby": {
       "title": "Nearby sizes",
-      "pickAria": "Use {label} instead"
+      "pickAria": "Use {label} instead",
+      "scrubberAria": "Adjacent sizes in this family"
     },
     "profiles": {
       "round": "Round",
@@ -596,9 +599,25 @@
       "saveSessionAsProject": "SAVE AS PROJECT",
       "sessionEmpty": "Nothing logged yet. Press + on a finished line and the session keeps a running total.",
       "anotherItem": "+ item",
+      "addAnotherItem": "Add another item",
       "saveSessionAsProjectShort": "→ PROJECT",
       "history": "YOUR LINES",
-      "backToSession": "← TODAY"
+      "backToSession": "← TODAY",
+      "defaultsAria": "Quick defaults — currency, unit and grade",
+      "defaultsCurrency": "Currency",
+      "defaultsUnit": "Default unit",
+      "defaultsGrade": "Default grade",
+      "nudgeLengthDown": "Decrease length",
+      "nudgeLengthUp": "Increase length",
+      "nudgeQtyDown": "Decrease quantity",
+      "nudgeQtyUp": "Increase quantity",
+      "syntaxTitle": "COMMAND GRAMMAR",
+      "syntaxHeadline": "Type it the way you'd say it",
+      "syntaxBeam": "EN beam · length · pieces · grade",
+      "syntaxTube": "Hollow section with inline rate",
+      "syntaxPlate": "Stainless plate · dimensions in mm",
+      "syntaxAssembly": "Multi-part assembly with BOM",
+      "syntaxTarget": "Target-weight solver"
     },
     "suggest": {
       "standardSize": "standard size",

@@ -3,6 +3,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
+  COMMAND_GRADES,
   cmdAppendLineItem,
   cmdParse,
   cmdClassifyToken,
@@ -21,7 +22,7 @@ import { useCountUp, markExternalValueChange } from "@/hooks/useCountUp";
 import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
 import { BreakdownLedger } from "../breakdown-ledger";
 import { CommandGlyph } from "../command-glyph";
-import { KIND_BG } from "../command-constants";
+import { CURRENCIES, EXAMPLE_QUERY, KIND_BG, UNIT_OPTIONS, placeholderExamples } from "../command-constants";
 import {
   applyIssueSuggestion,
   computeGhost,
@@ -39,13 +40,11 @@ import { CommandKeyHints } from "../command-key-hints";
 import { groupedSuggestions } from "../suggestion-groups";
 import type { CommandDesktopProps } from "./desktop-props";
 import { CloseIcon, DeskIcon, DeskTokenChip, SectionLabel } from "./desk-atoms";
-import { DeskViewHeader } from "./desk-rail";
 import { AvailabilityBadge, PricingBadge, StockBadge, TargetBadge, InlineIssue } from "../command-atoms";
 import { commandTargetNote } from "../target-note";
 import { massBand } from "../mass-band";
 import { ProfileDiscoveryTiles } from "../profile-discovery-tiles";
 import { SaveControl } from "../save-control";
-import { EXAMPLE_QUERY, placeholderExamples } from "../command-constants";
 import { useRotatingExample } from "@/hooks/useRotatingExample";
 import {
   editLineToken,
@@ -57,6 +56,12 @@ import {
   removeLineToken,
   replaceLineToken,
 } from "../line-edit";
+import {
+  commandStageProgress,
+  findSteppableLength,
+  nudgeItemLength,
+  nudgeItemQty,
+} from "../command-nudge";
 import { InlineTokenEditor } from "../inline-token-editor";
 import { YourLines } from "../your-lines";
 import { massTolerancePercentStore } from "@/lib/settings-stores";
@@ -67,7 +72,14 @@ type DeskCalcViewProps = CommandDesktopProps & {
   gotoCompare: () => void;
 };
 
-
+const QUICK_GRADE_IDS = [
+  "steel-s235jr",
+  "steel-s355jr",
+  "stainless-304",
+  "stainless-316",
+  "al-6060",
+  "al-6082",
+] as const;
 
 export function DeskCalcView({
   compact,
@@ -82,7 +94,9 @@ export function DeskCalcView({
   rateIsUserSupplied,
   parserSettings,
   shared,
+  onUpdateShared,
   defaultUnit,
+  onSetDefaultUnit,
   sessionTape,
   history,
   historyTimes,
@@ -164,9 +178,11 @@ export function DeskCalcView({
   );
 
   const [moreOpen, setMoreOpen] = useState(false);
+  const [defaultsOpen, setDefaultsOpen] = useState(false);
   /** The tape shows today's session, or every logged line by day. */
   const [showHistory, setShowHistory] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
+  const defaultsMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -178,6 +194,24 @@ export function DeskCalcView({
     window.addEventListener("mousedown", handleDown);
     return () => window.removeEventListener("mousedown", handleDown);
   }, [moreOpen]);
+
+  useEffect(() => {
+    if (!defaultsOpen) return;
+    const handleDown = (e: MouseEvent) => {
+      if (defaultsMenuRef.current && !defaultsMenuRef.current.contains(e.target as Node)) {
+        setDefaultsOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDefaultsOpen(false);
+    };
+    window.addEventListener("mousedown", handleDown);
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("mousedown", handleDown);
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [defaultsOpen]);
 
   /**
    * Same rule as the phone: only the item being typed is spelled out as
@@ -242,6 +276,28 @@ export function DeskCalcView({
           maximumFractionDigits: 2,
         });
 
+  const secondaryMetricVal = useMemo(() => {
+    const kg = line.multi ? line.totalKg : p.totalKg;
+    const amt = line.multi ? line.totalAmount : p.totalAmount;
+    if (isW) {
+      return amt != null ? `${sym} ${fsMoney(amt)}` : null;
+    }
+    return kg != null ? `${fsWeight(kg)} ${fsWeightUnit()}` : null;
+  }, [isW, line.multi, line.totalAmount, line.totalKg, p.totalAmount, p.totalKg, sym]);
+
+  const stageProgress = commandStageProgress(p);
+  const steppableLength = useMemo(
+    () => (p.valid && !line.multi ? findSteppableLength(query, line.activeIndex) : null),
+    [p.valid, line.multi, line.activeIndex, query],
+  );
+  const quickGrades = useMemo(
+    () =>
+      QUICK_GRADE_IDS.map((id) => COMMAND_GRADES.find((g) => g.id === id)).filter(
+        (g): g is (typeof COMMAND_GRADES)[number] => Boolean(g),
+      ),
+    [],
+  );
+
   // Parse every tape line — the Σ footer is a promise about the whole session,
   // so it must never silently cover only what happens to be on screen.
   const validTape = useMemo(
@@ -258,161 +314,148 @@ export function DeskCalcView({
   const sumKg = validTape.reduce((s, x) => s + (x.rp.totalKg ?? 0), 0);
   const sumAmount = validTape.reduce((s, x) => s + (x.rp.totalAmount ?? 0), 0);
 
-  // Suggestions, or the profile tiles on an empty line. On the wide desk they
-  // head the answer column, so the breakdown sheet can start right under the
-  // command line; stacked, they stay with the line they refine.
-  const strip = (
-    <div className={compact ? "" : "flex-shrink-0"}>
-      {query.trim() === "" ? (
-        <div className={compact ? "mt-4" : undefined}>
-          <ProfileDiscoveryTiles
-            onSelectProfile={(prefix) => {
-              setQuery(prefix);
-              focusInputAtEnd();
-            }}
-            onTryDemo={() => {
-              setQuery(EXAMPLE_QUERY);
-              focusInputAtEnd();
-            }}
-            compact={compact}
+  // Docked suggestion strip — lives right beneath the full-width command bar
+  // inside the unified Command Deck whenever the bar is active.
+  const suggestionStrip = query.trim() !== "" && (
+    <div className="mt-2.5">
+      <div className="flex items-center gap-3 flex-wrap mb-1.5">
+        <h2 className="fs-track-label text-[10px] font-bold text-muted uppercase">
+          {formatCommandHint(t, sug.hint)}
+        </h2>
+        <span className="ml-auto">
+          <CommandKeyHints
+            valid={p.valid}
+            hasGhost={!!ghost}
+            suggestionCount={sug.items.length}
+            historyLength={history.length}
+            onOpenHelp={onOpenHelp}
           />
-        </div>
-      ) : (
-        /* SUGGESTIONS */
-        <div className={compact ? "mt-3" : undefined}>
-          <div className="flex items-center gap-3 flex-wrap mb-2">
-          <h2
-            className="fs-track-label text-[10px] font-bold text-muted uppercase"
-          >
-            {formatCommandHint(t, sug.hint)}
-          </h2>
-          <span className="ml-auto">
-            <CommandKeyHints
-              valid={p.valid}
-              hasGhost={!!ghost}
-              suggestionCount={sug.items.length}
-              historyLength={history.length}
-              onOpenHelp={onOpenHelp}
-            />
-          </span>
-        </div>
-        <div data-suggestion-strip="" className="flex gap-x-[7px] gap-y-2 flex-wrap items-center">
-          {groupedSuggestions(sug.items).map((group) => (
-            <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
-              {group.group && (
-                <span
-                  className="text-[10px] font-bold text-muted-faint uppercase"
-                  style={{ letterSpacing: 1 }}
-                >
-                  {t(`suggest.group.${group.group}`)}
-                </span>
-              )}
-              {group.items.map(({ item: it, index: i }) => (
-            <button
-              key={i}
-              ref={i === 0 ? firstSuggestionRef : undefined}
-              type="button"
-              // Chips stay out of the Tab order — keep typing flow unbroken.
-              // ArrowDown from the input opens this list explicitly.
-              tabIndex={-1}
-              onClick={() => {
-                onSuggest(it);
-                focusInputAtEnd();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                  e.preventDefault();
-                  const dir = e.key === "ArrowRight" ? 1 : -1;
-                  const buttons = Array.from(
-                    e.currentTarget.parentElement?.querySelectorAll("button") ?? [],
-                  ) as HTMLButtonElement[];
-                  const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
-                  const next = buttons[idx + dir];
-                  if (next) {
-                    next.focus();
-                  } else if (dir === -1) {
+        </span>
+      </div>
+      <div data-suggestion-strip="" className="flex gap-x-[7px] gap-y-1.5 flex-wrap items-center">
+        {groupedSuggestions(sug.items).map((group) => (
+          <div key={group.group ?? "all"} className="flex items-center gap-[7px] flex-wrap">
+            {group.group && (
+              <span
+                className="text-[10px] font-bold text-muted-faint uppercase"
+                style={{ letterSpacing: 1 }}
+              >
+                {t(`suggest.group.${group.group}`)}
+              </span>
+            )}
+            {group.items.map(({ item: it, index: i }) => (
+              <button
+                key={i}
+                ref={i === 0 ? firstSuggestionRef : undefined}
+                type="button"
+                // Chips stay out of the Tab order — keep typing flow unbroken.
+                // ArrowDown from the input opens this list explicitly.
+                tabIndex={-1}
+                onClick={() => {
+                  onSuggest(it);
+                  focusInputAtEnd();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    const dir = e.key === "ArrowRight" ? 1 : -1;
+                    const buttons = Array.from(
+                      e.currentTarget.parentElement?.querySelectorAll("button") ?? [],
+                    ) as HTMLButtonElement[];
+                    const idx = buttons.indexOf(e.currentTarget as HTMLButtonElement);
+                    const next = buttons[idx + dir];
+                    if (next) {
+                      next.focus();
+                    } else if (dir === -1) {
+                      focusInputAtEnd();
+                    }
+                    return;
+                  }
+                  if (e.key === "ArrowUp" || e.key === "Escape") {
+                    e.preventDefault();
                     focusInputAtEnd();
                   }
-                  return;
-                }
-                if (e.key === "ArrowUp" || e.key === "Escape") {
-                  e.preventDefault();
-                  focusInputAtEnd();
-                }
-              }}
-              className="fs-pop flex items-center gap-[7px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
-              style={{
-                padding: it.sub ? "7px 13px" : "8px 14px",
-                border: it.kind === "save" ? "none" : "1px solid var(--border)",
-                background: it.kind === "save" ? "var(--action)" : "var(--surface)",
-                color: it.kind === "save" ? "var(--action-contrast)" : "var(--foreground)",
-              }}
-            >
-              {it.fam && (
-                <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
-                  <CommandGlyph
-                    fam={it.fam}
-                    alias={it.kind === "profile" ? it.ins : focusParse.alias?.alias}
-                    size={16}
-                  />
-                </span>
-              )}
-              <span className="flex flex-col items-start" style={{ lineHeight: 1.15 }}>
-                <span
-                  className={`font-bold text-[13px] ${
-                    it.kind === "size" || it.kind === "length" || it.kind === "qty"
-                      ? "font-mono"
-                      : ""
-                  }`}
-                >
-                  {formatCommandSuggestionLabel(t, it)}
-                </span>
-                {it.sub && (
-                  <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
+                }}
+                className="fs-pop flex items-center gap-[7px] cursor-pointer hover:border-[var(--border-strong)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--background)]"
+                style={{
+                  padding: it.sub ? "6px 12px" : "7px 13px",
+                  border: it.kind === "save" ? "none" : "1px solid var(--border)",
+                  background: it.kind === "save" ? "var(--action)" : "var(--background)",
+                  color: it.kind === "save" ? "var(--action-contrast)" : "var(--foreground)",
+                }}
+              >
+                {it.fam && (
+                  <span className="flex" style={{ color: "var(--foreground-secondary)" }}>
+                    <CommandGlyph
+                      fam={it.fam}
+                      alias={it.kind === "profile" ? it.ins : focusParse.alias?.alias}
+                      size={16}
+                    />
+                  </span>
                 )}
-              </span>
-              {/* The ⌥-digit that picks this chip, so the shortcut is
-                  learnable by looking rather than by being told. */}
-              {i < 9 && it.kind !== "save" && (
-                <span
-                  className="font-mono text-[10px] font-bold"
-                  style={{ color: "var(--muted-faint)" }}
-                  aria-hidden="true"
-                >
-                  {i + 1}
+                <span className="flex flex-col items-start" style={{ lineHeight: 1.15 }}>
+                  <span
+                    className={`font-bold text-[13px] ${
+                      it.kind === "size" || it.kind === "length" || it.kind === "qty"
+                        ? "font-mono"
+                        : ""
+                    }`}
+                  >
+                    {formatCommandSuggestionLabel(t, it)}
+                  </span>
+                  {it.sub && (
+                    <span className="text-[10px] text-muted font-semibold">{it.sub}</span>
+                  )}
                 </span>
-              )}
-            </button>
-              ))}
-            </div>
-          ))}
-        </div>
+                {/* The ⌥-digit that picks this chip, so the shortcut is
+                    learnable by looking rather than by being told. */}
+                {i < 9 && it.kind !== "save" && (
+                  <span
+                    className="font-mono text-[10px] font-bold"
+                    style={{ color: "var(--muted-faint)" }}
+                    aria-hidden="true"
+                  >
+                    {i + 1}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        ))}
       </div>
-      )}
+    </div>
+  );
+
+  const discoveryTiles = query.trim() === "" && (
+    <div className={compact ? "mt-2" : "flex-shrink-0"}>
+      <ProfileDiscoveryTiles
+        onSelectProfile={(prefix) => {
+          setQuery(prefix);
+          focusInputAtEnd();
+        }}
+        onTryDemo={() => {
+          setQuery(EXAMPLE_QUERY);
+          focusInputAtEnd();
+        }}
+        compact={compact}
+      />
     </div>
   );
 
   return (
     <div className="flex flex-1 min-w-0 flex-col overflow-hidden">
-      {/* No standfirst here: the design puts the query in this slot, but the
-          command line sits directly below and says the same thing in full.
-          What the header adds is the state the line does *not* show — the
-          defaults every untyped token falls back to. */}
-      <DeskViewHeader
-        title={t("nav.calculator")}
-        actions={
-          <span className="font-mono text-[11px] text-muted whitespace-nowrap">
-            {settingsSummary}
-          </span>
-        }
-      />
+      {/* The calculator opens straight on the unified Command Deck rather than
+          spending 42px on a title bar; keep an accessible h1 for the page outline. */}
+      <h1 className="sr-only">{t("nav.calculator")}</h1>
 
-      {/* ───────── command line — full width ───────── */}
+      {/* ───────── unified command deck — full width ───────── */}
       <div
+        data-command-deck=""
         className="flex-shrink-0"
         style={{
-          padding: compact ? "14px 16px 0" : "18px 20px 16px",
-          borderBottom: compact ? undefined : "1px solid var(--border-faint)",
+          padding: compact ? "12px 16px 12px" : "14px 20px 12px",
+          background: "var(--surface)",
+          borderBottom: "1px solid var(--border)",
         }}
       >
         {/* An ink edge, not an accent glow. The bar is the one thing on the
@@ -424,18 +467,29 @@ export function DeskCalcView({
             bar's empty space used to edit that chip. */}
         <div
           onMouseDown={(e) => {
-            if ((e.target as HTMLElement).closest("button, input")) return;
+            if ((e.target as HTMLElement).closest("button, input, [data-defaults-popover]")) return;
             e.preventDefault();
             focusInputAtEnd();
           }}
-          className="flex items-center gap-2 flex-wrap cursor-text"
+          className="relative flex items-center gap-2 flex-wrap cursor-text"
           style={{
-            minHeight: 52,
-            border: "1px solid var(--foreground)",
-            background: "var(--surface)",
-            padding: "10px 14px",
+            minHeight: 50,
+            border: "1.5px solid var(--foreground)",
+            background: "var(--background)",
+            padding: "8px 12px",
           }}
         >
+          {/* Quiet 2px stage-progress rail along the bottom edge of the command bar */}
+          {stageProgress > 0 && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0 bottom-0 h-[2px] transition-[width] duration-150"
+              style={{
+                width: `${(stageProgress / 4) * 100}%`,
+                background: "var(--accent)",
+              }}
+            />
+          )}
           <span
             className="flex items-center justify-center font-mono font-bold text-[19px] mr-0.5 shrink-0"
             style={{ color: "var(--accent)" }}
@@ -653,19 +707,154 @@ export function DeskCalcView({
             // global :focus-visible ring on the inner input is just noise.
             style={{ outline: "none" }}
           />
-          {query !== "" && (
-            <button
-              type="button"
-              onClick={onNew}
-              className="ml-auto bg-transparent border-0 text-muted text-[11px] font-bold cursor-pointer"
-              style={{ letterSpacing: 0.4 }}
-            >
-              {t("common.clear")}
-            </button>
-          )}
+          <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+            {query !== "" && (
+              <button
+                type="button"
+                onClick={onNew}
+                className="bg-transparent border-0 text-muted hover:text-foreground text-[11px] font-bold cursor-pointer px-1.5 py-1"
+                style={{ letterSpacing: 0.4 }}
+              >
+                {t("common.clear")}
+              </button>
+            )}
+
+            {/* Quick defaults popover — currency, default length unit, default grade */}
+            <div ref={defaultsMenuRef} className="relative" data-defaults-popover="">
+              <button
+                type="button"
+                onClick={() => setDefaultsOpen((v) => !v)}
+                aria-expanded={defaultsOpen}
+                aria-haspopup="dialog"
+                aria-label={t("desktop.defaultsAria")}
+                title={t("desktop.defaultsAria")}
+                className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold cursor-pointer whitespace-nowrap hover:border-[var(--border-strong)] transition-colors"
+                style={{
+                  padding: "4px 8px",
+                  border: `1px solid ${defaultsOpen ? "var(--foreground)" : "var(--border-faint)"}`,
+                  background: "var(--surface)",
+                  color: "var(--foreground-secondary)",
+                }}
+              >
+                <span>{settingsSummary}</span>
+                <span aria-hidden="true" className="text-[9px] text-muted-faint">▾</span>
+              </button>
+              {defaultsOpen && (
+                <div
+                  role="dialog"
+                  aria-label={t("desktop.defaultsAria")}
+                  className="absolute right-0 top-full mt-1.5 z-30 w-[264px] p-3 flex flex-col gap-3"
+                  style={{
+                    border: "1px solid var(--foreground)",
+                    background: "var(--surface)",
+                  }}
+                >
+                  <div>
+                    <div className="fs-track-label text-[10px] font-bold uppercase text-muted mb-1.5">
+                      {t("desktop.defaultsCurrency")}
+                    </div>
+                    <div className="grid grid-cols-5" style={{ border: "1px solid var(--border)" }}>
+                      {CURRENCIES.map((cur, idx) => {
+                        const active = shared.currency === cur;
+                        return (
+                          <button
+                            key={cur}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => onUpdateShared({ currency: cur })}
+                            className="py-1.5 font-mono text-[11px] font-bold cursor-pointer border-0"
+                            style={{
+                              borderLeft: idx === 0 ? undefined : "1px solid var(--border-faint)",
+                              background: active ? "var(--foreground)" : "transparent",
+                              color: active ? "var(--background)" : "var(--foreground-secondary)",
+                            }}
+                          >
+                            {cur}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="fs-track-label text-[10px] font-bold uppercase text-muted mb-1.5">
+                      {t("desktop.defaultsUnit")}
+                    </div>
+                    <div className="grid grid-cols-5" style={{ border: "1px solid var(--border)" }}>
+                      {UNIT_OPTIONS.map((unit, idx) => {
+                        const active = defaultUnit === unit;
+                        return (
+                          <button
+                            key={unit}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => onSetDefaultUnit(unit)}
+                            className="py-1.5 font-mono text-[11px] font-bold cursor-pointer border-0"
+                            style={{
+                              borderLeft: idx === 0 ? undefined : "1px solid var(--border-faint)",
+                              background: active ? "var(--foreground)" : "transparent",
+                              color: active ? "var(--background)" : "var(--foreground-secondary)",
+                            }}
+                          >
+                            {unit}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="fs-track-label text-[10px] font-bold uppercase text-muted mb-1.5">
+                      {t("desktop.defaultsGrade")}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {quickGrades.map((grade) => {
+                        const active = shared.defaultGradeId === grade.id;
+                        return (
+                          <button
+                            key={grade.id}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => onUpdateShared({ defaultGradeId: grade.id })}
+                            className="px-2 py-1 font-mono text-[11px] font-semibold cursor-pointer"
+                            style={{
+                              border: `1px solid ${active ? "var(--foreground)" : "var(--border)"}`,
+                              background: active ? "var(--foreground)" : "var(--background)",
+                              color: active ? "var(--background)" : "var(--foreground)",
+                            }}
+                          >
+                            {grade.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {p.valid && (
+              <button
+                type="button"
+                onClick={() => {
+                  onLogSession();
+                  focusInputAtEnd();
+                }}
+                title={t("aria.addToSession")}
+                aria-label={t("aria.addToSession")}
+                className="inline-flex items-center gap-1 font-mono text-[11px] font-bold cursor-pointer border-0"
+                style={{
+                  padding: "4px 9px",
+                  background: "var(--action)",
+                  color: "var(--action-contrast)",
+                }}
+              >
+                <span aria-hidden="true">↵</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {compact && strip}
+        {/* Docked suggestion strip directly below the command bar (full width) */}
+        {suggestionStrip}
       </div>
 
       {/* ───────── dashboard grid ─────────
@@ -682,10 +871,10 @@ export function DeskCalcView({
           style={{
             flex: compact ? undefined : ANSWER_FLEX,
             minWidth: compact ? undefined : ANSWER_MIN,
-            padding: compact ? undefined : "20px clamp(14px, 1.6vw, 24px) 0",
+            padding: compact ? undefined : "18px clamp(14px, 1.6vw, 24px) 0",
           }}
         >
-          {!compact && strip}
+          {discoveryTiles}
           {/* RESULT — no panel. The answer is the page here, so it sits on
               the paper directly and lets the rules below it do the grouping. */}
           <div className="flex-shrink-0 flex flex-col">
@@ -731,46 +920,74 @@ export function DeskCalcView({
 
             {/* hero — mono like every other figure in the app, and set at a
                 regular weight: at this size the digits carry on their own, and
-                mono keeps them from reflowing as the value counts up. */}
+                mono keeps them from reflowing as the value counts up. Paired
+                with the secondary metric beside it so weight and price are
+                both scannable at a glance and one click swaps them. */}
             <div style={{ padding: "10px 0 14px" }}>
-              {/* A click on the figure copies the answer as one line — the
-                  thing most often done with it is pasting it somewhere. */}
-              <button
-                type="button"
-                onClick={onCopyAnswer}
-                disabled={!p.valid}
-                title={p.valid ? t("aria.clickToCopy") : undefined}
-                aria-label={p.valid ? `${heroVal} — ${t("aria.clickToCopy")}` : undefined}
-                className="flex items-baseline gap-3 p-0 m-0 bg-transparent border-0 text-left"
-                style={{ cursor: p.valid ? "copy" : "default", color: "inherit" }}
-              >
-                {!isW && p.totalAmount != null && (
-                  <span
-                    className="font-mono leading-none"
-                    style={{ fontSize: 36, color: "var(--muted)" }}
-                  >
-                    {sym}
-                  </span>
-                )}
-                <span
-                  className="font-mono fs-display-num"
-                  style={{
-                    // The sheet beside it takes most of the width; the figure
-                    // scales to what is left.
-                    fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(46px, 4.4vw, 76px)",
-                    lineHeight: 0.86,
-                    letterSpacing: -4,
-                    color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
-                  }}
+              <div className="flex items-baseline justify-between gap-4 flex-wrap">
+                {/* A click on the figure copies the answer as one line — the
+                    thing most often done with it is pasting it somewhere. */}
+                <button
+                  type="button"
+                  onClick={onCopyAnswer}
+                  disabled={!p.valid}
+                  title={p.valid ? t("aria.clickToCopy") : undefined}
+                  aria-label={p.valid ? `${heroVal} — ${t("aria.clickToCopy")}` : undefined}
+                  className="flex items-baseline gap-3 p-0 m-0 bg-transparent border-0 text-left"
+                  style={{ cursor: p.valid ? "copy" : "default", color: "inherit" }}
                 >
-                  {heroVal}
-                </span>
-                {isW && p.totalKg != null && (
-                  <span className="font-mono text-[22px]" style={{ color: "var(--accent-text)" }}>
-                    {fsWeightUnit()}
+                  {!isW && p.totalAmount != null && (
+                    <span
+                      className="font-mono leading-none"
+                      style={{ fontSize: 36, color: "var(--muted)" }}
+                    >
+                      {sym}
+                    </span>
+                  )}
+                  <span
+                    className="font-mono fs-display-num"
+                    style={{
+                      // The sheet beside it takes most of the width; the figure
+                      // scales to what is left.
+                      fontSize: compact ? "clamp(48px, 11vw, 72px)" : "clamp(46px, 4.4vw, 76px)",
+                      lineHeight: 0.86,
+                      letterSpacing: -4,
+                      color: heroVal === "—" ? "var(--muted-faint)" : "var(--foreground)",
+                    }}
+                  >
+                    {heroVal}
                   </span>
+                  {isW && p.totalKg != null && (
+                    <span className="font-mono text-[22px]" style={{ color: "var(--accent-text)" }}>
+                      {fsWeightUnit()}
+                    </span>
+                  )}
+                </button>
+
+                {p.valid && secondaryMetricVal && (
+                  <button
+                    type="button"
+                    onClick={() => onSetMode(isW ? "price" : "weight")}
+                    aria-label={t("preview.swapMetric", {
+                      metric: (isW ? t("settings.price") : t("settings.weight")).toLowerCase(),
+                    })}
+                    title={t("preview.swapMetric", {
+                      metric: (isW ? t("settings.price") : t("settings.weight")).toLowerCase(),
+                    })}
+                    className="group flex flex-col items-end p-0 m-0 bg-transparent border-0 cursor-pointer text-right"
+                  >
+                    <span
+                      className="font-mono text-[20px] font-semibold text-foreground-secondary group-hover:text-foreground transition-colors whitespace-nowrap"
+                      style={{ borderBottom: "1px dashed var(--border-strong)", paddingBottom: 2 }}
+                    >
+                      {secondaryMetricVal}
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-faint group-hover:text-muted mt-1">
+                      ⇄ {(isW ? t("settings.price") : t("settings.weight")).toLowerCase()}
+                    </span>
+                  </button>
                 )}
-              </button>
+              </div>
               {band && (
                 <div className="font-mono text-[12px] text-foreground-secondary mt-2.5">
                   {band.percentLabel} · {band.rangeLabel}
@@ -900,9 +1117,120 @@ export function DeskCalcView({
                 where they are read, and on a `+` line those four cells
                 described one part under a headline that sums them all. */}
             <div
-              className="flex items-end gap-6 flex-wrap"
-              style={{ paddingTop: 16, borderTop: "1px solid var(--border-faint)" }}
+              className="flex items-center gap-3 flex-wrap"
+              style={{ paddingTop: 14, borderTop: "1px solid var(--border-faint)" }}
             >
+              {p.valid && !line.multi && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {steppableLength && (
+                    <div
+                      className="inline-flex items-stretch font-mono text-[12px]"
+                      style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+                    >
+                      <button
+                        type="button"
+                        aria-label={t("desktop.nudgeLengthDown")}
+                        onClick={() => {
+                          const next = nudgeItemLength(query, line.activeIndex, -1);
+                          if (next) {
+                            setQuery(next);
+                            focusInputAtEnd();
+                          }
+                        }}
+                        className="px-2 py-1 text-muted hover:text-foreground hover:bg-[var(--surface-inset)] cursor-pointer border-0 bg-transparent"
+                      >
+                        −
+                      </button>
+                      <span
+                        className="px-2 py-1 font-semibold text-foreground select-none"
+                        style={{
+                          borderLeft: "1px solid var(--border-faint)",
+                          borderRight: "1px solid var(--border-faint)",
+                        }}
+                      >
+                        {steppableLength.token}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={t("desktop.nudgeLengthUp")}
+                        onClick={() => {
+                          const next = nudgeItemLength(query, line.activeIndex, 1);
+                          if (next) {
+                            setQuery(next);
+                            focusInputAtEnd();
+                          }
+                        }}
+                        className="px-2 py-1 text-muted hover:text-foreground hover:bg-[var(--surface-inset)] cursor-pointer border-0 bg-transparent"
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+
+                  <div
+                    className="inline-flex items-stretch font-mono text-[12px]"
+                    style={{ border: "1px solid var(--border)", background: "var(--surface)" }}
+                  >
+                    <button
+                      type="button"
+                      aria-label={t("desktop.nudgeQtyDown")}
+                      disabled={p.realQty <= 1}
+                      onClick={() => {
+                        const next = nudgeItemQty(query, line.activeIndex, p.realQty, -1);
+                        if (next) {
+                          setQuery(next);
+                          focusInputAtEnd();
+                        }
+                      }}
+                      className="px-2 py-1 text-muted hover:text-foreground hover:bg-[var(--surface-inset)] cursor-pointer disabled:opacity-35 disabled:cursor-default border-0 bg-transparent"
+                    >
+                      −
+                    </button>
+                    <span
+                      className="px-2 py-1 font-semibold text-foreground select-none"
+                      style={{
+                        borderLeft: "1px solid var(--border-faint)",
+                        borderRight: "1px solid var(--border-faint)",
+                      }}
+                    >
+                      ×{p.realQty}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t("desktop.nudgeQtyUp")}
+                      onClick={() => {
+                        const next = nudgeItemQty(query, line.activeIndex, p.realQty, 1);
+                        if (next) {
+                          setQuery(next);
+                          focusInputAtEnd();
+                        }
+                      }}
+                      className="px-2 py-1 text-muted hover:text-foreground hover:bg-[var(--surface-inset)] cursor-pointer border-0 bg-transparent"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery((q) => cmdAppendLineItem(q));
+                      focusInputAtEnd();
+                    }}
+                    title={t("desktop.addAnotherItem")}
+                    aria-label={t("desktop.addAnotherItem")}
+                    className="inline-flex items-center justify-center font-mono text-[13px] font-bold text-muted hover:text-foreground cursor-pointer bg-transparent"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      border: "1px dashed var(--border-strong)",
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+
               <div className="ml-auto flex items-center gap-2">
                 {/* Copy the answer — the other thing done with a result. */}
                 <button
@@ -1223,6 +1551,11 @@ export function DeskCalcView({
             onPick={setPicked}
             query={query}
             setQuery={setQuery}
+            onLoadExample={(example) => {
+              setQuery(`${example} `);
+              markExternalValueChange();
+              focusInputAtEnd();
+            }}
           />
         </div>
       </div>
@@ -1240,6 +1573,14 @@ const ANSWER_MIN = 300;
 const SHEET_FLEX = "1.6 1 0";
 const SHEET_MAX = 940;
 
+const SYNTAX_EXAMPLES: { query: string; descKey: string }[] = [
+  { query: "hea120 6m x2 s235", descKey: "desktop.syntaxBeam" },
+  { query: "rhs 80x40x3 4.5m @2.4/kg", descKey: "desktop.syntaxTube" },
+  { query: "plt 1000x2000x10 304", descKey: "desktop.syntaxPlate" },
+  { query: "hea120 6m + ipe160 4m", descKey: "desktop.syntaxAssembly" },
+  { query: "ipe180 6m =500kg", descKey: "desktop.syntaxTarget" },
+];
+
 /** The rail: the phone's weight and cost ledgers, with the part drawn above. */
 function DeskBreakdown({
   p,
@@ -1249,6 +1590,7 @@ function DeskBreakdown({
   metric,
   query,
   setQuery,
+  onLoadExample,
 }: {
   p: CommandParseResult;
   line: CommandLine;
@@ -1257,9 +1599,41 @@ function DeskBreakdown({
   metric: "weight" | "price";
   query: string;
   setQuery: React.Dispatch<React.SetStateAction<string>>;
+  onLoadExample: (example: string) => void;
 }) {
   const t = useTranslations("command");
   if (!p.valid && !line.multi) {
+    if (query.trim() === "") {
+      return (
+        <div className="flex flex-1 flex-col justify-center max-w-[520px] mx-auto w-full py-4">
+          <span className="fs-track-label text-[10px] font-bold uppercase text-muted">
+            {t("desktop.syntaxTitle")}
+          </span>
+          <h2 className="fs-title m-0 mt-1.5 text-[24px] leading-tight text-foreground">
+            {t("desktop.syntaxHeadline")}
+          </h2>
+          <div className="mt-5 flex flex-col" style={{ borderTop: "1px solid var(--foreground)" }}>
+            {SYNTAX_EXAMPLES.map((row) => (
+              <button
+                key={row.query}
+                type="button"
+                onClick={() => onLoadExample(row.query)}
+                className="group flex flex-col items-start gap-0.5 py-3 px-1 text-left bg-transparent border-0 cursor-pointer hover:bg-[var(--background)] transition-colors"
+                style={{ borderBottom: "1px solid var(--border-faint)" }}
+              >
+                <span
+                  className="font-mono text-[13px] font-bold group-hover:underline"
+                  style={{ color: "var(--accent-text)" }}
+                >
+                  {row.query}
+                </span>
+                <span className="text-[12px] text-muted">{t(row.descKey)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
     return (
       <div
         className="flex flex-1 flex-col items-center justify-center gap-2 text-center"
