@@ -68,6 +68,7 @@ import { PhoneHero } from "./phone/phone-hero";
 import { SessionRibbon } from "./phone/session-ribbon";
 import { PhoneSuggestionStrip } from "./phone/suggestion-strip";
 import { PhoneQueryLine } from "./phone/query-line";
+import { commandStageProgress } from "./command-nudge";
 import { CommandLibrarySheet } from "./sheets/library-sheet";
 import { useProjectActions } from "./projects/use-project-actions";
 import { CommandResultSheet } from "./sheets/result-sheet";
@@ -1584,11 +1585,25 @@ export function CommandShell() {
 
           {/* TOP BAR */}
           <PhoneTopBar
-            onToggleTheme={cycleTheme}
             onOpenLibrary={openLibrary}
             onOpenSettings={() => setSheet("settings")}
             syncAttention={syncAttention}
           />
+
+          {/* TOP ADDING-MACHINE TAPE BAR — docked flush beneath the header
+              whenever there is an active query or existing history, keeping
+              the centre of the phone calm paper for the answer. */}
+          {(query.trim() !== "" || quickHistory.length > 0) && (
+            <SessionRibbon
+              summary={sessionSummary}
+              hasHistory={quickHistory.length > 0}
+              isWeight={isW}
+              sym={sym}
+              onOpen={() => openLibrary("session")}
+              onSaveAsProject={saveSessionAsProject}
+              onAdd={logToSession}
+            />
+          )}
 
           {/*
             A pristine bar has no answer to show, so the whole top of this
@@ -1599,138 +1614,84 @@ export function CommandShell() {
             keypad up left them about enough room for their own heading.
 
             So when there is nothing to show, the way in takes the space
-            instead of queueing behind it. The tape only appears if it has
-            something on it; an empty one was another dash.
+            instead of queueing behind it.
           */}
           {queryHydrated && query.trim() === "" ? (
-            <>
-              <div className="flex-1 min-h-0 overflow-y-auto px-[18px] pt-2">
-                <ProfileDiscoveryTiles
-                  compact
-                  hideTitle
-                  onSelectProfile={(prefix) => {
-                    haptic("tap");
-                    setQuery(prefix);
-                    markExternalValueChange();
-                  }}
-                  onTryDemo={() => {
-                    haptic("tap");
-                    setQuery(EXAMPLE_QUERY);
-                    markExternalValueChange();
-                  }}
-                />
-              </div>
-              {/* Shown whenever there is any history, not only today's: on a
-                  morning with nothing logged yet it is still the way back to
-                  yesterday's lines. */}
-              {quickHistory.length > 0 && (
-                <>
-            {/* SESSION RIBBON — the tape, at phone size. It carries the same two
-                actions the workspace pane does: open it, or turn it into a
-                project. Nothing typed is lost by not deciding where it goes,
-                which is the point of the tape. */}
-            <SessionRibbon
-              summary={sessionSummary}
-              hasHistory={quickHistory.length > 0}
-              isWeight={isW}
-              sym={sym}
-              onOpen={() => openLibrary("session")}
-              onSaveAsProject={saveSessionAsProject}
-              onAdd={logToSession}
-            />
-
-            {/* The visual way in, on the surface that has no text field at all.
-                It shipped to the workspace only, which left the phone — the
-                device most likely to be held by someone who has never typed
-                `hea120` in their life — with nothing but a row of chips. It
-                fills the band that was empty on a pristine screen anyway. */}
-                </>
-              )}
-            </>
+            <div className="flex-1 min-h-0 overflow-y-auto px-[18px] pt-2">
+              <ProfileDiscoveryTiles
+                compact
+                hideTitle
+                onSelectProfile={(prefix) => {
+                  haptic("tap");
+                  setQuery(prefix);
+                  markExternalValueChange();
+                }}
+                onTryDemo={() => {
+                  haptic("tap");
+                  setQuery(EXAMPLE_QUERY);
+                  markExternalValueChange();
+                }}
+              />
+            </div>
           ) : (
             <>
               {/* Free height is split above and below the answer instead of
-                  all of it falling below. On a 390x844 phone roughly a third
-                  of the screen sat empty between the session ribbon and the
-                  suggestion strip while the figure was pinned to the very
-                  top — the hardest place to reach one-handed. Both spacers
-                  are flex, so on a short screen they collapse and nothing
-                  moves. The split is weighted 1:2 so the answer lands in the
-                  upper third rather than dead centre. */}
-              {/* The answer gives way, never the line. On a short phone
-                  (375x667) the figure, the actions and the tape overflowed
-                  the column and pushed the suggestions and the command line
-                  down under the keyboard — typing blind. They scroll here
-                  instead; the strip and the line below stay docked on the
-                  keys. On a tall screen the spacers take the slack and this
-                  box never scrolls. */}
+                  all of it falling below. The split is weighted 1:2 so the
+                  answer lands in the upper third rather than dead centre, and
+                  on short phones the answer area scrolls while the Command Deck
+                  and keypad stay pinned at the bottom. */}
               <div className="flex min-h-0 flex-1 flex-col overflow-y-auto" data-answer-area="">
-              <div className="flex-[1] min-h-0" />
-            {/* HERO */}
-            <PhoneHero
-              p={p}
-              line={line}
-              query={query}
-              setQuery={setQuery}
-              mode={mode}
-              onSetMode={setModeOverride}
-              sym={sym}
-              heroVal={heroVal}
-              band={band}
-              rateIsUserSupplied={rateIsUserSupplied}
-              targetNote={targetNote}
-              onOpenResult={() => setSheet("result")}
-              projectName={currentProject?.name ?? null}
-              saved={!!currentSavedEntry}
-              onPrimarySave={primarySave}
-              onOpenDestinations={openDestinations}
-              onCompare={doCompare}
-              onShare={shareLink}
-              onCopyAnswer={copyAnswer}
-            />
-
-            {/* SESSION RIBBON — the tape, at phone size. It carries the same two
-                actions the workspace pane does: open it, or turn it into a
-                project. Nothing typed is lost by not deciding where it goes,
-                which is the point of the tape. */}
-            <SessionRibbon
-              summary={sessionSummary}
-              hasHistory={quickHistory.length > 0}
-              isWeight={isW}
-              sym={sym}
-              onOpen={() => openLibrary("session")}
-              onSaveAsProject={saveSessionAsProject}
-              onAdd={logToSession}
-            />
-
-            {/* The visual way in, on the surface that has no text field at all.
-                It shipped to the workspace only, which left the phone — the
-                device most likely to be held by someone who has never typed
-                `hea120` in their life — with nothing but a row of chips. It
-                fills the band that was empty on a pristine screen anyway. */}
-              <div className="flex-[2] min-h-[6px]" />
+                <div className="flex-[1] min-h-0" />
+                {/* HERO */}
+                <PhoneHero
+                  p={p}
+                  line={line}
+                  query={query}
+                  setQuery={setQuery}
+                  mode={mode}
+                  onSetMode={setModeOverride}
+                  sym={sym}
+                  heroVal={heroVal}
+                  band={band}
+                  rateIsUserSupplied={rateIsUserSupplied}
+                  targetNote={targetNote}
+                  onOpenResult={() => setSheet("result")}
+                  projectName={currentProject?.name ?? null}
+                  saved={!!currentSavedEntry}
+                  onPrimarySave={primarySave}
+                  onOpenDestinations={openDestinations}
+                  onCompare={doCompare}
+                  onShare={shareLink}
+                  onCopyAnswer={copyAnswer}
+                />
+                <div className="flex-[2] min-h-[6px]" />
               </div>
             </>
           )}
 
-          {/* SUGGESTION BAR */}
-          {/* The gap under the strip has to clear the query line's 3px focus
-              ring, not just its border box — at pb-1.5 the chips sat on the
-              glow and the two read as one collided control. */}
-          <PhoneSuggestionStrip
-            sug={sug}
-            activeAlias={p.alias?.alias}
-            hideSave={isPhoneViewport}
-            showClear={query !== ""}
-            firstSuggestionRef={firstSuggestionRef}
-            onSuggest={onSuggest}
-            onPaste={pasteFromClipboard}
-            onClear={newCalc}
-            onExit={focusInput}
-          />
+          {/* WELDED COMMAND DECK — suggestions + stage pips docked directly
+              onto the query line above the keypad. */}
+          <div
+            data-command-deck=""
+            className="flex-shrink-0"
+            style={{
+              background: "var(--surface)",
+              borderTop: "1px solid var(--border)",
+            }}
+          >
+            <PhoneSuggestionStrip
+              sug={sug}
+              activeAlias={p.alias?.alias}
+              stageProgress={commandStageProgress(p)}
+              hideSave={isPhoneViewport}
+              showClear={query !== ""}
+              firstSuggestionRef={firstSuggestionRef}
+              onSuggest={onSuggest}
+              onPaste={pasteFromClipboard}
+              onClear={newCalc}
+              onExit={focusInput}
+            />
 
-          {/* QUERY AREA */}
-          {/* QUERY LINE — chips plus the caret; the keypad below types into it */}
             <PhoneQueryLine
               query={query}
               setQuery={setQuery}
@@ -1742,6 +1703,7 @@ export function CommandShell() {
                 if (keypadMode === "actions") setKeypadOverride("letters");
               }}
             />
+          </div>
         </div>
 
           {/* On-screen keypad */}
@@ -1766,6 +1728,15 @@ export function CommandShell() {
             showDone={keypadMode === "letters" && keypadOverride === "letters" && p.valid}
             priceUnitLabel={priceUnitLabel}
             valid={p.valid}
+            nextHint={
+              p.alias && p.hasSize && !p.valid
+                ? "length"
+                : p.valid && p.qty == null
+                  ? "qty"
+                  : p.valid && p.priceOverride == null
+                    ? "price"
+                    : null
+            }
           />
 
           {/* SHEETS */}

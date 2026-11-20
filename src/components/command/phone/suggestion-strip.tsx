@@ -6,15 +6,17 @@ import type { CommandSuggestion, CommandSuggestionItem } from "@ferroscale/metal
 import { CommandGlyph } from "../command-glyph";
 import { formatCommandHint, formatCommandSuggestionLabel } from "../command-copy";
 
-const screenBg = "var(--screen)";
+const deckBg = "var(--surface)";
 
 /**
- * SUGGESTION BAR — the stage hint, Paste / Clear, and one sideways-scrolling
- * row of chips. The chips are the phone's main input accelerator.
+ * SUGGESTION BAR — stage pips, stage hint, Paste / Clear, and one
+ * sideways-scrolling row of chips docked cleanly at the top of the phone's
+ * Command Deck.
  */
 export function PhoneSuggestionStrip({
   sug,
   activeAlias,
+  stageProgress = 0,
   hideSave,
   showClear,
   firstSuggestionRef,
@@ -26,6 +28,8 @@ export function PhoneSuggestionStrip({
   sug: CommandSuggestion;
   /** The active item's profile alias, for the glyph on non-profile chips. */
   activeAlias: string | undefined;
+  /** 0–4 filled milestones for the compact stage pips beside the hint. */
+  stageProgress?: number;
   /** The phone has its own save control, so the "save" chip is dropped. */
   hideSave: boolean;
   showClear: boolean;
@@ -38,19 +42,35 @@ export function PhoneSuggestionStrip({
 }) {
   const t = useTranslations("command");
   return (
-    <div className="flex-shrink-0 pb-2.5">
-      <div className="flex items-center gap-2 px-[18px] pb-1.5">
-        <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase">
+    <div className="flex-shrink-0 pt-1.5 pb-2.5">
+      <div className="flex items-center gap-2 px-[14px] pb-1">
+        <span
+          className="inline-flex items-center gap-1 flex-shrink-0"
+          role="img"
+          aria-label={t("query.stageProgress", { current: stageProgress, total: 4 })}
+        >
+          {[0, 1, 2, 3].map((step) => (
+            <span
+              key={step}
+              aria-hidden="true"
+              className="w-[5px] h-[5px]"
+              style={{
+                background: step < stageProgress ? "var(--accent)" : "var(--border)",
+              }}
+            />
+          ))}
+        </span>
+        <h2 className="text-[10px] font-bold tracking-[1.2px] text-muted uppercase truncate">
           {formatCommandHint(t, sug.hint)}
         </h2>
-        <span className="ml-auto flex items-center -mr-3">
+        <span className="ml-auto flex items-center -mr-2 flex-shrink-0">
           <button
             type="button"
             onClick={onPaste}
             aria-label={t("common.paste")}
             // Padding + negative margin grows the tap target without
             // shifting the layout.
-            className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
+            className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-2.5 py-2.5 -my-2.5"
           >
             {t("common.paste")}
           </button>
@@ -58,7 +78,7 @@ export function PhoneSuggestionStrip({
             <button
               type="button"
               onClick={onClear}
-              className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-3 py-2.5 -my-2.5"
+              className="bg-transparent border-0 text-muted text-[11px] font-bold tracking-wide px-2.5 py-2.5 -my-2.5"
             >
               {t("common.clear")}
             </button>
@@ -74,7 +94,7 @@ export function PhoneSuggestionStrip({
         data-suggestion-strip=""
         // `overflowY: hidden` clips at the padding edge, so the chips
         // need room below them or their own borders get shaved off.
-        className="flex gap-1.5 px-[18px] pb-1"
+        className="flex gap-1.5 px-[14px] pb-0.5"
         style={{ overflowX: "auto", overflowY: "hidden" }}
         // The chips themselves stay out of the Tab order (typing flow),
         // so the strip is the one focusable stop: a keyboard can scroll
@@ -120,7 +140,7 @@ export function PhoneSuggestionStrip({
                 onExit();
               }
             }}
-            className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-none font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--screen,var(--surface))]"
+            className="fs-pop flex-shrink-0 flex items-center gap-1.5 rounded-none font-bold focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
             style={{
               // 44px touch targets — the strip is the phone's main
               // input accelerator, tapped with thumbs on the jobsite.
@@ -128,11 +148,11 @@ export function PhoneSuggestionStrip({
               border:
                 it.kind === "save"
                   ? "none"
-                  : "1px solid var(--border-faint)",
+                  : "1px solid var(--border)",
               background:
                 it.kind === "save"
                   ? "var(--action)"
-                  : "var(--surface)",
+                  : "var(--background)",
               color:
                 it.kind === "save"
                   ? "var(--action-contrast)"
@@ -170,9 +190,9 @@ export function PhoneSuggestionStrip({
       {/* Bottom fade hints that more chips are below the fold */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-4"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-3"
         style={{
-          background: `linear-gradient(to bottom, transparent, ${screenBg})`,
+          background: `linear-gradient(to bottom, transparent, ${deckBg})`,
         }}
       />
       {/* The strip scrolls sideways, so the fade that says "there is
@@ -183,7 +203,7 @@ export function PhoneSuggestionStrip({
         aria-hidden="true"
         className="pointer-events-none absolute inset-y-0 right-0 w-8"
         style={{
-          background: `linear-gradient(to right, transparent, ${screenBg})`,
+          background: `linear-gradient(to right, transparent, ${deckBg})`,
         }}
       />
       </div>

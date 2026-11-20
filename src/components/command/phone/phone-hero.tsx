@@ -343,8 +343,10 @@ export function PhoneHero({
 
       <MetricStrip
         p={p}
+        line={line}
         isWeight={isW}
         sym={sym}
+        onSwapMode={() => onSetMode(isW ? "price" : "weight")}
         onOpen={() => p.valid && onOpenResult()}
       />
 

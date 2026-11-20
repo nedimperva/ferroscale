@@ -18,6 +18,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Redesigned the command-bar calculator for desktop and mobile: desktop opens on a unified full-width Command Deck (command bar with stage progress rail, clickable currency/unit/grade quick defaults, inline ↵ log button, and docked suggestions), pairs primary and tap-to-swap secondary weight/price figures in the hero, adds inline length/quantity nudges and a 1-row adjacent EN size scrubber beneath the drawing, and turns the empty breakdown sheet into a clickable Command Grammar reference
+- On mobile, the session tape docks as a slim hairline bar under a 4-door header, the hero replaces its boxed metric strip with a hairline paired readout and spec peek handle into the breakdown sheet, suggestions and the query line weld into a single Command Deck with stage pips, and the keypad subtly highlights the next expected operator key without moving keys
 - The session — its running total, Save as project and Clear — is today's lines. Older ones stay in your lines, and ↑ on the desk walks back through all of them
 - The history keeps calculations, not keystrokes: a line that only finishes the one you logged a moment ago (hea120 6m, then hea120 6m x2) replaces it, and the same line typed with different spacing or capitals is kept once
 - Every page now has its own link-preview card in the app's day style — a mono kicker, the page's name in the serif, one line of detail, a single ridgeline and its address — in English and Bosnian. Before, FAQ, Formula QA, Contact and the workspace tabs all previewed as the calculator's card

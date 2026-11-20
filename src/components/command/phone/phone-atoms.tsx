@@ -1,8 +1,10 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
-import type { CommandParseResult } from "@ferroscale/metal-core";
+import { fsKgm, fsMoney, fsWeight, fsWeightUnit } from "@ferroscale/metal-core";
+import type { CommandLine, CommandParseResult } from "@ferroscale/metal-core";
+import { CommandGlyph } from "../command-glyph";
+import { formatCommandParseName } from "../command-copy";
 import { AlertDot } from "../desktop/desk-rail";
 
 export function IconBtn({
@@ -23,7 +25,7 @@ export function IconBtn({
       onClick={onClick}
       aria-label={alert ? `${ariaLabel}, ${alert}` : ariaLabel}
       title={alert ?? undefined}
-      className="relative w-[34px] h-[34px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary"
+      className="relative w-[36px] h-[36px] rounded-button border border-border-faint bg-[var(--surface)] flex items-center justify-center cursor-pointer text-foreground-secondary hover:border-[var(--border)] transition-colors"
     >
       {children}
       {alert && <AlertDot />}
@@ -39,61 +41,137 @@ export function Chev() {
   );
 }
 
-
 /**
- * The fold's one-line answer to "show me more": per-piece and the other
- * headline metric side by side, with the whole strip acting as the way into
- * the full breakdown. It replaces a 109px two-stat card with a 34px row —
- * the single biggest saving on the phone after the mode pills.
+ * Hairline-ruled secondary readout (tap-to-swap opposite metric + per-piece mass)
+ * followed by a calm spec peek handle into the full Breakdown bottom sheet.
+ * Replaces the old boxed MetricStrip so the phone stays paper-and-hairlines.
  */
 export function MetricStrip({
   p,
+  line,
   isWeight,
   sym,
+  onSwapMode,
   onOpen,
 }: {
   p: CommandParseResult;
+  line: CommandLine;
   isWeight: boolean;
   sym: string;
+  onSwapMode: () => void;
   onOpen: () => void;
 }) {
   const t = useTranslations("command");
-  const dim = { color: "var(--muted-faint)" };
+  const totalKg = line.multi ? line.totalKg : p.totalKg;
+  const totalAmount = line.multi ? line.totalAmount : p.totalAmount;
   const perPiece =
-    p.valid && p.perPieceKg != null ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}` : "—";
+    !line.multi && p.valid && p.perPieceKg != null
+      ? `${fsWeight(p.perPieceKg)} ${fsWeightUnit()}`
+      : null;
   const second =
-    p.valid && p.totalKg != null && p.totalAmount != null
+    p.valid && totalKg != null && totalAmount != null
       ? isWeight
-        ? `${sym} ${fsMoney(p.totalAmount)}`
-        : `${fsWeight(p.totalKg)} ${fsWeightUnit()}`
+        ? `${sym} ${fsMoney(totalAmount)}`
+        : `${fsWeight(totalKg)} ${fsWeightUnit()}`
+      : "—";
+
+  const specSummary = line.multi
+    ? line.items
+        .map((item) => formatCommandParseName(t, item.parse) ?? item.parse.name)
+        .filter(Boolean)
+        .join(" + ")
+    : p.valid
+      ? [
+          formatCommandParseName(t, p),
+          p.kgm != null ? `${fsKgm(p.kgm)} kg/m` : null,
+          p.gradeLabel,
+        ]
+          .filter(Boolean)
+          .join(" · ")
       : "—";
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      disabled={!p.valid}
-      aria-haspopup="dialog"
-      aria-label={p.valid ? t("aria.openBreakdown") : undefined}
-      className="flex items-center gap-3 w-full mt-2.5 rounded-button text-left border border-border-faint"
-      style={{
-        padding: "7px 11px",
-        background: "var(--surface-raised)",
-        cursor: p.valid ? "pointer" : "default",
-      }}
-    >
-      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
-        {perPiece}
-        <span className="text-muted">{t("preview.perPieceSuffix")}</span>
-      </span>
-      <span className="w-px h-3.5 bg-border-faint" />
-      <span className="font-mono text-[13px] font-semibold whitespace-nowrap" style={p.valid ? undefined : dim}>
-        {second}
-      </span>
-      <span className="fs-track-wide ml-auto text-[10px] font-bold uppercase text-muted-faint whitespace-nowrap">
-        {t("preview.breakdown")} ›
-      </span>
-    </button>
+    <div className="flex flex-col mt-2">
+      {/* Hairline paired readout: tappable secondary metric + per-piece figure */}
+      <div
+        className="flex items-baseline justify-between gap-2 py-1.5"
+        style={{ borderTop: "1px solid var(--border-faint)" }}
+      >
+        <button
+          type="button"
+          onClick={onSwapMode}
+          disabled={!p.valid}
+          aria-label={
+            p.valid
+              ? t("preview.swapMetric", {
+                  metric: (isWeight ? t("settings.price") : t("settings.weight")).toLowerCase(),
+                })
+              : undefined
+          }
+          className="inline-flex items-baseline gap-1.5 p-0 m-0 bg-transparent border-0 text-left cursor-pointer disabled:cursor-default"
+        >
+          <span
+            className="font-mono text-[14px] font-bold whitespace-nowrap"
+            style={{
+              color: p.valid ? "var(--foreground)" : "var(--muted-faint)",
+              borderBottom: p.valid ? "1px dashed var(--border-strong)" : undefined,
+              paddingBottom: 1,
+            }}
+          >
+            {second}
+          </span>
+          {p.valid && (
+            <span className="font-mono text-[11px] text-muted-faint" aria-hidden="true">
+              ⇄
+            </span>
+          )}
+        </button>
+
+        {perPiece && (
+          <span className="font-mono text-[12px] text-foreground-secondary whitespace-nowrap">
+            {perPiece}
+            <span className="text-muted">{t("preview.perPieceSuffix")}</span>
+          </span>
+        )}
+      </div>
+
+      {/* Spec peek handle — hairline strip leading cleanly to the Breakdown sheet */}
+      <button
+        type="button"
+        onClick={onOpen}
+        disabled={!p.valid}
+        aria-haspopup="dialog"
+        aria-label={p.valid ? t("aria.openBreakdown") : undefined}
+        className="flex items-center gap-2 w-full rounded-none text-left"
+        style={{
+          padding: "7px 10px",
+          background: "var(--surface)",
+          borderTop: "1px solid var(--border)",
+          borderBottom: "1px solid var(--border)",
+          borderLeft: 0,
+          borderRight: 0,
+          cursor: p.valid ? "pointer" : "default",
+        }}
+      >
+        {p.alias && (
+          <span className="flex flex-shrink-0 text-foreground-secondary" aria-hidden="true">
+            <CommandGlyph fam={p.alias.fam} alias={p.alias.alias} size={15} />
+          </span>
+        )}
+        <span
+          className="font-mono text-[11.5px] font-medium truncate min-w-0 flex-1"
+          style={{ color: p.valid ? "var(--foreground-secondary)" : "var(--muted-faint)" }}
+        >
+          {specSummary}
+        </span>
+        <span
+          className="fs-track-wide ml-auto text-[10px] font-bold uppercase whitespace-nowrap flex-shrink-0"
+          style={{ color: p.valid ? "var(--accent-text)" : "var(--muted-faint)" }}
+        >
+          {t("preview.breakdown")} ›
+        </span>
+      </button>
+    </div>
   );
 }
 
