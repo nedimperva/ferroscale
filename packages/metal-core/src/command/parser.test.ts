@@ -1271,3 +1271,71 @@ describe("fractional quantity", () => {
     expect(issue?.suggestion).toBeUndefined();
   });
 });
+
+describe("inline part labels (#label and quoted strings)", () => {
+  it("parses #label and preserves spaces from underscores and original case", () => {
+    const p = cmdParse("hea120 6m x2 #Column_A ", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.label).toBe("Column A");
+    expect(p.issues).toEqual([]);
+    expect(cmdClassifyToken("#Column_A")).toBe("label");
+  });
+
+  it("normalizes quoted strings into #label tokens", () => {
+    expect(cmdTokenize('plt 300x300x15 x4 "Base Plate"')).toEqual([
+      "plt300x300x15",
+      "x4",
+      "#Base_Plate",
+    ]);
+    const p = cmdParse('plt 300x300x15 x4 "Base Plate"', mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.label).toBe("Base Plate");
+    expect(p.issues).toEqual([]);
+  });
+
+  it("shadows a second label token while keeping the first", () => {
+    const p = cmdParse("hea120 6m #first #second ", mkSettings());
+    expect(p.label).toBe("first");
+    expect(p.shadowedTokenIndexes).toEqual([3]);
+  });
+});
+
+describe("size-solving and section-property reverse targets", () => {
+  it("solves for the largest standard catalog size within a weight target", () => {
+    // HEA 160 @ 6m is ~182.4 kg; HEA 180 @ 6m is ~213 kg.
+    const p = cmdParse("hea 6m =200kg ", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.size).toBe("160");
+    expect(p.target?.solvedFor).toBe("size");
+    expect(p.target?.kind).toBe("weight");
+    expect(p.totalKg).toBeLessThanOrEqual(200);
+  });
+
+  it("solves for a manual profile stock size when no size is given", () => {
+    const p = cmdParse("rnd 3m =25kg ", mkSettings());
+    expect(p.valid).toBe(true);
+    expect(p.hasSize).toBe(true);
+    expect(p.target?.solvedFor).toBe("size");
+    expect(p.totalKg).toBeLessThanOrEqual(25);
+  });
+
+  it("solves for the lightest standard section meeting a section property target", () => {
+    // HEA 140 has Wel,y = 155 cm³; HEA 160 has Wel,y = 220 cm³ (>= 200 cm³).
+    const wel = cmdParse("hea 6m =wel200 ", mkSettings());
+    expect(wel.valid).toBe(true);
+    expect(wel.size).toBe("160");
+    expect(wel.target?.kind).toBe("section");
+    expect(wel.target?.solvedFor).toBe("size");
+    expect(wel.target?.sectionProp).toBe("welY");
+    expect(wel.target?.achievedSection).toBeGreaterThanOrEqual(200);
+
+    // IPE 180 has Iy = 1317 cm⁴; IPE 200 has Iy = 1943 cm⁴ (>= 1500 cm⁴).
+    const iy = cmdParse("ipe 4m =iy1500 ", mkSettings());
+    expect(iy.valid).toBe(true);
+    expect(iy.size).toBe("200");
+    expect(iy.target?.sectionProp).toBe("iy");
+    expect(iy.target?.achievedSection).toBeGreaterThanOrEqual(1500);
+    expect(cmdClassifyToken("=wel200")).toBe("target");
+    expect(cmdClassifyToken("=iy1500")).toBe("target");
+  });
+});

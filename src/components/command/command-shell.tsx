@@ -621,7 +621,7 @@ export function CommandShell() {
     }
     // The name is just the spec — the card renders length/qty/grade itself, so
     // repeating them in the title only bought truncation. Rename to override.
-    const autoName = formatCommandParseName(t, p) ?? p.name ?? p.calc.result.profileLabel;
+    const autoName = p.label ?? formatCommandParseName(t, p) ?? p.name ?? p.calc.result.profileLabel;
     // A line of several items is an assembly — a gate frame, a railing bay —
     // so it saves as one entry with a part per item, which is exactly what the
     // saved model already holds.
@@ -630,7 +630,7 @@ export function CommandShell() {
           .map((item) => item.parse)
           .filter((parse) => parse.calc)
           .map((parse) => ({
-            name: formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
+            name: parse.label ?? formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
             input: parse.calc!.input,
             result: parse.calc!.result,
           }))
@@ -684,7 +684,7 @@ export function CommandShell() {
         showToast(t("toast.addLength"));
         return;
       }
-      const partName = formatCommandParseName(t, p) ?? p.calc.result.profileLabel;
+      const partName = p.label ?? formatCommandParseName(t, p) ?? p.calc.result.profileLabel;
       if (addPartToSaved(entry.id, p.calc.input, p.calc.result, partName)) {
         haptic("commit");
         showToast(t("toast.partAdded", { name: entry.name }));
@@ -708,7 +708,7 @@ export function CommandShell() {
         .map((item) => item.parse)
         .filter((parse) => parse.calc)
         .map((parse) => ({
-          name: formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
+          name: parse.label ?? formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
           input: parse.calc!.input,
           result: parse.calc!.result,
         }));
@@ -725,22 +725,24 @@ export function CommandShell() {
    * The parts of the current line, as drafts. One item for a plain line, one
    * per item for a multi-item one — the same shape `doSave` already builds.
    */
-  const currentLineDrafts = useCallback((): SavedPartDraft[] => {
+  const currentLineDrafts = useCallback((): (SavedPartDraft & { note?: string })[] => {
     if (!p.calc) return [];
     if (!line.multi) {
       return [{
-        name: formatCommandParseName(t, p) ?? p.calc.result.profileLabel,
+        name: p.label ?? formatCommandParseName(t, p) ?? p.calc.result.profileLabel,
         input: p.calc.input,
         result: p.calc.result,
+        note: p.label ?? undefined,
       }];
     }
     return line.items
       .map((item) => item.parse)
       .filter((parse) => parse.calc)
       .map((parse) => ({
-        name: formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
+        name: parse.label ?? formatCommandParseName(t, parse) ?? parse.calc!.result.profileLabel,
         input: parse.calc!.input,
         result: parse.calc!.result,
+        note: parse.label ?? undefined,
       }));
   }, [p, line, t]);
 
@@ -992,11 +994,11 @@ export function CommandShell() {
         const drafts = currentLineDrafts();
         if (drafts.length === 0) return;
         if (drafts.length === 1) {
-          ok = addCalculation(projectId, drafts[0].input, drafts[0].result);
+          ok = addCalculation(projectId, drafts[0].input, drafts[0].result, undefined, drafts[0].note);
         } else {
           addCalculations(
             projectId,
-            drafts.map((draft) => ({ input: draft.input, result: draft.result })),
+            drafts.map((draft) => ({ input: draft.input, result: draft.result, note: draft.note })),
           );
           ok = true;
         }
@@ -1072,6 +1074,7 @@ export function CommandShell() {
     libraryAssemblies: assembliesInLibrary,
     onOpenItem: loadInput,
     currentCalc: p.calc,
+    currentLabel: p.label,
     parserSettings,
     showToast,
     showActionToast,

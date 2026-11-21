@@ -10,6 +10,8 @@
 export type CommandKeyAction =
   /** Insert the nth suggestion chip (0-based). */
   | { type: "insertSuggestion"; index: number }
+  /** Step the active or trailing token up (`1`) or down (`-1`). */
+  | { type: "stepActiveToken"; direction: 1 | -1 }
   /** Take the faint inline completion. */
   | { type: "acceptGhost" }
   /**
@@ -60,9 +62,12 @@ export function resolveCommandKey(ctx: CommandKeyContext): CommandKeyAction | nu
   if (mod && ctx.key === "Enter") return { type: "compare" };
   if (mod && ctx.key.toLowerCase() === "s") return { type: "save" };
 
-  // ⌥1–9 picks a chip without leaving the input. Routed by physical key, so
-  // it survives the character ⌥ produces on Mac layouts.
+  // ⌥1–9 picks a chip without leaving the input; ⌥↑/⌥↓ steps the active or
+  // trailing token in place.
   if (ctx.altKey && !mod) {
+    if (ctx.key === "ArrowUp" || ctx.key === "ArrowDown") {
+      return { type: "stepActiveToken", direction: ctx.key === "ArrowUp" ? 1 : -1 };
+    }
     const digit = ctx.code.match(DIGIT_CODE);
     if (digit) {
       const index = Number(digit[1]) - 1;

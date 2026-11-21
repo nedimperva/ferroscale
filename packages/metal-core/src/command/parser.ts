@@ -11,7 +11,8 @@ import { isArithmeticToken, parseLengthExpression, parseQtyExpression } from "./
 import type { LengthExpression } from "./arith";
 import { findAngleCatalogSize, getProfileById } from "../datasets/profiles";
 import { getMaterialGradeById } from "../datasets/materials";
-import { checkStockSize } from "../datasets/stock-sizes";
+import { checkStockSize, getStockSizes } from "../datasets/stock-sizes";
+import { getSectionProperties } from "../datasets/section-properties";
 import { materialAvailability } from "../datasets/availability";
 import type { DimensionKey, ProfileId } from "../datasets/types";
 import {
@@ -34,6 +35,7 @@ import type {
   CommandParseIssue,
   CommandParseIssueCode,
   CommandParseResult,
+  CommandSectionTargetProp,
   CommandStockNote,
   CommandParserSettings,
   CommandPricing,
@@ -48,25 +50,71 @@ const QTY_RE = /^[x×*](\d+)$/;
 const QTY_EXPR_LEAD = /^[x×*]/;
 const PRICE_RE = /^@?(\d+(?:[.,]\d+)?)\/(kg|lb|m|ft|pc|pcs|piece)$/;
 const PRICE_VALUE_ONLY_RE = /^@(\d+(?:[.,]\d+)?)$/;
+/** Inline part callout/tag: `#column_A`, `#base_plate`, `#stopa`. */
+export const LABEL_RE = /^#(\S*)$/;
+/** Whole-line multiplier token: `**4`, `==x4`, `==4`. */
+export const LINE_MULT_TOKEN_RE = /^(?:\*\*\d+|==[x×*]?\d+)$/i;
+
 /**
- * A target instead of an input: `=500kg`, `=1t`, `=250eur`, `=250€`.
+ * A target instead of an input: `=500kg`, `=1t`, `=250eur`, `=250€`, or a
+ * section property target `=wel200`, `=wpl250`, `=iy1500`, `=iz300`.
  * The bar normally answers "what does this weigh?"; this asks the question
- * the other way round — "how much of it makes 500 kg?" — which is how buying
- * actually works.
+ * the other way round — "how much of it makes 500 kg?" or "which section gives
+ * Wel,y ≥ 200 cm³?" — which is how buying and sizing actually work.
  */
 const TARGET_RE = /^=(\d+(?:[.,]\d+)?)\s*(kg|t|lb|[a-z]{3}|€|\$|£)$/i;
+const SECTION_TARGET_PROP_FIRST_RE =
+  /^=(iy|iz|wely?|wply?)\s*(\d+(?:[.,]\d+)?)\s*(?:cm[34]|cm³|cm⁴)?$/i;
+const SECTION_TARGET_VAL_FIRST_RE =
+  /^=(\d+(?:[.,]\d+)?)\s*(iy|iz|wely?|wply?|cm[34]|cm³|cm⁴)$/i;
 
 const TARGET_WEIGHT_KG: Record<string, number> = { kg: 1, t: 1000, lb: 0.45359237 };
 const CURRENCY_SYMBOL_UNITS = new Set(["€", "$", "£"]);
 
+function resolveSectionProp(rawProp: string): CommandSectionTargetProp | null {
+  const p = rawProp.toLowerCase();
+  if (p === "iy" || p === "cm4" || p === "cm⁴") return "iy";
+  if (p === "iz") return "iz";
+  if (p === "wel" || p === "wely" || p === "cm3" || p === "cm³") return "welY";
+  if (p === "wpl" || p === "wply") return "wplY";
+  return null;
+}
+
+function isTargetLikeToken(lower: string): boolean {
+  const norm = normalizeDecimalComma(lower);
+  return (
+    SECTION_TARGET_PROP_FIRST_RE.test(norm) ||
+    SECTION_TARGET_VAL_FIRST_RE.test(norm) ||
+    TARGET_RE.test(norm)
+  );
+}
+
 interface ParsedTargetToken {
   raw: string;
-  kind: "weight" | "money";
-  /** Kilograms for a weight target, currency units for a money target. */
+  kind: "weight" | "money" | "section";
+  /** Kilograms for a weight target, currency units for a money target, cm⁴/cm³ for section. */
   value: number;
+  sectionProp?: CommandSectionTargetProp;
 }
 
 function parseTargetToken(token: string, currency: string): ParsedTargetToken | null {
+  const secPropFirst = token.match(SECTION_TARGET_PROP_FIRST_RE);
+  if (secPropFirst) {
+    const sectionProp = resolveSectionProp(secPropFirst[1]);
+    const value = parseFloat(secPropFirst[2].replace(",", "."));
+    if (sectionProp && Number.isFinite(value) && value > 0) {
+      return { raw: token, kind: "section", value, sectionProp };
+    }
+  }
+  const secValFirst = token.match(SECTION_TARGET_VAL_FIRST_RE);
+  if (secValFirst) {
+    const value = parseFloat(secValFirst[1].replace(",", "."));
+    const sectionProp = resolveSectionProp(secValFirst[2]);
+    if (sectionProp && Number.isFinite(value) && value > 0) {
+      return { raw: token, kind: "section", value, sectionProp };
+    }
+  }
+
   const match = token.match(TARGET_RE);
   if (!match) return null;
   const value = parseFloat(match[1].replace(",", "."));
@@ -659,6 +707,9 @@ function splitGluedToken(token: string): string[] {
   const lower = token.toLowerCase();
   // Already a single recognized token — keep whole.
   if (
+    LABEL_RE.test(lower) ||
+    LINE_MULT_TOKEN_RE.test(lower) ||
+    isTargetLikeToken(lower) ||
     isArithmeticToken(lower) ||
     LENGTH_RE.test(lower) ||
     QTY_RE.test(lower) ||
@@ -763,6 +814,12 @@ function mergeWordPairs(words: string[], lastCommitted: boolean): string[] {
     if (next !== null && committed(i) && committed(i + 1)) {
       const wl = w.toLowerCase();
       const nl = next.toLowerCase();
+      // "==" "x4" / "==" "4" → "==x4"
+      if (wl === "==" && (QTY_RE.test(nl) || BARE_NUMBER_RE.test(nl))) {
+        out.push("==x" + next.replace(/^[x×*]/i, ""));
+        i += 2;
+        continue;
+      }
       // "6" "meters" → "6m"
       if (BARE_NUMBER_RE.test(wl) && UNIT_WORDS[nl]) {
         out.push(w + UNIT_WORDS[nl]);
@@ -803,10 +860,17 @@ function mergeWordPairs(words: string[], lastCommitted: boolean): string[] {
  * agree. Preserves casing.
  */
 export function cmdTokenize(query: string): string[] {
-  const raw = query || "";
+  const rawInput = query || "";
+  // Normalize closed double-quoted strings ("base plate") into #base_plate
+  // tokens so multi-word part callouts stay one token through splitting.
+  const raw = rawInput.replace(/"([^"\r\n]+)"/g, (_, inner: string) => {
+    const slug = inner.trim().replace(/\s+/g, "_");
+    return slug ? `#${slug}` : "";
+  });
   const split = raw.trim().split(/\s+/).filter(Boolean);
-  // The final word is committed only when the query ends in whitespace.
-  const lastCommitted = split.length > 0 && /\s$/.test(raw);
+  // The final word is committed when the query ends in whitespace or a closed quote.
+  const lastCommitted =
+    split.length > 0 && (/\s$/.test(rawInput) || /"\s*$/.test(rawInput));
   const words = split
     .map((w, i) => (lastCommitted || i < split.length - 1 ? stripSeparator(w) : w))
     .filter(Boolean);
@@ -930,6 +994,8 @@ function assembleProfile(tokens: LineToken[]): LineToken[] {
     first.i = idx < first.i ? first.i - 1 : first.i;
   };
 
+  const hasTarget = out.some((t) => isTargetLikeToken(t.tok.toLowerCase()));
+
   if (size === "") {
     const chain = others().find(({ t }) => DIM_CHAIN_RE.test(t.tok.toLowerCase()));
     const bare = others().filter(({ t }) => BARE_NUMBER_RE.test(t.tok));
@@ -941,9 +1007,12 @@ function assembleProfile(tokens: LineToken[]): LineToken[] {
         profile && profile.mode === "standard" ? new Set(profile.sizes.map((sz) => sz.id)) : null;
       const hit = ids ? bare.find(({ t }) => ids.has(alias.alias + t.tok)) : undefined;
       // No real size anywhere: the number right after the profile was meant as
-      // one, and taking it lets the parser say "no HEA 125, nearest 120".
+      // one, and taking it lets the parser say "no HEA 125, nearest 120" —
+      // unless the line carries a target token (`hea 6 =200kg`), where the
+      // bare number is the length and the size is what the target solves for.
       const next = out[first.i + 1];
-      const adjacent = next?.committed && BARE_NUMBER_RE.test(next.tok) ? first.i + 1 : -1;
+      const adjacent =
+        !hasTarget && next?.committed && BARE_NUMBER_RE.test(next.tok) ? first.i + 1 : -1;
       if (hit) take(hit.i, hit.t.tok);
       else if (adjacent >= 0) take(adjacent, out[adjacent].tok);
     } else if (
@@ -955,12 +1024,12 @@ function assembleProfile(tokens: LineToken[]): LineToken[] {
     }
   }
 
-  if (alias.fam === "panel" && size !== "") {
+  if (SHEET_LIKE_FAMILIES.has(alias.fam) && size !== "") {
     const dims = size.split("x");
-    if (dims.length === 1) {
+    if (dims.length === 1 || (alias.fam === "chequered" && dims.length === 2)) {
       const chain = others().find(({ t }) => /^\d+(?:\.\d+)?x\d+(?:\.\d+)?$/.test(t.tok));
-      if (chain) take(chain.i, `${size}x${chain.t.tok.toLowerCase()}`);
-    } else if (dims.length === 2) {
+      if (chain) take(chain.i, `${chain.t.tok.toLowerCase()}x${size}`);
+    } else if (dims.length === 2 && alias.fam !== "chequered") {
       const thick = others().find(({ t }) => {
         const m = t.tok.toLowerCase().match(/^(\d+(?:\.\d+)?)(mm)?$/);
         return !!m && parseFloat(m[1]) > 0 && parseFloat(m[1]) <= MAX_PANEL_THICKNESS_MM;
@@ -1061,15 +1130,31 @@ function suggestForUnknownSize(
 }
 
 /**
- * A comma between two digits is a decimal separator, which is how most of
- * Europe — and the app's own Bosnian locale — writes a number. The price token
- * has always accepted it (`@2,5/kg` prices at 2.50) while every other token
- * rejected it, so `hea120 6,5m` died where `hea120 6m @2,5/kg` worked.
- *
- * Normalizing once here covers lengths, sizes, arithmetic and targets in one
- * place. Only the parsed copy is rewritten; the chip still shows what the user
- * typed.
+ * Candidate size texts for size-solving target queries (`hea 6m =200kg` or
+ * `shs 6m =100kg`). Uses the standard catalogue for standard profiles and the
+ * stock-size table for manual profiles.
  */
+function candidateSizesForAlias(alias: CommandAlias): string[] {
+  if (alias.profileId) {
+    const profile = getProfileById(alias.profileId);
+    if (!profile || profile.mode !== "standard") return [];
+    return profile.sizes.map((s) =>
+      s.id.startsWith(alias.alias) ? s.id.slice(alias.alias.length) : s.id,
+    );
+  }
+  if (alias.manualProfileId) {
+    const stock = getStockSizes(alias.manualProfileId);
+    if (!stock) return [];
+    const out: string[] = [];
+    for (const entry of stock) {
+      const text = dimsToSizeText(alias.fam, entry.dims);
+      if (text) out.push(text);
+    }
+    return out;
+  }
+  return [];
+}
+
 /**
  * A plate is spelled width × length × thickness, but people say the thickness
  * first — "10 mm plate, 200 by 300" — and `plt 10x200x300` was rejected as a
@@ -1140,9 +1225,8 @@ export function cmdParse(
   // straight to the calculation, priced "hea120 6m 2 pieces" as one piece and
   // "hea120 6 metres" as 6 mm until a space was typed. The answer on screen
   // should be what the line means now, not what it meant a word ago.
-  const toks = cmdTokenize(lastTokenCommitted ? query : `${query} `).map((t) =>
-    normalizeDecimalComma(t.toLowerCase()),
-  );
+  const rawToks = cmdTokenize(lastTokenCommitted ? query : `${query} `);
+  const toks = rawToks.map((t) => normalizeDecimalComma(t.toLowerCase()));
 
   let alias: CommandAlias | null = null;
   let aliasCommitted = false;
@@ -1151,7 +1235,10 @@ export function cmdParse(
   let lengthRaw: number | null = null;
   let lengthUnit: LengthUnit = settings.defaultLengthUnit;
   let lengthExplicit = false;
+  let lengthExpr: string | null = null;
   let qty: number | null = null;
+  let qtyExpr: string | null = null;
+  let label: string | null = null;
   let targetToken: ParsedTargetToken | null = null;
   let gradeId: string | null = null;
   let pricingOverride: Partial<CommandPricing> | null = null;
@@ -1162,6 +1249,22 @@ export function cmdParse(
   for (let i = 0; i < toks.length; i++) {
     const tk = toks[i];
     const committed = i < toks.length - 1 || lastTokenCommitted;
+    // Inline callout label (`#column_A` or normalized `"Column A"`).
+    if (LABEL_RE.test(tk)) {
+      const rawText = rawToks[i].slice(1).replace(/_/g, " ").trim();
+      if (!rawText) continue;
+      if (label != null) {
+        if (committed) shadowed.push(i);
+        continue;
+      }
+      label = rawText;
+      continue;
+    }
+    // Whole-line multiplier (`**4`, `==x4`) is handled at the line level by
+    // cmdParseLine; ignore it on an individual segment so it isn't flagged.
+    if (LINE_MULT_TOKEN_RE.test(tk)) {
+      continue;
+    }
     if (!alias) {
       const aliasMatch = tk.match(new RegExp(`^(${COMMAND_ALIAS_RE})(.*)$`));
       if (aliasMatch) {
@@ -1205,11 +1308,13 @@ export function cmdParse(
       lengthM = expr.mm / 1000;
       lengthRaw = fromMillimeters(expr.mm, expr.unit);
       lengthExplicit = expr.explicit;
+      lengthExpr = rawToks[i];
       continue;
     }
-    const qtyExpr: number | null = qty == null ? parseQtyExpression(tk) : null;
-    if (qtyExpr != null) {
-      qty = qtyExpr;
+    const parsedQtyExpr: number | null = qty == null ? parseQtyExpression(tk) : null;
+    if (parsedQtyExpr != null) {
+      qty = parsedQtyExpr;
+      qtyExpr = rawToks[i];
       continue;
     }
     // Arithmetic shaped but not evaluable — `50mm-6m` cuts away more than
@@ -1295,7 +1400,7 @@ export function cmdParse(
       : settings.pricing;
   if (alias?.fam === "panel") size = thicknessLast(size);
   let realQty = qty == null ? 1 : qty;
-  const hasSize = !!size && /\d/.test(size);
+  let hasSize = !!size && /\d/.test(size);
 
   // Sheet-like families carry length inside the size token (w × l × t).
   // Promote it so the equation line shows the real length and the stage
@@ -1359,11 +1464,11 @@ export function cmdParse(
   // the pricing rules here and drifting from them.
   let target: CommandTarget | null = null;
   const wanted = targetToken;
-  if (wanted && alias && hasSize) {
-    const probe = (lengthMm: number, pieces: number): number | null => {
+  if (wanted && alias) {
+    const probeForSize = (candSize: string, lengthMm: number, pieces: number): number | null => {
       const input = buildCalculationInput(
         alias,
-        size,
+        candSize,
         lengthMm,
         pieces,
         effectiveGradeId,
@@ -1384,33 +1489,97 @@ export function cmdParse(
       achievedAmount: null,
     });
 
-    if (lengthM != null) {
-      // A length is fixed, so the answer is pieces — whole bars, rounded up,
-      // because half a bar isn't something you can buy.
-      const perPiece = probe(lengthM * 1000, 1);
-      if (perPiece != null && perPiece > 0) {
-        qty = Math.max(1, Math.ceil(wanted.value / perPiece));
-        realQty = qty;
-        target = startTarget("qty");
-      }
-    } else {
-      // No length: solve for it, split across the pieces asked for. Two probes
-      // give the slope per metre and any fixed part (a per-piece price doesn't
-      // move with length at all — that case can't be solved, so it isn't).
-      const atOne = probe(1000, realQty);
-      const atTwo = probe(2000, realQty);
-      if (atOne != null && atTwo != null) {
-        const perMetre = atTwo - atOne;
-        const fixed = atOne - perMetre;
-        if (perMetre > 0) {
-          const metres = (wanted.value - fixed) / perMetre;
-          // Rounded to the millimetre — the unit the whole app cuts in.
-          const roundedM = Math.round(metres * 1000) / 1000;
-          if (roundedM > 0) {
-            lengthM = roundedM;
-            lengthRaw = fromMillimeters(roundedM * 1000, lengthUnit);
+    if (wanted.kind === "section" && wanted.sectionProp && alias.profileId) {
+      const profile = getProfileById(alias.profileId);
+      if (profile && profile.mode === "standard") {
+        const propKey = wanted.sectionProp;
+        const readSectionProp = (
+          props: ReturnType<typeof getSectionProperties>,
+        ): number | null => {
+          if (!props) return null;
+          if (propKey === "iy") return props.iyCm4;
+          if (propKey === "iz") return props.izCm4;
+          if (propKey === "welY") return props.welYCm3;
+          if (propKey === "wplY") return props.wplYCm3;
+          return null;
+        };
+        const candidates = profile.sizes
+          .map((sz) => ({
+            sz,
+            val: readSectionProp(getSectionProperties(sz.id)),
+          }))
+          .filter((c): c is { sz: (typeof profile.sizes)[number]; val: number } => c.val != null)
+          .sort((a, b) => a.sz.areaMm2 - b.sz.areaMm2);
+
+        if (candidates.length > 0) {
+          const chosen =
+            candidates.find((c) => c.val >= wanted.value) ??
+            candidates[candidates.length - 1];
+          size = chosen.sz.id.startsWith(alias.alias)
+            ? chosen.sz.id.slice(alias.alias.length)
+            : chosen.sz.id;
+          hasSize = true;
+          if (lengthM == null) {
+            lengthM = 1;
+            lengthRaw = fromMillimeters(1000, lengthUnit);
             lengthExplicit = false;
-            target = startTarget("length");
+          }
+          target = {
+            ...startTarget("size"),
+            sectionProp: propKey,
+            achievedSection: chosen.val,
+          };
+        }
+      }
+    } else if (!hasSize && lengthM != null && (wanted.kind === "weight" || wanted.kind === "money")) {
+      // Profile + length + weight/money target (`hea 6m =200kg`): solve for the
+      // largest catalog/stock size that stays within the target (or the
+      // lightest one if all exceed it).
+      const candidates = candidateSizesForAlias(alias);
+      const scored: { size: string; val: number }[] = [];
+      for (const candSize of candidates) {
+        const val = probeForSize(candSize, lengthM * 1000, realQty);
+        if (val != null && val > 0) {
+          scored.push({ size: candSize, val });
+        }
+      }
+      scored.sort((a, b) => a.val - b.val);
+      if (scored.length > 0) {
+        const under = scored.filter((c) => c.val <= wanted.value);
+        const chosen = under.length > 0 ? under[under.length - 1] : scored[0];
+        size = chosen.size;
+        hasSize = true;
+        target = startTarget("size");
+      }
+    } else if (hasSize && (wanted.kind === "weight" || wanted.kind === "money")) {
+      if (lengthM != null) {
+        // A length is fixed, so the answer is pieces — whole bars, rounded up,
+        // because half a bar isn't something you can buy.
+        const perPiece = probeForSize(size, lengthM * 1000, 1);
+        if (perPiece != null && perPiece > 0) {
+          qty = Math.max(1, Math.ceil(wanted.value / perPiece));
+          realQty = qty;
+          target = startTarget("qty");
+        }
+      } else {
+        // No length: solve for it, split across the pieces asked for. Two probes
+        // give the slope per metre and any fixed part (a per-piece price doesn't
+        // move with length at all — that case can't be solved, so it isn't).
+        const atOne = probeForSize(size, 1000, realQty);
+        const atTwo = probeForSize(size, 2000, realQty);
+        if (atOne != null && atTwo != null) {
+          const perMetre = atTwo - atOne;
+          const fixed = atOne - perMetre;
+          if (perMetre > 0) {
+            const metres = (wanted.value - fixed) / perMetre;
+            // Rounded to the millimetre — the unit the whole app cuts in.
+            const roundedM = Math.round(metres * 1000) / 1000;
+            if (roundedM > 0) {
+              lengthM = roundedM;
+              lengthRaw = fromMillimeters(roundedM * 1000, lengthUnit);
+              lengthExplicit = false;
+              target = startTarget("length");
+            }
           }
         }
       }
@@ -1492,8 +1661,11 @@ export function cmdParse(
     lengthRaw,
     lengthUnit,
     lengthExplicit,
+    lengthExpr,
     qty,
+    qtyExpr,
     realQty,
+    label,
     gradeId: typedGrade?.id ?? null,
     gradeLabel: typedGrade?.label ?? null,
     density,
@@ -1531,7 +1703,9 @@ export function cmdParse(
 
 export function cmdClassifyToken(tok: string): CommandTokenKind {
   const x = tok.toLowerCase();
-  if (TARGET_RE.test(x)) return "target";
+  if (LABEL_RE.test(x)) return "label";
+  if (LINE_MULT_TOKEN_RE.test(x)) return "qty";
+  if (isTargetLikeToken(x)) return "target";
   // `6m-50mm` reads as a length, `x2+3` as a quantity — the arithmetic is a
   // way of writing the value, not a different kind of thing.
   if (isArithmeticToken(x)) return QTY_EXPR_LEAD.test(x) ? "qty" : "len";
