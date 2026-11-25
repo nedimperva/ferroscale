@@ -19,27 +19,27 @@
     "test:all": "npm run test && npm run test:core"
   },
   "dependencies": {
-    "next": "16.4.5",
-    "next-intl": "^4.14.9",
+    "next": "16.4.6",
+    "next-intl": "^4.15.3",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.8",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.4.5",
-    "jsdom": "^31.0.0",
+    "eslint-config-next": "16.4.6",
+    "jsdom": "^31.0.1",
     "sharp": "^0.35.5",
     "tailwindcss": "^4",
     "typescript": "5.9.3",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "overrides": {
     "@typescript-eslint/typescript-estree": {
